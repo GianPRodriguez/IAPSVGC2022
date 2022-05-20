@@ -1,25 +1,21 @@
-import asyncio
-import json
 from copy import deepcopy
-
 from environs import Env
-
-import constants
-import config
 from config import init_logging
-import logging
 
 from teams import load_team
 from showdown.run_battle import pokemon_battle
 from showdown.websocket_client import PSWebsocketClient
-
 from data import all_move_json
 from data import pokedex
 from data.mods.apply_mods import apply_mods
 
+import asyncio
+import json
+import constants
+import config
+import logging
 
 logger = logging.getLogger(__name__)
-
 
 def parse_configs():
     env = Env()
@@ -46,34 +42,12 @@ def parse_configs():
         config.user_to_challenge = env("USER_TO_CHALLENGE")
     init_logging(env("LOG_LEVEL", "DEBUG"))
 
-
-def check_dictionaries_are_unmodified(original_pokedex, original_move_json):
-    # The bot should not modify the data dictionaries
-    # This is a "just-in-case" check to make sure and will stop the bot if it mutates either of them
-    if original_move_json != all_move_json:
-        logger.critical("Move JSON changed!\nDumping modified version to `modified_moves.json`")
-        with open("modified_moves.json", 'w') as f:
-            json.dump(all_move_json, f, indent=4)
-        exit(1)
-    else:
-        logger.debug("Move JSON unmodified!")
-
-    if original_pokedex != pokedex:
-        logger.critical("Pokedex JSON changed!\nDumping modified version to `modified_pokedex.json`")
-        with open("modified_pokedex.json", 'w') as f:
-            json.dump(pokedex, f, indent=4)
-        exit(1)
-    else:
-        logger.debug("Pokedex JSON unmodified!")
-
-
+# Función Principal
 async def showdown():
+    # Configuración
     parse_configs()
 
     apply_mods(config.pokemon_mode)
-
-    original_pokedex = deepcopy(pokedex)
-    original_move_json = deepcopy(all_move_json)
 
     ps_websocket_client = await PSWebsocketClient.create(config.username, config.password, config.websocket_uri)
     await ps_websocket_client.login()
@@ -81,6 +55,8 @@ async def showdown():
     battles_run = 0
     wins = 0
     losses = 0
+
+    # Hasta que no se alcance la cantidad de batallas definidas
     while True:
         team = load_team(config.team_name)
         if config.bot_mode == constants.CHALLENGE_USER:
@@ -101,12 +77,11 @@ async def showdown():
 
         logger.info("W: {}\tL: {}".format(wins, losses))
 
-        check_dictionaries_are_unmodified(original_pokedex, original_move_json)
-
         battles_run += 1
         if battles_run >= config.run_count:
             break
 
 
+# Inicio
 if __name__ == "__main__":
     asyncio.get_event_loop().run_until_complete(showdown())

@@ -208,6 +208,7 @@ class Battle(ABC):
         return state
 
     def get_all_options(self):
+        logger.info("Mejor movimiento")
         force_switch = self.force_switch or self.user.active.hp <= 0
         wait = self.wait or self.opponent.active.hp <= 0
 
