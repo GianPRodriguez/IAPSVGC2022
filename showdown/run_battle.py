@@ -126,7 +126,7 @@ async def read_messages_until_first_pokemon_is_seen(ps_websocket_client, battle,
 
 
 async def start_random_battle(ps_websocket_client: PSWebsocketClient, pokemon_battle_type):
-    logger.debug("run_battle.py / async def start_random_battle")
+    logger.info("Tracking: run_battle.py / async def start_random_battle")
     battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client)
     battle.battle_type = constants.RANDOM_BATTLE
     battle.generation = pokemon_battle_type[:4]
@@ -208,7 +208,7 @@ async def start_battle(ps_websocket_client, pokemon_battle_type):
 
 
 async def pokemon_battle(ps_websocket_client, pokemon_battle_type):
-    logger.debug("run_battle.py / async def pokemon_battle")
+    logger.info("Tracking: run_battle.py / async def pokemon_battle")
     battle = await start_battle(ps_websocket_client, pokemon_battle_type)
     while True:
         msg = await ps_websocket_client.receive_message()

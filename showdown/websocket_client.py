@@ -139,7 +139,7 @@ class PSWebsocketClient:
         await self.send_message('', message)
 
     async def search_for_match(self, battle_format, team):
-        logger.debug("Searching for ranked {} match".format(battle_format))
+        logger.debug("Español: Searching for ranked {} match".format(battle_format))
         await self.update_team(team)
         message = ["/search {}".format(battle_format)]
         await self.send_message("", message)
