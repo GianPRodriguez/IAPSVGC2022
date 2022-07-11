@@ -1,4 +1,6 @@
 import math
+import logging
+
 from collections import defaultdict
 
 import constants
@@ -6,6 +8,7 @@ import constants
 from .evaluate import evaluate
 from .find_state_instructions import get_all_state_instructions
 
+logger = logging.getLogger(__name__)
 
 WON_BATTLE = 100
 
@@ -41,6 +44,7 @@ def remove_guaranteed_opponent_moves(score_lookup):
     return new_opponent_decisions
 
 
+# FINALMENTE ESTE ESCOGE
 def pick_safest(score_lookup, remove_guaranteed=False):
     modified_score_lookup = score_lookup
     if remove_guaranteed:
@@ -48,11 +52,14 @@ def pick_safest(score_lookup, remove_guaranteed=False):
         if not modified_score_lookup:
             modified_score_lookup = score_lookup
     worst_case = defaultdict(lambda: (tuple(), float('inf')))
+
     for move_pair, result in modified_score_lookup.items():
         if worst_case[move_pair[0]][1] > result:
             worst_case[move_pair[0]] = move_pair, result
 
     safest = max(worst_case, key=lambda x: worst_case[x][1])
+    logger.info("worst_case")
+    logger.info(dict(worst_case))
     return worst_case[safest]
 
 

@@ -50,8 +50,8 @@ async def async_pick_move(battle):
     return ast.literal_eval(best_move)
 
 
+
 async def handle_team_preview(battle, ps_websocket_client):
-    logger.debug("run_battle.py / async def handle_team_preview")
     battle_copy = deepcopy(battle)
     battle_copy.user.active = Pokemon.get_dummy()
     battle_copy.opponent.active = Pokemon.get_dummy()
@@ -66,6 +66,7 @@ async def handle_team_preview(battle, ps_websocket_client):
     message = ["/team {}{}|{}".format(choice_digit, "".join(str(x) for x in team_list_indexes), battle.rqid)]
 
     await ps_websocket_client.send_message(battle.battle_tag, message)
+
 
 
 async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient):
@@ -93,6 +94,7 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, set
             user_json = json.loads(split_msg[2].strip('\''))
             user_id = user_json[constants.SIDE][constants.ID]
             opponent_id = constants.ID_LOOKUP[user_id]
+            # Aquí se hace el cambio de bot y llamada de BattleBot...
             battle = battle_module.BattleBot(battle_tag)
             battle.opponent.name = opponent_id
             battle.opponent.account_name = opponent_name
@@ -136,70 +138,39 @@ async def start_random_battle(ps_websocket_client: PSWebsocketClient, pokemon_ba
     return battle
 
 
-def _set_gen8ou_teams(battle):
-    data.ou_sets = data.get_ou_sets([p.name for p in battle.opponent.reserve])
-    exact_team = data.get_ou_team([p.name for p in battle.opponent.reserve])
-    if exact_team is not None:
-        logger.info("Found an exact team")
-        for pkmn, pkmn_info in exact_team.items():
-            for pkmn_obj in battle.opponent.reserve:
-                if pkmn_obj.name == pkmn:
-                    split_info = pkmn_info.split("|")
-                    pkmn_obj.ability = split_info[0]
-                    pkmn_obj.item = split_info[1]
-                    pkmn_obj.set_spread(
-                        split_info[2],
-                        split_info[3]
-                    )
-                    for m in split_info[4:]:
-                        pkmn_obj.add_move(m)
-
-
+# Inicia una Batalla Standard
 async def start_standard_battle(ps_websocket_client: PSWebsocketClient, pokemon_battle_type):
     battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, set_request_json=False)
     battle.battle_type = constants.STANDARD_BATTLE
     battle.generation = pokemon_battle_type[:4]
 
-    if battle.generation in constants.NO_TEAM_PREVIEW_GENS:
-        await read_messages_until_first_pokemon_is_seen(ps_websocket_client, battle, opponent_id, user_json)
-    else:
-        msg = ''
-        while constants.START_TEAM_PREVIEW not in msg:
-            msg = await ps_websocket_client.receive_message()
+    # Inicializa mensaje
+    msg = ''
+    # Hasta que se cargue...
+    while constants.START_TEAM_PREVIEW not in msg:
+        msg = await ps_websocket_client.receive_message()
 
-        preview_string_lines = msg.split(constants.START_TEAM_PREVIEW)[-1].split('\n')
+    preview_string_lines = msg.split(constants.START_TEAM_PREVIEW)[-1].split('\n')
 
-        opponent_pokemon = []
-        for line in preview_string_lines:
-            if not line:
-                continue
+    opponent_pokemon = []
+    for line in preview_string_lines:
+        if not line:
+            continue
 
-            split_line = line.split('|')
-            if split_line[1] == constants.TEAM_PREVIEW_POKE and split_line[2].strip() == opponent_id:
-                opponent_pokemon.append(split_line[3])
+        split_line = line.split('|')
+        if split_line[1] == constants.TEAM_PREVIEW_POKE and split_line[2].strip() == opponent_id:
+            opponent_pokemon.append(split_line[3])
 
-        battle.initialize_team_preview(user_json, opponent_pokemon, pokemon_battle_type)
+    # TEAM PREVIEW
+    battle.initialize_team_preview(user_json, opponent_pokemon, pokemon_battle_type)
 
-        if pokemon_battle_type == "gen8ou":
-            _set_gen8ou_teams(battle)
-
-        smogon_usage_data = get_standard_battle_sets(
-            pokemon_battle_type,
-            pokemon_names=[p.name for p in battle.opponent.reserve]
-        )
-        data.pokemon_sets = smogon_usage_data
-
-        await handle_team_preview(battle, ps_websocket_client)
+    # 
+    await handle_team_preview(battle, ps_websocket_client)
 
     return battle
 
-
 async def start_battle(ps_websocket_client, pokemon_battle_type):
-    if "random" in pokemon_battle_type:
-        Scoring.POKEMON_ALIVE_STATIC = 30  # random battle benefits from a lower static score for an alive pkmn
-        battle = await start_random_battle(ps_websocket_client, pokemon_battle_type)
-    else:
-        battle = await start_standard_battle(ps_websocket_client, pokemon_battle_type)
+    battle = await start_standard_battle(ps_websocket_client, pokemon_battle_type)
 
     await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
     await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
@@ -207,22 +178,34 @@ async def start_battle(ps_websocket_client, pokemon_battle_type):
     return battle
 
 
+# Nueva Batalla Pokémon completo
 async def pokemon_battle(ps_websocket_client, pokemon_battle_type):
-    logger.info("Tracking: run_battle.py / async def pokemon_battle")
+    # Solo inicia la batalla
     battle = await start_battle(ps_websocket_client, pokemon_battle_type)
     while True:
         msg = await ps_websocket_client.receive_message()
+
+        # ¿Ha finalizado la batalla?
         if battle_is_finished(battle.battle_tag, msg):
+            # Sí ha finalizado la batalla... se obtiene información del ganador
             if constants.WIN_STRING in msg:
+                # Se obtiene el NOMBRE del ganador
                 winner = msg.split(constants.WIN_STRING)[-1].split('\n')[0].strip(" ")
             else:
                 winner = None
+            # Y lo imprimo
             logger.debug("Ganador {}".format(winner))
+            # Se envía un mensaje al contrincante... es opcional
             await ps_websocket_client.send_message(battle.battle_tag, [config.battle_ending_message])
+            # Es opcional guardar la batalla...
             await ps_websocket_client.leave_battle(battle.battle_tag, save_replay=config.save_replay)
+            # Retorna al ganador
             return winner
         else:
+            # No ha finalizado la batalla... se debe realizar una acción!!
             action_required = await async_update_battle(battle, msg)
+            # action_required es BOOLEAN
             if action_required and not battle.wait:
+                # Escoge el mejor movimiento y lo envía al websocket
                 best_move = await async_pick_move(battle)
                 await ps_websocket_client.send_message(battle.battle_tag, best_move)

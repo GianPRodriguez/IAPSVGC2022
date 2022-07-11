@@ -51,7 +51,7 @@ def prefix_opponent_move(score_lookup, prefix):
     return new_score_lookup
 
 
-# AVERIGUAR FUNCION
+# ¡¡¡AVERIGUAR FUNCION!!!
 def pick_safest_move_from_battles(battles):
     all_scores = dict()
     for i, b in enumerate(battles):
@@ -64,6 +64,7 @@ def pick_safest_move_from_battles(battles):
         prefixed_scores = prefix_opponent_move(scores, str(i))
         all_scores = {**all_scores, **prefixed_scores}
 
+    # bot_choice proviene de pick_safest
     decision, payoff = pick_safest(all_scores, remove_guaranteed=True)
     bot_choice = decision[0]
     #logger.debug("Safest: {}, {}".format(bot_choice, payoff))

@@ -115,6 +115,7 @@ class Battle(ABC):
     def mega_evolve_possible(self):
         return any(g in self.generation for g in constants.MEGA_EVOLVE_GENERATIONS) or 'nationaldex' in config.pokemon_mode
 
+    # USO IMPORTANTE
     def prepare_battles(self, guess_mega_evo_opponent=True, join_moves_together=False):
         """Returns a list of battles based on this one
         The battles have the opponent's reserve pokemon's unknowns filled in

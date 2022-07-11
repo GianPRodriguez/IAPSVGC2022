@@ -68,6 +68,7 @@ async def showdown():
         else:
             raise ValueError("Invalid Bot Mode")
 
+        # Nueva Batalla Pokémon completo
         winner = await pokemon_battle(ps_websocket_client, config.pokemon_mode)
 
         if winner == config.username:
