@@ -34,21 +34,14 @@ def battle_is_finished(battle_tag, msg):
 async def accion_batalla(battle):
     # Copia del Estado Actual
     battle_copy = deepcopy(battle)
-    # json
+    # ¿Hay solicitud de JSON pendiente?
     if battle_copy.request_json:
         battle_copy.user.from_json(battle_copy.request_json)
-    # 
+    # Se define la mejor acción
     best_action = battle_copy.find_best_move
-    #
-    if constants.SWITCH_STRING in choice:
-        # hola
-        battle.user.last_used_move = LastUsedMove(battle.user.active.name, "switch {}".format(choice.split()[-1]), battle.turn)
-    else:
-        # 
-        battle.user.last_used_move = LastUsedMove(battle.user.active.name, choice.split()[2], battle.turn)
-    #
+    # Imprimo en CMD la mejor acción
     logger.info(best_action)
-    #
+    # Retorno el mensaje listo para enviarlo al WebSocket
     return ast.literal_eval(best_action)
 
 
@@ -88,43 +81,46 @@ async def etapa_team_preview(battle, ps_websocket_client):
     await ps_websocket_client.send_message(battle.battle_tag, mensaje)
 
 
-#|request|
-#|j|☆Nerbort
-#|t:|1657546734
-#|gametype|doubles
-#|player|p1|PopplioPeru98|2|1171
-
-
 async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient):
     # Obtiene las etiquetas que aparecen al iniciar una batalla
     while True:
         # El string recibido lo guardo en msg
         msg = await ps_websocket_client.receive_message()
-        #|init|battle
-        #|title|PopplioPeru98 vs. Nerbort
-        #|j|☆PopplioPeru98
+        # msg = ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw|init|battle|title|PopplioPeru98 vs. Braindeadmeta|j|☆PopplioPeru98"
         split_msg = msg.split('|')
         first_msg = split_msg[0]
+        # first_msg = ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
         if 'battle' in first_msg:
             battle_tag = first_msg.replace('>', '').strip()
+            # battle_tag = "battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
             user_name = split_msg[-1].replace('☆', '').strip()
+            # user_name = "PopplioPeru98"
             opponent_name = split_msg[4].replace(user_name, '').replace('vs.', '').strip()
+            # opponent_name = "Braindeadmeta"
             return battle_tag, opponent_name
 
 
 async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, set_request_json=True):
-    battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
-
+    # NO TOCAR
+    #battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
+    # Obtengo el id de la batalla y el nombre del oponente
     battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client)
+    # 
     while True:
+        # 
         msg = await ps_websocket_client.receive_message()
+        #
         split_msg = msg.split('|')
+        # ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw|request|"
+        # Si es la cadena de arriba...
         if split_msg[1].strip() == 'request' and split_msg[2].strip():
+            # 
             user_json = json.loads(split_msg[2].strip('\''))
             user_id = user_json[constants.SIDE][constants.ID]
             opponent_id = constants.ID_LOOKUP[user_id]
             # Aquí se hace el cambio de bot y llamada de BattleBot...
             battle = battle_module.BattleBot(battle_tag)
+            # Actualización
             battle.opponent.name = opponent_id
             battle.opponent.account_name = opponent_name
 
@@ -135,7 +131,7 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, set
 
 
 # Inicia una Batalla VGC 2022
-async def start_vgc2022_battle(ps_websocket_client: PSWebsocketClient, pokemon_battle_type):
+async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient):
     #
     battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, set_request_json=False)
     #
@@ -169,9 +165,9 @@ async def start_vgc2022_battle(ps_websocket_client: PSWebsocketClient, pokemon_b
     return battle
 
 
-async def start_battle(ps_websocket_client, pokemon_battle_type):
-    # Inicia la Batalla
-    battle = await start_vgc2022_battle(ps_websocket_client, pokemon_battle_type)
+async def iniciar_batalla(ps_websocket_client):
+    # Inicia la Batalla VGC 2022
+    battle = await inicia_vgc2022(ps_websocket_client)
     # Envía el saludo
     await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
     # Inicia el tiempo
@@ -183,7 +179,7 @@ async def start_battle(ps_websocket_client, pokemon_battle_type):
 # Nueva Batalla Pokémon completo
 async def pokemon_battle(ps_websocket_client):
     # Solo inicia la batalla
-    battle = await start_battle(ps_websocket_client)
+    battle = await iniciar_batalla(ps_websocket_client)
     # Mientras...
     while True:
         # Recibo mensaje del WebSocket
