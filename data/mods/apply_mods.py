@@ -104,20 +104,3 @@ def undo_physical_special_split():
                 move_data[constants.CATEGORY] = PRE_PHYSICAL_SPECIAL_SPLIT_CATEGORY_LOOKUP[move_data[constants.TYPE]]
             except KeyError:
                 pass
-
-
-def apply_mods(game_mode):
-    if "gen3" in game_mode:
-        apply_gen_3_mods()
-    if "gen4" in game_mode:
-        apply_gen_4_mods()
-    elif "gen5" in game_mode:
-        apply_gen_5_mods()
-    elif "gen6" in game_mode:
-        apply_gen_6_mods()
-    elif "gen7" in game_mode:
-        apply_gen_7_mods()
-
-    if str(CURRENT_GEN) not in game_mode[:4]:
-        set_random_battle_sets(7)  # use random battle sets from gen7 if we are not in gen8
-        damage_calculator.TERRAIN_DAMAGE_BOOST = 1.5  # terrain gave a 1.5x damage boost prior to gen8

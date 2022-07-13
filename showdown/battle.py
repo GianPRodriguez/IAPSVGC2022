@@ -79,7 +79,9 @@ class Battle(ABC):
 
         self.request_json = None
 
-    def initialize_team_preview(self, user_json, opponent_pokemon, battle_type):
+
+    # TEAM PREVIEW
+    def initialize_team_preview(self, user_json, opponent_pokemon):
         self.user.from_json(user_json, first_turn=True)
         self.user.reserve.insert(0, self.user.active)
         self.user.active = None
@@ -101,6 +103,7 @@ class Battle(ABC):
 
         self.started = True
         self.rqid = user_json[constants.RQID]
+
 
     def start_non_team_preview_battle(self, user_json, opponent_switch_string):
         self.user.from_json(user_json, first_turn=True)
@@ -267,59 +270,16 @@ class Battle(ABC):
         ...
 
 
+# Esta Clase lo comporte el usuario y oponente...
 class Battler:
-
     def __init__(self):
-        self.active = None
-        self.reserve = []
-        self.side_conditions = defaultdict(lambda: 0)
+        self.activo1 = None                             # class Pokemon
+        self.activo2 = None                             # class Pokemon
+        self.reservados = []                            # class Pokemon
+        self.nombreCuenta = None                        # String
 
-        self.name = None
-        self.trapped = False
-        self.wish = (0, 0)
-        self.future_sight = (0, 0)
-
-        self.account_name = None
-
-        self.last_used_move = LastUsedMove('', '', 0)
-
-    def mega_revealed(self):
-        return self.active.is_mega or any(p.is_mega for p in self.reserve)
-
-    def lock_active_pkmn_first_turn_moves(self):
-        # disable firstimpression and fakeout if the last_used_move was not a switch
-        if self.last_used_move.pokemon_name == self.active.name:
-            for m in self.active.moves:
-                if m.name in constants.FIRST_TURN_MOVES:
-                    m.disabled = True
-
-    def lock_active_pkmn_status_moves_if_active_has_assaultvest(self):
-        if self.active.item == 'assaultvest':
-            for m in self.active.moves:
-                if all_move_json[m.name][constants.CATEGORY] == constants.STATUS:
-                    m.disabled = True
-
-    def choice_lock_moves(self):
-        # if the active pokemon has a choice item and their last used move was by this pokemon -> lock their other moves
-        if self.active.item in constants.CHOICE_ITEMS and self.last_used_move.pokemon_name == self.active.name:
-            for m in self.active.moves:
-                if m.name != self.last_used_move.move:
-                    m.disabled = True
-
-    def taunt_lock_moves(self):
-        if constants.TAUNT in self.active.volatile_statuses:
-            for m in self.active.moves:
-                if all_move_json[m.name][constants.CATEGORY] == constants.STATUS:
-                    m.disabled = True
-
-    def lock_moves(self):
-        self.choice_lock_moves()
-        self.lock_active_pkmn_status_moves_if_active_has_assaultvest()
-        self.lock_active_pkmn_first_turn_moves()
-        self.taunt_lock_moves()
 
     def from_json(self, user_json, first_turn=False):
-
         # user_json does not track boosts or volatile statuses
         # they must be taken from the current battle
         if first_turn:
@@ -411,19 +371,10 @@ class Battler:
                 switches.append("{} {}".format(constants.SWITCH_STRING, pkmn.name))
         return switches
 
-    def to_dict(self):
-        return {
-            constants.TRAPPED: self.trapped,
-            constants.ACTIVE: self.active.to_dict(),
-            constants.RESERVE: [p.to_dict() for p in self.reserve],
-            constants.WISH: copy(self.wish),
-            constants.FUTURE_SIGHT: copy(self.future_sight),
-            constants.SIDE_CONDITIONS: copy(self.side_conditions)
-        }
 
 
+# Para el jugador se debe considerar todos los datos, para el oponente solo los visibles
 class Pokemon:
-
     def __init__(self, name: str, level: int, nature="serious", evs=(85,) * 6):
         self.name = normalize_name(name)
         self.base_name = self.name

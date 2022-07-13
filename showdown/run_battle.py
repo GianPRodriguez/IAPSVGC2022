@@ -61,8 +61,7 @@ async def accion_team_preview(battle):
     return int(eleccion0), int(eleccion1), int(eleccion2), int(eleccion3)
 
 
-# Se define la etapa TEAM PREVIEW
-async def etapa_team_preview(battle, ps_websocket_client):
+async def escoge_accion_team_preview(battle, ps_websocket_client):
     # DeepCopy del Estado Actual
     battle_copy = deepcopy(battle)
     # Se escoge los 4 Pokémon: eleccion(n) es un entero
@@ -105,63 +104,66 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, set
     #battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
     # Obtengo el id de la batalla y el nombre del oponente
     battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client)
-    # 
+    # Mientras...
     while True:
-        # 
+        # Recibo un mensaje del WebSocket
         msg = await ps_websocket_client.receive_message()
-        #
         split_msg = msg.split('|')
-        # ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw|request|"
-        # Si es la cadena de arriba...
+        # ">battle-gen8vgc2022-1615425859-wyhg27ady04ol40g13v0qhy5qf6031rpw|request|{"teamPreview":true,"maxChosenTeamSize":4,"side":{"name":"PopplioPeru98","id":"p1","pokemon":[{"ident":"p1: Incineroar","details":"Incineroar, L50, F","con"
+        # Si la cadena de arriba...
         if split_msg[1].strip() == 'request' and split_msg[2].strip():
-            # 
+            # Se obtiene el JSON 
             user_json = json.loads(split_msg[2].strip('\''))
+            # user_json es un diccionario derivado del JSON
             user_id = user_json[constants.SIDE][constants.ID]
+            # user_id = "p1"
             opponent_id = constants.ID_LOOKUP[user_id]
+            # opponent_id = "p2"
             # Aquí se hace el cambio de bot y llamada de BattleBot...
             battle = battle_module.BattleBot(battle_tag)
             # Actualización
             battle.opponent.name = opponent_id
+            # battle.opponent.name = "p2"
             battle.opponent.account_name = opponent_name
-
+            # battle.opponent.account_name = "Braindeadmeta"
             if set_request_json:
+                # El JSON se guarda en battle.request_json...
                 battle.request_json = user_json
-
+            # Retorna 
             return battle, opponent_id, user_json
 
 
 # Inicia una Batalla VGC 2022
 async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient):
-    #
-    battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, set_request_json=False)
-    #
-    battle.battle_type = constants.STANDARD_BATTLE
-    #
-    battle.generation = pokemon_battle_type[:4]
-
-    # Inicializa mensaje
+    # Se obtiene las variables de abajo
+    battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, set_request_json=True)
+    # Inicializa mensaje donde se cargará el TEAM PREVIEW
     msg = ''
-    # Hasta que se cargue...
+    # Mientras no aparezca al mensaje de TEAM PREVIEW
     while constants.START_TEAM_PREVIEW not in msg:
         msg = await ps_websocket_client.receive_message()
-
+    # ">battle-gen8vgc2022-1615320442-rkf1xxub9e146xgon0ekxyzr2hhlfxfpw|player|p2|Jisss|lucas|1112|teamsize|p1|6|teamsize|p2|6|gen|8|tier|[Gen 8] VGC 2022|rated||rule|Species Clause: Limit one of each Pokémon|rule|Item Clause: Limit one of each item|clearpoke|poke|p1|Incineroar, L50, M||poke|p1|Kyogre, L50||poke|p1|Tornadus, L50, M||poke|p1|Zacian-*, L50||poke|p1|Indeedee-F, L50, F||poke|p1|Alcremie, L50, F||poke|p2|Lapras, L50, M||poke|p2|Kyogre, L50||poke|p2|Zacian-*, L50||poke|p2|Tapu Fini, L50||poke|p2|Zapdos, L50||poke|p2|Mimikyu, L50, F||teampreview|4"
     preview_string_lines = msg.split(constants.START_TEAM_PREVIEW)[-1].split('\n')
-
+    # preview_string_lines = "|poke|p1|Incineroar, L50, M||poke|p1|Kyogre, L50||poke|p1|Tornadus, L50, M||poke|p1|Zacian-*, L50||poke|p1|Indeedee-F, L50, F||poke|p1|Alcremie, L50, F||poke|p2|Lapras, L50, M||poke|p2|Kyogre, L50||poke|p2|Zacian-*, L50||poke|p2|Tapu Fini, L50||poke|p2|Zapdos, L50||poke|p2|Mimikyu, L50, F||teampreview|4"
     opponent_pokemon = []
+    # Para cada linea...
     for line in preview_string_lines:
         if not line:
+            # Pasa a ETAPA TEAM PREVIEW
             continue
-
+        # line = "|poke|p1|Incineroar, L50, M|"
         split_line = line.split('|')
+        # split_line[1] = "poke"
+        # split_line[2] = "p1"
+        # split_line[3] = "Incineroar, L50, M"
         if split_line[1] == constants.TEAM_PREVIEW_POKE and split_line[2].strip() == opponent_id:
+            # Voy agrupando: ["Lapras, L50, M","Kyogre, L50","Zacian-*, L50","Tapu Fini, L50","Zapdos, L50","Mimikyu, L50, F"]
             opponent_pokemon.append(split_line[3])
-
-    # TEAM PREVIEW
-    battle.initialize_team_preview(user_json, opponent_pokemon, pokemon_battle_type)
-
-    # 
-    await etapa_team_preview(battle, ps_websocket_client)
-
+    # ETAPA TEAM PREVIEW
+    battle.initialize_team_preview(user_json, opponent_pokemon)
+    # Se escoge la mejor acción y lo envía al WebSocket
+    await escoge_accion_team_preview(battle, ps_websocket_client)
+    # Retorno el estado actual de la batalla
     return battle
 
 

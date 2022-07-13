@@ -30,59 +30,69 @@ def find_pokemon_in_reserves(pkmn_name, reserves):
     return None
 
 
+# ¿El cambio es hecho por el oponente?
 def is_opponent(battle,  split_msg):
+    # split_msg = ["","switch","p1a: Incineroar","Incineroar, L50, M","190/202"]
+    # split_msg[2] = "p1a: Incineroar"
     return not split_msg[2].startswith(battle.user.name)
 
 
-# JSON MENSAJE
+# Obtiene el JSON y rqid... Además, avisa si es por force_switch o es solo un wait
 def request(battle, split_msg):
-    """Update the user's team given the battle JSON in split_msg[2]
-       Also updates some battle meta-data such as rqid, force_switch, and wait"""
+    # split_msg = ["","request","{"active":[{"moves":[{"move":"Fake Out","id":"fakeout","pp":16,"maxpp":16,..."]
     if len(split_msg) >= 2:
+        # Se divide el JSON en battle_json
         battle_json = json.loads(split_msg[2].strip('\''))
-        #logger.debug("Received battle JSON from server: {}".format(battle_json))
+        # Obtiene el rqid, que al parecer no se utilizará
         battle.rqid = battle_json[constants.RQID]
-
+        # ¿battle_json tiene "forceSwitch"? Se activa cuando uso U-TURN
         if battle_json.get(constants.FORCE_SWITCH):
+            logger.debug("Action: forceSwitch")
             battle.force_switch = True
         else:
             battle.force_switch = False
-
+        # ¿battle_json tiene "wait"? ¿Se activa cuando el oponente usa U-TURN?
         if battle_json.get(constants.WAIT):
+            logger.debug("Action: wait")
             battle.wait = True
         else:
             battle.wait = False
-
+        # Se almacena el JSON para elegir una accióm
         if not battle.wait:
             battle.request_json = battle_json
 
 
+# Avanza el tiempo...
 def inactive(battle, split_msg):
+    # split_msg = ["","inactive","Time left: 55 sec this turn "," 410 sec total"]
     regex_string = "(\d+) sec this turn"
     if split_msg[2].startswith(constants.TIME_LEFT):
         capture = re.search(regex_string, split_msg[2])
-        try:
-            time_left = int(capture.group(1))
-            battle.time_remaining = time_left
-            logger.debug("Tiempo restante: {} segundos".format(time_left))
-        except ValueError:
-            logger.warning("{} is not a valid int".format(capture.group(1)))
-        except AttributeError:
-            logger.warning("'{}' does not match the regex '{}'".format(split_msg[2], regex_string))
+        time_left = int(capture.group(1))
+        logger.debug("Tiempo restante: {} segundos...".format(time_left))
 
 
+# Ya no avanza el tiempo...
 def inactiveoff(battle, _):
-    battle.time_remaining = None
+    logger.debug("Se ha detenido el tiempo...")
 
 
+# Ha habido un cambio de Pokémon...
 def switch_or_drag(battle, split_msg):
+    # |switch|POKEMON|DETAILS|HP STATUS or |drag|POKEMON|DETAILS|HP STATUS
+    # |switch|p1a: Incineroar|Incineroar, L50, M|190/202
+    # ¿El cambio es hecho por el oponente?
     if is_opponent(battle, split_msg):
+        # Sí es hecho por el oponente...
         side = battle.opponent
         #logger.debug("Opponent has switched - clearing the last used move")
+        logger.debug("El oponente ha cambiado de Pokémon...")
     else:
         side = battle.user
         side.side_conditions[constants.TOXIC_COUNT] = 0
+        logger.debug("El usuario ha cambiado de Pokémon...")
 
+    # Si el Pokémon cambiado tenía algún valor original...
     if side.active is not None:
         # set the pkmn's types back to their original value if the types were changed
         if constants.TYPECHANGE in side.active.volatile_statuses:
@@ -142,434 +152,415 @@ def switch_or_drag(battle, split_msg):
         side.active = Pokemon.from_switch_string(split_msg[3])
 
 
+# Aumento o disminución de HP...
 def heal_or_damage(battle, split_msg):
+    # split_msg = ["","-damage","p1a: Bibarel","168/282","[from] item: Life Orb"]
+    # split_msg = ["","-damage","p2a: Scizor","49/100"]
+    # split_msg = ["","-heal","p1a: Aerodactyl","221/265"]
+    # split_msg = ["","-damage","p2a: Indeedee","0 fnt"]
     if is_opponent(battle, split_msg):
-        side = battle.opponent
-        other_side = battle.user
-        pkmn = battle.opponent.active
-
-        # opponent hp is given as a percentage
-        if constants.FNT in split_msg[3]:
-            pkmn.hp = 0
+        if split_msg[2].startswith("p2"):
+            aux = "p2b"
         else:
-            new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
-            pkmn.hp = pkmn.max_hp * new_hp_percentage
-
+            aux = "p2a"
+        if split_msg[2].startswith(aux):
+            # Se establece el aumento o disminución...
+            if constants.FNT in split_msg[3]:
+                # Si el Pokémon se ha debilitado debido a un movimiento
+                battle.opponent.activo1.hp = 0
+            else:
+                # Si el Pokémon aún tiene HP, se obtiene el nuevo %
+                new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
+                # Se establece el nuevo %
+                battle.opponent.activo1.hp = battle.opponent.activo1.max_hp * new_hp_percentage
+        else:
+            # Se establece el aumento o disminución...
+            if constants.FNT in split_msg[3]:
+                # Si el Pokémon se ha debilitado debido a un movimiento
+                battle.oponent.activo2.hp = 0
+            else:
+                # Si el Pokémon aún tiene HP, se obtiene el nuevo %
+                new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
+                # Se establece el nuevo %
+                battle.oponent.activo2.hp = battle.oponent.activo2.max_hp * new_hp_percentage
     else:
-        side = battle.user
-        other_side = battle.opponent
-        pkmn = battle.user.active
-        if constants.FNT in split_msg[3]:
-            pkmn.hp = 0
+        if split_msg[2].startswith("p1"):
+            aux = "p1a"
         else:
-            pkmn.hp = float(split_msg[3].split('/')[0])
-            pkmn.max_hp = float(split_msg[3].split('/')[1].split()[0])
-
-    # increase the amount of turns toxic has been active
-    if len(split_msg) == 5 and constants.TOXIC in split_msg[3] and '[from] psn' in split_msg[4]:
-        side.side_conditions[constants.TOXIC_COUNT] += 1
-
-    if len(split_msg) == 6 and split_msg[4].startswith('[from] item:') and other_side.name in split_msg[5]:
-        item = normalize_name(split_msg[4].split('item:')[-1])
-        #logger.debug("Setting {}'s item to: {}".format(other_side.active.name, item))
-        other_side.active.item = item
-
-    # set the ability for the other side (the side not taking damage, '-damage' only)
-    if len(split_msg) == 6 and split_msg[4].startswith('[from] ability:') and other_side.name in split_msg[5] and split_msg[1] == '-damage':
-        ability = normalize_name(split_msg[4].split('ability:')[-1])
-        #logger.debug("Setting {}'s ability to: {}".format(other_side.active.name, ability))
-        other_side.active.ability = ability
-
-    # set the ability of the side (the side being healed, '-heal' only)
-    if len(split_msg) == 6 and constants.ABILITY in split_msg[4] and other_side.name in split_msg[5] and split_msg[1] == '-heal':
-        ability = normalize_name(split_msg[4].split(constants.ABILITY)[-1].strip(": "))
-        #logger.debug("Setting {}'s ability to: {}".format(pkmn.name, ability))
-        pkmn.ability = ability
-
-    # give that pokemon an item if this string specifies one
-    if len(split_msg) == 5 and constants.ITEM in split_msg[4] and pkmn.item is not None:
-        item = normalize_name(split_msg[4].split(constants.ITEM)[-1].strip(": "))
-        #logger.debug("Setting {}'s item to: {}".format(pkmn.name, item))
-        pkmn.item = item
+            aux = "p1b"
+        if split_msg[2].startswith(aux):
+            # Se establece el aumento o disminución...
+            if constants.FNT in split_msg[3]:
+                battle.user.activo1.hp = 0
+            else:
+                battle.user.activo1.hp = float(split_msg[3].split('/')[0])
+                battle.user.activo1.max_hp = float(split_msg[3].split('/')[1].split()[0])
+        else:
+            # Se establece el aumento o disminución...
+            if constants.FNT in split_msg[3]:
+                battle.user.activo2.hp = 0
+            else:
+                battle.user.activo2.hp = float(split_msg[3].split('/')[0])
+                battle.user.activo2.max_hp = float(split_msg[3].split('/')[1].split()[0])
 
 
+# Pokémon debilitado...
 def faint(battle, split_msg):
+    # split_msg = ["","faint","p1b: Tornadus"]
     if is_opponent(battle, split_msg):
-        side = battle.opponent
-    else:
-        side = battle.user
-
-    side.active.hp = 0
-
-
-def move(battle, split_msg):
-    if '[from]' in split_msg[-1] and split_msg[-1] != "[from]lockedmove":
-        return
-
-    move_name = normalize_name(split_msg[3].strip().lower())
-
-    if is_opponent(battle, split_msg):
-        side = battle.opponent
-        pkmn = battle.opponent.active
-    else:
-        side = battle.user
-        pkmn = battle.user.active
-
-    # remove volatile status if they have it
-    # this is for preparation moves like Phantom Force
-    if move_name in pkmn.volatile_statuses:
-        logger.debug("Removing volatile status {} from {}".format(move_name, pkmn.name))
-        pkmn.volatile_statuses.remove(move_name)
-
-    # add the move to it's moves if it hasn't been seen
-    # decrement the PP by one
-    # if the move is unknown, do nothing
-    move_object = pkmn.get_move(move_name)
-    if move_object is None:
-        new_move = pkmn.add_move(move_name)
-        if new_move is not None:
-            new_move.current_pp -= 1
-    else:
-        move_object.current_pp -= 1
-        #logger.debug("{} already has the move {}. Decrementing the PP by 1".format(pkmn.name, move_name))
-
-    # if this pokemon used two different moves without switching,
-    # set a flag to signify that it cannot have a choice item
-    if (
-            is_opponent(battle, split_msg) and
-            side.last_used_move.pokemon_name == side.active.name and
-            side.last_used_move.move != move_name
-    ):
-        #logger.debug("{} used two different moves - it cannot have a choice item".format(pkmn.name))
-        pkmn.can_have_choice_item = False
-        if pkmn.item in constants.CHOICE_ITEMS:
-            #logger.warning("{} has a choice item, but used two different moves - setting it's item to UNKNOWN".format(pkmn.name))
-            pkmn.item = constants.UNKNOWN_ITEM
-
-    # if the opponent uses a boosting status move, they cannot have a choice item
-    # this COULD be set for any status move, but some pkmn uncommonly run things like specs + wisp
-    try:
-        if constants.BOOSTS in all_move_json[move_name] and all_move_json[move_name][constants.CATEGORY] == constants.STATUS:
-            #logger.debug("{} used a boosting status-move. Setting can_have_choice_item to False".format(pkmn.name))
-            pkmn.can_have_choice_item = False
-    except KeyError:
-        pass
-
-    try:
-        if all_move_json[move_name][constants.CATEGORY] == constants.STATUS:
-            #logger.debug("{} used a status-move. Setting can_have_assultvest to False".format(pkmn.name))
-            pkmn.can_have_assaultvest = False
-    except KeyError:
-        pass
-
-    try:
-        category = all_move_json[move_name][constants.CATEGORY]
-        #logger.debug("Setting {}'s last used move: {}".format(pkmn.name, move_name))
-        side.last_used_move = LastUsedMove(
-            pokemon_name=pkmn.name,
-            move=move_name,
-            turn=battle.turn
-        )
-    except KeyError:
-        category = None
-        side.last_used_move = LastUsedMove(
-            pokemon_name=pkmn.name,
-            move=constants.DO_NOTHING_MOVE,
-            turn=battle.turn
-        )
-
-    # if this pokemon used a damaging move, eliminate the possibility of it having a lifeorb
-    # the lifeorb will reveal itself if it has it
-    if category in constants.DAMAGING_CATEGORIES and not any([normalize_name(a) in ['sheerforce', 'magicguard'] for a in pokedex[pkmn.name][constants.ABILITIES].values()]):
-        #logger.debug("{} used a damaging move - not guessing lifeorb anymore".format(pkmn.name))
-        pkmn.can_have_life_orb = False
-
-    # there is nothing special in the protocol for "wish" - it must be extracted here
-    if move_name == constants.WISH and 'still' not in split_msg[4]:
-        logger.debug("{} used wish - expecting {} health of recovery next turn".format(side.active.name, side.active.max_hp/2))
-        side.wish = (2, side.active.max_hp/2)
-
-
-def boost(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        pkmn = battle.opponent.active
-    else:
-        pkmn = battle.user.active
-
-    stat = constants.STAT_ABBREVIATION_LOOKUPS[split_msg[3].strip()]
-    amount = int(split_msg[4].strip())
-
-    pkmn.boosts[stat] = min(pkmn.boosts[stat] + amount, constants.MAX_BOOSTS)
-
-
-def unboost(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        pkmn = battle.opponent.active
-    else:
-        pkmn = battle.user.active
-
-    stat = constants.STAT_ABBREVIATION_LOOKUPS[split_msg[3].strip()]
-    amount = int(split_msg[4].strip())
-
-    pkmn.boosts[stat] = max(pkmn.boosts[stat] - amount, -1*constants.MAX_BOOSTS)
-
-
-def status(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        pkmn = battle.opponent.active
-    else:
-        pkmn = battle.user.active
-
-    if len(split_msg) > 4 and 'item: ' in split_msg[4]:
-        pkmn.item = normalize_name(split_msg[4].split('item:')[-1])
-
-    status_name = split_msg[3].strip()
-    logger.debug("{} ha obtenido el estado: {}".format(pkmn.name, status_name))
-    pkmn.status = status_name
-
-
-def activate(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        pkmn = battle.opponent.active
-    else:
-        pkmn = battle.user.active
-
-    if split_msg[3].lower() == 'move: poltergeist':
-        item = normalize_name(split_msg[4])
-        logger.debug("{} tiene el item {}".format(pkmn.name, item))
-        pkmn.item = item
-
-
-def prepare(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        pkmn = battle.opponent.active
-    else:
-        pkmn = battle.user.active
-
-    being_prepared = normalize_name(split_msg[3])
-    if being_prepared in pkmn.volatile_statuses:
-        logger.warning("{} already has the volatile status {}".format(pkmn.name, being_prepared))
-    else:
-        pkmn.volatile_statuses.append(being_prepared)
-
-
-def start_volatile_status(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        pkmn = battle.opponent.active
-        side = battle.opponent
-    else:
-        pkmn = battle.user.active
-        side = battle.user
-
-    volatile_status = normalize_name(split_msg[3].split(":")[-1])
-
-    # for some reason futuresight is sent with the `-start` message
-    # `-start` is typically reserved for volatile statuses
-    if volatile_status == "futuresight":
-        side.future_sight = (3, pkmn.name)
-        return
-
-    if volatile_status not in pkmn.volatile_statuses:
-        logger.debug("Starting the volatile status {} on {}".format(volatile_status, pkmn.name))
-        pkmn.volatile_statuses.append(volatile_status)
-
-    if volatile_status == constants.DYNAMAX:
-        pkmn.hp *= 2
-        pkmn.max_hp *= 2
-        logger.debug("{} started dynamax - doubling their HP to {}/{}".format(pkmn.name, pkmn.hp, pkmn.max_hp))
-
-    if constants.ABILITY in split_msg[3]:
-        pkmn.ability = volatile_status
-
-    if len(split_msg) == 6 and constants.ABILITY in normalize_name(split_msg[5]):
-        pkmn.ability = normalize_name(split_msg[5].split('ability:')[-1])
-
-    if volatile_status == constants.TYPECHANGE:
-        if split_msg[4] == "[from] move: Reflect Type":
-            pkmn_name = normalize_name(split_msg[5].split(":")[-1])
-            new_types = deepcopy(pokedex[pkmn_name][constants.TYPES])
+        if split_msg[2].startswith("p2"):
+            aux = "p2b"
         else:
-            new_types = [normalize_name(t) for t in split_msg[4].split("/")]
-
-        #logger.debug("Setting {}'s types to {}".format(pkmn.name, new_types))
-        pkmn.types = new_types
-
-
-def end_volatile_status(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        pkmn = battle.opponent.active
+            aux = "p2a"
+        if split_msg[2].startswith(aux):
+            # Pokémon debilitado debe tener HP = 0
+            battle.opponent.activo1.hp = 0
+        else:
+            # Pokémon debilitado debe tener HP = 0
+            battle.oponent.activo2.hp = 0
     else:
-        pkmn = battle.user.active
+        if split_msg[2].startswith("p1"):
+            aux = "p1a"
+        else:
+            aux = "p1b"
+        if split_msg[2].startswith(aux):
+            # Pokémon debilitado debe tener HP = 0
+            battle.user.activo1.hp = 0
+        else:
+            # Pokémon debilitado debe tener HP = 0
+            battle.user.activo2.hp = 0
 
+# Se realiza un movimiento...
+def move(battle, split_msg):
+    # split_msg = ["","move","p2a: Scizor","Bug Bite","p1a: Vileplume"]
+    # split_msg = ["","move","p1b: Zacian","Behemoth Blade","p2b: Zekrom"]
+    # No importa para el agente los movimientos registrados
+
+
+# Aumento de estadísticas
+def boost(battle, split_msg):
+    # split_msg = ["","-boost","p2b: Celesteela","spe","1"]
+    # Se obtiene el nombre de la estadística que ha incrementado... stat = "SPEED"
+    stat = constants.STAT_ABBREVIATION_LOOKUPS[split_msg[3].strip()]
+    # Se obtiene la cantidad en que ha aumentado... amount = 1
+    amount = int(split_msg[4].strip())
+    # Se define en qué Pokémon se realiza el incremento en la estadística...
+    if is_opponent(battle, split_msg):
+        # p2 (solo para este ejemplo)
+        if split_msg[2].startswith("p2"):
+            aux = "p2b"
+        else:
+            aux = "p2a"
+        if split_msg[2].startswith(aux):
+            # p2a (solo para este ejemplo)
+            # Como la cantidad no puede superar los 6... hay un límite y se actualiza la cifra verdadera...
+            battle.opponent.activo1.boosts[stat] = min(battle.opponent.activo1[stat] + amount, constants.MAX_BOOSTS)
+        else:
+            # p2b (solo para este ejemplo)
+            # Como la cantidad no puede superar los 6... hay un límite y se actualiza la cifra verdadera...
+            battle.oponent.activo2.boosts[stat] = min(battle.opponent.activo2[stat] + amount, constants.MAX_BOOSTS)
+    else:
+        if split_msg[2].startswith("p1"):
+            aux = "p1a"
+        else:
+            aux = "p1b"
+        # p1 (solo para este ejemplo)
+        if split_msg[2].startswith(aux):
+            # p1a (solo para este ejemplo)
+            # Como la cantidad no puede superar los 6... hay un límite y se actualiza la cifra verdadera...
+            battle.user.activo1.boosts[stat] = min(battle.user.activo1[stat] + amount, constants.MAX_BOOSTS)
+        else:
+            # p1b (solo para este ejemplo)
+            # Como la cantidad no puede superar los 6... hay un límite y se actualiza la cifra verdadera...
+            pkmn = battle.user.activo2.boosts[stat] = min(battle.user.activo2[stat] + amount, constants.MAX_BOOSTS)
+
+
+# Disminución de estadísticas
+def unboost(battle, split_msg):
+    # split_msg = ["","-unboost","p2a: Whimsicott","spe","1"]
+    # Se obtiene el nombre de la estadística que ha disminuido... stat = "SPEED"
+    stat = constants.STAT_ABBREVIATION_LOOKUPS[split_msg[3].strip()]
+    # Se obtiene la cantidad en que ha aumentado... amount = 1
+    amount = int(split_msg[4].strip())
+    # Se define en qué Pokémon se realiza el decremento en la estadística...
+    if is_opponent(battle, split_msg):
+        # p2 (solo para este ejemplo)
+        if split_msg[2].startswith("p2"):
+            aux = "p2b"
+        else:
+            aux = "p2a"
+        if split_msg[2].startswith(aux):
+            # p2a (solo para este ejemplo)
+            # Como la cantidad no puede superar los -6... hay un límite y se actualiza la cifra verdadera...
+            battle.opponent.activo1.boosts[stat] = max(battle.opponent.activo1[stat] - amount, -1*constants.MAX_BOOSTS)
+        else:
+            # p2b (solo para este ejemplo)
+            # Como la cantidad no puede superar los -6... hay un límite y se actualiza la cifra verdadera...
+            battle.oponent.activo2.boosts[stat] = max(battle.opponent.activo2[stat] - amount, -1*constants.MAX_BOOSTS)
+    else:
+        if split_msg[2].startswith("p1"):
+            aux = "p1a"
+        else:
+            aux = "p1b"
+        # p1 (solo para este ejemplo)
+        if split_msg[2].startswith(aux):
+            # p1a (solo para este ejemplo)
+            # Como la cantidad no puede superar los -6... hay un límite y se actualiza la cifra verdadera...
+            battle.user.activo1.boosts[stat] = max(battle.user.activo1[stat] - amount, -1*constants.MAX_BOOSTS)
+        else:
+            # p1b (solo para este ejemplo)
+            # Como la cantidad no puede superar los -6... hay un límite y se actualiza la cifra verdadera...
+            pkmn = battle.user.activo2.boosts[stat] = max(battle.user.activo2[stat] - amount, -1*constants.MAX_BOOSTS)
+
+
+# Un Pokémon ha cambiado de status
+def status(battle, split_msg):
+    # split_msg = ["","-status","p2a: Slowbro","brn"]
+    status_name = split_msg[3].strip()
+    # status_name = "brn"
+    if is_opponent(battle, split_msg):
+        if split_msg[2].startswith("p2"):
+            aux = "p2b"
+        else:
+            aux = "p2a"
+        if split_msg[2].startswith(aux):
+            battle.opponent.activo1.status = status_name
+            logger.debug("{} ha obtenido el estado: {}".format(battle.opponent.activo1.name, status_name))
+        else:
+            battle.oponent.activo2.status = status_name
+            logger.debug("{} ha obtenido el estado: {}".format(battle.oponent.activo2.name, status_name))
+    else:
+        if split_msg[2].startswith("p1"):
+            aux = "p1a"
+        else:
+            aux = "p1b"
+        if split_msg[2].startswith(aux):
+            battle.user.activo1.status = status_name
+            logger.debug("{} ha obtenido el estado: {}".format(battle.user.activo1.name, status_name))
+        else:
+            battle.user.activo2.status = status_name
+            logger.debug("{} ha obtenido el estado: {}".format(battle.user.activo2.name, status_name))
+
+
+# Se activa una habilidad...
+def activate(battle, split_msg):
+    # split_msg = ["","-activate","p2b: Indeedee","move: Psychic Terrain"]
+
+
+# Se prepara para un movimiento...
+def prepare(battle, split_msg):
+    # ...
+
+
+# Estado volátil... Solo considero Dynamax...
+def start_volatile_status(battle, split_msg):
+    # split_msg = ["","-start","p2a: Kyogre","Dynamax"]
+    # split_msg = ["","-start","p2a: Incineroar","move: Yawn","[of] p1a: Gastrodon"]
+    # split_msg = ["","-start","p1a: Charizard","Dynamax","Gmax"]
     volatile_status = normalize_name(split_msg[3].split(":")[-1])
-    if volatile_status not in pkmn.volatile_statuses:
-        logger.warning("Pokemon '{}' does not have the volatile status '{}'".format(pkmn.to_dict(), volatile_status))
+    if is_opponent(battle, split_msg):
+        if split_msg[2].startswith("p2"):
+            aux = "p2b"
+        else:
+            aux = "p2a"
+        if split_msg[2].startswith(aux):
+            if volatile_status == constants.DYNAMAX:
+                battle.opponent.activo1.hp *= 2
+                battle.opponent.activo1.max_hp *= 2
+                logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.opponent.activo1.name, battle.opponent.activo1.hp, battle.opponent.activo1.max_hp))
+        else:
+            if volatile_status == constants.DYNAMAX:battle.opponent.activo1
+                battle.opponent.activo2.hp *= 2
+                battle.opponent.activo2.max_hp *= 2
+                logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.opponent.activo2.name, battle.opponent.activo2.hp, battle.opponent.activo2.max_hp))
     else:
-        logger.debug("Removing the volatile status {} from {}".format(volatile_status, pkmn.name))
-        pkmn.volatile_statuses.remove(volatile_status)
-        if volatile_status == constants.DYNAMAX:
-            pkmn.hp /= 2
-            pkmn.max_hp /= 2
-            logger.debug("{} ended dynamax - halving their HP to {}/{}".format(pkmn.name, pkmn.hp, pkmn.max_hp))
+        if split_msg[2].startswith("p1"):
+            aux = "p1a"
+        else:
+            aux = "p1b"
+        if split_msg[2].startswith(aux):
+            if volatile_status == constants.DYNAMAX:
+                battle.user.activo1.hp *= 2
+                battle.user.activo1.max_hp *= 2
+                logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.user.activo1.name, battle.user.activo1.hp, battle.user.activo1.max_hp))
+        else:
+            if volatile_status == constants.DYNAMAX:
+                battle.user.activo2.hp *= 2
+                battle.user.activo2.max_hp *= 2
+                logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.user.activo2.name, battle.user.activo2.hp, battle.user.activo2.max_hp))
 
 
+
+# Fin estado volátil...
+def end_volatile_status(battle, split_msg):
+    # split_msg = ["","-end","p2a: Kyogre","Dynamax"]
+    volatile_status = normalize_name(split_msg[3].split(":")[-1])
+    if is_opponent(battle, split_msg):
+        if split_msg[2].startswith("p2"):
+            aux = "p2b"
+        else:
+            aux = "p2a"
+        if split_msg[2].startswith(aux):
+            if volatile_status == constants.DYNAMAX:
+                battle.opponent.activo1.hp /= 2
+                battle.opponent.activo1.max_hp /= 2
+                logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.opponent.activo1.name, battle.opponent.activo1.hp, battle.opponent.activo1.max_hp))
+        else:
+            if volatile_status == constants.DYNAMAX:battle.opponent.activo1
+                battle.opponent.activo2.hp /= 2
+                battle.opponent.activo2.max_hp /= 2
+                logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.opponent.activo2.name, battle.opponent.activo2.hp, battle.opponent.activo2.max_hp))
+    else:
+        if split_msg[2].startswith("p1"):
+            aux = "p1a"
+        else:
+            aux = "p1b"
+        if split_msg[2].startswith(aux):
+            if volatile_status == constants.DYNAMAX:
+                battle.user.activo1.hp /= 2
+                battle.user.activo1.max_hp /= 2
+                logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.user.activo1.name, battle.user.activo1.hp, battle.user.activo1.max_hp))
+        else:
+            if volatile_status == constants.DYNAMAX:
+                battle.user.activo2.hp /= 2
+                battle.user.activo2.max_hp /= 2
+                logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.user.activo2.name, battle.user.activo2.hp, battle.user.activo2.max_hp))
+
+
+# Un estado se cura...
 def curestatus(battle, split_msg):
+    # split_msg = ["","-curestatus","p2a: Kyogre","slp","[msg]"]
     if is_opponent(battle, split_msg):
-        side = battle.opponent
+        if split_msg[2].startswith("p2"):
+            aux = "p2b"
+        else:
+            aux = "p2a"
+        if split_msg[2].startswith(aux):
+            if volatile_status == constants.DYNAMAX:
+                battle.opponent.activo1.status = None
+                logger.debug("{} se ha curado...".format(battle.opponent.activo1.name))
+        else:
+            if volatile_status == constants.DYNAMAX:battle.opponent.activo1
+                battle.opponent.activo2.status = None
+                logger.debug("{} se ha curado...".format(battle.opponent.activo2.name))
     else:
-        side = battle.user
-
-    pkmn_name = split_msg[2].split(':')[-1].strip()
-
-    if normalize_name(pkmn_name) == side.active.name:
-        pkmn = side.active
-    else:
-        try:
-            pkmn = next(filter(lambda x: x.name == normalize_name(pkmn_name), side.reserve))
-        except StopIteration:
-            logger.warning(
-                "The pokemon {} does not exist in the party, defaulting to the active pokemon".format(normalize_name(pkmn_name))
-            )
-            pkmn = side.active
-
-    pkmn.status = None
+        if split_msg[2].startswith("p1"):
+            aux = "p1a"
+        else:
+            aux = "p1b"
+        if split_msg[2].startswith(aux):
+            if volatile_status == constants.DYNAMAX:
+                battle.user.activo1.status = None
+                logger.debug("{} se ha curado...".format(battle.user.activo1.name))
+        else:
+            if volatile_status == constants.DYNAMAX:
+                battle.user.activo2.status = None
+                logger.debug("{} se ha curado...".format(battle.user.activo2.name))
 
 
+# The Pokémon POKEMON has used a move that cures its team of status effects, like Heal Bell.
 def cureteam(battle, split_msg):
-    """Cure every pokemon on the opponent's team of it's status"""
-    if is_opponent(battle, split_msg):
-        side = battle.opponent
-    else:
-        side = battle.user
-
-    side.active.status = None
-    for pkmn in filter(lambda p: isinstance(p, Pokemon), side.reserve):
-        pkmn.status = None
+    # No se usa...
 
 
+# Se establece un Clima... no me importa quién lo realiza
+# split_msg = "|-weather|Sandstorm"
+# split_msg = "|-weather|none"
 def weather(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        side = battle.opponent
-    else:
-        side = battle.user
-
+    # weather_name = "Sandstorm" || weather_name = "none"
     weather_name = normalize_name(split_msg[2].split(':')[-1].strip())
-    logger.debug("El clima {} ha empezado".format(weather_name))
+    # Mensaje en el CMD
+    logger.debug("El clima {} ha empezado...".format(weather_name))
+    # Se establece en class Battle:
     battle.weather = weather_name
 
-    if len(split_msg) >= 5 and side.name in split_msg[4]:
-        ability = normalize_name(split_msg[3].split(':')[-1].strip())
-        #logger.debug("Setting {} ability to {}".format(side.active.name, ability))
-        side.active.ability = ability
 
-
+# Inicia un Field...
 def fieldstart(battle, split_msg):
-    """Set the battle's field condition"""
+    # split_msg = ["","-fieldstart","move: Grassy Terrain","[from] ability: Grassy Surge","[of] p2a: Rillaboom"]
+    # split_msg = ["","-fieldstart","move: Electric Terrain"]
     field_name = normalize_name(split_msg[2].split(':')[-1].strip())
-
-    # trick room shows up as a `-fieldstart` item but is separate from the other fields
+    # ¿Qué Field es...?
     if field_name == constants.TRICK_ROOM:
-        #logger.debug("Setting trickroom")
+        # Trick Room
+        logger.debug("Ha iniciado Trick Room...")
         battle.trick_room = True
     else:
-        #logger.debug("Setting the field to {}".format(field_name))
+        # Otro Field
+        logger.debug("Ha iniciado el campo {}...".format(field_name))
         battle.field = field_name
 
 
+# Termina un Field
 def fieldend(battle, split_msg):
-    """Remove the battle's field condition"""
     field_name = normalize_name(split_msg[2].split(':')[-1].strip())
-
-    # trick room shows up as a `-fieldend` item but is separate from the other fields
+    # ¿Qué Field es...?
     if field_name == constants.TRICK_ROOM:
-        #logger.debug("Removing trick room")
+        # Trick Room
+        logger.debug("Ha terminado Trick Room...")
         battle.trick_room = False
     else:
-        #logger.debug("Setting the field to None")
+        # Otro Field
+        logger.debug("Ha terminado el campo {}...".format(field_name))
         battle.field = None
 
 
+# Side conditions are all effects that affect one side of the field. (For example: Tailwind, Stealth Rock, Reflect)
 def sidestart(battle, split_msg):
-    """Set a side effect such as stealth rock or sticky web"""
+    # split_msg = ["","-sidestart","p1: PopplioPeru98","move: Tailwind"]
     condition = split_msg[3].split(':')[-1].strip()
     condition = normalize_name(condition)
-
+    # condition = "Tailwind"
     if is_opponent(battle, split_msg):
-        logger.debug("Side condition {} starting for opponent".format(condition))
+        logger.debug("Efecto {} ha sido iniciado por el oponente...".format(condition))
         battle.opponent.side_conditions[condition] += 1
     else:
-        logger.debug("Side condition {} starting for bot".format(condition))
+        logger.debug("Efecto {} ha sido iniciado por el usuario...".format(condition))
         battle.user.side_conditions[condition] += 1
 
 
+# Indicates that the side condition CONDITION ended for the given SIDE.
 def sideend(battle, split_msg):
-    """Remove a side effect such as stealth rock or sticky web"""
+    # |-sideend|p2: PopplioPeru98|move: Tailwind
     condition = split_msg[3].split(':')[-1].strip()
     condition = normalize_name(condition)
-
+    # condition = "Tailwind"
     if is_opponent(battle, split_msg):
-        logger.debug("Side condition {} ending for opponent".format(condition))
+        logger.debug("Efecto {} del oponente ha terminado...".format(condition))
         battle.opponent.side_conditions[condition] = 0
     else:
-        logger.debug("Side condition {} ending for bot".format(condition))
+        logger.debug("Efecto {} del usuario ha terminado...".format(condition))
         battle.user.side_conditions[condition] = 0
 
 
+# Intercambia efectos
 def swapsideconditions(battle, _):
-    user_sc = battle.user.side_conditions
-    opponent_sc = battle.opponent.side_conditions
-    for side_condition in constants.COURT_CHANGE_SWAPS:
-        user_sc[side_condition], opponent_sc[side_condition] = opponent_sc[side_condition], user_sc[side_condition]
+    # No se usa...
 
 
+# Establece Objeto
 def set_item(battle, split_msg):
-    """Set the opponent's item"""
-    if is_opponent(battle, split_msg):
-        side = battle.opponent
-    else:
-        side = battle.user
-
-    item = normalize_name(split_msg[3].strip())
-    #logger.debug("Setting {}'s item to {}".format(side.active.name, item))
-    side.active.item = item
+    # No se considera...
 
 
+# Remueve Objeto...
 def remove_item(battle, split_msg):
-    """Remove the opponent's item"""
-    if is_opponent(battle, split_msg):
-        side = battle.opponent
-    else:
-        side = battle.user
-
-    logger.debug("Removing {}'s item".format(side.active.name))
-    side.active.item = None
+    # No se considera...
 
 
+# Establece habilidad
 def set_ability(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        side = battle.opponent
-    else:
-        side = battle.user
-
-    for msg in split_msg:
-        if constants.ABILITY in normalize_name(msg):
-            ability = normalize_name(msg.split(':')[-1])
-            #logger.debug("Setting {}'s ability to {}".format(side.active.name, ability))
-            side.active.ability = ability
+    # No se considera...
 
 
+# Establece habilidad
 def set_opponent_ability_from_ability_tag(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        side = battle.opponent
-    else:
-        side = battle.user
-
-    ability = normalize_name(split_msg[3])
-    #logger.debug("Setting {}'s ability to {}".format(side.active.name, ability))
-    side.active.ability = ability
+    # No se considera...
 
 
+#
 def form_change(battle, split_msg):
+    # split_msg = ["","detailschange","p2a: Metagross","Metagross-Mega, L76"]
     if is_opponent(battle, split_msg):
         side = battle.opponent
     else:
@@ -597,91 +588,56 @@ def form_change(battle, split_msg):
         side.active.base_name = base_name
 
 
+# Ataque Z
 def zpower(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        side = battle.opponent
-    else:
-        side = battle.user
-
-    logger.debug("{} Used a Z-Move, setting item to None".format(side.active.name))
-    side.active.item = None
+    # No VGC 2022
 
 
+# Reestablece estadísticas negativas
 def clearnegativeboost(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        pkmn = battle.opponent.active
-    else:
-        pkmn = battle.user.active
-
-    for stat, value in pkmn.boosts.items():
-        if value < 0:
-            #logger.debug("Setting {}'s {} stat to 0".format(pkmn.name, stat))
-            pkmn.boosts[stat] = 0
+    # No VGC 2022
 
 
+# Reestablece todas las estadísticas
 def clearallboost(battle, _):
-    pkmn = battle.user.active
-    for stat, value in pkmn.boosts.items():
+    # Usuario
+    for stat, value in battle.user.active1.boosts.items():
         if value != 0:
-            #logger.debug("Setting {}'s {} stat to 0".format(pkmn.name, stat))
-            pkmn.boosts[stat] = 0
-
-    pkmn = battle.opponent.active
-    for stat, value in pkmn.boosts.items():
+            logger.debug("Configurando estadísticas de {} de {} a 0".format(battle.user.active1.name, stat))
+            battle.user.active1.boosts[stat] = 0
+    # Usuario
+    for stat, value in battle.user.active2.boosts.items():
         if value != 0:
-            #logger.debug("Setting {}'s {} stat to 0".format(pkmn.name, stat))
-            pkmn.boosts[stat] = 0
+            logger.debug("Configurando estadísticas de {} de {} a 0".format(battle.user.active2.name, stat))
+            battle.user.active2.boosts[stat] = 0
+    # Oponente
+    for stat, value in battle.opponent.active1.boosts.items():
+        if value != 0:
+            logger.debug("Configurando estadísticas de {} de {} a 0".format(battle.opponent.active1.name, stat))
+            battle.opponent.active1.boosts[stat] = 0
+    # Oponente
+    for stat, value in battle.opponent.active2.boosts.items():
+        if value != 0:
+            logger.debug("Configurando estadísticas de {} de {} a 0".format(battle.opponent.active2.name, stat))
+            battle.opponent.active2.boosts[stat] = 0
 
 
+# The Pokémon POKEMON used move MOVE which causes a temporary effect lasting the duration of the turn. (For example: Protect, Focus Punch, Roost).
 def singleturn(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        side = battle.opponent
-    else:
-        side = battle.user
-
-    move_name = normalize_name(split_msg[3].split(':')[-1])
-    if move_name in constants.PROTECT_VOLATILE_STATUSES:
-        # set to 2 because the `upkeep` function will decrement by 1 on every end-of-turn
-        side.side_conditions[constants.PROTECT] = 2
-        logger.debug("{} ha usado Protección".format(side.active.name))
+    # No se considera movimientos
 
 
+# Signals the upkeep phase of the turn where the number of turns left for field conditions are updated.
 def upkeep(battle, _):
-    if battle.user.side_conditions[constants.PROTECT] > 0:
-        battle.user.side_conditions[constants.PROTECT] -= 1
-        #logger.debug("Setting protect to {} for the bot".format(battle.user.side_conditions[constants.PROTECT]))
-
-    if battle.opponent.side_conditions[constants.PROTECT] > 0:
-        battle.opponent.side_conditions[constants.PROTECT] -= 1
-        #logger.debug("Setting protect to {} for the opponent".format(battle.opponent.side_conditions[constants.PROTECT]))
-
-    if battle.user.wish[0] > 0:
-        battle.user.wish = (battle.user.wish[0] - 1, battle.user.wish[1])
-        logger.debug("Decrementing wish to {} for the bot".format(battle.user.wish[0]))
-
-    if battle.opponent.wish[0] > 0:
-        battle.opponent.wish = (battle.opponent.wish[0] - 1, battle.opponent.wish[1])
-        logger.debug("Decrementing wish to {} for the opponent".format(battle.opponent.wish[0]))
-
-    if battle.user.future_sight[0] > 0:
-        battle.user.future_sight = (battle.user.future_sight[0] - 1, battle.user.future_sight[1])
-        logger.debug("Decrementing future_sight to {} for the bot".format(battle.user.future_sight[0]))
-
-    if battle.opponent.future_sight[0] > 0:
-        battle.opponent.future_sight = (battle.opponent.future_sight[0] - 1, battle.opponent.future_sight[1])
-        logger.debug("Decrementing future_sight to {} for the opponent".format(battle.opponent.future_sight[0]))
+    # No se considera
 
 
+# Mega-evolución
 def mega(battle, split_msg):
-    if is_opponent(battle, split_msg):
-        side = battle.opponent
-    else:
-        side = battle.user
-
-    side.active.is_mega = True
-    logger.debug("Mega-Pokemon: {}".format(side.active.name))
+    # No VGC 2022
 
 
+# Ditto
 def transform(battle, split_msg):
     if is_opponent(battle, split_msg):
         transformed_into_name = battle.user.active.name
@@ -706,143 +662,20 @@ def transform(battle, split_msg):
             battle.opponent.active.volatile_statuses.append(constants.TRANSFORM)
 
 
+# Actualiza el turno
 def turn(battle, split_msg):
+    # split_msg = ["","turn","1"]
     battle.turn = int(split_msg[2])
 
 
+# 
 def noinit(battle, split_msg):
     if split_msg[2] == "rename":
         battle.battle_tag = split_msg[3]
         logger.debug("Renamed battle to {}".format(battle.battle_tag))
 
 
-def check_speed_ranges(battle, msg_lines):
-    """
-    Intention:
-        This function is intended to set the min or max possible speed that the opponent's
-        active Pokemon could possibly have given a turn that just happened.
-
-        For example: if both the bot and the opponent use an equal priority move but the
-        opponent moves first, then the opponent's min_speed attribute will be set to the
-        bots actual speed. This is because the opponent must have at least that much speed
-        for it to have gone first.
-
-        These min/max speeds are set without knowledge of items. If the opponent goes first
-        when having a choice scarf then min speed will still be set to the bots speed. When
-        it comes time to guess a Pokemon's possible set(s), the item must be taken into account
-        as well when determining the final speed of a Pokemon. Abilities are NOT taken into
-        consideration because their speed modifications are subject to certain conditions
-        being present, whereas a choice scarf ALWAYS boosts speed.
-
-        If there is a situation where an ability could have modified the turn order (either by
-        changing a move's priority or giving a Pokemon more speed) then this check should be
-        skipped. Examples are:
-            - the opponent COULD have a speed-boosting weather ability AND that weather is up
-            - the opponent COULD have prankster and it used a status move
-            - Grassy Glide is used when Grassy Terrain is up
-    """
-    def get_move_information(m):
-        try:
-            return m.split('|')[2], all_move_json[normalize_name(m.split('|')[3])]
-        except KeyError:
-            logger.debug("Unknown move {} - using standard 0 priority move".format(normalize_name(m.split('|')[3])))
-            return m.split('|')[2], {constants.ID: "unknown", constants.PRIORITY: 0}
-
-    moves = [get_move_information(m) for m in msg_lines if m.startswith('|move|')]
-    if len(moves) != 2 or moves[0][1][constants.PRIORITY] != moves[1][1][constants.PRIORITY]:
-        return
-
-    bot_went_first = moves[0][0].startswith(battle.user.name)
-
-    if (
-        battle.opponent.active is None or
-        battle.opponent.active.item == "choicescarf" or
-        can_have_speed_modified(battle, battle.opponent.active) or
-        (not bot_went_first and can_have_priority_modified(battle, battle.opponent.active, moves[0][1][constants.ID])) or
-        (bot_went_first and can_have_priority_modified(battle, battle.user.active, moves[0][1][constants.ID]))
-    ):
-        return
-
-    battle_copy = deepcopy(battle)
-    battle_copy.user.from_json(battle_copy.request_json)
-
-    speed_threshold = int(
-        boost_multiplier_lookup[battle_copy.user.active.boosts[constants.SPEED]] *
-        battle_copy.user.active.stats[constants.SPEED] /
-        boost_multiplier_lookup[battle_copy.opponent.active.boosts[constants.SPEED]]
-    )
-
-    if battle.opponent.side_conditions[constants.TAILWIND]:
-        speed_threshold = int(speed_threshold / 2)
-
-    if battle.user.side_conditions[constants.TAILWIND]:
-        speed_threshold = int(speed_threshold * 2)
-
-    if battle.opponent.active.status == constants.PARALYZED:
-        speed_threshold = int(speed_threshold * 2)
-
-    if battle.user.active.status == constants.PARALYZED:
-        speed_threshold = int(speed_threshold / 2)
-
-    if battle.user.active.item == "choicescarf":
-        speed_threshold = int(speed_threshold * 1.5)
-
-    # we want to swap which attribute gets updated in trickroom because the slower pokemon goes first
-    if battle.trick_room:
-        bot_went_first = not bot_went_first
-
-    if bot_went_first:
-        opponent_max_speed = min(battle.opponent.active.speed_range.max, speed_threshold)
-        battle.opponent.active.speed_range = StatRange(
-            min=battle.opponent.active.speed_range.min,
-            max=opponent_max_speed
-        )
-        #logger.info("Updated {}'s max speed to {}".format(battle.opponent.active.name, battle.opponent.active.speed_range.max))
-
-    else:
-        opponent_min_speed = max(battle.opponent.active.speed_range.min, speed_threshold)
-        battle.opponent.active.speed_range = StatRange(
-            min=opponent_min_speed,
-            max=battle.opponent.active.speed_range.max
-        )
-        logger.info(
-            "Updated {}'s min speed to {}".format(battle.opponent.active.name, battle.opponent.active.speed_range.min))
-
-def get_damage_dealt(battle, split_msg, next_messages):
-    move_name = normalize_name(split_msg[3])
-    critical_hit = False
-
-    if is_opponent(battle, split_msg):
-        attacking_side = battle.opponent
-        defending_side = battle.user
-    else:
-        attacking_side = battle.user
-        defending_side = battle.opponent
-
-    for line in next_messages:
-        next_line_split = line.split('|')
-        # if one of these strings appears in index 1 then
-        # exit out since we are done with this pokemon's move
-        if len(next_line_split) < 2 or next_line_split[1] in MOVE_END_STRINGS:
-            break
-
-        elif next_line_split[1] == '-crit':
-            critical_hit = True
-
-        # if '-damage' appears, we want to parse the percentage damage dealt
-        elif next_line_split[1] == '-damage' and defending_side.name in next_line_split[2]:
-            final_health, maxhp, _ = get_pokemon_info_from_condition(next_line_split[3])
-            # maxhp can be 0 if the targetted pokemon fainted
-            # the message would be: "0 fnt"
-            if maxhp == 0:
-                maxhp = defending_side.active.max_hp
-
-            damage_dealt = (defending_side.active.hp / defending_side.active.max_hp)*maxhp - final_health
-            damage_percentage = round(damage_dealt / maxhp, 4)
-
-            logger.debug("{} hizo {}% de daño a {} con el movimiento {}".format(attacking_side.active.name, damage_percentage * 100, defending_side.active.name, move_name))
-            return DamageDealt(attacker=attacking_side.active.name, defender=defending_side.active.name, move=move_name, percent_damage=damage_percentage, crit=critical_hit)
-
+# Actualiza estado
 def update_battle(battle, msg):
     msg_lines = msg.split('\n')
 
@@ -901,16 +734,6 @@ def update_battle(battle, msg):
         function_to_call = battle_modifiers_lookup.get(action)
         if function_to_call is not None:
             function_to_call(battle, split_msg)
-
-        if action == 'move' and is_opponent(battle, split_msg):
-            check_choicescarf(battle, msg_lines)
-            damage_dealt = get_damage_dealt(battle, split_msg, msg_lines[i + 1:])
-            if damage_dealt:
-                check_choice_band_or_specs(battle, damage_dealt)
-
-        elif action == 'switch' and is_opponent(battle, split_msg):
-            check_heavydutyboots(battle, msg_lines[i+1:])
-
         if action == 'turn':
             return True
 
