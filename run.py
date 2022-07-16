@@ -7,7 +7,6 @@ from showdown.run_battle import pokemon_battle
 from showdown.websocket_client import PSWebsocketClient
 from data import all_move_json
 from data import pokedex
-from data.mods.apply_mods import apply_mods
 
 import asyncio
 import json

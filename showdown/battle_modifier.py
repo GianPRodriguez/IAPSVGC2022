@@ -7,9 +7,6 @@ import constants
 from data import all_move_json
 from data import pokedex
 from showdown.battle import Pokemon
-from showdown.battle import LastUsedMove
-from showdown.battle import DamageDealt
-from showdown.battle import StatRange
 from showdown.engine.helpers import normalize_name
 from showdown.engine.helpers import get_pokemon_info_from_condition
 from showdown.engine.helpers import calculate_stats
@@ -228,6 +225,7 @@ def move(battle, split_msg):
     # split_msg = ["","move","p2a: Scizor","Bug Bite","p1a: Vileplume"]
     # split_msg = ["","move","p1b: Zacian","Behemoth Blade","p2b: Zekrom"]
     # No importa para el agente los movimientos registrados
+    ...
 
 
 # Aumento de estadísticas
@@ -338,11 +336,11 @@ def status(battle, split_msg):
 # Se activa una habilidad...
 def activate(battle, split_msg):
     # split_msg = ["","-activate","p2b: Indeedee","move: Psychic Terrain"]
-
+    ...
 
 # Se prepara para un movimiento...
 def prepare(battle, split_msg):
-    # ...
+    ...
 
 
 # Estado volátil... Solo considero Dynamax...
@@ -362,7 +360,7 @@ def start_volatile_status(battle, split_msg):
                 battle.opponent.active1.max_hp *= 2
                 logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.opponent.active1.name, battle.opponent.active1.hp, battle.opponent.active1.max_hp))
         else:
-            if volatile_status == constants.DYNAMAX:battle.opponent.active1
+            if volatile_status == constants.DYNAMAX:
                 battle.opponent.active2.hp *= 2
                 battle.opponent.active2.max_hp *= 2
                 logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.opponent.active2.name, battle.opponent.active2.hp, battle.opponent.active2.max_hp))
@@ -399,7 +397,7 @@ def end_volatile_status(battle, split_msg):
                 battle.opponent.active1.max_hp /= 2
                 logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.opponent.active1.name, battle.opponent.active1.hp, battle.opponent.active1.max_hp))
         else:
-            if volatile_status == constants.DYNAMAX:battle.opponent.active1
+            if volatile_status == constants.DYNAMAX:
                 battle.opponent.active2.hp /= 2
                 battle.opponent.active2.max_hp /= 2
                 logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.opponent.active2.name, battle.opponent.active2.hp, battle.opponent.active2.max_hp))
@@ -433,7 +431,7 @@ def curestatus(battle, split_msg):
                 battle.opponent.active1.status = None
                 logger.debug("{} se ha curado...".format(battle.opponent.active1.name))
         else:
-            if volatile_status == constants.DYNAMAX:battle.opponent.active1
+            if volatile_status == constants.DYNAMAX:
                 battle.opponent.active2.status = None
                 logger.debug("{} se ha curado...".format(battle.opponent.active2.name))
     else:
@@ -454,6 +452,7 @@ def curestatus(battle, split_msg):
 # The Pokémon POKEMON has used a move that cures its team of status effects, like Heal Bell.
 def cureteam(battle, split_msg):
     # No se usa...
+    ...
 
 
 # Se establece un Clima... no me importa quién lo realiza
@@ -529,26 +528,31 @@ def sideend(battle, split_msg):
 # Intercambia efectos
 def swapsideconditions(battle, _):
     # No se usa...
+    ...
 
 
 # Establece Objeto
 def set_item(battle, split_msg):
     # No se considera...
+    ...
 
 
 # Remueve Objeto...
 def remove_item(battle, split_msg):
     # No se considera...
+    ...
 
 
 # Establece habilidad
 def set_ability(battle, split_msg):
     # No se considera...
+    ...
 
 
 # Establece habilidad
 def set_opponent_ability_from_ability_tag(battle, split_msg):
     # No se considera...
+    ...
 
 
 #
@@ -584,11 +588,13 @@ def form_change(battle, split_msg):
 # Ataque Z
 def zpower(battle, split_msg):
     # No VGC 2022
+    ...
 
 
 # Reestablece estadísticas negativas
 def clearnegativeboost(battle, split_msg):
     # No VGC 2022
+    ...
 
 
 # Reestablece todas las estadísticas
@@ -618,16 +624,19 @@ def clearallboost(battle, _):
 # The Pokémon POKEMON used move MOVE which causes a temporary effect lasting the duration of the turn. (For example: Protect, Focus Punch, Roost).
 def singleturn(battle, split_msg):
     # No se considera movimientos
+    ...
 
 
 # Signals the upkeep phase of the turn where the number of turns left for field conditions are updated.
 def upkeep(battle, _):
     # No se considera
+    ...
 
 
 # Mega-evolución
 def mega(battle, split_msg):
     # No VGC 2022
+    ...
 
 
 # Ditto
@@ -673,7 +682,6 @@ def update_battle(battle, msg):
     msg_lines = msg.split('\n')
 
     action = None
-    check_speed_ranges(battle, msg_lines)
     for i, line in enumerate(msg_lines):
         split_msg = line.split('|')
         if len(split_msg) < 2:

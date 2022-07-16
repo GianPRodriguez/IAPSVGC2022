@@ -44,7 +44,6 @@ class PSWebsocketClient:
 
     async def receive_message(self):
         message = await self.websocket.recv()
-        logger.debug("Mensaje recibido del websocket: {}".format(message))
         return message
 
     async def send_message(self, room, message_list):
@@ -133,13 +132,7 @@ class PSWebsocketClient:
         while username is None:
             msg = await self.receive_message()
             split_msg = msg.split('|')
-            print("msg: ", msg)
-            print("split_msg: ",split_msg)
             if (len(split_msg) == 9):
-                print(len(split_msg) == 9)
-                print(split_msg[1] == "pm")
-                print(split_msg[4].startswith("/challenge"))
-                print(split_msg[5] == battle_format)
                 if (len(split_msg) == 9 and split_msg[1] == "pm" and split_msg[4].startswith("/challenge") and split_msg[5] == battle_format):
                     username = split_msg[2].strip()
 

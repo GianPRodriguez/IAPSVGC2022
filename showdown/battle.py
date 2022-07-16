@@ -70,7 +70,7 @@ class Battle(ABC):
         for pkmn_string in opponent_pokemon:
             # opponent_pokemon = ["Lapras, L50, M","Kyogre, L50","Zacian-*, L50","Tapu Fini, L50","Zapdos, L50","Mimikyu, L50, F"]
             # pkmn_string = "Lapras, L50, M"
-            self.opponent.reserve.append(Pokemon(pkmn_string.partition(",")[0], 100))
+            self.opponent.reserved.append(Pokemon(pkmn_string.partition(",")[0], 100))
 
 
     @abstractmethod
@@ -89,17 +89,17 @@ class Battler:
 
     # Dado un JSON, hay que actualizar esta clase... propiamente para el lado del usuario
     def from_json(self, user_json, first_turn):
-        JSONdict = json.load(user_json)
+        JSONdict = user_json
         # Si es el primer turno...
         if(first_turn):
-            self.nombreCuenta = JSONdict[side][name]
+            self.nombreCuenta = JSONdict["side"]["name"]
             # Pokémon Activo 1
             self.active1 = Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2])
             # Pokémon Activo 2
             self.active2 = Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2])
             # Pokémon Reservados
-            self.reserved.insert(Pokemon(JSONdict["side"]["pokemon"][2]["details"].partition(",")[0], JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2]))
-            self.reserved.insert(Pokemon(JSONdict["side"]["pokemon"][3]["details"].partition(",")[0], JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2]))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][2]["details"].partition(",")[0], JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2]))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][3]["details"].partition(",")[0], JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2]))
         else:
             # Pokémon Activo 1
             self.active1.hp = JSONdict["side"]["pokemon"][0]["condition"].partition("/")[0]
@@ -133,12 +133,7 @@ class Pokemon:
 
     # Cambio de forma - Constante
     def forme_change(self, new_pkmn_name):
-        # Pendiente de Implementar, se debe realizarlo
-
-
-    # ¿No está debilitado?
-    def is_alive(self):
-        return self.hp > 0
+        ...
 
     def imprimir(self):
         print("Name: " + self.name)

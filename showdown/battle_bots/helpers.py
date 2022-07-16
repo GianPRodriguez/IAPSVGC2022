@@ -36,4 +36,4 @@ def pick_safest_move_from_battles(battles):
     nMoveSwitch2 = input("¿0/1/2/3/4?")
     dynamax2 = input("¿/dynamax?")
     toMove2 = input("¿0/1/2?")
-    return moveSwitch1, (int)nMoveSwitch1, dynamax1, (int)toMove1, moveSwitch2, (int)nMoveSwitch2, dynamax2, (int)toMove2
+    return moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2)

@@ -12,7 +12,6 @@ import constants
 import config
 from showdown.engine.evaluate import Scoring
 from showdown.battle import Pokemon
-from showdown.battle import LastUsedMove
 from showdown.battle_modifier import async_update_battle
 
 from showdown.websocket_client import PSWebsocketClient
@@ -65,7 +64,7 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
     # DeepCopy del Estado Actual
     battle_copy = deepcopy(battle)
     # Se escoge los 4 Pokémon: eleccion(n) es un entero
-    eleccion0, eleccion1, eleccion2, eleccion3 = await async_pick_move(battle_copy)
+    eleccion0, eleccion1, eleccion2, eleccion3 = await accion_team_preview(battle_copy)
     # indices es una lista: [1,2,3,4,5,6]
     indices = list(range(1, 6))
     # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
@@ -75,7 +74,7 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
     indices.remove(eleccion3)
     # Se prepara el String que se va a enviar al WebSocket
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
-    mensaje = ["/team {}{}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, "".join(str(x) for x in indices), battle.rqid)]
+    mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]
     # Se envía el String al WebSocket
     await ps_websocket_client.send_message(battle.battle_tag, mensaje)
 
@@ -100,8 +99,7 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient):
 
 
 async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, set_request_json=True):
-    # NO TOCAR
-    #battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
+    battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
     # Obtengo el id de la batalla y el nombre del oponente
     battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client)
     # Mientras...
