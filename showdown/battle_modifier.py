@@ -23,14 +23,7 @@ logger = logging.getLogger(__name__)
 
 MOVE_END_STRINGS = {'move', 'switch', 'upkeep', ''}
 
-def find_pokemon_in_reserves(pkmn_name, reserves):
-    for reserve_pkmn in reserves:
-        if pkmn_name.startswith(reserve_pkmn.name) or reserve_pkmn.name.startswith(pkmn_name) or reserve_pkmn.base_name == pkmn_name:
-            return reserve_pkmn
-    return None
-
-
-# ¿El cambio es hecho por el oponente?
+# ¿El cambio es hecho por el opponente?
 def is_opponent(battle,  split_msg):
     # split_msg = ["","switch","p1a: Incineroar","Incineroar, L50, M","190/202"]
     # split_msg[2] = "p1a: Incineroar"
@@ -51,7 +44,7 @@ def request(battle, split_msg):
             battle.force_switch = True
         else:
             battle.force_switch = False
-        # ¿battle_json tiene "wait"? ¿Se activa cuando el oponente usa U-TURN?
+        # ¿battle_json tiene "wait"? ¿Se activa cuando el opponente usa U-TURN?
         if battle_json.get(constants.WAIT):
             logger.debug("Action: wait")
             battle.wait = True
@@ -81,12 +74,12 @@ def inactiveoff(battle, _):
 def switch_or_drag(battle, split_msg):
     # |switch|POKEMON|DETAILS|HP STATUS or |drag|POKEMON|DETAILS|HP STATUS
     # |switch|p1a: Incineroar|Incineroar, L50, M|190/202
-    # ¿El cambio es hecho por el oponente?
+    # ¿El cambio es hecho por el opponente?
     if is_opponent(battle, split_msg):
-        # Sí es hecho por el oponente...
+        # Sí es hecho por el opponente...
         side = battle.opponent
         #logger.debug("Opponent has switched - clearing the last used move")
-        logger.debug("El oponente ha cambiado de Pokémon...")
+        logger.debug("El opponente ha cambiado de Pokémon...")
     else:
         side = battle.user
         side.side_conditions[constants.TOXIC_COUNT] = 0
@@ -167,22 +160,22 @@ def heal_or_damage(battle, split_msg):
             # Se establece el aumento o disminución...
             if constants.FNT in split_msg[3]:
                 # Si el Pokémon se ha debilitado debido a un movimiento
-                battle.opponent.activo1.hp = 0
+                battle.opponent.active1.hp = 0
             else:
                 # Si el Pokémon aún tiene HP, se obtiene el nuevo %
                 new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
                 # Se establece el nuevo %
-                battle.opponent.activo1.hp = battle.opponent.activo1.max_hp * new_hp_percentage
+                battle.opponent.active1.hp = battle.opponent.active1.max_hp * new_hp_percentage
         else:
             # Se establece el aumento o disminución...
             if constants.FNT in split_msg[3]:
                 # Si el Pokémon se ha debilitado debido a un movimiento
-                battle.oponent.activo2.hp = 0
+                battle.opponent.active2.hp = 0
             else:
                 # Si el Pokémon aún tiene HP, se obtiene el nuevo %
                 new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
                 # Se establece el nuevo %
-                battle.oponent.activo2.hp = battle.oponent.activo2.max_hp * new_hp_percentage
+                battle.opponent.active2.hp = battle.opponent.active2.max_hp * new_hp_percentage
     else:
         if split_msg[2].startswith("p1"):
             aux = "p1a"
@@ -191,17 +184,17 @@ def heal_or_damage(battle, split_msg):
         if split_msg[2].startswith(aux):
             # Se establece el aumento o disminución...
             if constants.FNT in split_msg[3]:
-                battle.user.activo1.hp = 0
+                battle.user.active1.hp = 0
             else:
-                battle.user.activo1.hp = float(split_msg[3].split('/')[0])
-                battle.user.activo1.max_hp = float(split_msg[3].split('/')[1].split()[0])
+                battle.user.active1.hp = float(split_msg[3].split('/')[0])
+                battle.user.active1.max_hp = float(split_msg[3].split('/')[1].split()[0])
         else:
             # Se establece el aumento o disminución...
             if constants.FNT in split_msg[3]:
-                battle.user.activo2.hp = 0
+                battle.user.active2.hp = 0
             else:
-                battle.user.activo2.hp = float(split_msg[3].split('/')[0])
-                battle.user.activo2.max_hp = float(split_msg[3].split('/')[1].split()[0])
+                battle.user.active2.hp = float(split_msg[3].split('/')[0])
+                battle.user.active2.max_hp = float(split_msg[3].split('/')[1].split()[0])
 
 
 # Pokémon debilitado...
@@ -214,10 +207,10 @@ def faint(battle, split_msg):
             aux = "p2a"
         if split_msg[2].startswith(aux):
             # Pokémon debilitado debe tener HP = 0
-            battle.opponent.activo1.hp = 0
+            battle.opponent.active1.hp = 0
         else:
             # Pokémon debilitado debe tener HP = 0
-            battle.oponent.activo2.hp = 0
+            battle.opponent.active2.hp = 0
     else:
         if split_msg[2].startswith("p1"):
             aux = "p1a"
@@ -225,10 +218,10 @@ def faint(battle, split_msg):
             aux = "p1b"
         if split_msg[2].startswith(aux):
             # Pokémon debilitado debe tener HP = 0
-            battle.user.activo1.hp = 0
+            battle.user.active1.hp = 0
         else:
             # Pokémon debilitado debe tener HP = 0
-            battle.user.activo2.hp = 0
+            battle.user.active2.hp = 0
 
 # Se realiza un movimiento...
 def move(battle, split_msg):
@@ -254,11 +247,11 @@ def boost(battle, split_msg):
         if split_msg[2].startswith(aux):
             # p2a (solo para este ejemplo)
             # Como la cantidad no puede superar los 6... hay un límite y se actualiza la cifra verdadera...
-            battle.opponent.activo1.boosts[stat] = min(battle.opponent.activo1[stat] + amount, constants.MAX_BOOSTS)
+            battle.opponent.active1.boosts[stat] = min(battle.opponent.active1[stat] + amount, constants.MAX_BOOSTS)
         else:
             # p2b (solo para este ejemplo)
             # Como la cantidad no puede superar los 6... hay un límite y se actualiza la cifra verdadera...
-            battle.oponent.activo2.boosts[stat] = min(battle.opponent.activo2[stat] + amount, constants.MAX_BOOSTS)
+            battle.opponent.active2.boosts[stat] = min(battle.opponent.active2[stat] + amount, constants.MAX_BOOSTS)
     else:
         if split_msg[2].startswith("p1"):
             aux = "p1a"
@@ -268,11 +261,11 @@ def boost(battle, split_msg):
         if split_msg[2].startswith(aux):
             # p1a (solo para este ejemplo)
             # Como la cantidad no puede superar los 6... hay un límite y se actualiza la cifra verdadera...
-            battle.user.activo1.boosts[stat] = min(battle.user.activo1[stat] + amount, constants.MAX_BOOSTS)
+            battle.user.active1.boosts[stat] = min(battle.user.active1[stat] + amount, constants.MAX_BOOSTS)
         else:
             # p1b (solo para este ejemplo)
             # Como la cantidad no puede superar los 6... hay un límite y se actualiza la cifra verdadera...
-            pkmn = battle.user.activo2.boosts[stat] = min(battle.user.activo2[stat] + amount, constants.MAX_BOOSTS)
+            pkmn = battle.user.active2.boosts[stat] = min(battle.user.active2[stat] + amount, constants.MAX_BOOSTS)
 
 
 # Disminución de estadísticas
@@ -292,11 +285,11 @@ def unboost(battle, split_msg):
         if split_msg[2].startswith(aux):
             # p2a (solo para este ejemplo)
             # Como la cantidad no puede superar los -6... hay un límite y se actualiza la cifra verdadera...
-            battle.opponent.activo1.boosts[stat] = max(battle.opponent.activo1[stat] - amount, -1*constants.MAX_BOOSTS)
+            battle.opponent.active1.boosts[stat] = max(battle.opponent.active1[stat] - amount, -1*constants.MAX_BOOSTS)
         else:
             # p2b (solo para este ejemplo)
             # Como la cantidad no puede superar los -6... hay un límite y se actualiza la cifra verdadera...
-            battle.oponent.activo2.boosts[stat] = max(battle.opponent.activo2[stat] - amount, -1*constants.MAX_BOOSTS)
+            battle.opponent.active2.boosts[stat] = max(battle.opponent.active2[stat] - amount, -1*constants.MAX_BOOSTS)
     else:
         if split_msg[2].startswith("p1"):
             aux = "p1a"
@@ -306,11 +299,11 @@ def unboost(battle, split_msg):
         if split_msg[2].startswith(aux):
             # p1a (solo para este ejemplo)
             # Como la cantidad no puede superar los -6... hay un límite y se actualiza la cifra verdadera...
-            battle.user.activo1.boosts[stat] = max(battle.user.activo1[stat] - amount, -1*constants.MAX_BOOSTS)
+            battle.user.active1.boosts[stat] = max(battle.user.active1[stat] - amount, -1*constants.MAX_BOOSTS)
         else:
             # p1b (solo para este ejemplo)
             # Como la cantidad no puede superar los -6... hay un límite y se actualiza la cifra verdadera...
-            pkmn = battle.user.activo2.boosts[stat] = max(battle.user.activo2[stat] - amount, -1*constants.MAX_BOOSTS)
+            pkmn = battle.user.active2.boosts[stat] = max(battle.user.active2[stat] - amount, -1*constants.MAX_BOOSTS)
 
 
 # Un Pokémon ha cambiado de status
@@ -324,22 +317,22 @@ def status(battle, split_msg):
         else:
             aux = "p2a"
         if split_msg[2].startswith(aux):
-            battle.opponent.activo1.status = status_name
-            logger.debug("{} ha obtenido el estado: {}".format(battle.opponent.activo1.name, status_name))
+            battle.opponent.active1.status = status_name
+            logger.debug("{} ha obtenido el estado: {}".format(battle.opponent.active1.name, status_name))
         else:
-            battle.oponent.activo2.status = status_name
-            logger.debug("{} ha obtenido el estado: {}".format(battle.oponent.activo2.name, status_name))
+            battle.opponent.active2.status = status_name
+            logger.debug("{} ha obtenido el estado: {}".format(battle.opponent.active2.name, status_name))
     else:
         if split_msg[2].startswith("p1"):
             aux = "p1a"
         else:
             aux = "p1b"
         if split_msg[2].startswith(aux):
-            battle.user.activo1.status = status_name
-            logger.debug("{} ha obtenido el estado: {}".format(battle.user.activo1.name, status_name))
+            battle.user.active1.status = status_name
+            logger.debug("{} ha obtenido el estado: {}".format(battle.user.active1.name, status_name))
         else:
-            battle.user.activo2.status = status_name
-            logger.debug("{} ha obtenido el estado: {}".format(battle.user.activo2.name, status_name))
+            battle.user.active2.status = status_name
+            logger.debug("{} ha obtenido el estado: {}".format(battle.user.active2.name, status_name))
 
 
 # Se activa una habilidad...
@@ -365,14 +358,14 @@ def start_volatile_status(battle, split_msg):
             aux = "p2a"
         if split_msg[2].startswith(aux):
             if volatile_status == constants.DYNAMAX:
-                battle.opponent.activo1.hp *= 2
-                battle.opponent.activo1.max_hp *= 2
-                logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.opponent.activo1.name, battle.opponent.activo1.hp, battle.opponent.activo1.max_hp))
+                battle.opponent.active1.hp *= 2
+                battle.opponent.active1.max_hp *= 2
+                logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.opponent.active1.name, battle.opponent.active1.hp, battle.opponent.active1.max_hp))
         else:
-            if volatile_status == constants.DYNAMAX:battle.opponent.activo1
-                battle.opponent.activo2.hp *= 2
-                battle.opponent.activo2.max_hp *= 2
-                logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.opponent.activo2.name, battle.opponent.activo2.hp, battle.opponent.activo2.max_hp))
+            if volatile_status == constants.DYNAMAX:battle.opponent.active1
+                battle.opponent.active2.hp *= 2
+                battle.opponent.active2.max_hp *= 2
+                logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.opponent.active2.name, battle.opponent.active2.hp, battle.opponent.active2.max_hp))
     else:
         if split_msg[2].startswith("p1"):
             aux = "p1a"
@@ -380,14 +373,14 @@ def start_volatile_status(battle, split_msg):
             aux = "p1b"
         if split_msg[2].startswith(aux):
             if volatile_status == constants.DYNAMAX:
-                battle.user.activo1.hp *= 2
-                battle.user.activo1.max_hp *= 2
-                logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.user.activo1.name, battle.user.activo1.hp, battle.user.activo1.max_hp))
+                battle.user.active1.hp *= 2
+                battle.user.active1.max_hp *= 2
+                logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.user.active1.name, battle.user.active1.hp, battle.user.active1.max_hp))
         else:
             if volatile_status == constants.DYNAMAX:
-                battle.user.activo2.hp *= 2
-                battle.user.activo2.max_hp *= 2
-                logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.user.activo2.name, battle.user.activo2.hp, battle.user.activo2.max_hp))
+                battle.user.active2.hp *= 2
+                battle.user.active2.max_hp *= 2
+                logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.user.active2.name, battle.user.active2.hp, battle.user.active2.max_hp))
 
 
 
@@ -402,14 +395,14 @@ def end_volatile_status(battle, split_msg):
             aux = "p2a"
         if split_msg[2].startswith(aux):
             if volatile_status == constants.DYNAMAX:
-                battle.opponent.activo1.hp /= 2
-                battle.opponent.activo1.max_hp /= 2
-                logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.opponent.activo1.name, battle.opponent.activo1.hp, battle.opponent.activo1.max_hp))
+                battle.opponent.active1.hp /= 2
+                battle.opponent.active1.max_hp /= 2
+                logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.opponent.active1.name, battle.opponent.active1.hp, battle.opponent.active1.max_hp))
         else:
-            if volatile_status == constants.DYNAMAX:battle.opponent.activo1
-                battle.opponent.activo2.hp /= 2
-                battle.opponent.activo2.max_hp /= 2
-                logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.opponent.activo2.name, battle.opponent.activo2.hp, battle.opponent.activo2.max_hp))
+            if volatile_status == constants.DYNAMAX:battle.opponent.active1
+                battle.opponent.active2.hp /= 2
+                battle.opponent.active2.max_hp /= 2
+                logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.opponent.active2.name, battle.opponent.active2.hp, battle.opponent.active2.max_hp))
     else:
         if split_msg[2].startswith("p1"):
             aux = "p1a"
@@ -417,14 +410,14 @@ def end_volatile_status(battle, split_msg):
             aux = "p1b"
         if split_msg[2].startswith(aux):
             if volatile_status == constants.DYNAMAX:
-                battle.user.activo1.hp /= 2
-                battle.user.activo1.max_hp /= 2
-                logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.user.activo1.name, battle.user.activo1.hp, battle.user.activo1.max_hp))
+                battle.user.active1.hp /= 2
+                battle.user.active1.max_hp /= 2
+                logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.user.active1.name, battle.user.active1.hp, battle.user.active1.max_hp))
         else:
             if volatile_status == constants.DYNAMAX:
-                battle.user.activo2.hp /= 2
-                battle.user.activo2.max_hp /= 2
-                logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.user.activo2.name, battle.user.activo2.hp, battle.user.activo2.max_hp))
+                battle.user.active2.hp /= 2
+                battle.user.active2.max_hp /= 2
+                logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.user.active2.name, battle.user.active2.hp, battle.user.active2.max_hp))
 
 
 # Un estado se cura...
@@ -437,12 +430,12 @@ def curestatus(battle, split_msg):
             aux = "p2a"
         if split_msg[2].startswith(aux):
             if volatile_status == constants.DYNAMAX:
-                battle.opponent.activo1.status = None
-                logger.debug("{} se ha curado...".format(battle.opponent.activo1.name))
+                battle.opponent.active1.status = None
+                logger.debug("{} se ha curado...".format(battle.opponent.active1.name))
         else:
-            if volatile_status == constants.DYNAMAX:battle.opponent.activo1
-                battle.opponent.activo2.status = None
-                logger.debug("{} se ha curado...".format(battle.opponent.activo2.name))
+            if volatile_status == constants.DYNAMAX:battle.opponent.active1
+                battle.opponent.active2.status = None
+                logger.debug("{} se ha curado...".format(battle.opponent.active2.name))
     else:
         if split_msg[2].startswith("p1"):
             aux = "p1a"
@@ -450,12 +443,12 @@ def curestatus(battle, split_msg):
             aux = "p1b"
         if split_msg[2].startswith(aux):
             if volatile_status == constants.DYNAMAX:
-                battle.user.activo1.status = None
-                logger.debug("{} se ha curado...".format(battle.user.activo1.name))
+                battle.user.active1.status = None
+                logger.debug("{} se ha curado...".format(battle.user.active1.name))
         else:
             if volatile_status == constants.DYNAMAX:
-                battle.user.activo2.status = None
-                logger.debug("{} se ha curado...".format(battle.user.activo2.name))
+                battle.user.active2.status = None
+                logger.debug("{} se ha curado...".format(battle.user.active2.name))
 
 
 # The Pokémon POKEMON has used a move that cures its team of status effects, like Heal Bell.
@@ -512,7 +505,7 @@ def sidestart(battle, split_msg):
     condition = normalize_name(condition)
     # condition = "Tailwind"
     if is_opponent(battle, split_msg):
-        logger.debug("Efecto {} ha sido iniciado por el oponente...".format(condition))
+        logger.debug("Efecto {} ha sido iniciado por el opponente...".format(condition))
         battle.opponent.side_conditions[condition] += 1
     else:
         logger.debug("Efecto {} ha sido iniciado por el usuario...".format(condition))
@@ -526,7 +519,7 @@ def sideend(battle, split_msg):
     condition = normalize_name(condition)
     # condition = "Tailwind"
     if is_opponent(battle, split_msg):
-        logger.debug("Efecto {} del oponente ha terminado...".format(condition))
+        logger.debug("Efecto {} del opponente ha terminado...".format(condition))
         battle.opponent.side_conditions[condition] = 0
     else:
         logger.debug("Efecto {} del usuario ha terminado...".format(condition))
@@ -610,12 +603,12 @@ def clearallboost(battle, _):
         if value != 0:
             logger.debug("Configurando estadísticas de {} de {} a 0".format(battle.user.active2.name, stat))
             battle.user.active2.boosts[stat] = 0
-    # Oponente
+    # opponente
     for stat, value in battle.opponent.active1.boosts.items():
         if value != 0:
             logger.debug("Configurando estadísticas de {} de {} a 0".format(battle.opponent.active1.name, stat))
             battle.opponent.active1.boosts[stat] = 0
-    # Oponente
+    # opponente
     for stat, value in battle.opponent.active2.boosts.items():
         if value != 0:
             logger.debug("Configurando estadísticas de {} de {} a 0".format(battle.opponent.active2.name, stat))
