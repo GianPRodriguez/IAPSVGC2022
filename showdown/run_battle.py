@@ -69,7 +69,7 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
     aux = []
     aux.append(battle.user.reserved[eleccion2-1])
     aux.append(battle.user.reserved[eleccion3-1])
-    battle.user.reserved = aux
+    battle.user.reserved = deepcopy(aux)
     # Se prepara el String que se va a enviar al WebSocket
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
     mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]

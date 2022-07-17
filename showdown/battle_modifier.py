@@ -80,7 +80,7 @@ def switch_or_drag(battle, split_msg):
             if split_msg[2].startswith("p2a"):
                 contador = 0
                 for pkmn in battle.opponent.reserved:
-                    if pkmn.name == split_msg[3].partition(",")[0]:
+                    if split_msg[3].partition(",")[0].startswith(pkmn.name):
                         aux2 = battle.opponent.active1
                         battle.opponent.active1 = deepcopy(pkmn)
                         pkmn = aux2
@@ -89,13 +89,13 @@ def switch_or_drag(battle, split_msg):
                         logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active1.name) + ": p2a")
                         # Si es el primer turno...
                         if len(battle.opponent.reserved) == 6 or len(battle.opponent.reserved) == 5: 
-                            # Hay que quitar uno...
+                            logger.debug("p2a: " + str(contador))
                             battle.opponent.reserved.pop(contador)
-                        contador =+ 1
+                        contador += 1
             else:
                 contador = 0
                 for pkmn in battle.opponent.reserved:
-                    if pkmn.name == split_msg[3].partition(",")[0]:
+                    if split_msg[3].partition(",")[0].startswith(pkmn.name):
                         aux2 = battle.opponent.active2
                         battle.opponent.active2 = deepcopy(pkmn)
                         pkmn = aux2
@@ -103,15 +103,15 @@ def switch_or_drag(battle, split_msg):
                         battle.opponent.active2.boosts = defaultdict(lambda: 0)
                         logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active2.name) + ": p2b")
                         if len(battle.opponent.reserved) == 6 or len(battle.opponent.reserved) == 5: 
-                            # Hay que quitar uno...
+                            logger.debug("p2b: " + str(contador))
                             battle.opponent.reserved.pop(contador)
-                        contador =+ 1
+                        contador += 1
         else:
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
                 contador = 0
                 for pkmn in battle.opponent.reserved:
-                    if pkmn.name == split_msg[3].partition(",")[0]:
+                    if split_msg[3].partition(",")[0].startswith(pkmn.name):
                         aux2 = battle.opponent.active1
                         battle.opponent.active1 = deepcopy(pkmn)
                         pkmn = aux2
@@ -119,13 +119,13 @@ def switch_or_drag(battle, split_msg):
                         battle.opponent.active1.boosts = defaultdict(lambda: 0)
                         logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active1.name) + ": p1a")
                         if len(battle.opponent.reserved) == 6 or len(battle.opponent.reserved) == 5: 
-                            # Hay que quitar uno...
+                            logger.debug("p1a: " + str(contador))
                             battle.opponent.reserved.pop(contador)
-                        contador =+ 1
+                        contador += 1
             else:
                 contador = 0
                 for pkmn in battle.opponent.reserved:
-                    if pkmn.name == split_msg[3].partition(",")[0]:
+                    if split_msg[3].partition(",")[0].startswith(pkmn.name):
                         aux2 = battle.opponent.active2
                         battle.opponent.active2 = deepcopy(pkmn)
                         pkmn = aux2
@@ -133,50 +133,63 @@ def switch_or_drag(battle, split_msg):
                         battle.opponent.active2.boosts = defaultdict(lambda: 0)
                         logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active2.name) + ": p1b")
                         if len(battle.opponent.reserved) == 6 or len(battle.opponent.reserved) == 5: 
-                            # Hay que quitar uno...
+                            logger.debug("p1b: " + str(contador))
                             battle.opponent.reserved.pop(contador)
-                        contador =+ 1          
+                        contador += 1          
     else:
         if split_msg[2].startswith("p1"):
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
+                contador = 0
                 for pkmn in battle.user.reserved:
-                    if pkmn.name == split_msg[3].partition(",")[0]:
-                        aux2 = battle.user.active1
+                    if split_msg[3].partition(",")[0].startswith(pkmn.name):
+                        aux = battle.user.active1
                         battle.user.active1 = deepcopy(pkmn)
-                        pkmn = aux2
+                        pkmn = deepcopy(aux)
                         battle.user.active1.volatile_statuses = []
                         battle.user.active1.boosts = defaultdict(lambda: 0)
                         logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active1.name) + ": p1a")
+                        # Intercambio en Reservados
+                        battle.user.reserved[contador] = deepcopy(pkmn)
+                    contador+=1
             else:
+                contador = 0
                 for pkmn in battle.user.reserved:
-                    if pkmn.name == split_msg[3].partition(",")[0]:
-                        aux2 = battle.user.active2
+                    if split_msg[3].partition(",")[0].startswith(pkmn.name):
+                        aux = battle.user.active2
                         battle.user.active2 = deepcopy(pkmn)
-                        pkmn = aux2
+                        pkmn = aux
                         battle.user.active2.volatile_statuses = []
                         battle.user.active2.boosts = defaultdict(lambda: 0)
                         logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active2.name) + ": p1b")
+                        # Intercambio en Reservados
+                        battle.user.reserved[contador] = deepcopy(pkmn)
         else:
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
+                contador = 0
                 for pkmn in battle.user.reserved:
-                    if pkmn.name == split_msg[3].partition(",")[0]:
-                        aux2 = battle.user.active1
+                    if split_msg[3].partition(",")[0].startswith(pkmn.name):
+                        aux = battle.user.active1
                         battle.user.active1 = deepcopy(pkmn)
-                        pkmn = aux2
+                        pkmn = aux
                         battle.user.active1.volatile_statuses = []
                         battle.user.active1.boosts = defaultdict(lambda: 0)
                         logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active1.name) + ": p2a")
+                        # Intercambio en Reservados
+                        battle.user.reserved[contador] = deepcopy(pkmn)
             else:
+                contador = 0
                 for pkmn in battle.user.reserved:
-                    if pkmn.name == split_msg[3].partition(",")[0]:
-                        aux2 = battle.user.active2
+                    if split_msg[3].partition(",")[0].startswith(pkmn.name):
+                        aux = battle.user.active2
                         battle.user.active2 = deepcopy(pkmn)
-                        pkmn = aux2
+                        pkmn = aux
                         battle.user.active2.volatile_statuses = []
                         battle.user.active2.boosts = defaultdict(lambda: 0)
-                        logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active2.name) + ": p2b")  
+                        logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active2.name) + ": p2b") 
+                        # Intercambio en Reservados
+                        battle.user.reserved[contador] = deepcopy(pkmn)
     return battle
 
 
@@ -507,7 +520,7 @@ def weather(battle, split_msg):
     # weather_name = "Sandstorm" || weather_name = "none"
     weather_name = normalize_name(split_msg[2].split(':')[-1].strip())
     # Mensaje en el CMD
-    logger.debug("El clima {} ha empezado...".format(weather_name))
+    # logger.debug("El clima {} ha empezado...".format(weather_name))
     # Se establece en class Battle:
     battle.weather = weather_name
     return battle
