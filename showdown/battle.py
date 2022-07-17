@@ -70,12 +70,25 @@ class Battle(ABC):
         for pkmn_string in opponent_pokemon:
             # opponent_pokemon = ["Lapras, L50, M","Kyogre, L50","Zacian-*, L50","Tapu Fini, L50","Zapdos, L50","Mimikyu, L50, F"]
             # pkmn_string = "Lapras, L50, M"
+            # Aquí deberá ir el MySQL
             self.opponent.reserved.append(Pokemon(pkmn_string.partition(",")[0], 100))
 
 
     @abstractmethod
     def find_best_move(self):
         ...
+
+    def imprimir(self):
+        self.user.imprimir()
+        self.opponent.imprimir()
+        print("Weather: " + str(self.weather))
+        print("Field:" + str(self.field))
+        print("Trick Room: " + str(self.trick_room))
+        print("Turn: " + str(self.turn))
+        print("Started: " + str(self.started))
+        print("rqid: " + str(self.rqid))
+        print("Force Switch: " + str(self.force_switch))
+        print("Wait: " + str(self.wait))
 
 
 class Battler:
@@ -84,22 +97,26 @@ class Battler:
         self.active1 = None                             # class Pokemon or None
         self.active2 = None                             # class Pokemon or None
         self.reserved = []                              # class Pokemon
-        self.nombreCuenta = None                        # String
+        self.name = None                                # String
 
 
     # Dado un JSON, hay que actualizar esta clase... propiamente para el lado del usuario
+    # first_turn = 0, 1 y 2
+    # 0 = TeamPreview
+    # 1 = First Turn
+    # 2 = Second Turn en adelante...
     def from_json(self, user_json, first_turn):
         JSONdict = user_json
         # Si es el primer turno...
-        if(first_turn):
-            self.nombreCuenta = JSONdict["side"]["name"]
-            # Pokémon Activo 1
-            self.active1 = Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2])
-            # Pokémon Activo 2
-            self.active2 = Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2])
-            # Pokémon Reservados
+        if (first_turn):
+            self.name = JSONdict["side"]["name"]
+            # Pokémon Reservados: Todos
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2]))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2]))
             self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][2]["details"].partition(",")[0], JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2]))
             self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][3]["details"].partition(",")[0], JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2]))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][4]["details"].partition(",")[0], JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2]))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][5]["details"].partition(",")[0], JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2]))
         else:
             # Pokémon Activo 1
             self.active1.hp = JSONdict["side"]["pokemon"][0]["condition"].partition("/")[0]
@@ -108,7 +125,7 @@ class Battler:
 
 
     def imprimir(self):
-        print("Nombre de la cuenta: " + self.nombreCuenta)
+        print("Nombre de la cuenta: " + str(self.name))
         self.active1.imprimir()
         print()
         self.active2.imprimir()
@@ -116,6 +133,7 @@ class Battler:
         self.reserved[0].imprimir()
         print()
         self.reserved[1].imprimir()
+        print()
 
 
 class Pokemon:
@@ -136,11 +154,11 @@ class Pokemon:
         ...
 
     def imprimir(self):
-        print("Name: " + self.name)
-        print("Max HP: " + self.max_hp)
-        print("HP: " + self.hp)
-        print("Fainted: " + self.fainted)
-        print("Status: " + self.status)
-        print("Volatile Status: " + self.volatile_statuses)
-        print("Boosts: " + self.boosts)
-        print("Can Dynamax: " + self.can_dynamax)
+        print("Name: " + str(self.name))
+        print("Max HP: " + str(self.max_hp))
+        print("HP: " + str(self.hp))
+        print("Fainted: " + str(self.fainted))
+        print("Status: " + str(self.status))
+        print("Volatile Status: " + str(self.volatile_statuses))
+        print("Boosts: " + str(self.boosts))
+        print("Can Dynamax: " + str(self.can_dynamax))

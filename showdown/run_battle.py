@@ -35,7 +35,7 @@ async def accion_batalla(battle):
     battle_copy = deepcopy(battle)
     # ¿Hay solicitud de JSON pendiente?
     if battle_copy.request_json:
-        battle_copy.user.from_json(battle_copy.request_json)
+        battle_copy.user.from_json(battle_copy.request_json, first_turn=False)
     # Se define la mejor acción
     best_action = battle_copy.find_best_move
     # Imprimo en CMD la mejor acción
@@ -61,17 +61,15 @@ async def accion_team_preview(battle):
 
 
 async def escoge_accion_team_preview(battle, ps_websocket_client):
-    # DeepCopy del Estado Actual
-    battle_copy = deepcopy(battle)
     # Se escoge los 4 Pokémon: eleccion(n) es un entero
-    eleccion0, eleccion1, eleccion2, eleccion3 = await accion_team_preview(battle_copy)
-    # indices es una lista: [1,2,3,4,5,6]
-    indices = list(range(1, 6))
+    eleccion0, eleccion1, eleccion2, eleccion3 = await accion_team_preview(battle)
     # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
-    indices.remove(eleccion0)
-    indices.remove(eleccion1)
-    indices.remove(eleccion2)
-    indices.remove(eleccion3)
+    battle.active1 = battle.user.reserved.pop(eleccion0-1)
+    battle.active2 = battle.user.reserved.pop(eleccion1-1)
+    aux = []
+    aux.append(battle.user.reserved.pop(eleccion2-1))
+    aux.append(battle.user.reserved.pop(eleccion3-1))
+    battle.user.reserved = aux
     # Se prepara el String que se va a enviar al WebSocket
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
     mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]
@@ -171,7 +169,7 @@ async def iniciar_batalla(ps_websocket_client):
     # Envía el saludo
     await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
     # Inicia el tiempo
-    await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
+    # await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
     # Retorna la Clase Batalla
     return battle
 
@@ -205,6 +203,7 @@ async def pokemon_battle(ps_websocket_client):
             action_required = await async_update_battle(battle, mensaje)
             # action_required es BOOLEAN
             if action_required and not battle.wait:
+                battle.imprimir()
                 # Escoge el mejor movimiento y lo envía al websocket
                 best_action = await accion_batalla(battle)
                 await ps_websocket_client.send_message(battle.battle_tag, best_action)

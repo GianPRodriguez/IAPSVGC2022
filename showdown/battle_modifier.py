@@ -73,73 +73,51 @@ def switch_or_drag(battle, split_msg):
     # |switch|p1a: Incineroar|Incineroar, L50, M|190/202
     # ¿El cambio es hecho por el opponente?
     if is_opponent(battle, split_msg):
-        # Sí es hecho por el opponente...
-        side = battle.opponent
-        #logger.debug("Opponent has switched - clearing the last used move")
-        logger.debug("El opponente ha cambiado de Pokémon...")
+        if split_msg[2].startswith("p2"):
+            aux = "p2b"
+        else:
+            aux = "p2a"
+        if split_msg[2].startswith(aux):
+            for pkmn in battle.opponent.reserved:
+                if pkmn.name == split_msg[3].partition(",")[0]:
+                    aux = battle.opponent.active1
+                    battle.opponent.active1 = pkmn
+                    pkmn = aux
+                    battle.opponent.active1.volatile_statuses = []
+                    battle.opponent.active1.boosts = defaultdict(lambda: 0)
+                    logger.debug("El opponente ha cambiado de Pokémon a..." + battle.opponent.active1.name + ": " + aux)
+        else:
+            for pkmn in battle.opponent.reserved:
+                if pkmn.name == split_msg[3].partition(",")[0]:
+                    aux = battle.opponent.active2
+                    battle.opponent.active2 = pkmn
+                    pkmn = aux
+                    battle.opponent.active2.volatile_statuses = []
+                    battle.opponent.active2.boosts = defaultdict(lambda: 0)
+                    logger.debug("El opponente ha cambiado de Pokémon a..." + battle.opponent.active2.name + ": " + aux)
     else:
-        side = battle.user
-        side.side_conditions[constants.TOXIC_COUNT] = 0
-        logger.debug("El usuario ha cambiado de Pokémon...")
-
-    # Si el Pokémon cambiado tenía algún valor original...
-    if side.active is not None:
-        # set the pkmn's types back to their original value if the types were changed
-        if constants.TYPECHANGE in side.active.volatile_statuses:
-            original_types = pokedex[side.active.name][constants.TYPES]
-            logger.debug("{} had it's type changed - changing its types back to {}".format(side.active.name, original_types))
-            side.active.types = original_types
-
-        # if the target was transformed, reset its transformed attributes
-        if constants.TRANSFORM in side.active.volatile_statuses:
-            logger.debug("{} was transformed. Resetting its transformed attributes".format(side.active.name))
-            side.active.stats = calculate_stats(side.active.base_stats, side.active.level)
-            side.active.ability = None
-            side.active.moves = []
-            side.active.types = pokedex[side.active.name][constants.TYPES]
-
-        # reset the boost of the pokemon being replaced
-        side.active.boosts.clear()
-
-        # reset the volatile statuses of the pokemon being replaced
-        side.active.volatile_statuses.clear()
-
-        # reset toxic count for this side
-        side.side_conditions[constants.TOXIC_COUNT] = 0
-
-        # if the side is alive and has regenerator, give it back 1/3 of it's maxhp
-        if side.active.hp > 0 and not side.active.fainted and side.active.ability == "regenerator":
-            health_healed = int(side.active.max_hp / 3)
-            side.active.hp = min(side.active.hp + health_healed, side.active.max_hp)
-            logger.debug(
-                "{} switched out with regenerator. Healing it to {}/{}".format(
-                    side.active.name, side.active.hp, side.active.max_hp
-                )
-            )
-
-    # check if the pokemon exists in the reserves
-    # if it does not, then the newly-created pokemon is used (for formats without team preview)
-    pkmn = Pokemon.from_switch_string(split_msg[3])
-    pkmn = find_pokemon_in_reserves(pkmn.name, side.reserve)
-
-    if pkmn is None:
-        pkmn = Pokemon.from_switch_string(split_msg[3])
-    else:
-        side.reserve.remove(pkmn)
-
-    side.last_used_move = LastUsedMove(
-        pokemon_name=None,
-        move='switch {}'.format(pkmn.name),
-        turn=battle.turn
-    )
-
-    # pkmn != active is a special edge-case for Zoroark
-    if side.active is not None and pkmn != side.active:
-        side.reserve.append(side.active)
-
-    side.active = pkmn
-    if side.active.name in constants.UNKOWN_POKEMON_FORMES:
-        side.active = Pokemon.from_switch_string(split_msg[3])
+        if split_msg[2].startswith("p1"):
+            aux = "p1a"
+        else:
+            aux = "p1b"
+        if split_msg[2].startswith(aux):
+            for pkmn in battle.user.reserved:
+                if pkmn.name == split_msg[3].partition(",")[0]:
+                    aux = battle.user.active1
+                    battle.user.active1 = pkmn
+                    pkmn = aux
+                    battle.user.active1.volatile_statuses = []
+                    battle.user.active1.boosts = defaultdict(lambda: 0)
+                    logger.debug("El usuario ha cambiado de Pokémon a..." + battle.opponent.active1.name + ": " + aux)
+        else:
+            for pkmn in battle.user.reserved:
+                if pkmn.name == split_msg[3].partition(",")[0]:
+                    aux = battle.user.active2
+                    battle.user.active2 = pkmn
+                    pkmn = aux
+                    battle.user.active2.volatile_statuses = []
+                    battle.user.active2.boosts = defaultdict(lambda: 0)
+                    logger.debug("El usuario ha cambiado de Pokémon a..." + battle.opponent.active2.name + ": " + aux)
 
 
 # Aumento o disminución de HP...
