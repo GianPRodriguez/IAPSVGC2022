@@ -22,18 +22,27 @@ def format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSw
         nMoveSwitch2 = ""
     if toMove2 == 0:
         toMove2 = ""
+    if dynamax1 == "0":
+        dynamax1 = ""
+    else:
+        dynamax1 = "dynamax"
+    if dynamax2 == "0":
+        dynamax2 = ""
+    else:
+        dynamax1 = "dynamax"
     message = "/choose {} {} {} {}, {} {} {} {}".format(moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
     return [message, str(battle.rqid)]
 
 
+
 # Acción
-def pick_safest_move_from_battles(battles):
-    moveSwitch1 = input("¿move/switch/pass?")
-    nMoveSwitch1 = input("¿0/1/2/3/4?")
-    dynamax1 = input("¿/dynamax?")
-    toMove1 = input("¿0/1/2?")
-    moveSwitch2 = input("¿move/switch/pass?")
-    nMoveSwitch2 = input("¿0/1/2/3/4?")
-    dynamax2 = input("¿/dynamax?")
-    toMove2 = input("¿0/1/2?")
+def pick_safest_move_from_battles(battle):
+    moveSwitch1 = input("¿move/switch/pass?: ")
+    nMoveSwitch1 = input("¿0/1/2/3/4?: ")
+    dynamax1 = input("dynamax... ¿0/1?: ")
+    toMove1 = input("¿0/1/2?: ")
+    moveSwitch2 = input("¿move/switch/pass?: ")
+    nMoveSwitch2 = input("¿0/1/2/3/4?: ")
+    dynamax2 = input("dynamax... ¿0/1?: ")
+    toMove2 = input("¿0/1/2?: ")
     return moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2)

@@ -12,9 +12,9 @@ class BattleBot(Battle):
         super(BattleBot, self).__init__(*args, **kwargs)
 
     # Busca el mejor movimiento - origen
-    def find_best_move(self):
-        battles = self.prepare_battles(join_moves_together=True)        
+    def find_best_move(self, battle):
+        print("ENTRO AL BOT")    
         # safest_move es la decisión del bot en bruto
-        moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = pick_safest_move_from_battles(battles)
+        moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = pick_safest_move_from_battles(battle)
         # Retorna el mensaje formateado listo para ser enviado al WebSocket
         return format_decision(self, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)

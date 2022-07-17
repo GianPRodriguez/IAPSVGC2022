@@ -12,7 +12,7 @@ import constants
 import config
 from showdown.engine.evaluate import Scoring
 from showdown.battle import Pokemon
-from showdown.battle_modifier import async_update_battle
+from showdown.battle_modifier import update_battle
 
 from showdown.websocket_client import PSWebsocketClient
 
@@ -37,11 +37,11 @@ async def accion_batalla(battle):
     if battle_copy.request_json:
         battle_copy.user.from_json(battle_copy.request_json, first_turn=False)
     # Se define la mejor acción
-    best_action = battle_copy.find_best_move
+    best_action = battle_copy.find_best_move(battle)
     # Imprimo en CMD la mejor acción
     logger.info(best_action)
     # Retorno el mensaje listo para enviarlo al WebSocket
-    return ast.literal_eval(best_action)
+    return best_action
 
 
 # Se envía la acción para TEAM PREVIEW
@@ -64,17 +64,18 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
     # Se escoge los 4 Pokémon: eleccion(n) es un entero
     eleccion0, eleccion1, eleccion2, eleccion3 = await accion_team_preview(battle)
     # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
-    battle.active1 = battle.user.reserved.pop(eleccion0-1)
-    battle.active2 = battle.user.reserved.pop(eleccion1-1)
+    battle.user.active1 = battle.user.reserved[eleccion0-1]
+    battle.user.active2 = battle.user.reserved[eleccion1-1]
     aux = []
-    aux.append(battle.user.reserved.pop(eleccion2-1))
-    aux.append(battle.user.reserved.pop(eleccion3-1))
+    aux.append(battle.user.reserved[eleccion2-1])
+    aux.append(battle.user.reserved[eleccion3-1])
     battle.user.reserved = aux
     # Se prepara el String que se va a enviar al WebSocket
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
     mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]
     # Se envía el String al WebSocket
     await ps_websocket_client.send_message(battle.battle_tag, mensaje)
+    return battle
 
 
 async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient):
@@ -118,8 +119,8 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, set
             # Aquí se hace el cambio de bot y llamada de BattleBot...
             battle = battle_module.BattleBot(battle_tag)
             # Actualización
-            battle.opponent.name = opponent_id
-            # battle.opponent.name = "p2"
+            battle.opponent.id = opponent_id
+            # battle.opponent.id = "p2"
             battle.opponent.account_name = opponent_name
             # battle.opponent.account_name = "Braindeadmeta"
             if set_request_json:
@@ -158,7 +159,7 @@ async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient):
     # ETAPA TEAM PREVIEW
     battle.initialize_team_preview(user_json, opponent_pokemon)
     # Se escoge la mejor acción y lo envía al WebSocket
-    await escoge_accion_team_preview(battle, ps_websocket_client)
+    battle = await escoge_accion_team_preview(battle, ps_websocket_client)
     # Retorno el estado actual de la batalla
     return battle
 
@@ -200,7 +201,7 @@ async def pokemon_battle(ps_websocket_client):
             return winner
         else:
             # No ha finalizado la batalla... se debe realizar una acción!!
-            action_required = await async_update_battle(battle, mensaje)
+            action_required, battle = await update_battle(battle, mensaje)
             # action_required es BOOLEAN
             if action_required and not battle.wait:
                 battle.imprimir()

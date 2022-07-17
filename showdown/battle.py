@@ -75,20 +75,27 @@ class Battle(ABC):
 
 
     @abstractmethod
-    def find_best_move(self):
+    def find_best_move(self, battle):
         ...
 
     def imprimir(self):
-        self.user.imprimir()
-        self.opponent.imprimir()
+        print()
+        print("Estado del Entorno")
+        print("------------------")
         print("Weather: " + str(self.weather))
-        print("Field:" + str(self.field))
+        print("Field: " + str(self.field))
         print("Trick Room: " + str(self.trick_room))
         print("Turn: " + str(self.turn))
         print("Started: " + str(self.started))
         print("rqid: " + str(self.rqid))
         print("Force Switch: " + str(self.force_switch))
         print("Wait: " + str(self.wait))
+        print()
+        print("USUARIO: ")
+        self.user.imprimir()
+        print()
+        print("OPONENTE: ")
+        self.opponent.imprimir()
 
 
 class Battler:
@@ -98,7 +105,8 @@ class Battler:
         self.active2 = None                             # class Pokemon or None
         self.reserved = []                              # class Pokemon
         self.name = None                                # String
-
+        self.account_name = None                        # String
+        self.side_conditions = defaultdict(lambda: 0)   # Diccionario Vacío
 
     # Dado un JSON, hay que actualizar esta clase... propiamente para el lado del usuario
     # first_turn = 0, 1 y 2
@@ -109,7 +117,8 @@ class Battler:
         JSONdict = user_json
         # Si es el primer turno...
         if (first_turn):
-            self.name = JSONdict["side"]["name"]
+            self.id = JSONdict["side"]["id"]
+            self.account_name = JSONdict["side"]["name"]
             # Pokémon Reservados: Todos
             self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2]))
             self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2]))
@@ -125,21 +134,41 @@ class Battler:
 
 
     def imprimir(self):
-        print("Nombre de la cuenta: " + str(self.name))
-        self.active1.imprimir()
         print()
-        self.active2.imprimir()
+        print("id: " + str(self.id))
+        print("Nombre de la cuenta: " + str(self.account_name))
         print()
-        self.reserved[0].imprimir()
+        print("Side conditions: ")
+        for key, value in self.side_conditions.items():
+            print(key, ' : ', value)
         print()
-        self.reserved[1].imprimir()
+        if self.active1 is not None:
+            print("Active 1: ")
+            print()
+            self.active1.imprimir()
+            print()
+        else:
+            print("Active 1: " + str(None))
+            print()
+        if self.active2 is not None:
+            print("Active 2: ")
+            print()
+            self.active2.imprimir()
+            print()
+        else:
+            print("Active 2: " + str(None))
+            print()
+        print("List of Reserved: ")
         print()
+        for pkmn in self.reserved:
+            pkmn.imprimir()
+            print()
 
 
 class Pokemon:
     # Constructor
     def __init__(self, name: str, max_hp: int):
-        self.name = normalize_name(name)
+        self.name = name
         self.max_hp = max_hp
         self.hp = self.max_hp
         self.fainted = False
@@ -160,5 +189,7 @@ class Pokemon:
         print("Fainted: " + str(self.fainted))
         print("Status: " + str(self.status))
         print("Volatile Status: " + str(self.volatile_statuses))
-        print("Boosts: " + str(self.boosts))
+        print("Boosts: ")
+        for key, value in self.boosts.items():
+            print(key, ' : ', value)
         print("Can Dynamax: " + str(self.can_dynamax))

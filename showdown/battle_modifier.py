@@ -2,6 +2,7 @@ import re
 import json
 from copy import deepcopy
 import logging
+from collections import defaultdict
 
 import constants
 from data import all_move_json
@@ -17,14 +18,11 @@ from showdown.engine.objects import boost_multiplier_lookup
 
 logger = logging.getLogger(__name__)
 
-
-MOVE_END_STRINGS = {'move', 'switch', 'upkeep', ''}
-
 # ¿El cambio es hecho por el opponente?
 def is_opponent(battle,  split_msg):
     # split_msg = ["","switch","p1a: Incineroar","Incineroar, L50, M","190/202"]
     # split_msg[2] = "p1a: Incineroar"
-    return not split_msg[2].startswith(battle.user.name)
+    return not split_msg[2].startswith(battle.user.id)
 
 
 # Obtiene el JSON y rqid... Además, avisa si es por force_switch o es solo un wait
@@ -50,6 +48,7 @@ def request(battle, split_msg):
         # Se almacena el JSON para elegir una accióm
         if not battle.wait:
             battle.request_json = battle_json
+    return battle
 
 
 # Avanza el tiempo...
@@ -60,11 +59,14 @@ def inactive(battle, split_msg):
         capture = re.search(regex_string, split_msg[2])
         time_left = int(capture.group(1))
         logger.debug("Tiempo restante: {} segundos...".format(time_left))
+    return battle
 
 
 # Ya no avanza el tiempo...
 def inactiveoff(battle, _):
     logger.debug("Se ha detenido el tiempo...")
+    return battle
+
 
 
 # Ha habido un cambio de Pokémon...
@@ -74,50 +76,108 @@ def switch_or_drag(battle, split_msg):
     # ¿El cambio es hecho por el opponente?
     if is_opponent(battle, split_msg):
         if split_msg[2].startswith("p2"):
-            aux = "p2b"
+            # ¿p2a o p2b?
+            if split_msg[2].startswith("p2a"):
+                contador = 0
+                for pkmn in battle.opponent.reserved:
+                    if pkmn.name == split_msg[3].partition(",")[0]:
+                        aux2 = battle.opponent.active1
+                        battle.opponent.active1 = deepcopy(pkmn)
+                        pkmn = aux2
+                        battle.opponent.active1.volatile_statuses = []
+                        battle.opponent.active1.boosts = defaultdict(lambda: 0)
+                        logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active1.name) + ": p2a")
+                        # Si es el primer turno...
+                        if len(battle.opponent.reserved) == 6 or len(battle.opponent.reserved) == 5: 
+                            # Hay que quitar uno...
+                            battle.opponent.reserved.pop(contador)
+                        contador =+ 1
+            else:
+                contador = 0
+                for pkmn in battle.opponent.reserved:
+                    if pkmn.name == split_msg[3].partition(",")[0]:
+                        aux2 = battle.opponent.active2
+                        battle.opponent.active2 = deepcopy(pkmn)
+                        pkmn = aux2
+                        battle.opponent.active2.volatile_statuses = []
+                        battle.opponent.active2.boosts = defaultdict(lambda: 0)
+                        logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active2.name) + ": p2b")
+                        if len(battle.opponent.reserved) == 6 or len(battle.opponent.reserved) == 5: 
+                            # Hay que quitar uno...
+                            battle.opponent.reserved.pop(contador)
+                        contador =+ 1
         else:
-            aux = "p2a"
-        if split_msg[2].startswith(aux):
-            for pkmn in battle.opponent.reserved:
-                if pkmn.name == split_msg[3].partition(",")[0]:
-                    aux = battle.opponent.active1
-                    battle.opponent.active1 = pkmn
-                    pkmn = aux
-                    battle.opponent.active1.volatile_statuses = []
-                    battle.opponent.active1.boosts = defaultdict(lambda: 0)
-                    logger.debug("El opponente ha cambiado de Pokémon a..." + battle.opponent.active1.name + ": " + aux)
-        else:
-            for pkmn in battle.opponent.reserved:
-                if pkmn.name == split_msg[3].partition(",")[0]:
-                    aux = battle.opponent.active2
-                    battle.opponent.active2 = pkmn
-                    pkmn = aux
-                    battle.opponent.active2.volatile_statuses = []
-                    battle.opponent.active2.boosts = defaultdict(lambda: 0)
-                    logger.debug("El opponente ha cambiado de Pokémon a..." + battle.opponent.active2.name + ": " + aux)
+            # ¿p1a o p1b?
+            if split_msg[2].startswith("p1a"):
+                contador = 0
+                for pkmn in battle.opponent.reserved:
+                    if pkmn.name == split_msg[3].partition(",")[0]:
+                        aux2 = battle.opponent.active1
+                        battle.opponent.active1 = deepcopy(pkmn)
+                        pkmn = aux2
+                        battle.opponent.active1.volatile_statuses = []
+                        battle.opponent.active1.boosts = defaultdict(lambda: 0)
+                        logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active1.name) + ": p1a")
+                        if len(battle.opponent.reserved) == 6 or len(battle.opponent.reserved) == 5: 
+                            # Hay que quitar uno...
+                            battle.opponent.reserved.pop(contador)
+                        contador =+ 1
+            else:
+                contador = 0
+                for pkmn in battle.opponent.reserved:
+                    if pkmn.name == split_msg[3].partition(",")[0]:
+                        aux2 = battle.opponent.active2
+                        battle.opponent.active2 = deepcopy(pkmn)
+                        pkmn = aux2
+                        battle.opponent.active2.volatile_statuses = []
+                        battle.opponent.active2.boosts = defaultdict(lambda: 0)
+                        logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active2.name) + ": p1b")
+                        if len(battle.opponent.reserved) == 6 or len(battle.opponent.reserved) == 5: 
+                            # Hay que quitar uno...
+                            battle.opponent.reserved.pop(contador)
+                        contador =+ 1          
     else:
         if split_msg[2].startswith("p1"):
-            aux = "p1a"
+            # ¿p1a o p1b?
+            if split_msg[2].startswith("p1a"):
+                for pkmn in battle.user.reserved:
+                    if pkmn.name == split_msg[3].partition(",")[0]:
+                        aux2 = battle.user.active1
+                        battle.user.active1 = deepcopy(pkmn)
+                        pkmn = aux2
+                        battle.user.active1.volatile_statuses = []
+                        battle.user.active1.boosts = defaultdict(lambda: 0)
+                        logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active1.name) + ": p1a")
+            else:
+                for pkmn in battle.user.reserved:
+                    if pkmn.name == split_msg[3].partition(",")[0]:
+                        aux2 = battle.user.active2
+                        battle.user.active2 = deepcopy(pkmn)
+                        pkmn = aux2
+                        battle.user.active2.volatile_statuses = []
+                        battle.user.active2.boosts = defaultdict(lambda: 0)
+                        logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active2.name) + ": p1b")
         else:
-            aux = "p1b"
-        if split_msg[2].startswith(aux):
-            for pkmn in battle.user.reserved:
-                if pkmn.name == split_msg[3].partition(",")[0]:
-                    aux = battle.user.active1
-                    battle.user.active1 = pkmn
-                    pkmn = aux
-                    battle.user.active1.volatile_statuses = []
-                    battle.user.active1.boosts = defaultdict(lambda: 0)
-                    logger.debug("El usuario ha cambiado de Pokémon a..." + battle.opponent.active1.name + ": " + aux)
-        else:
-            for pkmn in battle.user.reserved:
-                if pkmn.name == split_msg[3].partition(",")[0]:
-                    aux = battle.user.active2
-                    battle.user.active2 = pkmn
-                    pkmn = aux
-                    battle.user.active2.volatile_statuses = []
-                    battle.user.active2.boosts = defaultdict(lambda: 0)
-                    logger.debug("El usuario ha cambiado de Pokémon a..." + battle.opponent.active2.name + ": " + aux)
+            # ¿p2a o p2b?
+            if split_msg[2].startswith("p2a"):
+                for pkmn in battle.user.reserved:
+                    if pkmn.name == split_msg[3].partition(",")[0]:
+                        aux2 = battle.user.active1
+                        battle.user.active1 = deepcopy(pkmn)
+                        pkmn = aux2
+                        battle.user.active1.volatile_statuses = []
+                        battle.user.active1.boosts = defaultdict(lambda: 0)
+                        logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active1.name) + ": p2a")
+            else:
+                for pkmn in battle.user.reserved:
+                    if pkmn.name == split_msg[3].partition(",")[0]:
+                        aux2 = battle.user.active2
+                        battle.user.active2 = deepcopy(pkmn)
+                        pkmn = aux2
+                        battle.user.active2.volatile_statuses = []
+                        battle.user.active2.boosts = defaultdict(lambda: 0)
+                        logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active2.name) + ": p2b")  
+    return battle
 
 
 # Aumento o disminución de HP...
@@ -170,6 +230,7 @@ def heal_or_damage(battle, split_msg):
             else:
                 battle.user.active2.hp = float(split_msg[3].split('/')[0])
                 battle.user.active2.max_hp = float(split_msg[3].split('/')[1].split()[0])
+    return battle
 
 
 # Pokémon debilitado...
@@ -197,13 +258,14 @@ def faint(battle, split_msg):
         else:
             # Pokémon debilitado debe tener HP = 0
             battle.user.active2.hp = 0
+    return battle
 
 # Se realiza un movimiento...
 def move(battle, split_msg):
     # split_msg = ["","move","p2a: Scizor","Bug Bite","p1a: Vileplume"]
     # split_msg = ["","move","p1b: Zacian","Behemoth Blade","p2b: Zekrom"]
     # No importa para el agente los movimientos registrados
-    ...
+    return battle
 
 
 # Aumento de estadísticas
@@ -223,11 +285,11 @@ def boost(battle, split_msg):
         if split_msg[2].startswith(aux):
             # p2a (solo para este ejemplo)
             # Como la cantidad no puede superar los 6... hay un límite y se actualiza la cifra verdadera...
-            battle.opponent.active1.boosts[stat] = min(battle.opponent.active1[stat] + amount, constants.MAX_BOOSTS)
+            battle.opponent.active1.boosts[stat] = min(battle.opponent.active1.boosts[stat] + amount, constants.MAX_BOOSTS)
         else:
             # p2b (solo para este ejemplo)
             # Como la cantidad no puede superar los 6... hay un límite y se actualiza la cifra verdadera...
-            battle.opponent.active2.boosts[stat] = min(battle.opponent.active2[stat] + amount, constants.MAX_BOOSTS)
+            battle.opponent.active2.boosts[stat] = min(battle.opponent.active2.boosts[stat] + amount, constants.MAX_BOOSTS)
     else:
         if split_msg[2].startswith("p1"):
             aux = "p1a"
@@ -237,11 +299,12 @@ def boost(battle, split_msg):
         if split_msg[2].startswith(aux):
             # p1a (solo para este ejemplo)
             # Como la cantidad no puede superar los 6... hay un límite y se actualiza la cifra verdadera...
-            battle.user.active1.boosts[stat] = min(battle.user.active1[stat] + amount, constants.MAX_BOOSTS)
+            battle.user.active1.boosts[stat] = min(battle.user.active1.boosts[stat] + amount, constants.MAX_BOOSTS)
         else:
             # p1b (solo para este ejemplo)
             # Como la cantidad no puede superar los 6... hay un límite y se actualiza la cifra verdadera...
-            pkmn = battle.user.active2.boosts[stat] = min(battle.user.active2[stat] + amount, constants.MAX_BOOSTS)
+            pkmn = battle.user.active2.boosts[stat] = min(battle.user.active2.boosts[stat] + amount, constants.MAX_BOOSTS)
+    return battle
 
 
 # Disminución de estadísticas
@@ -261,11 +324,11 @@ def unboost(battle, split_msg):
         if split_msg[2].startswith(aux):
             # p2a (solo para este ejemplo)
             # Como la cantidad no puede superar los -6... hay un límite y se actualiza la cifra verdadera...
-            battle.opponent.active1.boosts[stat] = max(battle.opponent.active1[stat] - amount, -1*constants.MAX_BOOSTS)
+            battle.opponent.active1.boosts[stat] = max(battle.opponent.active1.boosts[stat] - amount, -1*constants.MAX_BOOSTS)
         else:
             # p2b (solo para este ejemplo)
             # Como la cantidad no puede superar los -6... hay un límite y se actualiza la cifra verdadera...
-            battle.opponent.active2.boosts[stat] = max(battle.opponent.active2[stat] - amount, -1*constants.MAX_BOOSTS)
+            battle.opponent.active2.boosts[stat] = max(battle.opponent.active2.boosts[stat] - amount, -1*constants.MAX_BOOSTS)
     else:
         if split_msg[2].startswith("p1"):
             aux = "p1a"
@@ -275,11 +338,12 @@ def unboost(battle, split_msg):
         if split_msg[2].startswith(aux):
             # p1a (solo para este ejemplo)
             # Como la cantidad no puede superar los -6... hay un límite y se actualiza la cifra verdadera...
-            battle.user.active1.boosts[stat] = max(battle.user.active1[stat] - amount, -1*constants.MAX_BOOSTS)
+            battle.user.active1.boosts[stat] = max(battle.user.active1.boosts[stat] - amount, -1*constants.MAX_BOOSTS)
         else:
             # p1b (solo para este ejemplo)
             # Como la cantidad no puede superar los -6... hay un límite y se actualiza la cifra verdadera...
-            pkmn = battle.user.active2.boosts[stat] = max(battle.user.active2[stat] - amount, -1*constants.MAX_BOOSTS)
+            pkmn = battle.user.active2.boosts[stat] = max(battle.user.active2.boosts[stat] - amount, -1*constants.MAX_BOOSTS)
+    return battle
 
 
 # Un Pokémon ha cambiado de status
@@ -309,16 +373,17 @@ def status(battle, split_msg):
         else:
             battle.user.active2.status = status_name
             logger.debug("{} ha obtenido el estado: {}".format(battle.user.active2.name, status_name))
+    return battle
 
 
 # Se activa una habilidad...
 def activate(battle, split_msg):
     # split_msg = ["","-activate","p2b: Indeedee","move: Psychic Terrain"]
-    ...
+    return battle
 
 # Se prepara para un movimiento...
 def prepare(battle, split_msg):
-    ...
+    return battle
 
 
 # Estado volátil... Solo considero Dynamax...
@@ -357,7 +422,7 @@ def start_volatile_status(battle, split_msg):
                 battle.user.active2.hp *= 2
                 battle.user.active2.max_hp *= 2
                 logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.user.active2.name, battle.user.active2.hp, battle.user.active2.max_hp))
-
+    return battle
 
 
 # Fin estado volátil...
@@ -394,6 +459,7 @@ def end_volatile_status(battle, split_msg):
                 battle.user.active2.hp /= 2
                 battle.user.active2.max_hp /= 2
                 logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.user.active2.name, battle.user.active2.hp, battle.user.active2.max_hp))
+    return battle
 
 
 # Un estado se cura...
@@ -425,12 +491,13 @@ def curestatus(battle, split_msg):
             if volatile_status == constants.DYNAMAX:
                 battle.user.active2.status = None
                 logger.debug("{} se ha curado...".format(battle.user.active2.name))
+    return battle
 
 
 # The Pokémon POKEMON has used a move that cures its team of status effects, like Heal Bell.
 def cureteam(battle, split_msg):
     # No se usa...
-    ...
+    return battle
 
 
 # Se establece un Clima... no me importa quién lo realiza
@@ -443,6 +510,7 @@ def weather(battle, split_msg):
     logger.debug("El clima {} ha empezado...".format(weather_name))
     # Se establece en class Battle:
     battle.weather = weather_name
+    return battle
 
 
 # Inicia un Field...
@@ -459,6 +527,7 @@ def fieldstart(battle, split_msg):
         # Otro Field
         logger.debug("Ha iniciado el campo {}...".format(field_name))
         battle.field = field_name
+    return battle
 
 
 # Termina un Field
@@ -473,6 +542,7 @@ def fieldend(battle, split_msg):
         # Otro Field
         logger.debug("Ha terminado el campo {}...".format(field_name))
         battle.field = None
+    return battle
 
 
 # Side conditions are all effects that affect one side of the field. (For example: Tailwind, Stealth Rock, Reflect)
@@ -487,6 +557,7 @@ def sidestart(battle, split_msg):
     else:
         logger.debug("Efecto {} ha sido iniciado por el usuario...".format(condition))
         battle.user.side_conditions[condition] += 1
+    return battle
 
 
 # Indicates that the side condition CONDITION ended for the given SIDE.
@@ -501,36 +572,37 @@ def sideend(battle, split_msg):
     else:
         logger.debug("Efecto {} del usuario ha terminado...".format(condition))
         battle.user.side_conditions[condition] = 0
+    return battle
 
 
 # Intercambia efectos
 def swapsideconditions(battle, _):
     # No se usa...
-    ...
+    return battle
 
 
 # Establece Objeto
 def set_item(battle, split_msg):
     # No se considera...
-    ...
+    return battle
 
 
 # Remueve Objeto...
 def remove_item(battle, split_msg):
     # No se considera...
-    ...
+    return battle
 
 
 # Establece habilidad
 def set_ability(battle, split_msg):
     # No se considera...
-    ...
+    return battle
 
 
 # Establece habilidad
 def set_opponent_ability_from_ability_tag(battle, split_msg):
     # No se considera...
-    ...
+    return battle
 
 
 #
@@ -561,18 +633,19 @@ def form_change(battle, split_msg):
 
     if side.active.name != "zoroark":
         side.active.base_name = base_name
+    return battle
 
 
 # Ataque Z
 def zpower(battle, split_msg):
     # No VGC 2022
-    ...
+    return battle
 
 
 # Reestablece estadísticas negativas
 def clearnegativeboost(battle, split_msg):
     # No VGC 2022
-    ...
+    return battle
 
 
 # Reestablece todas las estadísticas
@@ -597,24 +670,25 @@ def clearallboost(battle, _):
         if value != 0:
             logger.debug("Configurando estadísticas de {} de {} a 0".format(battle.opponent.active2.name, stat))
             battle.opponent.active2.boosts[stat] = 0
+    return battle
 
 
 # The Pokémon POKEMON used move MOVE which causes a temporary effect lasting the duration of the turn. (For example: Protect, Focus Punch, Roost).
 def singleturn(battle, split_msg):
     # No se considera movimientos
-    ...
+    return battle
 
 
 # Signals the upkeep phase of the turn where the number of turns left for field conditions are updated.
 def upkeep(battle, _):
     # No se considera
-    ...
+    return battle
 
 
 # Mega-evolución
 def mega(battle, split_msg):
     # No VGC 2022
-    ...
+    return battle
 
 
 # Ditto
@@ -640,12 +714,14 @@ def transform(battle, split_msg):
 
         if constants.TRANSFORM not in battle.opponent.active.volatile_statuses:
             battle.opponent.active.volatile_statuses.append(constants.TRANSFORM)
+    return battle
 
 
 # Actualiza el turno
 def turn(battle, split_msg):
     # split_msg = ["","turn","1"]
     battle.turn = int(split_msg[2])
+    return battle
 
 
 # 
@@ -653,10 +729,11 @@ def noinit(battle, split_msg):
     if split_msg[2] == "rename":
         battle.battle_tag = split_msg[3]
         logger.debug("Renamed battle to {}".format(battle.battle_tag))
+    return battle
 
 
 # Actualiza estado
-def update_battle(battle, msg):
+async def update_battle(battle, msg):
     msg_lines = msg.split('\n')
 
     action = None
@@ -712,16 +789,13 @@ def update_battle(battle, msg):
 
         function_to_call = battle_modifiers_lookup.get(action)
         if function_to_call is not None:
-            function_to_call(battle, split_msg)
+            battle = function_to_call(battle, split_msg)
         if action == 'turn':
-            return True
+            return True, battle
 
     if action in ['inactive', 'updatesearch']:
-        return False
+        return False, battle
 
     if action != "request":
-        return battle.force_switch
-
-
-async def async_update_battle(battle, msg):
-    return update_battle(battle, msg)
+        return battle.force_switch, battle
+    return None, battle

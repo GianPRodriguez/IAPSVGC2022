@@ -48,7 +48,7 @@ class PSWebsocketClient:
 
     async def send_message(self, room, message_list):
         message = room + "|" + "|".join(message_list) #<class 'list'>
-        logger.debug("Enviando mensaje hacia el websocket: {}".format(message))
+        # logger.debug("Enviando mensaje hacia el websocket: {}".format(message))
         await self.websocket.send(message)
         self.last_message = message
 
