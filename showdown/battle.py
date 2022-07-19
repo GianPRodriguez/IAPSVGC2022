@@ -10,6 +10,7 @@ from abc import abstractmethod
 import constants
 import config
 import logging
+import sys
 
 import data
 from data import all_move_json
@@ -82,23 +83,27 @@ class Battle(ABC):
         ...
 
     def imprimir(self):
-        print()
-        print("Estado del Entorno")
-        print("------------------")
-        print("Weather: " + str(self.weather))
-        print("Field: " + str(self.field))
-        print("Trick Room: " + str(self.trick_room))
-        print("Turn: " + str(self.turn))
-        print("Started: " + str(self.started))
-        print("rqid: " + str(self.rqid))
-        print("Force Switch: " + str(self.force_switch))
-        print("Wait: " + str(self.wait))
-        print()
-        print("USUARIO: ")
-        self.user.imprimir()
-        print()
-        print("OPONENTE: ")
-        self.opponent.imprimir()
+        original_stdout = sys.stdout
+        with open('reporte.txt', 'w') as f:
+            sys.stdout = f
+            print()
+            print("Estado del Entorno")
+            print("------------------")
+            print("Weather: " + str(self.weather))
+            print("Field: " + str(self.field))
+            print("Trick Room: " + str(self.trick_room))
+            print("Turn: " + str(self.turn))
+            print("Started: " + str(self.started))
+            print("rqid: " + str(self.rqid))
+            print("Force Switch: " + str(self.force_switch))
+            print("Wait: " + str(self.wait))
+            print()
+            print("USUARIO: ")
+            self.user.imprimir()
+            print()
+            print("OPONENTE: ")
+            self.opponent.imprimir()
+            sys.stdout = original_stdout
 
 
 class Battler:
