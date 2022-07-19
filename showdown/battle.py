@@ -48,8 +48,11 @@ class Battle(ABC):
         self.user = Battler()
         self.opponent = Battler()
         self.weather = None
+        self.weatherTurn = 0
         self.field = None
+        self.fieldTurn = 0
         self.trick_room = False
+        self.trick_roomTurn = 0
         self.turn = False
         self.started = False
         self.rqid = None
@@ -176,6 +179,7 @@ class Pokemon:
         self.volatile_statuses = []             # Varios
         self.boosts = defaultdict(lambda: 0)    # Diccionario vacío
         self.can_dynamax = True
+        self.opponent_confirmed = False
 
 
     # Cambio de forma - Constante
