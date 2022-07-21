@@ -31,38 +31,20 @@ def battle_is_finished(battle_tag, msg):
 
 # Retorna el Mensaje de Acción
 async def accion_batalla(battle):
-    # Copia del Estado Actual
-    battle_copy = deepcopy(battle)
     # ¿Hay solicitud de JSON pendiente?
-    if battle_copy.request_json:
-        battle_copy.user.from_json(battle_copy.request_json, first_turn=False)
+    if battle.request_json:
+        battle.from_json(battle.request_json, first_turn=False)
     # Se define la mejor acción
-    best_action = battle_copy.find_best_move(battle)
-    # Imprimo en CMD la mejor acción
-    logger.info(best_action)
+    mensaje = await format_decision(battle.action_battle(battle))
+    # Imprimo en CMD la acción
+    logger.info(mensaje)
     # Retorno el mensaje listo para enviarlo al WebSocket
-    return best_action
-
-
-# Se envía la acción para TEAM PREVIEW
-async def accion_team_preview(battle):
-    # Configurado para INPUT por CMD
-    print('Ingresa los 4 dígitos para el Team Preview... Ejemplo: "3142"')
-    # eleccion es un entero: 3142
-    eleccion = input()
-    # Creo un array de enteros
-    arrayEleccion = [int(a) for a in str(eleccion)]
-    eleccion0 = arrayEleccion[0]
-    eleccion1 = arrayEleccion[1]
-    eleccion2 = arrayEleccion[2]
-    eleccion3 = arrayEleccion[3]
-    # Regreso los 4 enteros
-    return int(eleccion0), int(eleccion1), int(eleccion2), int(eleccion3)
+    return battle, mensaje
 
 
 async def escoge_accion_team_preview(battle, ps_websocket_client):
     # Se escoge los 4 Pokémon: eleccion(n) es un entero
-    eleccion0, eleccion1, eleccion2, eleccion3 = await accion_team_preview(battle)
+    eleccion0, eleccion1, eleccion2, eleccion3 = await battle.action_team_preview(battle)
     # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
     battle.user.active1 = battle.user.reserved[eleccion0-1]
     battle.user.active2 = battle.user.reserved[eleccion1-1]
@@ -73,6 +55,8 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
     # Se prepara el String que se va a enviar al WebSocket
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
     mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]
+    # Imprimo en CMD la acción
+    logger.info(mensaje)
     # Se envía el String al WebSocket
     await ps_websocket_client.send_message(battle.battle_tag, mensaje)
     return battle
@@ -206,5 +190,5 @@ async def pokemon_battle(ps_websocket_client):
             if action_required and not battle.wait:
                 battle.imprimir()
                 # Escoge el mejor movimiento y lo envía al websocket
-                best_action = await accion_batalla(battle)
-                await ps_websocket_client.send_message(battle.battle_tag, best_action)
+                battle, mensaje = await accion_batalla(battle)
+                await ps_websocket_client.send_message(battle.battle_tag, mensaje)

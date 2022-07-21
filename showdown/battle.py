@@ -79,8 +79,12 @@ class Battle(ABC):
 
 
     @abstractmethod
-    def find_best_move(self, battle):
+    def action_team_preview(self, battle):
         ...
+
+    @abstractmethod
+    def action_battle(self, battle):
+        ...        
 
     def imprimir(self):
         original_stdout = sys.stdout
