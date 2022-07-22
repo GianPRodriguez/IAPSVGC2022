@@ -69,7 +69,7 @@ class Modulo1(tk.Frame):
 		canvasBody.pack()
 
 class Modulo2(tk.Frame):
-	async def IniciarModulo(self):
+	def IniciarModulo(self):
 		# Cola Multiprocesos
 		q = Queue()
 		# Bucle Infinito
@@ -98,8 +98,7 @@ class Modulo2(tk.Frame):
 		canvasBody.create_rectangle(0,0,310,259, outline='white', width=3)
 		canvasBody.pack()
 		# Botón Iniciar Batalla
-		loop = asyncio.get_event_loop()
-		button1 = tk.Button(self, text='Iniciar Batalla', anchor="center", command= self.IniciarModulo())
+		button1 = tk.Button(self, text='Iniciar Batalla', anchor="center", command= self.IniciarModulo)
 		button1.configure(width = 15, height = 2, activebackground = "#33B5E5", relief = tk.FLAT)
 		button1_widget = canvasBody.create_window(405, 160, window=button1)
 		# Botón Ayuda
