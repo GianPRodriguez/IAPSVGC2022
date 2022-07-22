@@ -3,6 +3,7 @@ from environs import Env
 from config import init_logging
 
 from teams import load_team
+from multiprocessing import Process, Queue
 from showdown.run_battle import pokemon_battle
 from showdown.websocket_client import PSWebsocketClient
 from data import all_move_json
@@ -44,7 +45,7 @@ def parse_configs():
 
 
 # MAIN
-async def showdown():
+async def showdown(q):
     # Configuración de la Aplicación
     parse_configs()
     # Creo una Clase PSWebsocketClient
@@ -70,7 +71,7 @@ async def showdown():
         else:
             raise ValueError("Invalid Bot Mode")
         # Nueva Batalla Pokémon completo
-        winner = await pokemon_battle(ps_websocket_client)
+        winner, q = await pokemon_battle(ps_websocket_client, q)
 
         if winner == config.username:
             wins += 1
@@ -86,4 +87,4 @@ async def showdown():
 
 # Inicio
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(showdown())
+    asyncio.get_event_loop().run_until_complete(showdown(q))

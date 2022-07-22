@@ -60,6 +60,7 @@ class Battle(ABC):
         self.force_switch = False               #
         self.wait = False                       #
         self.request_json = None
+        self.q = None                           # Queue
 
 
     # TEAM PREVIEW

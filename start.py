@@ -1,6 +1,8 @@
+from multiprocessing import Process, Queue
 import tkinter as tk
-import run
+from run import *
 import subprocess
+import asyncio
 
 class LoremIpsum(tk.Tk):
 	def __init__(self, *args, **kwargs):
@@ -14,6 +16,7 @@ class LoremIpsum(tk.Tk):
 		self.title("Lorem ipsum dolor sit amet")
 		self.geometry("500x309")
 		self.resizable(False, False)
+		self.iconbitmap("icon.ico")
 		# Frames
 		self.frames = {}
 		for F in (StartPage, Modulo1, Modulo2):
@@ -66,6 +69,22 @@ class Modulo1(tk.Frame):
 		canvasBody.pack()
 
 class Modulo2(tk.Frame):
+	async def IniciarModulo(self):
+		# Cola Multiprocesos
+		q = Queue()
+		# Bucle Infinito
+		while True:
+			p = Process(target=showdown, args=(q,))
+			p.start()
+			q.get()
+			# Nombre de los Pokémon
+			namePokemon0 = q[0]
+			namePokemon0 = q[1]
+			namePokemon0 = q[2]
+			namePokemon0 = q[3]
+			# Actualizo los Rectangulo Move
+			text1 = canvasBody.create_text(100, 100, text=namePokemon0, fill="white", font=('Verdana 15 bold'))
+
 	def __init__(self, parent, controller):
 		tk.Frame.__init__(self, parent)
 		self.controller = controller
@@ -79,7 +98,8 @@ class Modulo2(tk.Frame):
 		canvasBody.create_rectangle(0,0,310,259, outline='white', width=3)
 		canvasBody.pack()
 		# Botón Iniciar Batalla
-		button1 = tk.Button(self, text='Iniciar Batalla', anchor="center")
+		loop = asyncio.get_event_loop()
+		button1 = tk.Button(self, text='Iniciar Batalla', anchor="center", command= self.IniciarModulo())
 		button1.configure(width = 15, height = 2, activebackground = "#33B5E5", relief = tk.FLAT)
 		button1_widget = canvasBody.create_window(405, 160, window=button1)
 		# Botón Ayuda
@@ -97,16 +117,13 @@ class Modulo2(tk.Frame):
 		labelR2 = tk.Label(self,text="Histórico", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
 		LabelR2_widget = canvasBody.create_window(188, 238-5, window=labelR2)
 		# Rectangulo Move
-		canvasBody.create_rectangle(28,50-5,148,90-5, fill='white', outline='white')
-		canvasBody.create_rectangle(160,50-5,280,90-5, fill='white', outline='white')
-		canvasBody.create_rectangle(28,102-5,148,142-5, fill='white', outline='white')
-		canvasBody.create_rectangle(160,102-5,280,142-5, fill='white', outline='white')
+		rectangle1 = canvasBody.create_rectangle(28,50-5,148,90-5, fill='white', outline='white')
+		rectangle2 = canvasBody.create_rectangle(160,50-5,280,90-5, fill='white', outline='white')
+		rectangle3 = canvasBody.create_rectangle(28,102-5,148,142-5, fill='white', outline='white')
+		rectangle4 = canvasBody.create_rectangle(160,102-5,280,142-5, fill='white', outline='white')
 		# Rectangulo Rendimiento
-		canvasBody.create_rectangle(28,185-5,148,225-5, fill='white', outline='white')
-		canvasBody.create_rectangle(160,185-5,280,225-5, fill='white', outline='white')
-
-	def IniciarModulo():
-		subprocess.call(["python", "run.py"])
+		rectangle5 = canvasBody.create_rectangle(28,185-5,148,225-5, fill='white', outline='white')
+		rectangle6 = canvasBody.create_rectangle(160,185-5,280,225-5, fill='white', outline='white')
 
 
 if __name__ == "__main__":
