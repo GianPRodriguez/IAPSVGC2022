@@ -88,7 +88,7 @@ class Battle(ABC):
 
     def imprimir(self):
         original_stdout = sys.stdout
-        with open('reporte.txt', 'w') as f:
+        with open('reporte.txt', 'a') as f:
             sys.stdout = f
             print()
             print("Estado del Entorno")
@@ -187,7 +187,10 @@ class Pokemon:
         self.status = None                      # A lo más uno
         self.volatile_statuses = []             # Varios
         self.boosts = defaultdict(lambda: 0)    # Diccionario vacío
-        self.can_dynamax = True
+        if name.startswith('Zacian'):
+            self.can_dynamax = False
+        else:
+            self.can_dynamax = True
         self.opponent_confirmed = False
 
 

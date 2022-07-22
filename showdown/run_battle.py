@@ -6,14 +6,11 @@ from copy import deepcopy
 import logging
 import ast
 
-import data
-from data.helpers import get_standard_battle_sets
 import constants
 import config
 from showdown.engine.evaluate import Scoring
-from showdown.battle import Pokemon
+from showdown.battle_bots.helpers import format_decision
 from showdown.battle_modifier import update_battle
-
 from showdown.websocket_client import PSWebsocketClient
 
 logger = logging.getLogger(__name__)
@@ -33,9 +30,10 @@ def battle_is_finished(battle_tag, msg):
 async def accion_batalla(battle):
     # ¿Hay solicitud de JSON pendiente?
     if battle.request_json:
-        battle.from_json(battle.request_json, first_turn=False)
+        battle.user.from_json(battle.request_json, first_turn=False)
     # Se define la mejor acción
-    mensaje = await format_decision(battle.action_battle(battle))
+    battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = await battle.action_battle(battle)
+    mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
     # Imprimo en CMD la acción
     logger.info(mensaje)
     # Retorno el mensaje listo para enviarlo al WebSocket
