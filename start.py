@@ -72,18 +72,17 @@ class Modulo2(tk.Frame):
 	def IniciarModulo(self):
 		# Cola Multiprocesos
 		q = Queue()
-		# Bucle Infinito
-		while True:
-			p = Process(target=showdown, args=(q,))
-			p.start()
-			q.get()
-			# Nombre de los Pokémon
-			namePokemon0 = q[0]
-			namePokemon0 = q[1]
-			namePokemon0 = q[2]
-			namePokemon0 = q[3]
-			# Actualizo los Rectangulo Move
-			text1 = canvasBody.create_text(100, 100, text=namePokemon0, fill="white", font=('Verdana 15 bold'))
+		# Start Battle
+		p = Process(target=pre_showdown, args=(q,))
+		p.start()
+		q.get()
+		# Nombre de los Pokémon
+		namePokemon0 = q[0]
+		namePokemon0 = q[1]
+		namePokemon0 = q[2]
+		namePokemon0 = q[3]
+		# Actualizo los Rectangulo Move
+		text1 = canvasBody.create_text(100, 100, text=namePokemon0, fill="white", font=('Verdana 15 bold'))
 
 	def __init__(self, parent, controller):
 		tk.Frame.__init__(self, parent)

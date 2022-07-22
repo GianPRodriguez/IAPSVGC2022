@@ -84,8 +84,5 @@ async def showdown(q):
         if battles_run >= config.run_count:
             break
 
-
-# Inicio
-if __name__ == "__main__":
-    print("ENTRO AL __name__")
+def pre_showdown(q):
     asyncio.get_event_loop().run_until_complete(showdown(q))
