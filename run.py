@@ -1,7 +1,7 @@
 from copy import deepcopy
 from environs import Env
 from config import init_logging
-
+from threading import Thread
 from teams import load_team
 from multiprocessing import Process, Queue
 from showdown.run_battle import pokemon_battle
@@ -72,7 +72,7 @@ async def showdown(q):
             raise ValueError("Invalid Bot Mode")
         # Nueva Batalla Pokémon completo
         winner, q = await pokemon_battle(ps_websocket_client, q)
-
+        q.put("HOLIII")
         if winner == config.username:
             wins += 1
         else:
@@ -84,5 +84,8 @@ async def showdown(q):
         if battles_run >= config.run_count:
             break
 
-def pre_showdown(q):
-    asyncio.get_event_loop().run_until_complete(showdown(q))
+class AsyncDownload(Thread):
+    def __init__(self, q):
+        super().__init__()
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        asyncio.new_event_loop().run_until_complete(showdown(q))

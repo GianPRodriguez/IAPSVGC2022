@@ -1,8 +1,12 @@
-from multiprocessing import Process, Queue
+import multiprocessing
+import queue
+from threading import Thread
 import tkinter as tk
+from tkinter import ttk
 from run import *
 import subprocess
 import asyncio
+from PIL import ImageTk, Image
 
 class LoremIpsum(tk.Tk):
 	def __init__(self, *args, **kwargs):
@@ -19,7 +23,7 @@ class LoremIpsum(tk.Tk):
 		self.iconbitmap("icon.ico")
 		# Frames
 		self.frames = {}
-		for F in (StartPage, Modulo1, Modulo2):
+		for F in (StartPage, Modulo1, Modulo2, Modulo3):
 			page_name = F.__name__
 			frame = F(parent=container, controller=self)
 			self.frames[page_name] = frame
@@ -52,7 +56,7 @@ class StartPage(tk.Frame):
 		button2.configure(width = 50, height = 2, activebackground = "#33B5E5", relief = tk.FLAT)
 		button2_widget = canvasBody.create_window(70, 105, anchor=tk.NW, window=button2)
 
-		button3 = tk.Button(self, text='Módulo de Retroalimentación de Equipos', anchor="center")
+		button3 = tk.Button(self, text='Módulo de Entrenamiento', anchor="center", command=lambda: controller.show_frame("Modulo3"))
 		button3.configure(width = 50, height = 2, activebackground = "#33B5E5", relief = tk.FLAT)
 		button3_widget = canvasBody.create_window(70, 175, anchor=tk.NW, window=button3)
 
@@ -67,61 +71,235 @@ class Modulo1(tk.Frame):
 		# Canvas Body
 		canvasBody = tk.Canvas(self, width=500, height=259, bg="#154e72")
 		canvasBody.pack()
+		# Botón Iniciar Batalla
+		self.button1 = tk.Button(self, text='Iniciar Batalla', anchor="center")
+		self.button1.configure(width = 16, height = 2, activebackground = "#33B5E5", relief = tk.FLAT)
+		self.button1_widget = canvasBody.create_window(250, 180, window=self.button1)
+		# Label Nombre de Usuario
+		labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
+		LabelUsername_widget = canvasBody.create_window(250, 30, window=labelUsername)
+		# Label Equipo del Agente
+		labelTeam = tk.Label(self,text="Equipo del Agente", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
+		LabelTeam_widget = canvasBody.create_window(250, 85, window=labelTeam)
+		# Entrada Nombre de Usuario
+		self.strName = tk.StringVar()
+		self.nameEntry = ttk.Entry(self, textvariable=self.strName, width=20)
+		self.strName_widget = canvasBody.create_window(250, 55, window=self.nameEntry)
+		# ListBox Equipo
+		self.cbbTeam = ttk.Combobox(self, state="readonly", values=["Python", "C", "C++", "Java"], width=17)
+		self.listbox_widget = canvasBody.create_window(250, 110, window=self.cbbTeam)
+		# IMG Salir
+		self.salirPNG = Image.open("salir.png")
+		self.newSalirPNG = self.salirPNG.convert(mode="RGBA")
+		self.resized_image= self.newSalirPNG.resize((40,40), Image.Resampling.LANCZOS)
+		self.salirTK = ImageTk.PhotoImage(self.resized_image)
+		self.buttonSalir = tk.Button(self, image=self.salirTK, command=lambda: controller.show_frame("StartPage"), bg="#154e72", activebackground="#154e72", highlightthickness = 0, bd = 0)
+		self.buttonSalir_widget = canvasHead.create_window(470, 28, window=self.buttonSalir)
 
 class Modulo2(tk.Frame):
-	def IniciarModulo(self):
-		# Cola Multiprocesos
-		q = Queue()
-		# Start Battle
-		p = Process(target=pre_showdown, args=(q,))
-		p.start()
-		q.get()
-		# Nombre de los Pokémon
-		namePokemon0 = q[0]
-		namePokemon0 = q[1]
-		namePokemon0 = q[2]
-		namePokemon0 = q[3]
-		# Actualizo los Rectangulo Move
-		text1 = canvasBody.create_text(100, 100, text=namePokemon0, fill="white", font=('Verdana 15 bold'))
+    def __init__(self, parent, controller):
+    	tk.Frame.__init__(self, parent)
+    	self.controller = controller
+    	# Canvas Head
+    	canvasHead = tk.Canvas(self, width=500, height=50, bg="#154e72")
+    	canvasHead.place(x=0, y=0, anchor = tk.CENTER)
+    	canvasHead.create_text(250, 25, text="Módulo de Análisis de Batallas", fill="white", font=('Verdana 15 bold'))
+    	canvasHead.pack()
+    	# Canvas Body
+    	self.canvasBody = tk.Canvas(self, width=500, height=259, bg="#154e72")
+    	self.canvasBody.create_rectangle(0,0,310,259, outline='white', width=3)
+    	self.canvasBody.pack()
+    	# Botón Iniciar Batalla
+    	self.button1 = tk.Button(self, text='Iniciar Batalla', anchor="center", command= self.IniciarModulo)
+    	self.button1.configure(width = 16, height = 1, activebackground = "#33B5E5", relief = tk.FLAT)
+    	self.button1_widget = self.canvasBody.create_window(400, 225, window=self.button1)
+    	# Botón Ayuda
+    	self.button2 = tk.Button(self, text='Ayuda', anchor="center", command= self.OcultarDatos)
+    	self.button2.configure(width = 16, height = 1, activebackground = "#33B5E5", relief = tk.FLAT)
+    	self.button2_widget = self.canvasBody.create_window(400, 185, window=self.button2)
+    	# Label Movimientos
+    	labelMove = tk.Label(self,text="Movimientos", bg = "#154e72", font=('Verdana 12 bold'), fg="white")
+    	LabelMove_widget = self.canvasBody.create_window(80, 30-5, window=labelMove)
+    	# Label Rendimiento
+    	labelR = tk.Label(self,text="Rendimiento", bg = "#154e72", font=('Verdana 12 bold'), fg="white")
+    	LabelR_widget = self.canvasBody.create_window(80, 165-5, window=labelR)
+    	labelR1 = tk.Label(self,text="Último turno", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
+    	LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=labelR1)
+    	labelR2 = tk.Label(self,text="Histórico", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
+    	LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=labelR2)
+    	# Rectangulo Move
+    	self.rectangle1 = self.canvasBody.create_rectangle(28,50-5,148,90-5, fill='white', outline='white')
+    	self.rectangle2 = self.canvasBody.create_rectangle(160,50-5,280,90-5, fill='white', outline='white')
+    	self.rectangle3 = self.canvasBody.create_rectangle(28,102-5,148,142-5, fill='white', outline='white')
+    	self.rectangle4 = self.canvasBody.create_rectangle(160,102-5,280,142-5, fill='white', outline='white')
+    	# Rectangulo Rendimiento
+    	rectangle5 = self.canvasBody.create_rectangle(28,185-5,148,225-5, fill='white', outline='white')
+    	rectangle6 = self.canvasBody.create_rectangle(160,185-5,280,225-5, fill='white', outline='white')
+    	# Label Nombre de Usuario
+    	labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
+    	LabelUsername_widget = self.canvasBody.create_window(400, 15, window=labelUsername)
+    	# Label Password
+    	labelPassword = tk.Label(self,text="Contraseña", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
+    	LabelPassword_widget = self.canvasBody.create_window(400, 65, window=labelPassword)
+    	# Label Equipo
+    	labelTeam = tk.Label(self,text="Equipo", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
+    	LabelTeam_widget = self.canvasBody.create_window(400, 115, window=labelTeam)
+    	# Entrada Nombre de Usuario
+    	self.strName = tk.StringVar()
+    	self.nameEntry = ttk.Entry(self, textvariable=self.strName, width=20)
+    	self.strName_widget = self.canvasBody.create_window(400, 40, window=self.nameEntry)
+    	# Entrada Contraseña
+    	self.strPassword = tk.StringVar()
+    	self.passwordEntry = ttk.Entry(self, show="*", textvariable=self.strPassword, width=20)
+    	self.strPassword_widget = self.canvasBody.create_window(400, 90, window=self.passwordEntry)
+    	# ListBox Equipo
+    	self.cbbTeam = ttk.Combobox(self, state="readonly", values=["Python", "C", "C++", "Java"], width=17)
+    	self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
+    	# IMG Salir
+    	self.salirPNG = Image.open("salir.png")
+    	self.newSalirPNG = self.salirPNG.convert(mode="RGBA")
+    	self.resized_image= self.newSalirPNG.resize((40,40), Image.Resampling.LANCZOS)
+    	self.salirTK = ImageTk.PhotoImage(self.resized_image)
+    	self.buttonSalir = tk.Button(self, image=self.salirTK, command=lambda: controller.show_frame("StartPage"), bg="#154e72", activebackground="#154e72", highlightthickness = 0, bd = 0)
+    	self.buttonSalir_widget = canvasHead.create_window(470, 28, window=self.buttonSalir)
 
-	def __init__(self, parent, controller):
-		tk.Frame.__init__(self, parent)
-		self.controller = controller
-		# Canvas Head
-		canvasHead = tk.Canvas(self, width=500, height=50, bg="#154e72")
-		canvasHead.place(x=0, y=0, anchor = tk.CENTER)
-		canvasHead.create_text(250, 25, text="Módulo de Análisis de Batallas", fill="white", font=('Verdana 15 bold'))
-		canvasHead.pack()
-		# Canvas Body
-		canvasBody = tk.Canvas(self, width=500, height=259, bg="#154e72")
-		canvasBody.create_rectangle(0,0,310,259, outline='white', width=3)
-		canvasBody.pack()
-		# Botón Iniciar Batalla
-		button1 = tk.Button(self, text='Iniciar Batalla', anchor="center", command= self.IniciarModulo)
-		button1.configure(width = 15, height = 2, activebackground = "#33B5E5", relief = tk.FLAT)
-		button1_widget = canvasBody.create_window(405, 160, window=button1)
-		# Botón Ayuda
-		button2 = tk.Button(self, text='Ayuda', anchor="center")
-		button2.configure(width = 15, height = 2, activebackground = "#33B5E5", relief = tk.FLAT)
-		button2_widget = canvasBody.create_window(405, 80, window=button2)
-		# Label Movimientos
-		labelMove = tk.Label(self,text="Movimientos", bg = "#154e72", font=('Verdana 12 bold'), fg="white")
-		LabelMove_widget = canvasBody.create_window(80, 30-5, window=labelMove)
-		# Label Rendimiento
-		labelR = tk.Label(self,text="Rendimiento", bg = "#154e72", font=('Verdana 12 bold'), fg="white")
-		LabelR_widget = canvasBody.create_window(80, 165-5, window=labelR)
-		labelR1 = tk.Label(self,text="Último turno", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
-		LabelR1_widget = canvasBody.create_window(68, 238-5, window=labelR1)
-		labelR2 = tk.Label(self,text="Histórico", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
-		LabelR2_widget = canvasBody.create_window(188, 238-5, window=labelR2)
-		# Rectangulo Move
-		rectangle1 = canvasBody.create_rectangle(28,50-5,148,90-5, fill='white', outline='white')
-		rectangle2 = canvasBody.create_rectangle(160,50-5,280,90-5, fill='white', outline='white')
-		rectangle3 = canvasBody.create_rectangle(28,102-5,148,142-5, fill='white', outline='white')
-		rectangle4 = canvasBody.create_rectangle(160,102-5,280,142-5, fill='white', outline='white')
-		# Rectangulo Rendimiento
-		rectangle5 = canvasBody.create_rectangle(28,185-5,148,225-5, fill='white', outline='white')
-		rectangle6 = canvasBody.create_rectangle(160,185-5,280,225-5, fill='white', outline='white')
+    def monitor(self, thread, q):
+        if thread.is_alive():
+            # check the thread every 100ms
+            self.after(100, lambda: self.monitor(thread, q))
+            try:
+            	self.cola = q.get(0)
+            	if self.cola[0] == 1:
+            		# Nombre de los Pokémon
+            		namePokemon = self.cola
+            		namePokemon0 = namePokemon[1]
+            		namePokemon1 = namePokemon[2]
+            		namePokemon2 = namePokemon[3]
+            		namePokemon3 = namePokemon[4]
+            		# Actualizo los Rectangulo Move
+            		self.text1 = self.canvasBody.create_text(28+60, 45+20, text=namePokemon0, fill="black", font=('Verdana 12'))
+            		self.text2 = self.canvasBody.create_text(160+60, 45+20, text=namePokemon1, fill="black", font=('Verdana 12'))
+            		self.text3 = self.canvasBody.create_text(28+60, 97+20, text=namePokemon2, fill="black", font=('Verdana 12'))
+            		self.text4 = self.canvasBody.create_text(160+60, 97+20, text=namePokemon3, fill="black", font=('Verdana 12'))
+            		self.text5 = self.canvasBody.create_text(28+60, 180+20, text="0", fill="black", font=('Verdana 12'))
+            		self.text6 = self.canvasBody.create_text(160+60, 180+20, text="0", fill="black", font=('Verdana 12'))
+            	elif self.cola[0] == 0:
+            		self.button1.configure(text='Batalla en Curso')
+            	elif self.cola[0] == 2:
+            		contenidoCola = self.cola
+            		text1 = contenidoCola[1]
+            		color1 = contenidoCola[2]
+            		text2 = contenidoCola[3]
+            		color2 = contenidoCola[4]
+            		text3 = contenidoCola[5]
+            		color3 = contenidoCola[6]
+            		text4 = contenidoCola[7]
+            		color4 = contenidoCola[8]
+            		# Actualizo los Rectangulo Move
+            		self.canvasBody.itemconfig(self.text1, text=text1)
+            		self.canvasBody.itemconfig(self.text2, text=text2)
+            		self.canvasBody.itemconfig(self.text3, text=text3)
+            		self.canvasBody.itemconfig(self.text4, text=text4)
+            		self.canvasBody.itemconfig(self.rectangle1, fill=color1, outline=color1)
+            		self.canvasBody.itemconfig(self.rectangle2, fill=color2, outline=color2)
+            		self.canvasBody.itemconfig(self.rectangle3, fill=color3, outline=color3)
+            		self.canvasBody.itemconfig(self.rectangle4, fill=color4, outline=color4)
+            	else:
+            		...
+            except queue.Empty:
+            	...
+        else:
+        	self.canvasBody.itemconfig(self.text1, text='')
+        	self.canvasBody.itemconfig(self.text2, text='')
+        	self.canvasBody.itemconfig(self.text3, text='')
+        	self.canvasBody.itemconfig(self.text4, text='')
+        	self.canvasBody.itemconfig(self.text5, text='')
+        	self.canvasBody.itemconfig(self.text6, text='')
+        	self.button2.configure(text='Ayuda')
+        	self.button1.configure(text='Iniciar Batalla')
+
+    def IniciarModulo(self):
+    	# Cola Multiprocesos
+    	q = multiprocessing.Queue()
+    	# Creo los Rectangulo Move
+    	self.text1 = self.canvasBody.create_text(28+55, 45+20, text='', fill="black", font=('Verdana 12'))
+    	self.text2 = self.canvasBody.create_text(160+55, 45+20, text='', fill="black", font=('Verdana 12'))
+    	self.text3 = self.canvasBody.create_text(28+55, 97+20, text='', fill="black", font=('Verdana 12'))
+    	self.text4 = self.canvasBody.create_text(160+55, 97+20, text='', fill="black", font=('Verdana 12'))
+    	self.text5 = self.canvasBody.create_text(28+55, 180+20, text='', fill="black", font=('Verdana 12'))
+    	self.text6 = self.canvasBody.create_text(160+55, 180+20, text='', fill="black", font=('Verdana 12'))
+    	# Start Battle
+    	self.button1['state'] = tk.DISABLED
+    	self.button1.configure(text='Buscando Oponente')
+    	p = Thread(target=AsyncDownload, args=(q,))
+    	p.start()
+    	self.monitor(p, q)
+
+    def OcultarDatos(self):
+    	# Cambiar Nombre de Botón
+    	nameButton = self.button2.config('text')[-1]
+    	# Muestra u oculta los campos
+    	if nameButton == 'Ayuda':
+    		self.canvasBody.itemconfig(self.text1, text="???")
+    		self.canvasBody.itemconfig(self.text2, text="???")
+    		self.canvasBody.itemconfig(self.text3, text="???")
+    		self.canvasBody.itemconfig(self.text4, text="???")
+    		self.canvasBody.itemconfig(self.text5, text="???")
+    		self.canvasBody.itemconfig(self.text6, text="???")
+    		self.button2.configure(text='Detener Ayuda')
+    	else:
+    		self.canvasBody.itemconfig(self.text1, text=self.cola[1])
+    		self.canvasBody.itemconfig(self.text2, text=self.cola[2])
+    		self.canvasBody.itemconfig(self.text3, text=self.cola[3])
+    		self.canvasBody.itemconfig(self.text4, text=self.cola[4])
+    		self.canvasBody.itemconfig(self.text5, text='0')
+    		self.canvasBody.itemconfig(self.text6, text='0')
+    		self.button2.configure(text='Ayuda')
+    	# Nuevo Nombre
+    	
+
+class Modulo3(tk.Frame):
+    def __init__(self, parent, controller):
+    	tk.Frame.__init__(self, parent)
+    	self.controller = controller
+    	# Canvas Head
+    	canvasHead = tk.Canvas(self, width=500, height=50, bg="#154e72")
+    	canvasHead.place(x=0, y=0, anchor = tk.CENTER)
+    	canvasHead.create_text(250, 25, text="Módulo de Entrenamiento", fill="white", font=('Verdana 15 bold'))
+    	canvasHead.pack()
+    	# Canvas Body
+    	self.canvasBody = tk.Canvas(self, width=500, height=259, bg="#154e72")
+    	self.canvasBody.create_rectangle(0,0,310,259, outline='white', width=3)
+    	self.canvasBody.pack()
+    	# IMG Salir
+    	self.salirPNG = Image.open("salir.png")
+    	self.newSalirPNG = self.salirPNG.convert(mode="RGBA")
+    	self.resized_image= self.newSalirPNG.resize((40,40), Image.Resampling.LANCZOS)
+    	self.salirTK = ImageTk.PhotoImage(self.resized_image)
+    	self.buttonSalir = tk.Button(self, image=self.salirTK, command=lambda: controller.show_frame("StartPage"), bg="#154e72", activebackground="#154e72", highlightthickness = 0, bd = 0)
+    	self.buttonSalir_widget = canvasHead.create_window(470, 28, window=self.buttonSalir)
+    	# Label Nombre de Usuario
+    	labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
+    	LabelUsername_widget = self.canvasBody.create_window(400, 15, window=labelUsername)
+    	# Label Password
+    	labelPassword = tk.Label(self,text="Contraseña", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
+    	LabelPassword_widget = self.canvasBody.create_window(400, 65, window=labelPassword)
+    	# Entrada Nombre de Usuario
+    	self.strName = tk.StringVar()
+    	self.nameEntry = ttk.Entry(self, textvariable=self.strName, width=20)
+    	self.strName_widget = self.canvasBody.create_window(400, 40, window=self.nameEntry)
+    	# Entrada Contraseña
+    	self.strPassword = tk.StringVar()
+    	self.passwordEntry = ttk.Entry(self, show="*", textvariable=self.strPassword, width=20)
+    	self.strPassword_widget = self.canvasBody.create_window(400, 90, window=self.passwordEntry)
+    	# Botón Iniciar Entrenamiento
+    	self.button1 = tk.Button(self, text='Iniciar Entrenamiento', anchor="center")
+    	self.button1.configure(width = 16, height = 1, activebackground = "#33B5E5", relief = tk.FLAT)
+    	self.button1_widget = self.canvasBody.create_window(400, 225, window=self.button1)
+    	# Botón Establecer Equipo
+    	button2 = tk.Button(self, text='Establecer Equipo', anchor="center")
+    	button2.configure(width = 16, height = 1, activebackground = "#33B5E5", relief = tk.FLAT)
+    	button2_widget = self.canvasBody.create_window(400, 185, window=button2)
 
 
 if __name__ == "__main__":

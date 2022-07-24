@@ -6,6 +6,7 @@ from copy import copy
 from copy import deepcopy
 from abc import ABC
 from abc import abstractmethod
+from multiprocessing import Process, Queue
 
 import constants
 import config
@@ -60,11 +61,11 @@ class Battle(ABC):
         self.force_switch = False               #
         self.wait = False                       #
         self.request_json = None
-        self.q = None                           # Queue
+        self.q = Queue()                        # Queue
 
 
     # TEAM PREVIEW
-    def initialize_team_preview(self, user_json, opponent_pokemon):
+    async def initialize_team_preview(self, user_json, opponent_pokemon):
         # Inicialización de Battler para usuario
         self.user.from_json(user_json, first_turn=True)
         # La Batalla ha iniciado
@@ -80,11 +81,11 @@ class Battle(ABC):
 
 
     @abstractmethod
-    def action_team_preview(self, battle):
+    async def action_team_preview(self, battle):
         ...
 
     @abstractmethod
-    def action_battle(self, battle):
+    async def action_battle(self, battle):
         ...        
 
     def imprimir(self):
@@ -193,6 +194,7 @@ class Pokemon:
         else:
             self.can_dynamax = True
         self.opponent_confirmed = False
+        self.isDynamax = False
 
 
     # Cambio de forma - Constante
