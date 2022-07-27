@@ -96,6 +96,79 @@ class Modulo1(tk.Frame):
 		self.buttonSalir = tk.Button(self, image=self.salirTK, command=lambda: controller.show_frame("StartPage"), bg="#154e72", activebackground="#154e72", highlightthickness = 0, bd = 0)
 		self.buttonSalir_widget = canvasHead.create_window(470, 28, window=self.buttonSalir)
 
+	def monitor(self, thread, q):
+		if thread.is_alive():
+			# check the thread every 100ms
+			self.after(100, lambda: self.monitor(thread, q))
+			try:
+				self.cola = q.get(0)
+				if self.cola[0] == 1:
+					# Nombre de los Pokémon
+					namePokemon = self.cola
+					namePokemon0 = namePokemon[1]
+					namePokemon1 = namePokemon[2]
+					namePokemon2 = namePokemon[3]
+					namePokemon3 = namePokemon[4]
+					# Actualizo los Rectangulo Move
+					self.text1 = self.canvasBody.create_text(28+60, 45+20, text=namePokemon0, fill="black", font=('Verdana 10'))
+					self.text2 = self.canvasBody.create_text(160+60, 45+20, text=namePokemon1, fill="black", font=('Verdana 10'))
+					self.text3 = self.canvasBody.create_text(28+60, 97+20, text=namePokemon2, fill="black", font=('Verdana 10'))
+					self.text4 = self.canvasBody.create_text(160+60, 97+20, text=namePokemon3, fill="black", font=('Verdana 10'))
+					self.text5 = self.canvasBody.create_text(28+60, 180+20, text="0", fill="black", font=('Verdana 10'))
+					self.text6 = self.canvasBody.create_text(160+60, 180+20, text="0", fill="black", font=('Verdana 10'))
+				elif self.cola[0] == 0:
+					self.button1.configure(text='Batalla en Curso')
+				elif self.cola[0] == 2:
+					contenidoCola = self.cola
+					text1 = contenidoCola[1]
+					color1 = contenidoCola[2]
+					text2 = contenidoCola[3]
+					color2 = contenidoCola[4]
+					text3 = contenidoCola[5]
+					color3 = contenidoCola[6]
+					text4 = contenidoCola[7]
+					color4 = contenidoCola[8]
+					# Actualizo los Rectangulo Move
+					self.canvasBody.itemconfig(self.text1, text=text1)
+					self.canvasBody.itemconfig(self.text2, text=text2)
+					self.canvasBody.itemconfig(self.text3, text=text3)
+					self.canvasBody.itemconfig(self.text4, text=text4)
+					self.canvasBody.itemconfig(self.rectangle1, fill=color1, outline=color1)
+					self.canvasBody.itemconfig(self.rectangle2, fill=color2, outline=color2)
+					self.canvasBody.itemconfig(self.rectangle3, fill=color3, outline=color3)
+					self.canvasBody.itemconfig(self.rectangle4, fill=color4, outline=color4)
+				else:
+					...
+			except queue.Empty:
+				...
+		else:
+			self.canvasBody.itemconfig(self.text1, text='')
+			self.canvasBody.itemconfig(self.text2, text='')
+			self.canvasBody.itemconfig(self.text3, text='')
+			self.canvasBody.itemconfig(self.text4, text='')
+			self.canvasBody.itemconfig(self.text5, text='')
+			self.canvasBody.itemconfig(self.text6, text='')
+			self.button2.configure(text='Ayuda')
+			self.button1['state'] = tk.NORMAL
+			self.button1.configure(text='Iniciar Batalla')
+
+	def IniciarModulo(self):
+		# Cola Multiprocesos
+		q = multiprocessing.Queue()
+		# Creo los Rectangulo Move
+		self.text1 = self.canvasBody.create_text(28+55, 45+20, text='', fill="black", font=('Verdana 10'))
+		self.text2 = self.canvasBody.create_text(160+55, 45+20, text='', fill="black", font=('Verdana 10'))
+		self.text3 = self.canvasBody.create_text(28+55, 97+20, text='', fill="black", font=('Verdana 10'))
+		self.text4 = self.canvasBody.create_text(160+55, 97+20, text='', fill="black", font=('Verdana 10'))
+		self.text5 = self.canvasBody.create_text(28+55, 180+20, text='', fill="black", font=('Verdana 10'))
+		self.text6 = self.canvasBody.create_text(160+55, 180+20, text='', fill="black", font=('Verdana 10'))
+		# Start Battle
+		self.button1['state'] = tk.DISABLED
+		self.button1.configure(text='Buscando Oponente')
+		p = Thread(target=AsyncDownload, args=(q,))
+		p.start()
+		self.monitor(p, q)
+
 class Modulo2(tk.Frame):
     def __init__(self, parent, controller):
     	tk.Frame.__init__(self, parent)
@@ -177,12 +250,12 @@ class Modulo2(tk.Frame):
             		namePokemon2 = namePokemon[3]
             		namePokemon3 = namePokemon[4]
             		# Actualizo los Rectangulo Move
-            		self.text1 = self.canvasBody.create_text(28+60, 45+20, text=namePokemon0, fill="black", font=('Verdana 12'))
-            		self.text2 = self.canvasBody.create_text(160+60, 45+20, text=namePokemon1, fill="black", font=('Verdana 12'))
-            		self.text3 = self.canvasBody.create_text(28+60, 97+20, text=namePokemon2, fill="black", font=('Verdana 12'))
-            		self.text4 = self.canvasBody.create_text(160+60, 97+20, text=namePokemon3, fill="black", font=('Verdana 12'))
-            		self.text5 = self.canvasBody.create_text(28+60, 180+20, text="0", fill="black", font=('Verdana 12'))
-            		self.text6 = self.canvasBody.create_text(160+60, 180+20, text="0", fill="black", font=('Verdana 12'))
+            		self.text1 = self.canvasBody.create_text(28+60, 45+20, text=namePokemon0, fill="black", font=('Verdana 10'))
+            		self.text2 = self.canvasBody.create_text(160+60, 45+20, text=namePokemon1, fill="black", font=('Verdana 10'))
+            		self.text3 = self.canvasBody.create_text(28+60, 97+20, text=namePokemon2, fill="black", font=('Verdana 10'))
+            		self.text4 = self.canvasBody.create_text(160+60, 97+20, text=namePokemon3, fill="black", font=('Verdana 10'))
+            		self.text5 = self.canvasBody.create_text(28+60, 180+20, text="0", fill="black", font=('Verdana 10'))
+            		self.text6 = self.canvasBody.create_text(160+60, 180+20, text="0", fill="black", font=('Verdana 10'))
             	elif self.cola[0] == 0:
             		self.button1.configure(text='Batalla en Curso')
             	elif self.cola[0] == 2:
@@ -204,30 +277,33 @@ class Modulo2(tk.Frame):
             		self.canvasBody.itemconfig(self.rectangle2, fill=color2, outline=color2)
             		self.canvasBody.itemconfig(self.rectangle3, fill=color3, outline=color3)
             		self.canvasBody.itemconfig(self.rectangle4, fill=color4, outline=color4)
+            	elif self.cola[0] == -1:
+            		self.canvasBody.itemconfig(self.text1, text='')
+            		self.canvasBody.itemconfig(self.text2, text='')
+            		self.canvasBody.itemconfig(self.text3, text='')
+            		self.canvasBody.itemconfig(self.text4, text='')
+            		self.canvasBody.itemconfig(self.text5, text='')
+            		self.canvasBody.itemconfig(self.text6, text='')
+            		self.button2.configure(text='Ayuda')
+            		self.button1['state'] = tk.NORMAL
+            		self.button1.configure(text='Iniciar Batalla')
             	else:
             		...
             except queue.Empty:
             	...
         else:
-        	self.canvasBody.itemconfig(self.text1, text='')
-        	self.canvasBody.itemconfig(self.text2, text='')
-        	self.canvasBody.itemconfig(self.text3, text='')
-        	self.canvasBody.itemconfig(self.text4, text='')
-        	self.canvasBody.itemconfig(self.text5, text='')
-        	self.canvasBody.itemconfig(self.text6, text='')
-        	self.button2.configure(text='Ayuda')
-        	self.button1.configure(text='Iniciar Batalla')
+        	...
 
     def IniciarModulo(self):
     	# Cola Multiprocesos
     	q = multiprocessing.Queue()
     	# Creo los Rectangulo Move
-    	self.text1 = self.canvasBody.create_text(28+55, 45+20, text='', fill="black", font=('Verdana 12'))
-    	self.text2 = self.canvasBody.create_text(160+55, 45+20, text='', fill="black", font=('Verdana 12'))
-    	self.text3 = self.canvasBody.create_text(28+55, 97+20, text='', fill="black", font=('Verdana 12'))
-    	self.text4 = self.canvasBody.create_text(160+55, 97+20, text='', fill="black", font=('Verdana 12'))
-    	self.text5 = self.canvasBody.create_text(28+55, 180+20, text='', fill="black", font=('Verdana 12'))
-    	self.text6 = self.canvasBody.create_text(160+55, 180+20, text='', fill="black", font=('Verdana 12'))
+    	self.text1 = self.canvasBody.create_text(28+55, 45+20, text='', fill="black", font=('Verdana 10'))
+    	self.text2 = self.canvasBody.create_text(160+55, 45+20, text='', fill="black", font=('Verdana 10'))
+    	self.text3 = self.canvasBody.create_text(28+55, 97+20, text='', fill="black", font=('Verdana 10'))
+    	self.text4 = self.canvasBody.create_text(160+55, 97+20, text='', fill="black", font=('Verdana 10'))
+    	self.text5 = self.canvasBody.create_text(28+55, 180+20, text='', fill="black", font=('Verdana 10'))
+    	self.text6 = self.canvasBody.create_text(160+55, 180+20, text='', fill="black", font=('Verdana 10'))
     	# Start Battle
     	self.button1['state'] = tk.DISABLED
     	self.button1.configure(text='Buscando Oponente')

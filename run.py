@@ -83,9 +83,11 @@ async def showdown(q):
         battles_run += 1
         if battles_run >= config.run_count:
             break
+    # Como terminaron las batallas pendientes...
+    q.put([-1])
 
 class AsyncDownload(Thread):
     def __init__(self, q):
         super().__init__()
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-        asyncio.new_event_loop().run_until_complete(showdown(q))
+        asyncio.run(showdown(q))

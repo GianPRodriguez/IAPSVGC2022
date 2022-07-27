@@ -123,79 +123,18 @@ class BattleBot(Battle):
         else:
             # Para el Pokémon de la izquierda... ¿no está debilitado?
             if battle.user.active1.fainted == False:
-                # ¿move o switch?
-                moveSwitch1 = random.choice(['move', 'switch'])
-                if moveSwitch1 == 'move':
-                    # ¿Qué movimientos están disponibles?
-                    pokemon1move = []
-                    if (battle.request_json)['active'][0]['moves'][0]['disabled'] == False:
-                        pokemon1move.append(1)
-                    if (battle.request_json)['active'][0]['moves'][1]['disabled'] == False:
-                        pokemon1move.append(2)
-                    if (battle.request_json)['active'][0]['moves'][2]['disabled'] == False:
-                        pokemon1move.append(3)
-                    if (battle.request_json)['active'][0]['moves'][3]['disabled'] == False:
-                        pokemon1move.append(4)
-                    # ¿Hay al menos algún movimiento para escoger?
-                    if len(pokemon1move) > 0:
-                        # Sí, hay al menos uno...
-                        nMoveSwitch1 = random.choice(pokemon1move)
-                        # Ahora que se ha escogido al menos 1 movimiento... ¿es posible hacer dynamax?
-                        if battle.user.active1.can_dynamax:
-                            if ((battle.request_json)['active'][0]['canDynamax']):
-                                # Sí es posible...
-                                dynamax1 = random.choice([0, 1])
-                                if dynamax1:
-                                    battle.user.active1.can_dynamax = False
-                                    battle.user.active2.can_dynamax = False
-                                    battle.user.reserved[0].can_dynamax = False
-                                    battle.user.reserved[1].can_dynamax = False
-                                    # Como va a realizar dynamax...
-                                    if (battle.request_json)['active'][0]['maxMoves']['maxMoves'][nMoveSwitch1-1]['target'] == 'adjacentFoe':
-                                        toMove1 = random.choice([1, 2])
-                                    else: # 'self'
-                                        toMove1 = 0
-                                else:
-                                    # Ahora, ¿tiene un solo objetivo?
-                                    if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self':
-                                        toMove1 = 0
-                                    elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any':
-                                        toMove1 = random.choice([-2, 1, 2])
-                                    else:
-                                        logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch1-1]['target']))
-                        else:
-                            # No es posible...
-                            dynamax1 = 0
-                            # ¿Actualmente es Dynamax?
-                            if constants.DYNAMAX in battle.user.active1.volatile_statuses:
-                                if (battle.request_json)['active'][0]['maxMoves']['maxMoves'][nMoveSwitch1-1]['target'] == 'adjacentFoe':
-                                    toMove1 = random.choice([1, 2])
-                                else: # 'self'
-                                    toMove1 = 0
-                            else:
-                                # Ahora, ¿tiene un solo objetivo?
-                                if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self':
-                                    toMove1 = 0
-                                elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any':
-                                    toMove1 = random.choice([-2, 1, 2])
-                                else:
-                                    logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch1-1]['target']))
-                    else:
-                        # No hay ningún movimiento disponible... algo muy poco probable... Struggle se considera como uno... así que solo queda cambiar, sí o sí debe haber al menos 1
-                        switch3F = battle.user.reserved[0].fainted
-                        switch4F = battle.user.reserved[1].fainted
-                        if switch3F == False and switch4F == True:
-                            # Solo Pokémon 3 puede reemplazar 
-                            nMoveSwitch1 = 3
-                        elif switch3F == True and switch4F == False:
-                            # Solo Pokémon 4 puede reemplazar
-                            nMoveSwitch1 = 4
-                        else:
-                            # Pokémon 3 y 4 pueden reemplazar
-                            nMoveSwitch1 = random.choice([3, 4])
+                # Movimiento especial...
+                if (battle.request_json).get('active','False')[0].get('trapped','False') == True and (battle.request_json)['active'][0]:
+                    # Está atrapado y tiene que hacer ese movimiento...
+                    moveSwitch1 = 'pass'
+                    nMoveSwitch1 = 0
+                    dynamax1 = 0
+                    toMove1 = 0
                 else:
-                    if (battle.request_json).get('active','False')[0].get('trapped','False') == True or (battle.request_json).get('active','False')[0].get('maybeTrapped','False') == True:
-                        # Si está atrapado... solo queda hacer un movimiento
+                    # ¿move o switch?
+                    moveSwitch1 = random.choice(['move', 'switch'])
+                    if moveSwitch1 == 'move':
+                        # ¿Qué movimientos están disponibles?
                         pokemon1move = []
                         if (battle.request_json)['active'][0]['moves'][0]['disabled'] == False:
                             pokemon1move.append(1)
@@ -205,19 +144,41 @@ class BattleBot(Battle):
                             pokemon1move.append(3)
                         if (battle.request_json)['active'][0]['moves'][3]['disabled'] == False:
                             pokemon1move.append(4)
-                        # Como hay al menos uno...
-                        nMoveSwitch1 = random.choice(pokemon1move)
-                        # Ahora que se ha escogido al menos 1 movimiento... ¿es posible hacer dynamax?
-                        if battle.user.active1.can_dynamax:
-                            if ((battle.request_json)['active'][0]['canDynamax']):
-                                # Sí es posible...
-                                dynamax1 = random.choice([0, 1])
-                                if dynamax1:
-                                    battle.user.active1.can_dynamax = False
-                                    battle.user.active2.can_dynamax = False
-                                    battle.user.reserved[0].can_dynamax = False
-                                    battle.user.reserved[1].can_dynamax = False
-                                    # Como va a realizar dynamax...
+                        # ¿Hay al menos algún movimiento para escoger?
+                        if len(pokemon1move) > 0:
+                            # Sí, hay al menos uno...
+                            nMoveSwitch1 = random.choice(pokemon1move)
+                            # Ahora que se ha escogido al menos 1 movimiento... ¿es posible hacer dynamax?
+                            if battle.user.active1.can_dynamax:
+                                if ((battle.request_json)['active'][0]['canDynamax']):
+                                    # Sí es posible...
+                                    dynamax1 = random.choice([0, 1])
+                                    if dynamax1:
+                                        battle.user.active1.can_dynamax = False
+                                        battle.user.active2.can_dynamax = False
+                                        battle.user.reserved[0].can_dynamax = False
+                                        battle.user.reserved[1].can_dynamax = False
+                                        # Como va a realizar dynamax...
+                                        if (battle.request_json)['active'][0]['maxMoves']['maxMoves'][nMoveSwitch1-1]['target'] == 'adjacentFoe':
+                                            toMove1 = random.choice([1, 2])
+                                        else: # 'self'
+                                            toMove1 = 0
+                                    else:
+                                        # Ahora, ¿tiene un solo objetivo?
+                                        if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self':
+                                            toMove1 = 0
+                                        elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any':
+                                            if battle.user.active2.fainted == False:
+                                                toMove1 = random.choice([-2, 1, 2])
+                                            else:
+                                                toMove1 = random.choice([1, 2])
+                                        else:
+                                            logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch1-1]['target']))
+                            else:
+                                # No es posible...
+                                dynamax1 = 0
+                                # ¿Actualmente es Dynamax?
+                                if constants.DYNAMAX in battle.user.active1.volatile_statuses:
                                     if (battle.request_json)['active'][0]['maxMoves']['maxMoves'][nMoveSwitch1-1]['target'] == 'adjacentFoe':
                                         toMove1 = random.choice([1, 2])
                                     else: # 'self'
@@ -227,38 +188,103 @@ class BattleBot(Battle):
                                     if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self':
                                         toMove1 = 0
                                     elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any':
-                                        toMove1 = random.choice([-2, 1, 2])
+                                        if battle.user.active2.fainted == False:
+                                            toMove1 = random.choice([-2, 1, 2])
+                                        else:
+                                            toMove1 = random.choice([1, 2])
                                     else:
                                         logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch1-1]['target']))
                         else:
-                            # No es posible...
-                            dynamax1 = 0
-                            # ¿Actualmente es Dynamax?
-                            if constants.DYNAMAX in battle.user.active1.volatile_statuses:
-                                if (battle.request_json)['active'][0]['maxMoves']['maxMoves'][nMoveSwitch1-1]['target'] == 'adjacentFoe':
-                                    toMove1 = random.choice([1, 2])
-                                else: # 'self'
-                                    toMove1 = 0
+                            # No hay ningún movimiento disponible... algo muy poco probable... Struggle se considera como uno... así que solo queda cambiar, sí o sí debe haber al menos 1
+                            moveSwitch1 = 'switch'
+                            switch3F = battle.user.reserved[0].fainted
+                            switch4F = battle.user.reserved[1].fainted
+                            if switch3F == False and switch4F == True:
+                                # Solo Pokémon 3 puede reemplazar 
+                                nMoveSwitch1 = 3
+                            elif switch3F == True and switch4F == False:
+                                # Solo Pokémon 4 puede reemplazar
+                                nMoveSwitch1 = 4
                             else:
-                                # Ahora, ¿tiene un solo objetivo?
-                                if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self':
-                                    toMove1 = 0
-                                elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any':
-                                    toMove1 = random.choice([-2, 1, 2])
-                                else:
-                                    logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch1-1]['target']))
+                                # Pokémon 3 y 4 pueden reemplazar
+                                nMoveSwitch1 = random.choice([3, 4])
                     else:
-                        switch3F = battle.user.reserved[0].fainted
-                        switch4F = battle.user.reserved[1].fainted
-                        if switch3F == False and switch4F == True:
-                            # Solo Pokémon 3 puede reemplazar 
-                            nMoveSwitch1 = 3
-                        elif switch3F == True and switch4F == False:
-                            # Solo Pokémon 4 puede reemplazar
-                            nMoveSwitch1 = 4
+                        # El Random ha elegido Switch
+                        if ((battle.request_json).get('active','False')[0].get('trapped','False') == True or (battle.request_json).get('active','False')[0].get('maybeTrapped','False') == True) or (battle.user.reserved[0].fainted and battle.user.reserved[1].fainted):
+                            # Si está atrapado... o los 2 reservados están debilitados... solo queda hacer un movimiento
+                            print("Para 0 ... Si está atrapado... o los 2 reservados están debilitados... solo queda hacer un movimiento")
+                            moveSwitch1 = 'move'
+                            pokemon1move = []
+                            if (battle.request_json).get('active','False')[0].get('moves','False')[0].get('disabled','False') == False:
+                                pokemon1move.append(1)
+                            if (battle.request_json).get('active','False')[0].get('moves','False')[1].get('disabled','False') == False:
+                                pokemon1move.append(2)
+                            if (battle.request_json).get('active','False')[0].get('moves','False')[2].get('disabled','False') == False:
+                                pokemon1move.append(3)
+                            if (battle.request_json).get('active','False')[0].get('moves','False')[3].get('disabled','False') == False:
+                                pokemon1move.append(4)
+                            # Como hay al menos uno...
+                            nMoveSwitch1 = random.choice(pokemon1move)
+                            # Ahora que se ha escogido al menos 1 movimiento... ¿es posible hacer dynamax?
+                            if battle.user.active1.can_dynamax:
+                                if ((battle.request_json)['active'][0]['canDynamax']):
+                                    # Sí es posible...
+                                    dynamax1 = random.choice([0, 1])
+                                    if dynamax1:
+                                        battle.user.active1.can_dynamax = False
+                                        battle.user.active2.can_dynamax = False
+                                        battle.user.reserved[0].can_dynamax = False
+                                        battle.user.reserved[1].can_dynamax = False
+                                        # Como va a realizar dynamax...
+                                        if (battle.request_json)['active'][0]['maxMoves']['maxMoves'][nMoveSwitch1-1]['target'] == 'adjacentFoe':
+                                            toMove1 = random.choice([1, 2])
+                                        else: # 'self'
+                                            toMove1 = 0
+                                    else:
+                                        # Ahora, ¿tiene un solo objetivo?
+                                        if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self':
+                                            toMove1 = 0
+                                        elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any':
+                                            if battle.user.active2.fainted == False:
+                                                toMove1 = random.choice([-2, 1, 2])
+                                            else:
+                                                toMove1 = random.choice([1, 2])
+                                        else:
+                                            logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch1-1]['target']))
+                            else:
+                                # No es posible...
+                                dynamax1 = 0
+                                # ¿Actualmente es Dynamax?
+                                if constants.DYNAMAX in battle.user.active1.volatile_statuses:
+                                    if (battle.request_json)['active'][0]['maxMoves']['maxMoves'][nMoveSwitch1-1]['target'] == 'adjacentFoe':
+                                        toMove1 = random.choice([1, 2])
+                                    else: # 'self'
+                                        toMove1 = 0
+                                else:
+                                    # Ahora, ¿tiene un solo objetivo?
+                                    if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self':
+                                        toMove1 = 0
+                                    elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any':
+                                        if battle.user.active2.fainted == False:
+                                            toMove1 = random.choice([-2, 1, 2])
+                                        else:
+                                            toMove1 = random.choice([1, 2])
+                                    else:
+                                        logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch1-1]['target']))
                         else:
-                            # Pokémon 3 y 4 pueden reemplazar
-                            nMoveSwitch1 = random.choice([3, 4])
+                            # Si no... sí puede hacer un cambio normal
+                            switch3F = battle.user.reserved[0].fainted
+                            switch4F = battle.user.reserved[1].fainted
+                            if switch3F == False and switch4F == True:
+                                # Solo Pokémon 3 puede reemplazar 
+                                nMoveSwitch1 = 3
+                            elif switch3F == True and switch4F == False:
+                                # Solo Pokémon 4 puede reemplazar
+                                nMoveSwitch1 = 4
+                            else:
+                                # Pokémon 3 y 4 pueden reemplazar
+                                nMoveSwitch1 = random.choice([3, 4])
+                                print("CAMBIO ALEATORIO NORMAL PARA 1")
             else:
                 moveSwitch1 = 'pass'
                 nMoveSwitch1 = 0
@@ -269,7 +295,10 @@ class BattleBot(Battle):
                 # Movimiento especial...
                 if (battle.request_json).get('active','False')[1].get('trapped','False') == True and (battle.request_json)['active'][1]:
                     # Está atrapado y tiene que hacer ese movimiento...
-                    print("No debería entrar acá")
+                    moveSwitch2 = 'pass'
+                    nMoveSwitch2 = 0
+                    dynamax2 = 0
+                    toMove2 = 0
                 else:
                     # ¿move o switch?
                     moveSwitch2 = random.choice(['move', 'switch'])
@@ -308,7 +337,10 @@ class BattleBot(Battle):
                                         if (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'self':
                                             toMove2 = 0
                                         elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any':
-                                            toMove2 = random.choice([-1, 1, 2])
+                                            if battle.user.active1.fainted == False:
+                                                toMove2 = random.choice([-1, 1, 2])
+                                            else:
+                                                toMove2 = random.choice([1, 2])
                                         else:
                                             logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
                             else:
@@ -325,11 +357,15 @@ class BattleBot(Battle):
                                     if (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'self':
                                         toMove2 = 0
                                     elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any':
-                                        toMove2 = random.choice([-1, 1, 2])
+                                        if battle.user.active1.fainted == False:
+                                            toMove2 = random.choice([-1, 1, 2])
+                                        else:
+                                            toMove2 = random.choice([1, 2])
                                     else:
                                         logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
                         else:
                             # No hay ningún movimiento disponible... algo muy poco probable... Struggle se considera como uno... así que solo queda cambiar, sí o sí debe haber al menos 1
+                            moveSwitch2 = 'switch'
                             switch3F = battle.user.reserved[0].fainted
                             switch4F = battle.user.reserved[1].fainted
                             if switch3F == False and switch4F == True:
@@ -341,17 +377,21 @@ class BattleBot(Battle):
                             else:
                                 # Pokémon 3 y 4 pueden reemplazar
                                 nMoveSwitch2 = random.choice([3, 4])
+                                print("CAMBIO ALEATORIO NORMAL PARA 2")
                     else:
+                        # El Random ha elegido switch
                         if ((battle.request_json).get('active','False')[1].get('trapped','False') == True or (battle.request_json).get('active','False')[1].get('maybeTrapped','False') == True) or ((battle.user.reserved[0].fainted or battle.user.reserved[1].fainted) and (nMoveSwitch1 == 3 or nMoveSwitch1 == 4)) or (battle.user.reserved[0].fainted and battle.user.reserved[1].fainted):
-                            # Si está atrapado... solo queda hacer un movimiento
+                            # Si está atrapado... o los 2 reservados están debilitados... solo queda hacer un movimiento
+                            print("Para 1 ... Si está atrapado... o los 2 reservados están debilitados... solo queda hacer un movimiento")
+                            moveSwitch2 = 'move'
                             pokemon2move = []
-                            if (battle.request_json)['active'][1]['moves'][0]['disabled'] == False:
+                            if (battle.request_json).get('active','False')[1].get('moves','False')[0].get('disabled') == False:
                                 pokemon2move.append(1)
-                            if (battle.request_json)['active'][1]['moves'][1]['disabled'] == False:
+                            if (battle.request_json).get('active','False')[1].get('moves','False')[1].get('disabled') == False:
                                 pokemon2move.append(2)
-                            if (battle.request_json)['active'][1]['moves'][2]['disabled'] == False:
+                            if (battle.request_json).get('active','False')[1].get('moves','False')[2].get('disabled') == False:
                                 pokemon2move.append(3)
-                            if (battle.request_json)['active'][1]['moves'][3]['disabled'] == False:
+                            if (battle.request_json).get('active','False')[1].get('moves','False')[3].get('disabled') == False:
                                 pokemon2move.append(4)
                             # ¿Hay al menos algún movimiento para escoger?
                             if len(pokemon2move) > 0:
@@ -377,7 +417,10 @@ class BattleBot(Battle):
                                             if (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'self':
                                                 toMove2 = 0
                                             elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any':
-                                                toMove2 = random.choice([-1, 1, 2])
+                                                if battle.user.active1.fainted == False:
+                                                    toMove2 = random.choice([-1, 1, 2])
+                                                else:
+                                                    toMove2 = random.choice([1, 2])
                                             else:
                                                 logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
                                 else:
@@ -394,7 +437,10 @@ class BattleBot(Battle):
                                         if (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'self':
                                             toMove2 = 0
                                         elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any':
-                                            toMove2 = random.choice([-1, 1, 2])
+                                            if battle.user.active1.fainted == False:
+                                                toMove2 = random.choice([-1, 1, 2])
+                                            else:
+                                                toMove2 = random.choice([1, 2])
                                         else:
                                             logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
                         else:
@@ -422,7 +468,7 @@ class BattleBot(Battle):
                 toMove2 = 0
         # Se define los Text
         if moveSwitch1 == 'move':
-            text1 = await getMoveName(battle.request_json, 0, nMoveSwitch1-1, dynamax1)
+            text1 = await getMoveName(battle, 0, nMoveSwitch1-1, dynamax1)
             text1Aux = text1.lower().replace(' ', '-')
             color1 = await getColorMove(text1Aux)
             text3 = await getToMovePokemon(battle, text1Aux, toMove1)
@@ -432,13 +478,15 @@ class BattleBot(Battle):
             color1 = '#FFFFFF'
             text3 = 'Pass'
             color3 = '#FFFFFF'
-        else:
+        elif moveSwitch1 == 'switch':
             text1 = 'Switch to'
             color1 = '#FFFFFF'
-            text3 = battle.user.reserved[toMove1-1].name
+            text3 = battle.user.reserved[nMoveSwitch1-3].name
             color3 = '#FFFFFF'
+        else:
+            logger.error("NO DEBE ENTRAR ACÁ - moveSwitch1 == 'switch'")
         if moveSwitch2 == 'move':
-            text2 = await getMoveName(battle.request_json, 1, nMoveSwitch2-1, dynamax2)
+            text2 = await getMoveName(battle, 1, nMoveSwitch2-1, dynamax2)
             text2Aux = text2.lower().replace(' ', '-')
             color2 = await getColorMove(text2Aux)
             text4 = await getToMovePokemon(battle, text2Aux, toMove2)
@@ -448,11 +496,13 @@ class BattleBot(Battle):
             color2 = '#FFFFFF'
             text4 = 'Pass'
             color4 = '#FFFFFF'
-        else:
+        elif moveSwitch2 == 'switch':
             text2 = 'Switch to'
             color2 = '#FFFFFF'
-            text4 = battle.user.reserved[toMove2-1].name
+            text4 = battle.user.reserved[nMoveSwitch2-3].name
             color4 = '#FFFFFF'
+        else:
+            logger.error("NO DEBE ENTRAR ACÁ - moveSwitch2 == 'switch'")
         # Se envía al Queue la acción
         battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4])
         return battle, moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2)

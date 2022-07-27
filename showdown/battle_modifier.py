@@ -262,6 +262,21 @@ def switch_or_drag(battle, split_msg):
                     contador+=1
     return battle
 
+# Intercambio
+def swap(battle, split_msg):
+    # |swap|p1a: Gothitelle|1|[from] move: Ally Switch
+    if is_opponent(battle, split_msg):
+        # Opponent
+        auxActive1 = deepcopy(battle.opponent.active1)
+        battle.opponent.active1 = deepcopy(battle.opponent.active2)
+        battle.opponent.active2 = deepcopy(auxActive1)
+    else:
+        # User
+        auxActive1 = deepcopy(battle.user.active1)
+        battle.user.active1 = deepcopy(battle.user.active2)
+        battle.user.active2 = deepcopy(auxActive1)
+    return battle
+
 
 # Aumento o disminución de HP...
 def heal_or_damage(battle, split_msg):
@@ -278,7 +293,7 @@ def heal_or_damage(battle, split_msg):
                     battle.opponent.active1.hp = 0
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
-                    new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
+                    new_hp_percentage = int(math.ceil(float(split_msg[3].split('/')[0]) / 100))
                     # Se establece el nuevo %
                     battle.opponent.active1.hp = battle.opponent.active1.max_hp * new_hp_percentage
             else:
@@ -287,7 +302,7 @@ def heal_or_damage(battle, split_msg):
                     battle.opponent.active2.hp = 0
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
-                    new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
+                    new_hp_percentage = int(math.ceil(float(split_msg[3].split('/')[0]) / 100))
                     # Se establece el nuevo %
                     battle.opponent.active2.hp = battle.opponent.active2.max_hp * new_hp_percentage
         else:
@@ -298,7 +313,7 @@ def heal_or_damage(battle, split_msg):
                     battle.opponent.active1.hp = 0
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
-                    new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
+                    new_hp_percentage = int(math.ceil(float(split_msg[3].split('/')[0]) / 100))
                     # Se establece el nuevo %
                     battle.opponent.active1.hp = battle.opponent.active1.max_hp * new_hp_percentage
             else:
@@ -307,7 +322,7 @@ def heal_or_damage(battle, split_msg):
                     battle.opponent.active2.hp = 0
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
-                    new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
+                    new_hp_percentage = int(math.ceil(float(split_msg[3].split('/')[0]) / 100))
                     # Se establece el nuevo %
                     battle.opponent.active2.hp = battle.opponent.active2.max_hp * new_hp_percentage
     else:
@@ -317,28 +332,28 @@ def heal_or_damage(battle, split_msg):
                 if constants.FNT in split_msg[3]:
                     battle.user.active1.hp = 0
                 else:
-                    battle.user.active1.hp = float(split_msg[3].split('/')[0])
-                    battle.user.active1.max_hp = float(split_msg[3].split('/')[1].split()[0])
+                    battle.user.active1.hp = int(math.ceil(float(split_msg[3].split('/')[0])))
+                    battle.user.active1.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split()[0])))
             else:
                 if constants.FNT in split_msg[3]:
                     battle.user.active2.hp = 0
                 else:
-                    battle.user.active2.hp = float(split_msg[3].split('/')[0])
-                    battle.user.active2.max_hp = float(split_msg[3].split('/')[1].split()[0])
+                    battle.user.active2.hp = int(math.ceil(float(split_msg[3].split('/')[0])))
+                    battle.user.active2.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split()[0])))
         else:
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
                 if constants.FNT in split_msg[3]:
                     battle.user.active1.hp = 0
                 else:
-                    battle.user.active1.hp = float(split_msg[3].split('/')[0])
-                    battle.user.active1.max_hp = float(split_msg[3].split('/')[1].split()[0])
+                    battle.user.active1.hp = int(math.ceil(float(split_msg[3].split('/')[0])))
+                    battle.user.active1.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split()[0])))
             else:
                 if constants.FNT in split_msg[3]:
                     battle.user.active2.hp = 0
                 else:
-                    battle.user.active2.hp = float(split_msg[3].split('/')[0])
-                    battle.user.active2.max_hp = float(split_msg[3].split('/')[1].split()[0])
+                    battle.user.active2.hp = int(math.ceil(float(split_msg[3].split('/')[0])))
+                    battle.user.active2.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split()[0])))
     return battle
 
 
@@ -519,30 +534,30 @@ def start_volatile_status(battle, split_msg):
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.user.active1.hp = int(battle.user.active1.hp*2)
-                    battle.user.active1.max_hp = int(battle.user.active1.max_hp*2)
-                    battle.user.active1.volatile_statuses.append(constants.DYNAMAX)
-                    # logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.opponent.active1.name, battle.opponent.active1.hp, battle.opponent.active1.max_hp))
+                    battle.opponent.active1.hp = int(battle.opponent.active1.hp*2)
+                    battle.opponent.active1.max_hp = int(battle.opponent.active1.max_hp*2)
+                    battle.opponent.active1.volatile_statuses.append(constants.DYNAMAX)
+                    battle.opponent.active1.isDynamax = True
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.user.active2.hp = int(battle.user.active2.hp*2)
-                    battle.user.active2.max_hp = int(battle.user.active2.max_hp*2)
-                    battle.user.active2.volatile_statuses.append(constants.DYNAMAX)
-                    # logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.opponent.active2.name, battle.opponent.active2.hp, battle.opponent.active2.max_hp))
+                    battle.opponent.active2.hp = int(battle.opponent.active2.hp*2)
+                    battle.opponent.active2.max_hp = int(battle.opponent.active2.max_hp*2)
+                    battle.opponent.active2.volatile_statuses.append(constants.DYNAMAX)
+                    battle.opponent.active2.isDynamax = True
         else:
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.user.active1.hp = int(battle.user.active1.hp*2)
-                    battle.user.active1.max_hp = int(battle.user.active1.max_hp*2)
-                    battle.user.active1.volatile_statuses.append(constants.DYNAMAX)
-                    # logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.opponent.active1.name, battle.opponent.active1.hp, battle.opponent.active1.max_hp))
+                    battle.opponent.active1.hp = int(battle.opponent.active1.hp*2)
+                    battle.opponent.active1.max_hp = int(battle.opponent.active1.max_hp*2)
+                    battle.opponent.active1.volatile_statuses.append(constants.DYNAMAX)
+                    battle.opponent.active1.isDynamax = True
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.user.active2.hp = int(battle.user.active2.hp*2)
-                    battle.user.active2.max_hp = int(battle.user.active2.max_hp*2)
-                    battle.user.active2.volatile_statuses.append(constants.DYNAMAX)
-                    # logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.opponent.active2.name, battle.opponent.active2.hp, battle.opponent.active2.max_hp))
+                    battle.opponent.active2.hp = int(battle.opponent.active2.hp*2)
+                    battle.opponent.active2.max_hp = int(battle.opponent.active2.max_hp*2)
+                    battle.opponent.active2.volatile_statuses.append(constants.DYNAMAX)
+                    battle.opponent.active2.isDynamax = True
     else:
         if split_msg[2].startswith("p1"):
             # ¿p1a o p1b?
@@ -551,13 +566,13 @@ def start_volatile_status(battle, split_msg):
                     battle.user.active1.hp = int(battle.user.active1.hp*2)
                     battle.user.active1.max_hp = int(battle.user.active1.max_hp*2)
                     battle.user.active1.volatile_statuses.append(constants.DYNAMAX)
-                    # logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.user.active1.name, battle.user.active1.hp, battle.user.active1.max_hp))
+                    battle.user.active1.isDynamax = True
             else:
                 if volatile_status == constants.DYNAMAX:
                     battle.user.active2.hp = int(battle.user.active2.hp*2)
                     battle.user.active2.max_hp = int(battle.user.active2.max_hp*2)
                     battle.user.active2.volatile_statuses.append(constants.DYNAMAX)
-                    # logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.user.active2.name, battle.user.active2.hp, battle.user.active2.max_hp))
+                    battle.user.active2.isDynamax = True
         else:
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
@@ -565,13 +580,13 @@ def start_volatile_status(battle, split_msg):
                     battle.user.active1.hp = int(battle.user.active1.hp*2)
                     battle.user.active1.max_hp = int(battle.user.active1.max_hp*2)
                     battle.user.active1.volatile_statuses.append(constants.DYNAMAX)
-                    # logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.user.active1.name, battle.user.active1.hp, battle.user.active1.max_hp))
+                    battle.user.active1.isDynamax = True
             else:
                 if volatile_status == constants.DYNAMAX:
                     battle.user.active2.hp = int(battle.user.active2.hp*2)
                     battle.user.active2.max_hp = int(battle.user.active2.max_hp*2)
                     battle.user.active2.volatile_statuses.append(constants.DYNAMAX)
-                    # logger.debug("{} ha sido afectado por el fenómeno dinamax - se duplica su HP a {}/{}".format(battle.user.active2.name, battle.user.active2.hp, battle.user.active2.max_hp))
+                    battle.user.active2.isDynamax = True
     return battle
 
 
@@ -584,51 +599,59 @@ def end_volatile_status(battle, split_msg):
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active1.hp = int(math.ceil(battle.opponent.active1.hp/2))
-                    battle.opponent.active1.max_hp = int(math.ceil(attle.opponent.active1.max_hp/2))
-                    # logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.opponent.active1.name, battle.opponent.active1.hp, battle.opponent.active1.max_hp))
+                    battle.opponent.active1.hp = int(math.ceil(int(battle.opponent.active1.hp)/2))
+                    battle.opponent.active1.max_hp = int(math.ceil(int(battle.opponent.active1.max_hp)/2))
+                    battle.opponent.active1.isDynamax = False
+                    battle.opponent.active1.volatile_statuses.remove(constants.DYNAMAX)
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active2.hp = int(math.ceil(battle.opponent.active2.hp/2))
-                    battle.opponent.active2.max_hp = int(math.ceil(battle.opponent.active2.max_hp/2))
-                    # logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.opponent.active2.name, battle.opponent.active2.hp, battle.opponent.active2.max_hp))
+                    battle.opponent.active2.hp = int(math.ceil(int(battle.opponent.active2.hp)/2))
+                    battle.opponent.active2.max_hp = int(math.ceil(int(battle.opponent.active2.max_hp)/2))
+                    battle.opponent.active2.isDynamax = False
+                    battle.opponent.active2.volatile_statuses.remove(constants.DYNAMAX)
         else:
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active1.hp = int(math.ceil(battle.opponent.active1.hp/2))
-                    battle.opponent.active1.max_hp = int(math.ceil(attle.opponent.active1.max_hp/2))
-                    # logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.opponent.active1.name, battle.opponent.active1.hp, battle.opponent.active1.max_hp))
+                    battle.opponent.active1.hp = int(math.ceil(int(battle.opponent.active1.hp)/2))
+                    battle.opponent.active1.max_hp = int(math.ceil(int(battle.opponent.active1.max_hp)/2))
+                    battle.opponent.active1.isDynamax = False
+                    battle.opponent.active1.volatile_statuses.remove(constants.DYNAMAX)
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active2.hp = int(math.ceil(battle.opponent.active2.hp/2))
-                    battle.opponent.active2.max_hp = int(math.ceil(battle.opponent.active2.max_hp/2))
-                    # logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.opponent.active2.name, battle.opponent.active2.hp, battle.opponent.active2.max_hp))
+                    battle.opponent.active2.hp = int(math.ceil(int(battle.opponent.active2.hp)/2))
+                    battle.opponent.active2.max_hp = int(math.ceil(int(battle.opponent.active2.max_hp)/2))
+                    battle.opponent.active2.isDynamax = False
+                    battle.opponent.active2.volatile_statuses.remove(constants.DYNAMAX)
     else:
         if split_msg[2].startswith("p1"):
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active1.hp = int(math.ceil(battle.opponent.active1.hp/2))
-                    battle.opponent.active1.max_hp = int(math.ceil(attle.opponent.active1.max_hp/2))
-                    # logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.user.active1.name, battle.user.active1.hp, battle.user.active1.max_hp))
+                    battle.user.active1.hp = int(math.ceil(int(battle.user.active1.hp)/2))
+                    battle.user.active1.max_hp = int(math.ceil(int(battle.user.active1.max_hp)/2))
+                    battle.user.active1.isDynamax = False
+                    battle.user.active1.volatile_statuses.remove(constants.DYNAMAX)
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active2.hp = int(math.ceil(battle.opponent.active2.hp/2))
-                    battle.opponent.active2.max_hp = int(math.ceil(battle.opponent.active2.max_hp/2))
-                    # logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.user.active2.name, battle.user.active2.hp, battle.user.active2.max_hp))
+                    battle.user.active2.hp = int(math.ceil(int(battle.user.active2.hp)/2))
+                    battle.user.active2.max_hp = int(math.ceil(int(battle.user.active2.max_hp)/2))
+                    battle.user.active2.isDynamax = False
+                    battle.user.active2.volatile_statuses.remove(constants.DYNAMAX)
         else:
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active1.hp = int(math.ceil(battle.opponent.active1.hp/2))
-                    battle.opponent.active1.max_hp = int(math.ceil(battle.opponent.active1.max_hp/2))
-                    # logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.user.active1.name, battle.user.active1.hp, battle.user.active1.max_hp))
+                    battle.user.active1.hp = int(math.ceil(int(battle.user.active1.hp)/2))
+                    battle.user.active1.max_hp = int(math.ceil(int(battle.user.active1.max_hp)/2))
+                    battle.user.active1.isDynamax = False
+                    battle.user.active1.volatile_statuses.remove(constants.DYNAMAX)
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active2.hp = int(math.ceil(battle.opponent.active2.hp/2))
-                    battle.opponent.active2.max_hp = int(math.ceil(battle.opponent.active2.max_hp/2))
-                    # logger.debug("{} ha terminado el fenómeno dinamax - se reduce a la mitad su HP a {}/{}".format(battle.user.active2.name, battle.user.active2.hp, battle.user.active2.max_hp))
+                    battle.user.active2.hp = int(math.ceil(int(battle.user.active2.hp)/2))
+                    battle.user.active2.max_hp = int(math.ceil(int(battle.user.active2.max_hp)/2))
+                    battle.user.active2.isDynamax = False
+                    battle.user.active2.volatile_statuses.remove(constants.DYNAMAX)
     return battle
 
 
@@ -939,6 +962,7 @@ async def update_battle(battle, msg):
             'switch': switch_or_drag,
             'faint': faint,
             'drag': switch_or_drag,
+            'swap': swap,
             '-heal': heal_or_damage,
             '-damage': heal_or_damage,
             'move': move,

@@ -30,11 +30,46 @@ async def format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, 
     message = "/choose {} {} {} {}, {} {} {} {}".format(moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
     return [message, str(battle.rqid)]
 
-async def getMoveName(request_json, position, nMoveSwitch, dynamax):
-    if dynamax == 1:
-        return request_json.get('active','False')[position].get('maxMoves','False').get('maxMoves','False')[nMoveSwitch].get('move', 'False')
+async def getMoveName(battle, position, nMoveSwitch, dynamax):
+    maxMoves = {'maxstrike': 'Max Strike',
+                          'maxknuckle': 'Max Knuckle',
+                          'maxairstream': 'Max Airstream',
+                          'maxooze': 'Max Ooze',
+                          'maxquake': 'Max Quake',
+                          'maxrockfall': 'Max Rockfall',
+                          'maxflutterby': 'Max Flutterby',
+                          'maxphantasm': 'Max Phantasm',
+                          'maxsteelspike': 'Max Steelspike',
+                          'maxflare': 'Max Flare',
+                          'maxgeyser': 'Max Geyser',
+                          'maxovergrowth': 'Max Overgrowth',
+                          'maxlightning': 'Max Lightning',
+                          'maxmindstorm': 'Max Mindstorm',
+                          'maxhailstorm': 'Max Hailstorm',
+                          'maxwyrmwind': 'Max Wyrmwind',
+                          'maxdarkness': 'Max Darkness',
+                          'maxstarfall': 'Max Starfall',
+                          'maxguard': 'Max Guard'}
+    if position == 0:
+        if dynamax == 1 or battle.user.active1.isDynamax == True:
+            maxMoveWS = battle.request_json.get('active','False')[position].get('maxMoves','False').get('maxMoves','False')[nMoveSwitch].get('move', 'False')
+            if maxMoveWS in maxMoves:
+                return maxMoves[maxMoveWS]
+            else:
+                logger.info("NO DEBE ENTRAR ACÁ - if dynamax == 1 or battle.user.active1.isDynamax == True:")
+        else:
+            return battle.request_json.get('active','False')[position].get('moves','False')[nMoveSwitch].get('move', 'False')
+    elif position == 1:
+        if dynamax == 1 or battle.user.active2.isDynamax == True:
+            maxMoveWS = battle.request_json.get('active','False')[position].get('maxMoves','False').get('maxMoves','False')[nMoveSwitch].get('move', 'False')
+            if maxMoveWS in maxMoves:
+                return maxMoves[maxMoveWS]
+            else:
+                logger.info("NO DEBE ENTRAR ACÁ - elif position == 1:")
+        else:
+            return battle.request_json.get('active','False')[position].get('moves','False')[nMoveSwitch].get('move', 'False')
     else:
-        return request_json.get('active','False')[position].get('moves','False')[nMoveSwitch].get('move', 'False')
+        logger.info("NO DEBE ENTRAR ACÁ - async def getMoveName(battle, position, nMoveSwitch, dynamax):")
 
 async def getColorMove(move):
     url = 'https://pokeapi.co/api/v2/move/'
@@ -116,19 +151,21 @@ async def getToMovePokemon(battle, textAux, toMove):
         if typeToMove == 'user':
             return 'User'
         elif typeToMove == 'all-opponents':
-            return 'All Oponentes'
+            return 'All Opponents'
         elif typeToMove == 'all-other-pokemon':
             return 'All Other Pokémon'
         elif typeToMove == 'entire-field':
             return 'Entire Field'
+        elif typeToMove == 'users-field':
+            return 'Users Field'
         else: #selected-pokemon-me-first #selected-pokemon
             if toMove == 1:
                 return battle.opponent.active1.name
             elif toMove == 2:
                 return battle.opponent.active2.name
             elif toMove == -1:
-                return battle.user.active2.name
-            else:
                 return battle.user.active1.name
+            else:
+                return battle.user.active2.name
     else:
         return 'Nada'
