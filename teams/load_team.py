@@ -9,6 +9,7 @@ def load_team(name):
     if name is None:
         return 'null'
 
+
     path = os.path.join(TEAM_JSON_DIR, "{}".format(name))
     if os.path.isdir(path):
         team_file_names = list()
@@ -23,7 +24,8 @@ def load_team(name):
     else:
         raise ValueError("Path must be file or dir: {}".format(name))
 
+    # Abre el archivo 'file_path'
     with open(file_path, 'r') as f:
         team_json = f.read()
-
+    # Y se guarda en un JSON para exportarlo a 'export_to_packed'
     return export_to_packed(team_json)

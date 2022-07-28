@@ -8,7 +8,7 @@ from showdown.run_battle import pokemon_battle
 from showdown.websocket_client import PSWebsocketClient
 from data import all_move_json
 from data import pokedex
-
+import sys
 import asyncio
 import json
 import constants
@@ -45,9 +45,13 @@ def parse_configs():
 
 
 # MAIN
-async def showdown(q):
+async def showdown(q,username,password,teamname,botmode):
     # Configuración de la Aplicación
     parse_configs()
+    # Parameters
+    config.user_to_challenge = username
+    config.bot_mode = botmode
+    config.team_name = 'gen8/vgc2022/' + teamname
     # Creo una Clase PSWebsocketClient
     ps_websocket_client = await PSWebsocketClient.create(config.username, config.password, config.websocket_uri)
     # Se lee "|challstr|4|a6e6e29652941bc1b872a2c34cb0b4e6fdd83355bd3b8787d1519685b29bfb5d267f479f4be9f9fe554605c6c9842160194586f55644f532d991560f817c5939bf7961319b23de0803bac5f6faa2935e395c0f28da55b4c052ece76f0f64e5acdfea8691ac2607012b0d742704920c9fe3c6bc13730b121d6459b84f03d399b8"
@@ -58,7 +62,7 @@ async def showdown(q):
     losses = 0
     # Hasta que no se alcance la cantidad de batallas definidas
     while True:
-        # Se lee el EQUIPO
+        # Se lee el EQUIPO dado un Nombre Específico...
         team = load_team(config.team_name)
         # Opciones de juego
         if config.bot_mode == constants.CHALLENGE_USER:
@@ -72,7 +76,6 @@ async def showdown(q):
             raise ValueError("Invalid Bot Mode")
         # Nueva Batalla Pokémon completo
         winner, q = await pokemon_battle(ps_websocket_client, q)
-        q.put("HOLIII")
         if winner == config.username:
             wins += 1
         else:
@@ -85,9 +88,11 @@ async def showdown(q):
             break
     # Como terminaron las batallas pendientes...
     q.put([-1])
+    # Fin
+    sys.exit()
 
 class AsyncDownload(Thread):
-    def __init__(self, q):
+    def __init__(self, q, username,password,teamname,botmode):
         super().__init__()
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-        asyncio.run(showdown(q))
+        asyncio.run(showdown(q,username,password,teamname,botmode))

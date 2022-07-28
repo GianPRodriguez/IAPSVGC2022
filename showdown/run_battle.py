@@ -6,7 +6,7 @@ import concurrent.futures
 from copy import deepcopy
 import logging
 import ast
-
+import sys
 import constants
 import config
 from showdown.engine.evaluate import Scoring
@@ -61,7 +61,7 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
     return battle
 
 
-async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient):
+async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q):
     # Obtiene las etiquetas que aparecen al iniciar una batalla
     while True:
         # El string recibido lo guardo en msg
@@ -69,6 +69,10 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient):
         # msg = ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw|init|battle|title|PopplioPeru98 vs. Braindeadmeta|j|☆PopplioPeru98"
         split_msg = msg.split('|')
         first_msg = split_msg[0]
+        if len(split_msg) == 5:
+            if split_msg[4].startswith("/nonotify"):    # Rechazo
+                q.put([-1])
+                sys.exit()
         # first_msg = ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
         if 'battle' in first_msg:
             battle_tag = first_msg.replace('>', '').strip()
@@ -83,7 +87,7 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient):
 async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, set_request_json=True):
     battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
     # Obtengo el id de la batalla y el nombre del oponente
-    battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client)
+    battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client, q)
     # Mientras...
     while True:
         # Recibo un mensaje del WebSocket

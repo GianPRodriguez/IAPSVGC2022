@@ -1,5 +1,6 @@
+from .team import *
+from .teams import *
 from showdown.engine.helpers import normalize_name
-
 
 def json_to_packed(json_team):
     def from_json(j):
@@ -133,6 +134,11 @@ def single_pokemon_export_to_dict(pkmn_export_string):
 def export_to_packed(export_string):
     team_dict = list()
     team_members = export_string.split('\n\n')
+    # Metadata
+    # team_members[6]
+    # Lo elimino, para que solo quede el equipo
+    team_members.remove(team_members[6])
+    # Para los 6 Pokémon...
     for pkmn in filter(None, team_members):
         pkmn_dict = single_pokemon_export_to_dict(pkmn)
         team_dict.append(pkmn_dict)

@@ -106,7 +106,6 @@ def get_pokemon_info_from_condition(condition_string: str):
 def normalize_name(name):
     return name\
         .replace(" ", "")\
-        .replace("-", "")\
         .replace(".", "")\
         .replace("\'", "")\
         .replace("%", "")\
