@@ -284,6 +284,7 @@ def heal_or_damage(battle, split_msg):
     # split_msg = ["","-damage","p2a: Scizor","49/100"]
     # split_msg = ["","-heal","p1a: Aerodactyl","221/265"]
     # split_msg = ["","-damage","p2a: Indeedee","0 fnt"]
+    # |-damage|p2a: Tornadus|91/100|[from] item: Life Orb
     if is_opponent(battle, split_msg):
         if split_msg[2].startswith("p2"):
             # ¿p2a o p2b?
@@ -293,18 +294,18 @@ def heal_or_damage(battle, split_msg):
                     battle.opponent.active1.hp = 0
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
-                    new_hp_percentage = int(math.ceil(float(split_msg[3].split('/')[0]) / 100))
+                    new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
                     # Se establece el nuevo %
-                    battle.opponent.active1.hp = battle.opponent.active1.max_hp * new_hp_percentage
+                    battle.opponent.active1.hp = int(battle.opponent.active1.max_hp * new_hp_percentage)
             else:
                 if constants.FNT in split_msg[3]:
                     # Si el Pokémon se ha debilitado debido a un movimiento
                     battle.opponent.active2.hp = 0
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
-                    new_hp_percentage = int(math.ceil(float(split_msg[3].split('/')[0]) / 100))
+                    new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
                     # Se establece el nuevo %
-                    battle.opponent.active2.hp = battle.opponent.active2.max_hp * new_hp_percentage
+                    battle.opponent.active2.hp = int(battle.opponent.active2.max_hp * new_hp_percentage)
         else:
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
@@ -313,18 +314,18 @@ def heal_or_damage(battle, split_msg):
                     battle.opponent.active1.hp = 0
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
-                    new_hp_percentage = int(math.ceil(float(split_msg[3].split('/')[0]) / 100))
+                    new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
                     # Se establece el nuevo %
-                    battle.opponent.active1.hp = battle.opponent.active1.max_hp * new_hp_percentage
+                    battle.opponent.active1.hp = int(battle.opponent.active1.max_hp * new_hp_percentage)
             else:
                 if constants.FNT in split_msg[3]:
                     # Si el Pokémon se ha debilitado debido a un movimiento
                     battle.opponent.active2.hp = 0
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
-                    new_hp_percentage = int(math.ceil(float(split_msg[3].split('/')[0]) / 100))
+                    new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
                     # Se establece el nuevo %
-                    battle.opponent.active2.hp = battle.opponent.active2.max_hp * new_hp_percentage
+                    battle.opponent.active2.hp = int(battle.opponent.active2.max_hp * new_hp_percentage)
     else:
         if split_msg[2].startswith("p1"):
             # ¿p1a o p1b?
@@ -333,13 +334,13 @@ def heal_or_damage(battle, split_msg):
                     battle.user.active1.hp = 0
                 else:
                     battle.user.active1.hp = int(math.ceil(float(split_msg[3].split('/')[0])))
-                    battle.user.active1.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split()[0])))
+                    battle.user.active1.max_hp = int(math.ceil(float(split_msg[3].split('/')[1])))
             else:
                 if constants.FNT in split_msg[3]:
                     battle.user.active2.hp = 0
                 else:
                     battle.user.active2.hp = int(math.ceil(float(split_msg[3].split('/')[0])))
-                    battle.user.active2.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split()[0])))
+                    battle.user.active2.max_hp = int(math.ceil(float(split_msg[3].split('/')[1])))
         else:
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
@@ -347,13 +348,13 @@ def heal_or_damage(battle, split_msg):
                     battle.user.active1.hp = 0
                 else:
                     battle.user.active1.hp = int(math.ceil(float(split_msg[3].split('/')[0])))
-                    battle.user.active1.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split()[0])))
+                    battle.user.active1.max_hp = int(math.ceil(float(split_msg[3].split('/')[1])))
             else:
                 if constants.FNT in split_msg[3]:
                     battle.user.active2.hp = 0
                 else:
                     battle.user.active2.hp = int(math.ceil(float(split_msg[3].split('/')[0])))
-                    battle.user.active2.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split()[0])))
+                    battle.user.active2.max_hp = int(math.ceil(float(split_msg[3].split('/')[1])))
     return battle
 
 
@@ -534,28 +535,28 @@ def start_volatile_status(battle, split_msg):
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active1.hp = int(battle.opponent.active1.hp*2)
-                    battle.opponent.active1.max_hp = int(battle.opponent.active1.max_hp*2)
+                    battle.opponent.active1.hp = int(battle.opponent.active1.hp)*2
+                    battle.opponent.active1.max_hp = int(battle.opponent.active1.max_hp)*2
                     battle.opponent.active1.volatile_statuses.append(constants.DYNAMAX)
                     battle.opponent.active1.isDynamax = True
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active2.hp = int(battle.opponent.active2.hp*2)
-                    battle.opponent.active2.max_hp = int(battle.opponent.active2.max_hp*2)
+                    battle.opponent.active2.hp = int(battle.opponent.active2.hp)*2
+                    battle.opponent.active2.max_hp = int(battle.opponent.active2.max_hp)*2
                     battle.opponent.active2.volatile_statuses.append(constants.DYNAMAX)
                     battle.opponent.active2.isDynamax = True
         else:
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active1.hp = int(battle.opponent.active1.hp*2)
-                    battle.opponent.active1.max_hp = int(battle.opponent.active1.max_hp*2)
+                    battle.opponent.active1.hp = int(battle.opponent.active1.hp)*2
+                    battle.opponent.active1.max_hp = int(battle.opponent.active1.max_hp)*2
                     battle.opponent.active1.volatile_statuses.append(constants.DYNAMAX)
                     battle.opponent.active1.isDynamax = True
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active2.hp = int(battle.opponent.active2.hp*2)
-                    battle.opponent.active2.max_hp = int(battle.opponent.active2.max_hp*2)
+                    battle.opponent.active2.hp = int(battle.opponent.active2.hp)*2
+                    battle.opponent.active2.max_hp = int(battle.opponent.active2.max_hp)*2
                     battle.opponent.active2.volatile_statuses.append(constants.DYNAMAX)
                     battle.opponent.active2.isDynamax = True
     else:
@@ -563,28 +564,28 @@ def start_volatile_status(battle, split_msg):
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.user.active1.hp = int(battle.user.active1.hp*2)
-                    battle.user.active1.max_hp = int(battle.user.active1.max_hp*2)
+                    battle.user.active1.hp = int(battle.user.active1.hp)*2
+                    battle.user.active1.max_hp = int(battle.user.active1.max_hp)*2
                     battle.user.active1.volatile_statuses.append(constants.DYNAMAX)
                     battle.user.active1.isDynamax = True
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.user.active2.hp = int(battle.user.active2.hp*2)
-                    battle.user.active2.max_hp = int(battle.user.active2.max_hp*2)
+                    battle.user.active2.hp = int(battle.user.active2.hp)*2
+                    battle.user.active2.max_hp = int(battle.user.active2.max_hp)*2
                     battle.user.active2.volatile_statuses.append(constants.DYNAMAX)
                     battle.user.active2.isDynamax = True
         else:
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.user.active1.hp = int(battle.user.active1.hp*2)
-                    battle.user.active1.max_hp = int(battle.user.active1.max_hp*2)
+                    battle.user.active1.hp = int(battle.user.active1.hp)*2
+                    battle.user.active1.max_hp = int(battle.user.active1.max_hp)*2
                     battle.user.active1.volatile_statuses.append(constants.DYNAMAX)
                     battle.user.active1.isDynamax = True
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.user.active2.hp = int(battle.user.active2.hp*2)
-                    battle.user.active2.max_hp = int(battle.user.active2.max_hp*2)
+                    battle.user.active2.hp = int(battle.user.active2.hp)*2
+                    battle.user.active2.max_hp = int(battle.user.active2.max_hp)*2
                     battle.user.active2.volatile_statuses.append(constants.DYNAMAX)
                     battle.user.active2.isDynamax = True
     return battle
@@ -812,34 +813,68 @@ def set_opponent_ability_from_ability_tag(battle, split_msg):
     return battle
 
 
-#
+# Cambio de forma permanente
 def form_change(battle, split_msg):
     # split_msg = ["","detailschange","p2a: Metagross","Metagross-Mega, L76"]
+    # split_msg = ["","detailschange","p1a: Zygarde","Zygarde-Complete, L50"]
     if is_opponent(battle, split_msg):
-        side = battle.opponent
+        if split_msg[2].startswith("p2"):
+            # ¿p2a o p2b?
+            if split_msg[2].startswith("p2a"):
+                auxDynamax = battle.opponent.active1.isDynamax
+                volatile_statusAux = battle.opponent.active1.volatile_statuses
+                battle.opponent.active1 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.opponent.active1.isDynamax = auxDynamax
+                battle.opponent.active1.volatile_statuses = volatile_statusAux
+            else:
+                auxDynamax = battle.opponent.active2.isDynamax
+                volatile_statusAux = battle.opponent.active2.volatile_statuses
+                battle.opponent.active2 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.opponent.active2.isDynamax = auxDynamax
+                battle.opponent.active2.volatile_statuses = volatile_statusAux
+        else:
+            # ¿p1a o p1b?
+            if split_msg[2].startswith("p1a"):
+                auxDynamax = battle.opponent.active1.isDynamax
+                volatile_statusAux = battle.opponent.active1.volatile_statuses
+                battle.opponent.active1 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.opponent.active1.isDynamax = auxDynamax
+                battle.opponent.active1.volatile_statuses = volatile_statusAux
+            else:
+                auxDynamax = battle.opponent.active2.isDynamax
+                volatile_statusAux = battle.opponent.active2.volatile_statuses
+                battle.opponent.active2 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.opponent.active2.isDynamax = auxDynamax
+                battle.opponent.active2.volatile_statuses = volatile_statusAux
     else:
-        side = battle.user
-
-    base_name = side.active.base_name
-    hp_percent = float(side.active.hp) / side.active.max_hp
-    previous_moves = side.active.moves
-    previous_boosts = side.active.boosts
-    previous_status = side.active.status
-    previous_item = side.active.item
-
-    new_pokemon = Pokemon.from_switch_string(split_msg[3])
-    new_pokemon.moves = previous_moves
-    if new_pokemon in side.reserve:
-        side.reserve.remove(new_pokemon)
-
-    side.active = new_pokemon
-    side.active.hp = hp_percent * side.active.max_hp
-    side.active.boosts = previous_boosts
-    side.active.status = previous_status
-    side.active.item = previous_item
-
-    if side.active.name != "zoroark":
-        side.active.base_name = base_name
+        if split_msg[2].startswith("p1"):
+            # ¿p1a o p1b?
+            if split_msg[2].startswith("p1a"):
+                auxDynamax = battle.user.active1.isDynamax
+                volatile_statusAux = battle.user.active1.volatile_statuses
+                battle.user.active1 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.user.active1.isDynamax = auxDynamax
+                battle.user.active1.volatile_statuses = volatile_statusAux
+            else:
+                auxDynamax = battle.user.active2.isDynamax
+                volatile_statusAux = battle.user.active2.volatile_statuses
+                battle.user.active2 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.user.active2.isDynamax = auxDynamax
+                battle.user.active2.volatile_statuses = volatile_statusAux
+        else:
+            # ¿p2a o p2b?
+            if split_msg[2].startswith("p2a"):
+                auxDynamax = battle.user.active1.isDynamax
+                volatile_statusAux = battle.user.active1.volatile_statuses
+                battle.user.active1 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.user.active1.isDynamax = auxDynamax
+                battle.user.active1.volatile_statuses = volatile_statusAux
+            else:
+                auxDynamax = battle.user.active2.isDynamax
+                volatile_statusAux = battle.user.active2.volatile_statuses
+                battle.user.active2 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.user.active2.isDynamax = auxDynamax
+                battle.user.active2.volatile_statuses = volatile_statusAux
     return battle
 
 
@@ -900,27 +935,81 @@ def mega(battle, split_msg):
 
 # Ditto
 def transform(battle, split_msg):
+    # |-transform|p1b: Ditto|p2a: Incineroar|[from] ability: Imposter
     if is_opponent(battle, split_msg):
-        transformed_into_name = battle.user.active.name
-
-        battle_copy = deepcopy(battle)
-        battle.opponent.active.boosts = deepcopy(battle.user.active.boosts)
-
-        battle_copy.user.from_json(battle_copy.request_json)
-
-        if battle_copy.user.active.name == transformed_into_name or battle_copy.user.active.name.startswith(transformed_into_name):
-            transformed_into = battle_copy.user.active
+        if split_msg[2].startswith("p2"):
+            # ¿p2a o p2b?
+            if split_msg[2].startswith("p2a"):
+                if battle.opponent.active1.ditto == 1:
+                    auxHP = battle.opponent.active1.hp
+                    battle.opponent.active1 = deepcopy(battle.user.active2)
+                    battle.opponent.active1.hp = auxHP
+                else:
+                    battle.opponent.active1 = deepcopy(battle.user.active2)
+                battle.opponent.active1.ditto = 1
+            else:
+                if battle.opponent.active2.ditto == 1:
+                    auxHP = battle.opponent.active2.hp
+                    battle.opponent.active2 = deepcopy(battle.user.active1)
+                    battle.opponent.active2.hp = auxHP
+                else:
+                    battle.opponent.active2 = deepcopy(battle.user.active1)
+                battle.opponent.active2.ditto = 1
         else:
-            transformed_into = find_pokemon_in_reserves(transformed_into_name, battle_copy.user.reserve)
-
-        # logger.debug("Opponent {} transformed into {}".format(battle.opponent.active.name, battle.user.active.name))
-        battle.opponent.active.stats = deepcopy(transformed_into.stats)
-        battle.opponent.active.ability = deepcopy(transformed_into.ability)
-        battle.opponent.active.moves = deepcopy(transformed_into.moves)
-        battle.opponent.active.types = deepcopy(transformed_into.types)
-
-        if constants.TRANSFORM not in battle.opponent.active.volatile_statuses:
-            battle.opponent.active.volatile_statuses.append(constants.TRANSFORM)
+            # ¿p1a o p1b?
+            if split_msg[2].startswith("p1a"):
+                if battle.opponent.active1.ditto == 1:
+                    auxHP = battle.opponent.active1.hp
+                    battle.opponent.active1 = deepcopy(battle.user.active2)
+                    battle.opponent.active1.hp = auxHP
+                else:
+                    battle.opponent.active1 = deepcopy(battle.user.active2)
+                battle.opponent.active1.ditto = 1
+            else:
+                if battle.opponent.active2.ditto == 1:
+                    auxHP = battle.opponent.active2.hp
+                    battle.opponent.active2 = deepcopy(battle.user.active1)
+                    battle.opponent.active2.hp = auxHP
+                else:
+                    battle.opponent.active2 = deepcopy(battle.user.active1)
+                battle.opponent.active2.ditto = 1
+    else:
+        if split_msg[2].startswith("p1"):
+            # ¿p1a o p1b?
+            if split_msg[2].startswith("p1a"):
+                if battle.user.active1.ditto == 1:
+                    auxHP = battle.user.active1.hp
+                    battle.user.active1 = deepcopy(battle.opponent.active2)
+                    battle.user.active1.hp = auxHP
+                else:
+                    battle.user.active1 = deepcopy(battle.opponent.active2)
+                battle.user.active1.ditto = 1
+            else:
+                if battle.user.active2.ditto == 1:
+                    auxHP = battle.user.active2.hp
+                    battle.user.active2 = deepcopy(battle.opponent.active1)
+                    battle.user.active2.hp = auxHP
+                else:
+                    battle.user.active1 = deepcopy(battle.opponent.active1)
+                battle.user.active2.ditto = 1
+        else:
+            # ¿p2a o p2b?
+            if split_msg[2].startswith("p2a"):
+                if battle.user.active1.ditto == 1:
+                    auxHP = battle.user.active1.hp
+                    battle.user.active1 = deepcopy(battle.opponent.active2)
+                    battle.user.active1.hp = auxHP
+                else:
+                    battle.user.active1 = deepcopy(battle.opponent.active2)
+                battle.user.active1.ditto = 1
+            else:
+                if battle.user.active2.ditto == 1:
+                    auxHP = battle.user.active2.hp
+                    battle.user.active2 = deepcopy(battle.opponent.active1)
+                    battle.user.active2.hp = auxHP
+                else:
+                    battle.user.active1 = deepcopy(battle.opponent.active1)
+                battle.user.active2.ditto = 1
     return battle
 
 

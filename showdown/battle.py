@@ -58,10 +58,10 @@ class Battle(ABC):
         self.turn = False
         self.started = False
         self.rqid = None
-        self.force_switch = False               #
-        self.wait = False                       #
+        self.force_switch = False
+        self.wait = False
         self.request_json = None
-        self.q = Queue()                        # Queue
+        self.q = Queue()
 
 
     # TEAM PREVIEW
@@ -188,18 +188,26 @@ class Pokemon:
         self.fainted = False
         self.status = None                      # A lo más uno
         self.volatile_statuses = []             # Varios
-        self.boosts = defaultdict(lambda: 0)    # Diccionario vacío
+        self.boosts = defaultdict(lambda: 0)
         if name.startswith('Zacian'):
             self.can_dynamax = False
         else:
             self.can_dynamax = True
         self.opponent_confirmed = False
         self.isDynamax = False
+        self.HPB = -1
+        self.ATB = -1
+        self.DEB = -1
+        self.VEB = -1
+        self.FRO = 0
+        self.ASL = 0
+        self.PAR = 0
+        self.DRO = 0
+        if name == 'Ditto':
+            self.ditto = 1
+        else:
+            self.ditto = 0
 
-
-    # Cambio de forma - Constante
-    def forme_change(self, new_pkmn_name):
-        ...
 
     def imprimir(self):
         print("Name: " + str(self.name))

@@ -132,12 +132,6 @@ class BattleBot(Battle):
                     dynamax1 = 0
                     toMove1 = 0
                 else:
-                    logger.error((battle.request_json).get('active','False')[0].get('trapped','False'))
-                    logger.error(type((battle.request_json).get('active','False')[0].get('trapped','False')))
-                    logger.error((battle.request_json).get('active','False')[0].get('trapped','False') == True)
-                    logger.error((battle.request_json).get('active','False')[0].get('moves','False')[0].get('pp','False'))
-                    logger.error(type((battle.request_json).get('active','False')[0].get('moves','False')[0].get('pp','False')))
-                    logger.error((battle.request_json).get('active','False')[0].get('moves','False')[0].get('pp','False') == 'False')
                     # ¿move o switch?
                     moveSwitch1 = random.choice(['move', 'switch'])
                     if moveSwitch1 == 'move':
@@ -180,7 +174,7 @@ class BattleBot(Battle):
                                             else:
                                                 toMove1 = random.choice([1, 2])
                                         else:
-                                            logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch1-1]['target']))
+                                            logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
                             else:
                                 # No es posible...
                                 dynamax1 = 0
@@ -200,7 +194,7 @@ class BattleBot(Battle):
                                         else:
                                             toMove1 = random.choice([1, 2])
                                     else:
-                                        logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch1-1]['target']))
+                                        logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
                         else:
                             # No hay ningún movimiento disponible... algo muy poco probable... Struggle se considera como uno... así que solo queda cambiar, sí o sí debe haber al menos 1
                             moveSwitch1 = 'switch'
@@ -257,7 +251,7 @@ class BattleBot(Battle):
                                             else:
                                                 toMove1 = random.choice([1, 2])
                                         else:
-                                            logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch1-1]['target']))
+                                            logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
                             else:
                                 # No es posible...
                                 dynamax1 = 0
@@ -277,7 +271,7 @@ class BattleBot(Battle):
                                         else:
                                             toMove1 = random.choice([1, 2])
                                     else:
-                                        logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch1-1]['target']))
+                                        logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
                         else:
                             # Si no... sí puede hacer un cambio normal
                             switch3F = battle.user.reserved[0].fainted
@@ -308,12 +302,6 @@ class BattleBot(Battle):
                     dynamax2 = 0
                     toMove2 = 0
                 else:
-                    logger.error((battle.request_json).get('active','False')[1].get('trapped','False'))
-                    logger.error(type((battle.request_json).get('active','False')[1].get('trapped','False')))
-                    logger.error((battle.request_json).get('active','False')[1].get('trapped','False') == True)
-                    logger.error((battle.request_json).get('active','False')[1].get('moves','False')[0].get('pp','False'))
-                    logger.error(type((battle.request_json).get('active','False')[1].get('moves','False')[0].get('pp','False')))
-                    logger.error((battle.request_json).get('active','False')[1].get('moves','False')[0].get('pp','False') == 'False')
                     # ¿move o switch?
                     moveSwitch2 = random.choice(['move', 'switch'])
                     if moveSwitch2 == 'move':
