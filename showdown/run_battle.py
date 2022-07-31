@@ -31,7 +31,7 @@ def battle_is_finished(battle_tag, msg):
 async def accion_batalla(battle):
     # ¿Hay solicitud de JSON pendiente?
     if battle.request_json:
-        battle.user.from_json(battle.request_json, first_turn=False)
+        battle.user.updatePkmnUser(battle.request_json, first_turn=False)
     # Se define la mejor acción
     battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = await battle.action_battle(battle)
     mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
@@ -168,6 +168,7 @@ async def iniciar_batalla(ps_websocket_client, q):
 async def pokemon_battle(ps_websocket_client, q):
     # Solo inicia la batalla
     battle = await iniciar_batalla(ps_websocket_client, q)
+    battle.imprimir()
     # Mientras...
     while True:
         # Recibo mensaje del WebSocket

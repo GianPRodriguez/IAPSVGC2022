@@ -88,7 +88,7 @@ class Modulo1(tk.Frame):
 		# ListBox Equipo
 		self.textVar = tk.StringVar(self)
 		self.textVar.set('')
-		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["Python", "classic", "C++", "Java"], width=25)
+		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["Python", "classic", "alternative", "Java"], width=25)
 		self.listbox_widget = self.canvasBody.create_window(250, 110, window=self.cbbTeam)
 		# IMG Salir
 		self.salirPNG = Image.open("salir.png")
@@ -175,17 +175,17 @@ class Modulo2(tk.Frame):
     	self.rectangle3 = self.canvasBody.create_rectangle(28,102-5,148,142-5, fill='white', outline='white')
     	self.rectangle4 = self.canvasBody.create_rectangle(160,102-5,280,142-5, fill='white', outline='white')
     	# Rectangulo Rendimiento
-    	rectangle5 = self.canvasBody.create_rectangle(28,185-5,148,225-5, fill='white', outline='white')
-    	rectangle6 = self.canvasBody.create_rectangle(160,185-5,280,225-5, fill='white', outline='white')
+    	self.rectangle5 = self.canvasBody.create_rectangle(28,185-5,148,225-5, fill='white', outline='white')
+    	self.rectangle6 = self.canvasBody.create_rectangle(160,185-5,280,225-5, fill='white', outline='white')
     	# Label Nombre de Usuario
-    	labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
-    	LabelUsername_widget = self.canvasBody.create_window(400, 15, window=labelUsername)
+    	self.labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
+    	self.LabelUsername_widget = self.canvasBody.create_window(400, 15, window=self.labelUsername)
     	# Label Password
-    	labelPassword = tk.Label(self,text="Contraseña", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
-    	LabelPassword_widget = self.canvasBody.create_window(400, 65, window=labelPassword)
+    	self.labelPassword = tk.Label(self,text="Contraseña", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
+    	self.LabelPassword_widget = self.canvasBody.create_window(400, 65, window=self.labelPassword)
     	# Label Equipo
-    	labelTeam = tk.Label(self,text="Equipo", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
-    	LabelTeam_widget = self.canvasBody.create_window(400, 115, window=labelTeam)
+    	self.labelTeam = tk.Label(self,text="Equipo", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
+    	self.LabelTeam_widget = self.canvasBody.create_window(400, 115, window=self.labelTeam)
     	# Entrada Nombre de Usuario
     	self.strName = tk.StringVar()
     	self.nameEntry = ttk.Entry(self, textvariable=self.strName, width=20)
@@ -195,7 +195,9 @@ class Modulo2(tk.Frame):
     	self.passwordEntry = ttk.Entry(self, show="*", textvariable=self.strPassword, width=20)
     	self.strPassword_widget = self.canvasBody.create_window(400, 90, window=self.passwordEntry)
     	# ListBox Equipo
-    	self.cbbTeam = ttk.Combobox(self, state="readonly", values=["Python", "C", "C++", "Java"], width=17)
+    	self.textVar = tk.StringVar(self)
+    	self.textVar.set('')
+    	self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["Python", "classic", "alternative", "Java"], width=17)
     	self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
     	# IMG Salir
     	self.salirPNG = Image.open("salir.png")
@@ -237,11 +239,15 @@ class Modulo2(tk.Frame):
             		color3 = contenidoCola[6]
             		text4 = contenidoCola[7]
             		color4 = contenidoCola[8]
+            		text5 = contenidoCola[9]
+            		text6 = contenidoCola[10]
             		# Actualizo los Rectangulo Move
             		self.canvasBody.itemconfig(self.text1, text=text1)
             		self.canvasBody.itemconfig(self.text2, text=text2)
             		self.canvasBody.itemconfig(self.text3, text=text3)
             		self.canvasBody.itemconfig(self.text4, text=text4)
+            		self.canvasBody.itemconfig(self.text5, text=text5)
+            		self.canvasBody.itemconfig(self.text6, text=text6)
             		self.canvasBody.itemconfig(self.rectangle1, fill=color1, outline=color1)
             		self.canvasBody.itemconfig(self.rectangle2, fill=color2, outline=color2)
             		self.canvasBody.itemconfig(self.rectangle3, fill=color3, outline=color3)
@@ -264,8 +270,12 @@ class Modulo2(tk.Frame):
         	...
 
     def IniciarModulo(self):
-    	# Cola Multiprocesos
-    	q = multiprocessing.Queue()
+    	# Parameters
+    	q2 = multiprocessing.Queue()
+    	username = self.nameEntry.get()
+    	password = self.passwordEntry.get()
+    	teamname = self.textVar.get()
+    	botmode = "SEARCH_LADDER"
     	# Creo los Rectangulo Move
     	self.text1 = self.canvasBody.create_text(28+55, 45+20, text='', fill="black", font=('Verdana 10'))
     	self.text2 = self.canvasBody.create_text(160+55, 45+20, text='', fill="black", font=('Verdana 10'))
@@ -276,9 +286,9 @@ class Modulo2(tk.Frame):
     	# Start Battle
     	self.button1['state'] = tk.DISABLED
     	self.button1.configure(text='Buscando Oponente')
-    	p = Thread(target=AsyncDownload, args=(q,))
+    	p = Thread(target=AsyncDownload, args=(q2, username, password, teamname, botmode, ))
     	p.start()
-    	self.monitor(p, q)
+    	self.monitor(p, q2)
 
     def OcultarDatos(self):
     	# Cambiar Nombre de Botón

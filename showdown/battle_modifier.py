@@ -29,7 +29,7 @@ def is_opponent(battle,  split_msg):
 # Obtiene el JSON y rqid... Además, avisa si es por force_switch o es solo un wait
 def request(battle, split_msg):
     # split_msg = ["","request","{"active":[{"moves":[{"move":"Fake Out","id":"fakeout","pp":16,"maxpp":16,..."]
-    if len(split_msg) >= 2:
+    if len(split_msg) >= 3:
         # Se divide el JSON en battle_json
         battle_json = json.loads(split_msg[2].strip('\''))
         # Obtiene el rqid, que al parecer no se utilizará
@@ -524,7 +524,7 @@ def prepare(battle, split_msg):
     return battle
 
 
-# Estado volátil... Solo considero Dynamax...
+# Estado volátil... Solo considero Dynamax... y Yawn
 def start_volatile_status(battle, split_msg):
     # split_msg = ["","-start","p2a: Kyogre","Dynamax"]
     # split_msg = ["","-start","p2a: Incineroar","move: Yawn","[of] p1a: Gastrodon"]
@@ -724,15 +724,11 @@ def fieldstart(battle, split_msg):
     field_name = normalize_name(split_msg[2].split(':')[-1].strip())
     # ¿Qué Field es...?
     if field_name == constants.TRICK_ROOM:
-        # Trick Room
-        # logger.debug("Ha iniciado Trick Room...")
-        battle.trick_room = True
-        battle.trick_roomTurn = 5
+        # Trick Room tiene una duración inicial de 5 turnos
+        battle.trick_room = 5
     else:
-        # Otro Field
-        # logger.debug("Ha iniciado el campo {}...".format(field_name))
-        battle.field = field_name
-        battle.fieldTurn = 5
+        battle.terrain = field_name
+        battle.terrainTurn = 5
     return battle
 
 
@@ -741,15 +737,11 @@ def fieldend(battle, split_msg):
     field_name = normalize_name(split_msg[2].split(':')[-1].strip())
     # ¿Qué Field es...?
     if field_name == constants.TRICK_ROOM:
-        # Trick Room
-        # logger.debug("Ha terminado Trick Room...")
         battle.trick_room = False
         battle.trick_roomTurn = 0
     else:
-        # Otro Field
-        # logger.debug("Ha terminado el campo {}...".format(field_name))
-        battle.field = None
-        battle.fieldTurn = 0
+        battle.terrain = None
+        battle.terrainTurn = 0
     return battle
 
 
@@ -760,11 +752,9 @@ def sidestart(battle, split_msg):
     condition = normalize_name(condition)
     # condition = "Tailwind"
     if is_opponent(battle, split_msg):
-        # logger.debug("Efecto {} ha sido iniciado por el opponente...".format(condition))
-        battle.opponent.side_conditions[condition] += 5
+        battle.opponent.side_conditions[condition] = 5
     else:
-        # logger.debug("Efecto {} ha sido iniciado por el usuario...".format(condition))
-        battle.user.side_conditions[condition] += 5
+        battle.user.side_conditions[condition] = 5
     return battle
 
 
@@ -823,13 +813,13 @@ def form_change(battle, split_msg):
             if split_msg[2].startswith("p2a"):
                 auxDynamax = battle.opponent.active1.isDynamax
                 volatile_statusAux = battle.opponent.active1.volatile_statuses
-                battle.opponent.active1 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.opponent.active1 = Pokemon(split_msg[3].partition(",")[0], 0, True)
                 battle.opponent.active1.isDynamax = auxDynamax
                 battle.opponent.active1.volatile_statuses = volatile_statusAux
             else:
                 auxDynamax = battle.opponent.active2.isDynamax
                 volatile_statusAux = battle.opponent.active2.volatile_statuses
-                battle.opponent.active2 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.opponent.active2 = Pokemon(split_msg[3].partition(",")[0], 0, True)
                 battle.opponent.active2.isDynamax = auxDynamax
                 battle.opponent.active2.volatile_statuses = volatile_statusAux
         else:
@@ -837,13 +827,13 @@ def form_change(battle, split_msg):
             if split_msg[2].startswith("p1a"):
                 auxDynamax = battle.opponent.active1.isDynamax
                 volatile_statusAux = battle.opponent.active1.volatile_statuses
-                battle.opponent.active1 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.opponent.active1 = Pokemon(split_msg[3].partition(",")[0], 0, True)
                 battle.opponent.active1.isDynamax = auxDynamax
                 battle.opponent.active1.volatile_statuses = volatile_statusAux
             else:
                 auxDynamax = battle.opponent.active2.isDynamax
                 volatile_statusAux = battle.opponent.active2.volatile_statuses
-                battle.opponent.active2 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.opponent.active2 = Pokemon(split_msg[3].partition(",")[0], 0, True)
                 battle.opponent.active2.isDynamax = auxDynamax
                 battle.opponent.active2.volatile_statuses = volatile_statusAux
     else:
@@ -940,76 +930,76 @@ def transform(battle, split_msg):
         if split_msg[2].startswith("p2"):
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
-                if battle.opponent.active1.ditto == 1:
+                if battle.opponent.active1.isDitto == 1:
                     auxHP = battle.opponent.active1.hp
                     battle.opponent.active1 = deepcopy(battle.user.active2)
                     battle.opponent.active1.hp = auxHP
                 else:
                     battle.opponent.active1 = deepcopy(battle.user.active2)
-                battle.opponent.active1.ditto = 1
+                battle.opponent.active1.isDitto = 1
             else:
-                if battle.opponent.active2.ditto == 1:
+                if battle.opponent.active2.isDitto == 1:
                     auxHP = battle.opponent.active2.hp
                     battle.opponent.active2 = deepcopy(battle.user.active1)
                     battle.opponent.active2.hp = auxHP
                 else:
                     battle.opponent.active2 = deepcopy(battle.user.active1)
-                battle.opponent.active2.ditto = 1
+                battle.opponent.active2.isDitto = 1
         else:
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
-                if battle.opponent.active1.ditto == 1:
+                if battle.opponent.active1.isDitto == 1:
                     auxHP = battle.opponent.active1.hp
                     battle.opponent.active1 = deepcopy(battle.user.active2)
                     battle.opponent.active1.hp = auxHP
                 else:
                     battle.opponent.active1 = deepcopy(battle.user.active2)
-                battle.opponent.active1.ditto = 1
+                battle.opponent.active1.isDitto = 1
             else:
-                if battle.opponent.active2.ditto == 1:
+                if battle.opponent.active2.isDitto == 1:
                     auxHP = battle.opponent.active2.hp
                     battle.opponent.active2 = deepcopy(battle.user.active1)
                     battle.opponent.active2.hp = auxHP
                 else:
                     battle.opponent.active2 = deepcopy(battle.user.active1)
-                battle.opponent.active2.ditto = 1
+                battle.opponent.active2.isDitto = 1
     else:
         if split_msg[2].startswith("p1"):
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
-                if battle.user.active1.ditto == 1:
+                if battle.user.active1.isDitto == 1:
                     auxHP = battle.user.active1.hp
                     battle.user.active1 = deepcopy(battle.opponent.active2)
                     battle.user.active1.hp = auxHP
                 else:
                     battle.user.active1 = deepcopy(battle.opponent.active2)
-                battle.user.active1.ditto = 1
+                battle.user.active1.isDitto = 1
             else:
-                if battle.user.active2.ditto == 1:
+                if battle.user.active2.isDitto == 1:
                     auxHP = battle.user.active2.hp
                     battle.user.active2 = deepcopy(battle.opponent.active1)
                     battle.user.active2.hp = auxHP
                 else:
                     battle.user.active1 = deepcopy(battle.opponent.active1)
-                battle.user.active2.ditto = 1
+                battle.user.active2.isDitto = 1
         else:
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
-                if battle.user.active1.ditto == 1:
+                if battle.user.active1.isDitto == 1:
                     auxHP = battle.user.active1.hp
                     battle.user.active1 = deepcopy(battle.opponent.active2)
                     battle.user.active1.hp = auxHP
                 else:
                     battle.user.active1 = deepcopy(battle.opponent.active2)
-                battle.user.active1.ditto = 1
+                battle.user.active1.isDitto = 1
             else:
-                if battle.user.active2.ditto == 1:
+                if battle.user.active2.isDitto == 1:
                     auxHP = battle.user.active2.hp
                     battle.user.active2 = deepcopy(battle.opponent.active1)
                     battle.user.active2.hp = auxHP
                 else:
                     battle.user.active1 = deepcopy(battle.opponent.active1)
-                battle.user.active2.ditto = 1
+                battle.user.active2.isDitto = 1
     return battle
 
 
@@ -1019,10 +1009,14 @@ def turn(battle, split_msg):
     battle.turn = int(split_msg[2])
     if battle.weatherTurn > 0:
         battle.weatherTurn -= 1
-    if battle.fieldTurn > 0:
-        battle.fieldTurn -= 1
-    if battle.trick_roomTurn > 0:
-        battle.trick_roomTurn -= 1
+    if battle.terrainTurn > 0:
+        battle.terrainTurn -= 1
+    if battle.trick_room > 0:
+        battle.trick_room -= 1
+    if battle.user.side_conditions['tailwind'] > 0:
+        battle.user.side_conditions['tailwind'] -= 1
+    if battle.opponent.side_conditions['tailwind'] > 0:
+        battle.opponent.side_conditions['tailwind'] -= 1
     return battle
 
 

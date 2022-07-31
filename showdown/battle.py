@@ -1,84 +1,50 @@
-import itertools
 import json
-from collections import defaultdict
-from collections import namedtuple
-from copy import copy
-from copy import deepcopy
-from abc import ABC
-from abc import abstractmethod
-from multiprocessing import Process, Queue
-
+import requests
+import math
 import constants
-import config
 import logging
 import sys
 
-import data
-from data import all_move_json
-from data import pokedex
-from data.parse_smogon_stats import MOVES_STRING
-from data.parse_smogon_stats import SPREADS_STRING
-from data.parse_smogon_stats import ABILITY_STRING
-from data.parse_smogon_stats import ITEM_STRING
-from data.helpers import get_pokemon_sets
-from data.helpers import get_mega_pkmn_name
-from data.helpers import PASS_ITEMS
-from data.helpers import PASS_ABILITIES
-from data.helpers import get_all_likely_moves
-from data.helpers import get_most_likely_item
-from data.helpers import get_most_likely_ability
-from data.helpers import get_most_likely_spread
-from data.helpers import get_all_possible_moves_for_random_battle
-
-from showdown.engine.objects import State
-from showdown.engine.objects import Side
-from showdown.engine.objects import Pokemon as TransposePokemon
-
-from showdown.engine.helpers import remove_duplicate_spreads
-from showdown.engine.helpers import get_pokemon_info_from_condition
-from showdown.engine.helpers import set_makes_sense
-from showdown.engine.helpers import normalize_name
-from showdown.engine.helpers import calculate_stats
-
+from multiprocessing import Process, Queue
+from collections import defaultdict
+from numpy import sqrt 
+from abc import ABC
+from abc import abstractmethod
 
 logger = logging.getLogger(__name__)
-
 
 class Battle(ABC):
     def __init__(self, battle_tag):
         self.battle_tag = battle_tag
         self.user = Battler()
         self.opponent = Battler()
-        self.weather = None
+        self.weather = None             # ['None','raindance','sunnyday','sandstorm','hail']
         self.weatherTurn = 0
-        self.field = None
-        self.fieldTurn = 0
-        self.trick_room = False
-        self.trick_roomTurn = 0
+        self.terrain = None             # ['None','electricterrain','grassyterrain','mistyterrain','psychicterrain']
+        self.terrainTurn = 0
+        self.trick_room = 0             # [0,4,3,2,1]
         self.turn = False
         self.started = False
         self.rqid = None
         self.force_switch = False
         self.wait = False
         self.request_json = None
+        self.reward = 0
+        self.lastReward = 0
         self.q = Queue()
 
-
-    # TEAM PREVIEW
     async def initialize_team_preview(self, user_json, opponent_pokemon):
-        # Inicialización de Battler para usuario
-        self.user.from_json(user_json, first_turn=True)
-        # La Batalla ha iniciado
+        # Insert Pkmn User
+        self.user.updatePkmnUser(user_json, first_turn=True)
+        # The battle has started
         self.started = True
-        # Se obtiene el rqid
+        # The rqid is obtained
         self.rqid = user_json[constants.RQID]
-        # Para el Oponente... solo tenemos el nombre del Pokémon, su HP será 100%
+        # Insert Pkmn Opponent
         for pkmn_string in opponent_pokemon:
             # opponent_pokemon = ["Lapras, L50, M","Kyogre, L50","Zacian-*, L50","Tapu Fini, L50","Zapdos, L50","Mimikyu, L50, F"]
             # pkmn_string = "Lapras, L50, M"
-            # Aquí deberá ir el MySQL
-            self.opponent.reserved.append(Pokemon(pkmn_string.partition(",")[0], 100))
-
+            self.opponent.reserved.append(Pokemon(pkmn_string.partition(",")[0], 100, True))
 
     @abstractmethod
     async def action_team_preview(self, battle):
@@ -96,7 +62,9 @@ class Battle(ABC):
             print("Estado del Entorno")
             print("------------------")
             print("Weather: " + str(self.weather))
-            print("Field: " + str(self.field))
+            print("Weather Turn: " + str(self.weatherTurn))
+            print("Terrain: " + str(self.terrain))
+            print("Terrain Turn: " + str(self.terrainTurn))
             print("Trick Room: " + str(self.trick_room))
             print("Turn: " + str(self.turn))
             print("Started: " + str(self.started))
@@ -111,41 +79,70 @@ class Battle(ABC):
             self.opponent.imprimir()
             sys.stdout = original_stdout
 
+    def calculateRewards(self):
+        user = self.formula(self.user.active1)*1.1 + self.formula(self.user.active2) + 0.9*(self.formula(self.user.reserved[0]) + self.formula(self.user.reserved[1]))
+        if len(self.opponent.reserved) == 2:
+            opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]) + self.formula(self.opponent.reserved[2]) + self.formula(self.opponent.reserved[3]))/2
+        else:
+            opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]))
+        self.lastReward = self.reward
+        self.reward = user - opponent
+        return self.lastReward, self.reward
+
+    def formula(self, pkmn):
+        return sqrt((pkmn.ATB*pkmn.VEB)/10)*sqrt((pkmn.HPB*pkmn.DEB)/10)
 
 class Battler:
     # Constructor
     def __init__(self):
+        self.name = None                                # String
+        self.account_name = None                        # String
         self.active1 = None                             # class Pokemon or None
         self.active2 = None                             # class Pokemon or None
         self.reserved = []                              # class Pokemon
-        self.name = None                                # String
-        self.account_name = None                        # String
-        self.side_conditions = defaultdict(lambda: 0)   # Diccionario Vacío
+        self.side_conditions = defaultdict(lambda: 0)   # Tailwind, Stealth Rock, Reflect
+        self.isUser = False
 
-    # Dado un JSON, hay que actualizar esta clase... propiamente para el lado del usuario
-    # first_turn = 0, 1 y 2
-    # 0 = TeamPreview
-    # 1 = First Turn
-    # 2 = Second Turn en adelante...
-    def from_json(self, user_json, first_turn):
-        JSONdict = user_json
-        # Si es el primer turno...
+    def updatePkmnUser(self, JSONdict, first_turn):
         if (first_turn):
+            # Update data
             self.id = JSONdict["side"]["id"]
             self.account_name = JSONdict["side"]["name"]
-            # Pokémon Reservados: Todos
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2]))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2]))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][2]["details"].partition(",")[0], JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2]))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][3]["details"].partition(",")[0], JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2]))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][4]["details"].partition(",")[0], JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2]))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][5]["details"].partition(",")[0], JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2]))
+            self.isUser = True
+            # Insert Pkmn
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2],False))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2],False))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][2]["details"].partition(",")[0], JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2],False))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][3]["details"].partition(",")[0], JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2],False))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][4]["details"].partition(",")[0], JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2],False))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][5]["details"].partition(",")[0], JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2],False))
+            # Update Pkmn
+            for x in range(len(self.reserved)):
+                self.reserved[x].HPB = JSONdict["side"]["pokemon"][x]["condition"].partition("/")[0].partition(" ")[0]
+                self.reserved[x].ATB = max(int(JSONdict["side"]["pokemon"][x]["stats"]["atk"]),int(JSONdict["side"]["pokemon"][x]["stats"]["spa"]))
+                self.reserved[x].DEB = int(math.floor((int(JSONdict["side"]["pokemon"][x]["stats"]["def"])+int(JSONdict["side"]["pokemon"][x]["stats"]["spd"]))/2))
+                self.reserved[x].VEB = JSONdict["side"]["pokemon"][x]["stats"]["spe"]
         else:
-            # Pokémon Activo 1
-            self.active1.hp = JSONdict["side"]["pokemon"][0]["condition"].partition("/")[0]
-            # Pokémon Activo 2
-            self.active2.hp = JSONdict["side"]["pokemon"][1]["condition"].partition("/")[0]
-
+            # Update Pkmn1
+            self.active1.HPB = JSONdict["side"]["pokemon"][0]["condition"].partition("/")[0].partition(" ")[0]
+            self.active1.ATB = max(int(JSONdict["side"]["pokemon"][0]["stats"]["atk"]),int(JSONdict["side"]["pokemon"][0]["stats"]["spa"]))
+            self.active1.DEB = int(math.floor((int(JSONdict["side"]["pokemon"][0]["stats"]["def"])+int(JSONdict["side"]["pokemon"][0]["stats"]["spd"]))/2))
+            self.active1.VEB = JSONdict["side"]["pokemon"][0]["stats"]["spe"]
+            # Update Pkmn2
+            self.active2.HPB = JSONdict["side"]["pokemon"][1]["condition"].partition("/")[0].partition(" ")[0]
+            self.active2.ATB = max(int(JSONdict["side"]["pokemon"][1]["stats"]["atk"]),int(JSONdict["side"]["pokemon"][1]["stats"]["spa"]))
+            self.active2.DEB = int(math.floor((int(JSONdict["side"]["pokemon"][1]["stats"]["def"])+int(JSONdict["side"]["pokemon"][1]["stats"]["spd"]))/2))
+            self.active2.VEB = JSONdict["side"]["pokemon"][1]["stats"]["spe"]
+            # Update Pkmn3
+            self.reserved[0].HPB = JSONdict["side"]["pokemon"][2]["condition"].partition("/")[0].partition(" ")[0]
+            self.reserved[0].ATB = max(int(JSONdict["side"]["pokemon"][2]["stats"]["atk"]),int(JSONdict["side"]["pokemon"][2]["stats"]["spa"]))
+            self.reserved[0].DEB = int(math.floor((int(JSONdict["side"]["pokemon"][2]["stats"]["def"])+int(JSONdict["side"]["pokemon"][2]["stats"]["spd"]))/2))
+            self.reserved[0].VEB = JSONdict["side"]["pokemon"][2]["stats"]["spe"]
+            # Update Pkmn4
+            self.reserved[1].HPB = JSONdict["side"]["pokemon"][3]["condition"].partition("/")[0].partition(" ")[0]
+            self.reserved[1].ATB = max(int(JSONdict["side"]["pokemon"][3]["stats"]["atk"]),int(JSONdict["side"]["pokemon"][3]["stats"]["spa"]))
+            self.reserved[1].DEB = int(math.floor((int(JSONdict["side"]["pokemon"][3]["stats"]["def"])+int(JSONdict["side"]["pokemon"][3]["stats"]["spd"]))/2))
+            self.reserved[1].VEB = JSONdict["side"]["pokemon"][3]["stats"]["spe"]
 
     def imprimir(self):
         print()
@@ -178,36 +175,36 @@ class Battler:
             pkmn.imprimir()
             print()
 
-
 class Pokemon:
     # Constructor
-    def __init__(self, name: str, max_hp: int):
+    def __init__(self, name: str, max_hp: int, isOpponent: int):
         self.name = name
         self.max_hp = max_hp
         self.hp = self.max_hp
         self.fainted = False
-        self.status = None                      # A lo más uno
-        self.volatile_statuses = []             # Varios
+        self.status = None                      # ['slp', 'brn', 'frz', 'par', 'psn']
+        self.volatile_statuses = []             # dynamax
         self.boosts = defaultdict(lambda: 0)
-        if name.startswith('Zacian'):
+        if name.startswith('Zacian') or name.startswith('Zamazenta') or name.startswith('Eternatus'):
             self.can_dynamax = False
         else:
             self.can_dynamax = True
         self.opponent_confirmed = False
         self.isDynamax = False
-        self.HPB = -1
-        self.ATB = -1
-        self.DEB = -1
-        self.VEB = -1
+        self.HPB = 0
+        self.ATB = 0
+        self.DEB = 0
+        self.VEB = 0
         self.FRO = 0
         self.ASL = 0
         self.PAR = 0
         self.DRO = 0
         if name == 'Ditto':
-            self.ditto = 1
+            self.isDitto = 1
         else:
-            self.ditto = 0
-
+            self.isDitto = 0
+        if isOpponent:
+            self.POKEAPI()
 
     def imprimir(self):
         print("Name: " + str(self.name))
@@ -220,3 +217,54 @@ class Pokemon:
         for key, value in self.boosts.items():
             print(key, ' : ', value)
         print("Can Dynamax: " + str(self.can_dynamax))
+        print("Is Ditto: " + str(self.isDitto))
+        print("HPB: " + str(self.HPB))
+        print("ATB: " + str(self.ATB))
+        print("DEB: " + str(self.DEB))
+        print("VEB: " + str(self.VEB))
+        print("FRO: " + str(self.FRO))
+        print("ASL: " + str(self.ASL))
+        print("PAR: " + str(self.PAR))
+        print("DRO: " + str(self.DRO))
+
+    def HP_BATTLE_CALCULATE(self, HP_base):
+        return math.floor(((2*HP_base+constants.IV+(constants.EV/4))*constants.LEVEL)/100) + constants.LEVEL + 10
+
+    def OTHER_STAT_CALCULATE(self, STAT_base, modifier, defense):
+        if modifier and defense:
+            return math.floor((((2*STAT_base+constants.IV+(0/4))*constants.LEVEL)/100 + 5) * 1)
+        else:
+            return math.floor((((2*STAT_base+constants.IV+((constants.EV/2)/4))*constants.LEVEL)/100 + 5) * constants.NATURE)
+
+    def POKEAPI(self):
+        pokeapiPkmn = {'zacian': 'zacian-crowned', 'zacian-*': 'zacian-crowned', 'thundurus': 'thundurus-incarnate',
+                        'landorus': 'landorus-incarnate', 'tornadus': 'tornadus-incarnate','indeedee-f': 'indeedee-female',
+                        'urshifu': 'urshifu-single-strike', 'urshifu-rapid-strike': 'urshifu-single-strike'}
+        
+        if self.name.lower() in pokeapiPkmn:
+            namePkmn = pokeapiPkmn[self.name.lower()]
+        else:
+            namePkmn = self.name
+        url = 'https://pokeapi.co/api/v2/pokemon/' + namePkmn.lower()
+        response = requests.get(url)
+        if response.status_code == 200:
+            payload = response.json()
+            HP_base = payload['stats'][0]['base_stat']
+            ATK_base = payload['stats'][1]['base_stat']
+            DEF_base = payload['stats'][2]['base_stat']
+            SPA_base = payload['stats'][3]['base_stat']
+            SPD_base = payload['stats'][4]['base_stat']
+            VEL_base = payload['stats'][5]['base_stat']
+
+            self.HPB = self.HP_BATTLE_CALCULATE(HP_base)
+            ATK_battle_base = self.OTHER_STAT_CALCULATE(ATK_base,0,0)
+            SPA_battle_base = self.OTHER_STAT_CALCULATE(SPA_base,0,0)
+            self.ATB = max(ATK_battle_base, SPA_battle_base)
+            if DEF_base > SPD_base:
+                SPD_battle_base = self.OTHER_STAT_CALCULATE(SPD_base,0,1)
+                DEF_battle_base = self.OTHER_STAT_CALCULATE(DEF_base,1,1)
+            else:
+                DEF_battle_base = self.OTHER_STAT_CALCULATE(DEF_base,0,1)
+                SPD_battle_base = self.OTHER_STAT_CALCULATE(SPD_base,1,1)
+            self.DEB = int(math.floor((DEF_battle_base + SPD_battle_base)/2))
+            self.VEB = self.OTHER_STAT_CALCULATE(VEL_base,0,0)

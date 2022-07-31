@@ -52,6 +52,9 @@ async def showdown(q,username,password,teamname,botmode):
     config.user_to_challenge = username
     config.bot_mode = botmode
     config.team_name = 'gen8/vgc2022/' + teamname
+    if config.bot_mode == constants.SEARCH_LADDER:
+        config.username = username
+        config.password = password
     # Creo una Clase PSWebsocketClient
     ps_websocket_client = await PSWebsocketClient.create(config.username, config.password, config.websocket_uri)
     # Se lee "|challstr|4|a6e6e29652941bc1b872a2c34cb0b4e6fdd83355bd3b8787d1519685b29bfb5d267f479f4be9f9fe554605c6c9842160194586f55644f532d991560f817c5939bf7961319b23de0803bac5f6faa2935e395c0f28da55b4c052ece76f0f64e5acdfea8691ac2607012b0d742704920c9fe3c6bc13730b121d6459b84f03d399b8"

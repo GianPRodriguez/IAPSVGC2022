@@ -26,7 +26,7 @@ class BattleBot(Battle):
         namePokemon2 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion2-1].get('details', 'False').partition(",")[0]
         namePokemon3 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion3-1].get('details', 'False').partition(",")[0]
         # Se envía al Queue los 4 Pokémon
-        battle.q.put([1,namePokemon0, namePokemon1, namePokemon2, namePokemon3])
+        battle.q.put([1,namePokemon0, namePokemon1, namePokemon2, namePokemon3, 0, 0])
         # Regreso los 4 enteros
         return eleccion0, eleccion1, eleccion2, eleccion3
 
@@ -506,5 +506,6 @@ class BattleBot(Battle):
         else:
             logger.error("NO DEBE ENTRAR ACÁ - moveSwitch2 == 'switch'")
         # Se envía al Queue la acción
-        battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4])
+        lastReward, reward = self.calculateRewards()
+        battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4, lastReward, reward])
         return battle, moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2)
