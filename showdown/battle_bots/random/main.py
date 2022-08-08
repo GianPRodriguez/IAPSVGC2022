@@ -151,6 +151,8 @@ class BattleBot(Battle):
                             nMoveSwitch1 = random.choice(pokemon1move)
                             # Ahora que se ha escogido al menos 1 movimiento... ¿es posible hacer dynamax?
                             if battle.user.active1.can_dynamax:
+                                logger.warning(str(battle.user.active1.can_dynamax))
+                                logger.warning(str(type(battle.user.active1.can_dynamax)))
                                 if ((battle.request_json).get('active','False')[0].get('canDynamax','False')):
                                     # Sí es posible...
                                     dynamax1 = random.choice([0, 1])
@@ -166,9 +168,9 @@ class BattleBot(Battle):
                                             toMove1 = 0
                                     else:
                                         # Ahora, ¿tiene un solo objetivo?
-                                        if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self':
+                                        if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'all':
                                             toMove1 = 0
-                                        elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any':
+                                        elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'selected-pokemon':
                                             if battle.user.active2.fainted == False:
                                                 toMove1 = random.choice([-2, 1, 2])
                                             else:
@@ -186,9 +188,9 @@ class BattleBot(Battle):
                                         toMove1 = 0
                                 else:
                                     # Ahora, ¿tiene un solo objetivo?
-                                    if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self':
+                                    if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'all':
                                         toMove1 = 0
-                                    elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any':
+                                    elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'selected-pokemon':
                                         if battle.user.active2.fainted == False:
                                             toMove1 = random.choice([-2, 1, 2])
                                         else:
@@ -243,9 +245,9 @@ class BattleBot(Battle):
                                             toMove1 = 0
                                     else:
                                         # Ahora, ¿tiene un solo objetivo?
-                                        if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self':
+                                        if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'all':
                                             toMove1 = 0
-                                        elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any':
+                                        elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'selected-pokemon':
                                             if battle.user.active2.fainted == False:
                                                 toMove1 = random.choice([-2, 1, 2])
                                             else:
@@ -263,9 +265,9 @@ class BattleBot(Battle):
                                         toMove1 = 0
                                 else:
                                     # Ahora, ¿tiene un solo objetivo?
-                                    if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self':
+                                    if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'all':
                                         toMove1 = 0
-                                    elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any':
+                                    elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'selected-pokemon':
                                         if battle.user.active2.fainted == False:
                                             toMove1 = random.choice([-2, 1, 2])
                                         else:
@@ -336,9 +338,9 @@ class BattleBot(Battle):
                                             toMove2 = 0
                                     else:
                                         # Ahora, ¿tiene un solo objetivo?
-                                        if (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'self':
+                                        if (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'self' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'all':
                                             toMove2 = 0
-                                        elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any':
+                                        elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'selected-pokemon':
                                             if battle.user.active1.fainted == False:
                                                 toMove2 = random.choice([-1, 1, 2])
                                             else:
@@ -356,9 +358,9 @@ class BattleBot(Battle):
                                         toMove2 = 0
                                 else:
                                     # Ahora, ¿tiene un solo objetivo?
-                                    if (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'self':
+                                    if (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'self' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'all':
                                         toMove2 = 0
-                                    elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any':
+                                    elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'selected-pokemon':
                                         if battle.user.active1.fainted == False:
                                             toMove2 = random.choice([-1, 1, 2])
                                         else:
@@ -416,9 +418,9 @@ class BattleBot(Battle):
                                                 toMove2 = 0
                                         else:
                                             # Ahora, ¿tiene un solo objetivo?
-                                            if (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'self':
+                                            if (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'self' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'all':
                                                 toMove2 = 0
-                                            elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any':
+                                            elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'selected-pokemon':
                                                 if battle.user.active1.fainted == False:
                                                     toMove2 = random.choice([-1, 1, 2])
                                                 else:
@@ -436,9 +438,9 @@ class BattleBot(Battle):
                                             toMove2 = 0
                                     else:
                                         # Ahora, ¿tiene un solo objetivo?
-                                        if (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'self':
+                                        if (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'self' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'all':
                                             toMove2 = 0
-                                        elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any':
+                                        elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'selected-pokemon':
                                             if battle.user.active1.fainted == False:
                                                 toMove2 = random.choice([-1, 1, 2])
                                             else:
@@ -507,5 +509,6 @@ class BattleBot(Battle):
             logger.error("NO DEBE ENTRAR ACÁ - moveSwitch2 == 'switch'")
         # Se envía al Queue la acción
         lastReward, reward = self.calculateRewards()
+        logger.warning([2, text1, color1, text2, color2, text3, color3, text4, color4, lastReward, reward])
         battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4, lastReward, reward])
         return battle, moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2)

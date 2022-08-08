@@ -21,49 +21,8 @@ Side conditions:
 
 Active 1: 
 
-Name: Zacian
-Max HP: 168
-HP: 168
-Fainted: False
-Status: None
-Volatile Status: []
-Boosts: 
-Can Dynamax: False
-Is Ditto: 0
-HPB: 168
-ATB: 182
-DEB: 135
-VEB: 209
-FRO: 0
-ASL: 0
-PAR: 0
-DRO: 0
-
-Active 2: 
-
-Name: Umbreon
-Max HP: 202
-HP: 202
-Fainted: False
-Status: None
-Volatile Status: []
-Boosts: 
-Can Dynamax: True
-Is Ditto: 0
-HPB: 202
-ATB: 81
-DEB: 163
-VEB: 86
-FRO: 0
-ASL: 0
-PAR: 0
-DRO: 0
-
-List of Reserved: 
-
 Name: Regieleki
 Max HP: 156
-HP: 156
 Fainted: False
 Status: None
 Volatile Status: []
@@ -78,10 +37,32 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
 
 Name: Incineroar
 Max HP: 202
-HP: 202
 Fainted: False
 Status: None
 Volatile Status: []
@@ -96,6 +77,25 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 81
+DEB: 163
+VEB: 86
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
 
 
 OPONENTE: 
@@ -111,9 +111,159 @@ Active 2: None
 
 List of Reserved: 
 
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
 Name: Incineroar
-Max HP: 100
-HP: 100
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: False
+Started: True
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+
+Active 1: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
 Fainted: False
 Status: None
 Volatile Status: []
@@ -121,101 +271,4265 @@ Boosts:
 Can Dynamax: True
 Is Ditto: 0
 HPB: 202
-ATB: 166
-DEB: 124
-VEB: 105
+ATB: 136
+DEB: 131
+VEB: 84
 FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+isOpponent: False
 
-Name: Kyogre
-Max HP: 100
-HP: 100
-Fainted: False
-Status: None
-Volatile Status: []
-Boosts: 
-Can Dynamax: True
-Is Ditto: 0
-HPB: 207
-ATB: 204
-DEB: 149
-VEB: 138
-FRO: 0
-ASL: 0
-PAR: 0
-DRO: 0
+List of Reserved: 
 
-Name: Tornadus
-Max HP: 100
-HP: 100
-Fainted: False
-Status: None
-Volatile Status: []
-Boosts: 
-Can Dynamax: True
-Is Ditto: 0
-HPB: 186
-ATB: 177
-DEB: 108
-VEB: 161
-FRO: 0
-ASL: 0
-PAR: 0
-DRO: 0
-
-Name: Zacian-*
-Max HP: 100
-HP: 100
+Name: Zacian
+Max HP: 168
 Fainted: False
 Status: None
 Volatile Status: []
 Boosts: 
 Can Dynamax: False
 Is Ditto: 0
-HPB: 199
-ATB: 226
-DEB: 150
-VEB: 202
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
 FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+isOpponent: False
 
-Name: Indeedee-F
-Max HP: 100
-HP: 100
+Name: Thundurus
+Max HP: 155
 Fainted: False
 Status: None
 Volatile Status: []
 Boosts: 
 Can Dynamax: True
 Is Ditto: 0
-HPB: 177
-ATB: 144
-DEB: 118
-VEB: 133
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
 FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+isOpponent: False
 
-Name: Shedinja
-Max HP: 100
-HP: 100
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
 Fainted: False
 Status: None
 Volatile Status: []
 Boosts: 
 Can Dynamax: True
 Is Ditto: 0
-HPB: 108
-ATB: 138
-DEB: 68
-VEB: 83
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
 FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: 1
+Started: True
+rqid: 4
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 156
+DEB: 187
+VEB: 178
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+Active 2: 
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 167
+DEB: 91
+VEB: 277
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 156
+DEB: 187
+VEB: 178
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 244
+DEB: 159
+VEB: 220
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 128
+DEB: 164
+VEB: 128
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: 2
+Started: True
+rqid: 6
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 156
+DEB: 187
+VEB: 178
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+speed  :  -1
+Can Dynamax: False
+Is Ditto: 0
+HPB: 80
+ATB: 194
+DEB: 95
+VEB: 108
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 202
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+Active 2: 
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 170
+ATB: 167
+DEB: 91
+VEB: 277
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 156
+DEB: 187
+VEB: 178
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 244
+DEB: 159
+VEB: 220
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 128
+DEB: 164
+VEB: 128
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: False
+Started: True
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+
+Active 1: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 136
+DEB: 131
+VEB: 84
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: 1
+Started: True
+rqid: 4
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  1
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 273
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 128
+DEB: 164
+VEB: 128
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+Active 2: 
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 167
+DEB: 91
+VEB: 277
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 156
+DEB: 187
+VEB: 178
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 244
+DEB: 159
+VEB: 220
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: False
+Started: True
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+
+Active 1: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 136
+DEB: 131
+VEB: 84
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: 1
+Started: True
+rqid: 4
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  1
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 273
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 167
+DEB: 91
+VEB: 277
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+Active 2: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 156
+DEB: 187
+VEB: 178
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+List of Reserved: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 244
+DEB: 159
+VEB: 220
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 128
+DEB: 164
+VEB: 128
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: 2
+Started: True
+rqid: 6
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+speed  :  -1
+attack  :  2
+special-attack  :  2
+Can Dynamax: True
+Is Ditto: 0
+HPB: 173
+ATB: 272
+DEB: 168
+VEB: 92
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 170
+ATB: 167
+DEB: 91
+VEB: 277
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+Active 2: 
+
+Name: Lugia
+Max HP: 426
+Fainted: False
+Status: None
+Volatile Status: ['dynamax']
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 426
+ATB: 156
+DEB: 187
+VEB: 178
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+List of Reserved: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 244
+DEB: 159
+VEB: 220
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 128
+DEB: 164
+VEB: 128
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: 2
+Started: True
+rqid: 8
+Force Switch: True
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 173
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -2
+speed  :  1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 151
+ATB: 167
+DEB: 91
+VEB: 415
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+Active 2: 
+
+Name: Lugia
+Max HP: 426
+Fainted: False
+Status: None
+Volatile Status: ['dynamax']
+Boosts: 
+attack  :  -2
+speed  :  1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 426
+ATB: 156
+DEB: 187
+VEB: 267
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+List of Reserved: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 244
+DEB: 159
+VEB: 220
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 128
+DEB: 164
+VEB: 128
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: 3
+Started: True
+rqid: 10
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 173
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -2
+speed  :  1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 151
+ATB: 167
+DEB: 91
+VEB: 415
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+Active 2: 
+
+Name: Lugia
+Max HP: 426
+Fainted: False
+Status: None
+Volatile Status: ['dynamax']
+Boosts: 
+attack  :  -2
+speed  :  1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 426
+ATB: 156
+DEB: 187
+VEB: 267
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+List of Reserved: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 244
+DEB: 159
+VEB: 220
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 128
+DEB: 164
+VEB: 128
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: sunnyday
+Weather Turn: 4
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: 4
+Started: True
+rqid: 14
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Zacian-Crowned
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  1
+speed  :  -1
+Can Dynamax: False
+Is Ditto: 0
+HPB: 68
+ATB: 273
+DEB: 135
+VEB: 139
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 173
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Zacian-Crowned
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  1
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 366
+DEB: 159
+VEB: 220
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+Active 2: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -2
+speed  :  2
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 156
+DEB: 187
+VEB: 356
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+List of Reserved: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: True
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 167
+DEB: 91
+VEB: 277
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 128
+DEB: 164
+VEB: 128
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: False
+Started: True
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+
+Active 1: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 136
+DEB: 131
+VEB: 84
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: 1
+Started: True
+rqid: 4
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  1
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 273
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Zacian-Crowned
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  0
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 244
+DEB: 159
+VEB: 220
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+Active 2: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 156
+DEB: 187
+VEB: 178
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+List of Reserved: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 183
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 128
+DEB: 164
+VEB: 128
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 167
+DEB: 91
+VEB: 277
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: False
+Started: True
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+
+Active 1: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 136
+DEB: 131
+VEB: 84
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: False
+Started: True
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+
+Active 1: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 136
+DEB: 131
+VEB: 84
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: 1
+Started: True
+rqid: 4
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  0
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 90
+DEB: 131
+VEB: 84
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 156
+DEB: 187
+VEB: 178
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  -1
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 145
+DEB: 133
+VEB: 123
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: True
+
+List of Reserved: 
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 244
+DEB: 159
+VEB: 220
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 128
+DEB: 164
+VEB: 128
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 194
+DEB: 117
+VEB: 179
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 167
+DEB: 91
+VEB: 277
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: False
+Started: True
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+
+Active 1: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 136
+DEB: 131
+VEB: 84
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: False
+Started: True
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+
+Active 1: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 136
+DEB: 131
+VEB: 84
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+Turn: False
+Started: True
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+Side conditions: 
+
+Active 1: 
+
+Name: Zacian
+Max HP: 168
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Active 2: 
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 136
+DEB: 131
+VEB: 84
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 213
+ATB: 136
+DEB: 168
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 155
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 155
+ATB: 194
+DEB: 95
+VEB: 163
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Max HP: 213
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Incineroar
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Zacian-*
+Max HP: 199
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Umbreon
+Max HP: 202
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Thundurus
+Max HP: 186
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
+
+Name: Regieleki
+Max HP: 187
+Fainted: False
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 0
+DEB: 0
+VEB: 0
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponent: False
 

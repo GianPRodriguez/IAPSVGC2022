@@ -455,3 +455,5 @@ IV = 31
 LEVEL = 50
 EV = 252
 NATURE = 1.1
+DROWSY = 'moveyawn'
+FASTEST = 278

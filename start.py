@@ -1,4 +1,5 @@
 import multiprocessing
+import math
 import queue
 from threading import Thread
 import tkinter as tk
@@ -88,7 +89,7 @@ class Modulo1(tk.Frame):
 		# ListBox Equipo
 		self.textVar = tk.StringVar(self)
 		self.textVar.set('')
-		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["Python", "classic", "alternative", "Java"], width=25)
+		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Java"], width=25)
 		self.listbox_widget = self.canvasBody.create_window(250, 110, window=self.cbbTeam)
 		# IMG Salir
 		self.salirPNG = Image.open("salir.png")
@@ -97,6 +98,8 @@ class Modulo1(tk.Frame):
 		self.salirTK = ImageTk.PhotoImage(self.resized_image)
 		self.buttonSalir = tk.Button(self, image=self.salirTK, command=lambda: controller.show_frame("StartPage"), bg="#154e72", activebackground="#154e72", highlightthickness = 0, bd = 0)
 		self.buttonSalir_widget = self.canvasHead.create_window(470, 28, window=self.buttonSalir)
+		# Close Windows
+		#controller.protocol('WM_DELETE_WINDOW', self.display_msg)
 
 	def monitor(self, thread, q):
 		if thread.is_alive():
@@ -137,6 +140,12 @@ class Modulo1(tk.Frame):
 		p.start()
 		# Monitor
 		self.monitor(p, q1)
+
+	def display_msg(self):
+		...
+		#info = tk.Toplevel()
+		#info.geometry('200x100')
+		#info.title('Hello')
 
 class Modulo2(tk.Frame):
     def __init__(self, parent, controller):
@@ -197,7 +206,7 @@ class Modulo2(tk.Frame):
     	# ListBox Equipo
     	self.textVar = tk.StringVar(self)
     	self.textVar.set('')
-    	self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["Python", "classic", "alternative", "Java"], width=17)
+    	self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Java"], width=17)
     	self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
     	# IMG Salir
     	self.salirPNG = Image.open("salir.png")
@@ -215,21 +224,30 @@ class Modulo2(tk.Frame):
             	self.cola = q.get(0)
             	if self.cola[0] == 1:
             		# Nombre de los Pokémon
-            		namePokemon = self.cola
-            		namePokemon0 = namePokemon[1]
-            		namePokemon1 = namePokemon[2]
-            		namePokemon2 = namePokemon[3]
-            		namePokemon3 = namePokemon[4]
+            		self.namePokemon = self.cola
+            		self.namePokemon0 = namePokemon[1]
+            		self.namePokemon1 = namePokemon[2]
+            		self.namePokemon2 = namePokemon[3]
+            		self.namePokemon3 = namePokemon[4]
             		# Actualizo los Rectangulo Move
-            		self.text1 = self.canvasBody.create_text(28+60, 45+20, text=namePokemon0, fill="black", font=('Verdana 10'))
-            		self.text2 = self.canvasBody.create_text(160+60, 45+20, text=namePokemon1, fill="black", font=('Verdana 10'))
-            		self.text3 = self.canvasBody.create_text(28+60, 97+20, text=namePokemon2, fill="black", font=('Verdana 10'))
-            		self.text4 = self.canvasBody.create_text(160+60, 97+20, text=namePokemon3, fill="black", font=('Verdana 10'))
-            		self.text5 = self.canvasBody.create_text(28+60, 180+20, text="0", fill="black", font=('Verdana 10'))
-            		self.text6 = self.canvasBody.create_text(160+60, 180+20, text="0", fill="black", font=('Verdana 10'))
+            		if ...:
+            			self.text1 = self.canvasBody.create_text(28+60, 45+20, text="???", fill="black", font=('Verdana 10'))
+            			self.text2 = self.canvasBody.create_text(160+60, 45+20, text="???", fill="black", font=('Verdana 10'))
+            			self.text3 = self.canvasBody.create_text(28+60, 97+20, text="???", fill="black", font=('Verdana 10'))
+            			self.text4 = self.canvasBody.create_text(160+60, 97+20, text="???", fill="black", font=('Verdana 10'))
+            			self.text5 = self.canvasBody.create_text(28+60, 180+20, text="???", fill="black", font=('Verdana 10'))
+            			self.text6 = self.canvasBody.create_text(160+60, 180+20, text="???", fill="black", font=('Verdana 10'))
+            		else:
+            			self.text1 = self.canvasBody.create_text(28+60, 45+20, text=self.namePokemon0, fill="black", font=('Verdana 10'))
+            			self.text2 = self.canvasBody.create_text(160+60, 45+20, text=self.namePokemon1, fill="black", font=('Verdana 10'))
+            			self.text3 = self.canvasBody.create_text(28+60, 97+20, text=self.namePokemon2, fill="black", font=('Verdana 10'))
+            			self.text4 = self.canvasBody.create_text(160+60, 97+20, text=self.namePokemon3, fill="black", font=('Verdana 10'))
+            			self.text5 = self.canvasBody.create_text(28+60, 180+20, text="0", fill="black", font=('Verdana 10'))
+            			self.text6 = self.canvasBody.create_text(160+60, 180+20, text="0", fill="black", font=('Verdana 10'))
             	elif self.cola[0] == 0:
             		self.button1.configure(text='Batalla en Curso')
             	elif self.cola[0] == 2:
+            		# New Turn
             		contenidoCola = self.cola
             		text1 = contenidoCola[1]
             		color1 = contenidoCola[2]
@@ -246,19 +264,24 @@ class Modulo2(tk.Frame):
             		self.canvasBody.itemconfig(self.text2, text=text2)
             		self.canvasBody.itemconfig(self.text3, text=text3)
             		self.canvasBody.itemconfig(self.text4, text=text4)
-            		self.canvasBody.itemconfig(self.text5, text=text5)
-            		self.canvasBody.itemconfig(self.text6, text=text6)
+            		self.canvasBody.itemconfig(self.text5, text=math.floor(text5))
+            		self.canvasBody.itemconfig(self.text6, text=math.floor(text6))
             		self.canvasBody.itemconfig(self.rectangle1, fill=color1, outline=color1)
             		self.canvasBody.itemconfig(self.rectangle2, fill=color2, outline=color2)
             		self.canvasBody.itemconfig(self.rectangle3, fill=color3, outline=color3)
             		self.canvasBody.itemconfig(self.rectangle4, fill=color4, outline=color4)
             	elif self.cola[0] == -1:
+            		# End Game
             		self.canvasBody.itemconfig(self.text1, text='')
             		self.canvasBody.itemconfig(self.text2, text='')
             		self.canvasBody.itemconfig(self.text3, text='')
             		self.canvasBody.itemconfig(self.text4, text='')
             		self.canvasBody.itemconfig(self.text5, text='')
             		self.canvasBody.itemconfig(self.text6, text='')
+            		self.canvasBody.itemconfig(self.rectangle1, fill='white', outline='white')
+            		self.canvasBody.itemconfig(self.rectangle2, fill='white', outline='white')
+            		self.canvasBody.itemconfig(self.rectangle3, fill='white', outline='white')
+            		self.canvasBody.itemconfig(self.rectangle4, fill='white', outline='white')
             		self.button2.configure(text='Ayuda')
             		self.button1['state'] = tk.NORMAL
             		self.button1.configure(text='Iniciar Batalla')
@@ -276,6 +299,10 @@ class Modulo2(tk.Frame):
     	password = self.passwordEntry.get()
     	teamname = self.textVar.get()
     	botmode = "SEARCH_LADDER"
+    	# Widgets are blocked
+    	self.nameEntry.config(state='disabled')
+    	self.passwordEntry.config(state='disabled')
+    	self.cbbTeam.config(state='disabled')
     	# Creo los Rectangulo Move
     	self.text1 = self.canvasBody.create_text(28+55, 45+20, text='', fill="black", font=('Verdana 10'))
     	self.text2 = self.canvasBody.create_text(160+55, 45+20, text='', fill="black", font=('Verdana 10'))

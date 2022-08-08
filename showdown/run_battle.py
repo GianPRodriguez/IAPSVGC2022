@@ -12,6 +12,7 @@ import config
 from showdown.engine.evaluate import Scoring
 from showdown.battle_bots.helpers import format_decision
 from showdown.battle_modifier import update_battle
+from showdown.battle_modifier import updateEnvironment
 from showdown.websocket_client import PSWebsocketClient
 
 logger = logging.getLogger(__name__)
@@ -43,21 +44,22 @@ async def accion_batalla(battle):
 
 async def escoge_accion_team_preview(battle, ps_websocket_client):
     # Se escoge los 4 Pokémon: eleccion(n) es un entero
-    eleccion0, eleccion1, eleccion2, eleccion3 = await battle.action_team_preview(battle)
-    # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
-    battle.user.active1 = battle.user.reserved[eleccion0-1]
-    battle.user.active2 = battle.user.reserved[eleccion1-1]
-    aux = []
-    aux.append(battle.user.reserved[eleccion2-1])
-    aux.append(battle.user.reserved[eleccion3-1])
-    battle.user.reserved = deepcopy(aux)
+    eleccion0, eleccion1, eleccion2, eleccion3 = await battle.action_team_preview(battle)    
     # Se prepara el String que se va a enviar al WebSocket
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
     mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]
-    # Imprimo en CMD la acción
+    # Imprimo en CMD la acción hecha por el agente
     logger.info(mensaje)
-    # Se envía el String al WebSocket
-    await ps_websocket_client.send_message(battle.battle_tag, mensaje)
+    # Se envía la acción al WebSocket
+    if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
+        # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
+        battle.user.active1 = battle.user.reserved[eleccion0-1]
+        battle.user.active2 = battle.user.reserved[eleccion1-1]
+        aux = []
+        aux.append(battle.user.reserved[eleccion2-1])
+        aux.append(battle.user.reserved[eleccion3-1])
+        battle.user.reserved = deepcopy(aux)
+        await ps_websocket_client.send_message(battle.battle_tag, mensaje)
     return battle
 
 
@@ -120,9 +122,10 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, 
 
 
 # Inicia una Batalla VGC 2022
-async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient, q):
+async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient, q, botMode):
     # Se obtiene las variables de abajo
     battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, q, set_request_json=True)
+    battle.botMode = botMode
     # Inicializa mensaje donde se cargará el TEAM PREVIEW
     msg = ''
     # Mientras no aparezca al mensaje de TEAM PREVIEW
@@ -153,21 +156,22 @@ async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient, q):
     return battle
 
 
-async def iniciar_batalla(ps_websocket_client, q):
+async def iniciar_batalla(ps_websocket_client, q, botMode):
     # Inicia la Batalla VGC 2022
-    battle = await inicia_vgc2022(ps_websocket_client, q)
+    battle = await inicia_vgc2022(ps_websocket_client, q, botMode)
     # Envía el saludo
     await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
     # Inicia el tiempo
-    # await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
+    if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
+        await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
     # Retorna la Clase Batalla
     return battle
 
 
 # Nueva Batalla Pokémon completo
-async def pokemon_battle(ps_websocket_client, q):
+async def pokemon_battle(ps_websocket_client, q, botMode):
     # Solo inicia la batalla
-    battle = await iniciar_batalla(ps_websocket_client, q)
+    battle = await iniciar_batalla(ps_websocket_client, q, botMode)
     battle.imprimir()
     # Mientras...
     while True:
@@ -191,12 +195,16 @@ async def pokemon_battle(ps_websocket_client, q):
             # Retorna al ganador
             return winner, q
         else:
-            # No ha finalizado la batalla... se debe realizar una acción!!
+            # No ha finalizado la batalla... actualizo las variables del entorno
             action_required, battle = await update_battle(battle, mensaje)
             # action_required es BOOLEAN
             if action_required and not battle.wait:
+                # Actualizo las variables del entorno...
+                battle = await updateEnvironment(battle)
+                # Los imprimo...
                 battle.imprimir()
                 # Escoge el mejor movimiento y lo envía al websocket
                 battle, mensaje = await accion_batalla(battle)
                 q = battle.q
-                await ps_websocket_client.send_message(battle.battle_tag, mensaje)
+                if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
+                    await ps_websocket_client.send_message(battle.battle_tag, mensaje)
