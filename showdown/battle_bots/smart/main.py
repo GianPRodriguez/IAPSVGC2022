@@ -288,21 +288,21 @@ class BattleBot(Battle):
             for j in range(180):
                 u1, u2, ur1, ur2 = findRewardSingles(j, 0, battle)
                 aux = findGroupReward(o1, o2, or1, or2, u1, u2, ur1, ur2, battle)
-                if i == 4 and j == 129:
-                    print()
                 if aux > rewardx1OpponentTeam:
                     rewardx1OpponentTeam = aux
                     bestJ = j
             bestRewardIJ.append(Box(rewardx1OpponentTeam, i, bestJ))
-            print(bestRewardIJ[i].get())
+            #print(bestRewardIJ[i].get())
         bestRewardIJ.sort()
         print(bestRewardIJ[0].get())
         print(bestRewardIJ[1].get())
         print(bestRewardIJ[2].get())
         print(bestRewardIJ[3].get())
         print(bestRewardIJ[4].get())
+        print(bestRewardIJ[5].get())
+        print(bestRewardIJ[6].get())
         # bestJ -> team choosed
-        eleccion0, eleccion1, eleccion2, eleccion3 = findTeam(bestRewardIJ[2].j, battle)
+        eleccion0, eleccion1, eleccion2, eleccion3 = findTeam(bestRewardIJ[3].j, battle)
         # get names of Pkmn
         namePokemon0 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion0-1].get('details', 'False').partition(",")[0]
         namePokemon1 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion1-1].get('details', 'False').partition(",")[0]

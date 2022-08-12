@@ -324,6 +324,7 @@ def heal_or_damage(battle, split_msg):
                 if constants.FNT in split_msg[3]:
                     # Si el Pokémon se ha debilitado debido a un movimiento
                     battle.opponent.active1.HPB = 0
+                    battle.opponent.active1.fainted = True
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
                     new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
@@ -333,6 +334,7 @@ def heal_or_damage(battle, split_msg):
                 if constants.FNT in split_msg[3]:
                     # Si el Pokémon se ha debilitado debido a un movimiento
                     battle.opponent.active2.HPB = 0
+                    battle.opponent.active2.fainted = True
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
                     new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
@@ -344,6 +346,7 @@ def heal_or_damage(battle, split_msg):
                 if constants.FNT in split_msg[3]:
                     # Si el Pokémon se ha debilitado debido a un movimiento
                     battle.opponent.active1.HPB = 0
+                    battle.opponent.active1.fainted = True
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
                     new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
@@ -353,6 +356,7 @@ def heal_or_damage(battle, split_msg):
                 if constants.FNT in split_msg[3]:
                     # Si el Pokémon se ha debilitado debido a un movimiento
                     battle.opponent.active2.HPB = 0
+                    battle.opponent.active2.fainted = True
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
                     new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
@@ -364,12 +368,14 @@ def heal_or_damage(battle, split_msg):
             if split_msg[2].startswith("p1a"):
                 if constants.FNT in split_msg[3]:
                     battle.user.active1.HPB = 0
+                    battle.user.active1.fainted = True
                 else:
                     battle.user.active1.HPB = int(math.ceil(float(split_msg[3].split('/')[0])))
                     battle.user.active1.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split(' ')[0])))
             else:
                 if constants.FNT in split_msg[3]:
                     battle.user.active2.HPB = 0
+                    battle.user.active2.fainted = True
                 else:
                     battle.user.active2.HPB = int(math.ceil(float(split_msg[3].split('/')[0])))
                     battle.user.active2.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split(' ')[0])))
@@ -378,12 +384,14 @@ def heal_or_damage(battle, split_msg):
             if split_msg[2].startswith("p2a"):
                 if constants.FNT in split_msg[3]:
                     battle.user.active1.HPB = 0
+                    battle.user.active1.fainted = True
                 else:
                     battle.user.active1.HPB = int(math.ceil(float(split_msg[3].split('/')[0])))
                     battle.user.active1.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split(' ')[0])))
             else:
                 if constants.FNT in split_msg[3]:
                     battle.user.active2.HPB = 0
+                    battle.user.active2.fainted = True
                 else:
                     battle.user.active2.HPB = int(math.ceil(float(split_msg[3].split('/')[0])))
                     battle.user.active2.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split(' ')[0])))
@@ -664,7 +672,7 @@ def start_volatile_status(battle, split_msg):
                     battle.user.reserved[0].can_dynamax = False
                     battle.user.reserved[1].can_dynamax = False
                 elif volatile_status == constants.DROWSY:
-                    battle.user.active1.volatile_statuses.append(constants.DROWSY)
+                    battle.user.active2.volatile_statuses.append(constants.DROWSY)
     return battle
 
 

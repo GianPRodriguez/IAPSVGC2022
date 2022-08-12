@@ -73,7 +73,7 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q)
         first_msg = split_msg[0]
         if len(split_msg) == 5:
             if split_msg[4].startswith("/nonotify"):    # Rechazo
-                q.put([-1])
+                q.put([-2])
                 sys.exit()
         # first_msg = ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
         if 'battle' in first_msg:
@@ -183,6 +183,7 @@ async def pokemon_battle(ps_websocket_client, q, botMode):
             if constants.WIN_STRING in mensaje:
                 # Se obtiene el NOMBRE del ganador
                 winner = mensaje.split(constants.WIN_STRING)[-1].split('\n')[0].strip(" ")
+                q.put([-1,winner==battle.opponent.account_name,battle.user.account_name,battle.opponent.account_name])
             else:
                 winner = None
             # Y lo imprimo

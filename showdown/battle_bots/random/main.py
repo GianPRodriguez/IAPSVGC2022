@@ -386,7 +386,7 @@ class BattleBot(Battle):
                         # El Random ha elegido switch
                         if ((battle.request_json).get('active','False')[1].get('trapped','False') == True or (battle.request_json).get('active','False')[1].get('maybeTrapped','False') == True) or ((battle.user.reserved[0].fainted or battle.user.reserved[1].fainted) and (nMoveSwitch1 == 3 or nMoveSwitch1 == 4)) or (battle.user.reserved[0].fainted and battle.user.reserved[1].fainted):
                             # Si está atrapado... o los 2 reservados están debilitados... solo queda hacer un movimiento
-                            print("Para 1 ... Si está atrapado... o los 2 reservados están debilitados... solo queda hacer un movimiento")
+                            print("Para 1 ... Si está atrapado... o los 2 reservados están debilitados... o solo un reservado está habilitado y ya fue escogido por pkmn 0... solo queda hacer un movimiento")
                             moveSwitch2 = 'move'
                             pokemon2move = []
                             if (battle.request_json).get('active','False')[1].get('moves','False')[0].get('disabled') == False:

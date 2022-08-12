@@ -89,8 +89,6 @@ async def showdown(q,username,password,teamname,botmode):
         battles_run += 1
         if battles_run >= config.run_count:
             break
-    # Como terminaron las batallas pendientes...
-    q.put([-1])
     # Fin
     sys.exit()
 
