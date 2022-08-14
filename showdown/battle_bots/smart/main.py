@@ -294,13 +294,13 @@ class BattleBot(Battle):
             bestRewardIJ.append(Box(rewardx1OpponentTeam, i, bestJ))
             #print(bestRewardIJ[i].get())
         bestRewardIJ.sort()
-        print(bestRewardIJ[0].get())
-        print(bestRewardIJ[1].get())
-        print(bestRewardIJ[2].get())
-        print(bestRewardIJ[3].get())
-        print(bestRewardIJ[4].get())
-        print(bestRewardIJ[5].get())
-        print(bestRewardIJ[6].get())
+        #print(bestRewardIJ[0].get())
+        #print(bestRewardIJ[1].get())
+        #print(bestRewardIJ[2].get())
+        #print(bestRewardIJ[3].get())
+        #print(bestRewardIJ[4].get())
+        #print(bestRewardIJ[5].get())
+        #print(bestRewardIJ[6].get())
         # bestJ -> team choosed
         eleccion0, eleccion1, eleccion2, eleccion3 = findTeam(bestRewardIJ[3].j, battle)
         # get names of Pkmn
@@ -408,7 +408,7 @@ class BattleBot(Battle):
             if battle.user.active1.fainted == False:
                 # Movimiento especial...
                 if (battle.request_json).get('active','False')[0].get('moves','False')[0].get('pp','False') == 'False':
-                    print("The opposing Shedinja used Phantom Force!")
+                    #print("The opposing Shedinja used Phantom Force!")
                     # Está atrapado y tiene que hacer ese movimiento...
                     moveSwitch1 = 'move'
                     nMoveSwitch1 = 1
@@ -434,8 +434,8 @@ class BattleBot(Battle):
                             nMoveSwitch1 = random.choice(pokemon1move)
                             # Ahora que se ha escogido al menos 1 movimiento... ¿es posible hacer dynamax?
                             if battle.user.active1.can_dynamax:
-                                logger.warning(str(battle.user.active1.can_dynamax))
-                                logger.warning(str(type(battle.user.active1.can_dynamax)))
+                                #logger.warning(str(battle.user.active1.can_dynamax))
+                                #logger.warning(str(type(battle.user.active1.can_dynamax)))
                                 if ((battle.request_json).get('active','False')[0].get('canDynamax','False')):
                                     # Sí es posible...
                                     dynamax1 = random.choice([0, 1])
@@ -498,7 +498,7 @@ class BattleBot(Battle):
                         # El Random ha elegido Switch
                         if ((battle.request_json).get('active','False')[0].get('trapped','False') == True or (battle.request_json).get('active','False')[0].get('maybeTrapped','False') == True) or (battle.user.reserved[0].fainted and battle.user.reserved[1].fainted):
                             # Si está atrapado... o los 2 reservados están debilitados... solo queda hacer un movimiento
-                            print("Para 0 ... Si está atrapado... o los 2 reservados están debilitados... solo queda hacer un movimiento")
+                            #print("Para 0 ... Si está atrapado... o los 2 reservados están debilitados... solo queda hacer un movimiento")
                             moveSwitch1 = 'move'
                             pokemon1move = []
                             if (battle.request_json).get('active','False')[0].get('moves','False')[0].get('disabled','False') == False:
@@ -570,7 +570,7 @@ class BattleBot(Battle):
                             else:
                                 # Pokémon 3 y 4 pueden reemplazar
                                 nMoveSwitch1 = random.choice([3, 4])
-                                print("CAMBIO ALEATORIO NORMAL PARA 1")
+                                #print("CAMBIO ALEATORIO NORMAL PARA 1")
             else:
                 moveSwitch1 = 'pass'
                 nMoveSwitch1 = 0
@@ -580,7 +580,7 @@ class BattleBot(Battle):
             if battle.user.active2.fainted == False:
                 # Movimiento especial...
                 if (battle.request_json).get('active','False')[1].get('moves','False')[0].get('pp','False') == 'False':
-                    print("The opposing Shedinja used Phantom Force!")
+                    #print("The opposing Shedinja used Phantom Force!")
                     # Está atrapado y tiene que hacer ese movimiento...
                     moveSwitch2 = 'move'
                     nMoveSwitch2 = 1
@@ -664,12 +664,12 @@ class BattleBot(Battle):
                             else:
                                 # Pokémon 3 y 4 pueden reemplazar
                                 nMoveSwitch2 = random.choice([3, 4])
-                                print("CAMBIO ALEATORIO NORMAL PARA 2")
+                                #print("CAMBIO ALEATORIO NORMAL PARA 2")
                     else:
                         # El Random ha elegido switch
                         if ((battle.request_json).get('active','False')[1].get('trapped','False') == True or (battle.request_json).get('active','False')[1].get('maybeTrapped','False') == True) or ((battle.user.reserved[0].fainted or battle.user.reserved[1].fainted) and (nMoveSwitch1 == 3 or nMoveSwitch1 == 4)) or (battle.user.reserved[0].fainted and battle.user.reserved[1].fainted):
                             # Si está atrapado... o los 2 reservados están debilitados... solo queda hacer un movimiento
-                            print("Para 1 ... Si está atrapado... o los 2 reservados están debilitados... solo queda hacer un movimiento")
+                            #print("Para 1 ... Si está atrapado... o los 2 reservados están debilitados... solo queda hacer un movimiento")
                             moveSwitch2 = 'move'
                             pokemon2move = []
                             if (battle.request_json).get('active','False')[1].get('moves','False')[0].get('disabled') == False:
@@ -791,7 +791,17 @@ class BattleBot(Battle):
         else:
             logger.error("NO DEBE ENTRAR ACÁ - moveSwitch2 == 'switch'")
         # Se envía al Queue la acción
-        lastReward, reward = self.calculateRewards()
-        logger.warning([2, text1, color1, text2, color2, text3, color3, text4, color4, lastReward, reward])
-        battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4, lastReward, reward])
+        deltaReward, reward = self.calculateRewards()
+        if deltaReward > 1000:
+            color5 = "#325928"
+        elif deltaReward > 0:
+            color5 = "#582831"
+        else:
+            color5 = "#565828"
+        if reward > 0:
+            color6 = "#325928"
+        else:
+            color6 = "#582831"
+        logger.debug([2, text1, color1, text2, color2, text3, color3, text4, color4, deltaReward, color5, reward, color6])
+        battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4, deltaReward, color5, reward, color6])
         return battle, moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2)

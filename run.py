@@ -58,7 +58,11 @@ async def showdown(q,username,password,teamname,botmode):
     # Creo una Clase PSWebsocketClient
     ps_websocket_client = await PSWebsocketClient.create(config.username, config.password, config.websocket_uri)
     # Se lee "|challstr|4|a6e6e29652941bc1b872a2c34cb0b4e6fdd83355bd3b8787d1519685b29bfb5d267f479f4be9f9fe554605c6c9842160194586f55644f532d991560f817c5939bf7961319b23de0803bac5f6faa2935e395c0f28da55b4c052ece76f0f64e5acdfea8691ac2607012b0d742704920c9fe3c6bc13730b121d6459b84f03d399b8"
-    await ps_websocket_client.login()
+    isOk = await ps_websocket_client.login()
+    if isOk == -1:
+        q.put([-3])
+        logger.handlers.clear()
+        sys.exit()
     # Contadores
     battles_run = 0
     wins = 0
@@ -83,13 +87,12 @@ async def showdown(q,username,password,teamname,botmode):
             wins += 1
         else:
             losses += 1
-
         logger.info("W: {}\tL: {}".format(wins, losses))
-
         battles_run += 1
         if battles_run >= config.run_count:
             break
     # Fin
+    logger.handlers.clear()
     sys.exit()
 
 class AsyncDownload(Thread):

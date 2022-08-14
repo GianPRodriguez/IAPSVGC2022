@@ -33,6 +33,8 @@ async def accion_batalla(battle):
     # ¿Hay solicitud de JSON pendiente?
     if battle.request_json:
         battle.user.updatePkmnUser(battle.request_json, first_turn=False)
+    # Actualiza las estadísticas de los Pkmn del usuario y oponente
+    #await battle.updateStatistics()
     # Se define la mejor acción
     battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = await battle.action_battle(battle)
     mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
@@ -44,6 +46,7 @@ async def accion_batalla(battle):
 
 async def escoge_accion_team_preview(battle, ps_websocket_client):
     # Se escoge los 4 Pokémon: eleccion(n) es un entero
+    logger.info("Team Preview")
     eleccion0, eleccion1, eleccion2, eleccion3 = await battle.action_team_preview(battle)    
     # Se prepara el String que se va a enviar al WebSocket
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
@@ -61,7 +64,6 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
         battle.user.reserved = deepcopy(aux)
         await ps_websocket_client.send_message(battle.battle_tag, mensaje)
     return battle
-
 
 async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q):
     # Obtiene las etiquetas que aparecen al iniciar una batalla

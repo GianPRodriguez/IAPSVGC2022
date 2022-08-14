@@ -36,13 +36,13 @@ def request(battle, split_msg):
         battle.rqid = battle_json[constants.RQID]
         # ¿battle_json tiene "forceSwitch"? Se activa cuando uso U-TURN
         if battle_json.get(constants.FORCE_SWITCH):
-            logger.info("Action: forceSwitch")
+            logger.debug("Action: forceSwitch")
             battle.force_switch = True
         else:
             battle.force_switch = False
         # ¿battle_json tiene "wait"? ¿Se activa cuando el opponente usa U-TURN?
         if battle_json.get(constants.WAIT):
-            logger.info("Action: wait")
+            logger.debug("Action: wait")
             battle.wait = True
         else:
             battle.wait = False
@@ -65,7 +65,7 @@ def inactive(battle, split_msg):
 
 # Ya no avanza el tiempo...
 def inactiveoff(battle, _):
-    logger.info("Se ha detenido el tiempo...")
+    #logger.info("Se ha detenido el tiempo...")
     return battle
 
 
@@ -87,6 +87,8 @@ def switch_or_drag(battle, split_msg):
                         battle.opponent.active1.name = split_msg[3].partition(",")[0]
                         battle.opponent.active1.volatile_statuses = []
                         battle.opponent.active1.boosts = defaultdict(lambda: 0)
+                        if battle.opponent.active1.opponent_confirmed != True:
+                            battle.opponent.opponentPkmnConfirmed += 1
                         battle.opponent.active1.opponent_confirmed = True
                         # Fin - Actualizacion de Stats
                         # logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active1.name) + ": p2a")
@@ -120,6 +122,8 @@ def switch_or_drag(battle, split_msg):
                         battle.opponent.active2.name = split_msg[3].partition(",")[0]
                         battle.opponent.active2.volatile_statuses = []
                         battle.opponent.active2.boosts = defaultdict(lambda: 0)
+                        if battle.opponent.active2.opponent_confirmed != True:
+                            battle.opponent.opponentPkmnConfirmed += 1
                         battle.opponent.active2.opponent_confirmed = True
                         # Fin - Actualizacion de Stats
                         # logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active2.name) + ": p2b")
@@ -155,6 +159,8 @@ def switch_or_drag(battle, split_msg):
                         battle.opponent.active1.name = split_msg[3].partition(",")[0]
                         battle.opponent.active1.volatile_statuses = []
                         battle.opponent.active1.boosts = defaultdict(lambda: 0)
+                        if battle.opponent.active1.opponent_confirmed != True:
+                            battle.opponent.opponentPkmnConfirmed += 1
                         battle.opponent.active1.opponent_confirmed = True
                         # Fin - Actualizacion de Stats
                         # logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active1.name) + ": p1a")
@@ -188,6 +194,8 @@ def switch_or_drag(battle, split_msg):
                         battle.opponent.active2.name = split_msg[3].partition(",")[0]
                         battle.opponent.active2.volatile_statuses = []
                         battle.opponent.active2.boosts = defaultdict(lambda: 0)
+                        if battle.opponent.active2.opponent_confirmed != True:
+                            battle.opponent.opponentPkmnConfirmed += 1
                         battle.opponent.active2.opponent_confirmed = True
                         # Fin - Actualizacion de Stats
                         # logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active2.name) + ": p1b")
@@ -1116,6 +1124,7 @@ def turn(battle, split_msg):
         battle.opponent.side_conditions['lightscreen'] -= 1
     if battle.opponent.side_conditions['auroraveil'] > 0:
         battle.opponent.side_conditions['auroraveil'] -= 1
+    logger.debug("Turn: {}".format(int(split_msg[2])))
     return battle
 
 

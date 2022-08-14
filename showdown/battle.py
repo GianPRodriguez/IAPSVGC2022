@@ -23,7 +23,7 @@ class Battle(ABC):
         self.terrain = None             # ['None','electricterrain','grassyterrain','mistyterrain','psychicterrain']
         self.terrainTurn = 0
         self.trick_room = 0             # [0,4,3,2,1]
-        self.turn = False
+        self.turn = 0
         self.started = False
         self.rqid = None
         self.force_switch = False
@@ -84,13 +84,28 @@ class Battle(ABC):
 
     def calculateRewards(self):
         user = self.formula(self.user.active1)*1.1 + self.formula(self.user.active2) + 0.9*(self.formula(self.user.reserved[0]) + self.formula(self.user.reserved[1]))
-        if len(self.opponent.reserved) > 2:
+        if self.opponent.opponentPkmnConfirmed == 2:
             opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]) + self.formula(self.opponent.reserved[2]) + self.formula(self.opponent.reserved[3]))/2
-        else:
+        elif self.opponent.opponentPkmnConfirmed == 4:
             opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]))
-        self.lastReward = self.reward
+        else:   # == 3
+            if self.opponent.reserved[0].opponent_confirmed:
+                opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[0])) + 0.9*(self.formula(self.opponent.reserved[1]) + self.formula(self.opponent.reserved[2]) + self.formula(self.opponent.reserved[3]))/3
+            elif self.opponent.reserved[1].opponent_confirmed:
+                opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[1])) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[2]) + self.formula(self.opponent.reserved[3]))/3
+            elif self.opponent.reserved[2].opponent_confirmed:
+                opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[2])) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]) + self.formula(self.opponent.reserved[3]))/3
+            elif self.opponent.reserved[3].opponent_confirmed:
+                opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[3])) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]) + self.formula(self.opponent.reserved[2]))/3
+            else:
+                logger.error("def calculateRewards(self):")
+                opponent = 1000000
+        if self.turn > 1:
+            self.lastReward = self.reward
+        else:
+            self.lastReward = 0
         self.reward = user - opponent
-        return self.lastReward, self.reward
+        return self.reward-self.lastReward, self.reward
 
     def formula(self, pkmn):
         return sqrt((pkmn.ATB*pkmn.VEB)/10)*sqrt((pkmn.HPB*pkmn.DEB)/10)
@@ -105,6 +120,7 @@ class Battler:
         self.reserved = []                              # class Pokemon
         self.side_conditions = defaultdict(lambda: 0)   # Tailwind, Stealth Rock, Reflect
         self.isUser = False
+        self.opponentPkmnConfirmed = 0
 
     def updatePkmnUser(self, JSONdict, first_turn):
         if (first_turn):
@@ -136,9 +152,16 @@ class Battler:
                 for pkmn in self.reserved:
                     if pkmn.name != JSONdict["side"]["pokemon"][2]["details"].partition(",")[0] and pkmn.name != JSONdict["side"]["pokemon"][3]["details"].partition(",")[0]:
                         self.reserved.remove(pkmn)
-            # Update Pkmn
+            # Update Pkmn - Turno 2 en adelante... HPB
             self.active1.HPB = int(JSONdict["side"]["pokemon"][0]["condition"].partition("/")[0].partition(" ")[0])
             self.active2.HPB = int(JSONdict["side"]["pokemon"][1]["condition"].partition("/")[0].partition(" ")[0])
+            # Update Pkmn - Turno 2 en adelante... Moves
+            if JSONdict.get("active","False") != "False":
+                for i in range(len(JSONdict.get("active","False")[0].get("moves","False"))):
+                    self.active1.movePP[i] = int(JSONdict.get("active","False")[0].get("moves","False")[i].get("pp","False"))
+                for i in range(len(JSONdict.get("active","False")[1].get("moves","False"))):
+                    self.active2.movePP[i] = int(JSONdict.get("active","False")[1].get("moves","False")[i].get("pp","False"))
+            # Reserved
             self.reserved[0].HPB = int(JSONdict["side"]["pokemon"][2]["condition"].partition("/")[0].partition(" ")[0])
             self.reserved[1].HPB = int(JSONdict["side"]["pokemon"][3]["condition"].partition("/")[0].partition(" ")[0])
 
@@ -146,6 +169,8 @@ class Battler:
         print()
         print("id: " + str(self.id))
         print("Nombre de la cuenta: " + str(self.account_name))
+        print()
+        print("opponentPkmnConfirmed: " + str(self.opponentPkmnConfirmed))
         print()
         print("Side conditions: ")
         for key, value in self.side_conditions.items():
@@ -208,6 +233,7 @@ class Pokemon:
             self.isDitto = 1
         else:
             self.isDitto = 0
+        self.movePP = [-1, -1, -1, -1]
         self.POKEAPI(isOpponent)
 
     def imprimir(self):
@@ -230,6 +256,7 @@ class Pokemon:
         print("PAR: " + str(self.PAR))
         print("DRO: " + str(self.DRO))
         print("isOpponentConfirmed: " + str(self.opponent_confirmed))
+        print(self.movePP)
 
     def HP_BATTLE_CALCULATE(self, HP_base):
         return math.floor(((2*HP_base+constants.IV+(constants.EV/4))*constants.LEVEL)/100) + constants.LEVEL + 10
