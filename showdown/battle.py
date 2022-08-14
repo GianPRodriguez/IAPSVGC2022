@@ -101,11 +101,11 @@ class Battle(ABC):
                 logger.error("def calculateRewards(self):")
                 opponent = 1000000
         if self.turn > 1:
-            self.lastReward = self.reward
+            self.lastReward = (user - opponent) - self.reward
         else:
             self.lastReward = 0
         self.reward = user - opponent
-        return self.reward-self.lastReward, self.reward
+        return self.lastReward, self.reward
 
     def formula(self, pkmn):
         return sqrt((pkmn.ATB*pkmn.VEB)/10)*sqrt((pkmn.HPB*pkmn.DEB)/10)
@@ -205,7 +205,6 @@ class Pokemon:
         self.max_hp = max_hp
         self.type1 = None
         self.type2 = None
-        self.fainted = False
         self.status = None                      # ['slp', 'brn', 'frz', 'par', 'psn']
         self.volatile_statuses = []             # dynamax
         self.boosts = defaultdict(lambda: 0)
@@ -236,10 +235,12 @@ class Pokemon:
         self.movePP = [-1, -1, -1, -1]
         self.POKEAPI(isOpponent)
 
+    def isFainted(self):
+        return self.HPB == 0
+
     def imprimir(self):
         print("Name: " + str(self.name))
         print("Max HP: " + str(self.max_hp))
-        print("Fainted: " + str(self.fainted))
         print("Status: " + str(self.status))
         print("Volatile Status: " + str(self.volatile_statuses))
         print("Boosts: ")
@@ -257,6 +258,7 @@ class Pokemon:
         print("DRO: " + str(self.DRO))
         print("isOpponentConfirmed: " + str(self.opponent_confirmed))
         print(self.movePP)
+        print("Is Fainted?: {}".format(self.isFainted()))
 
     def HP_BATTLE_CALCULATE(self, HP_base):
         return math.floor(((2*HP_base+constants.IV+(constants.EV/4))*constants.LEVEL)/100) + constants.LEVEL + 10

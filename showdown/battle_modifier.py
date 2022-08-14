@@ -332,7 +332,7 @@ def heal_or_damage(battle, split_msg):
                 if constants.FNT in split_msg[3]:
                     # Si el Pokémon se ha debilitado debido a un movimiento
                     battle.opponent.active1.HPB = 0
-                    battle.opponent.active1.fainted = True
+                    #battle.opponent.active1.fainted = True
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
                     new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
@@ -342,7 +342,7 @@ def heal_or_damage(battle, split_msg):
                 if constants.FNT in split_msg[3]:
                     # Si el Pokémon se ha debilitado debido a un movimiento
                     battle.opponent.active2.HPB = 0
-                    battle.opponent.active2.fainted = True
+                    #battle.opponent.active2.fainted = True
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
                     new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
@@ -354,7 +354,7 @@ def heal_or_damage(battle, split_msg):
                 if constants.FNT in split_msg[3]:
                     # Si el Pokémon se ha debilitado debido a un movimiento
                     battle.opponent.active1.HPB = 0
-                    battle.opponent.active1.fainted = True
+                    #battle.opponent.active1.fainted = True
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
                     new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
@@ -364,7 +364,7 @@ def heal_or_damage(battle, split_msg):
                 if constants.FNT in split_msg[3]:
                     # Si el Pokémon se ha debilitado debido a un movimiento
                     battle.opponent.active2.HPB = 0
-                    battle.opponent.active2.fainted = True
+                    #battle.opponent.active2.fainted = True
                 else:
                     # Si el Pokémon aún tiene HP, se obtiene el nuevo %
                     new_hp_percentage = float(split_msg[3].split('/')[0]) / 100
@@ -376,14 +376,14 @@ def heal_or_damage(battle, split_msg):
             if split_msg[2].startswith("p1a"):
                 if constants.FNT in split_msg[3]:
                     battle.user.active1.HPB = 0
-                    battle.user.active1.fainted = True
+                    #battle.user.active1.fainted = True
                 else:
                     battle.user.active1.HPB = int(math.ceil(float(split_msg[3].split('/')[0])))
                     battle.user.active1.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split(' ')[0])))
             else:
                 if constants.FNT in split_msg[3]:
                     battle.user.active2.HPB = 0
-                    battle.user.active2.fainted = True
+                    #battle.user.active2.fainted = True
                 else:
                     battle.user.active2.HPB = int(math.ceil(float(split_msg[3].split('/')[0])))
                     battle.user.active2.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split(' ')[0])))
@@ -392,14 +392,14 @@ def heal_or_damage(battle, split_msg):
             if split_msg[2].startswith("p2a"):
                 if constants.FNT in split_msg[3]:
                     battle.user.active1.HPB = 0
-                    battle.user.active1.fainted = True
+                    #battle.user.active1.fainted = True
                 else:
                     battle.user.active1.HPB = int(math.ceil(float(split_msg[3].split('/')[0])))
                     battle.user.active1.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split(' ')[0])))
             else:
                 if constants.FNT in split_msg[3]:
                     battle.user.active2.HPB = 0
-                    battle.user.active2.fainted = True
+                    #battle.user.active2.fainted = True
                 else:
                     battle.user.active2.HPB = int(math.ceil(float(split_msg[3].split('/')[0])))
                     battle.user.active2.max_hp = int(math.ceil(float(split_msg[3].split('/')[1].split(' ')[0])))
@@ -414,35 +414,35 @@ def faint(battle, split_msg):
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
                 battle.opponent.active1.HPB = 0
-                battle.opponent.active1.fainted = True
+                #battle.opponent.active1.fainted = True
             else:
                 battle.opponent.active2.HPB = 0
-                battle.opponent.active2.fainted = True
+                #battle.opponent.active2.fainted = True
         else:
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
                 battle.opponent.active1.HPB = 0
-                battle.opponent.active1.fainted = True
+                #battle.opponent.active1.fainted = True
             else:
                 battle.opponent.active2.HPB = 0
-                battle.opponent.active2.fainted = True
+                #battle.opponent.active2.fainted = True
     else:
         if split_msg[2].startswith("p1"):
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
                 battle.user.active1.HPB = 0
-                battle.user.active1.fainted = True
+                #battle.user.active1.fainted = True
             else:
                 battle.user.active2.HPB = 0
-                battle.user.active2.fainted = True
+                #battle.user.active2.fainted = True
         else:
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
                 battle.user.active1.HPB = 0
-                battle.user.active1.fainted = True
+                #battle.user.active1.fainted = True
             else:
                 battle.user.active2.HPB = 0
-                battle.user.active2.fainted = True
+                #battle.user.active2.fainted = True
     return battle
 
 # Se realiza un movimiento...
@@ -578,7 +578,7 @@ def start_volatile_status(battle, split_msg):
     # split_msg = ["","-start","p2a: Incineroar","move: Yawn","[of] p1a: Gastrodon"]
     # split_msg = ["","-start","p1a: Charizard","Dynamax","Gmax"]
     volatile_status = normalize_name(split_msg[3])
-    logger.warning(volatile_status)
+    #logger.warning(volatile_status)
     if is_opponent(battle, split_msg):
         if split_msg[2].startswith("p2"):
             # ¿p2a o p2b?
@@ -1140,7 +1140,7 @@ def updatePokemon(battle, pkmn, isUser, isReserved):
     # Reserved: boosts = 0
     if isReserved:
         pkmn.boosts = defaultdict(lambda: 0)
-    # Inicializacion
+    # Inicializacion - No modificables los valores originales
     ATK_battle_base =  pkmn.ATK_battle_base
     DEF_battle_base =  pkmn.DEF_battle_base
     SPA_battle_base =  pkmn.SPA_battle_base
@@ -1173,6 +1173,28 @@ def updatePokemon(battle, pkmn, isUser, isReserved):
         else:
             VEL_battle_base = math.floor((2/(2+abs(int(pkmn.boosts['speed'])))) * pkmn.VEL_battle_base)
     # Volatile Status:
+    if isUser:
+        # Reflect
+        if "reflect" in battle.user.side_conditions and "auroraveil" not in battle.user.side_conditions:
+            DEF_battle_base = int(DEF_battle_base * 4/3)
+        # Light Screen
+        if "lightscreen" in battle.user.side_conditions and "auroraveil" not in battle.user.side_conditions:
+            SPD_battle_base = int(SPD_battle_base * 4/3)
+        # Aurora Veil
+        if "auroraveil" in battle.user.side_conditions:
+            DEF_battle_base = int(DEF_battle_base * 4/3)
+            SPD_battle_base = int(SPD_battle_base * 4/3)
+    else:
+        # Reflect
+        if "reflect" in battle.opponent.side_conditions and "auroraveil" not in battle.opponent.side_conditions:
+            DEF_battle_base = int(DEF_battle_base * 4/3)
+        # Light Screen
+        if "lightscreen" in battle.opponent.side_conditions and "auroraveil" not in battle.opponent.side_conditions:
+            SPD_battle_base = int(SPD_battle_base * 4/3)
+        # Aurora Veil
+        if "auroraveil" in battle.opponent.side_conditions:
+            DEF_battle_base = int(DEF_battle_base * 4/3)
+            SPD_battle_base = int(SPD_battle_base * 4/3)
     # ATB
     if pkmn.status == constants.BURN:
         pkmn.ATB = max(ATK_battle_base/2, SPA_battle_base)
@@ -1205,6 +1227,12 @@ def updatePokemon(battle, pkmn, isUser, isReserved):
         if battle.opponent.side_conditions['tailwind'] > 0:
             battle.opponent.active1.VEB *= 2
             battle.opponent.active2.VEB *= 2
+    # Trick Room
+    if battle.trick_room > 0:
+        pkmn.VEB = constants.FASTEST - pkmn.VEB   # Pkmn fastest = 1
+    # Dynamax - ATB *= 1.3
+    if 'dynamax' in pkmn.volatile_statuses:
+        pkmn.ATB = math.floor(pkmn.ATB * 1.3)
     # Actualización
     if isUser:
         if battle.user.active1.name == pkmn.name:
@@ -1216,9 +1244,6 @@ def updatePokemon(battle, pkmn, isUser, isReserved):
             battle.opponent.active1 = deepcopy(pkmn)
         elif battle.opponent.active2.name == pkmn.name:
             battle.opponent.active2 = deepcopy(pkmn)
-    # Trick Room
-    if battle.trick_room > 0:
-        pkmn.VEB = constants.FASTEST - pkmn.VEB   # Pkmn fastest = 1
     return battle
 
 async def updateEnvironment(battle):

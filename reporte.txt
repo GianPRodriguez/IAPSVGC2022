@@ -1,0 +1,484 @@
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 1
+Turn: 12
+Started: True
+rqid: 30
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+opponentPkmnConfirmed: 0
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Whimsicott
+Max HP: 167
+Status: None
+Volatile Status: ['moveyawn']
+Boosts: 
+special-attack  :  -1
+speed  :  -1
+Can Dynamax: False
+Is Ditto: 0
+HPB: 70
+ATB: 87
+DEB: 162
+VEB: 197
+FRO: 0
+ASL: 1
+PAR: 0
+DRO: 0
+isOpponentConfirmed: False
+[7, 23, 46, 61]
+REPORTE UNITARIO ISFAINTED
+Whimsicott
+70
+False
+Is Fainted?: False
+
+Active 2: 
+
+Name: Rotom-Heat
+Max HP: 126
+Status: None
+Volatile Status: []
+Boosts: 
+defense  :  -2
+special-attack  :  -3
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 76
+DEB: 126
+VEB: 127
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: False
+[44, 31, 32, 7]
+REPORTE UNITARIO ISFAINTED
+Rotom-Heat
+0
+True
+Is Fainted?: True
+
+List of Reserved: 
+
+Name: Umbreon
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 128
+DEB: 218
+VEB: 150
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: False
+[-1, -1, -1, -1]
+REPORTE UNITARIO ISFAINTED
+Umbreon
+0
+True
+Is Fainted?: True
+
+Name: Eternatus
+Max HP: 247
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 197
+DEB: 160
+VEB: 127
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: False
+[8, 8, 63, 16]
+REPORTE UNITARIO ISFAINTED
+Eternatus
+0
+True
+Is Fainted?: True
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+opponentPkmnConfirmed: 4
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Regieleki
+Max HP: 187
+Status: None
+Volatile Status: []
+Boosts: 
+speed  :  -2
+Can Dynamax: True
+Is Ditto: 0
+HPB: 170
+ATB: 167
+DEB: 121
+VEB: 140
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: True
+[-1, -1, -1, -1]
+REPORTE UNITARIO ISFAINTED
+Regieleki
+170
+False
+Is Fainted?: False
+
+Active 2: 
+
+Name: Umbreon
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 128
+DEB: 218
+VEB: 150
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: True
+[-1, -1, -1, -1]
+REPORTE UNITARIO ISFAINTED
+Umbreon
+202
+False
+Is Fainted?: False
+
+List of Reserved: 
+
+Name: Zacian-Crowned
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 199
+ATB: 244
+DEB: 212
+VEB: 58
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: True
+[-1, -1, -1, -1]
+REPORTE UNITARIO ISFAINTED
+Zacian-Crowned
+199
+False
+Is Fainted?: False
+
+Name: Lugia
+Max HP: 213
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 191
+ATB: 156
+DEB: 249
+VEB: 100
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: True
+[-1, -1, -1, -1]
+REPORTE UNITARIO ISFAINTED
+Lugia
+191
+False
+Is Fainted?: False
+
+
+Estado del Entorno
+------------------
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: False
+Turn: 13
+Started: True
+rqid: 32
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+opponentPkmnConfirmed: 0
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Whimsicott
+Max HP: 167
+Status: None
+Volatile Status: ['moveyawn']
+Boosts: 
+special-attack  :  -2
+speed  :  -2
+Can Dynamax: False
+Is Ditto: 0
+HPB: 28
+ATB: 87
+DEB: 162
+VEB: 61
+FRO: 0
+ASL: 1
+PAR: 0
+DRO: 0
+isOpponentConfirmed: False
+[7, 23, 45, 61]
+REPORTE UNITARIO ISFAINTED
+Whimsicott
+28
+False
+Is Fainted?: False
+
+Active 2: 
+
+Name: Rotom-Heat
+Max HP: 126
+Status: None
+Volatile Status: []
+Boosts: 
+defense  :  -2
+special-attack  :  -3
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 76
+DEB: 126
+VEB: 151
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: False
+[44, 31, 32, 7]
+REPORTE UNITARIO ISFAINTED
+Rotom-Heat
+0
+True
+Is Fainted?: True
+
+List of Reserved: 
+
+Name: Umbreon
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 0
+ATB: 128
+DEB: 218
+VEB: 128
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: False
+[-1, -1, -1, -1]
+REPORTE UNITARIO ISFAINTED
+Umbreon
+0
+True
+Is Fainted?: True
+
+Name: Eternatus
+Max HP: 247
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 0
+ATB: 197
+DEB: 160
+VEB: 151
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: False
+[8, 8, 63, 16]
+REPORTE UNITARIO ISFAINTED
+Eternatus
+0
+True
+Is Fainted?: True
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+opponentPkmnConfirmed: 4
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: Regieleki
+Max HP: 187
+Status: None
+Volatile Status: []
+Boosts: 
+speed  :  -2
+Can Dynamax: True
+Is Ditto: 0
+HPB: 151
+ATB: 167
+DEB: 121
+VEB: 138
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: True
+[-1, -1, -1, -1]
+REPORTE UNITARIO ISFAINTED
+Regieleki
+151
+False
+Is Fainted?: False
+
+Active 2: 
+
+Name: Umbreon
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 202
+ATB: 128
+DEB: 218
+VEB: 128
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: True
+[-1, -1, -1, -1]
+REPORTE UNITARIO ISFAINTED
+Umbreon
+202
+False
+Is Fainted?: False
+
+List of Reserved: 
+
+Name: Zacian-Crowned
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Ditto: 0
+HPB: 199
+ATB: 244
+DEB: 212
+VEB: 220
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: True
+[-1, -1, -1, -1]
+REPORTE UNITARIO ISFAINTED
+Zacian-Crowned
+199
+False
+Is Fainted?: False
+
+Name: Lugia
+Max HP: 213
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Ditto: 0
+HPB: 191
+ATB: 156
+DEB: 249
+VEB: 178
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+isOpponentConfirmed: True
+[-1, -1, -1, -1]
+REPORTE UNITARIO ISFAINTED
+Lugia
+191
+False
+Is Fainted?: False
+

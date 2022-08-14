@@ -33,6 +33,10 @@ async def accion_batalla(battle):
     # ¿Hay solicitud de JSON pendiente?
     if battle.request_json:
         battle.user.updatePkmnUser(battle.request_json, first_turn=False)
+        # Actualizo las variables del entorno...
+        battle = await updateEnvironment(battle)
+        # Los imprimo...
+        battle.imprimir()
     # Actualiza las estadísticas de los Pkmn del usuario y oponente
     #await battle.updateStatistics()
     # Se define la mejor acción
@@ -202,10 +206,6 @@ async def pokemon_battle(ps_websocket_client, q, botMode):
             action_required, battle = await update_battle(battle, mensaje)
             # action_required es BOOLEAN
             if action_required and not battle.wait:
-                # Actualizo las variables del entorno...
-                battle = await updateEnvironment(battle)
-                # Los imprimo...
-                battle.imprimir()
                 # Escoge el mejor movimiento y lo envía al websocket
                 battle, mensaje = await accion_batalla(battle)
                 q = battle.q
