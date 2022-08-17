@@ -19,6 +19,7 @@ from showdown.engine.objects import boost_multiplier_lookup
 
 logger = logging.getLogger(__name__)
 
+
 # ¿La modificación es para el opponente?
 def is_opponent(battle,  split_msg):
     # split_msg = ["","switch","p1a: Incineroar","Incineroar, L50, M","190/202"]
@@ -1124,6 +1125,16 @@ def turn(battle, split_msg):
         battle.opponent.side_conditions['lightscreen'] -= 1
     if battle.opponent.side_conditions['auroraveil'] > 0:
         battle.opponent.side_conditions['auroraveil'] -= 1
+    # Yawn
+    if CONSTANTS.DROWSY in battle.user.active1.volatile_statuses:
+        battle.user.active1.volatile_statuses.remove(CONSTANTS.DROWSY)
+    if CONSTANTS.DROWSY in battle.user.active2.volatile_statuses:
+        battle.user.active2.volatile_statuses.remove(CONSTANTS.DROWSY)
+    if CONSTANTS.DROWSY in battle.opponent.active1.volatile_statuses:
+        battle.opponent.active1.volatile_statuses.remove(CONSTANTS.DROWSY)
+    if CONSTANTS.DROWSY in battle.opponent.active2.volatile_statuses:
+        battle.opponent.active2.volatile_statuses.remove(CONSTANTS.DROWSY)
+    # Print Turn
     logger.debug("Turn: {}".format(int(split_msg[2])))
     return battle
 
@@ -1205,7 +1216,7 @@ def updatePokemon(battle, pkmn, isUser, isReserved):
         pkmn.FRO = 1
         pkmn.ATB = math.floor(max(ATK_battle_base, SPA_battle_base)/10)
     else:
-        if 'Yawn' in pkmn.volatile_statuses:
+        if CONSTANTS.DROWSY in pkmn.volatile_statuses:
             pkmn.DRO = 1
             pkmn.ATB = math.floor(max(ATK_battle_base, SPA_battle_base)/2)
         else:
