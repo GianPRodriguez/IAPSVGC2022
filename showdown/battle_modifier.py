@@ -16,9 +16,7 @@ from showdown.engine.find_state_instructions import get_effective_speed
 from showdown.engine.damage_calculator import calculate_damage
 from showdown.engine.objects import boost_multiplier_lookup
 
-
 logger = logging.getLogger(__name__)
-
 
 # ¿La modificación es para el opponente?
 def is_opponent(battle,  split_msg):
@@ -1146,7 +1144,7 @@ def noinit(battle, split_msg):
         # logger.debug("Renamed battle to {}".format(battle.battle_tag))
     return battle
 
-
+# Update Pkmn in Battle()
 def updatePokemon(battle, pkmn, isUser, isReserved):
     # Reserved: boosts = 0
     if isReserved:
@@ -1255,6 +1253,8 @@ def updatePokemon(battle, pkmn, isUser, isReserved):
             battle.opponent.active1 = deepcopy(pkmn)
         elif battle.opponent.active2.name == pkmn.name:
             battle.opponent.active2 = deepcopy(pkmn)
+    # ATBoost & DEBoost
+    ...
     return battle
 
 async def updateEnvironment(battle):

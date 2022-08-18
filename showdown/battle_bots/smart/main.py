@@ -528,7 +528,7 @@ class BattleBot(Battle):
         else:
             logger.error("NO DEBE ENTRAR ACÁ - moveSwitch2 == 'switch'")
         # Se envía al Queue la acción
-        deltaReward, reward = self.calculateRewards()
+        deltaReward, reward = battle.calculateRewards()
         if deltaReward > 1000:
             color5 = "#325928"
         elif deltaReward > 0:

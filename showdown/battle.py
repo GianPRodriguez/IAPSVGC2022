@@ -228,11 +228,11 @@ class Pokemon:
         self.ATK_battle_base = 0
         self.SPA_battle_base = 0
         self.ATB = 0
-        self.ATBoost = -1
+        self.ATBoost = 1
         self.SPD_battle_base = 0
         self.DEF_battle_base = 0
         self.DEB = 0
-        self.DEBoost = -1
+        self.DEBoost = 1
         self.VEL_battle_base = 0
         self.VEB = 0
         self.FRO = 0
