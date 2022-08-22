@@ -37,6 +37,7 @@ Can Dynamax: True
 Is Dynamax: False
 Is Ditto: 0
 isOpponentConfirmed: False
+Is Fainted?: False
 ---STATS---
 HPB: 1
 ATB: 156
@@ -47,11 +48,11 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+---MOVES---
 [-1, -1, -1, -1]
 psychic  :  1
 ghost  :  1
 fire  :  1
-Is Fainted?: False
 
 Name: Rotom-Heat
 Type 1: electric
@@ -64,6 +65,7 @@ Can Dynamax: True
 Is Dynamax: False
 Is Ditto: 0
 isOpponentConfirmed: False
+Is Fainted?: False
 ---STATS---
 HPB: 126
 ATB: 157
@@ -74,11 +76,11 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+---MOVES---
 [-1, -1, -1, -1]
 psychic  :  1
 dark  :  1
 fire  :  1
-Is Fainted?: False
 
 Name: Eternatus
 Type 1: poison
@@ -91,6 +93,7 @@ Can Dynamax: False
 Is Dynamax: False
 Is Ditto: 0
 isOpponentConfirmed: False
+Is Fainted?: False
 ---STATS---
 HPB: 247
 ATB: 197
@@ -101,11 +104,11 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+---MOVES---
 [-1, -1, -1, -1]
 dragon  :  1
 normal  :  1
 poison  :  1
-Is Fainted?: False
 
 Name: Amoonguss
 Type 1: grass
@@ -118,6 +121,7 @@ Can Dynamax: True
 Is Dynamax: False
 Is Ditto: 0
 isOpponentConfirmed: False
+Is Fainted?: False
 ---STATS---
 HPB: 221
 ATB: 105
@@ -128,11 +132,11 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+---MOVES---
 [-1, -1, -1, -1]
 grass  :  1
 bug  :  1
 water  :  1
-Is Fainted?: False
 
 Name: Umbreon
 Type 1: dark
@@ -145,6 +149,7 @@ Can Dynamax: True
 Is Dynamax: False
 Is Ditto: 0
 isOpponentConfirmed: False
+Is Fainted?: False
 ---STATS---
 HPB: 202
 ATB: 105
@@ -155,11 +160,11 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+---MOVES---
 [-1, -1, -1, -1]
 fire  :  1
 dark  :  1
 normal  :  1
-Is Fainted?: False
 
 Name: Whimsicott
 Type 1: grass
@@ -172,6 +177,7 @@ Can Dynamax: True
 Is Dynamax: False
 Is Ditto: 0
 isOpponentConfirmed: False
+Is Fainted?: False
 ---STATS---
 HPB: 167
 ATB: 97
@@ -182,11 +188,11 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+---MOVES---
 [-1, -1, -1, -1]
 psychic  :  1
 flying  :  1
 grass  :  1
-Is Fainted?: False
 
 
 OPONENTE: 
@@ -215,6 +221,7 @@ Can Dynamax: True
 Is Dynamax: False
 Is Ditto: 0
 isOpponentConfirmed: False
+Is Fainted?: False
 ---STATS---
 HPB: 213
 ATB: 156
@@ -225,11 +232,12 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+---MOVES---
 [-1, -1, -1, -1]
 ground  :  0.9219
+flying  :  0.91851
 water  :  0.20569
 ghost  :  0.19479
-Is Fainted?: False
 
 Name: Incineroar
 Type 1: fire
@@ -242,6 +250,7 @@ Can Dynamax: True
 Is Dynamax: False
 Is Ditto: 0
 isOpponentConfirmed: False
+Is Fainted?: False
 ---STATS---
 HPB: 202
 ATB: 183
@@ -252,8 +261,12 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+---MOVES---
 [-1, -1, -1, -1]
-Is Fainted?: False
+normal  :  0.99948
+fire  :  0.99477
+dark  :  0.38806
+bug  :  0.01792
 
 Name: Zacian-*
 Type 1: fairy
@@ -266,6 +279,7 @@ Can Dynamax: False
 Is Dynamax: False
 Is Ditto: 0
 isOpponentConfirmed: False
+Is Fainted?: False
 ---STATS---
 HPB: 199
 ATB: 244
@@ -276,9 +290,12 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+---MOVES---
 [-1, -1, -1, -1]
+steel  :  0.99985
 fighting  :  0.75735
-Is Fainted?: False
+fairy  :  0.5383
+normal  :  0.28244
 
 Name: Umbreon
 Type 1: dark
@@ -291,6 +308,7 @@ Can Dynamax: True
 Is Dynamax: False
 Is Ditto: 0
 isOpponentConfirmed: False
+Is Fainted?: False
 ---STATS---
 HPB: 202
 ATB: 128
@@ -301,8 +319,9 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+---MOVES---
 [-1, -1, -1, -1]
-Is Fainted?: False
+dark  :  0.99986
 
 Name: Thundurus
 Type 1: electric
@@ -315,6 +334,7 @@ Can Dynamax: True
 Is Dynamax: False
 Is Ditto: 0
 isOpponentConfirmed: False
+Is Fainted?: False
 ---STATS---
 HPB: 186
 ATB: 194
@@ -325,10 +345,14 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+---MOVES---
 [-1, -1, -1, -1]
+electric  :  0.84966
+flying  :  0.8493
 fighting  :  0.53147
 dark  :  0.15029
-Is Fainted?: False
+steel  :  0.08253
+bug  :  0.01515
 
 Name: Regieleki
 Type 1: electric
@@ -341,6 +365,7 @@ Can Dynamax: True
 Is Dynamax: False
 Is Ditto: 0
 isOpponentConfirmed: False
+Is Fainted?: False
 ---STATS---
 HPB: 187
 ATB: 167
@@ -351,8 +376,1109 @@ FRO: 0
 ASL: 0
 PAR: 0
 DRO: 0
+---MOVES---
 [-1, -1, -1, -1]
+electric  :  0.89196
 flying  :  0.45273
+normal  :  0.25126
 dark  :  0.12138
+
+
+Estado del Entorno
+------------------
+Turn: 0
+Started: True
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Shedinja
+Type 1: bug
+Type 2: ghost
+Max HP: 1
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
 Is Fainted?: False
+---STATS---
+HPB: 1
+ATB: 156
+DEB: 58
+VEB: 92
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+psychic  :  1
+ghost  :  1
+fire  :  1
+
+Name: Rotom-Heat
+Type 1: electric
+Type 2: fire
+Max HP: 126
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 126
+ATB: 157
+DEB: 127
+VEB: 151
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+psychic  :  1
+dark  :  1
+fire  :  1
+
+Name: Eternatus
+Type 1: poison
+Type 2: dragon
+Max HP: 247
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 247
+ATB: 197
+DEB: 120
+VEB: 151
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dragon  :  1
+normal  :  1
+poison  :  1
+
+Name: Amoonguss
+Type 1: grass
+Type 2: poison
+Max HP: 221
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 221
+ATB: 105
+DEB: 117
+VEB: 45
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  1
+bug  :  1
+water  :  1
+
+Name: Umbreon
+Type 1: dark
+Type 2: Null
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 105
+DEB: 147
+VEB: 76
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fire  :  1
+dark  :  1
+normal  :  1
+
+Name: Whimsicott
+Type 1: grass
+Type 2: fairy
+Max HP: 167
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 167
+ATB: 97
+DEB: 122
+VEB: 122
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+psychic  :  1
+flying  :  1
+grass  :  1
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+opponentPkmnConfirmed: 0
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Type 1: psychic
+Type 2: flying
+Max HP: 213
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 213
+ATB: 156
+DEB: 187
+VEB: 178
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ground  :  0.9219
+flying  :  0.91851
+water  :  0.20569
+ghost  :  0.19479
+
+Name: Incineroar
+Type 1: fire
+Type 2: dark
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 183
+DEB: 133
+VEB: 123
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+normal  :  0.99948
+fire  :  0.99477
+dark  :  0.38806
+bug  :  0.01792
+
+Name: Zacian-*
+Type 1: fairy
+Type 2: steel
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 199
+ATB: 244
+DEB: 159
+VEB: 220
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.99985
+fighting  :  0.75735
+fairy  :  0.5383
+normal  :  0.28244
+
+Name: Umbreon
+Type 1: dark
+Type 2: Null
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 128
+DEB: 164
+VEB: 128
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dark  :  0.99986
+
+Name: Thundurus
+Type 1: electric
+Type 2: flying
+Max HP: 186
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 186
+ATB: 194
+DEB: 117
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  0.84966
+flying  :  0.8493
+fighting  :  0.53147
+dark  :  0.15029
+steel  :  0.08253
+bug  :  0.01515
+
+Name: Regieleki
+Type 1: electric
+Type 2: Null
+Max HP: 187
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 187
+ATB: 167
+DEB: 91
+VEB: 277
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  0.89196
+flying  :  0.45273
+normal  :  0.25126
+dark  :  0.12138
+
+
+Estado del Entorno
+------------------
+Turn: 0
+Started: True
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Shedinja
+Type 1: bug
+Type 2: ghost
+Max HP: 1
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 1
+ATB: 156
+DEB: 58
+VEB: 92
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+psychic  :  1
+ghost  :  1
+fire  :  1
+
+Name: Rotom-Heat
+Type 1: electric
+Type 2: fire
+Max HP: 126
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 126
+ATB: 157
+DEB: 127
+VEB: 151
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+psychic  :  1
+dark  :  1
+fire  :  1
+
+Name: Eternatus
+Type 1: poison
+Type 2: dragon
+Max HP: 247
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 247
+ATB: 197
+DEB: 120
+VEB: 151
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dragon  :  1
+normal  :  1
+poison  :  1
+
+Name: Amoonguss
+Type 1: grass
+Type 2: poison
+Max HP: 221
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 221
+ATB: 105
+DEB: 117
+VEB: 45
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  1
+bug  :  1
+water  :  1
+
+Name: Umbreon
+Type 1: dark
+Type 2: Null
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 105
+DEB: 147
+VEB: 76
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fire  :  1
+dark  :  1
+normal  :  1
+
+Name: Whimsicott
+Type 1: grass
+Type 2: fairy
+Max HP: 167
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 167
+ATB: 97
+DEB: 122
+VEB: 122
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+psychic  :  1
+flying  :  1
+grass  :  1
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+opponentPkmnConfirmed: 0
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Type 1: psychic
+Type 2: flying
+Max HP: 213
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 213
+ATB: 156
+DEB: 187
+VEB: 178
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ground  :  0.9219
+flying  :  0.91851
+water  :  0.20569
+ghost  :  0.19479
+
+Name: Incineroar
+Type 1: fire
+Type 2: dark
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 183
+DEB: 133
+VEB: 123
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+normal  :  0.99948
+fire  :  0.99477
+dark  :  0.38806
+bug  :  0.01792
+
+Name: Zacian-*
+Type 1: fairy
+Type 2: steel
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 199
+ATB: 244
+DEB: 159
+VEB: 220
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.99985
+fighting  :  0.75735
+fairy  :  0.5383
+normal  :  0.28244
+
+Name: Umbreon
+Type 1: dark
+Type 2: Null
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 128
+DEB: 164
+VEB: 128
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dark  :  0.99986
+
+Name: Thundurus
+Type 1: electric
+Type 2: flying
+Max HP: 186
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 186
+ATB: 194
+DEB: 117
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  0.84966
+flying  :  0.8493
+fighting  :  0.53147
+dark  :  0.15029
+steel  :  0.08253
+bug  :  0.01515
+
+Name: Regieleki
+Type 1: electric
+Type 2: Null
+Max HP: 187
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 187
+ATB: 167
+DEB: 91
+VEB: 277
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  0.89196
+flying  :  0.45273
+normal  :  0.25126
+dark  :  0.12138
+
+
+Estado del Entorno
+------------------
+Turn: 0
+Started: True
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+
+Side conditions: 
+
+Active 1: 
+
+Name: Eternatus
+Type 1: poison
+Type 2: dragon
+Max HP: 247
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 247
+ATB: 197
+DEB: 120
+VEB: 151
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dragon  :  1
+normal  :  1
+poison  :  1
+
+Active 2: 
+
+Name: Umbreon
+Type 1: dark
+Type 2: Null
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 105
+DEB: 147
+VEB: 76
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fire  :  1
+dark  :  1
+normal  :  1
+
+List of Reserved: 
+
+Name: Rotom-Heat
+Type 1: electric
+Type 2: fire
+Max HP: 126
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 126
+ATB: 157
+DEB: 127
+VEB: 151
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+psychic  :  1
+dark  :  1
+fire  :  1
+
+Name: Whimsicott
+Type 1: grass
+Type 2: fairy
+Max HP: 167
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 167
+ATB: 97
+DEB: 122
+VEB: 122
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+psychic  :  1
+flying  :  1
+grass  :  1
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+opponentPkmnConfirmed: 0
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Type 1: psychic
+Type 2: flying
+Max HP: 213
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 213
+ATB: 156
+DEB: 187
+VEB: 178
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ground  :  0.9219
+flying  :  0.91851
+water  :  0.20569
+ghost  :  0.19479
+
+Name: Incineroar
+Type 1: fire
+Type 2: dark
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 183
+DEB: 133
+VEB: 123
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+normal  :  0.99948
+fire  :  0.99477
+dark  :  0.38806
+bug  :  0.01792
+
+Name: Zacian-*
+Type 1: fairy
+Type 2: steel
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 199
+ATB: 244
+DEB: 159
+VEB: 220
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.99985
+fighting  :  0.75735
+fairy  :  0.5383
+normal  :  0.28244
+
+Name: Umbreon
+Type 1: dark
+Type 2: Null
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 128
+DEB: 164
+VEB: 128
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dark  :  0.99986
+
+Name: Thundurus
+Type 1: electric
+Type 2: flying
+Max HP: 186
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 186
+ATB: 194
+DEB: 117
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  0.84966
+flying  :  0.8493
+fighting  :  0.53147
+dark  :  0.15029
+steel  :  0.08253
+bug  :  0.01515
+
+Name: Regieleki
+Type 1: electric
+Type 2: Null
+Max HP: 187
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 187
+ATB: 167
+DEB: 91
+VEB: 277
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  0.89196
+flying  :  0.45273
+normal  :  0.25126
+dark  :  0.12138
 

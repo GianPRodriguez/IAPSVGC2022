@@ -5,6 +5,7 @@ import constants
 
 from numpy import sqrt
 from showdown.battle import Battle
+from showdown.battle_bots.helpers import Box
 from showdown.battle_bots.helpers import getMoveName
 from showdown.battle_bots.helpers import getColorMove
 from showdown.battle_bots.helpers import getToMovePokemon
@@ -14,6 +15,7 @@ from showdown.battle_bots.helpers import findGroupReward
 from showdown.battle_bots.helpers import findTeam
 from showdown.battle_bots.helpers import getATBoost
 from showdown.battle_bots.helpers import getDEBoost
+
 
 logger = logging.getLogger(__name__)
 

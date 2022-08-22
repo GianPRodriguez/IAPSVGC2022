@@ -35,7 +35,7 @@ class pkmnSubReward:
         self.type2 = type2
         self.ATBoost = 1
         self.DEBoost = 1
-        self.dictMoves = defaultdict(lambda: 0)
+        self.dictMoves = dictMoves
 
     def addTypesMod(self, ATBoost, DEBoost):
         self.ATBoost = ATBoost
