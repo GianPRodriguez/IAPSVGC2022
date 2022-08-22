@@ -4,6 +4,8 @@ import config
 import constants
 import requests
 import math
+from collections import defaultdict
+from numpy import sqrt 
 
 logger = logging.getLogger(__name__)
 
@@ -405,8 +407,8 @@ def findTeam(index ,battle):
 def getATBoost(dictMoves, o1type1, o1type2, o2type1, o2type2, battle):
     cadena = battle.cadenaTypes
     # aux
-    aux1 = 0
-    aux2 = 0
+    aux1 = -1
+    aux2 = -1
     # iterator
     for key in dictMoves:
         aux1 = max(aux1, float(cadena.get(key,'False').get(o1type1,1)) * float(cadena.get(key,'False').get(o1type2,1)) * dictMoves[key])
@@ -418,8 +420,8 @@ def getATBoost(dictMoves, o1type1, o1type2, o2type1, o2type2, battle):
 def getDEBoost(dictMoves1, dictMoves2, utype1, utype2, battle):
     cadena = battle.cadenaTypes
     # aux
-    aux1 = 0
-    aux2 = 0
+    aux1 = -1
+    aux2 = -1
     # iterator
     for key in dictMoves1:
         aux1 = max(aux1, float(cadena.get(key,'False').get(utype1,1)) * float(cadena.get(key,'False').get(utype2,1)) * dictMoves1[key])
