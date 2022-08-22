@@ -15,6 +15,9 @@ from showdown.engine.helpers import calculate_stats
 from showdown.engine.find_state_instructions import get_effective_speed
 from showdown.engine.damage_calculator import calculate_damage
 from showdown.engine.objects import boost_multiplier_lookup
+from showdown.battle_bots.helpers import getATBoost
+from showdown.battle_bots.helpers import getDEBoost
+
 
 logger = logging.getLogger(__name__)
 
@@ -1124,14 +1127,14 @@ def turn(battle, split_msg):
     if battle.opponent.side_conditions['auroraveil'] > 0:
         battle.opponent.side_conditions['auroraveil'] -= 1
     # Yawn
-    if CONSTANTS.DROWSY in battle.user.active1.volatile_statuses:
-        battle.user.active1.volatile_statuses.remove(CONSTANTS.DROWSY)
-    if CONSTANTS.DROWSY in battle.user.active2.volatile_statuses:
-        battle.user.active2.volatile_statuses.remove(CONSTANTS.DROWSY)
-    if CONSTANTS.DROWSY in battle.opponent.active1.volatile_statuses:
-        battle.opponent.active1.volatile_statuses.remove(CONSTANTS.DROWSY)
-    if CONSTANTS.DROWSY in battle.opponent.active2.volatile_statuses:
-        battle.opponent.active2.volatile_statuses.remove(CONSTANTS.DROWSY)
+    if constants.DROWSY in battle.user.active1.volatile_statuses:
+        battle.user.active1.volatile_statuses.remove(constants.DROWSY)
+    if constants.DROWSY in battle.user.active2.volatile_statuses:
+        battle.user.active2.volatile_statuses.remove(constants.DROWSY)
+    if constants.DROWSY in battle.opponent.active1.volatile_statuses:
+        battle.opponent.active1.volatile_statuses.remove(constants.DROWSY)
+    if constants.DROWSY in battle.opponent.active2.volatile_statuses:
+        battle.opponent.active2.volatile_statuses.remove(constants.DROWSY)
     # Print Turn
     logger.debug("Turn: {}".format(int(split_msg[2])))
     return battle
@@ -1214,7 +1217,7 @@ def updatePokemon(battle, pkmn, isUser, isReserved):
         pkmn.FRO = 1
         pkmn.ATB = math.floor(max(ATK_battle_base, SPA_battle_base)/10)
     else:
-        if CONSTANTS.DROWSY in pkmn.volatile_statuses:
+        if constants.DROWSY in pkmn.volatile_statuses:
             pkmn.DRO = 1
             pkmn.ATB = math.floor(max(ATK_battle_base, SPA_battle_base)/2)
         else:
@@ -1255,11 +1258,11 @@ def updatePokemon(battle, pkmn, isUser, isReserved):
             battle.opponent.active2 = deepcopy(pkmn)
     # ATBoost & DEBoost
     if isUser:
-        pkmn.ATBoost = getATBoost(pkmn.dictMoves, pkmno1.type1, pkmno1.type2, pkmno2.type1, pkmno2.type2, battle)
-        pkmn.DEBoost = getDEBoost(pkmno1.dictMoves, pkmno2.dictMoves, pkmn.type1, pkmn.type2, battle)
+        pkmn.ATBoost = getATBoost(pkmn.moveType, battle.opponent.active1.type1, battle.opponent.active1.type2, battle.opponent.active2.type1, battle.opponent.active2.type2, battle)
+        pkmn.DEBoost = getDEBoost(battle.opponent.active1.moveType, battle.opponent.active2.moveType, pkmn.type1, pkmn.type2, battle)
     else:
-        pkmn.ATBoost = getATBoost(pkmn.dictMoves, pkmnu1.type1, pkmnu1.type2, pkmnu2.type1, pkmnu2.type2, battle)
-        pkmn.DEBoost = getDEBoost(pkmnu1.dictMoves, pkmnu2.dictMoves, pkmn.type1, pkmn.type2, battle)
+        pkmn.ATBoost = getATBoost(pkmn.moveType, battle.user.active1.type1, battle.user.active1.type2, battle.user.active2.type1, battle.user.active2.type2, battle)
+        pkmn.DEBoost = getDEBoost(battle.user.active1.moveType, battle.user.active2.moveType, pkmn.type1, pkmn.type2, battle)
     return battle
 
 async def updateEnvironment(battle):

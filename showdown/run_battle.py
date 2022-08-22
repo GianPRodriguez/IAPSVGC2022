@@ -156,7 +156,6 @@ async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient, q, botMode):
             opponent_pokemon.append(split_line[3])
     # ETAPA TEAM PREVIEW
     await battle.initialize_team_preview(user_json, opponent_pokemon)
-    battle.imprimir()
     # Se escoge la mejor acción y lo envía al WebSocket
     battle = await escoge_accion_team_preview(battle, ps_websocket_client)
     # Retorno el estado actual de la batalla
