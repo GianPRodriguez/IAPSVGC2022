@@ -37,6 +37,7 @@ class Battle(ABC):
         self.cadenaTypes = json.loads('{"normal":{"rock":0.5,"ghost":0,"steel":0.5},"fire":{"fire":0.5,"water":0.5,"grass":2,"ice":2,"bug":2,"rock":0.5,"dragon":0.5,"steel":2},"water":{"fire":2,"water":0.5,"grass":0.5,"ground":2,"rock":2,"dragon":0.5},"grass":{"fire":0.5,"water":2,"grass":0.5,"poison":0.5,"ground":2,"flying":0.5,"bug":0.5,"rock":2,"dragon":0.5,"steel":0.5},"electric":{"water":2,"grass":0.5,"electric":0.5,"ground":0,"flying":2,"dragon":0.5},"ice":{"fire":0.5,"water":0.5,"grass":2,"ice":0.5,"ground":2,"flying":2,"dragon":2,"steel":0.5},"fighting":{"normal":2,"ice":2,"poison":0.5,"flying":0.5,"psychic":0.5,"bug":0.5,"rock":2,"ghost":0,"dark":2,"steel":2,"fairy":0.5},"poison":{"grass":2,"poison":0.5,"ground":0.5,"rock":0.5,"ghost":0.5,"steel":0,"fairy":2},"ground":{"fire":2,"grass":0.5,"electric":2,"poison":2,"flying":0,"bug":0.5,"rock":2,"steel":2},"flying":{"grass":2,"electric":0.5,"fighting":2,"bug":2,"rock":0.5,"steel":0.5},"psychic":{"fighting":2,"poison":2,"psychic":0.5,"dark":0,"steel":0.5},"bug":{"fire":0.5,"grass":2,"fighting":0.5,"poison":0.5,"flying":0.5,"Psychic":2,"ghost":0.5,"dark":2,"steel":0.5,"fairy":0.5},"rock":{"fire":2,"ice":2,"fighting":0.5,"ground":0.5,"flying":2,"bug":2,"steel":0.5},"ghost":{"normal":0,"psychic":2,"ghost":2,"dark":0.5},"dragon":{"dragon":2,"steel":0.5,"fairy":0},"dark":{"fighting":0.5,"psychic":2,"ghost":2,"dark":0.5,"fairy":0.5},"steel":{"fire":0.5,"water":0.5,"electric":0.5,"ice":2,"rock":2,"steel":0.5,"fairy":2},"fairy":{"fire":0.5,"fighting":2,"poison":0.5,"dragon":2,"dark":2,"steel":0.5}}')
         self.moveTypes = json.loads('{"incineroar":{},"zacian-crowned":{"fighting":0.75735},"kyogre":{"ice":0.8791,"electric":0.57364},"thundurus-incarnate":{"fighting":0.53147,"dark":0.15029},"grimmsnarl":{},"groudon":{"ghost":0.59048,"fire":0.54518,"rock":0.50500,"steel":0.12149},"charizard":{"rock":0.58226,"grass":0.15463},"whimsicott":{},"calyrex-shadow":{"ground":0.53899,"dark":0.17781,"grass":0.10682},"gastrodon":{"ice":0.89135},"regieleki":{"flying":0.45273,"dark":0.12138},"rillaboom":{"ground":0.76241,"bug":0.44455,"dark":0.20077},"amoonguss":{"bug":0.68530,"dark":0.12953},"landorus-therian":{"rock":0.83253,"bug":0.09015,"grass":0.07710},"venusaur":{"fire":0.77553,"ground":0.56556},"porygon2":{"dark":0.89516,"ice":0.06786,"ghost":0.03614},"calyrex-ice":{"ground":0.99178},"tornadus-incarnate":{"ice":0.92301,"water":0.11633,"fire":0.11633},"kartana":{"flying":0.96584,"fighting":0.93301},"yveltal":{"fire":0.15597},"palkia":{"ground":0.78957,"electric":0.23010,"fire":0.17872},"lunala":{"rock":0.97268},"indeedee-female":{"fire":0.13001,"ghost":0.06076},"shedinja":{},"tapu-fini":{"ghost":0.13964,"ice":0.09851},"eternatus":{"fire":0.57257},"solgaleo":{"ground":0.97452,"electric":0.63119,"rock":0.52669,"fire":0.03333},"umbreon":{},"zapdos":{"fire":0.35606},"urshifu-single-strike":{"bug":0.13374,"rock":0.06665},"blastoise":{"ice":0.44852},"bronzong":{"fighting":0.98581},"coalossal":{"grass":0.96308},"moltres-galar":{},"urshifu-rapid-strike":{},"slowbro":{"fighting":0.99947},"dialga":{"ground":0.90317,"ice":0.46159,"electric":0.09783,"rock":0.08115,"fighting":0.02609},"golisopod":{"dark":0.99984},"volcarona":{},"kyurem-white":{"ground":0.97957},"xerneas":{"electric":0.06522},"mimikyu":{},"weezing":{},"clefairy":{"ice":0.09159,"fire":0.05082},"ditto":{},"sableye":{},"regigigas":{"ground":0.93212,"dark":0.77335,"ice":0.43212,"electric":0.06825},"celesteela":{"fire":0.90462,"rock":0.16451},"gothitelle":{"dark":0.07034},"ho-oh":{"ground":0.20401},"entei":{"rock":0.74683,"ground":0.43392,"dark":0.25977,"steel":0.12998},"torkoal":{"fighting":0.37560,"grass":0.32326,"ground":0.08439},"ferrothorn":{"fighting":0.84104,"dark":0.15127},"reshiram":{"ground":0.97316,"grass":0.21074,"ghost":0.05319},"hydreigon":{"ground":0.25124,"flying":0.12643,"rock":0.63636},"zekrom":{"flying":0.80690,"ground":0.13966},"snorlax":{"dark":0.74537,"ground":0.38384,"steel":0.11932,"fighting":0.11409},"raichu":{"grass":0.07859},"dragapult":{"water":0.50625,"flying":0.33810,"dark":0.09101,"steel":0.06246},"suicune":{"dark":0.97535,"ground":0.82199},"zygarde-50":{"steel":0.33615,"rock":0.08899,"fighting":0.06994},"landorus-incarnate":{"rock":0.77128,"poison":0.18759,"grass":0.08481},"liepard":{},"rayquaza":{"ground":0.60018,"fire":0.20475,"rock":0.14844,"ice":0.05789,"electric":0.05252},"dusclops":{"rock":0.11869,"ground":0.15789},"kingdra":{"flying":0.88471,"ice":0.22185},"milotic":{"ice":0.15513},"lugia":{"ground":0.92190,"water":0.20569,"ghost":0.19479},"rotom-heat":{"dark":0.07701},"pikachu":{"ground":0.79406,"dark":0.78705,"water":0.12046,"grass":0.10953},"alcremie":{"fire":0.19801},"comfey":{"grass":0.19090,"bug":0.10802},"lapras":{"electric":0.11329},"magearna":{"electric":0.02301},"zeraora":{"dark":0.02469,"fighting":0.02293},"victini":{"electric":0.06417,"fighting":0.05615,"bug":0.05348},"melmetal":{"ground":0.04661,"electric":0.01695},"volcanion":{"ground":0.06863},"mew":{"dark":0.15823,"bug":0.06329,"steel":0.04430,"ground":0.04430,"ghost":0.02532,"flying":0.02532,"rock":0.02532,"ice":0.01899,"fire":0.01899,"fighting":0.01266,"electric":0.01266},"marshadow":{"rock":0.02532},"zamazenta-crowned":{"dark":0.59504},"necrozma-dusk":{"ground":0.1017,"rock":0.02532},"kyurem":{"ground":0.07246},"zarude":{"rock":0.09677,"ground":0.03226,"bug":0.03226},"kyurem-black":{"electric":0.15254},"fletchinder":{},"keldeo-resolute":{"flying":0.09091},"cinderace":{"dark":0.41860,"fighting":0.04651},"zygarde-complete":{"steel":0.33615,"rock":0.08899,"fighting":0.06994},"giratina-origin":{},"jirachi":{},"oranguru":{"dark":0.21429},"diancie":{},"weezing-galar":{},"silvally":{"dark":0.25000}}')
 
+    # Only Opponent
     async def initialize_team_preview(self, user_json, opponent_pokemon):
         # Insert Pkmn User
         self.user.updatePkmnUser(user_json, first_turn=True)
@@ -45,10 +46,20 @@ class Battle(ABC):
         # The rqid is obtained
         self.rqid = user_json[constants.RQID]
         # Insert Pkmn Opponent
+        pokeapiPkmn = {'zacian': 'zacian-crowned', 'zacian-*': 'zacian-crowned', 'thundurus': 'thundurus-incarnate',
+                        'landorus': 'landorus-incarnate', 'tornadus': 'tornadus-incarnate','indeedee-f': 'indeedee-female',
+                        'urshifu': 'urshifu-single-strike', 'necrozma-dusk-mane': 'necrozma-dusk', 'zamazenta': 'zamazenta-crowned', 'zamazenta-*': 'zamazenta-crowned'}
         for pkmn_string in opponent_pokemon:
             # opponent_pokemon = ["Lapras, L50, M","Kyogre, L50","Zacian-*, L50","Tapu Fini, L50","Zapdos, L50","Mimikyu, L50, F"]
             # pkmn_string = "Lapras, L50, M"
-            self.opponent.reserved.append(Pokemon(pkmn_string.partition(",")[0], -1, True))
+            # Add Types Moves
+            name = pkmn_string.partition(",")[0]
+            if name.lower() in pokeapiPkmn:
+                namePkmn = pokeapiPkmn[name.lower()]
+            else:
+                namePkmn = name
+            moveDict = self.moveTypes[namePkmn]['type'].lower()
+            self.opponent.reserved.append(Pokemon(name, -1, True, None, None, None, None, moveDict))
 
     @abstractmethod
     async def action_team_preview(self, battle):
@@ -137,12 +148,12 @@ class Battler:
             self.account_name = JSONdict["side"]["name"]
             self.isUser = True
             # Insert Pkmn
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2],False))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2],False))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][2]["details"].partition(",")[0], JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2],False))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][3]["details"].partition(",")[0], JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2],False))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][4]["details"].partition(",")[0], JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2],False))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][5]["details"].partition(",")[0], JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2],False))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][0]["moves"][0], JSONdict["side"]["pokemon"][0]["moves"][1], JSONdict["side"]["pokemon"][0]["moves"][2], JSONdict["side"]["pokemon"][0]["moves"][3]))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][1]["moves"][0], JSONdict["side"]["pokemon"][1]["moves"][1], JSONdict["side"]["pokemon"][1]["moves"][2], JSONdict["side"]["pokemon"][1]["moves"][3]))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][2]["details"].partition(",")[0], JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][2]["moves"][0], JSONdict["side"]["pokemon"][2]["moves"][1], JSONdict["side"]["pokemon"][2]["moves"][2], JSONdict["side"]["pokemon"][2]["moves"][3]))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][3]["details"].partition(",")[0], JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][3]["moves"][0], JSONdict["side"]["pokemon"][3]["moves"][1], JSONdict["side"]["pokemon"][3]["moves"][2], JSONdict["side"]["pokemon"][3]["moves"][3]))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][4]["details"].partition(",")[0], JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][4]["moves"][0], JSONdict["side"]["pokemon"][4]["moves"][1], JSONdict["side"]["pokemon"][4]["moves"][2], JSONdict["side"]["pokemon"][4]["moves"][3]))
+            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][5]["details"].partition(",")[0], JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][5]["moves"][0], JSONdict["side"]["pokemon"][5]["moves"][1], JSONdict["side"]["pokemon"][5]["moves"][2], JSONdict["side"]["pokemon"][5]["moves"][3]))
             # Update Pkmn
             for x in range(len(self.reserved)):
                 self.reserved[x].HPB_battle_base = int(JSONdict["side"]["pokemon"][x]["condition"].partition("/")[0].partition(" ")[0])
@@ -209,7 +220,7 @@ class Battler:
 
 class Pokemon:
     # Constructor
-    def __init__(self, name: str, max_hp: int, isOpponent: bool):
+    def __init__(self, name: str, max_hp: int, isOpponent: bool, move1: str, move2: str, move3: str, move4: str,  moveDict: Optional):
         self.name = name
         self.max_hp = max_hp
         self.type1 = None
@@ -244,11 +255,27 @@ class Pokemon:
         else:
             self.isDitto = 0
         self.movePP = [-1, -1, -1, -1]
-        self.moveType = [None, None, None, None]
+        self.moveType = defaultdict(lambda: 0)
+        if move1 is not None:
+            self.moveType[self.findMoveType(move1)] = 1
+            self.moveType[self.findMoveType(move2)] = 1
+            self.moveType[self.findMoveType(move3)] = 1
+            self.moveType[self.findMoveType(move4)] = 1
+        else:
+            self.moveType = moveDict
         self.POKEAPI(isOpponent)
 
     def isFainted(self):
         return self.HPB == 0
+
+    def findMoveType(move):
+        url = 'https://play.pokemonshowdown.com/data/moves.json'
+        response = requests.get(url)
+        if response.status_code == 200:
+            payload = response.json()
+            return payload[move]['name']['type'].lower()
+        else:
+            return None
 
     def imprimir(self):
         print("Name: " + str(self.name))
@@ -275,6 +302,8 @@ class Pokemon:
         print("PAR: " + str(self.PAR))
         print("DRO: " + str(self.DRO))
         print(self.movePP)
+        for key, value in self.moveType.items():
+            print(key, ' : ', value)
         print("Is Fainted?: {}".format(self.isFainted()))
 
     def HP_BATTLE_CALCULATE(self, HP_base):

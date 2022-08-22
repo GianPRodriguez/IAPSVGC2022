@@ -24,7 +24,7 @@ class Box():
 
 # async def action_team_preview(self, battle):
 class pkmnSubReward:
-    def __init__(self, HPB, ATB, DEB, VEB, type1, type2, iteratorMoves):
+    def __init__(self, HPB, ATB, DEB, VEB, type1, type2, dictMoves):
         self.HPB = HPB
         self.ATB = ATB
         self.DEB = DEB
@@ -33,7 +33,7 @@ class pkmnSubReward:
         self.type2 = type2
         self.ATBoost = 1
         self.DEBoost = 1
-        self.iteratorMoves = []
+        self.dictMoves = defaultdict(lambda: 0)
 
     def addTypesMod(self, ATBoost, DEBoost):
         self.ATBoost = ATBoost
@@ -263,10 +263,10 @@ def findRewardSingles(index, isOpponent, battle):
         elif dictIndex.get(str(index),'False').get('10','False') == 0 and dictIndex.get(str(index),'False').get('11','False') == 1 and subIndex2 != 5:
              subIndex3 = 5
         # Asignacion
-        pkmn1 = pkmnSubReward(battle.opponent.reserved[subIndex0].HPB, battle.opponent.reserved[subIndex0].ATB, battle.opponent.reserved[subIndex0].DEB, battle.opponent.reserved[subIndex0].VEB, battle.opponent.reserved[subIndex0].type1, battle.opponent.reserved[subIndex0].type2)
-        pkmn2 = pkmnSubReward(battle.opponent.reserved[subIndex1].HPB, battle.opponent.reserved[subIndex1].ATB, battle.opponent.reserved[subIndex1].DEB, battle.opponent.reserved[subIndex1].VEB, battle.opponent.reserved[subIndex1].type1, battle.opponent.reserved[subIndex1].type2)
-        pkmnr1 = pkmnSubReward(battle.opponent.reserved[subIndex2].HPB, battle.opponent.reserved[subIndex2].ATB, battle.opponent.reserved[subIndex2].DEB, battle.opponent.reserved[subIndex2].VEB, battle.opponent.reserved[subIndex2].type1, battle.opponent.reserved[subIndex2].type2)
-        pkmnr2 = pkmnSubReward(battle.opponent.reserved[subIndex3].HPB, battle.opponent.reserved[subIndex3].ATB, battle.opponent.reserved[subIndex3].DEB, battle.opponent.reserved[subIndex3].VEB, battle.opponent.reserved[subIndex3].type1, battle.opponent.reserved[subIndex3].type2)
+        pkmn1 = pkmnSubReward(battle.opponent.reserved[subIndex0].HPB, battle.opponent.reserved[subIndex0].ATB, battle.opponent.reserved[subIndex0].DEB, battle.opponent.reserved[subIndex0].VEB, battle.opponent.reserved[subIndex0].type1, battle.opponent.reserved[subIndex0].type2, battle.opponent.reserved[subIndex0].moveType)
+        pkmn2 = pkmnSubReward(battle.opponent.reserved[subIndex1].HPB, battle.opponent.reserved[subIndex1].ATB, battle.opponent.reserved[subIndex1].DEB, battle.opponent.reserved[subIndex1].VEB, battle.opponent.reserved[subIndex1].type1, battle.opponent.reserved[subIndex1].type2, battle.opponent.reserved[subIndex1].moveType)
+        pkmnr1 = pkmnSubReward(battle.opponent.reserved[subIndex2].HPB, battle.opponent.reserved[subIndex2].ATB, battle.opponent.reserved[subIndex2].DEB, battle.opponent.reserved[subIndex2].VEB, battle.opponent.reserved[subIndex2].type1, battle.opponent.reserved[subIndex2].type2, battle.opponent.reserved[subIndex2].moveType)
+        pkmnr2 = pkmnSubReward(battle.opponent.reserved[subIndex3].HPB, battle.opponent.reserved[subIndex3].ATB, battle.opponent.reserved[subIndex3].DEB, battle.opponent.reserved[subIndex3].VEB, battle.opponent.reserved[subIndex3].type1, battle.opponent.reserved[subIndex3].type2, battle.opponent.reserved[subIndex3].moveType)
         return pkmn1, pkmn2, pkmnr1, pkmnr2
     else:
         # 11 - Pkmn1
@@ -322,10 +322,10 @@ def findRewardSingles(index, isOpponent, battle):
         elif dictIndex.get(str(index),'False').get('10','False') == 0 and dictIndex.get(str(index),'False').get('11','False') == 1 and subIndex2 != 5:
              subIndex3 = 5
         # Asignacion
-        pkmn1 = pkmnSubReward(battle.user.reserved[subIndex0].HPB, battle.user.reserved[subIndex0].ATB, battle.user.reserved[subIndex0].DEB, battle.user.reserved[subIndex0].VEB, battle.user.reserved[subIndex0].type1, battle.user.reserved[subIndex0].type2)
-        pkmn2 = pkmnSubReward(battle.user.reserved[subIndex1].HPB, battle.user.reserved[subIndex1].ATB, battle.user.reserved[subIndex1].DEB, battle.user.reserved[subIndex1].VEB, battle.user.reserved[subIndex1].type1, battle.user.reserved[subIndex1].type2)
-        pkmnr1 = pkmnSubReward(battle.user.reserved[subIndex2].HPB, battle.user.reserved[subIndex2].ATB, battle.user.reserved[subIndex2].DEB, battle.user.reserved[subIndex2].VEB, battle.user.reserved[subIndex2].type1, battle.user.reserved[subIndex2].type2)
-        pkmnr2 = pkmnSubReward(battle.user.reserved[subIndex3].HPB, battle.user.reserved[subIndex3].ATB, battle.user.reserved[subIndex3].DEB, battle.user.reserved[subIndex3].VEB, battle.user.reserved[subIndex3].type1, battle.user.reserved[subIndex3].type2)
+        pkmn1 = pkmnSubReward(battle.user.reserved[subIndex0].HPB, battle.user.reserved[subIndex0].ATB, battle.user.reserved[subIndex0].DEB, battle.user.reserved[subIndex0].VEB, battle.user.reserved[subIndex0].type1, battle.user.reserved[subIndex0].type2, battle.user.reserved[subIndex0].moveType)
+        pkmn2 = pkmnSubReward(battle.user.reserved[subIndex1].HPB, battle.user.reserved[subIndex1].ATB, battle.user.reserved[subIndex1].DEB, battle.user.reserved[subIndex1].VEB, battle.user.reserved[subIndex1].type1, battle.user.reserved[subIndex1].type2, battle.user.reserved[subIndex1].moveType)
+        pkmnr1 = pkmnSubReward(battle.user.reserved[subIndex2].HPB, battle.user.reserved[subIndex2].ATB, battle.user.reserved[subIndex2].DEB, battle.user.reserved[subIndex2].VEB, battle.user.reserved[subIndex2].type1, battle.user.reserved[subIndex2].type2, battle.user.reserved[subIndex2].moveType)
+        pkmnr2 = pkmnSubReward(battle.user.reserved[subIndex3].HPB, battle.user.reserved[subIndex3].ATB, battle.user.reserved[subIndex3].DEB, battle.user.reserved[subIndex3].VEB, battle.user.reserved[subIndex3].type1, battle.user.reserved[subIndex3].type2, battle.user.reserved[subIndex3].moveType)
         return pkmn1, pkmn2, pkmnr1, pkmnr2
 
 
@@ -335,10 +335,10 @@ def formula(pkmn):
 
 # async def action_team_preview(self, battle):
 def findGroupReward(pkmno1, pkmno2, pkmnor1, pkmnor2, pkmnu1, pkmnu2, pkmnur1, pkmnur2, battle):
-    pkmnu1.addTypesMod(getATBoost(pkmnu1.iteratorMoves, pkmno1.type1, pkmno1.type2, pkmno2.type1, pkmno2.type2, battle), getDEBoost(pkmno1.iteratorMoves1, pkmno2.iteratorMoves2, pkmnu1.type1, pkmnu1.type2, battle))
-    pkmnu2.addTypesMod(getATBoost(pkmnu2.iteratorMoves, pkmno1.type1, pkmno1.type2, pkmno2.type1, pkmno2.type2, battle), getDEBoost(pkmno1.iteratorMoves1, pkmno2.iteratorMoves2, pkmnu2.type1, pkmnu2.type2, battle))
-    pkmno1.addTypesMod(getATBoost(pkmno1.iteratorMoves, pkmnu1.type1, pkmnu1.type2, pkmnu2.type1, pkmnu2.type2, battle), getDEBoost(pkmnu1.iteratorMoves1, pkmnu2.iteratorMoves2, pkmno1.type1, pkmno1.type2, battle))
-    pkmno2.addTypesMod(getATBoost(pkmno2.iteratorMoves, pkmnu1.type1, pkmnu1.type2, pkmnu2.type1, pkmnu2.type2, battle), getDEBoost(pkmnu1.iteratorMoves1, pkmnu2.iteratorMoves2, pkmno2.type1, pkmno2.type2, battle))
+    pkmnu1.addTypesMod(getATBoost(pkmnu1.dictMoves, pkmno1.type1, pkmno1.type2, pkmno2.type1, pkmno2.type2, battle), getDEBoost(pkmno1.dictMoves, pkmno2.dictMoves, pkmnu1.type1, pkmnu1.type2, battle))
+    pkmnu2.addTypesMod(getATBoost(pkmnu2.dictMoves, pkmno1.type1, pkmno1.type2, pkmno2.type1, pkmno2.type2, battle), getDEBoost(pkmno1.dictMoves, pkmno2.dictMoves, pkmnu2.type1, pkmnu2.type2, battle))
+    pkmno1.addTypesMod(getATBoost(pkmno1.dictMoves, pkmnu1.type1, pkmnu1.type2, pkmnu2.type1, pkmnu2.type2, battle), getDEBoost(pkmnu1.dictMoves, pkmnu2.dictMoves, pkmno1.type1, pkmno1.type2, battle))
+    pkmno2.addTypesMod(getATBoost(pkmno2.dictMoves, pkmnu1.type1, pkmnu1.type2, pkmnu2.type1, pkmnu2.type2, battle), getDEBoost(pkmnu1.dictMoves, pkmnu2.dictMoves, pkmno2.type1, pkmno2.type2, battle))
     return formula(pkmnu1)*1.1 + formula(pkmnu2) + 0.9*(formula(pkmnur1)+formula(pkmnur2)) - (formula(pkmno1)*1.1 + formula(pkmno2) + 0.9*(formula(pkmnor1)+formula(pkmnor2)))
 
 
@@ -402,27 +402,27 @@ def findTeam(index ,battle):
 
 
 # Team Preview & Battle
-def getATBoost(iteratorMoves, o1type1, o1type2, o2type1, o2type2, battle):
+def getATBoost(dictMoves, o1type1, o1type2, o2type1, o2type2, battle):
     cadena = battle.cadenaTypes
     # aux
     aux1 = 0
     aux2 = 0
     # iterator
-    for typeMovePer in iteratorMoves:
-        aux1 = max(aux1, float(cadena.get(typeMovePer[0],'False').get(o1type1,1)) * float(cadena.get(typeMovePer[0],'False').get(o1type2,1)) * typeMovePer[1])
-        aux2 = max(aux2, float(cadena.get(typeMovePer[0],'False').get(o2type1,1)) * float(cadena.get(typeMovePer[0],'False').get(o2type2,1)) * typeMovePer[1])
+    for key in dictMoves:
+        aux1 = max(aux1, float(cadena.get(key,'False').get(o1type1,1)) * float(cadena.get(key,'False').get(o1type2,1)) * dictMoves[key])
+        aux2 = max(aux2, float(cadena.get(key,'False').get(o2type1,1)) * float(cadena.get(key,'False').get(o2type2,1)) * dictMoves[key])
     return (aux1 + aux2)/2
 
 
 # Team Preview & Battle
-def getDEBoost(iteratorMoves1, iteratorMoves2, utype1, utype2, battle):
+def getDEBoost(dictMoves1, dictMoves2, utype1, utype2, battle):
     cadena = battle.cadenaTypes
     # aux
     aux1 = 0
     aux2 = 0
     # iterator
-    for typeMovePer in iteratorMoves1:
-        aux1 = max(aux1, float(cadena.get(typeMovePer[0],'False').get(utype1,1)) * float(cadena.get(typeMovePer[0],'False').get(utype2,1)) * typeMovePer[1])
-    for typeMovePer in iteratorMoves2:
-        aux2 = max(aux2, float(cadena.get(typeMovePer[0],'False').get(utype1,1)) * float(cadena.get(typeMovePer[0],'False').get(utype2,1)) * typeMovePer[1])
+    for key in dictMoves1:
+        aux1 = max(aux1, float(cadena.get(key,'False').get(utype1,1)) * float(cadena.get(key,'False').get(utype2,1)) * dictMoves1[key])
+    for key in dictMoves2:
+        aux2 = max(aux2, float(cadena.get(key,'False').get(utype1,1)) * float(cadena.get(key,'False').get(utype2,1)) * dictMoves2[key])
     return 2/(aux1 + aux2)
