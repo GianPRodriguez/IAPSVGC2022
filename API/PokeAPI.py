@@ -1,0 +1,57 @@
+import constants
+
+urlPokeAPI = 'https://pokeapi.co/api/v2/'
+
+async def getMoveColor(move):
+    if move in constants.maxMoves:
+        move = constants.maxMoves[move]
+    urlMove = urlPokeAPI + 'move/' +  move
+    response = requests.get(urlMove)
+    if response.status_code == 200:
+        payload = response.json()
+        return constants.colorType[payload['type']['name']]
+    else:
+        return '#FFFFFF'
+
+async def getMoveTarget(battle, textAux, toMove):
+    if textAux in constants.maxMoves:
+        textAux = constants.maxMoves[textAux]
+    urlMove = urlPokeAPI + 'move/' +  move
+    response = requests.get(urlMove)
+    if response.status_code == 200:
+        payload = response.json()
+        typeToMove = payload['target']['name']
+        if typeToMove == 'user':
+            return 'User'
+        elif typeToMove == 'all-opponents':
+            return 'All Opponents'
+        elif typeToMove == 'all-other-pokemon':
+            return 'All Other Pokémon'
+        elif typeToMove == 'entire-field':
+            return 'Entire Field'
+        elif typeToMove == 'users-field':
+            return 'Users Field'
+        else: #selected-pokemon-me-first #selected-pokemon
+            if toMove == 1:
+                return battle.opponent.active1.name
+            elif toMove == 2:
+                return battle.opponent.active2.name
+            elif toMove == -1:
+                return battle.user.active1.name
+            else:
+                return battle.user.active2.name
+    else:
+        return 'Nada'
+
+async def getPkmnTypes(namePkmn):
+    url = urlPokeAPI + 'pokemon/' + namePkmn.lower().replace(' ', '-')
+    response = requests.get(url)
+    if response.status_code == 200:
+        payload = response.json()
+        pkmnType1 = payload.get('types','Null')[0].get('type','Null').get('name','Null')
+        if len(payload.get('types','Null')) == 1:
+            pkmnType2 = 'Null'
+        else:
+            pkmnType2 = payload.get('types','Null')[1].get('type','Null').get('name','Null')
+        return pkmnType1, pkmnType2
+    return 'Nada', 'Nada'

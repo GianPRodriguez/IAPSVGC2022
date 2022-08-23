@@ -5,10 +5,10 @@ import constants
 
 from numpy import sqrt
 from showdown.battle import Battle
+from API.PokeAPI import getMoveColor
+from API.PokeAPI import getMoveTarget
 from showdown.battle_bots.helpers import Box
 from showdown.battle_bots.helpers import getMoveName
-from showdown.battle_bots.helpers import getColorMove
-from showdown.battle_bots.helpers import getToMovePokemon
 from showdown.battle_bots.helpers import findRewardSingles
 from showdown.battle_bots.helpers import formula
 from showdown.battle_bots.helpers import findGroupReward
@@ -501,8 +501,8 @@ class BattleBot(Battle):
         if moveSwitch1 == 'move':
             text1 = await getMoveName(battle, 0, nMoveSwitch1-1, dynamax1)
             text1Aux = text1.lower().replace(' ', '-')
-            color1 = await getColorMove(text1Aux)
-            text3 = await getToMovePokemon(battle, text1Aux, toMove1)
+            color1 = await getMoveColor(text1Aux)
+            text3 = await getMoveTarget(battle, text1Aux, toMove1)
             color3 = '#FFFFFF'
         elif moveSwitch1 == 'pass':
             text1 = 'Pass'
@@ -519,8 +519,8 @@ class BattleBot(Battle):
         if moveSwitch2 == 'move':
             text2 = await getMoveName(battle, 1, nMoveSwitch2-1, dynamax2)
             text2Aux = text2.lower().replace(' ', '-')
-            color2 = await getColorMove(text2Aux)
-            text4 = await getToMovePokemon(battle, text2Aux, toMove2)
+            color2 = await getMoveColor(text2Aux)
+            text4 = await getMoveTarget(battle, text2Aux, toMove2)
             color4 = '#FFFFFF'
         elif moveSwitch2 == 'pass':
             text2 = 'Pass'

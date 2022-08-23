@@ -457,3 +457,7 @@ EV = 252
 NATURE = 1.1
 DROWSY = 'moveyawn'
 FASTEST = 278
+
+standardName = {'zacian':'zacian-crowned','zacian-*':'zacian-crowned','thundurus':'thundurus-incarnate','landorus':'landorus-incarnate','tornadus':'tornadus-incarnate','indeedee-f':'indeedee-female','urshifu':'urshifu-single-strike','necrozma-dusk-mane':'necrozma-dusk','zamazenta':'zamazenta-crowned','zamazenta-*':'zamazenta-crowned'}
+colorType = {'normal':'#A8A77A','fire':'#EE8130','water':'#6390F0','electric':'#F7D02C','grass':'#7AC74C','ice':'#96D9D6','fighting':'#C22E28','poison':'#A33EA1','ground':'#E2BF65','flying':'#A98FF3','psychic':'#F95587','bug':'#A6B91A','rock':'#B6A136','ghost':'#735797','dragon':'#6F35FC','dark':'#705746','steel':'#B7B7CE','fairy':'#D685AD'}
+maxMoves = {'maxstrike':'max-strike','maxknuckle':'max-knuckle','maxairstream':'max-airstream','maxooze':'max-ooze','maxquake':'max-quake','maxrockfall':'max-rockfall','maxflutterby':'max-flutterby','maxphantasm':'max-phantasm','maxsteelspike':'max-steelspike','maxflare':'max-flare','maxgeyser':'max-geyser','maxovergrowth':'max-overgrowth','maxlightning':'max-lightning','maxmindstorm':'max-mindstorm','maxhailstorm':'max-hailstorm','maxwyrmwind':'max-wyrmwind','maxdarkness':'max-darkness','maxstarfall':'max-starfall','maxguard':'max-guard'}
