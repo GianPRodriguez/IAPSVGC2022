@@ -32,8 +32,8 @@ class Battle(ABC):
         self.lastReward = 0
         self.botMode = None
         self.q = Queue()
-        self.cadenaTP = json.loads(open('../API/JSONs/geneticAlgorithm.json').read())
         self.cadenaTypes = json.loads(open('../API/JSONs/typeChart.json').read())
+        self.cadenaTP = json.loads(open('../API/JSONs/geneticAlgorithm.json').read())
         self.moveTypes = json.loads(open('../API/JSONs/pkmnMovesTypes.json').read())
 
     # Only Opponent

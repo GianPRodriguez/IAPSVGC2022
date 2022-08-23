@@ -6,8 +6,6 @@ from teams import load_team
 from multiprocessing import Process, Queue
 from showdown.run_battle import pokemon_battle
 from showdown.websocket_client import PSWebsocketClient
-from data import all_move_json
-from data import pokedex
 import sys
 import asyncio
 import json

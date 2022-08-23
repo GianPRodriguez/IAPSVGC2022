@@ -1,6 +1,18 @@
 from .team import *
 from .teams import *
-from showdown.engine.helpers import normalize_name
+
+def normalize_name(name):
+    return name\
+        .replace(" ", "")\
+        .replace(".", "")\
+        .replace("\'", "")\
+        .replace("%", "")\
+        .replace("*", "")\
+        .replace(":", "")\
+        .strip()\
+        .lower()\
+        .encode('ascii', 'ignore')\
+        .decode('utf-8')
 
 def json_to_packed(json_team):
     def from_json(j):

@@ -9,7 +9,6 @@ import ast
 import sys
 import constants
 import config
-from showdown.engine.evaluate import Scoring
 from showdown.battle_bots.helpers import format_decision
 from showdown.battle_modifier import update_battle
 from showdown.battle_modifier import updateEnvironment
