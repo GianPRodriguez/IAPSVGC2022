@@ -117,12 +117,12 @@ class PSWebsocketClient:
         await self.send_message('', message)
 
     async def challenge_user(self, user_to_challenge, battle_format, team):
-        logger.debug("Enfrentandose a {}...".format(user_to_challenge))
         if time.time() - self.last_challenge_time < 10:
             logger.info("Sleeping for 10 seconds because last challenge was less than 10 seconds ago")
             await io.sleep(10)
         await self.update_team(team)
         message = ["/challenge {},{}".format(user_to_challenge, battle_format)]
+        logger.debug("Enfrentándose a {}...".format(user_to_challenge))
         await self.send_message('', message)
         self.last_challenge_time = time.time()
 

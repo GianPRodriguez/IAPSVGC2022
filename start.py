@@ -51,11 +51,11 @@ class StartPage(tk.Frame):
 		canvasBody.place(x=0, y=50, anchor = tk.CENTER)
 		canvasBody.pack()
 
-		button1 = tk.Button(self, text='Módulo de Batallas contra Agentes', anchor="center", command=lambda: controller.show_frame("Modulo1"))
+		button1 = tk.Button(self, text='Módulo de Batallas', anchor="center", command=lambda: controller.show_frame("Modulo1"))
 		button1.configure(width = 50, height = 2, activebackground = "#33B5E5", relief = tk.FLAT)
 		button1_widget = canvasBody.create_window(70, 35, anchor=tk.NW, window=button1)
 
-		button2 = tk.Button(self, text='Módulo de Análisis de Batallas', anchor="center", command=lambda: controller.show_frame("Modulo2"))
+		button2 = tk.Button(self, text='Módulo de Análisis', anchor="center", command=lambda: controller.show_frame("Modulo2"))
 		button2.configure(width = 50, height = 2, activebackground = "#33B5E5", relief = tk.FLAT)
 		button2_widget = canvasBody.create_window(70, 105, anchor=tk.NW, window=button2)
 
@@ -70,7 +70,7 @@ class Modulo1(tk.Frame):
 		# Canvas Head
 		self.canvasHead = tk.Canvas(self, width=500, height=50, bg="#283158")
 		self.canvasHead.place(x=0, y=0, anchor = tk.CENTER)
-		self.canvasHead.create_text(250, 25, text="Módulo de Batallas contra Agentes", fill="white", font=('Verdana 15 bold'))
+		self.canvasHead.create_text(250, 25, text="Módulo de Batallas", fill="white", font=('Verdana 15 bold'))
 		self.canvasHead.pack()
 		# Canvas Body
 		self.canvasBody = tk.Canvas(self, width=500, height=259, bg="#283158")
@@ -136,6 +136,19 @@ class Modulo1(tk.Frame):
 					self.cbbTeam.config(state='normal')
 					self.button1['state'] = tk.NORMAL
 					self.button1.configure(text='Iniciar Batalla')
+					self.textIncorrect = self.canvasBody.create_text(170, 235, text="El oponente ha rechazado la solicitud de batalla", fill="orange", font=('Verdana 10'))
+				elif self.cola[0] == -3: 								# username incorrect
+					self.nameEntry.config(state='normal')
+					self.cbbTeam.config(state='normal')
+					self.button1['state'] = tk.NORMAL
+					self.button1.configure(text='Iniciar Batalla')
+					self.textIncorrect = self.canvasBody.create_text(210, 235, text="¡El equipo del agente no cumple con las reglas del formato!", fill="orange", font=('Verdana 10'))
+				elif self.cola[0] == -4: 								# username incorrect
+					self.nameEntry.config(state='normal')
+					self.cbbTeam.config(state='normal')
+					self.button1['state'] = tk.NORMAL
+					self.button1.configure(text='Iniciar Batalla')
+					self.textIncorrect = self.canvasBody.create_text(160, 235, text="¡El nombre de usuario no ha sido encontrado!", fill="orange", font=('Verdana 10'))
 			except queue.Empty:
 				# None
 				...
@@ -144,23 +157,30 @@ class Modulo1(tk.Frame):
 			...
 
 	def IniciarBatalla(self):
-		# Parameters
-		q1 = multiprocessing.Queue()
-		username = self.nameEntry.get()
-		password = None
-		teamname = self.textVar.get()
-		botmode = "CHALLENGE_USER"
-		# Widgets are blocked
-		self.nameEntry.config(state='disabled')
-		self.cbbTeam.config(state='disabled')
-		# Start Battle
-		self.button1['state'] = tk.DISABLED
-		self.button1.configure(text='Esperando Confirmación')
-		# Thread
-		self.p = Thread(target=AsyncDownload, args=(q1,username,password,teamname,botmode,))
-		self.p.start()
-		# Monitor
-		self.monitor(q1)
+		if self.textVar.get() == '':
+			if hasattr(self, "textIncorrect"):
+				self.canvasBody.delete(self.textIncorrect)
+			self.textIncorrect = self.canvasBody.create_text(120, 235, text="No se ha seleccionado un equipo", fill="orange", font=('Verdana 10'))
+		else:
+			if hasattr(self, "textIncorrect"):
+				self.canvasBody.delete(self.textIncorrect)
+			# Parameters
+			q1 = multiprocessing.Queue()
+			username = self.nameEntry.get()
+			password = None
+			teamname = self.textVar.get()
+			botmode = "CHALLENGE_USER"
+			# Widgets are blocked
+			self.nameEntry.config(state='disabled')
+			self.cbbTeam.config(state='disabled')
+			# Start Battle
+			self.button1['state'] = tk.DISABLED
+			self.button1.configure(text='Esperando Confirmación')
+			# Thread
+			self.p = Thread(target=AsyncDownload, args=(q1,username,password,teamname,botmode,))
+			self.p.start()
+			# Monitor
+			self.monitor(q1)
 
 	def closeWindows(self):
 		if self.button1.config('text')[-1] != "Batalla en Curso":
@@ -212,14 +232,14 @@ class Modulo1(tk.Frame):
 			self.rectangle1 = self.canvasBody.create_rectangle(0,0,500,259, fill='#325928')
 			# Text
 			self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="¡Felicidades!", fill="white", font=('Verdana 14'))
-			self.textWinner = "Has ganado la batalla contra el agente inteligente" + self.nameOpponent
+			self.textWinner = "Has ganado la batalla"
 			self.textWinner_widget2 = self.canvasBody.create_text(185, 100, text=self.textWinner, fill="white", font=('Verdana 11'))
 		else:
 			self.emoji = Image.open("noWinner.png")
 			self.rectangle1 = self.canvasBody.create_rectangle(0,0,500,259, fill='#582831')
 			# Text
 			self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="Has perdido :(", fill="white", font=('Verdana 14'))
-			self.textWinner_widget2 = self.canvasBody.create_text(185, 100, text="Suerte para la próxima :)", fill="white", font=('Verdana 11'))
+			self.textWinner_widget2 = self.canvasBody.create_text(185, 100, text="Suerte para la próxima", fill="white", font=('Verdana 11'))
 		self.emojiPNG = self.emoji.convert(mode="RGBA")
 		self.emojiResized_image = self.emojiPNG.resize((80,80), Image.Resampling.LANCZOS)
 		self.emojiTK = ImageTk.PhotoImage(self.emojiResized_image)

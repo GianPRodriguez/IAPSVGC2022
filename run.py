@@ -39,8 +39,7 @@ def parse_configs():
 
     if config.bot_mode == constants.CHALLENGE_USER:
         config.user_to_challenge = env("USER_TO_CHALLENGE")
-    init_logging(env("LOG_LEVEL", "DEBUG"))
-
+    init_logging("INFO")
 
 # MAIN
 async def showdown(q,username,password,teamname,botmode):

@@ -29,13 +29,13 @@ def request(battle, split_msg):
         battle.rqid = battle_json[constants.RQID]
         # ¿battle_json tiene "forceSwitch"? Se activa cuando uso U-TURN
         if battle_json.get(constants.FORCE_SWITCH):
-            logger.debug("Action: forceSwitch")
+            logger.info("Action: forceSwitch")
             battle.force_switch = True
         else:
             battle.force_switch = False
         # ¿battle_json tiene "wait"? ¿Se activa cuando el opponente usa U-TURN?
         if battle_json.get(constants.WAIT):
-            logger.debug("Action: wait")
+            logger.info("Action: wait")
             battle.wait = True
         else:
             battle.wait = False
