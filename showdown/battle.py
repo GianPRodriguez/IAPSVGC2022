@@ -8,7 +8,7 @@ from abc import ABC
 from numpy import sqrt
 from abc import abstractmethod
 from collections import defaultdict
-from API.PokeAPI import getPkmnTypes
+from API.PokeAPI import getPkmnInfo
 from multiprocessing import Process, Queue
 
 
@@ -32,9 +32,9 @@ class Battle(ABC):
         self.lastReward = 0
         self.botMode = None
         self.q = Queue()
-        self.cadenaTypes = json.loads(open('../API/JSONs/typeChart.json').read())
-        self.cadenaTP = json.loads(open('../API/JSONs/geneticAlgorithm.json').read())
-        self.moveTypes = json.loads(open('../API/JSONs/pkmnMovesTypes.json').read())
+        self.cadenaTypes = json.loads(open("C:/Users/Gian Pierre/Documents/showdown/showdown-master-doubles/test_showdown_master_doubles/API/JSONs/typeChart.json",'r').read())
+        self.cadenaTP = json.loads(open("C:/Users/Gian Pierre/Documents/showdown/showdown-master-doubles/test_showdown_master_doubles/API/JSONs/geneticAlgorithm.json",'r').read())
+        self.moveTypes = json.loads(open("C:/Users/Gian Pierre/Documents/showdown/showdown-master-doubles/test_showdown_master_doubles/API/JSONs/pkmnMovesTypes.json",'r').read())
 
     # Only Opponent
     async def initialize_team_preview(self, user_json, opponent_pokemon):
@@ -265,7 +265,7 @@ class Pokemon:
         return self.HPB == 0
 
     def findMoveType(self, move):
-        return json.loads(open('../API/JSONs/moves.json').read())[move]['type'].lower()
+        return json.loads(open('C:/Users/Gian Pierre/Documents/showdown/showdown-master-doubles/test_showdown_master_doubles/API/JSONs/moves.json').read())[move]['type'].lower()
 
     def imprimir(self):
         print("Name: " + str(self.name))
@@ -311,15 +311,8 @@ class Pokemon:
             namePkmn = constants.standardName[self.name.lower()]
         else:
             namePkmn = self.name
-        self.type1, self.type2 = getPkmnTypes(namePkmn)
+        self.type1, self.type2, HP_base, ATK_base, DEF_base, SPA_base, SPD_base, VEL_base = getPkmnInfo(namePkmn)
         if isOpponent:
-            # Stats Base
-            HP_base = payload['stats'][0]['base_stat']
-            ATK_base = payload['stats'][1]['base_stat']
-            DEF_base = payload['stats'][2]['base_stat']
-            SPA_base = payload['stats'][3]['base_stat']
-            SPD_base = payload['stats'][4]['base_stat']
-            VEL_base = payload['stats'][5]['base_stat']
             # Stats Battle
             self.HPB_battle_base = self.HP_BATTLE_CALCULATE(HP_base)
             self.max_hp = self.HPB_battle_base

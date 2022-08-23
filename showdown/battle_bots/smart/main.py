@@ -1,5 +1,6 @@
-import random
+import math
 import json
+import random
 import logging
 import constants
 
@@ -15,7 +16,6 @@ from showdown.battle_bots.helpers import findGroupReward
 from showdown.battle_bots.helpers import findTeam
 from showdown.battle_bots.helpers import getATBoost
 from showdown.battle_bots.helpers import getDEBoost
-
 
 logger = logging.getLogger(__name__)
 
@@ -501,8 +501,8 @@ class BattleBot(Battle):
         if moveSwitch1 == 'move':
             text1 = await getMoveName(battle, 0, nMoveSwitch1-1, dynamax1)
             text1Aux = text1.lower().replace(' ', '-')
-            color1 = await getMoveColor(text1Aux)
-            text3 = await getMoveTarget(battle, text1Aux, toMove1)
+            color1 = getMoveColor(text1Aux)
+            text3 = getMoveTarget(battle, text1Aux, toMove1)
             color3 = '#FFFFFF'
         elif moveSwitch1 == 'pass':
             text1 = 'Pass'
@@ -519,8 +519,8 @@ class BattleBot(Battle):
         if moveSwitch2 == 'move':
             text2 = await getMoveName(battle, 1, nMoveSwitch2-1, dynamax2)
             text2Aux = text2.lower().replace(' ', '-')
-            color2 = await getMoveColor(text2Aux)
-            text4 = await getMoveTarget(battle, text2Aux, toMove2)
+            color2 = getMoveColor(text2Aux)
+            text4 = getMoveTarget(battle, text2Aux, toMove2)
             color4 = '#FFFFFF'
         elif moveSwitch2 == 'pass':
             text2 = 'Pass'
@@ -546,6 +546,6 @@ class BattleBot(Battle):
             color6 = "#325928"
         else:
             color6 = "#582831"
-        logger.debug([2, text1, color1, text2, color2, text3, color3, text4, color4, deltaReward, color5, reward, color6])
-        battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4, deltaReward, color5, reward, color6])
+        logger.info([2, text1, color1, text2, color2, text3, color3, text4, color4, math.floor(deltaReward), color5, math.floor(reward), color6])
+        battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4, math.floor(deltaReward), color5, math.floor(reward), color6])
         return battle, moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2)

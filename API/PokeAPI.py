@@ -1,8 +1,10 @@
+import json
+import requests
 import constants
 
 urlPokeAPI = 'https://pokeapi.co/api/v2/'
 
-async def getMoveColor(move):
+def getMoveColor(move):
     if move in constants.maxMoves:
         move = constants.maxMoves[move]
     urlMove = urlPokeAPI + 'move/' +  move
@@ -13,10 +15,10 @@ async def getMoveColor(move):
     else:
         return '#FFFFFF'
 
-async def getMoveTarget(battle, textAux, toMove):
+def getMoveTarget(battle, textAux, toMove):
     if textAux in constants.maxMoves:
         textAux = constants.maxMoves[textAux]
-    urlMove = urlPokeAPI + 'move/' +  move
+    urlMove = urlPokeAPI + 'move/' +  textAux
     response = requests.get(urlMove)
     if response.status_code == 200:
         payload = response.json()
@@ -43,15 +45,22 @@ async def getMoveTarget(battle, textAux, toMove):
     else:
         return 'Nada'
 
-async def getPkmnTypes(namePkmn):
+def getPkmnInfo(namePkmn):
     url = urlPokeAPI + 'pokemon/' + namePkmn.lower().replace(' ', '-')
     response = requests.get(url)
     if response.status_code == 200:
         payload = response.json()
+        # Stats Base
+        HP_base = payload['stats'][0]['base_stat']
+        ATK_base = payload['stats'][1]['base_stat']
+        DEF_base = payload['stats'][2]['base_stat']
+        SPA_base = payload['stats'][3]['base_stat']
+        SPD_base = payload['stats'][4]['base_stat']
+        VEL_base = payload['stats'][5]['base_stat']
         pkmnType1 = payload.get('types','Null')[0].get('type','Null').get('name','Null')
         if len(payload.get('types','Null')) == 1:
             pkmnType2 = 'Null'
         else:
             pkmnType2 = payload.get('types','Null')[1].get('type','Null').get('name','Null')
-        return pkmnType1, pkmnType2
-    return 'Nada', 'Nada'
+        return pkmnType1, pkmnType2, HP_base, ATK_base, DEF_base, SPA_base, SPD_base, VEL_base
+    return 'Nada', 'Nada', 'Nada', 'Nada', 'Nada', 'Nada', 'Nada', 'Nada'

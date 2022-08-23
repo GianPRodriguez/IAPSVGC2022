@@ -1,15 +1,14 @@
 import re
 import json
 import math
-from copy import deepcopy
 import logging
+from copy import deepcopy
 from collections import defaultdict
-
+from teams.team_converter import normalize_name
 import constants
 from showdown.battle import Pokemon
 from showdown.battle_bots.helpers import getATBoost
 from showdown.battle_bots.helpers import getDEBoost
-
 
 logger = logging.getLogger(__name__)
 
@@ -1128,7 +1127,7 @@ def turn(battle, split_msg):
     if constants.DROWSY in battle.opponent.active2.volatile_statuses:
         battle.opponent.active2.volatile_statuses.remove(constants.DROWSY)
     # Print Turn
-    logger.debug("Turn: {}".format(int(split_msg[2])))
+    logger.info("Turno: {}".format(int(split_msg[2])))
     return battle
 
 

@@ -94,7 +94,7 @@ class Modulo1(tk.Frame):
 		# ListBox AgentTeam
 		self.textVar = tk.StringVar(self)
 		self.textVar.set('')
-		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Java"], width=25)
+		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Eduardo Cunha"], width=25)
 		self.listbox_widget = self.canvasBody.create_window(250, 110, window=self.cbbTeam)
 		self.auxCbbTeam = self.cbbTeam
 		# IMG Exit
@@ -212,7 +212,7 @@ class Modulo1(tk.Frame):
 			self.rectangle1 = self.canvasBody.create_rectangle(0,0,500,259, fill='#325928')
 			# Text
 			self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="¡Felicidades!", fill="white", font=('Verdana 14'))
-			self.textWinner = "Has ganado la batalla contra " + self.nameOpponent
+			self.textWinner = "Has ganado la batalla contra el agente inteligente" + self.nameOpponent
 			self.textWinner_widget2 = self.canvasBody.create_text(185, 100, text=self.textWinner, fill="white", font=('Verdana 11'))
 		else:
 			self.emoji = Image.open("noWinner.png")
@@ -309,7 +309,7 @@ class Modulo2(tk.Frame):
     	# ListBox Equipo
     	self.textVar = tk.StringVar(self)
     	self.textVar.set('')
-    	self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Java"], width=17)
+    	self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Eduardo Cunha"], width=17)
     	self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
     	# IMG Exit
     	self.exitPNG = Image.open("IMGs/exit.png")
@@ -487,7 +487,7 @@ class Modulo2(tk.Frame):
             		# ListBox Equipo
             		self.textVar = tk.StringVar(self)
             		self.textVar.set('')
-            		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Java"], width=17)
+            		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Eduardo Cunha"], width=17)
             		self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
             	elif self.cola[0] == -3:
             		# Username or Password Incorrect
@@ -505,7 +505,7 @@ class Modulo2(tk.Frame):
             		# ListBox Equipo
             		self.textVar = tk.StringVar(self)
             		self.textVar.set('')
-            		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Java"], width=17)
+            		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Eduardo Cunha"], width=17)
             		self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
             	else:
             		...
