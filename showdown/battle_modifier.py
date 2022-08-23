@@ -695,28 +695,28 @@ def end_volatile_status(battle, split_msg):
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active1.HPB = int(math.ceil(int(battle.opponent.active1.HPB)/2))
-                    battle.opponent.active1.max_hp = int(math.ceil(int(battle.opponent.active1.max_hp)/2))
+                    battle.opponent.active1.HPB = int(math.ceil(battle.opponent.active1.HPB/2))
+                    battle.opponent.active1.max_hp = int(math.ceil(battle.opponent.active1.max_hp/2))
                     battle.opponent.active1.isDynamax = False
                     battle.opponent.active1.volatile_statuses.remove(constants.DYNAMAX)
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active2.HPB = int(math.ceil(int(battle.opponent.active2.HPB)/2))
-                    battle.opponent.active2.max_hp = int(math.ceil(int(battle.opponent.active2.max_hp)/2))
+                    battle.opponent.active2.HPB = int(math.ceil(battle.opponent.active2.HPB/2))
+                    battle.opponent.active2.max_hp = int(math.ceil(battle.opponent.active2.max_hp/2))
                     battle.opponent.active2.isDynamax = False
                     battle.opponent.active2.volatile_statuses.remove(constants.DYNAMAX)
         else:
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active1.HPB = int(math.ceil(int(battle.opponent.active1.HPB)/2))
-                    battle.opponent.active1.max_hp = int(math.ceil(int(battle.opponent.active1.max_hp)/2))
+                    battle.opponent.active1.HPB = int(math.ceil(battle.opponent.active1.HPB/2))
+                    battle.opponent.active1.max_hp = int(math.ceil(battle.opponent.active1.max_hp/2))
                     battle.opponent.active1.isDynamax = False
                     battle.opponent.active1.volatile_statuses.remove(constants.DYNAMAX)
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.opponent.active2.HPB = int(math.ceil(int(battle.opponent.active2.HPB)/2))
-                    battle.opponent.active2.max_hp = int(math.ceil(int(battle.opponent.active2.max_hp)/2))
+                    battle.opponent.active2.HPB = int(math.ceil(battle.opponent.active2.HPB/2))
+                    battle.opponent.active2.max_hp = int(math.ceil(battle.opponent.active2.max_hp/2))
                     battle.opponent.active2.isDynamax = False
                     battle.opponent.active2.volatile_statuses.remove(constants.DYNAMAX)
     else:
@@ -724,28 +724,28 @@ def end_volatile_status(battle, split_msg):
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.user.active1.HPB = int(math.ceil(int(battle.user.active1.HPB)/2))
-                    battle.user.active1.max_hp = int(math.ceil(int(battle.user.active1.max_hp)/2))
+                    battle.user.active1.HPB = int(math.ceil(battle.user.active1.HPB/2))
+                    battle.user.active1.max_hp = int(math.ceil(battle.user.active1.max_hp/2))
                     battle.user.active1.isDynamax = False
                     battle.user.active1.volatile_statuses.remove(constants.DYNAMAX)
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.user.active2.HPB = int(math.ceil(int(battle.user.active2.HPB)/2))
-                    battle.user.active2.max_hp = int(math.ceil(int(battle.user.active2.max_hp)/2))
+                    battle.user.active2.HPB = int(math.ceil(battle.user.active2.HPB/2))
+                    battle.user.active2.max_hp = int(math.ceil(battle.user.active2.max_hp/2))
                     battle.user.active2.isDynamax = False
                     battle.user.active2.volatile_statuses.remove(constants.DYNAMAX)
         else:
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
                 if volatile_status == constants.DYNAMAX:
-                    battle.user.active1.HPB = int(math.ceil(int(battle.user.active1.HPB)/2))
-                    battle.user.active1.max_hp = int(math.ceil(int(battle.user.active1.max_hp)/2))
+                    battle.user.active1.HPB = int(math.ceil(battle.user.active1.HPB/2))
+                    battle.user.active1.max_hp = int(math.ceil(battle.user.active1.max_hp/2))
                     battle.user.active1.isDynamax = False
                     battle.user.active1.volatile_statuses.remove(constants.DYNAMAX)
             else:
                 if volatile_status == constants.DYNAMAX:
-                    battle.user.active2.HPB = int(math.ceil(int(battle.user.active2.HPB)/2))
-                    battle.user.active2.max_hp = int(math.ceil(int(battle.user.active2.max_hp)/2))
+                    battle.user.active2.HPB = int(math.ceil(battle.user.active2.HPB/2))
+                    battle.user.active2.max_hp = int(math.ceil(battle.user.active2.max_hp/2))
                     battle.user.active2.isDynamax = False
                     battle.user.active2.volatile_statuses.remove(constants.DYNAMAX)
     return battle
@@ -1275,7 +1275,7 @@ async def updateEnvironment(battle):
     battle = updatePokemon(battle, battle.opponent.active1, False, False)
     battle = updatePokemon(battle, battle.opponent.active2, False, False)
     for i in range(len(battle.opponent.reserved)):
-        battle = updatePokemon(battle, battle.opponent.reserved[i], True, True)
+        battle = updatePokemon(battle, battle.opponent.reserved[i], False, True)
     return battle
 
 # Actualiza estado
