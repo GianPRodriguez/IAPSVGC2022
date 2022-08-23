@@ -4,10 +4,9 @@ import requests
 import json
 import time
 import config
-
 import logging
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 class LoginError(Exception):
     pass
@@ -40,7 +39,7 @@ class PSWebsocketClient:
     async def join_room(self, room_name):
         message = "/join {}".format(room_name)
         await self.send_message('', [message])
-        logger.debug("Joined room '{}'".format(room_name))
+        logger.info("Joined room '{}'".format(room_name))
 
     async def receive_message(self):
         message = await self.websocket.recv()
@@ -66,7 +65,7 @@ class PSWebsocketClient:
 
 
     async def login(self):
-        logger.debug("Iniciando sesión...")
+        print("[INFO]     Iniciando sesión...")
         client_id, challstr = await self.get_id_and_challstr()
         # Si se ha registrado una contraseña... ocurre siempre
         if self.password:
@@ -93,7 +92,7 @@ class PSWebsocketClient:
             if self.password:
                 response_json = json.loads(response.text[1:])
                 if not response_json['actionsuccess']:
-                    logger.error("¡Inicio de sesión fallido!")
+                    print("[INFO]     ¡Inicio de sesión fallido!")
                     return -1
                     #raise LoginError("Could not log-in")
                 # Obtengo el assertion
@@ -103,7 +102,7 @@ class PSWebsocketClient:
             # Mensaje
             message = ["/trn " + self.username + ",0," + assertion]
             # "|/trn PopplioPeru98,0,6e414fd79bcc5014f9306dbfbb3d205ab0d5bf178cd3de477b77d8f29624078b152bd9bc54d66afecc73225373f2a92ba24080a35b31325bc2c8b40e5a85dcd2f98b280d9ae42106f309e635f7ab2182856dac6325c5b1b4d184075e7d27ab29b83168cd9e13d7fd3bc71f970b15a76e88a6dbddd17eccdae08456c2ab106a37,popplioperu98,4,1657584912,sim3.psim.us,d14e9223aceb95938c2e3b4c1650426759,768fe0d69ee003cc,aa84d633ecbd9433;54aeedd16494c78287c2d851bf25ee65c7c200f190137d1942bfb1bad2b2edb0a529430602dae99d4edcc0f0ab1d53b82e3b390f37e229e77f306cd8e5ed4677059607d8bcd1ddf1959a4d36d8ddf07598a0521310c2ddc18d3a1dc19e477ea6d0b5e3978a4c3615148bb911774f98a7febfa08c7ffd313e0ad513d06f71aea3755dd51909b6911a9d8b299507acfe3d9ced301014e490e915b4abf93b5aa480b531fd1c91249937eef120120c446ad6a5746f15dd8d7556682a7c7f9a0952223ebd7a293fa0eaaf1b02ed53cb2bbcf4725eddd633325fc93769cadc45bf4ff63cf0a3184689403e191cb8f1b69a4f338d0b3d5e97eca568058d384c302bf6f7e52ee35678009ce28d58ce23825baed8d1168ebcd5530c2140de603bc5bea46e3bc9b70f1858b5e13a39fba1e52f8cf952257a8ae338a660445d7a4c7d07665dee9b17f3aa99d204d0af76468fd89786a70c6f458997ee69cecfd21c2d046ac102397651dd3287a866d1cbe99d10a173d50262960d7df389fc653bc04a09b227f378f6567c307728ddc1de0298727948a66002690928d3927de2ce1d20f97b25d784a3893be816932ef63f58763e081eede2ee8653dc6896e99e9761120b6d93f844fc11918c1420c751a839a891460f5d0fa771d6cfd59431ec8e82090fcfcb467fa2bff310c2d47badc3293a8611bcf7bab28f9576a930d4328b1e3437f45d"
-            logger.debug("¡Sesión iniciada con éxito!")
+            print("[INFO]     ¡Sesión iniciada con éxito!")
             await self.send_message('', message)
             return 0
         else:
@@ -122,7 +121,7 @@ class PSWebsocketClient:
             await io.sleep(10)
         await self.update_team(team)
         message = ["/challenge {},{}".format(user_to_challenge, battle_format)]
-        logger.debug("Enfrentándose a {}...".format(user_to_challenge))
+        print("[INFO]     Enfrentándose a {}...".format(user_to_challenge))
         await self.send_message('', message)
         self.last_challenge_time = time.time()
 
@@ -130,7 +129,7 @@ class PSWebsocketClient:
         if room_name is not None:
             await self.join_room(room_name)
 
-        logger.debug("Esperando un combate en formato {}".format(battle_format))
+        logger.info("Esperando un combate en formato {}".format(battle_format))
         await self.update_team(team)
         username = None
         while username is None:
@@ -144,7 +143,7 @@ class PSWebsocketClient:
         await self.send_message('', message)
 
     async def search_for_match(self, team):
-        logger.debug("Español: Searching for ranked {} match".format(config.pokemon_mode))
+        logger.info("Español: Searching for ranked {} match".format(config.pokemon_mode))
         await self.update_team(team)
         message = ["/search {}".format(config.pokemon_mode)]
         # "/search gen8vgc2022"

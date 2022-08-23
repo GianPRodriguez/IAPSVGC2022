@@ -3,6 +3,7 @@ import math
 import queue
 import sys
 import os 
+import threading
 from threading import Thread
 import tkinter as tk
 from tkinter import ttk
@@ -154,7 +155,8 @@ class Modulo1(tk.Frame):
 				...
 		else:
 			# None
-			...
+			self.p.join()
+			return
 
 	def IniciarBatalla(self):
 		if self.textVar.get() == '':

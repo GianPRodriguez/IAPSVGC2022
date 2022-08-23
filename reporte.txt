@@ -26925,3 +26925,665 @@ flying  :  0.45273
 normal  :  0.25126
 dark  :  0.12138
 
+
+Estado del Entorno
+------------------
+Turn: 0
+Started: True
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+
+Side conditions: 
+
+Active 1: 
+
+Name: Thundurus
+Type 1: electric
+Type 2: flying
+Max HP: 155
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 155
+ATB: 167
+DEB: 95
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  1
+dark  :  1
+fighting  :  1
+
+Active 2: 
+
+Name: Gastrodon-East
+Type 1: water
+Type 2: ground
+Max HP: 209
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 209
+ATB: 112
+DEB: 121
+VEB: 59
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ground  :  1
+normal  :  1
+ice  :  1
+
+List of Reserved: 
+
+Name: Zacian
+Type 1: fairy
+Type 2: steel
+Max HP: 168
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  1
+fighting  :  1
+fairy  :  1
+normal  :  1
+
+Name: Calyrex-Shadow
+Type 1: psychic
+Type 2: ghost
+Max HP: 176
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 176
+ATB: 217
+DEB: 110
+VEB: 222
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ghost  :  1
+psychic  :  1
+ground  :  1
+dark  :  1
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+opponentPkmnConfirmed: 0
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Type 1: psychic
+Type 2: flying
+Max HP: 213
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 213
+ATB: 156
+DEB: 187
+VEB: 178
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ground  :  0.9219
+flying  :  0.91851
+water  :  0.20569
+ghost  :  0.19479
+
+Name: Incineroar
+Type 1: fire
+Type 2: dark
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 183
+DEB: 133
+VEB: 123
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+normal  :  0.99948
+fire  :  0.99477
+dark  :  0.38806
+bug  :  0.01792
+
+Name: Zacian-*
+Type 1: fairy
+Type 2: steel
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 199
+ATB: 244
+DEB: 159
+VEB: 220
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.99985
+fighting  :  0.75735
+fairy  :  0.5383
+normal  :  0.28244
+
+Name: Umbreon
+Type 1: dark
+Type 2: Null
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 128
+DEB: 164
+VEB: 128
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dark  :  0.99986
+
+Name: Thundurus
+Type 1: electric
+Type 2: flying
+Max HP: 186
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 186
+ATB: 194
+DEB: 117
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  0.84966
+flying  :  0.8493
+fighting  :  0.53147
+dark  :  0.15029
+steel  :  0.08253
+bug  :  0.01515
+
+Name: Regieleki
+Type 1: electric
+Type 2: Null
+Max HP: 187
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 187
+ATB: 167
+DEB: 91
+VEB: 277
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  0.89196
+flying  :  0.45273
+normal  :  0.25126
+dark  :  0.12138
+
+
+Estado del Entorno
+------------------
+Turn: 0
+Started: True
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: PopplioPeru98
+
+
+Side conditions: 
+
+Active 1: 
+
+Name: Thundurus
+Type 1: electric
+Type 2: flying
+Max HP: 155
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 155
+ATB: 167
+DEB: 95
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  1
+dark  :  1
+fighting  :  1
+
+Active 2: 
+
+Name: Gastrodon-East
+Type 1: water
+Type 2: ground
+Max HP: 209
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 209
+ATB: 112
+DEB: 121
+VEB: 59
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ground  :  1
+normal  :  1
+ice  :  1
+
+List of Reserved: 
+
+Name: Zacian
+Type 1: fairy
+Type 2: steel
+Max HP: 168
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  1
+fighting  :  1
+fairy  :  1
+normal  :  1
+
+Name: Calyrex-Shadow
+Type 1: psychic
+Type 2: ghost
+Max HP: 176
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 176
+ATB: 217
+DEB: 110
+VEB: 222
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ghost  :  1
+psychic  :  1
+ground  :  1
+dark  :  1
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: Delta VGC 2022
+
+opponentPkmnConfirmed: 0
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: Lugia
+Type 1: psychic
+Type 2: flying
+Max HP: 213
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 213
+ATB: 156
+DEB: 187
+VEB: 178
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ground  :  0.9219
+flying  :  0.91851
+water  :  0.20569
+ghost  :  0.19479
+
+Name: Incineroar
+Type 1: fire
+Type 2: dark
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 183
+DEB: 133
+VEB: 123
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+normal  :  0.99948
+fire  :  0.99477
+dark  :  0.38806
+bug  :  0.01792
+
+Name: Zacian-*
+Type 1: fairy
+Type 2: steel
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 199
+ATB: 244
+DEB: 159
+VEB: 220
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.99985
+fighting  :  0.75735
+fairy  :  0.5383
+normal  :  0.28244
+
+Name: Umbreon
+Type 1: dark
+Type 2: Null
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 128
+DEB: 164
+VEB: 128
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dark  :  0.99986
+
+Name: Thundurus
+Type 1: electric
+Type 2: flying
+Max HP: 186
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 186
+ATB: 194
+DEB: 117
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  0.84966
+flying  :  0.8493
+fighting  :  0.53147
+dark  :  0.15029
+steel  :  0.08253
+bug  :  0.01515
+
+Name: Regieleki
+Type 1: electric
+Type 2: Null
+Max HP: 187
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 187
+ATB: 167
+DEB: 91
+VEB: 277
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  0.89196
+flying  :  0.45273
+normal  :  0.25126
+dark  :  0.12138
+

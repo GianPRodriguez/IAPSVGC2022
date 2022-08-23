@@ -1,8 +1,8 @@
 from multiprocessing import Process, Queue
 import importlib
+import os
 import json
 import io
-import logging
 import concurrent.futures
 from copy import deepcopy
 import ast
@@ -13,8 +13,6 @@ from showdown.battle_bots.helpers import format_decision
 from showdown.battle_modifier import update_battle
 from showdown.battle_modifier import updateEnvironment
 from showdown.websocket_client import PSWebsocketClient
-
-logger = logging.getLogger(__name__)
 
 # Retorna un Boolean
 def battle_is_finished(battle_tag, msg):
@@ -41,20 +39,20 @@ async def accion_batalla(battle):
     battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = await battle.action_battle(battle)
     mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
     # Imprimo en CMD la acción
-    logger.info(mensaje)
+    print("[WARNING]     {}".format(mensaje))
     # Retorno el mensaje listo para enviarlo al WebSocket
     return battle, mensaje
 
 
 async def escoge_accion_team_preview(battle, ps_websocket_client):
     # Se escoge los 4 Pokémon: eleccion(n) es un entero
-    logger.info("Vista Previa del Equipo")
+    print("[INFO]     Vista Previa del Equipo")
     eleccion0, eleccion1, eleccion2, eleccion3 = await battle.action_team_preview(battle)    
     # Se prepara el String que se va a enviar al WebSocket
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
     mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]
     # Imprimo en CMD la acción hecha por el agente
-    logger.info(mensaje)
+    print("[WARNING]     {}".format(mensaje))
     # Se envía la acción al WebSocket
     if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
         # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
@@ -78,24 +76,15 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q)
         if len(split_msg) == 5:
             if split_msg[4].startswith("/nonotify"):    # Rechazo
                 q.put([-2])
-                if (logger.hasHandlers()):
-                    logger.handlers.clear()
-                logger.error("El oponente ha rechazado la solicitud de batalla")
-                logging.shutdown()
+                print("[ERROR]     El oponente ha rechazado la solicitud de batalla")
                 sys.exit()
         if msg.startswith("|popup|The user"):
             q.put([-4])
-            if (logger.hasHandlers()):
-                logger.handlers.clear()
-            logger.error("¡El nombre de usuario no ha sido encontrado!")
-            logging.shutdown()
+            print("[ERROR]     ¡El nombre de usuario no ha sido encontrado!")
             sys.exit()
         if msg.startswith("|popup|Your team"):
             q.put([-3])
-            if (logger.hasHandlers()):
-                logger.handlers.clear()
-            logger.error("¡El equipo del agente inteligente no cumple con las reglas del formato!")
-            logging.shutdown()
+            print("[ERROR]     ¡El equipo del agente inteligente no cumple con las reglas del formato!")
             sys.exit()
         # first_msg = ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
         if 'battle' in first_msg:
@@ -209,7 +198,7 @@ async def pokemon_battle(ps_websocket_client, q, botMode):
             else:
                 winner = None
             # Y lo imprimo
-            logger.info("Ganador {}".format(winner))
+            print("[INFO]     Ganador {}".format(winner))
             # Se envía un mensaje de despedida al contricante
             await ps_websocket_client.send_message(battle.battle_tag, [config.battle_ending_message])
             # Es opcional guardar la batalla...

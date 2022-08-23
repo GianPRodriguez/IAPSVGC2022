@@ -13,6 +13,7 @@ import constants
 import config
 import logging
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -58,7 +59,6 @@ async def showdown(q,username,password,teamname,botmode):
     isOk = await ps_websocket_client.login()
     if isOk == -1:
         q.put([-3])
-        logger.handlers.clear()
         sys.exit()
     # Contadores
     battles_run = 0
