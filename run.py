@@ -84,7 +84,7 @@ async def showdown(q,username,password,teamname,botmode):
             wins += 1
         else:
             losses += 1
-        logger.info("W: {}\tL: {}".format(wins, losses))
+        print("[INFO]     W: {}\tL: {}".format(wins, losses))
         battles_run += 1
         if battles_run >= config.run_count:
             break
