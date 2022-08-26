@@ -1,12 +1,10 @@
 import io
-import websockets
-import requests
 import json
 import time
 import config
 import logging
-
-logger = logging.getLogger(__name__)
+import requests
+import websockets
 
 class LoginError(Exception):
     pass
@@ -17,7 +15,6 @@ class SaveReplayError(Exception):
 
 
 class PSWebsocketClient:
-
     websocket = None
     address = None
     login_uri = None
@@ -39,7 +36,7 @@ class PSWebsocketClient:
     async def join_room(self, room_name):
         message = "/join {}".format(room_name)
         await self.send_message('', [message])
-        logger.info("Joined room '{}'".format(room_name))
+        #logger.info("Joined room '{}'".format(room_name))
 
     async def receive_message(self):
         message = await self.websocket.recv()
@@ -92,7 +89,6 @@ class PSWebsocketClient:
             if self.password:
                 response_json = json.loads(response.text[1:])
                 if not response_json['actionsuccess']:
-                    print("[INFO]     ¡Inicio de sesión fallido!")
                     return -1
                     #raise LoginError("Could not log-in")
                 # Obtengo el assertion
@@ -106,7 +102,7 @@ class PSWebsocketClient:
             await self.send_message('', message)
             return 0
         else:
-            logger.error("Could not log-in\nDetails:\n{}".format(response.content))
+            #logger.error("Could not log-in\nDetails:\n{}".format(response.content))
             return -2
             #raise LoginError("Could not log-in")
 
@@ -117,7 +113,7 @@ class PSWebsocketClient:
 
     async def challenge_user(self, user_to_challenge, battle_format, team):
         if time.time() - self.last_challenge_time < 10:
-            logger.info("Sleeping for 10 seconds because last challenge was less than 10 seconds ago")
+            #logger.info("Sleeping for 10 seconds because last challenge was less than 10 seconds ago")
             await io.sleep(10)
         await self.update_team(team)
         message = ["/challenge {},{}".format(user_to_challenge, battle_format)]
@@ -128,8 +124,7 @@ class PSWebsocketClient:
     async def accept_challenge(self, battle_format, team, room_name):
         if room_name is not None:
             await self.join_room(room_name)
-
-        logger.info("Esperando un combate en formato {}".format(battle_format))
+        print("[INFO]     Esperando un combate en formato {}".format(battle_format))
         await self.update_team(team)
         username = None
         while username is None:
@@ -143,7 +138,7 @@ class PSWebsocketClient:
         await self.send_message('', message)
 
     async def search_for_match(self, team):
-        logger.info("Español: Searching for ranked {} match".format(config.pokemon_mode))
+        print("[INFO]     Buscando una partida en formato {}...".format(config.pokemon_mode))
         await self.update_team(team)
         message = ["/search {}".format(config.pokemon_mode)]
         # "/search gen8vgc2022"

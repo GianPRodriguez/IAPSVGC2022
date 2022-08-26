@@ -17,7 +17,6 @@ from showdown.battle_bots.helpers import findTeam
 from showdown.battle_bots.helpers import getATBoost
 from showdown.battle_bots.helpers import getDEBoost
 
-logger = logging.getLogger(__name__)
 
 class BattleBot(Battle):
     def __init__(self, *args, **kwargs):
@@ -53,7 +52,7 @@ class BattleBot(Battle):
         namePokemon2 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion2-1].get('details', 'False').partition(",")[0]
         namePokemon3 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion3-1].get('details', 'False').partition(",")[0]
         # Send to Queue
-        print("[INFO]     {}".format([1,namePokemon0, namePokemon1, namePokemon2, namePokemon3, 0, 0]))
+        print("[ACTION]   {}".format([1,namePokemon0, namePokemon1, namePokemon2, namePokemon3, 0, 0]))
         battle.q.put([1,namePokemon0, namePokemon1, namePokemon2, namePokemon3, 0, 0])
         # Return 4 integers
         return eleccion0, eleccion1, eleccion2, eleccion3
@@ -204,7 +203,7 @@ class BattleBot(Battle):
                                             else:
                                                 toMove1 = random.choice([1, 2])
                                         else:
-                                            logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
+                                            print("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
                             else:
                                 # No es posible...
                                 dynamax1 = 0
@@ -224,7 +223,7 @@ class BattleBot(Battle):
                                         else:
                                             toMove1 = random.choice([1, 2])
                                     else:
-                                        logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
+                                        print("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
                         else:
                             # No hay ningún movimiento disponible... algo muy poco probable... Struggle se considera como uno... así que solo queda cambiar, sí o sí debe haber al menos 1
                             moveSwitch1 = 'switch'
@@ -281,7 +280,7 @@ class BattleBot(Battle):
                                             else:
                                                 toMove1 = random.choice([1, 2])
                                         else:
-                                            logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
+                                            print("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
                             else:
                                 # No es posible...
                                 dynamax1 = 0
@@ -301,7 +300,7 @@ class BattleBot(Battle):
                                         else:
                                             toMove1 = random.choice([1, 2])
                                     else:
-                                        logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
+                                        print("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
                         else:
                             # Si no... sí puede hacer un cambio normal
                             switch3F = battle.user.reserved[0].isFainted()
@@ -374,7 +373,7 @@ class BattleBot(Battle):
                                             else:
                                                 toMove2 = random.choice([1, 2])
                                         else:
-                                            logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
+                                            print("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
                             else:
                                 # No es posible...
                                 dynamax2 = 0
@@ -394,7 +393,7 @@ class BattleBot(Battle):
                                         else:
                                             toMove2 = random.choice([1, 2])
                                     else:
-                                        logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
+                                        print("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
                         else:
                             # No hay ningún movimiento disponible... algo muy poco probable... Struggle se considera como uno... así que solo queda cambiar, sí o sí debe haber al menos 1
                             moveSwitch2 = 'switch'
@@ -454,7 +453,7 @@ class BattleBot(Battle):
                                                 else:
                                                     toMove2 = random.choice([1, 2])
                                             else:
-                                                logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
+                                                print("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
                                 else:
                                     # No es posible...
                                     dynamax2 = 0
@@ -474,7 +473,7 @@ class BattleBot(Battle):
                                             else:
                                                 toMove2 = random.choice([1, 2])
                                         else:
-                                            logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
+                                            print("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
                         else:
                             switch3F = battle.user.reserved[0].isFainted()
                             switch4F = battle.user.reserved[1].isFainted()
@@ -516,7 +515,7 @@ class BattleBot(Battle):
             text3 = battle.user.reserved[nMoveSwitch1-3].name
             color3 = '#FFFFFF'
         else:
-            logger.error("NO DEBE ENTRAR ACÁ - moveSwitch1 == 'switch'")
+            print("NO DEBE ENTRAR ACÁ - moveSwitch1 == 'switch'")
         if moveSwitch2 == 'move':
             text2 = await getMoveName(battle, 1, nMoveSwitch2-1, dynamax2)
             text2Aux = text2.lower().replace(' ', '-')
@@ -534,19 +533,19 @@ class BattleBot(Battle):
             text4 = battle.user.reserved[nMoveSwitch2-3].name
             color4 = '#FFFFFF'
         else:
-            logger.error("NO DEBE ENTRAR ACÁ - moveSwitch2 == 'switch'")
+            print("NO DEBE ENTRAR ACÁ - moveSwitch2 == 'switch'")
         # Se envía al Queue la acción
         deltaReward, reward = battle.calculateRewards()
         if deltaReward > 1000:
             color5 = "#325928"
-        elif deltaReward > 0:
-            color5 = "#582831"
-        else:
+        elif deltaReward >= 0:
             color5 = "#565828"
+        else:
+            color5 = "#582831"
         if reward > 0:
             color6 = "#325928"
         else:
             color6 = "#582831"
-        print("[INFO]     {}".format([2, text1, color1, text2, color2, text3, color3, text4, color4, math.floor(deltaReward), color5, math.floor(reward), color6]))
+        print("[ACTION]   {}".format([2, text1, color1, text2, color2, text3, color3, text4, color4, math.floor(deltaReward), color5, math.floor(reward), color6]))
         battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4, math.floor(deltaReward), color5, math.floor(reward), color6])
         return battle, moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2)

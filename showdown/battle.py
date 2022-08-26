@@ -55,7 +55,7 @@ class Battle(ABC):
                 namePkmn = constants.standardName[name.lower()]
             else:
                 namePkmn = name
-            moveDict = self.moveTypes[namePkmn.lower()]
+            moveDict = self.moveTypes[namePkmn.lower().replace(" ", "-")]
             self.opponent.reserved.append(Pokemon(name, -1, True, None, None, None, None, moveDict))
 
     @abstractmethod
@@ -144,12 +144,30 @@ class Battler:
             self.account_name = JSONdict["side"]["name"]
             self.isUser = True
             # Insert Pkmn
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][0]["moves"][0], JSONdict["side"]["pokemon"][0]["moves"][1], JSONdict["side"]["pokemon"][0]["moves"][2], JSONdict["side"]["pokemon"][0]["moves"][3], None))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][1]["moves"][0], JSONdict["side"]["pokemon"][1]["moves"][1], JSONdict["side"]["pokemon"][1]["moves"][2], JSONdict["side"]["pokemon"][1]["moves"][3], None))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][2]["details"].partition(",")[0], JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][2]["moves"][0], JSONdict["side"]["pokemon"][2]["moves"][1], JSONdict["side"]["pokemon"][2]["moves"][2], JSONdict["side"]["pokemon"][2]["moves"][3], None))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][3]["details"].partition(",")[0], JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][3]["moves"][0], JSONdict["side"]["pokemon"][3]["moves"][1], JSONdict["side"]["pokemon"][3]["moves"][2], JSONdict["side"]["pokemon"][3]["moves"][3], None))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][4]["details"].partition(",")[0], JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][4]["moves"][0], JSONdict["side"]["pokemon"][4]["moves"][1], JSONdict["side"]["pokemon"][4]["moves"][2], JSONdict["side"]["pokemon"][4]["moves"][3], None))
-            self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][5]["details"].partition(",")[0], JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][5]["moves"][0], JSONdict["side"]["pokemon"][5]["moves"][1], JSONdict["side"]["pokemon"][5]["moves"][2], JSONdict["side"]["pokemon"][5]["moves"][3], None))
+            if len(JSONdict["side"]["pokemon"][0]["moves"]) > 1:
+                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][0]["moves"][0], JSONdict["side"]["pokemon"][0]["moves"][1], JSONdict["side"]["pokemon"][0]["moves"][2], JSONdict["side"]["pokemon"][0]["moves"][3], None))
+            else:
+                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][0]["moves"][0], None, None, None, None))
+            if len(JSONdict["side"]["pokemon"][1]["moves"]) > 1:
+                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][1]["moves"][0], JSONdict["side"]["pokemon"][1]["moves"][1], JSONdict["side"]["pokemon"][1]["moves"][2], JSONdict["side"]["pokemon"][1]["moves"][3], None))
+            else:
+                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][1]["moves"][0], None, None, None, None))
+            if len(JSONdict["side"]["pokemon"][2]["moves"]) > 1:
+                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][2]["details"].partition(",")[0], JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][2]["moves"][0], JSONdict["side"]["pokemon"][2]["moves"][1], JSONdict["side"]["pokemon"][2]["moves"][2], JSONdict["side"]["pokemon"][2]["moves"][3], None))
+            else:
+                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][2]["details"].partition(",")[0], JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][2]["moves"][0], None, None, None, None))
+            if len(JSONdict["side"]["pokemon"][3]["moves"]) > 1:
+                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][3]["details"].partition(",")[0], JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][3]["moves"][0], JSONdict["side"]["pokemon"][3]["moves"][1], JSONdict["side"]["pokemon"][3]["moves"][2], JSONdict["side"]["pokemon"][3]["moves"][3], None))
+            else:
+                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][3]["details"].partition(",")[0], JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][3]["moves"][0], None, None, None, None))
+            if len(JSONdict["side"]["pokemon"][4]["moves"]) > 1:
+                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][4]["details"].partition(",")[0], JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][4]["moves"][0], JSONdict["side"]["pokemon"][4]["moves"][1], JSONdict["side"]["pokemon"][4]["moves"][2], JSONdict["side"]["pokemon"][4]["moves"][3], None))
+            else:
+                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][4]["details"].partition(",")[0], JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][4]["moves"][0], None, None, None, None))
+            if len(JSONdict["side"]["pokemon"][5]["moves"]) > 1:
+                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][5]["details"].partition(",")[0], JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][5]["moves"][0], JSONdict["side"]["pokemon"][5]["moves"][1], JSONdict["side"]["pokemon"][5]["moves"][2], JSONdict["side"]["pokemon"][5]["moves"][3], None))
+            else:
+                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][5]["details"].partition(",")[0], JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][5]["moves"][0], None, None, None, None))
             # Update Pkmn
             for x in range(len(self.reserved)):
                 self.reserved[x].HPB_battle_base = int(JSONdict["side"]["pokemon"][x]["condition"].partition("/")[0].partition(" ")[0])

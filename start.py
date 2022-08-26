@@ -120,7 +120,9 @@ class Modulo1(tk.Frame):
 			try:
 				# Get Queue
 				self.cola = q.get(0)
-				if self.cola[0] == -1: 									# battle finished
+				if self.cola[0] == 0:
+					self.button1.configure(text='Batalla en Curso')
+				elif self.cola[0] == -1:
 					# Widgets are available
 					self.nameEntry.config(state='normal')
 					self.cbbTeam.config(state='normal')
@@ -130,26 +132,30 @@ class Modulo1(tk.Frame):
 					self.isWinner = self.cola[1]
 					self.nameOpponent = self.cola[2]
 					self.endBattle()
-				elif self.cola[0] == 0: 								# battle in progress
-					self.button1.configure(text='Batalla en Curso')
-				elif self.cola[0] == -2: 								# username incorrect
+				elif self.cola[0] == -2:
 					self.nameEntry.config(state='normal')
 					self.cbbTeam.config(state='normal')
 					self.button1['state'] = tk.NORMAL
 					self.button1.configure(text='Iniciar Batalla')
-					self.textIncorrect = self.canvasBody.create_text(170, 235, text="El oponente ha rechazado la solicitud de batalla", fill="orange", font=('Verdana 10'))
-				elif self.cola[0] == -3: 								# username incorrect
+					self.textIncorrect = self.canvasBody.create_text(170, 235, text="¡El oponente ha rechazado la solicitud de batalla!", fill="orange", font=('Verdana 10'))
+				elif self.cola[0] == -3:
 					self.nameEntry.config(state='normal')
 					self.cbbTeam.config(state='normal')
 					self.button1['state'] = tk.NORMAL
 					self.button1.configure(text='Iniciar Batalla')
 					self.textIncorrect = self.canvasBody.create_text(210, 235, text="¡El equipo del agente no cumple con las reglas del formato!", fill="orange", font=('Verdana 10'))
-				elif self.cola[0] == -4: 								# username incorrect
+				elif self.cola[0] == -4:
 					self.nameEntry.config(state='normal')
 					self.cbbTeam.config(state='normal')
 					self.button1['state'] = tk.NORMAL
 					self.button1.configure(text='Iniciar Batalla')
 					self.textIncorrect = self.canvasBody.create_text(160, 235, text="¡El nombre de usuario no ha sido encontrado!", fill="orange", font=('Verdana 10'))
+				elif self.cola[0] == -5:
+					self.nameEntry.config(state='normal')
+					self.cbbTeam.config(state='normal')
+					self.button1['state'] = tk.NORMAL
+					self.button1.configure(text='Iniciar Batalla')
+					self.textIncorrect = self.canvasBody.create_text(160, 235, text="¡Usuario o contraseña incorrecta!", fill="orange", font=('Verdana 10'))
 			except queue.Empty:
 				# None
 				...
@@ -386,52 +392,8 @@ class Modulo2(tk.Frame):
             self.after(100, lambda: self.monitor())
             try:
             	self.cola = self.q.get(0)
-            	if self.cola[0] == 1:
-            		self.namePokemon = self.cola
-            		# Team Preview
-            		self.text1 = self.namePokemon[1]
-            		self.text2 = self.namePokemon[2]
-            		self.text3 = self.namePokemon[3]
-            		self.text4 = self.namePokemon[4]
-            		# Help is enabled
-            		self.help['state'] = tk.NORMAL
-            		# Update 4 Pkmn
-            		if self.help.config('text')[-1] == 'Ayuda':
-            			self.text1_widget = self.canvasBody.create_text(28+60, 45+20, text="???", fill="black", font=('Verdana 10'))
-            			self.text2_widget = self.canvasBody.create_text(160+60, 45+20, text="???", fill="black", font=('Verdana 10'))
-            			self.text3_widget = self.canvasBody.create_text(28+60, 97+20, text="???", fill="black", font=('Verdana 10'))
-            			self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text="???", fill="black", font=('Verdana 10'))
-            		else:
-            			self.text1_widget = self.canvasBody.create_text(28+60, 45+20, text=self.text1, fill="black", font=('Verdana 10'))
-            			self.text2_widget = self.canvasBody.create_text(160+60, 45+20, text=self.text2, fill="black", font=('Verdana 10'))
-            			self.text3_widget = self.canvasBody.create_text(28+60, 97+20, text=self.text3, fill="black", font=('Verdana 10'))
-            			self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text=self.text4, fill="black", font=('Verdana 10'))
-            		self.text5_widget = self.canvasBody.create_text(28+55, 180+20, text="", fill="black", font=('Verdana 10'))
-            		self.text6_widget = self.canvasBody.create_text(160+55, 180+20, text="", fill="black", font=('Verdana 10'))
-            	elif self.cola[0] == 0:
-            		# New Battle
-            		self.startBattle.configure(text='Batalla en Curso')
-            		# Bye IMG Bar Chart
-            		self.canvasBody.delete(self.barChart_widget)
-            		# Label Team Preview
-            		self.labelMove = tk.Label(self,text="Vista Previa del Equipo", bg = "#283158", font=('Verdana 12 bold'), fg="white")
-            		self.LabelMove_widget = self.canvasBody.create_window(130, 30-5, window=self.labelMove)
-            		# Team Preview Rectangles
-            		self.color1 = '#ffffff'
-            		self.color2 = '#ffffff'
-            		self.color3 = '#ffffff'
-            		self.color4 = '#ffffff'
-            		self.color5 = '#283158'
-            		self.color6 = '#283158'
-            		self.color1_widget = self.canvasBody.create_rectangle(28,50-5,148,90-5, fill=self.color1, outline=self.color1)
-            		self.color2_widget = self.canvasBody.create_rectangle(160,50-5,280,90-5, fill=self.color2, outline=self.color2)
-            		self.color3_widget = self.canvasBody.create_rectangle(28,102-5,148,142-5, fill=self.color3, outline=self.color3)
-            		self.color4_widget = self.canvasBody.create_rectangle(160,102-5,280,142-5, fill=self.color4, outline=self.color4)
-            		self.color5_widget = self.canvasBody.create_rectangle(28,185-5,148,225-5, fill=self.color5, outline=self.color5)
-            		self.color6_widget = self.canvasBody.create_rectangle(160,185-5,280,225-5, fill=self.color6, outline=self.color6)
-            		# GIF Loading
-            		...
-            	elif self.cola[0] == 2:
+            	if self.cola[0] == 2:
+            		print("self.cola[0] == 2:")
             		self.isBattle = True
             		self.canvasBody.delete(self.LabelMove_widget)
             		self.labelMove = tk.Label(self,text="Movimientos", bg = "#283158", font=('Verdana 12 bold'), fg="white")
@@ -457,18 +419,66 @@ class Modulo2(tk.Frame):
             		self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
             		self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
             		# Update text & color
-            		self.text1_widget = self.canvasBody.itemconfig(self.text1_widget, text=self.text1)
-            		self.text2_widget = self.canvasBody.itemconfig(self.text2_widget, text=self.text2)
-            		self.text3_widget = self.canvasBody.itemconfig(self.text3_widget, text=self.text3)
-            		self.text4_widget = self.canvasBody.itemconfig(self.text4_widget, text=self.text4)
-            		self.text5_widget = self.canvasBody.itemconfig(self.text5_widget, text=math.floor(self.text5))
-            		self.text6_widget = self.canvasBody.itemconfig(self.text6_widget, text=math.floor(self.text6))
-            		self.color1_widget = self.canvasBody.itemconfig(self.color1_widget, fill=self.color1, outline=self.color1)
-            		self.color2_widget = self.canvasBody.itemconfig(self.color2_widget, fill=self.color2, outline=self.color2)
-            		self.color3_widget = self.canvasBody.itemconfig(self.color3_widget, fill=self.color3, outline=self.color3)
-            		self.color4_widget = self.canvasBody.itemconfig(self.color4_widget, fill=self.color4, outline=self.color4)
-            		self.color5_widget = self.canvasBody.itemconfig(self.color5_widget, fill=self.color5, outline=self.color5)
-            		self.color6_widget = self.canvasBody.itemconfig(self.color6_widget, fill=self.color6, outline=self.color6)
+            		self.canvasBody.itemconfig(self.text1_widget, text=self.text1)
+            		self.canvasBody.itemconfig(self.text2_widget, text=self.text2)
+            		self.canvasBody.itemconfig(self.text3_widget, text=self.text3)
+            		self.canvasBody.itemconfig(self.text4_widget, text=self.text4)
+            		self.canvasBody.itemconfig(self.text5_widget, text=math.floor(self.text5))
+            		self.canvasBody.itemconfig(self.text6_widget, text=math.floor(self.text6))
+            		self.canvasBody.itemconfig(self.color1_widget, fill=self.color1, outline=self.color1)
+            		self.canvasBody.itemconfig(self.color2_widget, fill=self.color2, outline=self.color2)
+            		self.canvasBody.itemconfig(self.color3_widget, fill=self.color3, outline=self.color3)
+            		self.canvasBody.itemconfig(self.color4_widget, fill=self.color4, outline=self.color4)
+            		self.canvasBody.itemconfig(self.color5_widget, fill=self.color5, outline=self.color5)
+            		self.canvasBody.itemconfig(self.color6_widget, fill=self.color6, outline=self.color6)
+            	elif self.cola[0] == 1:
+            		self.namePokemon = self.cola
+            		# Team Preview
+            		self.text1 = self.namePokemon[1]
+            		self.text2 = self.namePokemon[2]
+            		self.text3 = self.namePokemon[3]
+            		self.text4 = self.namePokemon[4]
+            		# Help is enabled
+            		self.help['state'] = tk.NORMAL
+            		# Update 4 Pkmn
+            		if self.help.config('text')[-1] == 'Ayuda':
+            			self.canvasBody.itemconfig(self.text1_widget, text="???")
+            			self.canvasBody.itemconfig(self.text2_widget, text="???")
+            			self.canvasBody.itemconfig(self.text3_widget, text="???")
+            			self.canvasBody.itemconfig(self.text4_widget, text="???")
+            		else:
+            			self.canvasBody.itemconfig(self.text1_widget, text=self.text1)
+            			self.canvasBody.itemconfig(self.text2_widget, text=self.text2)
+            			self.canvasBody.itemconfig(self.text3_widget, text=self.text3)
+            			self.canvasBody.itemconfig(self.text4_widget, text=self.text4)
+            		self.text5_widget = self.canvasBody.create_text(28+55, 180+20, text="", fill="black", font=('Verdana 10'))
+            		self.text6_widget = self.canvasBody.create_text(160+55, 180+20, text="", fill="black", font=('Verdana 10'))
+            	elif self.cola[0] == 0:
+            		# New Battle
+            		self.startBattle.configure(text='Batalla en Curso')
+            		# Bye IMG Bar Chart
+            		self.canvasBody.delete(self.barChart_widget)
+            		# Label Team Preview
+            		self.labelMove = tk.Label(self,text="Vista Previa del Equipo", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+            		self.LabelMove_widget = self.canvasBody.create_window(130, 30-5, window=self.labelMove)
+            		# Team Preview Rectangles
+            		self.color1 = '#ffffff'
+            		self.color2 = '#ffffff'
+            		self.color3 = '#ffffff'
+            		self.color4 = '#ffffff'
+            		self.color5 = '#283158'
+            		self.color6 = '#283158'
+            		self.color1_widget = self.canvasBody.create_rectangle(28,50-5,148,90-5, fill=self.color1, outline=self.color1)
+            		self.color2_widget = self.canvasBody.create_rectangle(160,50-5,280,90-5, fill=self.color2, outline=self.color2)
+            		self.color3_widget = self.canvasBody.create_rectangle(28,102-5,148,142-5, fill=self.color3, outline=self.color3)
+            		self.color4_widget = self.canvasBody.create_rectangle(160,102-5,280,142-5, fill=self.color4, outline=self.color4)
+            		self.color5_widget = self.canvasBody.create_rectangle(28,185-5,148,225-5, fill=self.color5, outline=self.color5)
+            		self.color6_widget = self.canvasBody.create_rectangle(160,185-5,280,225-5, fill=self.color6, outline=self.color6)
+            		# Cargando...
+            		self.text1_widget = self.canvasBody.create_text(28+60, 45+20, text="Calculando...", fill="black", font=('Verdana 10'))
+            		self.text2_widget = self.canvasBody.create_text(160+60, 45+20, text="Calculando...", fill="black", font=('Verdana 10'))
+            		self.text3_widget = self.canvasBody.create_text(28+60, 97+20, text="Calculando...", fill="black", font=('Verdana 10'))
+            		self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text="Calculando...", fill="black", font=('Verdana 10'))
             	elif self.cola[0] == -1:
             		self.isBattle = False
             		# End Game
@@ -487,7 +497,7 @@ class Modulo2(tk.Frame):
             		self.canvasBody.delete(self.LabelR_widget)
             		self.canvasBody.delete(self.LabelR1_widget)
             		self.canvasBody.delete(self.LabelR2_widget)
-            		self.canvasBody.delete(self.labelMove)
+            		self.canvasBody.delete(self.LabelMove_widget)
             		# Buttons
             		self.help.configure(text='Ayuda')
             		self.startBattle['state'] = tk.NORMAL
@@ -512,8 +522,14 @@ class Modulo2(tk.Frame):
             		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Eduardo Cunha"], width=17)
             		self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
             	elif self.cola[0] == -3:
+            		self.nameEntry.config(state='normal')
+            		self.cbbTeam.config(state='normal')
+            		self.button1['state'] = tk.NORMAL
+            		self.button1.configure(text='Iniciar Batalla')
+            		self.textIncorrect = self.canvasBody.create_text(120, 235, text="¡El equipo del agente no cumple con las reglas del formato!", fill="orange", font=('Verdana 10'))
+            	elif self.cola[0] == -5:
             		# Username or Password Incorrect
-            		self.textIncorrect = self.canvasBody.create_text(120, 235, text="Usuario o contraseña incorrecta", fill="red", font=('Verdana 10'))
+            		self.textIncorrect = self.canvasBody.create_text(120, 235, text="¡Usuario o contraseña incorrecta!", fill="orange", font=('Verdana 10'))
             		self.startBattle['state'] = tk.NORMAL
             		self.startBattle.configure(text='Iniciar Batalla')
             		# Entrada Nombre de Usuario
@@ -529,8 +545,6 @@ class Modulo2(tk.Frame):
             		self.textVar.set('')
             		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Eduardo Cunha"], width=17)
             		self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
-            	else:
-            		...
             except queue.Empty:
             	...
         else:

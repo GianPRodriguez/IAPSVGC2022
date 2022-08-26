@@ -1,18 +1,19 @@
-from multiprocessing import Process, Queue
-import importlib
 import os
-import json
 import io
-import concurrent.futures
-from copy import deepcopy
 import ast
 import sys
-import constants
+import json
 import config
-from showdown.battle_bots.helpers import format_decision
+import importlib
+import constants
+import concurrent.futures
+
+from copy import deepcopy
+from multiprocessing import Process, Queue
 from showdown.battle_modifier import update_battle
 from showdown.battle_modifier import updateEnvironment
 from showdown.websocket_client import PSWebsocketClient
+from showdown.battle_bots.helpers import format_decision
 
 # Retorna un Boolean
 def battle_is_finished(battle_tag, msg):
@@ -39,7 +40,7 @@ async def accion_batalla(battle):
     battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = await battle.action_battle(battle)
     mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
     # Imprimo en CMD la acción
-    print("[WARNING]  {}".format(mensaje))
+    print("[SEND]     {}".format(mensaje))
     # Retorno el mensaje listo para enviarlo al WebSocket
     return battle, mensaje
 
@@ -52,7 +53,7 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
     mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]
     # Imprimo en CMD la acción hecha por el agente
-    print("[WARNING]  {}".format(mensaje))
+    print("[SEND]     {}".format(mensaje))
     # Se envía la acción al WebSocket
     if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
         # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
@@ -73,15 +74,10 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q)
         # msg = ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw|init|battle|title|PopplioPeru98 vs. Braindeadmeta|j|☆PopplioPeru98"
         split_msg = msg.split('|')
         first_msg = split_msg[0]
-        print('mensaje recibido')
         if len(split_msg) == 5:
             if split_msg[4].startswith("/nonotify"):    # Rechazo
                 q.put([-2])
                 print("[ERROR]    El oponente ha rechazado la solicitud de batalla")
-                sys.exit()
-            if split_msg[4].startswith("/nonotify"):    # Rechazo
-                q.put([-5])
-                #print("[ERROR]    ¡Inicio de sesión fallido!")
                 sys.exit()
         if msg.startswith("|popup|The user"):
             q.put([-4])
@@ -89,7 +85,7 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q)
             sys.exit()
         if msg.startswith("|popup|Your team"):
             q.put([-3])
-            print("[ERROR]    ¡El equipo del agente inteligente no cumple con las reglas del formato!")
+            print("[ERROR]    ¡El equipo del agente no cumple con las reglas del formato!")
             sys.exit()
         # first_msg = ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
         if 'battle' in first_msg:
@@ -125,6 +121,7 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, 
             battle = battle_module.BattleBot(battle_tag)
             battle.q = q
             battle.q.put([0])
+            print("[INFO]     ¡Batalla en Curso!")
             # Actualización
             battle.opponent.id = opponent_id
             # battle.opponent.id = "p2"
