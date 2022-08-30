@@ -15,6 +15,7 @@ def getMoveColor(move):
     else:
         return '#FFFFFF'
 
+
 def getMoveTarget(battle, textAux, toMove):
     if textAux in constants.maxMoves:
         textAux = constants.maxMoves[textAux]
@@ -46,7 +47,7 @@ def getMoveTarget(battle, textAux, toMove):
         return 'Nada'
 
 def getPkmnInfo(namePkmn):
-    url = urlPokeAPI + 'pokemon/' + namePkmn.lower().replace(' ', '-')
+    url = urlPokeAPI + 'pokemon/' + namePkmn.replace(' ', '-')
     response = requests.get(url)
     if response.status_code == 200:
         payload = response.json()

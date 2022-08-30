@@ -45,7 +45,6 @@ class Battle(ABC):
         # The rqid is obtained
         self.rqid = user_json[constants.RQID]
         # Insert Pkmn Opponent
-
         for pkmn_string in opponent_pokemon:
             # opponent_pokemon = ["Lapras, L50, M","Kyogre, L50","Zacian-*, L50","Tapu Fini, L50","Zapdos, L50","Mimikyu, L50, F"]
             # pkmn_string = "Lapras, L50, M"
@@ -54,9 +53,9 @@ class Battle(ABC):
             if name.lower() in constants.standardName:
                 namePkmn = constants.standardName[name.lower()]
             else:
-                namePkmn = name
+                namePkmn = name.lower()
             moveDict = self.moveTypes[namePkmn.lower().replace(" ", "-")]
-            self.opponent.reserved.append(Pokemon(name, -1, True, None, None, None, None, moveDict))
+            self.opponent.reserved.append(Pokemon(namePkmn, -1, True, None, None, None, None, moveDict))
 
     @abstractmethod
     async def action_team_preview(self, battle):
@@ -137,6 +136,13 @@ class Battler:
         self.isUser = False
         self.opponentPkmnConfirmed = 0
 
+    def getDamageClass(self, move):
+        damageClass = json.loads(open('C:/Users/Gian Pierre/Documents/showdown/showdown-master-doubles/test_showdown_master_doubles/API/JSONs/moves.json').read())[move]['category'].lower()
+        if damageClass != 'status':
+            return move
+        else:
+            return None
+
     def updatePkmnUser(self, JSONdict, first_turn):
         if (first_turn):
             # Update data
@@ -144,30 +150,60 @@ class Battler:
             self.account_name = JSONdict["side"]["name"]
             self.isUser = True
             # Insert Pkmn
+            name = JSONdict["side"]["pokemon"][0]["details"].partition(",")[0]
+            if name.lower() in constants.standardName:
+                namePkmn = constants.standardName[name.lower()]
+            else:
+                namePkmn = name.lower()
             if len(JSONdict["side"]["pokemon"][0]["moves"]) > 1:
-                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][0]["moves"][0], JSONdict["side"]["pokemon"][0]["moves"][1], JSONdict["side"]["pokemon"][0]["moves"][2], JSONdict["side"]["pokemon"][0]["moves"][3], None))
+                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][0]["moves"][0].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][0]["moves"][1].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][0]["moves"][2].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][0]["moves"][3].lower().replace(' ', '-')), None))
             else:
-                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][0]["details"].partition(",")[0], JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][0]["moves"][0], None, None, None, None))
+                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][0]["moves"][0].lower().replace(' ', '-')), None, None, None, None))
+            name = JSONdict["side"]["pokemon"][1]["details"].partition(",")[0]
+            if name.lower() in constants.standardName:
+                namePkmn = constants.standardName[name.lower()]
+            else:
+                namePkmn = name.lower()
             if len(JSONdict["side"]["pokemon"][1]["moves"]) > 1:
-                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][1]["moves"][0], JSONdict["side"]["pokemon"][1]["moves"][1], JSONdict["side"]["pokemon"][1]["moves"][2], JSONdict["side"]["pokemon"][1]["moves"][3], None))
+                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][1]["moves"][0].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][1]["moves"][1].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][1]["moves"][2].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][1]["moves"][3].lower().replace(' ', '-')), None))
             else:
-                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][1]["details"].partition(",")[0], JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][1]["moves"][0], None, None, None, None))
+                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][1]["moves"][0].lower().replace(' ', '-')), None, None, None, None))
+            name = JSONdict["side"]["pokemon"][2]["details"].partition(",")[0]
+            if name.lower() in constants.standardName:
+                namePkmn = constants.standardName[name.lower()]
+            else:
+                namePkmn = name.lower()
             if len(JSONdict["side"]["pokemon"][2]["moves"]) > 1:
-                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][2]["details"].partition(",")[0], JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][2]["moves"][0], JSONdict["side"]["pokemon"][2]["moves"][1], JSONdict["side"]["pokemon"][2]["moves"][2], JSONdict["side"]["pokemon"][2]["moves"][3], None))
+                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][2]["moves"][0].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][2]["moves"][1].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][2]["moves"][2].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][2]["moves"][3].lower().replace(' ', '-')), None))
             else:
-                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][2]["details"].partition(",")[0], JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][2]["moves"][0], None, None, None, None))
+                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][2]["moves"][0].lower().replace(' ', '-')), None, None, None, None))
+            name = JSONdict["side"]["pokemon"][3]["details"].partition(",")[0]
+            if name.lower() in constants.standardName:
+                namePkmn = constants.standardName[name.lower()]
+            else:
+                namePkmn = name.lower()
             if len(JSONdict["side"]["pokemon"][3]["moves"]) > 1:
-                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][3]["details"].partition(",")[0], JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][3]["moves"][0], JSONdict["side"]["pokemon"][3]["moves"][1], JSONdict["side"]["pokemon"][3]["moves"][2], JSONdict["side"]["pokemon"][3]["moves"][3], None))
+                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][3]["moves"][0].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][3]["moves"][1].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][3]["moves"][2].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][3]["moves"][3].lower().replace(' ', '-')), None))
             else:
-                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][3]["details"].partition(",")[0], JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][3]["moves"][0], None, None, None, None))
+                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][3]["moves"][0].lower().replace(' ', '-')), None, None, None, None))
+            name = JSONdict["side"]["pokemon"][4]["details"].partition(",")[0]
+            if name.lower() in constants.standardName:
+                namePkmn = constants.standardName[name.lower()]
+            else:
+                namePkmn = name.lower()
             if len(JSONdict["side"]["pokemon"][4]["moves"]) > 1:
-                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][4]["details"].partition(",")[0], JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][4]["moves"][0], JSONdict["side"]["pokemon"][4]["moves"][1], JSONdict["side"]["pokemon"][4]["moves"][2], JSONdict["side"]["pokemon"][4]["moves"][3], None))
+                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][4]["moves"][0].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][4]["moves"][1].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][4]["moves"][2].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][4]["moves"][3].lower().replace(' ', '-')), None))
             else:
-                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][4]["details"].partition(",")[0], JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][4]["moves"][0], None, None, None, None))
+                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][4]["moves"][0].lower().replace(' ', '-')), None, None, None, None))
+            name = JSONdict["side"]["pokemon"][5]["details"].partition(",")[0]
+            if name.lower() in constants.standardName:
+                namePkmn = constants.standardName[name.lower()]
+            else:
+                namePkmn = name.lower()
             if len(JSONdict["side"]["pokemon"][5]["moves"]) > 1:
-                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][5]["details"].partition(",")[0], JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][5]["moves"][0], JSONdict["side"]["pokemon"][5]["moves"][1], JSONdict["side"]["pokemon"][5]["moves"][2], JSONdict["side"]["pokemon"][5]["moves"][3], None))
+                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][5]["moves"][0].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][5]["moves"][1].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][5]["moves"][2].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][5]["moves"][3].lower().replace(' ', '-')), None))
             else:
-                self.reserved.append(Pokemon(JSONdict["side"]["pokemon"][5]["details"].partition(",")[0], JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2],False, JSONdict["side"]["pokemon"][5]["moves"][0], None, None, None, None))
+                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][5]["moves"][0].lower().replace(' ', '-')), None, None, None, None))
             # Update Pkmn
             for x in range(len(self.reserved)):
                 self.reserved[x].HPB_battle_base = int(JSONdict["side"]["pokemon"][x]["condition"].partition("/")[0].partition(" ")[0])
@@ -182,9 +218,26 @@ class Battler:
                 self.reserved[x].VEB = int(JSONdict["side"]["pokemon"][x]["stats"]["spe"])
         else:
             if len(self.reserved) == 4:
-                for pkmn in self.reserved:
-                    if pkmn.name != JSONdict["side"]["pokemon"][2]["details"].partition(",")[0] and pkmn.name != JSONdict["side"]["pokemon"][3]["details"].partition(",")[0]:
-                        self.reserved.remove(pkmn)
+                name1 = self.reserved[0].name
+                name2 = self.reserved[1].name
+                name3 = self.reserved[2].name
+                name4 = self.reserved[3].name
+                if JSONdict["side"]["pokemon"][2]["details"].partition(",")[0].lower().replace(" ", "-") in constants.standardName:
+                    auxPkmname1 = constants.standardName[JSONdict["side"]["pokemon"][2]["details"].partition(",")[0].lower().replace(" ", "-")]
+                else:
+                    auxPkmname1 = JSONdict["side"]["pokemon"][2]["details"].partition(",")[0].lower().replace(" ", "-")
+                if JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-") in constants.standardName:
+                    auxPkmname2 = constants.standardName[JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-")]
+                else:
+                    auxPkmname2 = JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-")                
+                if name1 != auxPkmname1 and name1 != auxPkmname2:
+                    self.reserved.pop(0)
+                if name2 != auxPkmname1 and name2 != auxPkmname2:
+                    self.reserved.pop(abs(3-len(self.reserved)))
+                if name3 != auxPkmname1 and name3 != auxPkmname2:
+                    self.reserved.pop(abs(2-len(self.reserved)))
+                if name4 != auxPkmname1 and name4 != auxPkmname2:
+                    self.reserved.pop(abs(1-len(self.reserved)))
             # Update Pkmn - Turno 2 en adelante... HPB
             self.active1.HPB = int(JSONdict["side"]["pokemon"][0]["condition"].partition("/")[0].partition(" ")[0])
             self.active2.HPB = int(JSONdict["side"]["pokemon"][1]["condition"].partition("/")[0].partition(" ")[0])
@@ -242,7 +295,7 @@ class Pokemon:
         self.status = None                      # ['slp', 'brn', 'frz', 'par', 'psn']
         self.volatile_statuses = []             # dynamax, moveyawn
         self.boosts = defaultdict(lambda: 0)
-        if name.startswith('Zacian') or name.startswith('Zamazenta') or name.startswith('Eternatus'):
+        if name.startswith('zacian') or name.startswith('zamazenta') or name.startswith('eternatus'):
             self.can_dynamax = False
         else:
             self.can_dynamax = True
@@ -272,9 +325,12 @@ class Pokemon:
         self.moveType = defaultdict(lambda: 0)
         if move1 is not None:
             self.moveType[self.findMoveType(move1)] = 1
-            self.moveType[self.findMoveType(move2)] = 1
-            self.moveType[self.findMoveType(move3)] = 1
-            self.moveType[self.findMoveType(move4)] = 1
+            if move2 is not None:
+                self.moveType[self.findMoveType(move2)] = 1
+            if move3 is not None:
+                self.moveType[self.findMoveType(move3)] = 1
+            if move4 is not None:
+                self.moveType[self.findMoveType(move4)] = 1
         else:
             self.moveType = moveDict
         self.getStatsBattle(isOpponent)
@@ -328,7 +384,7 @@ class Pokemon:
         if self.name.lower() in constants.standardName:
             namePkmn = constants.standardName[self.name.lower()]
         else:
-            namePkmn = self.name
+            namePkmn = self.name.lower()
         self.type1, self.type2, HP_base, ATK_base, DEF_base, SPA_base, SPD_base, VEL_base = getPkmnInfo(namePkmn)
         if isOpponent:
             # Stats Battle

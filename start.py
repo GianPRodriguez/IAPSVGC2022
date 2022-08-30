@@ -359,6 +359,13 @@ class Modulo2(tk.Frame):
     	self.infoTK = ImageTk.PhotoImage(self.infoResized)
     	self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Análisis.pdf"'), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
     	self.buttonInfo_widget = self.canvasHead.create_window(28, 28, window=self.buttonInfo)
+    	# Close Windows
+    	self.activeClose = 0
+    	if self.activeClose == 0:
+    		self.activeClose = 1
+    		self.auxController.protocol('WM_DELETE_WINDOW', self.closeWindows)
+    	else:
+    		self.auxController.destroy()
 
     def IniciarBatalla(self):
     	if self.textVar.get() == '':
@@ -481,51 +488,15 @@ class Modulo2(tk.Frame):
             		self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text="Calculando...", fill="black", font=('Verdana 10'))
             	elif self.cola[0] == -1:
             		self.isBattle = False
-            		# End Game
-            		self.canvasBody.delete(self.text1_widget)
-            		self.canvasBody.delete(self.text2_widget)
-            		self.canvasBody.delete(self.text3_widget)
-            		self.canvasBody.delete(self.text4_widget)
-            		self.canvasBody.delete(self.text5_widget)
-            		self.canvasBody.delete(self.text6_widget)
-            		self.canvasBody.delete(self.color1_widget)
-            		self.canvasBody.delete(self.color2_widget)
-            		self.canvasBody.delete(self.color3_widget)
-            		self.canvasBody.delete(self.color4_widget)
-            		self.canvasBody.delete(self.color5_widget)
-            		self.canvasBody.delete(self.color6_widget)
-            		self.canvasBody.delete(self.LabelR_widget)
-            		self.canvasBody.delete(self.LabelR1_widget)
-            		self.canvasBody.delete(self.LabelR2_widget)
-            		self.canvasBody.delete(self.LabelMove_widget)
-            		# Buttons
-            		self.help.configure(text='Ayuda')
-            		self.startBattle['state'] = tk.NORMAL
-            		self.startBattle.configure(text='Iniciar Batalla')
-            		# IMG Bar Chart
-            		self.barChartPNG = Image.open("IMGs/barChart.png")
-            		self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
-            		self.barChartResized = self.newBarChartPNG.resize((200,200), Image.Resampling.LANCZOS)
-            		self.barChartTK = ImageTk.PhotoImage(self.barChartResized)
-            		self.barChart_widget = self.canvasBody.create_image(160,125,image=self.barChartTK)
-            		# Entrada Nombre de Usuario
-            		self.strName = tk.StringVar()
-            		self.nameEntry = ttk.Entry(self, textvariable=self.strName, width=20)
-            		self.strName_widget = self.canvasBody.create_window(400, 40, window=self.nameEntry)
-            		# Entrada Contraseña
-            		self.strPassword = tk.StringVar()
-            		self.passwordEntry = ttk.Entry(self, show="*", textvariable=self.strPassword, width=20)
-            		self.strPassword_widget = self.canvasBody.create_window(400, 90, window=self.passwordEntry)
-            		# ListBox Equipo
-            		self.textVar = tk.StringVar(self)
-            		self.textVar.set('')
-            		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Eduardo Cunha"], width=17)
-            		self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
+            		# Battle results
+            		self.isWinner = self.cola[1]
+            		self.nameOpponent = self.cola[2]
+            		self.endBattle()
             	elif self.cola[0] == -3:
             		self.nameEntry.config(state='normal')
             		self.cbbTeam.config(state='normal')
-            		self.button1['state'] = tk.NORMAL
-            		self.button1.configure(text='Iniciar Batalla')
+            		self.startBattle['state'] = tk.NORMAL
+            		self.startBattle.configure(text='Iniciar Batalla')
             		self.textIncorrect = self.canvasBody.create_text(120, 235, text="¡El equipo del agente no cumple con las reglas del formato!", fill="orange", font=('Verdana 10'))
             	elif self.cola[0] == -5:
             		# Username or Password Incorrect
@@ -581,6 +552,179 @@ class Modulo2(tk.Frame):
 	    		self.canvasBody.itemconfig(self.color5_widget, fill="#ffffff", outline="#ffffff")
 	    		self.canvasBody.itemconfig(self.color6_widget, fill="#ffffff", outline="#ffffff")
     		self.help.configure(text='Ayuda')
+
+    def closeWindows(self):
+    	if self.startBattle.config('text')[-1] != "Batalla en Curso":
+    		self.exitWindows()
+    	else:
+    		self.isCloseWindows = True
+    		# Purple background
+    		self.rectangle1 = self.canvasBody.create_rectangle(0,0,500,259, fill='#4e2858')
+    		# Hide widgets
+    		self.canvasBody.delete(self.LabelR_widget)
+    		self.canvasBody.delete(self.LabelR1_widget)
+    		self.canvasBody.delete(self.LabelR2_widget)
+    		self.canvasBody.delete(self.startBattle_widget)
+    		self.canvasBody.delete(self.listbox_widget)
+    		self.canvasBody.delete(self.LabelUsername_widget)
+    		self.canvasBody.delete(self.LabelTeam_widget)
+    		self.canvasBody.delete(self.strName_widget)
+    		self.canvasBody.delete(self.LabelPassword_widget)
+    		self.canvasBody.delete(self.strPassword_widget)
+    		self.canvasBody.delete(self.help_widget)
+    		self.canvasBody.delete(self.LabelMove_widget)
+    		# Emoji
+    		self.emoji = Image.open("close.png")
+    		self.emojiPNG = self.emoji.convert(mode="RGBA")
+    		self.emojiResized_image = self.emojiPNG.resize((80,80), Image.Resampling.LANCZOS)
+    		self.emojiTK = ImageTk.PhotoImage(self.emojiResized_image)
+    		self.emoji_widget = self.canvasBody.create_image(420,85,image=self.emojiTK)
+    		# Text
+    		self.textClose_widget1 = self.canvasBody.create_text(185, 75, text="¡La batalla está en curso!", fill="white", font=('Verdana 14'))
+    		self.textClose_widget2 = self.canvasBody.create_text(185, 100, text="¿Está seguro de salir?", fill="white", font=('Verdana 11'))
+    		# Button Sí
+    		self.buttonYes = tk.Button(self, text='Sí', anchor="center")
+    		self.buttonYes.configure(width = 23, height = 2, relief = tk.FLAT, command= self.exitWindows)
+    		self.buttonYes_widget = self.canvasBody.create_window(150, 180, window=self.buttonYes)
+    		# Button No
+    		self.buttonNo = tk.Button(self, text='No', anchor="center")
+    		self.buttonNo.configure(width = 23, height = 2, relief = tk.FLAT, command= self.screenNormalClose)
+    		self.buttonNo_widget = self.canvasBody.create_window(350, 180, window=self.buttonNo)
+    		self.auxController.protocol('WM_DELETE_WINDOW', self.exitWindows)
+
+    def exitWindows(self):
+    	#self.p.join()
+    	os._exit(0)
+    	self.auxController.destroy()
+
+    def endBattle(self):
+    	# Hide widgets
+    	self.canvasBody.delete(self.LabelR_widget)
+    	self.canvasBody.delete(self.LabelR1_widget)
+    	self.canvasBody.delete(self.LabelR2_widget)
+    	self.canvasBody.delete(self.startBattle_widget)
+    	self.canvasBody.delete(self.listbox_widget)
+    	self.canvasBody.delete(self.LabelUsername_widget)
+    	self.canvasBody.delete(self.LabelTeam_widget)
+    	self.canvasBody.delete(self.strName_widget)
+    	self.canvasBody.delete(self.LabelPassword_widget)
+    	self.canvasBody.delete(self.strPassword_widget)
+    	self.canvasBody.delete(self.help_widget)
+    	self.canvasBody.delete(self.LabelMove_widget)
+    	# Emoji
+    	if self.isWinner:
+    		self.emoji = Image.open("winner.png")
+    		self.rectangle1 = self.canvasBody.create_rectangle(0,0,500,259, fill='#325928')
+    		# Text
+    		self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="¡Felicidades!", fill="white", font=('Verdana 14'))
+    		self.textWinner = "Has ganado la batalla contra " + self.nameOpponent
+    		self.textWinner_widget2 = self.canvasBody.create_text(185, 100, text=self.textWinner, fill="white", font=('Verdana 11'))
+    	else:
+    		self.emoji = Image.open("noWinner.png")
+    		self.rectangle1 = self.canvasBody.create_rectangle(0,0,500,259, fill='#582831')
+    		# Text
+    		self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="Has perdido :(", fill="white", font=('Verdana 14'))
+    		self.textWinner_widget2 = self.canvasBody.create_text(185, 100, text="Suerte para la próxima", fill="white", font=('Verdana 11'))
+    	self.emojiPNG = self.emoji.convert(mode="RGBA")
+    	self.emojiResized_image = self.emojiPNG.resize((80,80), Image.Resampling.LANCZOS)
+    	self.emojiTK = ImageTk.PhotoImage(self.emojiResized_image)
+    	self.emoji_widget = self.canvasBody.create_image(420,85,image=self.emojiTK)
+    	# Button
+    	self.buttonHide = tk.Button(self, text='¡Seguir jugando!', anchor="center")
+    	self.buttonHide.configure(width = 23, height = 2, relief = tk.FLAT, command= self.screenNormalEnd)
+    	self.buttonHide_widget = self.canvasBody.create_window(250, 180, window=self.buttonHide)
+
+    def screenNormalClose(self):
+    	self.canvasBody.delete(self.buttonYes_widget)
+    	self.canvasBody.delete(self.buttonNo_widget)
+    	self.canvasBody.delete(self.textClose_widget1)
+    	self.canvasBody.delete(self.textClose_widget2)
+    	self.canvasBody.delete(self.emoji_widget)
+    	self.canvasBody.delete(self.rectangle1)
+    	self.screenNormal()
+
+    def screenNormalEnd(self):
+    	# delete widgets
+    	self.canvasBody.delete(self.buttonHide_widget)
+    	self.canvasBody.delete(self.textWinner_widget1)
+    	self.canvasBody.delete(self.textWinner_widget2)
+    	self.canvasBody.delete(self.emoji_widget)
+    	self.canvasBody.delete(self.rectangle1)
+    	self.canvasBody.delete(self.color1_widget)
+    	self.canvasBody.delete(self.color2_widget)
+    	self.canvasBody.delete(self.color3_widget)
+    	self.canvasBody.delete(self.color4_widget)
+    	self.canvasBody.delete(self.color5_widget)
+    	self.canvasBody.delete(self.color6_widget)
+    	self.canvasBody.delete(self.text1_widget)
+    	self.canvasBody.delete(self.text2_widget)
+    	self.canvasBody.delete(self.text3_widget)
+    	self.canvasBody.delete(self.text4_widget)
+    	self.canvasBody.delete(self.text5_widget)
+    	self.canvasBody.delete(self.text6_widget)
+    	# return texts
+
+    	self.screenNormal()
+
+    def screenNormal(self):
+    	# Botón Iniciar Batalla
+    	self.startBattle = tk.Button(self, text='Iniciar Batalla', anchor="center", command= self.IniciarBatalla)
+    	self.startBattle.configure(width = 16, height = 1, relief = tk.FLAT)
+    	self.startBattle_widget = self.canvasBody.create_window(400, 225, window=self.startBattle)
+    	# Botón Ayuda
+    	self.help = tk.Button(self, text='Ayuda', anchor="center", command= self.MostrarOcultarDatos)
+    	self.help.configure(width = 16, height = 1, relief = tk.FLAT)
+    	self.help_widget = self.canvasBody.create_window(400, 185, window=self.help)
+    	self.help.config(state='disabled')
+    	# Label Nombre de Usuario
+    	self.labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelUsername_widget = self.canvasBody.create_window(400, 15, window=self.labelUsername)
+    	# Label Password
+    	self.labelPassword = tk.Label(self,text="Contraseña", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelPassword_widget = self.canvasBody.create_window(400, 65, window=self.labelPassword)
+    	# Label Equipo
+    	self.labelTeam = tk.Label(self,text="Equipo", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelTeam_widget = self.canvasBody.create_window(400, 115, window=self.labelTeam)
+    	# Entrada Nombre de Usuario
+    	self.strName = tk.StringVar()
+    	self.nameEntry = ttk.Entry(self, textvariable=self.strName, width=20)
+    	self.strName_widget = self.canvasBody.create_window(400, 40, window=self.nameEntry)
+    	# Entrada Contraseña
+    	self.strPassword = tk.StringVar()
+    	self.passwordEntry = ttk.Entry(self, show="*", textvariable=self.strPassword, width=20)
+    	self.strPassword_widget = self.canvasBody.create_window(400, 90, window=self.passwordEntry)
+    	# ListBox Equipo
+    	self.textVar = tk.StringVar(self)
+    	self.textVar.set('')
+    	self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Eduardo Cunha"], width=17)
+    	self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
+    	# IMG Exit
+    	self.exitPNG = Image.open("IMGs/exit.png")
+    	self.newExitPNG = self.exitPNG.convert(mode="RGBA")
+    	self.exitResized = self.newExitPNG.resize((40,40), Image.Resampling.LANCZOS)
+    	self.exitTK = ImageTk.PhotoImage(self.exitResized)
+    	self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: controller.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+    	self.buttonExit_widget = self.canvasHead.create_window(470, 28, window=self.buttonExit)
+    	# IMG Bar Chart
+    	self.barChartPNG = Image.open("IMGs/barChart.png")
+    	self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
+    	self.barChartResized = self.newBarChartPNG.resize((200,200), Image.Resampling.LANCZOS)
+    	self.barChartTK = ImageTk.PhotoImage(self.barChartResized)
+    	self.barChart_widget = self.canvasBody.create_image(160,125,image=self.barChartTK)
+    	# IMG Info
+    	self.infoPNG = Image.open("IMGs/info.png")
+    	self.newInfoPNG = self.infoPNG.convert(mode="RGBA")
+    	self.infoResized = self.newInfoPNG.resize((38,38), Image.Resampling.LANCZOS)
+    	self.infoTK = ImageTk.PhotoImage(self.infoResized)
+    	self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Análisis.pdf"'), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+    	self.buttonInfo_widget = self.canvasHead.create_window(28, 28, window=self.buttonInfo)
+    	# Close Windows
+    	self.activeClose = 0
+    	if self.activeClose == 0:
+    		self.activeClose = 1
+    		self.auxController.protocol('WM_DELETE_WINDOW', self.closeWindows)
+    	else:
+    		self.auxController.destroy()
 
 class Modulo3(tk.Frame):
     def __init__(self, parent, controller):

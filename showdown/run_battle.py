@@ -34,13 +34,9 @@ async def accion_batalla(battle):
         battle = await updateEnvironment(battle)
         # Los imprimo...
         battle.imprimir()
-    # Actualiza las estadísticas de los Pkmn del usuario y oponente
-    #await battle.updateStatistics()
     # Se define la mejor acción
     battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = await battle.action_battle(battle)
     mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
-    # Imprimo en CMD la acción
-    print("[SEND]     {}".format(mensaje))
     # Retorno el mensaje listo para enviarlo al WebSocket
     return battle, mensaje
 
@@ -52,10 +48,10 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
     # Se prepara el String que se va a enviar al WebSocket
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
     mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]
-    # Imprimo en CMD la acción hecha por el agente
-    print("[SEND]     {}".format(mensaje))
     # Se envía la acción al WebSocket
     if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
+        # Imprimo en CMD la acción hecha por el agente
+        print("[SEND]     {}".format(mensaje))
         # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
         battle.user.active1 = battle.user.reserved[eleccion0-1]
         battle.user.active2 = battle.user.reserved[eleccion1-1]
@@ -196,7 +192,10 @@ async def pokemon_battle(ps_websocket_client, q, botMode):
             if constants.WIN_STRING in mensaje:
                 # Se obtiene el NOMBRE del ganador
                 winner = mensaje.split(constants.WIN_STRING)[-1].split('\n')[0].strip(" ")
-                q.put([-1,winner==battle.opponent.account_name,battle.user.account_name,battle.opponent.account_name])
+                if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
+                    q.put([-1,winner==battle.opponent.account_name,battle.user.account_name,battle.opponent.account_name])
+                else:
+                    q.put([-1,winner!=battle.opponent.account_name,battle.user.account_name,battle.opponent.account_name])
             else:
                 winner = None
             # Y lo imprimo
@@ -217,4 +216,6 @@ async def pokemon_battle(ps_websocket_client, q, botMode):
                 battle, mensaje = await accion_batalla(battle)
                 q = battle.q
                 if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
+                    # Imprimo en CMD la acción
+                    print("[SEND]     {}".format(mensaje))
                     await ps_websocket_client.send_message(battle.battle_tag, mensaje)

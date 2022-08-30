@@ -67,17 +67,22 @@ def switch_or_drag(battle, split_msg):
     # |switch|POKEMON|DETAILS|HP STATUS or |drag|POKEMON|DETAILS|HP STATUS
     # |switch|p1a: Incineroar|Incineroar, L50, M|190/202
     # ¿El cambio es hecho por el opponente?
+    name = split_msg[3].partition(",")[0]
+    if name.lower() in constants.standardName:
+        namePkmn = constants.standardName[name.lower()]
+    else:
+        namePkmn = name.lower()
     if is_opponent(battle, split_msg):
         if split_msg[2].startswith("p2"):
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
                 contador = 0
                 for pkmn in battle.opponent.reserved:
-                    if split_msg[3].partition(",")[0].startswith(pkmn.name[:-1]):
+                    if namePkmn == pkmn.name:
                         pkmnAux = deepcopy(battle.opponent.active1)
                         battle.opponent.active1 = deepcopy(pkmn)
                         # Inicio - Actualizacion de Stats
-                        battle.opponent.active1.name = split_msg[3].partition(",")[0]
+                        battle.opponent.active1.name = namePkmn
                         battle.opponent.active1.volatile_statuses = []
                         battle.opponent.active1.boosts = defaultdict(lambda: 0)
                         if battle.opponent.active1.opponent_confirmed != True:
@@ -108,11 +113,11 @@ def switch_or_drag(battle, split_msg):
             else:
                 contador = 0
                 for pkmn in battle.opponent.reserved:
-                    if split_msg[3].partition(",")[0].startswith(pkmn.name[:-1]):
+                    if namePkmn == pkmn.name:
                         pkmnAux = deepcopy(battle.opponent.active2)
                         battle.opponent.active2 = deepcopy(pkmn)
                         # Inicio - Actualizacion de Stats
-                        battle.opponent.active2.name = split_msg[3].partition(",")[0]
+                        battle.opponent.active2.name = namePkmn
                         battle.opponent.active2.volatile_statuses = []
                         battle.opponent.active2.boosts = defaultdict(lambda: 0)
                         if battle.opponent.active2.opponent_confirmed != True:
@@ -145,11 +150,11 @@ def switch_or_drag(battle, split_msg):
             if split_msg[2].startswith("p1a"):
                 contador = 0
                 for pkmn in battle.opponent.reserved:
-                    if split_msg[3].partition(",")[0].startswith(pkmn.name[:-1]):
+                    if namePkmn == pkmn.name:
                         pkmnAux = deepcopy(battle.opponent.active1)
                         battle.opponent.active1 = deepcopy(pkmn)
                         # Inicio - Actualizacion de Stats
-                        battle.opponent.active1.name = split_msg[3].partition(",")[0]
+                        battle.opponent.active1.name = namePkmn
                         battle.opponent.active1.volatile_statuses = []
                         battle.opponent.active1.boosts = defaultdict(lambda: 0)
                         if battle.opponent.active1.opponent_confirmed != True:
@@ -180,11 +185,11 @@ def switch_or_drag(battle, split_msg):
             else:
                 contador = 0
                 for pkmn in battle.opponent.reserved:
-                    if split_msg[3].partition(",")[0].startswith(pkmn.name[:-1]):
+                    if namePkmn == pkmn.name:
                         pkmnAux = deepcopy(battle.opponent.active2)
                         battle.opponent.active2 = deepcopy(pkmn)
                         # Inicio - Actualizacion de Stats
-                        battle.opponent.active2.name = split_msg[3].partition(",")[0]
+                        battle.opponent.active2.name = namePkmn
                         battle.opponent.active2.volatile_statuses = []
                         battle.opponent.active2.boosts = defaultdict(lambda: 0)
                         if battle.opponent.active2.opponent_confirmed != True:
@@ -218,14 +223,14 @@ def switch_or_drag(battle, split_msg):
             if split_msg[2].startswith("p1a"):
                 contador = 0
                 for pkmn in battle.user.reserved:
-                    if split_msg[3].partition(",")[0].startswith(pkmn.name[:-1]):
+                    if namePkmn == pkmn.name:
                         aux = deepcopy(battle.user.active1)
                         battle.user.active1 = deepcopy(pkmn)
                         # Inicio - Limpieza de Stats
                         battle.user.active1.volatile_statuses = []
                         battle.user.active1.boosts = defaultdict(lambda: 0)
                         # Fin - Limpieza de Stats
-                        battle.user.active1.name = split_msg[3].partition(",")[0]
+                        battle.user.active1.name = namePkmn
                         pkmn = deepcopy(aux)
                         # logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active1.name) + ": p1a")
                         # Intercambio en Reservados
@@ -237,14 +242,14 @@ def switch_or_drag(battle, split_msg):
             else:
                 contador = 0
                 for pkmn in battle.user.reserved:
-                    if split_msg[3].partition(",")[0].startswith(pkmn.name[:-1]):
+                    if namePkmn == pkmn.name:
                         aux = deepcopy(battle.user.active2)
                         battle.user.active2 = deepcopy(pkmn)
                         # Inicio - Limpieza de Stats
                         battle.user.active2.volatile_statuses = []
                         battle.user.active2.boosts = defaultdict(lambda: 0)
                         # Fin - Limpieza de Stats
-                        battle.user.active2.name = split_msg[3].partition(",")[0]
+                        battle.user.active2.name = namePkmn
                         pkmn = deepcopy(aux)
                         # logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active2.name) + ": p1b")
                         # Intercambio en Reservados
@@ -258,14 +263,14 @@ def switch_or_drag(battle, split_msg):
             if split_msg[2].startswith("p2a"):
                 contador = 0
                 for pkmn in battle.user.reserved:
-                    if split_msg[3].partition(",")[0].startswith(pkmn.name[:-1]):
+                    if namePkmn == pkmn.name:
                         aux = deepcopy(battle.user.active1)
                         battle.user.active1 = deepcopy(pkmn)
                         # Inicio - Limpieza de Stats
                         battle.user.active1.volatile_statuses = []
                         battle.user.active1.boosts = defaultdict(lambda: 0)
                         # Fin - Limpieza de Stats
-                        battle.user.active1.name = split_msg[3].partition(",")[0]
+                        battle.user.active1.name = namePkmn
                         pkmn = deepcopy(aux)
                         # logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active1.name) + ": p2a")
                         # Intercambio en Reservados
@@ -277,14 +282,14 @@ def switch_or_drag(battle, split_msg):
             else:
                 contador = 0
                 for pkmn in battle.user.reserved:
-                    if split_msg[3].partition(",")[0].startswith(pkmn.name[:-1]):
+                    if namePkmn == pkmn.name:
                         aux = deepcopy(battle.user.active2)
                         battle.user.active2 = deepcopy(pkmn)
                         # Inicio - Limpieza de Stats
                         battle.user.active2.volatile_statuses = []
                         battle.user.active2.boosts = defaultdict(lambda: 0)
                         # Fin - Limpieza de Stats
-                        battle.user.active2.name = split_msg[3].partition(",")[0]
+                        battle.user.active2.name = namePkmn
                         pkmn = deepcopy(aux)
                         # logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active2.name) + ": p2b") 
                         # Intercambio en Reservados
@@ -895,19 +900,24 @@ def set_opponent_ability_from_ability_tag(battle, split_msg):
 def form_change(battle, split_msg):
     # split_msg = ["","detailschange","p2a: Metagross","Metagross-Mega, L76"]
     # split_msg = ["","detailschange","p1a: Zygarde","Zygarde-Complete, L50"]
+    name = split_msg[3].partition(",")[0]
+    if name.lower() in constants.standardName:
+        namePkmn = constants.standardName[name.lower()]
+    else:
+        namePkmn = name.lower()
     if is_opponent(battle, split_msg):
         if split_msg[2].startswith("p2"):
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
                 auxDynamax = battle.opponent.active1.isDynamax
                 volatile_statusAux = battle.opponent.active1.volatile_statuses
-                battle.opponent.active1 = Pokemon(split_msg[3].partition(",")[0], 0, True)
+                battle.opponent.active1 = Pokemon(namePkmn, 0, True)
                 battle.opponent.active1.isDynamax = auxDynamax
                 battle.opponent.active1.volatile_statuses = volatile_statusAux
             else:
                 auxDynamax = battle.opponent.active2.isDynamax
                 volatile_statusAux = battle.opponent.active2.volatile_statuses
-                battle.opponent.active2 = Pokemon(split_msg[3].partition(",")[0], 0, True)
+                battle.opponent.active2 = Pokemon(namePkmn, 0, True)
                 battle.opponent.active2.isDynamax = auxDynamax
                 battle.opponent.active2.volatile_statuses = volatile_statusAux
         else:
@@ -915,13 +925,13 @@ def form_change(battle, split_msg):
             if split_msg[2].startswith("p1a"):
                 auxDynamax = battle.opponent.active1.isDynamax
                 volatile_statusAux = battle.opponent.active1.volatile_statuses
-                battle.opponent.active1 = Pokemon(split_msg[3].partition(",")[0], 0, True)
+                battle.opponent.active1 = Pokemon(namePkmn, 0, True)
                 battle.opponent.active1.isDynamax = auxDynamax
                 battle.opponent.active1.volatile_statuses = volatile_statusAux
             else:
                 auxDynamax = battle.opponent.active2.isDynamax
                 volatile_statusAux = battle.opponent.active2.volatile_statuses
-                battle.opponent.active2 = Pokemon(split_msg[3].partition(",")[0], 0, True)
+                battle.opponent.active2 = Pokemon(namePkmn, 0, True)
                 battle.opponent.active2.isDynamax = auxDynamax
                 battle.opponent.active2.volatile_statuses = volatile_statusAux
     else:
@@ -930,13 +940,13 @@ def form_change(battle, split_msg):
             if split_msg[2].startswith("p1a"):
                 auxDynamax = battle.user.active1.isDynamax
                 volatile_statusAux = battle.user.active1.volatile_statuses
-                battle.user.active1 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.user.active1 = Pokemon(namePkmn, 0)
                 battle.user.active1.isDynamax = auxDynamax
                 battle.user.active1.volatile_statuses = volatile_statusAux
             else:
                 auxDynamax = battle.user.active2.isDynamax
                 volatile_statusAux = battle.user.active2.volatile_statuses
-                battle.user.active2 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.user.active2 = Pokemon(namePkmn, 0)
                 battle.user.active2.isDynamax = auxDynamax
                 battle.user.active2.volatile_statuses = volatile_statusAux
         else:
@@ -944,13 +954,13 @@ def form_change(battle, split_msg):
             if split_msg[2].startswith("p2a"):
                 auxDynamax = battle.user.active1.isDynamax
                 volatile_statusAux = battle.user.active1.volatile_statuses
-                battle.user.active1 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.user.active1 = Pokemon(namePkmn, 0)
                 battle.user.active1.isDynamax = auxDynamax
                 battle.user.active1.volatile_statuses = volatile_statusAux
             else:
                 auxDynamax = battle.user.active2.isDynamax
                 volatile_statusAux = battle.user.active2.volatile_statuses
-                battle.user.active2 = Pokemon(split_msg[3].partition(",")[0], 0)
+                battle.user.active2 = Pokemon(namePkmn, 0)
                 battle.user.active2.isDynamax = auxDynamax
                 battle.user.active2.volatile_statuses = volatile_statusAux
     return battle
@@ -1126,7 +1136,7 @@ def turn(battle, split_msg):
         battle.opponent.active1.volatile_statuses.remove(constants.DROWSY)
     if constants.DROWSY in battle.opponent.active2.volatile_statuses:
         battle.opponent.active2.volatile_statuses.remove(constants.DROWSY)
-    # Print Turn
+    # Turn
     logger.info("Turno: {}".format(int(split_msg[2])))
     return battle
 
