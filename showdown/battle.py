@@ -32,9 +32,9 @@ class Battle(ABC):
         self.lastReward = 0
         self.botMode = None
         self.q = Queue()
-        self.cadenaTypes = json.loads(open("C:/Users/Gian Pierre/Documents/showdown/showdown-master-doubles/test_showdown_master_doubles/API/JSONs/typeChart.json",'r').read())
-        self.cadenaTP = json.loads(open("C:/Users/Gian Pierre/Documents/showdown/showdown-master-doubles/test_showdown_master_doubles/API/JSONs/geneticAlgorithm.json",'r').read())
-        self.moveTypes = json.loads(open("C:/Users/Gian Pierre/Documents/showdown/showdown-master-doubles/test_showdown_master_doubles/API/JSONs/pkmnMovesTypes.json",'r').read())
+        self.cadenaTypes = json.loads(open("API/JSONs/typeChart.json","r").read())
+        self.cadenaTP = json.loads(open("API/JSONs/geneticAlgorithm.json","r").read())
+        self.moveTypes = json.loads(open("API/JSONs/pkmnMovesTypes.json","r").read())
 
     # Only Opponent
     async def initialize_team_preview(self, user_json, opponent_pokemon):
@@ -137,7 +137,7 @@ class Battler:
         self.opponentPkmnConfirmed = 0
 
     def getDamageClass(self, move):
-        damageClass = json.loads(open('C:/Users/Gian Pierre/Documents/showdown/showdown-master-doubles/test_showdown_master_doubles/API/JSONs/moves.json').read())[move]['category'].lower()
+        damageClass = json.loads(open("API/JSONs/moves.json","r").read())[move]['category'].lower()
         if damageClass != 'status':
             return move
         else:
@@ -339,7 +339,7 @@ class Pokemon:
         return self.HPB == 0
 
     def findMoveType(self, move):
-        return json.loads(open('C:/Users/Gian Pierre/Documents/showdown/showdown-master-doubles/test_showdown_master_doubles/API/JSONs/moves.json').read())[move]['type'].lower()
+        return json.loads(open("API/JSONs/moves.json","r").read())[move]['type'].lower()
 
     def imprimir(self):
         print("Name: " + str(self.name))
