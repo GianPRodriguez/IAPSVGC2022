@@ -99,7 +99,7 @@ class Modulo1(tk.Frame):
 		self.listbox_widget = self.canvasBody.create_window(250, 110, window=self.cbbTeam)
 		self.auxCbbTeam = self.cbbTeam
 		# IMG Exit
-		self.salirPNG = Image.open("salir.png")
+		self.salirPNG = Image.open("IMGs/exit.png")
 		self.newSalirPNG = self.salirPNG.convert(mode="RGBA")
 		self.resized_image= self.newSalirPNG.resize((40,40), Image.Resampling.LANCZOS)
 		self.salirTK = ImageTk.PhotoImage(self.resized_image)
@@ -204,7 +204,7 @@ class Modulo1(tk.Frame):
 			self.canvasBody.delete(self.LabelTeam_widget)
 			self.canvasBody.delete(self.strName_widget)
 			# Emoji
-			self.emoji = Image.open("close.png")
+			self.emoji = Image.open("IMGs/close.png")
 			self.emojiPNG = self.emoji.convert(mode="RGBA")
 			self.emojiResized_image = self.emojiPNG.resize((80,80), Image.Resampling.LANCZOS)
 			self.emojiTK = ImageTk.PhotoImage(self.emojiResized_image)
@@ -236,14 +236,14 @@ class Modulo1(tk.Frame):
 		self.canvasBody.delete(self.strName_widget)
 		# Emoji
 		if self.isWinner:
-			self.emoji = Image.open("winner.png")
+			self.emoji = Image.open("IMGs/winner.png")
 			self.rectangle1 = self.canvasBody.create_rectangle(0,0,500,259, fill='#325928')
 			# Text
 			self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="¡Felicidades!", fill="white", font=('Verdana 14'))
 			self.textWinner = "Has ganado la batalla"
 			self.textWinner_widget2 = self.canvasBody.create_text(185, 100, text=self.textWinner, fill="white", font=('Verdana 11'))
 		else:
-			self.emoji = Image.open("noWinner.png")
+			self.emoji = Image.open("IMGs/noWinner.png")
 			self.rectangle1 = self.canvasBody.create_rectangle(0,0,500,259, fill='#582831')
 			# Text
 			self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="Has perdido :(", fill="white", font=('Verdana 14'))
@@ -415,7 +415,6 @@ class Modulo2(tk.Frame):
             try:
             	self.cola = self.q.get(0)
             	if self.cola[0] == 2:
-            		print("self.cola[0] == 2:")
             		self.isBattle = True
             		self.canvasBody.delete(self.LabelMove_widget)
             		self.labelMove = tk.Label(self,text="Movimientos", bg = "#283158", font=('Verdana 12 bold'), fg="white")
@@ -434,12 +433,15 @@ class Modulo2(tk.Frame):
             		self.text6 = self.cola[11]
             		self.color6 = self.cola[12]
             		# Label Rendimiento
-            		self.labelR = tk.Label(self,text="Rendimiento", bg = "#283158", font=('Verdana 12 bold'), fg="white")
-            		self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
-            		self.labelR1 = tk.Label(self,text="Último turno", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-            		self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
-            		self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-            		self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
+            		if not hasattr(self, "labelR"):
+            			self.labelR = tk.Label(self,text="Rendimiento", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+            			self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
+            		if not hasattr(self, "labelR1"):
+            			self.labelR1 = tk.Label(self,text="Último turno", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+            			self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
+            		if not hasattr(self, "labelR2"):
+            			self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+            			self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
             		# Update text & color
             		self.canvasBody.itemconfig(self.text1_widget, text=self.text1)
             		self.canvasBody.itemconfig(self.text2_widget, text=self.text2)
@@ -502,11 +504,11 @@ class Modulo2(tk.Frame):
             		self.text3_widget = self.canvasBody.create_text(28+60, 97+20, text="Calculando...", fill="black", font=('Verdana 10'))
             		self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text="Calculando...", fill="black", font=('Verdana 10'))
             	elif self.cola[0] == -1:
-					# Widgets are available
-					self.nameEntry.config(state='normal')
-					self.passwordEntry.config(state='normal')
-					self.cbbTeam.config(state='normal')
-					self.button1['state'] = tk.NORMAL
+            		# Widgets are available
+            		self.nameEntry.config(state='normal')
+            		self.passwordEntry.config(state='normal')
+            		self.cbbTeam.config(state='normal')
+            		self.startBattle['state'] = tk.NORMAL
             		self.isBattle = False
             		# Battle results
             		self.isWinner = self.cola[1]
@@ -577,24 +579,32 @@ class Modulo2(tk.Frame):
     	if self.startBattle.config('text')[-1] != "Batalla en Curso":
     		self.exitWindows()
     	else:
+    		# Al cerrar la ventana...
     		self.isCloseWindows = True
     		# Purple background
     		self.rectangle1 = self.canvasBody.create_rectangle(0,0,500,259, fill='#4e2858')
-    		# Hide widgets
+    		# Label Rendimiento
+    		self.labelR = tk.Label(self,text="Rendimiento", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+    		self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
+    		self.labelR1 = tk.Label(self,text="Último turno", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    		self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
+    		self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    		self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
+    		self.canvasBody.delete(self.LabelR_widget)
+    		self.canvasBody.delete(self.LabelR1_widget)
+    		self.canvasBody.delete(self.LabelR2_widget)
+    		# Hide All Widgets
     		self.canvasBody.delete(self.startBattle_widget)
     		self.canvasBody.delete(self.help_widget)
+    		self.canvasBody.delete(self.LabelTeam_widget)
     		self.canvasBody.delete(self.listbox_widget)
     		self.canvasBody.delete(self.LabelUsername_widget)
-    		self.canvasBody.delete(self.LabelTeam_widget)
     		self.canvasBody.delete(self.strName_widget)
     		self.canvasBody.delete(self.LabelPassword_widget)
     		self.canvasBody.delete(self.strPassword_widget)
     		self.canvasBody.delete(self.LabelMove_widget)
-    		self.canvasBody.delete(self.LabelR_widget)
-    		self.canvasBody.delete(self.LabelR1_widget)
-    		self.canvasBody.delete(self.LabelR2_widget)
     		# Emoji
-    		self.emoji = Image.open("close.png")
+    		self.emoji = Image.open("IMGs/close.png")
     		self.emojiPNG = self.emoji.convert(mode="RGBA")
     		self.emojiResized_image = self.emojiPNG.resize((80,80), Image.Resampling.LANCZOS)
     		self.emojiTK = ImageTk.PhotoImage(self.emojiResized_image)
@@ -618,6 +628,16 @@ class Modulo2(tk.Frame):
     	self.auxController.destroy()
 
     def endBattle(self):
+    	# Label Rendimiento
+    	self.labelR = tk.Label(self,text="Rendimiento", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+    	self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
+    	self.labelR1 = tk.Label(self,text="Último turno", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
+    	self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
+    	self.canvasBody.delete(self.LabelR_widget)
+    	self.canvasBody.delete(self.LabelR1_widget)
+    	self.canvasBody.delete(self.LabelR2_widget)
     	# Hide widgets
     	self.canvasBody.delete(self.startBattle_widget)
     	self.canvasBody.delete(self.help_widget)
@@ -628,19 +648,16 @@ class Modulo2(tk.Frame):
     	self.canvasBody.delete(self.LabelPassword_widget)
     	self.canvasBody.delete(self.strPassword_widget)
     	self.canvasBody.delete(self.LabelMove_widget)
-    	self.canvasBody.delete(self.LabelR_widget)
-    	self.canvasBody.delete(self.LabelR1_widget)
-    	self.canvasBody.delete(self.LabelR2_widget)
     	# Emoji
     	if self.isWinner:
-    		self.emoji = Image.open("winner.png")
+    		self.emoji = Image.open("IMGs/winner.png")
     		self.rectangle1 = self.canvasBody.create_rectangle(0,0,500,259, fill='#325928')
     		# Text
     		self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="¡Felicidades!", fill="white", font=('Verdana 14'))
     		self.textWinner = "Has ganado la batalla contra " + self.nameOpponent
     		self.textWinner_widget2 = self.canvasBody.create_text(185, 100, text=self.textWinner, fill="white", font=('Verdana 11'))
     	else:
-    		self.emoji = Image.open("noWinner.png")
+    		self.emoji = Image.open("IMGs/noWinner.png")
     		self.rectangle1 = self.canvasBody.create_rectangle(0,0,500,259, fill='#582831')
     		# Text
     		self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="Has perdido :(", fill="white", font=('Verdana 14'))
@@ -727,6 +744,16 @@ class Modulo2(tk.Frame):
     	self.strName_widget = self.canvasBody.create_window(400, 40, window=self.auxNameEntry)
     	self.strPassword_widget = self.canvasBody.create_window(400, 90, window=self.auxPasswordEntry)
     	self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.auxCbbTeam)
+    	# Reward
+    	self.labelR = tk.Label(self,text="", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+    	self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
+    	self.labelR1 = tk.Label(self,text="", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
+    	self.labelR2 = tk.Label(self,text="", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
+    	self.canvasBody.delete(self.LabelR_widget)
+    	self.canvasBody.delete(self.LabelR1_widget)
+    	self.canvasBody.delete(self.LabelR2_widget)
     	# IMG Exit
     	self.exitPNG = Image.open("IMGs/exit.png")
     	self.newExitPNG = self.exitPNG.convert(mode="RGBA")
@@ -763,7 +790,7 @@ class Modulo3(tk.Frame):
     	self.canvasBody.create_rectangle(0,0,310,259, outline='white', width=3)
     	self.canvasBody.pack()
     	# IMG Salir
-    	self.salirPNG = Image.open("salir.png")
+    	self.salirPNG = Image.open("IMGs/exit.png")
     	self.newSalirPNG = self.salirPNG.convert(mode="RGBA")
     	self.resized_image= self.newSalirPNG.resize((40,40), Image.Resampling.LANCZOS)
     	self.salirTK = ImageTk.PhotoImage(self.resized_image)

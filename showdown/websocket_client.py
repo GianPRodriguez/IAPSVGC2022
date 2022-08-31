@@ -124,7 +124,7 @@ class PSWebsocketClient:
     async def accept_challenge(self, battle_format, team, room_name):
         if room_name is not None:
             await self.join_room(room_name)
-        print("[INFO]     Esperando un combate en formato {}".format(battle_format))
+        print("[INFO]     Esperando una batalla en formato {}".format(battle_format))
         await self.update_team(team)
         username = None
         while username is None:
@@ -138,7 +138,7 @@ class PSWebsocketClient:
         await self.send_message('', message)
 
     async def search_for_match(self, team):
-        print("[INFO]     Buscando una partida en formato {}...".format(config.pokemon_mode))
+        print("[INFO]     Buscando una batalla en formato {}...".format(config.pokemon_mode))
         await self.update_team(team)
         message = ["/search {}".format(config.pokemon_mode)]
         # "/search gen8vgc2022"

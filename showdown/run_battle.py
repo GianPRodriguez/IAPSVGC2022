@@ -195,11 +195,11 @@ async def pokemon_battle(ps_websocket_client, q, botMode):
                 if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
                     q.put([-1,winner==battle.opponent.account_name,battle.user.account_name,battle.opponent.account_name])
                 else:
-                    q.put([-1,winner!=battle.opponent.account_name,battle.user.account_name,battle.opponent.account_name])
+                    q.put([-1,winner!=battle.opponent.account_name,battle.opponent.account_name,battle.user.account_name])
             else:
                 winner = None
             # Y lo imprimo
-            print("[INFO]     Ganador {}".format(winner))
+            print("[INFO]     Ganador: {}".format(winner))
             # Se envía un mensaje de despedida al contricante
             await ps_websocket_client.send_message(battle.battle_tag, [config.battle_ending_message])
             # Es opcional guardar la batalla...

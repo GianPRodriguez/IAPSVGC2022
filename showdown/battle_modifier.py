@@ -10,8 +10,6 @@ from showdown.battle import Pokemon
 from showdown.battle_bots.helpers import getATBoost
 from showdown.battle_bots.helpers import getDEBoost
 
-logger = logging.getLogger(__name__)
-
 # ¿La modificación es para el opponente?
 def is_opponent(battle,  split_msg):
     # split_msg = ["","switch","p1a: Incineroar","Incineroar, L50, M","190/202"]
@@ -29,13 +27,13 @@ def request(battle, split_msg):
         battle.rqid = battle_json[constants.RQID]
         # ¿battle_json tiene "forceSwitch"? Se activa cuando uso U-TURN
         if battle_json.get(constants.FORCE_SWITCH):
-            logger.info("Action: forceSwitch")
+            print("[INFO]     Action: forceSwitch")
             battle.force_switch = True
         else:
             battle.force_switch = False
         # ¿battle_json tiene "wait"? ¿Se activa cuando el opponente usa U-TURN?
         if battle_json.get(constants.WAIT):
-            logger.info("Action: wait")
+            print("[INFO]     Action: forceSwitch")
             battle.wait = True
         else:
             battle.wait = False
@@ -109,7 +107,8 @@ def switch_or_drag(battle, split_msg):
                         if pkmn.opponent_confirmed == False:
                             battle.opponent.reserved.remove(pkmn)
                     if len(battle.opponent.reserved) == 3:
-                        logger.error("NO DEBE HABER 3")
+                        ...
+                        #logger.error("NO DEBE HABER 3")
             else:
                 contador = 0
                 for pkmn in battle.opponent.reserved:
@@ -144,7 +143,8 @@ def switch_or_drag(battle, split_msg):
                         if pkmn.opponent_confirmed == False:
                             battle.opponent.reserved.remove(pkmn)
                     if len(battle.opponent.reserved) == 3:
-                        logger.error("NO DEBE HABER 3")
+                        ...
+                        #logger.error("NO DEBE HABER 3")
         else:
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
@@ -181,7 +181,8 @@ def switch_or_drag(battle, split_msg):
                         if pkmn.opponent_confirmed == False:
                             battle.opponent.reserved.remove(pkmn)
                     if len(battle.opponent.reserved) == 3:
-                        logger.error("NO DEBE HABER 3")
+                        ...
+                        #logger.error("NO DEBE HABER 3")
             else:
                 contador = 0
                 for pkmn in battle.opponent.reserved:
@@ -216,7 +217,8 @@ def switch_or_drag(battle, split_msg):
                         if pkmn.opponent_confirmed == False:
                             battle.opponent.reserved.remove(pkmn)
                     if len(battle.opponent.reserved) == 3:
-                        logger.error("NO DEBE HABER 3")
+                        ...
+                        #logger.error("NO DEBE HABER 3")
     else:
         if split_msg[2].startswith("p1"):
             # ¿p1a o p1b?
@@ -1137,7 +1139,7 @@ def turn(battle, split_msg):
     if constants.DROWSY in battle.opponent.active2.volatile_statuses:
         battle.opponent.active2.volatile_statuses.remove(constants.DROWSY)
     # Turn
-    logger.info("Turno: {}".format(int(split_msg[2])))
+    print("[INFO]     Turno: {}".format(int(split_msg[2])))
     return battle
 
 
@@ -1189,25 +1191,25 @@ def updatePokemon(battle, pkmn, isUser, isReserved):
     if isUser:
         # Reflect
         if "reflect" in battle.user.side_conditions and "auroraveil" not in battle.user.side_conditions:
-            DEF_battle_base = int(DEF_battle_base * 4/3)
+            DEF_battle_base = math.floor(DEF_battle_base * 4/3)
         # Light Screen
         if "lightscreen" in battle.user.side_conditions and "auroraveil" not in battle.user.side_conditions:
-            SPD_battle_base = int(SPD_battle_base * 4/3)
+            SPD_battle_base = math.floor(SPD_battle_base * 4/3)
         # Aurora Veil
         if "auroraveil" in battle.user.side_conditions:
-            DEF_battle_base = int(DEF_battle_base * 4/3)
-            SPD_battle_base = int(SPD_battle_base * 4/3)
+            DEF_battle_base = math.floor(DEF_battle_base * 4/3)
+            SPD_battle_base = math.floor(SPD_battle_base * 4/3)
     else:
         # Reflect
         if "reflect" in battle.opponent.side_conditions and "auroraveil" not in battle.opponent.side_conditions:
-            DEF_battle_base = int(DEF_battle_base * 4/3)
+            DEF_battle_base = math.floor(DEF_battle_base * 4/3)
         # Light Screen
         if "lightscreen" in battle.opponent.side_conditions and "auroraveil" not in battle.opponent.side_conditions:
-            SPD_battle_base = int(SPD_battle_base * 4/3)
+            SPD_battle_base = math.floor(SPD_battle_base * 4/3)
         # Aurora Veil
         if "auroraveil" in battle.opponent.side_conditions:
-            DEF_battle_base = int(DEF_battle_base * 4/3)
-            SPD_battle_base = int(SPD_battle_base * 4/3)
+            DEF_battle_base = math.floor(DEF_battle_base * 4/3)
+            SPD_battle_base = math.floor(SPD_battle_base * 4/3)
     # ATB
     if pkmn.status == constants.BURN:
         pkmn.ATB = max(ATK_battle_base/2, SPA_battle_base)
@@ -1234,17 +1236,34 @@ def updatePokemon(battle, pkmn, isUser, isReserved):
     # Tailwind
     if isUser:
         if battle.user.side_conditions['tailwind'] > 0:
-            battle.user.active1.VEB *= 2
-            battle.user.active2.VEB *= 2
+            pkmn.VEB = math.floor(pkmn.VEB*2)
     else:
         if battle.opponent.side_conditions['tailwind'] > 0:
-            battle.opponent.active1.VEB *= 2
-            battle.opponent.active2.VEB *= 2
+            pkmn.VEB = math.floor(pkmn.VEB*2)
     # Trick Room
     if battle.trick_room > 0:
-        pkmn.VEB = constants.FASTEST - pkmn.VEB   # Pkmn fastest = 1
+        if (isUser and battle.user.side_conditions['tailwind'] > 0) or (not isUser and battle.opponent.side_conditions['tailwind'] > 0):
+            pkmn.VEB = math.floor(constants.FASTEST * 2 - pkmn.VEB)     # Pkmn fastest = 1
+        else:
+            pkmn.VEB = math.floor(constants.FASTEST - pkmn.VEB)     # Pkmn fastest = 1
     # Dynamax - ATB *= 1.3
     if 'dynamax' in pkmn.volatile_statuses:
+        pkmn.ATB = math.floor(pkmn.ATB * 1.3)
+    # Beneficio por Clima
+    if battle.weather == 'raindance' and pkmn.moveType.get('water',0) > 0.50:
+        pkmn.ATB = math.floor(pkmn.ATB * 1.3)
+    if battle.weather == 'raindance' and pkmn.moveType.get('fire',0) > 0.60:
+        pkmn.ATB = math.floor(pkmn.ATB * 0.7)
+    if battle.weather == 'sunnyday' and pkmn.moveType.get('fire',0) > 0.50:
+        pkmn.ATB = math.floor(pkmn.ATB * 1.3)
+    if battle.weather == 'sunnyday' and pkmn.moveType.get('water',0) > 0.60:
+        pkmn.ATB = math.floor(pkmn.ATB * 0.7)
+    # Beneficio por Terreno
+    if battle.weather == 'electricterrain' and pkmn.moveType.get('electric',0) > 0.50:
+        pkmn.ATB = math.floor(pkmn.ATB * 1.3)
+    if battle.weather == 'grassyterrain' and pkmn.moveType.get('grass',0) > 0.50:
+        pkmn.ATB = math.floor(pkmn.ATB * 1.3)
+    if battle.weather == 'psychicterrain' and pkmn.moveType.get('psychic',0) > 0.50:
         pkmn.ATB = math.floor(pkmn.ATB * 1.3)
     # Actualización
     if isUser:

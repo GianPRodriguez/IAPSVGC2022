@@ -111,13 +111,16 @@ class Battle(ABC):
             else:
                 opponent = 1000000
         # On the first turn, the lastReward is 0
-        if self.turn > 1:
-            self.lastReward = (user - opponent) - self.reward
+        if not self.force_switch:
+            if self.turn > 1:
+                self.lastReward = (user - opponent) - self.reward
+            else:
+                self.lastReward = 0
+            # Heart
+            self.reward = user - opponent
+            return self.lastReward, self.reward
         else:
-            self.lastReward = 0
-        # Heart
-        self.reward = user - opponent
-        return self.lastReward, self.reward
+            return self.lastReward, self.reward
 
     # Calculate the reward for the user or for the opponent of 1 Pkmn
     def formula(self, pkmn):
