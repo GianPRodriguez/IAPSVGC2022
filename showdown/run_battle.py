@@ -211,7 +211,7 @@ async def pokemon_battle(ps_websocket_client, q, botMode):
             # No ha finalizado la batalla... actualizo las variables del entorno
             action_required, battle = await update_battle(battle, mensaje)
             # action_required es BOOLEAN
-            if action_required and not battle.wait:
+            if (action_required and not battle.wait) or battle.error:
                 # Escoge el mejor movimiento y lo envía al websocket
                 battle, mensaje = await accion_batalla(battle)
                 q = battle.q

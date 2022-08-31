@@ -979,6 +979,11 @@ def clearnegativeboost(battle, split_msg):
     # No VGC 2022
     return battle
 
+def error(battle, split_msg):
+    battle.error = True
+    print("ERROR")
+    return battle
+
 
 # Reestablece todas las estadísticas
 def clearallboost(battle, _):
@@ -1352,11 +1357,14 @@ async def update_battle(battle, msg):
             'inactiveoff': inactiveoff,
             'turn': turn,
             'noinit': noinit,
+            'error': error,
         }
 
         function_to_call = battle_modifiers_lookup.get(action)
         if function_to_call is not None:
             battle = function_to_call(battle, split_msg)
+            if action != 'error':
+                battle.error = False
         if action == 'turn':
             return True, battle
 

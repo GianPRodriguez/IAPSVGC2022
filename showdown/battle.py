@@ -27,6 +27,7 @@ class Battle(ABC):
         self.rqid = None
         self.force_switch = False
         self.wait = False
+        self.error = False
         self.request_json = None
         self.reward = 0
         self.lastReward = 0
