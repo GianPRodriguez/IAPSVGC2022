@@ -349,18 +349,8 @@ class Modulo2(tk.Frame):
     	self.newExitPNG = self.exitPNG.convert(mode="RGBA")
     	self.exitResized = self.newExitPNG.resize((40,40), Image.Resampling.LANCZOS)
     	self.exitTK = ImageTk.PhotoImage(self.exitResized)
-    	self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: controller.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+    	self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
     	self.buttonExit_widget = self.canvasHead.create_window(470, 28, window=self.buttonExit)
-    	# Label Rendimiento
-    	self.labelR = tk.Label(self,text="", bg = "#283158", font=('Verdana 12 bold'), fg="white")
-    	self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
-    	self.labelR1 = tk.Label(self,text="", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
-    	self.labelR2 = tk.Label(self,text="", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
-    	self.canvasBody.delete(self.LabelR_widget)
-    	self.canvasBody.delete(self.LabelR1_widget)
-    	self.canvasBody.delete(self.LabelR2_widget)
     	# IMG Bar Chart
     	self.barChartPNG = Image.open("IMGs/barChart.png")
     	self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
@@ -416,8 +406,7 @@ class Modulo2(tk.Frame):
             	self.cola = self.q.get(0)
             	if self.cola[0] == 2:
             		self.isBattle = True
-            		self.canvasBody.delete(self.LabelMove_widget)
-            		self.labelMove = tk.Label(self,text="Movimientos", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+            		self.labelMove.configure(text="Movimientos", bg = "#283158", font=('Verdana 12 bold'), fg="white")
             		self.LabelMove_widget = self.canvasBody.create_window(80, 30-5, window=self.labelMove)
             		# New Turn
             		self.text1 = self.cola[1]
@@ -433,28 +422,39 @@ class Modulo2(tk.Frame):
             		self.text6 = self.cola[11]
             		self.color6 = self.cola[12]
             		# Label Rendimiento
-            		if not hasattr(self, "labelR"):
-            			self.labelR = tk.Label(self,text="Rendimiento", bg = "#283158", font=('Verdana 12 bold'), fg="white")
-            			self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
-            		if not hasattr(self, "labelR1"):
-            			self.labelR1 = tk.Label(self,text="Último turno", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-            			self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
-            		if not hasattr(self, "labelR2"):
-            			self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-            			self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
-            		# Update text & color
-            		self.canvasBody.itemconfig(self.text1_widget, text=self.text1)
-            		self.canvasBody.itemconfig(self.text2_widget, text=self.text2)
-            		self.canvasBody.itemconfig(self.text3_widget, text=self.text3)
-            		self.canvasBody.itemconfig(self.text4_widget, text=self.text4)
-            		self.canvasBody.itemconfig(self.text5_widget, text=math.floor(self.text5))
-            		self.canvasBody.itemconfig(self.text6_widget, text=math.floor(self.text6))
-            		self.canvasBody.itemconfig(self.color1_widget, fill=self.color1, outline=self.color1)
-            		self.canvasBody.itemconfig(self.color2_widget, fill=self.color2, outline=self.color2)
-            		self.canvasBody.itemconfig(self.color3_widget, fill=self.color3, outline=self.color3)
-            		self.canvasBody.itemconfig(self.color4_widget, fill=self.color4, outline=self.color4)
-            		self.canvasBody.itemconfig(self.color5_widget, fill=self.color5, outline=self.color5)
-            		self.canvasBody.itemconfig(self.color6_widget, fill=self.color6, outline=self.color6)
+            		self.labelR = tk.Label(self,text="Rendimiento", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+            		self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
+            		self.labelR1 = tk.Label(self,text="Último turno", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+            		self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
+            		self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+            		self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
+            		# Create Rectangle
+            		if self.help.config('text')[-1] == 'Ayuda':
+	            		self.color1_widget = self.canvasBody.create_rectangle(28,50-5,148,90-5, fill="#ffffff", outline="#ffffff")
+	            		self.color2_widget = self.canvasBody.create_rectangle(160,50-5,280,90-5, fill="#ffffff", outline="#ffffff")
+	            		self.color3_widget = self.canvasBody.create_rectangle(28,102-5,148,142-5, fill="#ffffff", outline="#ffffff")
+	            		self.color4_widget = self.canvasBody.create_rectangle(160,102-5,280,142-5, fill="#ffffff", outline="#ffffff")
+	            		self.color5_widget = self.canvasBody.create_rectangle(28,185-5,148,225-5, fill="#ffffff", outline="#ffffff")
+	            		self.color6_widget = self.canvasBody.create_rectangle(160,185-5,280,225-5, fill="#ffffff", outline="#ffffff")
+	            		self.text1_widget = self.canvasBody.create_text(28+60, 45+20, text="???", fill="black", font=('Verdana 10'))
+	            		self.text2_widget = self.canvasBody.create_text(160+60, 45+20, text="???", fill="black", font=('Verdana 10'))
+	            		self.text3_widget = self.canvasBody.create_text(28+60, 97+20, text="???", fill="black", font=('Verdana 10'))
+	            		self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text="???", fill="black", font=('Verdana 10'))
+	            		self.text5_widget = self.canvasBody.create_text(28+55, 180+20, text="???", fill="black", font=('Verdana 10'))
+	            		self.text6_widget = self.canvasBody.create_text(160+55, 180+20, text="???", fill="black", font=('Verdana 10'))
+	            	else:
+	            		self.color1_widget = self.canvasBody.create_rectangle(28,50-5,148,90-5, fill=self.color1, outline=self.color1)
+	            		self.color2_widget = self.canvasBody.create_rectangle(160,50-5,280,90-5, fill=self.color2, outline=self.color2)
+	            		self.color3_widget = self.canvasBody.create_rectangle(28,102-5,148,142-5, fill=self.color3, outline=self.color3)
+	            		self.color4_widget = self.canvasBody.create_rectangle(160,102-5,280,142-5, fill=self.color4, outline=self.color4)
+	            		self.color5_widget = self.canvasBody.create_rectangle(28,185-5,148,225-5, fill=self.color5, outline=self.color5)
+	            		self.color6_widget = self.canvasBody.create_rectangle(160,185-5,280,225-5, fill=self.color6, outline=self.color6)
+	            		self.text1_widget = self.canvasBody.create_text(28+60, 45+20, text=self.text1, fill="black", font=('Verdana 10'))
+	            		self.text2_widget = self.canvasBody.create_text(160+60, 45+20, text=self.text2, fill="black", font=('Verdana 10'))
+	            		self.text3_widget = self.canvasBody.create_text(28+60, 97+20, text=self.text3, fill="black", font=('Verdana 8'))
+	            		self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text=self.text4, fill="black", font=('Verdana 8'))
+	            		self.text5_widget = self.canvasBody.create_text(28+55, 180+20, text=math.floor(self.text5), fill="white", font=('Verdana 12'))
+	            		self.text6_widget = self.canvasBody.create_text(160+55, 180+20, text=math.floor(self.text6), fill="white", font=('Verdana 12'))
             	elif self.cola[0] == 1:
             		self.namePokemon = self.cola
             		# Team Preview
@@ -462,21 +462,24 @@ class Modulo2(tk.Frame):
             		self.text2 = self.namePokemon[2]
             		self.text3 = self.namePokemon[3]
             		self.text4 = self.namePokemon[4]
+            		self.text5 = ""
+            		self.text6 = ""
             		# Help is enabled
             		self.help['state'] = tk.NORMAL
+            		self.auxHelp = self.help
             		# Update 4 Pkmn
             		if self.help.config('text')[-1] == 'Ayuda':
-            			self.canvasBody.itemconfig(self.text1_widget, text="???")
-            			self.canvasBody.itemconfig(self.text2_widget, text="???")
-            			self.canvasBody.itemconfig(self.text3_widget, text="???")
-            			self.canvasBody.itemconfig(self.text4_widget, text="???")
+            			self.canvasBody.itemconfig(self.text1_widget, text="???", font=('Verdana 10'))
+            			self.canvasBody.itemconfig(self.text2_widget, text="???", font=('Verdana 10'))
+            			self.canvasBody.itemconfig(self.text3_widget, text="???", font=('Verdana 10'))
+            			self.canvasBody.itemconfig(self.text4_widget, text="???", font=('Verdana 10'))
             		else:
-            			self.canvasBody.itemconfig(self.text1_widget, text=self.text1)
-            			self.canvasBody.itemconfig(self.text2_widget, text=self.text2)
-            			self.canvasBody.itemconfig(self.text3_widget, text=self.text3)
-            			self.canvasBody.itemconfig(self.text4_widget, text=self.text4)
-            		self.text5_widget = self.canvasBody.create_text(28+55, 180+20, text="", fill="black", font=('Verdana 10'))
-            		self.text6_widget = self.canvasBody.create_text(160+55, 180+20, text="", fill="black", font=('Verdana 10'))
+            			self.canvasBody.itemconfig(self.text1_widget, text=self.text1, font=('Verdana 8'))
+            			self.canvasBody.itemconfig(self.text2_widget, text=self.text2, font=('Verdana 8'))
+            			self.canvasBody.itemconfig(self.text3_widget, text=self.text3, font=('Verdana 8'))
+            			self.canvasBody.itemconfig(self.text4_widget, text=self.text4, font=('Verdana 8'))
+            		self.text5_widget = self.canvasBody.create_text(28+55, 180+20, text=self.text5, fill="white", font=('Verdana 12'))
+            		self.text6_widget = self.canvasBody.create_text(160+55, 180+20, text=self.text6, fill="white", font=('Verdana 12'))
             	elif self.cola[0] == 0:
             		# New Battle
             		self.startBattle.configure(text='Batalla en Curso')
@@ -510,6 +513,7 @@ class Modulo2(tk.Frame):
             		self.cbbTeam.config(state='normal')
             		self.startBattle['state'] = tk.NORMAL
             		self.isBattle = False
+            		self.activeClose = 0
             		# Battle results
             		self.isWinner = self.cola[1]
             		self.nameOpponent = self.cola[2]
@@ -554,26 +558,28 @@ class Modulo2(tk.Frame):
     		self.canvasBody.itemconfig(self.color3_widget, fill=self.color3, outline=self.color3)
     		self.canvasBody.itemconfig(self.color4_widget, fill=self.color4, outline=self.color4)
     		if self.isBattle:
-    			self.canvasBody.itemconfig(self.text5_widget, text=self.text5)
-    			self.canvasBody.itemconfig(self.text6_widget, text=self.text6)
+    			self.canvasBody.itemconfig(self.text5_widget, text=self.text5, fill="white", font=('Verdana 12'))
+    			self.canvasBody.itemconfig(self.text6_widget, text=self.text6, fill="white", font=('Verdana 12'))
 	    		self.canvasBody.itemconfig(self.color5_widget, fill=self.color5, outline=self.color5)
 	    		self.canvasBody.itemconfig(self.color6_widget, fill=self.color6, outline=self.color6)
     		self.help.configure(text='Detener Ayuda')
+    		self.auxHelp = self.help
     	else:
-    		self.canvasBody.itemconfig(self.text1_widget, text="???")
-    		self.canvasBody.itemconfig(self.text2_widget, text="???")
-    		self.canvasBody.itemconfig(self.text3_widget, text="???")
-    		self.canvasBody.itemconfig(self.text4_widget, text="???")
+    		self.canvasBody.itemconfig(self.text1_widget, text="???", font=('Verdana 10'))
+    		self.canvasBody.itemconfig(self.text2_widget, text="???", font=('Verdana 10'))
+    		self.canvasBody.itemconfig(self.text3_widget, text="???", font=('Verdana 10'))
+    		self.canvasBody.itemconfig(self.text4_widget, text="???", font=('Verdana 10'))
     		self.canvasBody.itemconfig(self.color1_widget, fill="#ffffff", outline="#ffffff")
     		self.canvasBody.itemconfig(self.color2_widget, fill="#ffffff", outline="#ffffff")
     		self.canvasBody.itemconfig(self.color3_widget, fill="#ffffff", outline="#ffffff")
     		self.canvasBody.itemconfig(self.color4_widget, fill="#ffffff", outline="#ffffff")
     		if self.isBattle:
-    			self.canvasBody.itemconfig(self.text5_widget, text="???")
-    			self.canvasBody.itemconfig(self.text6_widget, text="???")
+    			self.canvasBody.itemconfig(self.text5_widget, text="???", fill="black", font=('Verdana 10'))
+    			self.canvasBody.itemconfig(self.text6_widget, text="???", fill="black", font=('Verdana 10'))
 	    		self.canvasBody.itemconfig(self.color5_widget, fill="#ffffff", outline="#ffffff")
 	    		self.canvasBody.itemconfig(self.color6_widget, fill="#ffffff", outline="#ffffff")
     		self.help.configure(text='Ayuda')
+    		self.auxHelp = self.help
 
     def closeWindows(self):
     	if self.startBattle.config('text')[-1] != "Batalla en Curso":
@@ -581,28 +587,10 @@ class Modulo2(tk.Frame):
     	else:
     		# Al cerrar la ventana...
     		self.isCloseWindows = True
+    		# Clean Canvas
+    		self.canvasBody.delete("all")
     		# Purple background
     		self.rectangle1 = self.canvasBody.create_rectangle(0,0,500,259, fill='#4e2858')
-    		# Label Rendimiento
-    		self.labelR = tk.Label(self,text="Rendimiento", bg = "#283158", font=('Verdana 12 bold'), fg="white")
-    		self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
-    		self.labelR1 = tk.Label(self,text="Último turno", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    		self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
-    		self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    		self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
-    		self.canvasBody.delete(self.LabelR_widget)
-    		self.canvasBody.delete(self.LabelR1_widget)
-    		self.canvasBody.delete(self.LabelR2_widget)
-    		# Hide All Widgets
-    		self.canvasBody.delete(self.startBattle_widget)
-    		self.canvasBody.delete(self.help_widget)
-    		self.canvasBody.delete(self.LabelTeam_widget)
-    		self.canvasBody.delete(self.listbox_widget)
-    		self.canvasBody.delete(self.LabelUsername_widget)
-    		self.canvasBody.delete(self.strName_widget)
-    		self.canvasBody.delete(self.LabelPassword_widget)
-    		self.canvasBody.delete(self.strPassword_widget)
-    		self.canvasBody.delete(self.LabelMove_widget)
     		# Emoji
     		self.emoji = Image.open("IMGs/close.png")
     		self.emojiPNG = self.emoji.convert(mode="RGBA")
@@ -628,26 +616,8 @@ class Modulo2(tk.Frame):
     	self.auxController.destroy()
 
     def endBattle(self):
-    	# Label Rendimiento
-    	self.labelR = tk.Label(self,text="Rendimiento", bg = "#283158", font=('Verdana 12 bold'), fg="white")
-    	self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
-    	self.labelR1 = tk.Label(self,text="Último turno", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
-    	self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
-    	self.canvasBody.delete(self.LabelR_widget)
-    	self.canvasBody.delete(self.LabelR1_widget)
-    	self.canvasBody.delete(self.LabelR2_widget)
-    	# Hide widgets
-    	self.canvasBody.delete(self.startBattle_widget)
-    	self.canvasBody.delete(self.help_widget)
-    	self.canvasBody.delete(self.listbox_widget)
-    	self.canvasBody.delete(self.LabelUsername_widget)
-    	self.canvasBody.delete(self.LabelTeam_widget)
-    	self.canvasBody.delete(self.strName_widget)
-    	self.canvasBody.delete(self.LabelPassword_widget)
-    	self.canvasBody.delete(self.strPassword_widget)
-    	self.canvasBody.delete(self.LabelMove_widget)
+    	# Clean Canvas
+    	self.canvasBody.delete("all")
     	# Emoji
     	if self.isWinner:
     		self.emoji = Image.open("IMGs/winner.png")
@@ -680,35 +650,70 @@ class Modulo2(tk.Frame):
     	self.canvasBody.delete(self.emoji_widget)
     	self.canvasBody.delete(self.rectangle1)
     	# Label Turn
-    	self.labelMove = tk.Label(self,text="Movimientos", bg = "#283158", font=('Verdana 12 bold'), fg="white")
-    	self.LabelMove_widget = self.canvasBody.create_window(80, 30-5, window=self.labelMove)
-    	self.labelR = tk.Label(self,text="Rendimiento", bg = "#283158", font=('Verdana 12 bold'), fg="white")
-    	self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
-    	self.labelR1 = tk.Label(self,text="Último turno", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
-    	self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
+    	if self.isBattle:
+    		self.labelMove = tk.Label(self,text="Movimientos", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+    		self.LabelMove_widget = self.canvasBody.create_window(80, 30-5, window=self.labelMove)
+    		self.labelR = tk.Label(self,text="Rendimiento", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+    		self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
+    		self.labelR1 = tk.Label(self,text="Último turno", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    		self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
+    		self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    		self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
+    	else:
+    		self.labelMove = tk.Label(self,text="Vista Previa del Equipo", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+    		self.LabelMove_widget = self.canvasBody.create_window(130, 30-5, window=self.labelMove)
+    	# Rectangles
+    	if self.isBattle:
+    		if self.help.config('text')[-1] == 'Ayuda':
+	    		self.color1_widget = self.canvasBody.create_rectangle(28,50-5,148,90-5, fill="#ffffff", outline="#ffffff")
+	    		self.color2_widget = self.canvasBody.create_rectangle(160,50-5,280,90-5, fill="#ffffff", outline="#ffffff")
+	    		self.color3_widget = self.canvasBody.create_rectangle(28,102-5,148,142-5, fill="#ffffff", outline="#ffffff")
+	    		self.color4_widget = self.canvasBody.create_rectangle(160,102-5,280,142-5, fill="#ffffff", outline="#ffffff")
+	    		self.color5_widget = self.canvasBody.create_rectangle(28,185-5,148,225-5, fill="#ffffff", outline="#ffffff")
+	    		self.color6_widget = self.canvasBody.create_rectangle(160,185-5,280,225-5, fill="#ffffff", outline="#ffffff")
+	    		self.text1_widget = self.canvasBody.create_text(28+60, 45+20, text="???", fill="black", font=('Verdana 10'))
+	    		self.text2_widget = self.canvasBody.create_text(160+60, 45+20, text="???", fill="black", font=('Verdana 10'))
+	    		self.text3_widget = self.canvasBody.create_text(28+60, 97+20, text="???", fill="black", font=('Verdana 10'))
+	    		self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text="???", fill="black", font=('Verdana 10'))
+	    		self.text5_widget = self.canvasBody.create_text(28+55, 180+20, text="???", fill="black", font=('Verdana 10'))
+	    		self.text6_widget = self.canvasBody.create_text(160+55, 180+20, text="???", fill="black", font=('Verdana 10'))
+	    	else:
+	    		self.color1_widget = self.canvasBody.create_rectangle(28,50-5,148,90-5, fill=self.color1, outline=self.color1)
+	    		self.color2_widget = self.canvasBody.create_rectangle(160,50-5,280,90-5, fill=self.color2, outline=self.color2)
+	    		self.color3_widget = self.canvasBody.create_rectangle(28,102-5,148,142-5, fill=self.color3, outline=self.color3)
+	    		self.color4_widget = self.canvasBody.create_rectangle(160,102-5,280,142-5, fill=self.color4, outline=self.color4)
+	    		self.color5_widget = self.canvasBody.create_rectangle(28,185-5,148,225-5, fill=self.color5, outline=self.color5)
+	    		self.color6_widget = self.canvasBody.create_rectangle(160,185-5,280,225-5, fill=self.color6, outline=self.color6)
+	    		self.text1_widget = self.canvasBody.create_text(28+60, 45+20, text=self.text1, fill="black", font=('Verdana 10'))
+	    		self.text2_widget = self.canvasBody.create_text(160+60, 45+20, text=self.text2, fill="black", font=('Verdana 10'))
+	    		self.text3_widget = self.canvasBody.create_text(28+60, 97+20, text=self.text3, fill="black", font=('Verdana 8'))
+	    		self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text=self.text4, fill="black", font=('Verdana 8'))
+	    		self.text5_widget = self.canvasBody.create_text(28+55, 180+20, text=math.floor(self.text5), fill="white", font=('Verdana 12'))
+	    		self.text6_widget = self.canvasBody.create_text(160+55, 180+20, text=math.floor(self.text6), fill="white", font=('Verdana 12'))
+    	else:
+	    	if self.help.config('text')[-1] == 'Ayuda':
+	    		self.color1_widget = self.canvasBody.create_rectangle(28,50-5,148,90-5, fill="#ffffff", outline="#ffffff")
+	    		self.color2_widget = self.canvasBody.create_rectangle(160,50-5,280,90-5, fill="#ffffff", outline="#ffffff")
+	    		self.color3_widget = self.canvasBody.create_rectangle(28,102-5,148,142-5, fill="#ffffff", outline="#ffffff")
+	    		self.color4_widget = self.canvasBody.create_rectangle(160,102-5,280,142-5, fill="#ffffff", outline="#ffffff")
+	    		self.text1_widget = self.canvasBody.create_text(28+60, 45+20, text="???", fill="black", font=('Verdana 10'))
+	    		self.text2_widget = self.canvasBody.create_text(160+60, 45+20, text="???", fill="black", font=('Verdana 10'))
+	    		self.text3_widget = self.canvasBody.create_text(28+60, 97+20, text="???", fill="black", font=('Verdana 10'))
+	    		self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text="???", fill="black", font=('Verdana 10'))
+	    	else:
+	    		self.color1_widget = self.canvasBody.create_rectangle(28,50-5,148,90-5, fill=self.color1, outline=self.color1)
+	    		self.color2_widget = self.canvasBody.create_rectangle(160,50-5,280,90-5, fill=self.color2, outline=self.color2)
+	    		self.color3_widget = self.canvasBody.create_rectangle(28,102-5,148,142-5, fill=self.color3, outline=self.color3)
+	    		self.color4_widget = self.canvasBody.create_rectangle(160,102-5,280,142-5, fill=self.color4, outline=self.color4)
+	    		self.text1_widget = self.canvasBody.create_text(28+60, 45+20, text=self.text1, fill="black", font=('Verdana 10'))
+	    		self.text2_widget = self.canvasBody.create_text(160+60, 45+20, text=self.text2, fill="black", font=('Verdana 10'))
+	    		self.text3_widget = self.canvasBody.create_text(28+60, 97+20, text=self.text3, fill="black", font=('Verdana 10'))
+	    		self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text=self.text4, fill="black", font=('Verdana 10'))
     	self.screenNormal()
 
     def screenNormalEnd(self):
     	# delete widgets
-    	self.canvasBody.delete(self.buttonHide_widget)
-    	self.canvasBody.delete(self.textWinner_widget1)
-    	self.canvasBody.delete(self.textWinner_widget2)
-    	self.canvasBody.delete(self.emoji_widget)
-    	self.canvasBody.delete(self.rectangle1)
-    	self.canvasBody.delete(self.color1_widget)
-    	self.canvasBody.delete(self.color2_widget)
-    	self.canvasBody.delete(self.color3_widget)
-    	self.canvasBody.delete(self.color4_widget)
-    	self.canvasBody.delete(self.color5_widget)
-    	self.canvasBody.delete(self.color6_widget)
-    	self.canvasBody.delete(self.text1_widget)
-    	self.canvasBody.delete(self.text2_widget)
-    	self.canvasBody.delete(self.text3_widget)
-    	self.canvasBody.delete(self.text4_widget)
-    	self.canvasBody.delete(self.text5_widget)
-    	self.canvasBody.delete(self.text6_widget)
+    	self.canvasBody.delete("all")
     	# IMG Bar Chart
     	self.barChartPNG = Image.open("IMGs/barChart.png")
     	self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
@@ -724,11 +729,13 @@ class Modulo2(tk.Frame):
     	self.help.configure(width = 16, height = 1, relief = tk.FLAT)
     	self.help_widget = self.canvasBody.create_window(400, 185, window=self.help)
     	self.help.config(state='disabled')
+    	self.auxHelp = self.help
     	self.screenNormal()
 
     def screenNormal(self):
     	# Botón Iniciar Batalla
     	self.startBattle_widget = self.canvasBody.create_window(400, 225, window=self.auxStartBattle)
+    	self.auxStartBattle = self.startBattle
     	# Botón Ayuda
     	self.help_widget = self.canvasBody.create_window(400, 185, window=self.auxHelp)
     	# Label Nombre de Usuario
@@ -744,22 +751,12 @@ class Modulo2(tk.Frame):
     	self.strName_widget = self.canvasBody.create_window(400, 40, window=self.auxNameEntry)
     	self.strPassword_widget = self.canvasBody.create_window(400, 90, window=self.auxPasswordEntry)
     	self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.auxCbbTeam)
-    	# Reward
-    	self.labelR = tk.Label(self,text="", bg = "#283158", font=('Verdana 12 bold'), fg="white")
-    	self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
-    	self.labelR1 = tk.Label(self,text="", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
-    	self.labelR2 = tk.Label(self,text="", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
-    	self.canvasBody.delete(self.LabelR_widget)
-    	self.canvasBody.delete(self.LabelR1_widget)
-    	self.canvasBody.delete(self.LabelR2_widget)
     	# IMG Exit
     	self.exitPNG = Image.open("IMGs/exit.png")
     	self.newExitPNG = self.exitPNG.convert(mode="RGBA")
     	self.exitResized = self.newExitPNG.resize((40,40), Image.Resampling.LANCZOS)
     	self.exitTK = ImageTk.PhotoImage(self.exitResized)
-    	self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: controller.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+    	self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
     	self.buttonExit_widget = self.canvasHead.create_window(470, 28, window=self.buttonExit)
     	# IMG Info
     	self.infoPNG = Image.open("IMGs/info.png")
