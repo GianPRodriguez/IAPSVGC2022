@@ -907,6 +907,8 @@ def form_change(battle, split_msg):
         namePkmn = constants.standardName[name.lower()]
     else:
         namePkmn = name.lower()
+    if namePkmn == "mimikyu":
+        return battle
     if is_opponent(battle, split_msg):
         if split_msg[2].startswith("p2"):
             # ¿p2a o p2b?

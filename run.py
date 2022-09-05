@@ -5,16 +5,14 @@ from threading import Thread
 from teams import load_team
 from multiprocessing import Process, Queue
 from showdown.run_battle import pokemon_battle
+from asyncio.tasks import FIRST_COMPLETED
 from showdown.websocket_client import PSWebsocketClient
 import sys
 import asyncio
 import json
 import constants
 import config
-import logging
-
-
-logger = logging.getLogger(__name__)
+import queue
 
 
 def parse_configs():
@@ -40,10 +38,9 @@ def parse_configs():
 
     if config.bot_mode == constants.CHALLENGE_USER:
         config.user_to_challenge = env("USER_TO_CHALLENGE")
-    init_logging("INFO")
 
 # MAIN
-async def showdown(q,username,password,teamname,botmode):
+async def showdown(q, username, password, teamname, botmode, opponentUsername, training, numBattles):
     # Configuración de la Aplicación
     parse_configs()
     # Parameters
@@ -54,15 +51,15 @@ async def showdown(q,username,password,teamname,botmode):
         config.username = username
         config.password = password
     # Creo una Clase PSWebsocketClient
-    ps_websocket_client = await PSWebsocketClient.create(config.username, config.password, config.websocket_uri)
+    ps_websocket_client = await PSWebsocketClient.create(username, password, config.websocket_uri)
     # Se lee "|challstr|4|a6e6e29652941bc1b872a2c34cb0b4e6fdd83355bd3b8787d1519685b29bfb5d267f479f4be9f9fe554605c6c9842160194586f55644f532d991560f817c5939bf7961319b23de0803bac5f6faa2935e395c0f28da55b4c052ece76f0f64e5acdfea8691ac2607012b0d742704920c9fe3c6bc13730b121d6459b84f03d399b8"
-    isOk = await ps_websocket_client.login()
+    isOk = await ps_websocket_client.login(training)
     if isOk == -1:
         print("[INFO]     ¡Usuario o contraseña incorrecta!")
         q.put([-5])
         sys.exit()
     # Contadores
-    battles_run = 0
+    battles_run = numBattles
     wins = 0
     losses = 0
     # Hasta que no se alcance la cantidad de batallas definidas
@@ -71,7 +68,10 @@ async def showdown(q,username,password,teamname,botmode):
         team = load_team(config.team_name)
         # Opciones de juego
         if config.bot_mode == constants.CHALLENGE_USER:
-            await ps_websocket_client.challenge_user(config.user_to_challenge, config.pokemon_mode, team)
+            if training:
+                await ps_websocket_client.challenge_user(opponentUsername, config.pokemon_mode, team)
+            else:
+                await ps_websocket_client.challenge_user(config.user_to_challenge, config.pokemon_mode, team)
         elif config.bot_mode == constants.ACCEPT_CHALLENGE:
             await ps_websocket_client.accept_challenge(config.pokemon_mode, team, config.room_name)
         elif config.bot_mode == constants.SEARCH_LADDER:
@@ -80,7 +80,7 @@ async def showdown(q,username,password,teamname,botmode):
         else:
             raise ValueError("Invalid Bot Mode")
         # Nueva Batalla Pokémon completo
-        winner, q = await pokemon_battle(ps_websocket_client, q, config.bot_mode)
+        winner, q = await pokemon_battle(ps_websocket_client, q, config.bot_mode, training)
         if winner == config.username:
             wins += 1
         else:
@@ -90,11 +90,21 @@ async def showdown(q,username,password,teamname,botmode):
         if battles_run >= config.run_count:
             break
     # Fin
-    logger.handlers.clear()
-    sys.exit()
+    q.put([-10])
+
+async def stop(q, username, password, teamname, botmode, opponentUsername, training, numBattles):
+    poller = asyncio.ensure_future(showdown(q, username, password, teamname, botmode, opponentUsername, training, numBattles))
+    while True:
+        await asyncio.sleep(0.1)
+        try:
+            cola = q.get(0)
+            if cola[0] == -10:
+                poller.cancel()
+                return
+        except queue.Empty:
+            ...
 
 class AsyncDownload(Thread):
-    def __init__(self, q, username,password,teamname,botmode):
+    def __init__(self, q, username, password, teamname, botmode, opponentUsername, training, numBattles):
         super().__init__()
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-        asyncio.run(showdown(q,username,password,teamname,botmode))
+        asyncio.run(stop(q,username,password,teamname,botmode, opponentUsername, training, numBattles))

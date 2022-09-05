@@ -52,7 +52,8 @@ class BattleBot(Battle):
         namePokemon2 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion2-1].get('details', 'False').partition(",")[0]
         namePokemon3 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion3-1].get('details', 'False').partition(",")[0]
         # Send to Queue
-        print("[ACTION]   {}".format([namePokemon0, namePokemon1, namePokemon2, namePokemon3]))
+        if not battle.isTraining:
+            print("[ACTION]   {}".format([namePokemon0, namePokemon1, namePokemon2, namePokemon3]))
         battle.q.put([1,namePokemon0, namePokemon1, namePokemon2, namePokemon3, 0, 0])
         # Return 4 integers
         return eleccion0, eleccion1, eleccion2, eleccion3
@@ -546,8 +547,9 @@ class BattleBot(Battle):
             color6 = "#325928"
         else:
             color6 = "#582831"
-        print("[REWARD]   {}".format([math.floor(deltaReward), math.floor(reward)]))
-        print("[ACTION]   {}".format([text1, text3, text2, text4]))
-        print("[COLOR]    {}".format([color1, color3, color2, color4, color5, color6]))
+        if not battle.isTraining:
+            print("[REWARD]   {}".format([math.floor(deltaReward), math.floor(reward)]))
+            print("[ACTION]   {}".format([text1, text3, text2, text4]))
+            print("[COLOR]    {}".format([color1, color3, color2, color4, color5, color6]))
         battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4, math.floor(deltaReward), color5, math.floor(reward), color6])
         return battle, moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2)

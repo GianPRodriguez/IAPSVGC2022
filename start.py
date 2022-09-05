@@ -185,7 +185,7 @@ class Modulo1(tk.Frame):
 			self.button1['state'] = tk.DISABLED
 			self.button1.configure(text='Esperando Confirmación')
 			# Thread
-			self.p = Thread(target=AsyncDownload, args=(q1,username,password,teamname,botmode,))
+			self.p = Thread(target=AsyncDownload, args=(q1,username,password,teamname,botmode,False,1,))
 			self.p.start()
 			# Monitor
 			self.monitor(q1)
@@ -393,7 +393,7 @@ class Modulo2(tk.Frame):
 	    	# Start Battle
 	    	self.startBattle['state'] = tk.DISABLED
 	    	self.startBattle.configure(text='Buscando Oponente')
-	    	self.p = Thread(target=AsyncDownload, args=(self.q, self.username, self.password, self.teamname, botmode, ))
+	    	self.p = Thread(target=AsyncDownload, args=(self.q, self.username, self.password, self.teamname, botmode, False, 1,))
 	    	self.p.start()
 	    	self.isBattle = False
 	    	self.monitor()
@@ -551,8 +551,8 @@ class Modulo2(tk.Frame):
     	if self.help.config('text')[-1] == 'Ayuda':
     		self.canvasBody.itemconfig(self.text1_widget, text=self.text1)
     		self.canvasBody.itemconfig(self.text2_widget, text=self.text2)
-    		self.canvasBody.itemconfig(self.text3_widget, text=self.text3)
-    		self.canvasBody.itemconfig(self.text4_widget, text=self.text4)
+    		self.canvasBody.itemconfig(self.text3_widget, text=self.text3, fill="black", font=('Verdana 8'))
+    		self.canvasBody.itemconfig(self.text4_widget, text=self.text4, fill="black", font=('Verdana 8'))
     		self.canvasBody.itemconfig(self.color1_widget, fill=self.color1, outline=self.color1)
     		self.canvasBody.itemconfig(self.color2_widget, fill=self.color2, outline=self.color2)
     		self.canvasBody.itemconfig(self.color3_widget, fill=self.color3, outline=self.color3)

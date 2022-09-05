@@ -43,7 +43,8 @@ async def accion_batalla(battle):
 
 async def escoge_accion_team_preview(battle, ps_websocket_client):
     # Se escoge los 4 Pokémon: eleccion(n) es un entero
-    print("[INFO]     Vista Previa del Equipo")
+    if not battle.isTraining:
+        print("[INFO]     Vista Previa del Equipo")
     eleccion0, eleccion1, eleccion2, eleccion3 = await battle.action_team_preview(battle)    
     # Se prepara el String que se va a enviar al WebSocket
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
@@ -51,7 +52,8 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
     # Se envía la acción al WebSocket
     if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
         # Imprimo en CMD la acción hecha por el agente
-        print("[SEND]     {}".format(mensaje))
+        if not battle.isTraining:
+            print("[SEND]     {}".format(mensaje))
         # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
         battle.user.active1 = battle.user.reserved[eleccion0-1]
         battle.user.active2 = battle.user.reserved[eleccion1-1]
@@ -178,9 +180,10 @@ async def iniciar_batalla(ps_websocket_client, q, botMode):
 
 
 # Nueva Batalla Pokémon completo
-async def pokemon_battle(ps_websocket_client, q, botMode):
+async def pokemon_battle(ps_websocket_client, q, botMode, training):
     # Solo inicia la batalla
     battle = await iniciar_batalla(ps_websocket_client, q, botMode)
+    battle.isTraining = training
     battle.imprimir()
     # Mientras...
     while True:

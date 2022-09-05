@@ -33,6 +33,7 @@ class Battle(ABC):
         self.lastReward = 0
         self.botMode = None
         self.q = Queue()
+        self.isTraining = False
         self.cadenaTypes = json.loads(open("API/JSONs/typeChart.json","r").read())
         self.cadenaTP = json.loads(open("API/JSONs/geneticAlgorithm.json","r").read())
         self.moveTypes = json.loads(open("API/JSONs/pkmnMovesTypes.json","r").read())
