@@ -107,4 +107,7 @@ async def stop(q, username, password, teamname, botmode, opponentUsername, train
 class AsyncDownload(Thread):
     def __init__(self, q, username, password, teamname, botmode, opponentUsername, training, numBattles):
         super().__init__()
-        asyncio.run(stop(q,username,password,teamname,botmode, opponentUsername, training, numBattles))
+        if training:
+            asyncio.run(stop(q,username,password,teamname,botmode, opponentUsername, training, numBattles))
+        else:
+            asyncio.run(showdown(q,username,password,teamname,botmode, opponentUsername, training, numBattles))

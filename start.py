@@ -43,12 +43,12 @@ class StartPage(tk.Frame):
 		tk.Frame.__init__(self, parent)
 		self.controller = controller
 		# Canvas Head
-		canvasHead = tk.Canvas(self, width=500, height=50, bg="#154e72")
+		canvasHead = tk.Canvas(self, width=500, height=50, bg="#283158")
 		canvasHead.place(x=0, y=0, anchor = tk.CENTER)
 		canvasHead.create_text(250, 25, text="Lorem ipsum dolor sit amet", fill="white", font=('Verdana 15 bold'))
 		canvasHead.pack()
 		# Canvas Body
-		canvasBody = tk.Canvas(self, width=500, height=259, bg="#154e72")
+		canvasBody = tk.Canvas(self, width=500, height=259, bg="#283158")
 		canvasBody.place(x=0, y=50, anchor = tk.CENTER)
 		canvasBody.pack()
 
@@ -101,7 +101,7 @@ class Modulo1(tk.Frame):
 		# IMG Exit
 		self.salirPNG = Image.open("IMGs/exit.png")
 		self.newSalirPNG = self.salirPNG.convert(mode="RGBA")
-		self.resized_image= self.newSalirPNG.resize((40,40), Image.Resampling.LANCZOS)
+		self.resized_image= self.newSalirPNG.resize((40,40), Image.LANCZOS)
 		self.salirTK = ImageTk.PhotoImage(self.resized_image)
 		self.buttonSalir = tk.Button(self, image=self.salirTK, command=lambda: controller.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
 		self.buttonSalir_widget = self.canvasHead.create_window(470, 28, window=self.buttonSalir)
@@ -185,7 +185,7 @@ class Modulo1(tk.Frame):
 			self.button1['state'] = tk.DISABLED
 			self.button1.configure(text='Esperando Confirmación')
 			# Thread
-			self.p = Thread(target=AsyncDownload, args=(q1,username,password,teamname,botmode,False,1,))
+			self.p = Thread(target=AsyncDownload, args=(q1,username,password,teamname,botmode,None,False,1,))
 			self.p.start()
 			# Monitor
 			self.monitor(q1)
@@ -206,7 +206,7 @@ class Modulo1(tk.Frame):
 			# Emoji
 			self.emoji = Image.open("IMGs/close.png")
 			self.emojiPNG = self.emoji.convert(mode="RGBA")
-			self.emojiResized_image = self.emojiPNG.resize((80,80), Image.Resampling.LANCZOS)
+			self.emojiResized_image = self.emojiPNG.resize((80,80), Image.LANCZOS)
 			self.emojiTK = ImageTk.PhotoImage(self.emojiResized_image)
 			self.emoji_widget = self.canvasBody.create_image(420,85,image=self.emojiTK)
 			# Text
@@ -249,7 +249,7 @@ class Modulo1(tk.Frame):
 			self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="Has perdido :(", fill="white", font=('Verdana 14'))
 			self.textWinner_widget2 = self.canvasBody.create_text(185, 100, text="Suerte para la próxima", fill="white", font=('Verdana 11'))
 		self.emojiPNG = self.emoji.convert(mode="RGBA")
-		self.emojiResized_image = self.emojiPNG.resize((80,80), Image.Resampling.LANCZOS)
+		self.emojiResized_image = self.emojiPNG.resize((80,80), Image.LANCZOS)
 		self.emojiTK = ImageTk.PhotoImage(self.emojiResized_image)
 		self.emoji_widget = self.canvasBody.create_image(420,85,image=self.emojiTK)
 		# Button
@@ -347,20 +347,20 @@ class Modulo2(tk.Frame):
     	# IMG Exit
     	self.exitPNG = Image.open("IMGs/exit.png")
     	self.newExitPNG = self.exitPNG.convert(mode="RGBA")
-    	self.exitResized = self.newExitPNG.resize((40,40), Image.Resampling.LANCZOS)
+    	self.exitResized = self.newExitPNG.resize((40,40), Image.LANCZOS)
     	self.exitTK = ImageTk.PhotoImage(self.exitResized)
     	self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
     	self.buttonExit_widget = self.canvasHead.create_window(470, 28, window=self.buttonExit)
     	# IMG Bar Chart
     	self.barChartPNG = Image.open("IMGs/barChart.png")
     	self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
-    	self.barChartResized = self.newBarChartPNG.resize((200,200), Image.Resampling.LANCZOS)
+    	self.barChartResized = self.newBarChartPNG.resize((200,200), Image.LANCZOS)
     	self.barChartTK = ImageTk.PhotoImage(self.barChartResized)
     	self.barChart_widget = self.canvasBody.create_image(160,125,image=self.barChartTK)
     	# IMG Info
     	self.infoPNG = Image.open("IMGs/info.png")
     	self.newInfoPNG = self.infoPNG.convert(mode="RGBA")
-    	self.infoResized = self.newInfoPNG.resize((38,38), Image.Resampling.LANCZOS)
+    	self.infoResized = self.newInfoPNG.resize((38,38), Image.LANCZOS)
     	self.infoTK = ImageTk.PhotoImage(self.infoResized)
     	self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Análisis.pdf"'), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
     	self.buttonInfo_widget = self.canvasHead.create_window(28, 28, window=self.buttonInfo)
@@ -393,7 +393,7 @@ class Modulo2(tk.Frame):
 	    	# Start Battle
 	    	self.startBattle['state'] = tk.DISABLED
 	    	self.startBattle.configure(text='Buscando Oponente')
-	    	self.p = Thread(target=AsyncDownload, args=(self.q, self.username, self.password, self.teamname, botmode, False, 1,))
+	    	self.p = Thread(target=AsyncDownload, args=(self.q, self.username, self.password, self.teamname, botmode, None, False, 1,))
 	    	self.p.start()
 	    	self.isBattle = False
 	    	self.monitor()
@@ -523,7 +523,7 @@ class Modulo2(tk.Frame):
             		self.cbbTeam.config(state='normal')
             		self.startBattle['state'] = tk.NORMAL
             		self.startBattle.configure(text='Iniciar Batalla')
-            		self.textIncorrect = self.canvasBody.create_text(120, 235, text="¡El equipo del agente no cumple con las reglas del formato!", fill="orange", font=('Verdana 10'))
+            		self.textIncorrect = self.canvasBody.create_text(155, 235, text="¡El equipo no cumple con las reglas del formato!", fill="orange", font=('Verdana 9'))
             	elif self.cola[0] == -5:
             		# Username or Password Incorrect
             		self.textIncorrect = self.canvasBody.create_text(120, 235, text="¡Usuario o contraseña incorrecta!", fill="orange", font=('Verdana 10'))
@@ -594,7 +594,7 @@ class Modulo2(tk.Frame):
     		# Emoji
     		self.emoji = Image.open("IMGs/close.png")
     		self.emojiPNG = self.emoji.convert(mode="RGBA")
-    		self.emojiResized_image = self.emojiPNG.resize((80,80), Image.Resampling.LANCZOS)
+    		self.emojiResized_image = self.emojiPNG.resize((80,80), Image.LANCZOS)
     		self.emojiTK = ImageTk.PhotoImage(self.emojiResized_image)
     		self.emoji_widget = self.canvasBody.create_image(420,85,image=self.emojiTK)
     		# Text
@@ -633,7 +633,7 @@ class Modulo2(tk.Frame):
     		self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="Has perdido :(", fill="white", font=('Verdana 14'))
     		self.textWinner_widget2 = self.canvasBody.create_text(185, 100, text="Suerte para la próxima", fill="white", font=('Verdana 11'))
     	self.emojiPNG = self.emoji.convert(mode="RGBA")
-    	self.emojiResized_image = self.emojiPNG.resize((80,80), Image.Resampling.LANCZOS)
+    	self.emojiResized_image = self.emojiPNG.resize((80,80), Image.LANCZOS)
     	self.emojiTK = ImageTk.PhotoImage(self.emojiResized_image)
     	self.emoji_widget = self.canvasBody.create_image(420,85,image=self.emojiTK)
     	# Button
@@ -717,7 +717,7 @@ class Modulo2(tk.Frame):
     	# IMG Bar Chart
     	self.barChartPNG = Image.open("IMGs/barChart.png")
     	self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
-    	self.barChartResized = self.newBarChartPNG.resize((200,200), Image.Resampling.LANCZOS)
+    	self.barChartResized = self.newBarChartPNG.resize((200,200), Image.LANCZOS)
     	self.barChartTK = ImageTk.PhotoImage(self.barChartResized)
     	self.barChart_widget = self.canvasBody.create_image(160,125,image=self.barChartTK)
     	# Botón Iniciar Batalla
@@ -754,14 +754,14 @@ class Modulo2(tk.Frame):
     	# IMG Exit
     	self.exitPNG = Image.open("IMGs/exit.png")
     	self.newExitPNG = self.exitPNG.convert(mode="RGBA")
-    	self.exitResized = self.newExitPNG.resize((40,40), Image.Resampling.LANCZOS)
+    	self.exitResized = self.newExitPNG.resize((40,40), Image.LANCZOS)
     	self.exitTK = ImageTk.PhotoImage(self.exitResized)
     	self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
     	self.buttonExit_widget = self.canvasHead.create_window(470, 28, window=self.buttonExit)
     	# IMG Info
     	self.infoPNG = Image.open("IMGs/info.png")
     	self.newInfoPNG = self.infoPNG.convert(mode="RGBA")
-    	self.infoResized = self.newInfoPNG.resize((38,38), Image.Resampling.LANCZOS)
+    	self.infoResized = self.newInfoPNG.resize((38,38), Image.LANCZOS)
     	self.infoTK = ImageTk.PhotoImage(self.infoResized)
     	self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Análisis.pdf"'), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
     	self.buttonInfo_widget = self.canvasHead.create_window(28, 28, window=self.buttonInfo)
@@ -789,7 +789,7 @@ class Modulo3(tk.Frame):
     	# IMG Salir
     	self.salirPNG = Image.open("IMGs/exit.png")
     	self.newSalirPNG = self.salirPNG.convert(mode="RGBA")
-    	self.resized_image= self.newSalirPNG.resize((40,40), Image.Resampling.LANCZOS)
+    	self.resized_image= self.newSalirPNG.resize((40,40), Image.LANCZOS)
     	self.salirTK = ImageTk.PhotoImage(self.resized_image)
     	self.buttonSalir = tk.Button(self, image=self.salirTK, command=lambda: controller.show_frame("StartPage"), bg="#154e72", activebackground="#154e72", highlightthickness = 0, bd = 0)
     	self.buttonSalir_widget = canvasHead.create_window(470, 28, window=self.buttonSalir)

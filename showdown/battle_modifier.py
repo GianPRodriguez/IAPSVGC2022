@@ -33,7 +33,7 @@ def request(battle, split_msg):
             battle.force_switch = False
         # ¿battle_json tiene "wait"? ¿Se activa cuando el opponente usa U-TURN?
         if battle_json.get(constants.WAIT):
-            print("[INFO]     Action: forceSwitch")
+            print("[INFO]     Action: Wait")
             battle.wait = True
         else:
             battle.wait = False
@@ -907,6 +907,7 @@ def form_change(battle, split_msg):
         namePkmn = constants.standardName[name.lower()]
     else:
         namePkmn = name.lower()
+    print(namePkmn)
     if namePkmn == "mimikyu":
         return battle
     if is_opponent(battle, split_msg):
