@@ -168379,3 +168379,2402 @@ dark  :  0.15029
 steel  :  0.08253
 bug  :  0.01515
 
+
+Estado del Entorno
+------------------
+Turn: 0
+Started: True
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+rqid: 2
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: Delta VGC 2022
+
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 168
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 168
+ATB: 182
+DEB: 135
+VEB: 209
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  1
+fighting  :  1
+fairy  :  1
+
+Name: calyrex-shadow
+Type 1: psychic
+Type 2: ghost
+Max HP: 176
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 176
+ATB: 217
+DEB: 110
+VEB: 222
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ghost  :  1
+psychic  :  1
+ground  :  1
+dark  :  1
+
+Name: incineroar
+Type 1: fire
+Type 2: dark
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 136
+DEB: 132
+VEB: 82
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+normal  :  1
+fire  :  1
+dark  :  1
+
+Name: gastrodon
+Type 1: water
+Type 2: ground
+Max HP: 209
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 209
+ATB: 112
+DEB: 121
+VEB: 59
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ground  :  1
+ice  :  1
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 203
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 203
+ATB: 187
+DEB: 106
+VEB: 106
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  1
+normal  :  1
+ground  :  1
+bug  :  1
+
+Name: thundurus-incarnate
+Type 1: electric
+Type 2: flying
+Max HP: 155
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 155
+ATB: 167
+DEB: 95
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+electric  :  1
+dark  :  1
+fighting  :  1
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: fsucia
+
+opponentPkmnConfirmed: 0
+
+Side conditions: 
+
+Active 1: None
+
+Active 2: None
+
+List of Reserved: 
+
+Name: tapu fini
+Type 1: water
+Type 2: fairy
+Max HP: 177
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 177
+ATB: 161
+DEB: 166
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.86173
+water  :  0.2969
+ghost  :  0.13964
+ice  :  0.09851
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 199
+ATB: 244
+DEB: 159
+VEB: 220
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.99985
+fighting  :  0.75735
+fairy  :  0.5383
+normal  :  0.28244
+
+Name: urshifu-single-strike
+Type 1: fighting
+Type 2: dark
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 207
+ATB: 200
+DEB: 121
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dark  :  0.99964
+fighting  :  0.99805
+bug  :  0.13374
+rock  :  0.06665
+
+Name: solgaleo
+Type 1: psychic
+Type 2: steel
+Max HP: 244
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 244
+ATB: 207
+DEB: 141
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.9995
+ground  :  0.97452
+electric  :  0.63119
+rock  :  0.52669
+psychic  :  0.23064
+fire  :  0.01563
+
+Name: grimmsnarl
+Type 1: dark
+Type 2: fairy
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 189
+DEB: 111
+VEB: 123
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.50748
+dark  :  0.40074
+normal  :  0.08012
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 207
+ATB: 194
+DEB: 122
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  0.99917
+normal  :  0.96769
+ground  :  0.76241
+bug  :  0.44455
+dark  :  0.20077
+
+
+Estado del Entorno
+------------------
+Turn: 1
+Started: True
+Weather: None
+Weather Turn: 0
+Terrain: None
+Terrain Turn: 0
+Trick Room: 0
+rqid: 4
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: Delta VGC 2022
+
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 168
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  1
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 168
+ATB: 273
+DEB: 180
+VEB: 209
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[8, 24, 16, 16]
+steel  :  1
+fighting  :  1
+fairy  :  1
+
+Active 2: 
+
+Name: thundurus-incarnate
+Type 1: electric
+Type 2: flying
+Max HP: 155
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 155
+ATB: 167
+DEB: 126
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[24, 24, 24, 24]
+electric  :  1
+dark  :  1
+fighting  :  1
+
+List of Reserved: 
+
+Name: calyrex-shadow
+Type 1: psychic
+Type 2: ghost
+Max HP: 176
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 176
+ATB: 217
+DEB: 146
+VEB: 222
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ghost  :  1
+psychic  :  1
+ground  :  1
+dark  :  1
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 203
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 203
+ATB: 187
+DEB: 141
+VEB: 106
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  1
+normal  :  1
+ground  :  1
+bug  :  1
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: fsucia
+
+opponentPkmnConfirmed: 2
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: solgaleo
+Type 1: psychic
+Type 2: steel
+Max HP: 244
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: False
+---STATS---
+HPB: 244
+ATB: 207
+DEB: 187
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.9995
+ground  :  0.97452
+electric  :  0.63119
+rock  :  0.52669
+psychic  :  0.23064
+fire  :  0.01563
+
+Active 2: 
+
+Name: grimmsnarl
+Type 1: dark
+Type 2: fairy
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: False
+---STATS---
+HPB: 202
+ATB: 189
+DEB: 148
+VEB: 123
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.50748
+dark  :  0.40074
+normal  :  0.08012
+
+List of Reserved: 
+
+Name: tapu fini
+Type 1: water
+Type 2: fairy
+Max HP: 177
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 177
+ATB: 161
+DEB: 222
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.86173
+water  :  0.2969
+ghost  :  0.13964
+ice  :  0.09851
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 199
+ATB: 244
+DEB: 212
+VEB: 220
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.99985
+fighting  :  0.75735
+fairy  :  0.5383
+normal  :  0.28244
+
+Name: urshifu-single-strike
+Type 1: fighting
+Type 2: dark
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 207
+ATB: 200
+DEB: 162
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dark  :  0.99964
+fighting  :  0.99805
+bug  :  0.13374
+rock  :  0.06665
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 207
+ATB: 194
+DEB: 162
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  0.99917
+normal  :  0.96769
+ground  :  0.76241
+bug  :  0.44455
+dark  :  0.20077
+
+
+Estado del Entorno
+------------------
+Turn: 2
+Started: True
+Weather: None
+Weather Turn: 0
+Terrain: grassyterrain
+Terrain Turn: 4
+Trick Room: 0
+rqid: 8
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: Delta VGC 2022
+
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 168
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  1
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 10
+ATB: 273
+DEB: 180
+VEB: 209
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[7, 24, 16, 16]
+steel  :  1
+fighting  :  1
+fairy  :  1
+
+Active 2: 
+
+Name: thundurus-incarnate
+Type 1: electric
+Type 2: flying
+Max HP: 310
+Status: None
+Volatile Status: ['dynamax']
+Boosts: 
+Can Dynamax: False
+Is Dynamax: True
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 295
+ATB: 217
+DEB: 126
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[23, 24, 24, 24]
+electric  :  1
+dark  :  1
+fighting  :  1
+
+List of Reserved: 
+
+Name: calyrex-shadow
+Type 1: psychic
+Type 2: ghost
+Max HP: 176
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 176
+ATB: 217
+DEB: 146
+VEB: 222
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ghost  :  1
+psychic  :  1
+ground  :  1
+dark  :  1
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 203
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 203
+ATB: 187
+DEB: 141
+VEB: 106
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  1
+normal  :  1
+ground  :  1
+bug  :  1
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: fsucia
+
+opponentPkmnConfirmed: 3
+
+Side conditions: 
+tailwind  :  0
+reflect  :  4
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: solgaleo
+Type 1: psychic
+Type 2: steel
+Max HP: 488
+Status: None
+Volatile Status: ['dynamax']
+Boosts: 
+special-defense  :  1
+Can Dynamax: True
+Is Dynamax: True
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: False
+---STATS---
+HPB: 400
+ATB: 269
+DEB: 239
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.9995
+ground  :  0.97452
+electric  :  0.63119
+rock  :  0.52669
+psychic  :  0.23064
+fire  :  0.01563
+
+Active 2: 
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: False
+---STATS---
+HPB: 207
+ATB: 194
+DEB: 162
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  0.99917
+normal  :  0.96769
+ground  :  0.76241
+bug  :  0.44455
+dark  :  0.20077
+
+List of Reserved: 
+
+Name: tapu fini
+Type 1: water
+Type 2: fairy
+Max HP: 177
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 177
+ATB: 161
+DEB: 222
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.86173
+water  :  0.2969
+ghost  :  0.13964
+ice  :  0.09851
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 199
+ATB: 244
+DEB: 212
+VEB: 220
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.99985
+fighting  :  0.75735
+fairy  :  0.5383
+normal  :  0.28244
+
+Name: urshifu-single-strike
+Type 1: fighting
+Type 2: dark
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 207
+ATB: 200
+DEB: 162
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dark  :  0.99964
+fighting  :  0.99805
+bug  :  0.13374
+rock  :  0.06665
+
+Name: grimmsnarl
+Type 1: dark
+Type 2: fairy
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 189
+DEB: 148
+VEB: 123
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.50748
+dark  :  0.40074
+normal  :  0.08012
+
+
+Estado del Entorno
+------------------
+Turn: 2
+Started: True
+Weather: sandstorm
+Weather Turn: 5
+Terrain: electricterrain
+Terrain Turn: 5
+Trick Room: 0
+rqid: 10
+Force Switch: True
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: Delta VGC 2022
+
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 168
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  1
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 273
+DEB: 180
+VEB: 209
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[7, 24, 16, 16]
+steel  :  1
+fighting  :  1
+fairy  :  1
+
+Active 2: 
+
+Name: thundurus-incarnate
+Type 1: electric
+Type 2: flying
+Max HP: 310
+Status: None
+Volatile Status: ['dynamax']
+Boosts: 
+Can Dynamax: False
+Is Dynamax: True
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 21
+ATB: 217
+DEB: 126
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[23, 24, 24, 24]
+electric  :  1
+dark  :  1
+fighting  :  1
+
+List of Reserved: 
+
+Name: calyrex-shadow
+Type 1: psychic
+Type 2: ghost
+Max HP: 176
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 176
+ATB: 217
+DEB: 146
+VEB: 222
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+ghost  :  1
+psychic  :  1
+ground  :  1
+dark  :  1
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 203
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 203
+ATB: 187
+DEB: 141
+VEB: 106
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  1
+normal  :  1
+ground  :  1
+bug  :  1
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: fsucia
+
+opponentPkmnConfirmed: 3
+
+Side conditions: 
+tailwind  :  0
+reflect  :  4
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: solgaleo
+Type 1: psychic
+Type 2: steel
+Max HP: 488
+Status: None
+Volatile Status: ['dynamax']
+Boosts: 
+special-defense  :  1
+Can Dynamax: True
+Is Dynamax: True
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: False
+---STATS---
+HPB: 307
+ATB: 269
+DEB: 239
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.9995
+ground  :  0.97452
+electric  :  0.63119
+rock  :  0.52669
+psychic  :  0.23064
+fire  :  0.01563
+
+Active 2: 
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: False
+---STATS---
+HPB: 196
+ATB: 194
+DEB: 162
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  0.99917
+normal  :  0.96769
+ground  :  0.76241
+bug  :  0.44455
+dark  :  0.20077
+
+List of Reserved: 
+
+Name: tapu fini
+Type 1: water
+Type 2: fairy
+Max HP: 177
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 177
+ATB: 161
+DEB: 222
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.86173
+water  :  0.2969
+ghost  :  0.13964
+ice  :  0.09851
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 199
+ATB: 244
+DEB: 212
+VEB: 220
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.99985
+fighting  :  0.75735
+fairy  :  0.5383
+normal  :  0.28244
+
+Name: urshifu-single-strike
+Type 1: fighting
+Type 2: dark
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 207
+ATB: 200
+DEB: 162
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dark  :  0.99964
+fighting  :  0.99805
+bug  :  0.13374
+rock  :  0.06665
+
+Name: grimmsnarl
+Type 1: dark
+Type 2: fairy
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 189
+DEB: 148
+VEB: 123
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.50748
+dark  :  0.40074
+normal  :  0.08012
+
+
+Estado del Entorno
+------------------
+Turn: 3
+Started: True
+Weather: sandstorm
+Weather Turn: 4
+Terrain: electricterrain
+Terrain Turn: 4
+Trick Room: 0
+rqid: 12
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: Delta VGC 2022
+
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: calyrex-shadow
+Type 1: psychic
+Type 2: ghost
+Max HP: 176
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 176
+ATB: 217
+DEB: 146
+VEB: 222
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[8, 16, 24, 24]
+ghost  :  1
+psychic  :  1
+ground  :  1
+dark  :  1
+
+Active 2: 
+
+Name: thundurus-incarnate
+Type 1: electric
+Type 2: flying
+Max HP: 310
+Status: None
+Volatile Status: ['dynamax']
+Boosts: 
+Can Dynamax: False
+Is Dynamax: True
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 21
+ATB: 217
+DEB: 126
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[22, 24, 24, 24]
+electric  :  1
+dark  :  1
+fighting  :  1
+
+List of Reserved: 
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 168
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 182
+DEB: 180
+VEB: 209
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[7, 24, 16, 16]
+steel  :  1
+fighting  :  1
+fairy  :  1
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 203
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 203
+ATB: 187
+DEB: 141
+VEB: 106
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  1
+normal  :  1
+ground  :  1
+bug  :  1
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: fsucia
+
+opponentPkmnConfirmed: 3
+
+Side conditions: 
+tailwind  :  0
+reflect  :  3
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: solgaleo
+Type 1: psychic
+Type 2: steel
+Max HP: 488
+Status: None
+Volatile Status: ['dynamax']
+Boosts: 
+special-defense  :  1
+Can Dynamax: True
+Is Dynamax: True
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: False
+---STATS---
+HPB: 307
+ATB: 269
+DEB: 239
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.9995
+ground  :  0.97452
+electric  :  0.63119
+rock  :  0.52669
+psychic  :  0.23064
+fire  :  0.01563
+
+Active 2: 
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: False
+---STATS---
+HPB: 196
+ATB: 194
+DEB: 162
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  0.99917
+normal  :  0.96769
+ground  :  0.76241
+bug  :  0.44455
+dark  :  0.20077
+
+List of Reserved: 
+
+Name: tapu fini
+Type 1: water
+Type 2: fairy
+Max HP: 177
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 177
+ATB: 161
+DEB: 222
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.86173
+water  :  0.2969
+ghost  :  0.13964
+ice  :  0.09851
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 199
+ATB: 244
+DEB: 212
+VEB: 220
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.99985
+fighting  :  0.75735
+fairy  :  0.5383
+normal  :  0.28244
+
+Name: urshifu-single-strike
+Type 1: fighting
+Type 2: dark
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 207
+ATB: 200
+DEB: 162
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dark  :  0.99964
+fighting  :  0.99805
+bug  :  0.13374
+rock  :  0.06665
+
+Name: grimmsnarl
+Type 1: dark
+Type 2: fairy
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 189
+DEB: 148
+VEB: 123
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.50748
+dark  :  0.40074
+normal  :  0.08012
+
+
+Estado del Entorno
+------------------
+Turn: 3
+Started: True
+Weather: sandstorm
+Weather Turn: 5
+Terrain: electricterrain
+Terrain Turn: 4
+Trick Room: 0
+rqid: 14
+Force Switch: True
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: Delta VGC 2022
+
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: calyrex-shadow
+Type 1: psychic
+Type 2: ghost
+Max HP: 176
+Status: None
+Volatile Status: []
+Boosts: 
+special-attack  :  1
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 325
+DEB: 146
+VEB: 222
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[8, 16, 24, 24]
+ghost  :  1
+psychic  :  1
+ground  :  1
+dark  :  1
+
+Active 2: 
+
+Name: thundurus-incarnate
+Type 1: electric
+Type 2: flying
+Max HP: 310
+Status: None
+Volatile Status: ['dynamax']
+Boosts: 
+Can Dynamax: False
+Is Dynamax: True
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 217
+DEB: 126
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[22, 24, 24, 24]
+electric  :  1
+dark  :  1
+fighting  :  1
+
+List of Reserved: 
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 168
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 182
+DEB: 180
+VEB: 209
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[7, 24, 16, 16]
+steel  :  1
+fighting  :  1
+fairy  :  1
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 203
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 203
+ATB: 187
+DEB: 141
+VEB: 106
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  1
+normal  :  1
+ground  :  1
+bug  :  1
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: fsucia
+
+opponentPkmnConfirmed: 3
+
+Side conditions: 
+tailwind  :  0
+reflect  :  3
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: solgaleo
+Type 1: psychic
+Type 2: steel
+Max HP: 488
+Status: None
+Volatile Status: ['dynamax']
+Boosts: 
+special-defense  :  1
+attack  :  2
+special-attack  :  2
+defense  :  1
+Can Dynamax: True
+Is Dynamax: True
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: False
+---STATS---
+HPB: 9
+ATB: 538
+DEB: 281
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.9995
+ground  :  0.97452
+electric  :  0.63119
+rock  :  0.52669
+psychic  :  0.23064
+fire  :  0.01563
+
+Active 2: 
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 194
+DEB: 162
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  0.99917
+normal  :  0.96769
+ground  :  0.76241
+bug  :  0.44455
+dark  :  0.20077
+
+List of Reserved: 
+
+Name: tapu fini
+Type 1: water
+Type 2: fairy
+Max HP: 177
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 177
+ATB: 161
+DEB: 222
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.86173
+water  :  0.2969
+ghost  :  0.13964
+ice  :  0.09851
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 199
+ATB: 244
+DEB: 212
+VEB: 220
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.99985
+fighting  :  0.75735
+fairy  :  0.5383
+normal  :  0.28244
+
+Name: urshifu-single-strike
+Type 1: fighting
+Type 2: dark
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 207
+ATB: 200
+DEB: 162
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+dark  :  0.99964
+fighting  :  0.99805
+bug  :  0.13374
+rock  :  0.06665
+
+Name: grimmsnarl
+Type 1: dark
+Type 2: fairy
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 189
+DEB: 148
+VEB: 123
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.50748
+dark  :  0.40074
+normal  :  0.08012
+
+
+Estado del Entorno
+------------------
+Turn: 4
+Started: True
+Weather: sandstorm
+Weather Turn: 4
+Terrain: grassyterrain
+Terrain Turn: 4
+Trick Room: 0
+rqid: 16
+Force Switch: False
+Wait: False
+
+USUARIO: 
+
+id: p1
+Nombre de la cuenta: Delta VGC 2022
+
+
+Side conditions: 
+tailwind  :  0
+reflect  :  0
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 203
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: False
+---STATS---
+HPB: 203
+ATB: 187
+DEB: 141
+VEB: 106
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[32, 16, 16, 32]
+grass  :  1
+normal  :  1
+ground  :  1
+bug  :  1
+
+Active 2: 
+
+Name: thundurus-incarnate
+Type 1: electric
+Type 2: flying
+Max HP: 310
+Status: None
+Volatile Status: ['dynamax']
+Boosts: 
+Can Dynamax: False
+Is Dynamax: True
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 217
+DEB: 126
+VEB: 179
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[21, 24, 24, 24]
+electric  :  1
+dark  :  1
+fighting  :  1
+
+List of Reserved: 
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 168
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 182
+DEB: 180
+VEB: 209
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[7, 24, 16, 16]
+steel  :  1
+fighting  :  1
+fairy  :  1
+
+Name: calyrex-shadow
+Type 1: psychic
+Type 2: ghost
+Max HP: 176
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: False
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 217
+DEB: 146
+VEB: 222
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[8, 16, 24, 24]
+ghost  :  1
+psychic  :  1
+ground  :  1
+dark  :  1
+
+
+OPONENTE: 
+
+id: p2
+Nombre de la cuenta: fsucia
+
+opponentPkmnConfirmed: 4
+
+Side conditions: 
+tailwind  :  0
+reflect  :  2
+lightscreen  :  0
+auroraveil  :  0
+
+Active 1: 
+
+Name: solgaleo
+Type 1: psychic
+Type 2: steel
+Max HP: 244
+Status: None
+Volatile Status: []
+Boosts: 
+special-defense  :  1
+attack  :  2
+special-attack  :  2
+defense  :  1
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: False
+---STATS---
+HPB: 7
+ATB: 414
+DEB: 281
+VEB: 163
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.9995
+ground  :  0.97452
+electric  :  0.63119
+rock  :  0.52669
+psychic  :  0.23064
+fire  :  0.01563
+
+Active 2: 
+
+Name: zacian-crowned
+Type 1: fairy
+Type 2: steel
+Max HP: 199
+Status: None
+Volatile Status: []
+Boosts: 
+attack  :  1
+Can Dynamax: False
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: False
+---STATS---
+HPB: 199
+ATB: 366
+DEB: 212
+VEB: 220
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+steel  :  0.99985
+fighting  :  0.75735
+fairy  :  0.5383
+normal  :  0.28244
+
+List of Reserved: 
+
+Name: rillaboom
+Type 1: grass
+Type 2: Null
+Max HP: 207
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 194
+DEB: 162
+VEB: 150
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+grass  :  0.99917
+normal  :  0.96769
+ground  :  0.76241
+bug  :  0.44455
+dark  :  0.20077
+
+Name: grimmsnarl
+Type 1: dark
+Type 2: fairy
+Max HP: 202
+Status: None
+Volatile Status: []
+Boosts: 
+Can Dynamax: True
+Is Dynamax: False
+Is Ditto: 0
+isOpponentConfirmed: True
+Is Fainted?: True
+---STATS---
+HPB: 0
+ATB: 189
+DEB: 148
+VEB: 123
+---HEALTH---
+FRO: 0
+ASL: 0
+PAR: 0
+DRO: 0
+---MOVES---
+[-1, -1, -1, -1]
+fairy  :  0.50748
+dark  :  0.40074
+normal  :  0.08012
+

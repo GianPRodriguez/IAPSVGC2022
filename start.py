@@ -11,6 +11,8 @@ from run import *
 import subprocess
 import asyncio
 from PIL import ImageTk, Image
+import requests
+from io import BytesIO
 
 class LoremIpsum(tk.Tk):
 	def __init__(self, *args, **kwargs):
@@ -776,45 +778,218 @@ class Modulo2(tk.Frame):
 class Modulo3(tk.Frame):
     def __init__(self, parent, controller):
     	tk.Frame.__init__(self, parent)
-    	self.controller = controller
+    	self.auxController = controller
     	# Canvas Head
-    	canvasHead = tk.Canvas(self, width=500, height=50, bg="#154e72")
-    	canvasHead.place(x=0, y=0, anchor = tk.CENTER)
-    	canvasHead.create_text(250, 25, text="Módulo de Entrenamiento", fill="white", font=('Verdana 15 bold'))
-    	canvasHead.pack()
+    	self.canvasHead = tk.Canvas(self, width=500, height=50, bg="#283158")
+    	self.canvasHead.place(x=0, y=0, anchor = tk.CENTER)
+    	self.canvasHead.create_text(250, 25, text="Módulo de Entrenamiento", fill="white", font=('Verdana 15 bold'))
+    	self.canvasHead.pack()
     	# Canvas Body
-    	self.canvasBody = tk.Canvas(self, width=500, height=259, bg="#154e72")
+    	self.canvasBody = tk.Canvas(self, width=500, height=259, bg="#283158")
     	self.canvasBody.create_rectangle(0,0,310,259, outline='white', width=3)
     	self.canvasBody.pack()
-    	# IMG Salir
-    	self.salirPNG = Image.open("IMGs/exit.png")
-    	self.newSalirPNG = self.salirPNG.convert(mode="RGBA")
-    	self.resized_image= self.newSalirPNG.resize((40,40), Image.LANCZOS)
-    	self.salirTK = ImageTk.PhotoImage(self.resized_image)
-    	self.buttonSalir = tk.Button(self, image=self.salirTK, command=lambda: controller.show_frame("StartPage"), bg="#154e72", activebackground="#154e72", highlightthickness = 0, bd = 0)
-    	self.buttonSalir_widget = canvasHead.create_window(470, 28, window=self.buttonSalir)
-    	# Label Nombre de Usuario
-    	labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
-    	LabelUsername_widget = self.canvasBody.create_window(400, 15, window=labelUsername)
-    	# Label Password
-    	labelPassword = tk.Label(self,text="Contraseña", bg = "#154e72", font=('Verdana 8 bold'), fg="white")
-    	LabelPassword_widget = self.canvasBody.create_window(400, 65, window=labelPassword)
-    	# Entrada Nombre de Usuario
-    	self.strName = tk.StringVar()
-    	self.nameEntry = ttk.Entry(self, textvariable=self.strName, width=20)
-    	self.strName_widget = self.canvasBody.create_window(400, 40, window=self.nameEntry)
-    	# Entrada Contraseña
-    	self.strPassword = tk.StringVar()
-    	self.passwordEntry = ttk.Entry(self, show="*", textvariable=self.strPassword, width=20)
-    	self.strPassword_widget = self.canvasBody.create_window(400, 90, window=self.passwordEntry)
+    	# Label Seleccionar Equipo
+    	self.labelSelect = tk.Label(self,text="Seleccionar Equipo", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelSelect_widget = self.canvasBody.create_window(400, 15, window=self.labelSelect)
+    	# ListBox Equipo
+    	self.textVar = tk.StringVar(self)
+    	self.textVar.set('')
+    	self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Eduardo Cunha", "Nuevo Equipo"], width=21)
+    	self.cbbTeam.bind('<<ComboboxSelected>>', self.definirSeleccionarEquipo)
+    	self.listbox_widget = self.canvasBody.create_window(399, 40, window=self.cbbTeam)
+    	self.auxCbbTeam = self.cbbTeam
+    	# Botón Seleccionar Equipo
+    	self.selectTeam = tk.Button(self, text='Subir Equipo', anchor="center", command = self.SeleccionarEquipo)
+    	self.selectTeam.configure(width = 20, height = 1)
+    	self.selectTeam_widget = self.canvasBody.create_window(400, 65, window=self.selectTeam)
+    	self.selectTeam['state'] = tk.DISABLED
+    	# Label Seleccionar Oponentes
+    	self.labelSelect = tk.Label(self,text="Subir Oponentes", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelSelect_widget = self.canvasBody.create_window(400, 90, window=self.labelSelect)
+    	# Botón Seleccionar Oponentes
+    	self.selectOpponents = tk.Button(self, text='Subir Oponentes', anchor="center", command = self.SeleccionarOponentes)
+    	self.selectOpponents.configure(width = 20, height = 1, relief = tk.FLAT)
+    	self.selectOpponents_widget = self.canvasBody.create_window(400, 115, window=self.selectOpponents)
+    	# Label Cantidad Batallas
+    	self.labelSelect = tk.Label(self,text="Cantidad de Batallas", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelSelect_widget = self.canvasBody.create_window(400, 140, window=self.labelSelect)
+    	# Scale
+    	v = tk.DoubleVar()
+    	self.scale = tk.Scale(self, variable = v, from_ = 8000, to = 80000, resolution = 8000, orient = tk.HORIZONTAL, length = 140, fg="#ffffff", font="#ffffff", bg="#283158", activebackground="#283158", highlightbackground="#283158",highlightcolor="#ffffff",troughcolor="#ffffff")
+    	self.Scale_widget = self.canvasBody.create_window(399, 180, window=self.scale)
     	# Botón Iniciar Entrenamiento
-    	self.button1 = tk.Button(self, text='Iniciar Entrenamiento', anchor="center")
-    	self.button1.configure(width = 16, height = 1, activebackground = "#33B5E5", relief = tk.FLAT)
-    	self.button1_widget = self.canvasBody.create_window(400, 225, window=self.button1)
-    	# Botón Establecer Equipo
-    	button2 = tk.Button(self, text='Establecer Equipo', anchor="center")
-    	button2.configure(width = 16, height = 1, activebackground = "#33B5E5", relief = tk.FLAT)
-    	button2_widget = self.canvasBody.create_window(400, 185, window=button2)
+    	self.startTraining = tk.Button(self, text='Iniciar Entrenamiento', anchor="center", command = self.IniciarEntrenamiento)
+    	self.startTraining.configure(width = 20, height = 1)
+    	self.startTraining_widget = self.canvasBody.create_window(400, 225, window=self.startTraining)
+    	self.auxStartTraining = self.startTraining
+    	# IMG Exit
+    	self.exitPNG = Image.open("IMGs/exit.png")
+    	self.newExitPNG = self.exitPNG.convert(mode="RGBA")
+    	self.exitResized = self.newExitPNG.resize((40,40), Image.LANCZOS)
+    	self.exitTK = ImageTk.PhotoImage(self.exitResized)
+    	self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+    	self.buttonExit_widget = self.canvasHead.create_window(470, 28, window=self.buttonExit)
+    	# IMG Bar Chart
+    	self.barChartPNG = Image.open("IMGs/chartIncreasing.png")
+    	self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
+    	self.barChartResized = self.newBarChartPNG.resize((200,200), Image.LANCZOS)
+    	self.barChartTK = ImageTk.PhotoImage(self.barChartResized)
+    	self.barChart_widget = self.canvasBody.create_image(160,125,image=self.barChartTK)
+    	# IMG Info
+    	self.infoPNG = Image.open("IMGs/info.png")
+    	self.newInfoPNG = self.infoPNG.convert(mode="RGBA")
+    	self.infoResized = self.newInfoPNG.resize((38,38), Image.LANCZOS)
+    	self.infoTK = ImageTk.PhotoImage(self.infoResized)
+    	self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Análisis.pdf"'), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+    	self.buttonInfo_widget = self.canvasHead.create_window(28, 28, window=self.buttonInfo)
+    	# Close Windows
+    	self.activeClose = 0
+    	if self.activeClose == 0:
+    		self.activeClose = 1
+    		self.auxController.protocol('WM_DELETE_WINDOW', self.closeWindows)
+    	else:
+    		self.auxController.destroy()
+
+    def definirSeleccionarEquipo(self, eventObject):
+    	if self.textVar.get() == "Nuevo Equipo":
+    		self.selectTeam['state'] = tk.NORMAL
+
+    def IniciarEntrenamiento(self):
+    	...
+
+    def SeleccionarOponentes(self):
+    	...
+
+    def SeleccionarEquipo(self):
+    	self.top = tk.Toplevel(self)
+    	self.top.geometry("500x309")
+    	self.top.resizable(False, False)
+    	self.top.title("Módulo de Construcción de Equipos")
+    	# Canvas Head
+    	self.canvasHead2 = tk.Canvas(self.top, width=500, height=50, bg="#283158")
+    	self.canvasHead2.place(x=0, y=0, anchor = tk.CENTER)
+    	self.canvasHead2.create_text(250, 25, text="Módulo de Construcción de Equipos", fill="white", font=('Verdana 15 bold'))
+    	self.canvasHead2.pack()
+    	# Canvas Body
+    	self.canvasBody2 = tk.Canvas(self.top, width=500, height=259, bg="#283158")
+    	self.canvasBody2.pack()
+    	# Label Paste Team
+    	self.pasteTeam = tk.Label(self.top, text="Pegue su equipo usando el formato de Pokémon Showdown!", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.PasteTeam_widget = self.canvasBody2.create_window(205, 18, window=self.pasteTeam)
+    	# Text
+    	self.textTeam = tk.Text(self.top, height = 9, width = 60)
+    	self.textTeam_widget = self.canvasBody2.create_window(250, 112, window=self.textTeam)
+    	# Boton Validar
+    	self.validate = tk.Button(self.top, text='Validar', anchor="center", command = self.ValidarEquipo)
+    	self.validate.configure(width = 33, height = 3, relief = tk.FLAT)
+    	self.validate_widget = self.canvasBody2.create_window(128, 220, window=self.validate)
+    	# Botón Cancelar
+    	self.cancel = tk.Button(self.top, text='Cancelar', anchor="center", command = self.Cancelar1)
+    	self.cancel.configure(width = 33, height = 3, relief = tk.FLAT)
+    	self.cancel_widget = self.canvasBody2.create_window(371, 220, window=self.cancel)
+
+    def ValidarEquipo(self):
+    	self.top2 = tk.Toplevel(self)
+    	self.top2.geometry("285x285")
+    	self.top2.resizable(False, False)
+    	self.top2.title("Módulo de Construcción de Equipos")
+    	# Canvas Body
+    	self.canvasBody2 = tk.Canvas(self.top2, width=285, height=285, bg="#283158")
+    	self.canvasBody2.pack()
+    	# Label Paste Team
+    	self.pasteTeam = tk.Label(self.top2, text="Seleccione los Pokémon que no formarán", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.PasteTeam_widget = self.canvasBody2.create_window(140, 18, window=self.pasteTeam)
+    	self.pasteTeam = tk.Label(self.top2, text="parte de la evaluación", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.PasteTeam_widget = self.canvasBody2.create_window(140, 36, window=self.pasteTeam)
+    	# Pkmn1
+    	response = requests.get("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/132.png")
+    	self.pkmn1PNG = Image.open(BytesIO(response.content))
+    	self.newPkmn1PNG = self.pkmn1PNG.convert(mode="RGBA")
+    	self.pkmn1PNGResized = self.newPkmn1PNG.resize((95,95), Image.LANCZOS)
+    	self.pkmn1PNGTK = ImageTk.PhotoImage(self.pkmn1PNGResized)
+    	self.buttonPkmn1 = tk.Button(self.top2, image=self.pkmn1PNGTK, command= self.buttonPkmn1Select)
+    	self.pkmn1PNG_widget = self.canvasBody2.create_window(47.5,47.5+54, window=self.buttonPkmn1)
+    	# Pkmn4
+    	response = requests.get("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/382.png")
+    	self.pkmn4PNG = Image.open(BytesIO(response.content))
+    	self.newPkmn4PNG = self.pkmn4PNG.convert(mode="RGBA")
+    	self.pkmn4PNGResized = self.newPkmn4PNG.resize((95,95), Image.LANCZOS)
+    	self.pkmn4PNGTK = ImageTk.PhotoImage(self.pkmn4PNGResized)
+    	self.buttonPkmn4 = tk.Button(self.top2, image=self.pkmn4PNGTK, command= self.buttonPkmn4Select)
+    	self.pkmn4PNG_widget = self.canvasBody2.create_window(47.5,142.5+54, window=self.buttonPkmn4)
+    	# Pkmn2
+    	response = requests.get("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/10188.png")
+    	self.pkmn2PNG = Image.open(BytesIO(response.content))
+    	self.newPkmn2PNG = self.pkmn2PNG.convert(mode="RGBA")
+    	self.pkmn2PNGResized = self.newPkmn2PNG.resize((95,95), Image.LANCZOS)
+    	self.pkmn2PNGTK = ImageTk.PhotoImage(self.pkmn2PNGResized)
+    	self.buttonPkmn2 = tk.Button(self.top2, image=self.pkmn2PNGTK, command= self.buttonPkmn2Select)
+    	self.pkmn2PNG_widget = self.canvasBody2.create_window(95+47.5,47.5+54, window=self.buttonPkmn2)
+    	# Pkmn5
+    	response = requests.get("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/132.png")
+    	self.pkmn5PNG = Image.open(BytesIO(response.content))
+    	self.newPkmn5PNG = self.pkmn5PNG.convert(mode="RGBA")
+    	self.pkmn5PNGResized = self.newPkmn5PNG.resize((95,95), Image.LANCZOS)
+    	self.pkmn5PNGTK = ImageTk.PhotoImage(self.pkmn5PNGResized)
+    	self.buttonPkmn5 = tk.Button(self.top2, image=self.pkmn5PNGTK, command= self.buttonPkmn5Select)
+    	self.pkmn5PNG_widget = self.canvasBody2.create_window(95+47.5,142.5+54, window=self.buttonPkmn5)
+    	# Pkmn3
+    	response = requests.get("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/132.png")
+    	self.pkmn3PNG = Image.open(BytesIO(response.content))
+    	self.newPkmn3PNG = self.pkmn3PNG.convert(mode="RGBA")
+    	self.pkmn3PNGResized = self.newPkmn3PNG.resize((95,95), Image.LANCZOS)
+    	self.pkmn3PNGTK = ImageTk.PhotoImage(self.pkmn3PNGResized)
+    	self.buttonPkmn3 = tk.Button(self.top2, image=self.pkmn3PNGTK, command= self.buttonPkmn3Select)
+    	self.pkmn3PNG_widget = self.canvasBody2.create_window(95+47.5+95,47.5+54, window=self.buttonPkmn3)
+    	# Pkmn6
+    	response = requests.get("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/727.png")
+    	self.pkmn6PNG = Image.open(BytesIO(response.content))
+    	self.newPkmn6PNG = self.pkmn6PNG.convert(mode="RGBA")
+    	self.pkmn6PNGResized = self.newPkmn6PNG.resize((95,95), Image.LANCZOS)
+    	self.pkmn6PNGTK = ImageTk.PhotoImage(self.pkmn6PNGResized)
+    	self.buttonPkmn6 = tk.Button(self.top2, image=self.pkmn6PNGTK, command= self.buttonPkmn6Select)
+    	self.pkmn6PNG_widget = self.canvasBody2.create_window(95+47.5+95,142.5+54, window=self.buttonPkmn6)
+    	# Boton Validar
+    	self.validate = tk.Button(self.top2, text='Validar', anchor="center", command = self.ValidarEquipo)
+    	self.validate.configure(width = 20, height = 2, relief = tk.FLAT)
+    	self.validate_widget = self.canvasBody2.create_window(70, 270, window=self.validate)
+    	# Botón Cancelar
+    	self.cancel = tk.Button(self.top2, text='Cancelar', anchor="center", command = self.Cancelar1)
+    	self.cancel.configure(width = 20, height = 2, relief = tk.FLAT)
+    	self.cancel_widget = self.canvasBody2.create_window(210, 270, window=self.cancel)
+
+
+    def Cancelar1(self):
+    	...
+
+    def closeWindows(self):
+    	if self.startTraining.config('text')[-1] != "Entrenamiento en Curso":
+    		self.exitWindows()
+    	else:
+    		# Aparece Aviso
+    		self.exitWindows()
+
+    def buttonPkmn1Select(self):
+    	...
+
+    def buttonPkmn2Select(self):
+    	...
+
+    def buttonPkmn3Select(self):
+    	...
+
+    def buttonPkmn4Select(self):
+    	...
+
+    def buttonPkmn5Select(self):
+    	...
+
+    def buttonPkmn6Select(self):
+    	...
+
+    def exitWindows(self):
+    	os._exit(0)
+    	self.auxController.destroy()
 
 if __name__ == "__main__":
     app = LoremIpsum()
