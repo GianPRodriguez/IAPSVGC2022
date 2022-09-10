@@ -13,6 +13,39 @@ import asyncio
 from PIL import ImageTk, Image
 import requests
 from io import BytesIO
+from teams.team_converter import export_to_packed
+
+async def stop(q, teamText):
+	poller = asyncio.ensure_future(ValidarEquipo(q, teamText))
+	while True:
+		await asyncio.sleep(0.1)
+		try:
+			cola = q.get(0)
+			if cola[0] == -1:
+				break
+		except queue.Empty:
+			...
+	poller.cancel()
+	return
+
+async def ValidarEquipo(q, teamText):
+	team, listPkmn = export_to_packed(teamText)
+	print(team)
+	if team is None:
+		print("[ERROR]    ¡El equipo del agente no cumple con las reglas del formato!")
+		q.put([-1])
+		return
+	ps_websocket_client = await PSWebsocketClient.create('', '', 'sim.smogon.com:8000')
+	await ps_websocket_client.update_team(team)
+	msg = await ps_websocket_client.receive_message()
+	if msg.startswith("|popup|Your team"):
+		print("[ERROR]    ¡El equipo del agente no cumple con las reglas del formato!")
+		q.put([-1])
+		return
+	else:
+		print("[INFO]     ¡El equipo del agente cumple con las reglas del formato!")
+		q.put([-1])
+		return
 
 class LoremIpsum(tk.Tk):
 	def __init__(self, *args, **kwargs):
@@ -799,7 +832,7 @@ class Modulo3(tk.Frame):
     	self.listbox_widget = self.canvasBody.create_window(399, 40, window=self.cbbTeam)
     	self.auxCbbTeam = self.cbbTeam
     	# Botón Seleccionar Equipo
-    	self.selectTeam = tk.Button(self, text='Subir Equipo', anchor="center", command = self.SeleccionarEquipo)
+    	self.selectTeam = tk.Button(self, text='Subir Equipo', anchor="center", command = self.SubirEquipo)
     	self.selectTeam.configure(width = 20, height = 1)
     	self.selectTeam_widget = self.canvasBody.create_window(400, 65, window=self.selectTeam)
     	self.selectTeam['state'] = tk.DISABLED
@@ -860,7 +893,7 @@ class Modulo3(tk.Frame):
     def SeleccionarOponentes(self):
     	...
 
-    def SeleccionarEquipo(self):
+    def SubirEquipo(self):
     	self.top = tk.Toplevel(self)
     	self.top.geometry("500x309")
     	self.top.resizable(False, False)
@@ -880,7 +913,7 @@ class Modulo3(tk.Frame):
     	self.textTeam = tk.Text(self.top, height = 9, width = 60)
     	self.textTeam_widget = self.canvasBody2.create_window(250, 112, window=self.textTeam)
     	# Boton Validar
-    	self.validate = tk.Button(self.top, text='Validar', anchor="center", command = self.ValidarEquipo)
+    	self.validate = tk.Button(self.top, text='Validar', anchor="center", command = self.preValidarEquipo)
     	self.validate.configure(width = 33, height = 3, relief = tk.FLAT)
     	self.validate_widget = self.canvasBody2.create_window(128, 220, window=self.validate)
     	# Botón Cancelar
@@ -888,7 +921,10 @@ class Modulo3(tk.Frame):
     	self.cancel.configure(width = 33, height = 3, relief = tk.FLAT)
     	self.cancel_widget = self.canvasBody2.create_window(371, 220, window=self.cancel)
 
-    def ValidarEquipo(self):
+    def preValidarEquipo(self):
+    	self.q = multiprocessing.Queue()
+    	teamText = self.textTeam.get("1.0",'end-1c')
+    	asyncio.run(stop(self.q, teamText))
     	self.top2 = tk.Toplevel(self)
     	self.top2.geometry("285x285")
     	self.top2.resizable(False, False)
@@ -950,7 +986,7 @@ class Modulo3(tk.Frame):
     	self.buttonPkmn6 = tk.Button(self.top2, image=self.pkmn6PNGTK, command= self.buttonPkmn6Select)
     	self.pkmn6PNG_widget = self.canvasBody2.create_window(95+47.5+95,142.5+54, window=self.buttonPkmn6)
     	# Boton Validar
-    	self.validate = tk.Button(self.top2, text='Validar', anchor="center", command = self.ValidarEquipo)
+    	self.validate = tk.Button(self.top2, text='Validar', anchor="center", command = self.IncluirEquipo)
     	self.validate.configure(width = 20, height = 2, relief = tk.FLAT)
     	self.validate_widget = self.canvasBody2.create_window(70, 270, window=self.validate)
     	# Botón Cancelar
@@ -958,6 +994,8 @@ class Modulo3(tk.Frame):
     	self.cancel.configure(width = 20, height = 2, relief = tk.FLAT)
     	self.cancel_widget = self.canvasBody2.create_window(210, 270, window=self.cancel)
 
+    def IncluirEquipo(self):
+    	...
 
     def Cancelar1(self):
     	...
