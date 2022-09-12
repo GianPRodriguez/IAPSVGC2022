@@ -151,12 +151,12 @@ def export_to_packed(export_string):
         # team_members[6]
         # Lo elimino, para que solo quede el equipo
         team_members.remove(team_members[6])
-        #listPkmn = []
+        listPkmn = []
         # Para los 6 Pokémon...
         for pkmn in filter(None, team_members):
-            #listPkmn.append(pkmn.split(' ')[0])
+            listPkmn.append(pkmn.split(' ')[0])
             pkmn_dict = single_pokemon_export_to_dict(pkmn)
             team_dict.append(pkmn_dict)
-        return json_to_packed(team_dict)
+        return json_to_packed(team_dict), listPkmn
     except:
-        return None
+        return None, None
