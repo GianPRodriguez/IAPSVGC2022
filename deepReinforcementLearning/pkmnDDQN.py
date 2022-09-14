@@ -6,11 +6,15 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+import tensorflow as tf
+
 class DDQNAgent:
     def __init__(self, state_size, action_size):
         self.state_size = state_size      # tamao de un estado (numero de atributos que representan un estado)
         self.action_size = action_size    # tamao del vector de acciones 
-        self.memory = deque(maxlen=2000)  # define la memoria del agente (3000 registros como maximo)
+        self.memory = deque(maxlen=3000)  # define la memoria del agente (3000 registros como maximo)
         self.gamma = 0.95                 # discount rate
         self.learning_rate = 0.001        # taza de aprendizaje 
         
@@ -54,7 +58,7 @@ class DDQNAgent:
     def replay(self, batch_size): 
         # obtiene una muestra de su memoria de experiencias
         minibatch = random.sample(self.memory, batch_size) 
-        
+
         # Obtiene arrays de  states, accions, rewards, next_estates  del minibatch
         states = np.array([i[0] for i in minibatch])    
         actions = np.array([i[1] for i in minibatch])   
@@ -72,7 +76,7 @@ class DDQNAgent:
         Targets = self.model.predict_on_batch(states)  # los target Q-values son los que predice el modelo actual, salvo el correspondiente a la accion tomada
         ind = np.array([i for i in range(batch_size)])
         Targets[[ind], [actions]] = Targets_actions   # actualiza el target Q-value de la accion ejecutada  
-        
+
         # Ajusta el modelo  con pares  [states, Targets] del minibatch
         self.model.fit(states, Targets, epochs=1, verbose=0)
 
@@ -87,42 +91,96 @@ class DDQNAgent:
         self.model.save_weights(name)
 
 def run():
+    # La batalla no está terminada
     done = False
-    batch_size = 64
-    EPISODES = 150                                  # Number of Battles
+    # Tamaño del lote: 64 = 8 batallas * 8 turnos
+    batch_size = 4
+    # Número de Batallas: 80000
+    EPISODES = 2
     
-    env = gym.make('CartPole-v1')                   # Llamada a Run()
-    state_size = env.observation_space.shape[0]     # Run() devuelve state_size y action_size
-    action_size = env.action_space.n                # Run() devuelve state_size y action_size
+    # Neuronas de entrada
+    state_size = 183
+    # Neuronas de salida
+    action_size = 26
+    # Se crea al agente
     agent = DDQNAgent(state_size, action_size)
     
-    score_list = []     # lista para guardar la evolucion del score
+    # Lista para guardar la evolucion del score
+    score_list = []
+    # Lista para guardar la evolución del factor de exploración
     epsilon_list = []
 
-    for e in range(EPISODES):   # por cada episodio
-        state = env.reset()     # resetea el entorno
-        state = np.reshape(state, [1, state_size])
+    # Para cada Batalla...
+    for e in range(EPISODES):
+
+        # Inicio Batalla - Agente Inteligente
+        userThread = Thread(target=AsyncDownload, args=(q,agentUsername,agentPassword,agentTeamname,agentBotmode,opponentUsername,True,1,))
+        userThread.start()
+        # Inicio Batalla - Agente Random
+        opponentThread = Thread(target=AsyncDownload, args=(None,opponentUsername,opponentPassword,opponentTeamname,opponentBotmode,agentUsername,True,1,))
+        opponentThread.start()
+
+        # Correcto
         score = 0
-        for step in range(500):   # se prueba el agente hasta 500 pasos, sale de este loop cuando se cae en estado terminal (perdida de equilibrio)  
-            action = agent.get_action(state)   # obtiene una accion del agente
-            next_state, reward, done, _ = env.step(action)  # ejecuta action en el entorno y obtiene: nuevo estado, reward y flag done (si es estado terminal)
-            reward = reward if not done else -10  # si es estado terminal el reward es -10
-            next_state = np.reshape(next_state, [1, state_size])
-            agent.remember(state, action, reward, next_state, done) # almacena esta experiencia en la memoria del agente
-            state = next_state   # actualiza el estado actual al nuevo estado
-            score += reward
-            
-            if len(agent.memory) > batch_size:  # si hay suficiente experiencias en memoria del agente -> ajusta su modelo neuronal 
-                agent.replay(batch_size)
-            
-            if done:  # si es estado terminal, imprime resultados del trial. El escore del trial es el numero de pasos que logro ejecutar el agente
-                print("episode: {}/{}, score: {}, e: {:.2}".format(e, EPISODES, step, agent.epsilon))
-                break
-                
-        agent.update_target_model()  # actualiza el target_model al final de cada trial
-        score_list.append(score)   
+
+        # Obteniendo valores del Queue
+        if userThread.is_alive():
+            # check the thread every 100ms
+            self.after(100, lambda: self.monitor(q))
+            try:
+                # Get Queue
+                self.cola = q.get(0)
+                if self.cola[0] == 0:
+                    # Obtengo el state inicial
+                    ...
+                    # [ 0.02468106  0.00889922 -0.04296796 -0.02061151], valores iniciales del primer turno
+                    state = self.cola[1]
+                    ...
+                    # [[ 0.02468106,  0.00889922, -0.04296796, -0.02061151]], formateo valores neuronales primer turno
+                    state = np.reshape(state, [1, state_size])
+                    ...
+                    # Obtiene una accion del agente, uso q
+                    action = agent.get_action(state)
+                    ...
+
+                    # Ejecuta la acción en el entorno y obtiene: nuevo estado, reward y flag done (si es estado terminal, o sea batalla terminada), uso q
+                    env.step(action)
+                elif self.cola[0] == 1:
+                    # Obtengo next_state, reward, done, _
+                    next_state = self.cola[1]
+                    reward = self.cola[2]
+                    done = self.cola[3]
+                    ...
+                    # Si es estado terminal el reward es -10, aqui debería ser escoger accion prohibida
+                    reward = reward if not done else -10
+                    # [[ 0.02485905, -0.18558103, -0.04338019,  0.25821091]], formateo nuevo estado valores neuronales
+                    next_state = np.reshape(next_state, [1, state_size])
+                    # Almacena esta experiencia en la memoria del agente, OK
+                    agent.remember(state, action, reward, next_state, done)
+                    # Actualiza el estado actual al nuevo estado y el reward histórico llamado SCORE
+                    state = next_state
+                    score += reward
+                    
+                    # Si hay suficiente experiencias en memoria del agente -> ajusta su modelo neuronal 
+                    if len(agent.memory) > batch_size:
+                        agent.replay(batch_size)
+                    # Si es estado terminal, terminó la batalla, imprime resultados del trial. El escore del trial es el numero de pasos que logro ejecutar el agente
+                    if done:
+                        print("episode: {}/{}, score: {}, e: {:.2}".format(e, EPISODES, step, agent.epsilon))
+            except queue.Empty:
+                # None
+                ...
+        else:
+            ...
+        # Actualiza el target_model al final de cada batalla
+        agent.update_target_model()
+        # 
+        score_list.append(score)
+        # 
         epsilon_list.append(agent.epsilon)
-    env.close()
+
+    # ...
+    agent.model.save("saved_model/")
 
 if __name__ == "__main__":
     run()

@@ -946,6 +946,7 @@ class Modulo3(tk.Frame):
 
     def closeWindows1(self):
     	self.top.destroy()
+    	# Corregir Error
     	if self.top2 is not None:
     		self.top2.destroy()
 
@@ -957,6 +958,7 @@ class Modulo3(tk.Frame):
     	isValid, self.listPkmn = asyncio.run(stop(self.q, self.teamText))
     	if isValid:
     		print("[INFO]     ¡Su equipo es válido para el formato VGC 2022!")
+    		print("[INFO]     Equipo: {}".format(self.listPkmn))
     		if hasattr(self, "textIncorrect"):
     			self.canvasBody.delete(self.textIncorrect)
     		self.textIncorrect = self.canvasBody.create_text(155, 235, text="¡Su equipo es válido para el formato VGC 2022!", fill="#8fff00", font=('Verdana 8'))
@@ -1047,7 +1049,7 @@ class Modulo3(tk.Frame):
 	    	self.textNameTeam = tk.Text(self.top2, height = 1, width = 30)
 	    	self.textNameTeam_widget = self.canvasBody2.create_window(140, 246+25+15, window=self.textNameTeam)
 	    	# Boton Validar
-	    	self.validate2 = tk.Button(self.top2, text='Validar', anchor="center", command = self.IncluirEquipo)
+	    	self.validate2 = tk.Button(self.top2, text='Registrar', anchor="center", command = self.IncluirEquipo)
 	    	self.validate2.configure(width = 20, height = 2, relief = tk.FLAT)
 	    	self.validate_widget = self.canvasBody2.create_window(74, 266+60, window=self.validate2)
 	    	# Botón Cancelar
