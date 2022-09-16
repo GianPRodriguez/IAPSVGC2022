@@ -10,6 +10,94 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import tensorflow as tf
 
+def NeuralNetworkOutput(listNeuralNetworkOutput):
+    # Parámetros
+    moveSwitch1 = None
+    nMoveSwitch1 = 0
+    dynamax1 = 0
+    toMove1 = 0
+    moveSwitch2 = None
+    nMoveSwitch2 = 0
+    dynamax2 = 0
+    toMove2 = 0
+    # 1 to 3
+    if listNeuralNetworkOutput[0] >= listNeuralNetworkOutput[1] and listNeuralNetworkOutput[0] >= listNeuralNetworkOutput[2]:
+        moveSwitch1 = 'move'
+    elif listNeuralNetworkOutput[1] >= listNeuralNetworkOutput[0] and listNeuralNetworkOutput[1] >= listNeuralNetworkOutput[2]:
+        moveSwitch1 = 'switch'
+    elif listNeuralNetworkOutput[2] >= listNeuralNetworkOutput[0] and listNeuralNetworkOutput[2] >= listNeuralNetworkOutput[1]:
+        moveSwitch1 = 'pass'
+    else:
+        print("ERROR 1 - NeuralNetworkOutput")
+    # 4 to 8
+    if listNeuralNetworkOutput[3] >= listNeuralNetworkOutput[4] and listNeuralNetworkOutput[3] >= listNeuralNetworkOutput[5] and listNeuralNetworkOutput[3] >= listNeuralNetworkOutput[6] and listNeuralNetworkOutput[3] >= listNeuralNetworkOutput[7]:
+        nMoveSwitch1 = ''
+    elif listNeuralNetworkOutput[4] >= listNeuralNetworkOutput[3] and listNeuralNetworkOutput[4] >= listNeuralNetworkOutput[5] and listNeuralNetworkOutput[4] >= listNeuralNetworkOutput[6] and listNeuralNetworkOutput[4] >= listNeuralNetworkOutput[7]:
+        nMoveSwitch1 = '1'
+    elif listNeuralNetworkOutput[5] >= listNeuralNetworkOutput[3] and listNeuralNetworkOutput[5] >= listNeuralNetworkOutput[4] and listNeuralNetworkOutput[5] >= listNeuralNetworkOutput[6] and listNeuralNetworkOutput[5] >= listNeuralNetworkOutput[7]:
+        nMoveSwitch1 = '2'
+    elif listNeuralNetworkOutput[6] >= listNeuralNetworkOutput[3] and listNeuralNetworkOutput[6] >= listNeuralNetworkOutput[4] and listNeuralNetworkOutput[6] >= listNeuralNetworkOutput[5] and listNeuralNetworkOutput[6] >= listNeuralNetworkOutput[7]:
+        nMoveSwitch1 = '3'
+    elif listNeuralNetworkOutput[7] >= listNeuralNetworkOutput[3] and listNeuralNetworkOutput[7] >= listNeuralNetworkOutput[4] and listNeuralNetworkOutput[7] >= listNeuralNetworkOutput[5] and listNeuralNetworkOutput[7] >= listNeuralNetworkOutput[6]:
+        nMoveSwitch1 = '4'
+    else:
+        print("ERROR 2 - NeuralNetworkOutput")
+    # 9
+    if listNeuralNetworkOutput[8] > 0.5:
+        dynamax1 = 'dynamax'
+    else:
+        dynamax1 = ''
+    # 10 to 13
+    if listNeuralNetworkOutput[9] >= listNeuralNetworkOutput[10] and listNeuralNetworkOutput[9] >= listNeuralNetworkOutput[11] and listNeuralNetworkOutput[9] >= listNeuralNetworkOutput[12]:
+        toMove1 = '-2'
+    elif listNeuralNetworkOutput[10] >= listNeuralNetworkOutput[9] and listNeuralNetworkOutput[10] >= listNeuralNetworkOutput[11] and listNeuralNetworkOutput[10] >= listNeuralNetworkOutput[12]:
+        toMove1 = ''
+    elif listNeuralNetworkOutput[11] >= listNeuralNetworkOutput[9] and listNeuralNetworkOutput[11] >= listNeuralNetworkOutput[10] and listNeuralNetworkOutput[11] >= listNeuralNetworkOutput[12]:
+        toMove1 = '1'
+    elif listNeuralNetworkOutput[12] >= listNeuralNetworkOutput[9] and listNeuralNetworkOutput[12] >= listNeuralNetworkOutput[10] and listNeuralNetworkOutput[12] >= listNeuralNetworkOutput[11]:
+        toMove1 = '2'
+    else:
+        print("ERROR 3 - NeuralNetworkOutput")
+    # 14 to 16
+    if listNeuralNetworkOutput[13] >= listNeuralNetworkOutput[14] and listNeuralNetworkOutput[13] >= listNeuralNetworkOutput[15]:
+        moveSwitch2 = 'move'
+    elif listNeuralNetworkOutput[14] >= listNeuralNetworkOutput[13] and listNeuralNetworkOutput[14] >= listNeuralNetworkOutput[15]:
+        moveSwitch2 = 'switch'
+    elif listNeuralNetworkOutput[15] >= listNeuralNetworkOutput[13] and listNeuralNetworkOutput[15] >= listNeuralNetworkOutput[14]:
+        moveSwitch2 = 'pass'
+    else:
+        print("ERROR 4 - NeuralNetworkOutput")
+    # 17 to 21
+    if listNeuralNetworkOutput[16] >= listNeuralNetworkOutput[17] and listNeuralNetworkOutput[16] >= listNeuralNetworkOutput[18] and listNeuralNetworkOutput[16] >= listNeuralNetworkOutput[19] and listNeuralNetworkOutput[16] >= listNeuralNetworkOutput[20]:
+        nMoveSwitch2 = ''
+    elif listNeuralNetworkOutput[17] >= listNeuralNetworkOutput[16] and listNeuralNetworkOutput[17] >= listNeuralNetworkOutput[18] and listNeuralNetworkOutput[17] >= listNeuralNetworkOutput[19] and listNeuralNetworkOutput[17] >= listNeuralNetworkOutput[20]:
+        nMoveSwitch2 = '1'
+    elif listNeuralNetworkOutput[18] >= listNeuralNetworkOutput[16] and listNeuralNetworkOutput[18] >= listNeuralNetworkOutput[17] and listNeuralNetworkOutput[18] >= listNeuralNetworkOutput[19] and listNeuralNetworkOutput[18] >= listNeuralNetworkOutput[20]:
+        nMoveSwitch2 = '2'
+    elif listNeuralNetworkOutput[19] >= listNeuralNetworkOutput[16] and listNeuralNetworkOutput[19] >= listNeuralNetworkOutput[17] and listNeuralNetworkOutput[19] >= listNeuralNetworkOutput[18] and listNeuralNetworkOutput[19] >= listNeuralNetworkOutput[20]:
+        nMoveSwitch2 = '3'
+    elif listNeuralNetworkOutput[20] >= listNeuralNetworkOutput[16] and listNeuralNetworkOutput[20] >= listNeuralNetworkOutput[17] and listNeuralNetworkOutput[20] >= listNeuralNetworkOutput[18] and listNeuralNetworkOutput[20] >= listNeuralNetworkOutput[19]:
+        nMoveSwitch2 = '4'
+    else:
+        print("ERROR 5 - NeuralNetworkOutput")
+    # 22
+    if listNeuralNetworkOutput[21] > 0.5:
+        dynamax2 = 'dynamax'
+    else:
+        dynamax2 = ''
+    # 23 to 26
+    if listNeuralNetworkOutput[22] >= listNeuralNetworkOutput[23] and listNeuralNetworkOutput[22] >= listNeuralNetworkOutput[24] and listNeuralNetworkOutput[22] >= listNeuralNetworkOutput[25]:
+        toMove2 = '-1'
+    elif listNeuralNetworkOutput[23] >= listNeuralNetworkOutput[22] and listNeuralNetworkOutput[23] >= listNeuralNetworkOutput[24] and listNeuralNetworkOutput[23] >= listNeuralNetworkOutput[25]:
+        toMove2 = ''
+    elif listNeuralNetworkOutput[24] >= listNeuralNetworkOutput[22] and listNeuralNetworkOutput[24] >= listNeuralNetworkOutput[23] and listNeuralNetworkOutput[24] >= listNeuralNetworkOutput[25]:
+        toMove2 = '1'
+    elif listNeuralNetworkOutput[25] >= listNeuralNetworkOutput[22] and listNeuralNetworkOutput[25] >= listNeuralNetworkOutput[23] and listNeuralNetworkOutput[25] >= listNeuralNetworkOutput[24]:
+        toMove2 = '2'
+    else:
+        print("ERROR 6 - NeuralNetworkOutput")
+    return moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2
+
 class DDQNAgent:
     def __init__(self, state_size, action_size):
         self.state_size = state_size      # tamao de un estado (numero de atributos que representan un estado)
