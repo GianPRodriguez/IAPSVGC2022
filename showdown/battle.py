@@ -57,6 +57,15 @@ class Battle(ABC):
             else:
                 namePkmn = name.lower()
             moveDict = self.moveTypes[namePkmn.lower().replace(" ", "-")]
+            for key in moveDict:
+                if moveDict[key] > 0.75:
+                    moveDict[key] = 1
+                elif moveDict[key] > 0.50:
+                    moveDict[key] = 0.75
+                elif moveDict[key] > 0.25:
+                    moveDict[key] = 0.50
+                else:
+                    moveDict[key] = 0.25
             self.opponent.reserved.append(Pokemon(namePkmn, -1, True, None, None, None, None, moveDict))
 
     @abstractmethod
@@ -96,9 +105,20 @@ class Battle(ABC):
     def calculateRewards(self):
         # Only user
         user = self.formula(self.user.active1)*1.1 + self.formula(self.user.active2) + 0.9*(self.formula(self.user.reserved[0]) + self.formula(self.user.reserved[1]))
+        #print("user: {}".format(user))
+        #print("user1: {}".format(self.formula(self.user.active1)*1.1))
+        #print("user2: {}".format(self.formula(self.user.active2)))
+        #print("user3: {}".format(0.9*self.formula(self.user.reserved[0])))
+        #print("user4: {}".format(0.9*self.formula(self.user.reserved[1])))
         # Only opponent
         if self.opponent.opponentPkmnConfirmed == 2:
             opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]) + self.formula(self.opponent.reserved[2]) + self.formula(self.opponent.reserved[3]))/2
+            #print("opponent1: {}".format(self.formula(self.opponent.active1)*1.1))
+            #print("opponent2: {}".format(self.formula(self.opponent.active2)))
+            #print("opponent3: {}".format(self.formula(self.opponent.reserved[0])*0.45))
+            #print("opponent4: {}".format(self.formula(self.opponent.reserved[1])*0.45))
+            #print("opponent5: {}".format(self.formula(self.opponent.reserved[2])*0.45))
+            #print("opponent6: {}".format(self.formula(self.opponent.reserved[3])*0.45))
         elif self.opponent.opponentPkmnConfirmed == 4:
             opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]))
         else:   # == 3
@@ -112,6 +132,7 @@ class Battle(ABC):
                 opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[3])) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]) + self.formula(self.opponent.reserved[2]))/3
             else:
                 opponent = 1000000
+        print("opponent: {}".format(opponent))
         # On the first turn, the lastReward is 0
         if not self.force_switch:
             if self.turn > 1:

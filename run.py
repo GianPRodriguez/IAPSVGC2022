@@ -65,7 +65,7 @@ async def showdown(q, username, password, teamname, botmode, opponentUsername, t
     # Hasta que no se alcance la cantidad de batallas definidas
     while True:
         # Se lee el EQUIPO dado un Nombre Específico...
-        team = load_team(config.team_name)
+        team = load_team(config.team_name)[0]
         # Opciones de juego
         if config.bot_mode == constants.CHALLENGE_USER:
             if training:

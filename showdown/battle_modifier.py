@@ -1289,6 +1289,18 @@ def updatePokemon(battle, pkmn, isUser, isReserved):
         pkmn.ATBoost = getATBoost(pkmn.moveType, battle.opponent.active1.type1, battle.opponent.active1.type2, battle.opponent.active2.type1, battle.opponent.active2.type2, battle)
         pkmn.DEBoost = getDEBoost(battle.opponent.active1.moveType, battle.opponent.active2.moveType, pkmn.type1, pkmn.type2, battle)
     else:
+        if pkmn.name == "calyrex-shadow":
+            print("ATBOOST")
+            print(pkmn.moveType)
+            print(battle.user.active1.type1)
+            print(battle.user.active1.type2)
+            print(battle.user.active2.type1)
+            print(battle.user.active2.type2)
+            print("DEBOOST")
+            print(battle.user.active1.moveType)
+            print(battle.user.active2.moveType)
+            print(pkmn.type1)
+            print(pkmn.type2)
         pkmn.ATBoost = getATBoost(pkmn.moveType, battle.user.active1.type1, battle.user.active1.type2, battle.user.active2.type1, battle.user.active2.type2, battle)
         pkmn.DEBoost = getDEBoost(battle.user.active1.moveType, battle.user.active2.moveType, pkmn.type1, pkmn.type2, battle)
     return battle

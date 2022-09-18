@@ -31,22 +31,26 @@ class BattleBot(Battle):
             for j in range(180):
                 u1, u2, ur1, ur2 = findRewardSingles(j, 0, battle)
                 aux = findGroupReward(o1, o2, or1, or2, u1, u2, ur1, ur2, battle)
+                #if i == 177:
+                #    print("j: {} aux: {} bestJ: {} rewardx1OpponentTeam: {}".format(j, aux, bestJ, rewardx1OpponentTeam))
                 if aux > rewardx1OpponentTeam:
                     rewardx1OpponentTeam = aux
                     bestJ = j
             bestRewardIJ.append(Box(rewardx1OpponentTeam, i, bestJ))
             #print(bestRewardIJ[i].get())
         bestRewardIJ.sort()
-        print("Desde el mejor hasta el sexto")
-        print(bestRewardIJ[0].get())
-        print(bestRewardIJ[1].get())
-        print(bestRewardIJ[2].get())
-        print(bestRewardIJ[3].get())
-        print(bestRewardIJ[4].get())
-        print(bestRewardIJ[5].get())
-        print(bestRewardIJ[6].get())
-        # bestJ -> team choosed
-        eleccion0, eleccion1, eleccion2, eleccion3 = findTeam(bestRewardIJ[3].j, battle)
+        # Obtener Suma de Reward
+        sum = 0
+        for i in range(32):
+            sum = sum + (5000-bestRewardIJ[i].get()[2])
+        listWeights = []
+        listJ = []
+        for i in range(32):
+            listWeights.append((5000-bestRewardIJ[i].get()[2])/sum)
+            listJ.append(bestRewardIJ[i].get()[1])
+        bestJChoose = random.choices(listJ, weights=listWeights, k=1)[0]
+        # bestJChoose -> team choosed
+        eleccion0, eleccion1, eleccion2, eleccion3 = findTeam(bestJChoose, battle)
         # get names of Pkmn
         namePokemon0 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion0-1].get('details', 'False').partition(",")[0]
         namePokemon1 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion1-1].get('details', 'False').partition(",")[0]

@@ -212,15 +212,35 @@ def findRewardSingles(index, isOpponent, battle):
 
 
 def formula(pkmn):
+    #if pkmn.type1 == 'psychic':
+    #    print("ATB: {} ATBoost: {} VEB: {} HPB: {} DEBoost: {} DEB: {}".format(pkmn.ATB, pkmn.ATBoost, pkmn.VEB, pkmn.HPB, pkmn.DEBoost, pkmn.DEB))
     return sqrt((pkmn.ATB*pkmn.ATBoost*pkmn.VEB)/10)*sqrt((pkmn.HPB*pkmn.DEBoost*pkmn.DEB)/10)
 
 
 # async def action_team_preview(self, battle):
 def findGroupReward(pkmno1, pkmno2, pkmnor1, pkmnor2, pkmnu1, pkmnu2, pkmnur1, pkmnur2, battle):
     pkmnu1.addTypesMod(getATBoost(pkmnu1.dictMoves, pkmno1.type1, pkmno1.type2, pkmno2.type1, pkmno2.type2, battle), getDEBoost(pkmno1.dictMoves, pkmno2.dictMoves, pkmnu1.type1, pkmnu1.type2, battle))
+    #print("pkmnu1.dictMoves: {} pkmno1.dictMoves.dictMoves: {} pkmno2.dictMoves: {}".format(pkmnu1.dictMoves, pkmno1.dictMoves, pkmno2.dictMoves))
+    #print("getATBoost: {} getDEBoost: {}".format(getATBoost(pkmnu1.dictMoves, pkmno1.type1, pkmno1.type2, pkmno2.type1, pkmno2.type2, battle), getDEBoost(pkmno1.dictMoves, pkmno2.dictMoves, pkmnu1.type1, pkmnu1.type2, battle)))
     pkmnu2.addTypesMod(getATBoost(pkmnu2.dictMoves, pkmno1.type1, pkmno1.type2, pkmno2.type1, pkmno2.type2, battle), getDEBoost(pkmno1.dictMoves, pkmno2.dictMoves, pkmnu2.type1, pkmnu2.type2, battle))
     pkmno1.addTypesMod(getATBoost(pkmno1.dictMoves, pkmnu1.type1, pkmnu1.type2, pkmnu2.type1, pkmnu2.type2, battle), getDEBoost(pkmnu1.dictMoves, pkmnu2.dictMoves, pkmno1.type1, pkmno1.type2, battle))
     pkmno2.addTypesMod(getATBoost(pkmno2.dictMoves, pkmnu1.type1, pkmnu1.type2, pkmnu2.type1, pkmnu2.type2, battle), getDEBoost(pkmnu1.dictMoves, pkmnu2.dictMoves, pkmno2.type1, pkmno2.type2, battle))
+    #if pkmnu1.type1.lower() == 'psychic' and pkmnu2.type1.lower() == 'grass' and pkmnur1.type1.lower() == 'fairy' and pkmnur2.type1.lower() == 'electric' and pkmno1.type1.lower() == 'water' and pkmno1.type2.lower() == 'ground' and pkmno2.type1.lower() == 'fire' and pkmno2.type2.lower() == 'dark' and pkmnor1.type1.lower() == 'dark' and pkmnor1.type2.lower() == 'flying' and pkmnor2.type1.lower() == 'fairy':
+    #    print("----------")
+    #    print("formula(pkmnu1): ATB: {} ATBoost: {} VEB: {} HPB: {} DEBoost: {} DEB: {}".format(pkmnu1.ATB, pkmnu1.ATBoost, pkmnu1.VEB, pkmnu1.HPB, pkmnu1.DEBoost, pkmnu1.DEB))
+    #    print("formula(pkmnu1)*1.1: {}".format(formula(pkmnu1)*1.1))
+    #    print("formula(pkmnu2): ATB: {} ATBoost: {} VEB: {} HPB: {} DEBoost: {} DEB: {}".format(pkmnu2.ATB, pkmnu2.ATBoost, pkmnu2.VEB, pkmnu2.HPB, pkmnu2.DEBoost, pkmnu2.DEB))
+    #    print("formula(pkmnu2): {}".format(formula(pkmnu2)))
+    #    print("0.9*formula(pkmnur1): {}".format(0.9*formula(pkmnur1)))
+    #    print("0.9*formula(pkmnur2): {}".format(0.9*formula(pkmnur2)))
+    #    print("SUMA USUARIO: {}".format(formula(pkmnu1)*1.1 + formula(pkmnu2) + 0.9*(formula(pkmnur1)+formula(pkmnur2))))
+    #    print("----------")
+    #    print("formula(pkmno1)*1.1: {}".format(formula(pkmno1)*1.1))
+    #    print("formula(pkmno2): {}".format(formula(pkmno2)))
+    #    print("0.9*formula(pkmnor1): {}".format(0.9*formula(pkmnor1)))
+    #    print("0.9*formula(pkmnor2): {}".format(0.9*formula(pkmnor2)))
+    #    print("SUMA OPONENTE: {}".format(-(formula(pkmno1)*1.1 + formula(pkmno2) + 0.9*(formula(pkmnor1)+formula(pkmnor2)))))
+    #    print("TOTAL SUMA: {}".format(formula(pkmnu1)*1.1 + formula(pkmnu2) + 0.9*(formula(pkmnur1)+formula(pkmnur2)) - (formula(pkmno1)*1.1 + formula(pkmno2) + 0.9*(formula(pkmnor1)+formula(pkmnor2)))))
     return formula(pkmnu1)*1.1 + formula(pkmnu2) + 0.9*(formula(pkmnur1)+formula(pkmnur2)) - (formula(pkmno1)*1.1 + formula(pkmno2) + 0.9*(formula(pkmnor1)+formula(pkmnor2)))
 
 
