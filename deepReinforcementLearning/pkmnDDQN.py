@@ -100,11 +100,11 @@ def NeuralNetworkOutput(listNeuralNetworkOutput):
 
 class DDQNAgent:
     def __init__(self, state_size, action_size):
-        self.state_size = state_size      # tamao de un estado (numero de atributos que representan un estado)
-        self.action_size = action_size    # tamao del vector de acciones 
-        self.memory = deque(maxlen=3000)  # define la memoria del agente (3000 registros como maximo)
-        self.gamma = 0.95                 # discount rate
-        self.learning_rate = 0.001        # taza de aprendizaje 
+        self.state_size = state_size        # tamao de un estado (numero de atributos que representan un estado)
+        self.action_size = action_size      # tamao del vector de acciones 
+        self.memory = deque(maxlen=64000)   # define la memoria del agente
+        self.gamma = 0.95                   # discount rate
+        self.learning_rate = 0.001          # taza de aprendizaje, probar tambien con 0.0001
         
         self.epsilon = 1.0               # factor de exploration inicial
         self.epsilon_min = 0.01          # factor de exploration minimo

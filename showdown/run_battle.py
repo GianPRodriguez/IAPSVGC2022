@@ -3,13 +3,16 @@ import io
 import ast
 import sys
 import json
+import queue
 import config
 import importlib
 import constants
 import concurrent.futures
+import traceback
+import sys
+import time
 
 from copy import deepcopy
-from multiprocessing import Process, Queue
 from showdown.battle_modifier import update_battle
 from showdown.battle_modifier import updateEnvironment
 from showdown.websocket_client import PSWebsocketClient
@@ -98,8 +101,14 @@ def NeuralNetworkInput(battle):
     listNeuralNetworkInput.append(battle.user.active1.PAR*1.0)
     listNeuralNetworkInput.append(battle.user.active1.DRO*1.0)
     # 18 to 27
-    listNeuralNetworkInput.append(battle.user.active1.isDynamax)
-    listNeuralNetworkInput.append(battle.user.active1.can_dynamax)
+    if battle.user.active1.isDynamax:
+        listNeuralNetworkInput.append(1.0)
+    else:
+        listNeuralNetworkInput.append(0.0)
+    if battle.user.active1.can_dynamax:
+        listNeuralNetworkInput.append(1.0)
+    else:
+        listNeuralNetworkInput.append(0.0)
     if not battle.force_switch:
         if battle.user.active1.movePP[0] > 0:
             listNeuralNetworkInput.append(1.0)
@@ -197,8 +206,14 @@ def NeuralNetworkInput(battle):
     listNeuralNetworkInput.append(battle.user.active2.PAR*1.0)
     listNeuralNetworkInput.append(battle.user.active2.DRO*1.0)
     # 41 to 50
-    listNeuralNetworkInput.append(battle.user.active2.isDynamax)
-    listNeuralNetworkInput.append(battle.user.active2.can_dynamax)
+    if battle.user.active2.isDynamax:
+        listNeuralNetworkInput.append(1.0)
+    else:
+        listNeuralNetworkInput.append(0.0)
+    if battle.user.active2.can_dynamax:
+        listNeuralNetworkInput.append(1.0)
+    else:
+        listNeuralNetworkInput.append(0.0)
     if not battle.force_switch:
         if battle.user.active2.movePP[0] > 0:
             listNeuralNetworkInput.append(1.0)
@@ -353,15 +368,15 @@ def NeuralNetworkInput(battle):
     else:
         listNeuralNetworkInput.append(0.0)
     # 76 to 77
-    if "auroraveil" in battle.user.side_conditions:
+    if battle.user.side_conditions['auroraveil'] > 0:
         listNeuralNetworkInput.append(1.0)
         listNeuralNetworkInput.append(1.0)
     else:
-        if "lightscreen" in battle.user.side_conditions and "auroraveil" not in battle.user.side_conditions:
+        if battle.user.side_conditions['lightscreen'] > 0:
             listNeuralNetworkInput.append(1.0)
         else:
             listNeuralNetworkInput.append(0.0)
-        if "reflect" in battle.user.side_conditions and "auroraveil" not in battle.user.side_conditions:
+        if battle.user.side_conditions['reflect'] > 0:
             listNeuralNetworkInput.append(1.0)
         else:
             listNeuralNetworkInput.append(0.0)
@@ -1137,29 +1152,32 @@ def NeuralNetworkInput(battle):
     listNeuralNetworkInput.append(battle.opponent.active1.DEB*1.0)
     listNeuralNetworkInput.append(battle.opponent.active1.VEB*1.0)
     # 120 to 123
-    listNeuralNetworkInput.append(battle.opponent.active1.isDynamax)
+    if battle.opponent.active1.isDynamax:
+        listNeuralNetworkInput.append(1.0)
+    else:
+        listNeuralNetworkInput.append(0.0)
     listNeuralNetworkInput.append(battle.opponent.active1.ASL*1.0)
     listNeuralNetworkInput.append(battle.opponent.active1.PAR*1.0)
     listNeuralNetworkInput.append(battle.opponent.active1.DRO*1.0)
     # 124 to 141
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('normal',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('fire',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('water',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('grass',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('electric',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('ice',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('fighting',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('poison',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('ground',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('flying',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('psychic',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('bug',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('rock',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('ghost',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('dragon',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('dark',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('steel',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('fairy',0.0))
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('normal',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('fire',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('water',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('grass',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('electric',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('ice',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('fighting',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('poison',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('ground',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('flying',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('psychic',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('bug',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('rock',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('ghost',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('dragon',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('dark',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('steel',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active1.moveType.get('fairy',0.0)*1.0)
     # 142 to 160
     if battle.opponent.active2.type1 == 'Null':
         listNeuralNetworkInput.append(0.0)
@@ -1931,44 +1949,47 @@ def NeuralNetworkInput(battle):
     listNeuralNetworkInput.append(battle.opponent.active2.DEB*1.0)
     listNeuralNetworkInput.append(battle.opponent.active2.VEB*1.0)
     # 184 to 187
-    listNeuralNetworkInput.append(battle.opponent.active2.isDynamax)
+    if battle.opponent.active2.isDynamax:
+        listNeuralNetworkInput.append(1.0)
+    else:
+        listNeuralNetworkInput.append(0.0)
     listNeuralNetworkInput.append(battle.opponent.active2.ASL*1.0)
     listNeuralNetworkInput.append(battle.opponent.active2.PAR*1.0)
     listNeuralNetworkInput.append(battle.opponent.active2.DRO*1.0)
     # 188 to 205
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('normal',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('fire',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('water',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('grass',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('electric',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('ice',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('fighting',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('poison',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('ground',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('flying',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('psychic',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('bug',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('rock',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('ghost',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('dragon',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('dark',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('steel',0.0))
-    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('fairy',0.0))
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('normal',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('fire',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('water',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('grass',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('electric',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('ice',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('fighting',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('poison',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('ground',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('flying',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('psychic',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('bug',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('rock',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('ghost',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('dragon',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('dark',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('steel',0.0)*1.0)
+    listNeuralNetworkInput.append(battle.opponent.active2.moveType.get('fairy',0.0)*1.0)
     # 206
     if battle.opponent.side_conditions['tailwind'] > 0:
         listNeuralNetworkInput.append(1.0)
     else:
         listNeuralNetworkInput.append(0.0)
     # 207 to 208
-    if "auroraveil" in battle.opponent.side_conditions:
+    if battle.opponent.side_conditions['auroraveil'] > 0:
         listNeuralNetworkInput.append(1.0)
         listNeuralNetworkInput.append(1.0)
     else:
-        if "lightscreen" in battle.opponent.side_conditions and "auroraveil" not in battle.opponent.side_conditions:
+        if battle.opponent.side_conditions['lightscreen'] > 0:
             listNeuralNetworkInput.append(1.0)
         else:
             listNeuralNetworkInput.append(0.0)
-        if "reflect" in battle.opponent.side_conditions and "auroraveil" not in battle.opponent.side_conditions:
+        if battle.opponent.side_conditions['reflect'] > 0:
             listNeuralNetworkInput.append(1.0)
         else:
             listNeuralNetworkInput.append(0.0)
@@ -1978,7 +1999,7 @@ def NeuralNetworkInput(battle):
     else:
         listNeuralNetworkInput.append(0.0)
     # 210 to 214
-    if battle.weather == None:
+    if battle.weather == 'none' or battle.weather == None:
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
@@ -2011,31 +2032,31 @@ def NeuralNetworkInput(battle):
     else:
         print("ERROR 10 - NeuralNetworkInput")
     # 215 to 219
-    if battle.weather == None:
+    if battle.terrain == 'none' or battle.terrain == None:
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(1.0)
-    elif battle.weather == 'electricterrain':
+    elif battle.terrain == 'electricterrain':
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(1.0)
         listNeuralNetworkInput.append(0.0)
-    elif battle.weather == 'grassyterrain':
+    elif battle.terrain == 'grassyterrain':
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(1.0)
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
-    elif battle.weather == 'mistyterrain':
+    elif battle.terrain == 'mistyterrain':
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(1.0)
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
-    elif battle.weather == 'psychicterrain':
+    elif battle.terrain == 'psychicterrain':
         listNeuralNetworkInput.append(1.0)
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
@@ -2065,10 +2086,56 @@ async def accion_batalla(battle):
         # Los imprimo...
         battle.imprimir()
     # Actualizo los valores de las Neuronas de Entrada
-    listNeuralNetworkInput = NeuralNetworkInput(battle)
+    if battle.agentTraining:
+        listNeuralNetworkInput = NeuralNetworkInput(battle)
     # Se define la mejor acción
-    battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = await battle.action_battle(battle)
+    battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, reward, score = await battle.action_battle(battle)
     mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
+    if battle.agentTraining:
+        # if invalidAction - reward -10000.0
+        battle.q.put([10,listNeuralNetworkInput,battle.turn,reward,score,True])
+        #print("10 ENVIADO")
+        # Bucle Principal
+        while True:
+            time.sleep(0.5)
+            if battle.q.qsize() > 0:
+                if battle.q.queue[0][0] == 50:
+                    cola = battle.q.get(0)
+                    if cola[0] == 50:
+                        if cola[1]:
+                            #print("{} RECIBIDO".format(cola[0]))
+                            # msg random
+                            # battle, mensaje = await accion_batalla(battle) # ya generado
+                            battle.q.put([-50, mensaje, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2])
+                            #print("-50 ENVIADO")
+                            # msg generado por agente random
+                            while True:
+                                time.sleep(0.5)
+                                if battle.q.qsize() > 0:
+                                    if battle.q.queue[0][0] == 150:
+                                        cola2 = battle.q.get(0)
+                                        #print("{} RECIBIDO".format(cola2[0]))
+                                        if cola2[0] == 150:
+                                            msg = cola2[1]  # Enviado desde RANDOM
+                                            break
+                            mensaje = msg
+                            break
+                        else:
+                            #print("{} RECIBIDO (2)".format(cola[0]))
+                            # msg generado por red neuronal
+                            while True:
+                                if battle.q.qsize() > 0:
+                                    cola2 = battle.q.get(0)
+                                    #print("{} RECIBIDO (2)".format(cola2[0]))
+                                    if cola2[0] == 150:
+                                        msg = cola2[1]  # Enviado desde DDQN
+                                        break
+                            mensaje = msg
+                            break
+                    else:
+                        print("ERROR {} RECIBIDO T".format(cola[0]))
+    #if self.randomTraining: # los parametros vienen de la cola
+    #    mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
     # Retorno el mensaje listo para enviarlo al WebSocket
     return battle, mensaje
 
@@ -2077,7 +2144,7 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
     # Se escoge los 4 Pokémon: eleccion(n) es un entero
     if not battle.isTraining:
         print("[INFO]     Vista Previa del Equipo")
-    eleccion0, eleccion1, eleccion2, eleccion3 = await battle.action_team_preview(battle)    
+    eleccion0, eleccion1, eleccion2, eleccion3 = await battle.action_team_preview(battle) 
     # Se prepara el String que se va a enviar al WebSocket
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
     mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]
@@ -2129,7 +2196,7 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q)
             return battle_tag, opponent_name
 
 
-async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, set_request_json=True):
+async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, training, agentTraining, set_request_json=True):
     battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
     # Obtengo el id de la batalla y el nombre del oponente
     battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client, q)
@@ -2150,9 +2217,11 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, 
             # opponent_id = "p2"
             # Aquí se hace el cambio de bot y llamada de BattleBot...
             battle = battle_module.BattleBot(battle_tag)
+            battle.isTraining = training
+            battle.agentTraining = agentTraining
             battle.q = q
-            battle.q.put([0])
-            print("[INFO]     ¡Batalla en Curso!")
+            if not training:
+                battle.q.put([0])
             # Actualización
             battle.opponent.id = opponent_id
             # battle.opponent.id = "p2"
@@ -2166,9 +2235,9 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, 
 
 
 # Inicia una Batalla VGC 2022
-async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient, q, botMode):
+async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient, q, botMode, training, agentTraining):
     # Se obtiene las variables de abajo
-    battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, q, set_request_json=True)
+    battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, q, training, agentTraining, set_request_json=True)
     battle.botMode = botMode
     # Inicializa mensaje donde se cargará el TEAM PREVIEW
     msg = ''
@@ -2200,23 +2269,22 @@ async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient, q, botMode):
     return battle
 
 
-async def iniciar_batalla(ps_websocket_client, q, botMode):
+async def iniciar_batalla(ps_websocket_client, q, botMode, training, agentTraining):
     # Inicia la Batalla VGC 2022
-    battle = await inicia_vgc2022(ps_websocket_client, q, botMode)
+    battle = await inicia_vgc2022(ps_websocket_client, q, botMode, training, agentTraining)
     # Envía el saludo
     await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
     # Inicia el tiempo
-    if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
+    if (battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE) and not training:
         await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
     # Retorna la Clase Batalla
     return battle
 
 
 # Nueva Batalla Pokémon completo
-async def pokemon_battle(ps_websocket_client, q, botMode, training):
+async def pokemon_battle(ps_websocket_client, q, botMode, training, agentTraining):
     # Solo inicia la batalla
-    battle = await iniciar_batalla(ps_websocket_client, q, botMode)
-    battle.isTraining = training
+    battle = await iniciar_batalla(ps_websocket_client, q, botMode, training, agentTraining)
     battle.imprimir()
     # Mientras...
     while True:
@@ -2228,14 +2296,24 @@ async def pokemon_battle(ps_websocket_client, q, botMode, training):
             if constants.WIN_STRING in mensaje:
                 # Se obtiene el NOMBRE del ganador
                 winner = mensaje.split(constants.WIN_STRING)[-1].split('\n')[0].strip(" ")
-                if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
-                    q.put([-1,winner==battle.opponent.account_name,battle.user.account_name,battle.opponent.account_name])
-                else:
-                    q.put([-1,winner!=battle.opponent.account_name,battle.opponent.account_name,battle.user.account_name])
+                if not training:
+                    if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
+                        q.put([-1,winner==battle.opponent.account_name,battle.user.account_name,battle.opponent.account_name])
+                    else:
+                        q.put([-1,winner!=battle.opponent.account_name,battle.opponent.account_name,battle.user.account_name])
             else:
                 winner = None
+            # En el entrenamiento, existe un turno x+1
+            if agentTraining:
+                action_required, battle = await update_battle(battle, mensaje)
+                battle.imprimir()
+                battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, reward, score = await battle.action_battle(battle)
+                listNeuralNetworkInput = NeuralNetworkInput(battle)
+                battle.q.put([10,listNeuralNetworkInput,battle.turn+1,reward,score,False])
+                #print("10 ENVIADO (FIN)")
             # Y lo imprimo
-            print("[INFO]     Ganador: {}".format(winner))
+            if not training:
+                print("[INFO]     Ganador: {}".format(winner))
             # Se envía un mensaje de despedida al contricante
             await ps_websocket_client.send_message(battle.battle_tag, [config.battle_ending_message])
             # Es opcional guardar la batalla...
@@ -2247,11 +2325,12 @@ async def pokemon_battle(ps_websocket_client, q, botMode, training):
             # No ha finalizado la batalla... actualizo las variables del entorno
             action_required, battle = await update_battle(battle, mensaje)
             # action_required es BOOLEAN
-            if (action_required and not battle.wait) or battle.error:
+            if (action_required and not battle.wait):
                 # Escoge el mejor movimiento y lo envía al websocket
                 battle, mensaje = await accion_batalla(battle)
                 q = battle.q
                 if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
-                    # Imprimo en CMD la acción
-                    print("[SEND]     {}".format(mensaje))
+                    if not training:
+                        # Imprimo en CMD la acción
+                        print("[SEND]     {}".format(mensaje))
                     await ps_websocket_client.send_message(battle.battle_tag, mensaje)

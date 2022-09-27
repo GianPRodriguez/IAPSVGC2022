@@ -8,7 +8,7 @@ Jolly Nature
 - Play Rough  
 - Protect  
 
-Calyrex-Shadow @ Choice Specs  
+Calyrex-Shadow @ Focus Sash  
 Ability: As One (Spectrier)  
 Level: 50  
 EVs: 4 HP / 252 SpA / 252 Spe  
@@ -19,15 +19,15 @@ IVs: 0 Atk
 - Mud Shot  
 - Snarl  
 
-Incineroar @ Shuca Berry  
+Incineroar (F) @ Shuca Berry  
 Ability: Intimidate  
 Level: 50  
 EVs: 252 HP / 4 Atk / 156 Def / 84 SpD / 12 Spe  
 Impish Nature  
 - Fake Out  
 - Flare Blitz  
+- Throat Chop  
 - Parting Shot  
-- Snarl  
 
 Gastrodon-East @ Leftovers  
 Ability: Storm Drain  
@@ -60,4 +60,3 @@ Jolly Nature
 - Brick Break  
 - Eerie Impulse  
 
-{"TeamName":"Eduardo Cunha","ConcludedBattles":"120","BattlesWon1000":"45"}

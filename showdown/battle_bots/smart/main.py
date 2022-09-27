@@ -59,7 +59,7 @@ class BattleBot(Battle):
         # Send to Queue
         if not battle.isTraining:
             print("[ACTION]   {}".format([namePokemon0, namePokemon1, namePokemon2, namePokemon3]))
-        battle.q.put([1,namePokemon0, namePokemon1, namePokemon2, namePokemon3, 0, 0])
+            battle.q.put([1,namePokemon0, namePokemon1, namePokemon2, namePokemon3, 0, 0])
         # Return 4 integers
         return eleccion0, eleccion1, eleccion2, eleccion3
 
@@ -166,7 +166,7 @@ class BattleBot(Battle):
                     toMove1 = 0
                 else:
                     # ¿move o switch?
-                    moveSwitch1 = random.choices(['move', 'switch'], weights=(70,30), k=1)[0]
+                    moveSwitch1 = random.choices(['move', 'switch'], weights=(80,20), k=1)[0]
                     if moveSwitch1 == 'move':
                         # ¿Qué movimientos están disponibles?
                         pokemon1move = []
@@ -188,7 +188,7 @@ class BattleBot(Battle):
                                 #logger.warning(str(type(battle.user.active1.can_dynamax)))
                                 if ((battle.request_json).get('active','False')[0].get('canDynamax','False')):
                                     # Sí es posible...
-                                    dynamax1 = random.choices([0, 1], weights=(30,70), k=1)[0]
+                                    dynamax1 = random.choices([0, 1], weights=(70,30), k=1)[0]
                                     if dynamax1:
                                         battle.user.active1.can_dynamax = False
                                         battle.user.active2.can_dynamax = False
@@ -205,7 +205,7 @@ class BattleBot(Battle):
                                             toMove1 = 0
                                         elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'selected-pokemon':
                                             if battle.user.active2.isFainted() == False:
-                                                toMove1 = random.choices([-2, 1, 2], weights=(10,45,45), k=1)[0]
+                                                toMove1 = random.choices([-2, 1, 2], weights=(4,48,48), k=1)[0]
                                             else:
                                                 toMove1 = random.choice([1, 2])
                                         else:
@@ -225,7 +225,7 @@ class BattleBot(Battle):
                                         toMove1 = 0
                                     elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'selected-pokemon':
                                         if battle.user.active2.isFainted() == False:
-                                            toMove1 = random.choices([-2, 1, 2], weights=(10,45,45), k=1)[0]
+                                            toMove1 = random.choices([-2, 1, 2], weights=(4,48,48), k=1)[0]
                                         else:
                                             toMove1 = random.choice([1, 2])
                                     else:
@@ -265,7 +265,7 @@ class BattleBot(Battle):
                             if battle.user.active1.can_dynamax:
                                 if ((battle.request_json)['active'][0]['canDynamax']):
                                     # Sí es posible...
-                                    dynamax1 = random.choices([0, 1], weights=(30,70), k=1)[0]
+                                    dynamax1 = random.choices([0, 1], weights=(70,30), k=1)[0]
                                     if dynamax1:
                                         battle.user.active1.can_dynamax = False
                                         battle.user.active2.can_dynamax = False
@@ -282,7 +282,7 @@ class BattleBot(Battle):
                                             toMove1 = 0
                                         elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'selected-pokemon':
                                             if battle.user.active2.isFainted() == False:
-                                                toMove1 = random.choices([-2, 1, 2], weights=(10,45,45), k=1)[0]
+                                                toMove1 = random.choices([-2, 1, 2], weights=(4,48,48), k=1)[0]
                                             else:
                                                 toMove1 = random.choice([1, 2])
                                         else:
@@ -302,7 +302,7 @@ class BattleBot(Battle):
                                         toMove1 = 0
                                     elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'selected-pokemon':
                                         if battle.user.active2.isFainted() == False:
-                                            toMove1 = random.choices([-2, 1, 2], weights=(10,45,45), k=1)[0]
+                                            toMove1 = random.choices([-2, 1, 2], weights=(4,48,48), k=1)[0]
                                         else:
                                             toMove1 = random.choice([1, 2])
                                     else:
@@ -338,7 +338,7 @@ class BattleBot(Battle):
                     toMove2 = 0
                 else:
                     # ¿move o switch?
-                    moveSwitch2 = random.choices(['move', 'switch'], weights=(70,30), k=1)[0]
+                    moveSwitch2 = random.choices(['move', 'switch'], weights=(80,20), k=1)[0]
                     if moveSwitch2 == 'move':
                         # ¿Qué movimientos están disponibles?
                         pokemon2move = []
@@ -358,7 +358,7 @@ class BattleBot(Battle):
                             if battle.user.active2.can_dynamax:
                                 if ((battle.request_json).get('active','False')[1].get('canDynamax','False')):
                                     # Sí es posible...
-                                    dynamax2 = random.choices([0, 1], weights=(30,70), k=1)[0]
+                                    dynamax2 = random.choices([0, 1], weights=(70,30), k=1)[0]
                                     if dynamax2:
                                         battle.user.active1.can_dynamax = False
                                         battle.user.active2.can_dynamax = False
@@ -375,7 +375,7 @@ class BattleBot(Battle):
                                             toMove2 = 0
                                         elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'selected-pokemon':
                                             if battle.user.active1.isFainted() == False:
-                                                toMove2 = random.choices([-1, 1, 2], weights=(10,45,45), k=1)[0]
+                                                toMove2 = random.choices([-1, 1, 2], weights=(4,48,48), k=1)[0]
                                             else:
                                                 toMove2 = random.choice([1, 2])
                                         else:
@@ -395,7 +395,7 @@ class BattleBot(Battle):
                                         toMove2 = 0
                                     elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'selected-pokemon':
                                         if battle.user.active1.isFainted() == False:
-                                            toMove2 = random.choices([-1, 1, 2], weights=(10,45,45), k=1)[0]
+                                            toMove2 = random.choices([-1, 1, 2], weights=(4,48,48), k=1)[0]
                                         else:
                                             toMove2 = random.choice([1, 2])
                                     else:
@@ -438,7 +438,7 @@ class BattleBot(Battle):
                                 if battle.user.active2.can_dynamax:
                                     if ((battle.request_json)['active'][1]['canDynamax']):
                                         # Sí es posible...
-                                        dynamax2 = random.choices([0, 1], weights=(30,70), k=1)[0]
+                                        dynamax2 = random.choices([0, 1], weights=(70,30), k=1)[0]
                                         if dynamax2:
                                             battle.user.active1.can_dynamax = False
                                             battle.user.active2.can_dynamax = False
@@ -455,7 +455,7 @@ class BattleBot(Battle):
                                                 toMove2 = 0
                                             elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'selected-pokemon':
                                                 if battle.user.active1.isFainted() == False:
-                                                    toMove2 = random.choices([-1, 1, 2], weights=(10,45,45), k=1)[0]
+                                                    toMove2 = random.choices([-1, 1, 2], weights=(4,48,48), k=1)[0]
                                                 else:
                                                     toMove2 = random.choice([1, 2])
                                             else:
@@ -475,7 +475,7 @@ class BattleBot(Battle):
                                             toMove2 = 0
                                         elif (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'normal' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'any' or (battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target'] == 'selected-pokemon':
                                             if battle.user.active1.isFainted() == False:
-                                                toMove2 = random.choices([-1, 1, 2], weights=(10,45,45), k=1)[0]
+                                                toMove2 = random.choices([-1, 1, 2], weights=(4,48,48), k=1)[0]
                                             else:
                                                 toMove2 = random.choice([1, 2])
                                         else:
@@ -542,6 +542,8 @@ class BattleBot(Battle):
             print("NO DEBE ENTRAR ACÁ - moveSwitch2 == 'switch'")
         # Se envía al Queue la acción
         deltaReward, reward = battle.calculateRewards()
+        if battle.error:
+            deltaReward, reward = -9999, reward
         if deltaReward > 1000:
             color5 = "#325928"
         elif deltaReward >= 0:
@@ -556,5 +558,5 @@ class BattleBot(Battle):
             print("[REWARD]   {}".format([math.floor(deltaReward), math.floor(reward)]))
             print("[ACTION]   {}".format([text1, text3, text2, text4]))
             print("[COLOR]    {}".format([color1, color3, color2, color4, color5, color6]))
-        battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4, math.floor(deltaReward), color5, math.floor(reward), color6])
-        return battle, moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2)
+            battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4, math.floor(deltaReward), color5, math.floor(reward), color6])
+        return battle, moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2), math.floor(deltaReward), math.floor(reward)

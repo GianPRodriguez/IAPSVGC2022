@@ -3,13 +3,12 @@ import json
 import math
 import requests
 import constants
-
+import queue
 from abc import ABC
 from numpy import sqrt
 from abc import abstractmethod
 from collections import defaultdict
 from API.PokeAPI import getPkmnInfo
-from multiprocessing import Process, Queue
 
 
 class Battle(ABC):
@@ -32,8 +31,9 @@ class Battle(ABC):
         self.reward = 0
         self.lastReward = 0
         self.botMode = None
-        self.q = Queue()
+        self.q = queue.Queue()
         self.isTraining = False
+        self.agentTraining = False
         self.cadenaTypes = json.loads(open("API/JSONs/typeChart.json","r").read())
         self.cadenaTP = json.loads(open("API/JSONs/geneticAlgorithm.json","r").read())
         self.moveTypes = json.loads(open("API/JSONs/pkmnMovesTypes.json","r").read())
@@ -132,18 +132,18 @@ class Battle(ABC):
                 opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[3])) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]) + self.formula(self.opponent.reserved[2]))/3
             else:
                 opponent = 1000000
-        print("opponent: {}".format(opponent))
-        # On the first turn, the lastReward is 0
-        if not self.force_switch:
-            if self.turn > 1:
-                self.lastReward = (user - opponent) - self.reward
-            else:
-                self.lastReward = 0
-            # Heart
-            self.reward = user - opponent
-            return self.lastReward, self.reward
+        # On the first turn, the reward is the score
+        if self.turn > 1:
+            self.lastReward = (user - opponent) - self.reward
+            self.reward = (user - opponent)
         else:
-            return self.lastReward, self.reward
+            if self.force_switch:
+                self.lastReward = (user - opponent) - self.reward
+                self.reward = (user - opponent)
+            else:
+                self.lastReward = user - opponent
+                self.reward = user - opponent
+        return self.lastReward, self.reward
 
     # Calculate the reward for the user or for the opponent of 1 Pkmn
     def formula(self, pkmn):

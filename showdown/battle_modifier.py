@@ -27,13 +27,15 @@ def request(battle, split_msg):
         battle.rqid = battle_json[constants.RQID]
         # ¿battle_json tiene "forceSwitch"? Se activa cuando uso U-TURN
         if battle_json.get(constants.FORCE_SWITCH):
-            print("[INFO]     Action: forceSwitch")
+            if not battle.isTraining:
+                print("[INFO]     Action: forceSwitch")
             battle.force_switch = True
         else:
             battle.force_switch = False
         # ¿battle_json tiene "wait"? ¿Se activa cuando el opponente usa U-TURN?
         if battle_json.get(constants.WAIT):
-            print("[INFO]     Action: Wait")
+            if not battle.isTraining:
+                print("[INFO]     Action: Wait")
             battle.wait = True
         else:
             battle.wait = False
@@ -46,11 +48,11 @@ def request(battle, split_msg):
 # Avanza el tiempo...
 def inactive(battle, split_msg):
     # split_msg = ["","inactive","Time left: 55 sec this turn "," 410 sec total"]
-    regex_string = "(\d+) sec this turn"
-    if split_msg[2].startswith(constants.TIME_LEFT):
-        capture = re.search(regex_string, split_msg[2])
-        time_left = int(capture.group(1))
-        # logger.info("Tiempo restante: {} segundos...".format(time_left))
+    #regex_string = "(\d+) sec this turn"
+    #if split_msg[2].startswith(constants.TIME_LEFT):
+    #    capture = re.search(regex_string, split_msg[2])
+    #    time_left = int(capture.group(1))
+    #    # logger.info("Tiempo restante: {} segundos...".format(time_left))
     return battle
 
 
@@ -984,7 +986,7 @@ def clearnegativeboost(battle, split_msg):
 
 def error(battle, split_msg):
     battle.error = True
-    print("ERROR")
+    #print("JUGADA INVALIDA")
     return battle
 
 
@@ -1147,7 +1149,8 @@ def turn(battle, split_msg):
     if constants.DROWSY in battle.opponent.active2.volatile_statuses:
         battle.opponent.active2.volatile_statuses.remove(constants.DROWSY)
     # Turn
-    print("[INFO]     Turno: {}".format(int(split_msg[2])))
+    if not battle.isTraining:
+        print("[INFO]     Turno: {}".format(int(split_msg[2])))
     return battle
 
 
@@ -1289,18 +1292,6 @@ def updatePokemon(battle, pkmn, isUser, isReserved):
         pkmn.ATBoost = getATBoost(pkmn.moveType, battle.opponent.active1.type1, battle.opponent.active1.type2, battle.opponent.active2.type1, battle.opponent.active2.type2, battle)
         pkmn.DEBoost = getDEBoost(battle.opponent.active1.moveType, battle.opponent.active2.moveType, pkmn.type1, pkmn.type2, battle)
     else:
-        if pkmn.name == "calyrex-shadow":
-            print("ATBOOST")
-            print(pkmn.moveType)
-            print(battle.user.active1.type1)
-            print(battle.user.active1.type2)
-            print(battle.user.active2.type1)
-            print(battle.user.active2.type2)
-            print("DEBOOST")
-            print(battle.user.active1.moveType)
-            print(battle.user.active2.moveType)
-            print(pkmn.type1)
-            print(pkmn.type2)
         pkmn.ATBoost = getATBoost(pkmn.moveType, battle.user.active1.type1, battle.user.active1.type2, battle.user.active2.type1, battle.user.active2.type2, battle)
         pkmn.DEBoost = getDEBoost(battle.user.active1.moveType, battle.user.active2.moveType, pkmn.type1, pkmn.type2, battle)
     return battle
@@ -1380,6 +1371,8 @@ async def update_battle(battle, msg):
             battle = function_to_call(battle, split_msg)
             if action != 'error':
                 battle.error = False
+            else:
+                return True, battle
         if action == 'turn':
             return True, battle
 

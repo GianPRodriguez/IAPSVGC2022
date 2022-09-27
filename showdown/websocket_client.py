@@ -62,7 +62,8 @@ class PSWebsocketClient:
 
 
     async def login(self, training):
-        print("[INFO]     Iniciando sesión...")
+        if not training:
+            print("[INFO]     Iniciando sesión...")
         client_id, challstr = await self.get_id_and_challstr()
         # Si se ha registrado una contraseña... ocurre siempre
         if self.password:
@@ -112,20 +113,22 @@ class PSWebsocketClient:
         # "|/utm Incineroar||aguavberry|intimidate|fakeout,flareblitz,snarl,uturn|Adamant|252,56,160,,40,|||||]Kyogre||choicespecs|drizzle|waterspout,originpulse,icebeam,thunder|Modest|4,,,252,,252||,0,,,,|||]Tornadus||lifeorb|prankster|tailwind,darkpulse,hurricane,icywind|Modest|4,,,252,,252|M|,0,,,,|||]Zacian-Crowned||rustedsword|intrepidsword|behemothblade,closecombat,playrough,sacredsword|Adamant|252,252,,,4,|||||]Indeedee-F||expertbelt|psychicsurge|allyswitch,followme,dazzlinggleam,psychic|Calm|252,,184,,72,|F|,0,,,,|||]Alcremie||focussash|sweetveil|decorate,substitute,dazzlinggleam,psychic|Calm|252,,112,,144,|F|,0,,,,|||"
         await self.send_message('', message)
 
-    async def challenge_user(self, user_to_challenge, battle_format, team):
+    async def challenge_user(self, user_to_challenge, battle_format, team, training):
         if time.time() - self.last_challenge_time < 10:
             #logger.info("Sleeping for 10 seconds because last challenge was less than 10 seconds ago")
             await io.sleep(10)
         await self.update_team(team)
         message = ["/challenge {},{}".format(user_to_challenge, battle_format)]
-        print("[INFO]     Enfrentándose a {}...".format(user_to_challenge))
+        if not training:
+            print("[INFO]     Enfrentándose a {}...".format(user_to_challenge))
         await self.send_message('', message)
         self.last_challenge_time = time.time()
 
-    async def accept_challenge(self, battle_format, team, room_name):
+    async def accept_challenge(self, battle_format, team, room_name, training):
         if room_name is not None:
             await self.join_room(room_name)
-        print("[INFO]     Esperando una batalla en formato {}".format(battle_format))
+        if not training:
+            print("[INFO]     Esperando una batalla en formato {}".format(battle_format))
         await self.update_team(team)
         username = None
         while username is None:

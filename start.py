@@ -219,8 +219,8 @@ class Modulo1(tk.Frame):
 			# Start Battle
 			self.button1['state'] = tk.DISABLED
 			self.button1.configure(text='Esperando Confirmación')
-			# Thread
-			self.p = Thread(target=AsyncDownload, args=(q1,username,password,teamname,botmode,None,False,1,))
+			# Thread 1
+			self.p = Thread(target=AsyncDownload, args=(q1,username,password,teamname,botmode,None,False,False,1,))
 			self.p.start()
 			# Monitor
 			self.monitor(q1)
@@ -430,7 +430,7 @@ class Modulo2(tk.Frame):
 	    	# Start Battle
 	    	self.startBattle['state'] = tk.DISABLED
 	    	self.startBattle.configure(text='Buscando Oponente')
-	    	self.p = Thread(target=AsyncDownload, args=(self.q, self.username, self.password, self.teamname, botmode, None, False, 1,))
+	    	self.p = Thread(target=AsyncDownload, args=(self.q, self.username, self.password, self.teamname, botmode, None, False, False, 1,))
 	    	self.p.start()
 	    	self.isBattle = False
 	    	self.monitor()

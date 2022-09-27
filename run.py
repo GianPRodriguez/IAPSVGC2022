@@ -3,7 +3,6 @@ from environs import Env
 from config import init_logging
 from threading import Thread
 from teams import load_team
-from multiprocessing import Process, Queue
 from showdown.run_battle import pokemon_battle
 from asyncio.tasks import FIRST_COMPLETED
 from showdown.websocket_client import PSWebsocketClient
@@ -19,7 +18,7 @@ def parse_configs():
     env = Env()
     env.read_env()
 
-    config.battle_bot_module = env("BATTLE_BOT", 'safest')
+    config.battle_bot_module = env("BATTLE_BOT", 'smart')
     config.save_replay = env.bool("SAVE_REPLAY", config.save_replay)
     config.use_relative_weights = env.bool("USE_RELATIVE_WEIGHTS", config.use_relative_weights)
     config.gambit_exe_path = env("GAMBIT_PATH", config.gambit_exe_path)
@@ -40,20 +39,27 @@ def parse_configs():
         config.user_to_challenge = env("USER_TO_CHALLENGE")
 
 # MAIN
-async def showdown(q, username, password, teamname, botmode, opponentUsername, training, numBattles):
+async def showdown(q, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles):
     # Configuración de la Aplicación
     parse_configs()
     # Parameters
-    config.user_to_challenge = username
-    config.bot_mode = botmode
-    config.team_name = 'gen8/vgc2022/' + teamname
+    if not training:
+        config.user_to_challenge = username
+        config.bot_mode = botmode
+        config.team_name = 'gen8/vgc2022/' + teamname
+    else:
+        team_name = 'gen8/vgc2022/' + teamname
     if config.bot_mode == constants.SEARCH_LADDER:
         config.username = username
         config.password = password
-    # Creo una Clase PSWebsocketClient
-    ps_websocket_client = await PSWebsocketClient.create(config.username, config.password, config.websocket_uri)
+    if training:
+        ps_websocket_client = await PSWebsocketClient.create(username, password, config.websocket_uri)
+        isOk = await ps_websocket_client.login(training)
+    else:
+        # Creo una Clase PSWebsocketClient
+        ps_websocket_client = await PSWebsocketClient.create(config.username, config.password, config.websocket_uri)
+        isOk = await ps_websocket_client.login(training)
     # Se lee "|challstr|4|a6e6e29652941bc1b872a2c34cb0b4e6fdd83355bd3b8787d1519685b29bfb5d267f479f4be9f9fe554605c6c9842160194586f55644f532d991560f817c5939bf7961319b23de0803bac5f6faa2935e395c0f28da55b4c052ece76f0f64e5acdfea8691ac2607012b0d742704920c9fe3c6bc13730b121d6459b84f03d399b8"
-    isOk = await ps_websocket_client.login(training)
     if isOk == -1:
         print("[INFO]     ¡Usuario o contraseña incorrecta!")
         q.put([-5])
@@ -63,37 +69,64 @@ async def showdown(q, username, password, teamname, botmode, opponentUsername, t
     wins = 0
     losses = 0
     # Hasta que no se alcance la cantidad de batallas definidas
-    while True:
-        # Se lee el EQUIPO dado un Nombre Específico...
-        team = load_team(config.team_name)[0]
-        # Opciones de juego
-        if config.bot_mode == constants.CHALLENGE_USER:
-            if training:
-                await ps_websocket_client.challenge_user(opponentUsername, config.pokemon_mode, team)
+    if training:
+        while True:
+            # Se lee el EQUIPO dado un Nombre Específico...
+            team = load_team(team_name)[0]
+            # Opciones de juego
+            if botmode == constants.CHALLENGE_USER:
+                await ps_websocket_client.challenge_user(opponentUsername, config.pokemon_mode, team, training)
+            elif botmode == constants.ACCEPT_CHALLENGE:
+                await ps_websocket_client.accept_challenge(config.pokemon_mode, team, config.room_name, training)
+            elif botmode == constants.SEARCH_LADDER:
+                # Validación ante Jugadores Humanos
+                await ps_websocket_client.search_for_match(team)
             else:
-                await ps_websocket_client.challenge_user(config.user_to_challenge, config.pokemon_mode, team)
-        elif config.bot_mode == constants.ACCEPT_CHALLENGE:
-            await ps_websocket_client.accept_challenge(config.pokemon_mode, team, config.room_name)
-        elif config.bot_mode == constants.SEARCH_LADDER:
-            # Validación ante Jugadores Humanos
-            await ps_websocket_client.search_for_match(team)
-        else:
-            raise ValueError("Invalid Bot Mode")
-        # Nueva Batalla Pokémon completo
-        winner, q = await pokemon_battle(ps_websocket_client, q, config.bot_mode, training)
-        if winner == config.username:
-            wins += 1
-        else:
-            losses += 1
-        print("[INFO]     W: {}\tL: {}".format(wins, losses))
-        battles_run += 1
-        if battles_run >= config.run_count:
-            break
+                raise ValueError("Invalid Bot Mode")
+            # Nueva Batalla Pokémon completo
+            winner, q = await pokemon_battle(ps_websocket_client, q, botmode, training, agentTraining)
+            if winner == username:
+                wins += 1
+            else:
+                losses += 1
+            battles_run += 1
+            if battles_run >= config.run_count:
+                break
+    else:
+        while True:
+            # Se lee el EQUIPO dado un Nombre Específico...
+            team = load_team(config.team_name)[0]
+            # Opciones de juego
+            if config.bot_mode == constants.CHALLENGE_USER:
+                if training:
+                    await ps_websocket_client.challenge_user(opponentUsername, config.pokemon_mode, team, False)
+                else:
+                    await ps_websocket_client.challenge_user(config.user_to_challenge, config.pokemon_mode, team, False)
+            elif config.bot_mode == constants.ACCEPT_CHALLENGE:
+                await ps_websocket_client.accept_challenge(config.pokemon_mode, team, config.room_name, False)
+            elif config.bot_mode == constants.SEARCH_LADDER:
+                # Validación ante Jugadores Humanos
+                await ps_websocket_client.search_for_match(team)
+            else:
+                raise ValueError("Invalid Bot Mode")
+            # Nueva Batalla Pokémon completo
+            winner, q = await pokemon_battle(ps_websocket_client, q, config.bot_mode, training, False)
+            if winner == config.username:
+                wins += 1
+            else:
+                losses += 1
+            if training:
+                print("[INFO]     W: {}\tL: {}".format(wins, losses))
+            battles_run += 1
+            if battles_run >= config.run_count:
+                break
     # Fin
-    q.put([-10])
+    if agentTraining:
+        q.put([-10, winner])
 
-async def stop(q, username, password, teamname, botmode, opponentUsername, training, numBattles):
-    poller = asyncio.ensure_future(showdown(q, username, password, teamname, botmode, opponentUsername, training, numBattles))
+
+async def stop(q, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles):
+    poller = asyncio.ensure_future(showdown(q, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles))
     while True:
         await asyncio.sleep(0.1)
         try:
@@ -105,9 +138,9 @@ async def stop(q, username, password, teamname, botmode, opponentUsername, train
             ...
 
 class AsyncDownload(Thread):
-    def __init__(self, q, username, password, teamname, botmode, opponentUsername, training, numBattles):
+    def __init__(self, q, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles):
         super().__init__()
         if training:
-            asyncio.run(stop(q,username,password,teamname,botmode, opponentUsername, training, numBattles))
+            asyncio.run(stop(q,username,password,teamname,botmode, opponentUsername, training, agentTraining, numBattles))
         else:
-            asyncio.run(showdown(q,username,password,teamname,botmode, opponentUsername, training, numBattles))
+            asyncio.run(showdown(q,username,password,teamname,botmode, opponentUsername, training, agentTraining, numBattles))

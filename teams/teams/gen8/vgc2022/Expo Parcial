@@ -1,7 +1,6 @@
 Lugia @ Weakness Policy  
 Ability: Multiscale  
-Level: 50  
-EVs: 252 HP / 52 Def / 68 SpA / 68 SpD / 68 Spe  
+EVs: 252 HP / 44 Def / 132 SpA / 44 SpD / 36 Spe  
 Modest Nature  
 IVs: 0 Atk  
 - Aeroblast  
@@ -9,41 +8,27 @@ IVs: 0 Atk
 - Recover  
 - Dragon Pulse  
 
-Incineroar @ Sitrus Berry  
+Incineroar (F) @ Shuca Berry  
 Ability: Intimidate  
-Level: 50  
-EVs: 252 HP / 4 Atk / 156 Def / 68 SpD / 28 Spe  
+EVs: 244 HP / 4 Atk / 124 Def / 108 SpD / 28 Spe  
 Impish Nature  
 - Fake Out  
-- Snarl  
-- U-turn  
 - Flare Blitz  
+- Throat Chop  
+- Parting Shot  
 
 Zacian-Crowned @ Rusted Sword  
 Ability: Intrepid Sword  
-Level: 50  
 EVs: 4 HP / 252 Atk / 252 Spe  
 Jolly Nature  
 IVs: 0 SpA  
 - Behemoth Blade  
 - Sacred Sword  
-- Substitute  
+- Play Rough  
 - Protect  
-
-Rotom-Heat @ Life Orb  
-Ability: Levitate  
-Level: 50  
-EVs: 244 HP / 68 Def / 116 SpA / 4 SpD / 76 Spe  
-Modest Nature  
-IVs: 0 Atk  
-- Overheat  
-- Thunder  
-- Will-O-Wisp  
-- Ally Switch  
 
 Umbreon @ Leftovers  
 Ability: Inner Focus  
-Level: 50  
 EVs: 252 HP / 156 Def / 4 SpA / 92 SpD / 4 Spe  
 Bold Nature  
 IVs: 0 Atk  
@@ -52,12 +37,23 @@ IVs: 0 Atk
 - Snarl  
 - Moonlight  
 
-Thundurus (M) @ Aguav Berry  
+Thundurus @ Focus Sash  
 Ability: Prankster  
-EVs: 4 HP / 252 Atk / 252 Spe  
-Jolly Nature  
-- Wild Charge  
-- Fly  
+EVs: 4 HP / 252 SpA / 252 Spe  
+Modest Nature  
+IVs: 0 Atk  
 - Eerie Impulse  
-- Taunt  
+- Thunder Wave  
+- Grass Knot  
+- Thunder  
+
+Regieleki @ Life Orb  
+Ability: Transistor  
+EVs: 4 HP / 252 SpA / 252 Spe  
+Timid Nature  
+IVs: 0 Atk  
+- Electroweb  
+- Volt Switch  
+- Thunder  
+- Protect  
 
