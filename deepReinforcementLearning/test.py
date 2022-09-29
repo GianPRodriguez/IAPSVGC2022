@@ -283,6 +283,9 @@ class DDQNAgent:
         self.model = self._build_model() 	# Construye el modelo neuronal a entrenar 
 
         self.q = queue.Queue()
+        self.q50 = queue.Queue()
+        self.qm50 = queue.Queue()
+        self.q150 = queue.Queue()
 
         # Construye un 2do modelo neuronal (target_model) para ayudar a estimar el target del 1er modelo (model)   
         self.target_model = self._build_model()
@@ -321,26 +324,20 @@ class DDQNAgent:
     	if np.random.rand() <= 0.7:
     		# retorna una accion aleatoria con probabilidad self.epsilon
     		# Solicito msg random
-    		self.q.put([50,True])
-    		#print("50 ENVIADO")
+    		self.q50.put([50,True])
+    		print("50 ENVIADO")
     		# Ahora, el Thread ha leido el 50... Espero la respuesta
     		while True:
-    			try:
-    				if self.q.qsize() > 0:
-    					try:
-		    				if self.q.queue[0][0] == -50:
-		    					cola = self.q.get(0)
-		    					#print("{} RECIBIDO".format(cola[0]))
-		    					if cola[0] == -50:
-		    						# Obtengo la respuesta
-		    						msg = cola[1]
-		    						break
-		    					else:
-		    						print("ERROR {} RECIBIDO P2".format(cola[0]))
-		    			except:
-		    				...
-    			except queue.Empty:
-    				...
+    			if self.qm50.qsize() > 0:
+		    		if self.qm50.queue[0][0] == -50:
+		    			cola = self.qm50.get(0)
+		    			print("{} RECIBIDO".format(cola[0]))
+		    			if cola[0] == -50:
+		    				# Obtengo la respuesta
+		    				msg = cola[1]
+		    				break
+		    		else:
+		    			print("ERROR {} RECIBIDO P2".format(cola[0]))
     		moveSwitch1 = cola[2]
     		nMoveSwitch1 = cola[3]
     		dynamax1 = cola[4]
@@ -351,8 +348,8 @@ class DDQNAgent:
     		toMove2 = cola[9]
     		return msg, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2
     	# Obtiene los q valores predichos por el modelo para cada accion
-    	self.q.put([50,False])
-    	#print("50 ENVIADO (2)")
+    	self.q50.put([50,False])
+    	print("50 ENVIADO (2)")
     	action_values = self.model.predict(state)
     	# Retorna el mensaje de acción, que pudiera significar una jugada no válida
     	return NeuralNetworkOutput(action_values[0])
@@ -396,8 +393,11 @@ class DDQNAgent:
     def save(self, name):
         self.model.save_weights(name)
 
-    def addQueue(self, q):
+    def addQueue(self, q, q50, qm50, q150):
     	self.q = q
+    	self.q50 = q50
+    	self.qm50 = qm50
+    	self.q150 = q150
 
 def inicio():
 	# Número de Batallas: 80000
@@ -423,18 +423,21 @@ def inicio():
 	for e in range(EPISODES):
 		q1 = queue.Queue()
 		q2 = queue.Queue()
+		q50 = queue.Queue()
+		qm50 = queue.Queue()
+		q150 = queue.Queue()
 		# Inicio Batalla - Agente Random
-		opponentThread = Thread(target=AsyncDownload, args=(q2,"Deep1UDDQN","123456",listAgentTeamname[e%len(listAgentTeamname)],"ACCEPT_CHALLENGE","Deep1ODDQN",True,False,1,))
+		opponentThread = Thread(target=AsyncDownload, args=(q2,q2,q2,q2,"Deep1ODDQN","123456",listAgentTeamname[e%len(listAgentTeamname)],"ACCEPT_CHALLENGE","Deep1UDDQN",True,False,1,))
 		opponentThread.start()
 		# Inicio Batalla - Agente Inteligente
-		userThread = Thread(target=AsyncDownload, args=(q1,"Deep1ODDQN","123456","Eduardo Cunha","CHALLENGE_USER","Deep1UDDQN",True,True,1,))
+		userThread = Thread(target=AsyncDownload, args=(q1,q50,qm50,q150,"Deep1UDDQN","123456","Eduardo Cunha","CHALLENGE_USER","Deep1ODDQN",True,True,1,))
 		userThread.start()
-		agente.addQueue(q1)
+		agente.addQueue(q1, q50, qm50, q150)
 		interacciones = 0
 		while True:
 			try:
 				cola = q1.get(0)
-				#print("{} RECIBIDO".format(cola[0]))
+				print("{} RECIBIDO".format(cola[0]))
 				if cola[0] == 10:
 					# Recibo el array de estado actual del entorno, invariante si es el primer turno o cualquiera
 					listNeuralNetworkInput = cola[1]
@@ -477,13 +480,11 @@ def inicio():
 					state = np.reshape(listNeuralNetworkInput, [1, state_size])
 
 					# Ejecuta la acción en el entorno y obtiene, en el siguiente turno: nuevo estado, reward y flag done (si es estado terminal, o sea batalla terminada), uso q
-					if cola[5]:
-						while q1.qsize() > 0:
-							...
+					if cola[5]: # No es turno final
 						# Obtiene una accion del agente
 						action, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = agente.get_action(state)
-						q1.put([150,action])
-						#print("150 ENVIADO (1) (2)")
+						q150.put([150,action])
+						print("150 ENVIADO (1) (2)")
 					else:
 						action = None
 					interacciones += 1
@@ -508,13 +509,6 @@ def inicio():
 						#print("new action: {}".format(listAction))
 					lastAction = actionEncoded
 					lastReward = reward
-					time.sleep(0.5)
-					while q1.qsize() > 0:
-						try:
-							if q1.queue[0][0] == 10 or q1.queue[0][0] == -10:
-								break
-						except:
-							...
 				elif cola[0] == -10:
 					# Fin de la batalla
 					print("Fin de la Batalla")

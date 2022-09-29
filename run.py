@@ -39,7 +39,7 @@ def parse_configs():
         config.user_to_challenge = env("USER_TO_CHALLENGE")
 
 # MAIN
-async def showdown(q, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles):
+async def showdown(q, q50, qm50, q150, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles):
     # Configuración de la Aplicación
     parse_configs()
     # Parameters
@@ -84,7 +84,7 @@ async def showdown(q, username, password, teamname, botmode, opponentUsername, t
             else:
                 raise ValueError("Invalid Bot Mode")
             # Nueva Batalla Pokémon completo
-            winner, q = await pokemon_battle(ps_websocket_client, q, botmode, training, agentTraining)
+            winner, q = await pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, training, agentTraining)
             if winner == username:
                 wins += 1
             else:
@@ -110,7 +110,7 @@ async def showdown(q, username, password, teamname, botmode, opponentUsername, t
             else:
                 raise ValueError("Invalid Bot Mode")
             # Nueva Batalla Pokémon completo
-            winner, q = await pokemon_battle(ps_websocket_client, q, config.bot_mode, training, False)
+            winner, q = await pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, training, False)
             if winner == config.username:
                 wins += 1
             else:
@@ -123,10 +123,11 @@ async def showdown(q, username, password, teamname, botmode, opponentUsername, t
     # Fin
     if agentTraining:
         q.put([-10, winner])
+        print("-10 ENVIADO")
 
 
-async def stop(q, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles):
-    poller = asyncio.ensure_future(showdown(q, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles))
+async def stop(q, q50, qm50, q150, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles):
+    poller = asyncio.ensure_future(showdown(q, q50, qm50, q150, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles))
     while True:
         await asyncio.sleep(0.1)
         try:
@@ -138,9 +139,9 @@ async def stop(q, username, password, teamname, botmode, opponentUsername, train
             ...
 
 class AsyncDownload(Thread):
-    def __init__(self, q, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles):
+    def __init__(self,q,q50,qm50,q150,username,password,teamname,botmode,opponentUsername,training,agentTraining,numBattles):
         super().__init__()
         if training:
-            asyncio.run(stop(q,username,password,teamname,botmode, opponentUsername, training, agentTraining, numBattles))
+            asyncio.run(stop(q,q50,qm50,q150,username,password,teamname,botmode,opponentUsername,training,agentTraining,numBattles))
         else:
-            asyncio.run(showdown(q,username,password,teamname,botmode, opponentUsername, training, agentTraining, numBattles))
+            asyncio.run(showdown(q,q50,qm50,q150,username,password,teamname,botmode,opponentUsername,training,agentTraining,numBattles))

@@ -2094,46 +2094,41 @@ async def accion_batalla(battle):
     if battle.agentTraining:
         # if invalidAction - reward -10000.0
         battle.q.put([10,listNeuralNetworkInput,battle.turn,reward,score,True])
-        #print("10 ENVIADO")
+        print("10 ENVIADO")
         # Bucle Principal
         while True:
-            time.sleep(0.5)
-            if battle.q.qsize() > 0:
-                if battle.q.queue[0][0] == 50:
-                    cola = battle.q.get(0)
-                    if cola[0] == 50:
-                        if cola[1]:
-                            #print("{} RECIBIDO".format(cola[0]))
-                            # msg random
-                            # battle, mensaje = await accion_batalla(battle) # ya generado
-                            battle.q.put([-50, mensaje, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2])
-                            #print("-50 ENVIADO")
-                            # msg generado por agente random
-                            while True:
-                                time.sleep(0.5)
-                                if battle.q.qsize() > 0:
-                                    if battle.q.queue[0][0] == 150:
-                                        cola2 = battle.q.get(0)
-                                        #print("{} RECIBIDO".format(cola2[0]))
-                                        if cola2[0] == 150:
-                                            msg = cola2[1]  # Enviado desde RANDOM
-                                            break
-                            mensaje = msg
-                            break
-                        else:
-                            #print("{} RECIBIDO (2)".format(cola[0]))
-                            # msg generado por red neuronal
-                            while True:
-                                if battle.q.qsize() > 0:
-                                    cola2 = battle.q.get(0)
-                                    #print("{} RECIBIDO (2)".format(cola2[0]))
-                                    if cola2[0] == 150:
-                                        msg = cola2[1]  # Enviado desde DDQN
-                                        break
-                            mensaje = msg
-                            break
+            if battle.q50.qsize() > 0:
+                cola = battle.q50.get(0)
+                if cola[0] == 50:
+                    if cola[1]:
+                        print("{} RECIBIDO".format(cola[0]))
+                        # msg random
+                        battle.qm50.put([-50, mensaje, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2])
+                        print("-50 ENVIADO")
+                        # msg generado por agente random
+                        while True:
+                            if battle.q150.qsize() > 0:
+                                cola2 = battle.q150.get(0)
+                                print("{} RECIBIDO".format(cola2[0]))
+                                if cola2[0] == 150:
+                                    msg = cola2[1]  # Enviado desde RANDOM
+                                    break
+                        mensaje = msg
+                        break
                     else:
-                        print("ERROR {} RECIBIDO T".format(cola[0]))
+                        print("{} RECIBIDO (2)".format(cola[0]))
+                        # msg generado por red neuronal
+                        while True:
+                            if battle.q150.qsize() > 0:
+                                cola2 = battle.q150.get(0)
+                                print("{} RECIBIDO (2)".format(cola2[0]))
+                                if cola2[0] == 150:
+                                    msg = cola2[1]  # Enviado desde DDQN
+                                    break
+                        mensaje = msg
+                        break
+                else:
+                    print("ERROR {} RECIBIDO T".format(cola[0]))
     #if self.randomTraining: # los parametros vienen de la cola
     #    mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
     # Retorno el mensaje listo para enviarlo al WebSocket
@@ -2196,7 +2191,7 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q)
             return battle_tag, opponent_name
 
 
-async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, training, agentTraining, set_request_json=True):
+async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, q50, qm50, q150, botMode, training, agentTraining, set_request_json=True):
     battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
     # Obtengo el id de la batalla y el nombre del oponente
     battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client, q)
@@ -2220,6 +2215,9 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, 
             battle.isTraining = training
             battle.agentTraining = agentTraining
             battle.q = q
+            battle.q50 = q50
+            battle.qm50 = qm50
+            battle.q150 = q150
             if not training:
                 battle.q.put([0])
             # Actualización
@@ -2235,9 +2233,9 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, 
 
 
 # Inicia una Batalla VGC 2022
-async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient, q, botMode, training, agentTraining):
+async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient, q, q50, qm50, q150, botMode, training, agentTraining):
     # Se obtiene las variables de abajo
-    battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, q, training, agentTraining, set_request_json=True)
+    battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, q, q50, qm50, q150, botMode, training, agentTraining, set_request_json=True)
     battle.botMode = botMode
     # Inicializa mensaje donde se cargará el TEAM PREVIEW
     msg = ''
@@ -2269,9 +2267,9 @@ async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient, q, botMode, tra
     return battle
 
 
-async def iniciar_batalla(ps_websocket_client, q, botMode, training, agentTraining):
+async def iniciar_batalla(ps_websocket_client, q, q50, qm50, q150, botMode, training, agentTraining):
     # Inicia la Batalla VGC 2022
-    battle = await inicia_vgc2022(ps_websocket_client, q, botMode, training, agentTraining)
+    battle = await inicia_vgc2022(ps_websocket_client, q, q50, qm50, q150, botMode, training, agentTraining)
     # Envía el saludo
     await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
     # Inicia el tiempo
@@ -2282,9 +2280,12 @@ async def iniciar_batalla(ps_websocket_client, q, botMode, training, agentTraini
 
 
 # Nueva Batalla Pokémon completo
-async def pokemon_battle(ps_websocket_client, q, botMode, training, agentTraining):
+async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, training, agentTraining):
     # Solo inicia la batalla
-    battle = await iniciar_batalla(ps_websocket_client, q, botMode, training, agentTraining)
+    try:
+        battle = await iniciar_batalla(ps_websocket_client, q, q50, qm50, q150, botmode, training, agentTraining)
+    except:
+        traceback.print_exc()
     battle.imprimir()
     # Mientras...
     while True:
@@ -2310,7 +2311,7 @@ async def pokemon_battle(ps_websocket_client, q, botMode, training, agentTrainin
                 battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, reward, score = await battle.action_battle(battle)
                 listNeuralNetworkInput = NeuralNetworkInput(battle)
                 battle.q.put([10,listNeuralNetworkInput,battle.turn+1,reward,score,False])
-                #print("10 ENVIADO (FIN)")
+                print("10 ENVIADO (FIN)")
             # Y lo imprimo
             if not training:
                 print("[INFO]     Ganador: {}".format(winner))

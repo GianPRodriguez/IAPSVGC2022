@@ -32,6 +32,9 @@ class Battle(ABC):
         self.lastReward = 0
         self.botMode = None
         self.q = queue.Queue()
+        self.q50 = queue.Queue()
+        self.qm50 = queue.Queue()
+        self.q150 = queue.Queue()
         self.isTraining = False
         self.agentTraining = False
         self.cadenaTypes = json.loads(open("API/JSONs/typeChart.json","r").read())
