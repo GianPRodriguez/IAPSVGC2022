@@ -40,6 +40,7 @@ class Battle(ABC):
         self.cadenaTypes = json.loads(open("API/JSONs/typeChart.json","r").read())
         self.cadenaTP = json.loads(open("API/JSONs/geneticAlgorithm.json","r").read())
         self.moveTypes = json.loads(open("API/JSONs/pkmnMovesTypes.json","r").read())
+        self.movesANN = json.loads(open("API/JSONs/movesANN.json","r").read())
 
     # Only Opponent
     async def initialize_team_preview(self, user_json, opponent_pokemon):

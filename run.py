@@ -123,7 +123,7 @@ async def showdown(q, q50, qm50, q150, username, password, teamname, botmode, op
     # Fin
     if agentTraining:
         q.put([-10, winner])
-        print("-10 ENVIADO")
+        #print("-10 ENVIADO")
 
 
 async def stop(q, q50, qm50, q150, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles):

@@ -325,13 +325,13 @@ class DDQNAgent:
     		# retorna una accion aleatoria con probabilidad self.epsilon
     		# Solicito msg random
     		self.q50.put([50,True])
-    		print("50 ENVIADO")
+    		#print("50 ENVIADO")
     		# Ahora, el Thread ha leido el 50... Espero la respuesta
     		while True:
     			if self.qm50.qsize() > 0:
 		    		if self.qm50.queue[0][0] == -50:
 		    			cola = self.qm50.get(0)
-		    			print("{} RECIBIDO".format(cola[0]))
+		    			#print("{} RECIBIDO".format(cola[0]))
 		    			if cola[0] == -50:
 		    				# Obtengo la respuesta
 		    				msg = cola[1]
@@ -349,7 +349,7 @@ class DDQNAgent:
     		return msg, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2
     	# Obtiene los q valores predichos por el modelo para cada accion
     	self.q50.put([50,False])
-    	print("50 ENVIADO (2)")
+    	#print("50 ENVIADO (2)")
     	action_values = self.model.predict(state)
     	# Retorna el mensaje de acción, que pudiera significar una jugada no válida
     	return NeuralNetworkOutput(action_values[0])
@@ -437,7 +437,7 @@ def inicio():
 		while True:
 			try:
 				cola = q1.get(0)
-				print("{} RECIBIDO".format(cola[0]))
+				#print("{} RECIBIDO".format(cola[0]))
 				if cola[0] == 10:
 					# Recibo el array de estado actual del entorno, invariante si es el primer turno o cualquiera
 					listNeuralNetworkInput = cola[1]
@@ -469,22 +469,22 @@ def inicio():
 					if path.exists(nameFile):
 						with open(nameFile, 'a') as outfile:
 							outfile.write("{}\t{}\t{}\t{}\t{}\n".format(numBattle, turnBattle, reward, score, dt_string))
-							print("{}\t{}\t{}\t{}\t{}".format(numBattle, turnBattle, reward, score, dt_string))
 					else:
 						with open(nameFile, 'w') as outfile:
 							outfile.write("{}\t{}\t{}\t{}\t{}\n".format(numBattle, turnBattle, reward, score, dt_string))
-							print("{}\t{}\t{}\t{}\t{}".format(numBattle, turnBattle, reward, score, dt_string))
 					# Es momento de realizar alguna acción...
 					# Formato de Input de la Red Neuronal
 					#print("listNeuralNetworkInput: {}".format(listNeuralNetworkInput))
 					state = np.reshape(listNeuralNetworkInput, [1, state_size])
-
 					# Ejecuta la acción en el entorno y obtiene, en el siguiente turno: nuevo estado, reward y flag done (si es estado terminal, o sea batalla terminada), uso q
 					if cola[5]: # No es turno final
 						# Obtiene una accion del agente
 						action, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = agente.get_action(state)
+						#---
+						auxAction = ''.join(action[0]).replace("/choose ","").replace(",","").replace("  ","   ").replace("    ","     ").replace("      ","")
+						#---
 						q150.put([150,action])
-						print("150 ENVIADO (1) (2)")
+						#print("150 ENVIADO (1) (2)")
 					else:
 						action = None
 					interacciones += 1

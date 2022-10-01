@@ -205,7 +205,7 @@ class BattleBot(Battle):
                                             toMove1 = 0
                                         elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'selected-pokemon':
                                             if battle.user.active2.isFainted() == False:
-                                                toMove1 = random.choices([-2, 1, 2], weights=(4,48,48), k=1)[0]
+                                                toMove1 = random.choices([-2, 1, 2], weights=(0,50,50), k=1)[0]
                                             else:
                                                 toMove1 = random.choice([1, 2])
                                         else:
@@ -225,7 +225,7 @@ class BattleBot(Battle):
                                         toMove1 = 0
                                     elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'selected-pokemon':
                                         if battle.user.active2.isFainted() == False:
-                                            toMove1 = random.choices([-2, 1, 2], weights=(4,48,48), k=1)[0]
+                                            toMove1 = random.choices([-2, 1, 2], weights=(0,50,50), k=1)[0]
                                         else:
                                             toMove1 = random.choice([1, 2])
                                     else:
@@ -282,7 +282,7 @@ class BattleBot(Battle):
                                             toMove1 = 0
                                         elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'selected-pokemon':
                                             if battle.user.active2.isFainted() == False:
-                                                toMove1 = random.choices([-2, 1, 2], weights=(4,48,48), k=1)[0]
+                                                toMove1 = random.choices([-2, 1, 2], weights=(0,50,50), k=1)[0]
                                             else:
                                                 toMove1 = random.choice([1, 2])
                                         else:
@@ -302,7 +302,7 @@ class BattleBot(Battle):
                                         toMove1 = 0
                                     elif (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'normal' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'any' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'selected-pokemon':
                                         if battle.user.active2.isFainted() == False:
-                                            toMove1 = random.choices([-2, 1, 2], weights=(4,48,48), k=1)[0]
+                                            toMove1 = random.choices([-2, 1, 2], weights=(0,50,50), k=1)[0]
                                         else:
                                             toMove1 = random.choice([1, 2])
                                     else:
