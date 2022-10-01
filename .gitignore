@@ -1,3 +1,3 @@
 .github
-_pycache_
-.github/workflows
+**/_pycache_
+**/.github/workflows
