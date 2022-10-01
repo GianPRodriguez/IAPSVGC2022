@@ -3,14 +3,13 @@ import io
 import ast
 import sys
 import json
+import time
 import queue
 import config
 import importlib
 import constants
-import concurrent.futures
 import traceback
-import sys
-import time
+import concurrent.futures
 
 from copy import deepcopy
 from showdown.battle_modifier import update_battle

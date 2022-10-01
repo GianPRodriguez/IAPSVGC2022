@@ -9,10 +9,8 @@ import websockets
 class LoginError(Exception):
     pass
 
-
 class SaveReplayError(Exception):
     pass
-
 
 class PSWebsocketClient:
     websocket = None
@@ -50,7 +48,6 @@ class PSWebsocketClient:
         await self.websocket.send(message)
         self.last_message = message
 
-
     async def get_id_and_challstr(self):
         while True:
             message = await self.receive_message()
@@ -59,7 +56,6 @@ class PSWebsocketClient:
             if split_message[1] == 'challstr':
                 # split_message[2] = "4" && split_message[3] = "a6e6e29652941bc1b872a2c34cb0b4e6fdd83355bd3b8787d1519685b29bfb5d267f479f4be9f9fe554605c6c9842160194586f55644f532d991560f817c5939bf7961319b23de0803bac5f6faa2935e395c0f28da55b4c052ece76f0f64e5acdfea8691ac2607012b0d742704920c9fe3c6bc13730b121d6459b84f03d399b8"
                 return split_message[2], split_message[3]
-
 
     async def login(self, training):
         if not training:
@@ -178,5 +174,5 @@ class PSWebsocketClient:
                     }
                 )
                 if post_response.status_code != 200:
-                    raise SaveReplayError("POST to save replay did not return a 200: {}".format(post_response.content))
+                    raise SaveReplayError("POST para guardar la repetición no devolvió un código 200: {}".format(post_response.content))
                 break

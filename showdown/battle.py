@@ -1,9 +1,10 @@
 import sys
 import json
 import math
+import queue
 import requests
 import constants
-import queue
+
 from abc import ABC
 from numpy import sqrt
 from abc import abstractmethod

@@ -388,10 +388,10 @@ class DDQNAgent:
             self.epsilon *= self.epsilon_decay
 
     def load(self, name):
-        self.model.load_weights(name)
+        self.model.load_model(name)
 
     def save(self, name):
-        self.model.save_weights(name)
+        self.model.save(name)
 
     def addQueue(self, q, q50, qm50, q150):
     	self.q = q
@@ -537,6 +537,8 @@ def inicio():
 		else:
 			with open(nameFile, 'w') as outfile:
 				outfile.write("{}\t{}\t{}\t{}\t{}\n".format(numBattle, win, loss, score, dt_string))
+		# save model
+		agente.save("deepReinforcementLearning/modelos/0/")
 
 
 if __name__ == "__main__":

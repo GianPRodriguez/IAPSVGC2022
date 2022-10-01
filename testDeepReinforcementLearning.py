@@ -1,3 +1,3 @@
-from deepReinforcementLearning.test import inicio
+from deepReinforcementLearning.start import inicio
 
 inicio()
