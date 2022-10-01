@@ -1,64 +1,91 @@
-import neat
+"""
+Single-pole balancing experiment using a feed-forward neural network.
+"""
+
 import multiprocessing
-import time
-from datetime import datetime
-from run import AsyncDownload
-from os import path
+import os
+import pickle
 
-xor_inputs = [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
-xor_outputs = [[0.0], [1.0], [1.0], [0.0]]
-USERS = [["PopplioPeru98","mallow123"],["Delta VGC 2022","Mallow"]]
+import cart_pole
+import neat
+import visualize
 
+runs_per_net = 5
+simulation_seconds = 60.0
+
+
+# Use the NN network phenotype and the discrete actuator force function.
 def eval_genome(genome, config):
-    #print("genome.key: {}".format(genome.key))
     net = neat.nn.FeedForwardNetwork.create(genome, config)
-    print("genome.key: {}".format(genome.key))
-    # Parametros Batalla
-    #q = multiprocessing.Queue()
-    #username = USERS[genome.key-1][0]
-    #password = USERS[genome.key-1][1]
-    #teamname = 'Eduardo Cunha'
-    #botmode = "CHALLENGE_USER"
-    #opponentUsername = "KimJongUnVGC2020"
-    # Reporte
-    #nameFile = str(genome.key-1) + '.txt'
-    #if path.exists(nameFile):
-    #    with open(nameFile, "r") as file:
-    #        last_line = file.readlines()[-1]
-    #        numBattle = str(int(last_line.split('\t')[0])+1).zfill(5)
-    #    dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    #    with open(nameFile, 'a') as outfile:
-    #        outfile.write("{}\t{}\txx\t{}\n".format(numBattle, genome.key-1, dt_string))
-    #else:
-    #    dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    #    with open(nameFile, 'w') as outfile:
-    #        outfile.write("00001\t{}\txx\t{}\n".format(genome.key-1, dt_string))
-    # Inicio Batalla
-    #AsyncDownload(q,username,password,teamname,botmode,opponentUsername,True,1)
-    # Completar
-    genome.fitness = 4.0
-    # Cada evaluación es con un equipo diferente, el fitness es el fitness final
-    for xi, xo in zip(xor_inputs, xor_outputs):
-        output = net.activate(xi)
-        genome.fitness -= (output[0] - xo[0]) ** 2
-    return genome.fitness
+
+    fitnesses = []
+
+    for runs in range(runs_per_net):
+        sim = cart_pole.CartPole()
+
+        # Run the given simulation for up to num_steps time steps.
+        fitness = 0.0
+        while sim.t < simulation_seconds:
+            inputs = sim.get_scaled_state()
+            action = net.activate(inputs)
+
+            # Apply action to the simulated cart-pole
+            force = cart_pole.discrete_actuator_force(action)
+            sim.step(force)
+
+            # Stop if the network fails to keep the cart within the position or angle limits.
+            # The per-run fitness is the number of time steps the network can balance the pole
+            # without exceeding these limits.
+            if abs(sim.x) >= sim.position_limit or abs(sim.theta) >= sim.angle_limit_radians:
+                break
+
+            fitness = sim.t
+
+        fitnesses.append(fitness)
+
+    # The genome's fitness is its worst performance across all runs.
+    return min(fitnesses)
+
+
+def eval_genomes(genomes, config):
+    for genome_id, genome in genomes:
+        genome.fitness = eval_genome(genome, config)
+
+
+def inicio():
+    # Load the config file, which is assumed to live in
+    # the same directory as this script.
+    local_dir = os.path.dirname(__file__)
+    config_path = os.path.join(local_dir, 'config-feedforward')
+    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                         config_path)
+
+    pop = neat.Population(config)
+    stats = neat.StatisticsReporter()
+    pop.add_reporter(stats)
+    pop.add_reporter(neat.StdOutReporter(True))
+
+    pe = neat.ParallelEvaluator(multiprocessing.cpu_count(), eval_genome)
+    winner = pop.run(pe.evaluate)
+
+    # Save the winner.
+    with open('winner-feedforward', 'wb') as f:
+        pickle.dump(winner, f)
+
+    print(winner)
+
+    visualize.plot_stats(stats, ylog=True, view=True, filename="feedforward-fitness.svg")
+    visualize.plot_species(stats, view=True, filename="feedforward-speciation.svg")
+
+    node_names = {-1: 'x', -2: 'dx', -3: 'theta', -4: 'dtheta', 0: 'control'}
+    visualize.draw_net(config, winner, True, node_names=node_names)
+
+    visualize.draw_net(config, winner, view=True, node_names=node_names,
+                       filename="winner-feedforward.gv")
+    visualize.draw_net(config, winner, view=True, node_names=node_names,
+                       filename="winner-feedforward-enabled-pruned.gv", prune_unused=True)
+
 
 if __name__ == '__main__':
-    # Configuración del NEAT
-    config_path = "./neuroevolution/config-feedforward"
-    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
-    # Creación de la población
-    p = neat.Population(config)
-    # Run NEAT
-    pe = neat.ParallelEvaluator(multiprocessing.cpu_count(), eval_genome)
-    winner = p.run(pe.evaluate, 6)  #172800
-    # ¿Cómo guardar los mejores luego de n corridas?
-
-    # Display the winning genome.
-    print('\nBest genome:\n{!s}'.format(winner))
-    # Show output of the most fit genome against training data.
-    print('\nOutput:')
-    winner_net = neat.nn.FeedForwardNetwork.create(winner, config)
-    for xi, xo in zip(xor_inputs, xor_outputs):
-        output = winner_net.activate(xi)
-        print("  input {!r}, expected output {!r}, got {!r}".format(xi, xo, output))
+    inicio()
