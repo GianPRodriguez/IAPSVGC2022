@@ -14,10 +14,10 @@ Level: 50
 EVs: 4 HP / 252 SpA / 252 Spe  
 Timid Nature  
 IVs: 0 Atk  
-- Astral Barrage  
+- Leaf Storm  
 - Expanding Force  
 - Mud Shot  
-- Snarl  
+- Astral Barrage  
 
 Incineroar (F) @ Shuca Berry  
 Ability: Intimidate  
@@ -36,19 +36,19 @@ EVs: 180 HP / 204 Def / 124 SpD
 Bold Nature  
 IVs: 0 Atk  
 - Earth Power  
-- Protect  
-- Yawn  
 - Ice Beam  
+- Hydro Pump  
+- Yawn  
 
 Rillaboom @ Assault Vest  
 Ability: Grassy Surge  
 Level: 50  
 EVs: 220 HP / 196 Atk / 12 Def / 76 SpD / 4 Spe  
 Adamant Nature  
-- Grassy Glide  
 - Fake Out  
-- High Horsepower  
+- Grassy Glide  
 - U-turn  
+- High Horsepower  
 
 Thundurus (M) @ Life Orb  
 Ability: Defiant  

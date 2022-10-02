@@ -2,6 +2,7 @@ import os
 import sys
 import gym
 import time
+import json
 import queue
 import random
 import numpy as np
@@ -24,6 +25,7 @@ sys.path.append(parent_directory)
 
 from run import AsyncDownload  
 
+diccionario = json.loads(open("API/JSONs/movesANN.json","r").read())
 listAgentTeamname = ["Eduardo Cunha","Guillermo Castilla","James Baek"]
 
 def msgToArray(moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2):
@@ -325,6 +327,7 @@ class DDQNAgent:
     		# retorna una accion aleatoria con probabilidad self.epsilon
     		# Solicito msg random
     		self.q50.put([50,True])
+    		print("RANDOM:")
     		#print("50 ENVIADO")
     		# Ahora, el Thread ha leido el 50... Espero la respuesta
     		while True:
@@ -349,6 +352,7 @@ class DDQNAgent:
     		return msg, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2
     	# Obtiene los q valores predichos por el modelo para cada accion
     	self.q50.put([50,False])
+    	print("ANN:")
     	#print("50 ENVIADO (2)")
     	action_values = self.model.predict(state)
     	# Retorna el mensaje de acción, que pudiera significar una jugada no válida
@@ -481,7 +485,13 @@ def inicio():
 						# Obtiene una accion del agente
 						action, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = agente.get_action(state)
 						#---
-						auxAction = ''.join(action[0]).replace("/choose ","").replace(",","").replace("  ","   ").replace("    ","     ").replace("      ","")
+						auxAction = ''.join(action[0]).replace("/choose ","").replace(",","")
+						#print("ACTION 0: --{}--".format(action[0]))
+						print("ACTION: --{}--".format(auxAction))
+						try:
+							print("INDEX: {}".format(list(diccionario.keys()) [list(diccionario.values()).index(auxAction)]))
+						except:
+							print("INDEX: -1")
 						#---
 						q150.put([150,action])
 						#print("150 ENVIADO (1) (2)")
@@ -539,6 +549,7 @@ def inicio():
 				outfile.write("{}\t{}\t{}\t{}\t{}\n".format(numBattle, win, loss, score, dt_string))
 		# save model
 		agente.save("deepReinforcementLearning/modelos/0/")
+	print("FIN DE TODO")
 
 
 if __name__ == "__main__":

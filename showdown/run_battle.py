@@ -2314,7 +2314,7 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
                 battle.imprimir()
                 battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, reward, score = await battle.action_battle(battle)
                 listNeuralNetworkInput = NeuralNetworkInput(battle)
-                battle.q.put([10,listNeuralNetworkInput,battle.turn+1,reward,score,False])
+                battle.q.put([-10,listNeuralNetworkInput,battle.turn+1,reward,score,False])
                 #print("10 ENVIADO (FIN)")
             # Y lo imprimo
             if not training:
