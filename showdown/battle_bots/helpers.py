@@ -323,8 +323,24 @@ def getDEBoost(dictMoves1, dictMoves2, utype1, utype2, battle):
     aux1 = -1
     aux2 = -1
     # iterator
-    for key in dictMoves1:
-        aux1 = max(aux1, float(cadena.get(key,'False').get(utype1,1)) * float(cadena.get(key,'False').get(utype2,1)) * dictMoves1[key])
-    for key in dictMoves2:
-        aux2 = max(aux2, float(cadena.get(key,'False').get(utype1,1)) * float(cadena.get(key,'False').get(utype2,1)) * dictMoves2[key])
+    if utype1 == 'water' and utype2 == 'ground':
+        for key in dictMoves1:
+            if key == 'water':
+                utype2 = 'grass'
+                aux1 = max(aux1, float(cadena.get(key,'False').get(utype1,1)) * float(cadena.get(key,'False').get(utype2,1)) * dictMoves1[key])
+                utype2 = 'ground'
+            else:
+                aux1 = max(aux1, float(cadena.get(key,'False').get(utype1,1)) * float(cadena.get(key,'False').get(utype2,1)) * dictMoves1[key])
+        for key in dictMoves2:
+            if key == 'water':
+                utype2 = 'grass'
+                aux2 = max(aux2, float(cadena.get(key,'False').get(utype1,1)) * float(cadena.get(key,'False').get(utype2,1)) * dictMoves2[key])
+                utype2 = 'ground'
+            else:
+                aux2 = max(aux2, float(cadena.get(key,'False').get(utype1,1)) * float(cadena.get(key,'False').get(utype2,1)) * dictMoves2[key])
+    else:
+        for key in dictMoves1:
+            aux1 = max(aux1, float(cadena.get(key,'False').get(utype1,1)) * float(cadena.get(key,'False').get(utype2,1)) * dictMoves1[key])
+        for key in dictMoves2:
+            aux2 = max(aux2, float(cadena.get(key,'False').get(utype1,1)) * float(cadena.get(key,'False').get(utype2,1)) * dictMoves2[key])
     return 2/(aux1 + aux2)

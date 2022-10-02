@@ -2090,6 +2090,7 @@ async def accion_batalla(battle):
     # Se define la mejor acción
     battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, reward, score = await battle.action_battle(battle)
     mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
+    #print("MENSAJE: {}".format(mensaje))
     if battle.agentTraining:
         # if invalidAction - reward -10000.0
         battle.q.put([10,listNeuralNetworkInput,battle.turn,reward,score,True])
@@ -2103,9 +2104,6 @@ async def accion_batalla(battle):
                         #print("{} RECIBIDO".format(cola[0]))
                         # msg random
                         battle.qm50.put([-50, mensaje, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2])
-                        # SE IMPRIME EL INDICE DEL MENSAJE
-                        
-                        # FIN DEL INDICE DEL MENSAJE
                         #print("-50 ENVIADO")
                         # msg generado por agente random
                         while True:
@@ -2115,7 +2113,7 @@ async def accion_batalla(battle):
                                 if cola2[0] == 150:
                                     msg = cola2[1]  # Enviado desde RANDOM
                                     break
-                        mensaje = msg
+                        mensaje[0] = msg
                         #print("RANDOM: --{}--".format(''.join(mensaje[0]).replace("/choose ","").replace(",","").replace("  ","   ").replace("    ","     ").replace("      ","")))
                         break
                     else:
@@ -2128,7 +2126,7 @@ async def accion_batalla(battle):
                                 if cola2[0] == 150:
                                     msg = cola2[1]  # Enviado desde DDQN
                                     break
-                        mensaje = msg
+                        mensaje[0] = msg
                         #print("ANN: --{}--".format(''.join(mensaje[0]).replace("/choose ","").replace(",","").replace("  ","   ").replace("    ","     ").replace("      ","")))
                         break
                 else:
@@ -2315,7 +2313,7 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
                 battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, reward, score = await battle.action_battle(battle)
                 listNeuralNetworkInput = NeuralNetworkInput(battle)
                 battle.q.put([-10,listNeuralNetworkInput,battle.turn+1,reward,score,False])
-                #print("10 ENVIADO (FIN)")
+                #print("-10 ENVIADO")
             # Y lo imprimo
             if not training:
                 print("[INFO]     Ganador: {}".format(winner))

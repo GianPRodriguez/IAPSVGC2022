@@ -306,7 +306,9 @@ class DDQNAgent:
         model.add(Dense(54, activation='relu'))
         # Capa Oculta 4: 38 neuronas
         model.add(Dense(38, activation='relu')) 
-        # Capa de Salida: 26 neuronas
+        # Capa Oculta 5: 26 neuronas
+        model.add(Dense(38, activation='relu')) 
+        # Capa de Salida: 339 neuronas
         model.add(Dense(self.action_size, activation='linear')) 
         # La funcion de perdida es el error cuadratico medio (mse)
         model.compile(loss='mse', optimizer = Adam(learning_rate=self.learning_rate)) 
@@ -327,36 +329,32 @@ class DDQNAgent:
     		# retorna una accion aleatoria con probabilidad self.epsilon
     		# Solicito msg random
     		self.q50.put([50,True])
-    		print("RANDOM:")
     		#print("50 ENVIADO")
+    		#print("RANDOM:")
     		# Ahora, el Thread ha leido el 50... Espero la respuesta
     		while True:
     			if self.qm50.qsize() > 0:
-		    		if self.qm50.queue[0][0] == -50:
-		    			cola = self.qm50.get(0)
-		    			#print("{} RECIBIDO".format(cola[0]))
-		    			if cola[0] == -50:
-		    				# Obtengo la respuesta
-		    				msg = cola[1]
-		    				break
-		    		else:
-		    			print("ERROR {} RECIBIDO P2".format(cola[0]))
-    		moveSwitch1 = cola[2]
-    		nMoveSwitch1 = cola[3]
-    		dynamax1 = cola[4]
-    		toMove1 = cola[5]
-    		moveSwitch2 = cola[6]
-    		nMoveSwitch2 = cola[7]
-    		dynamax2 = cola[8]
-    		toMove2 = cola[9]
-    		return msg, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2
+    				if self.qm50.queue[0][0] == -50:
+    					cola = self.qm50.get(0)
+    					#print("{} RECIBIDO".format(cola[0]))
+    					if cola[0] == -50:
+    						# Obtengo la respuesta
+    						msg = cola[1]
+    						break
+    				else:
+    					print("ERROR {} RECIBIDO P2".format(cola[0]))
+    		action = ''.join(msg[0]).replace("/choose ","")
+    		action_value = int(list(diccionario.keys()) [list(diccionario.values()).index(action)])
+    		return action_value
     	# Obtiene los q valores predichos por el modelo para cada accion
     	self.q50.put([50,False])
-    	print("ANN:")
     	#print("50 ENVIADO (2)")
-    	action_values = self.model.predict(state)
-    	# Retorna el mensaje de acción, que pudiera significar una jugada no válida
-    	return NeuralNetworkOutput(action_values[0])
+    	#print("ANN:")
+    	action_value = self.model.predict(state)
+    	# action_value is a number, 0 to 338
+    	action_value = int(np.argmax(action_value))
+    	# Retorno el indice de una acción
+    	return action_value
 
     # Metodo para actualizar los pesos de model con una muestra (minibatch) de la memoria de experiencias de tamao batch_size
     def replay(self, batch_size): 
@@ -380,7 +378,7 @@ class DDQNAgent:
         # Construye el target completo de Q-values para los states de cada experiencia del batch
         Targets = self.model.predict_on_batch(states)  # los target Q-values son los que predice el modelo actual, salvo el correspondiente a la accion tomada
         ind = np.array([i for i in range(batch_size)])   
-        #print("ind: {}".format(ind))
+        #print("ind: {}".format(ind)
         #print("actions: {}".format(actions))
         Targets[[ind], [actions]] = Targets_actions   # actualiza el target Q-value de la accion ejecutada  
 
@@ -405,21 +403,19 @@ class DDQNAgent:
 
 def inicio():
 	# Número de Batallas: 80000
-	EPISODES = 1
+	EPISODES = 3
 	# Tamaño del lote: 64 = 8 batallas * 8 turnos
 	batch_size = 3
 	# Neuronas de entrada
 	state_size = 219
 	# Neuronas de salida
-	action_size = 26
+	action_size = 339
 	# Se crea al agente
 	agente = DDQNAgent(state_size, action_size)
 	# Lista para guardar la evolucion del score
 	score_list = []
 	# Lista para guardar la evolución del factor de exploración
 	epsilon_list = []
-	# listAction
-	listAction = []
 	# W / L
 	win = 0
 	loss = 0
@@ -483,16 +479,10 @@ def inicio():
 					# Ejecuta la acción en el entorno y obtiene, en el siguiente turno: nuevo estado, reward y flag done (si es estado terminal, o sea batalla terminada), uso q
 					if cola[5]: # No es turno final
 						# Obtiene una accion del agente
-						action, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2 = agente.get_action(state)
-						#---
-						auxAction = ''.join(action[0]).replace("/choose ","").replace(",","")
+						action_value = agente.get_action(state)
 						#print("ACTION 0: --{}--".format(action[0]))
-						print("ACTION: --{}--".format(auxAction))
-						try:
-							print("INDEX: {}".format(list(diccionario.keys()) [list(diccionario.values()).index(auxAction)]))
-						except:
-							print("INDEX: -1")
-						#---
+						action = '/choose ' + diccionario[str(action_value)]
+						print("action: {} index: {}".format(action, action_value))
 						q150.put([150,action])
 						#print("150 ENVIADO (1) (2)")
 					else:
@@ -507,17 +497,7 @@ def inicio():
 							agente.replay(batch_size)
 					# Last
 					lastState = state
-					array = msgToArray(moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
-					if array in listAction:
-						index = listAction.index(array)
-						actionEncoded = index
-						#print("old action")
-					else:
-						listAction.append(array)
-						index = listAction.index(array)
-						actionEncoded = index
-						#print("new action: {}".format(listAction))
-					lastAction = actionEncoded
+					lastAction = action_value
 					lastReward = reward
 				elif cola[0] == -10:
 					# Fin de la batalla
@@ -549,7 +529,8 @@ def inicio():
 				outfile.write("{}\t{}\t{}\t{}\t{}\n".format(numBattle, win, loss, score, dt_string))
 		# save model
 		agente.save("deepReinforcementLearning/modelos/0/")
-	print("FIN DE TODO")
+	print("Fin del Entrenamiento")
+	return
 
 
 if __name__ == "__main__":
