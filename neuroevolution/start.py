@@ -1,91 +1,139 @@
-"""
-Single-pole balancing experiment using a feed-forward neural network.
-"""
-
-import multiprocessing
-import os
-import pickle
-
-import cart_pole
 import neat
-import visualize
+import os
+import sys
+import time
+import queue
+import json
+import neuroevolution.config
+import multiprocessing
+from multiprocessing import Manager
+from datetime import datetime
+from os import path
+from threading import Thread
 
-runs_per_net = 5
-simulation_seconds = 60.0
+current = os.path.dirname(os.path.realpath(__file__))
+parent_directory = os.path.dirname(current)
+sys.path.append(parent_directory)
+
+from run import AsyncDownload  
+
+diccionario = json.loads(open("API/JSONs/movesANN.json","r").read())
+USERS = [["Neuro1UNeat","Neuro1ONeat"],["Neuro2UNeat","Neuro2ONeat"]]
+TEAMS = ["Eduardo Cunha","Guillermo Castilla"]
 
 
-# Use the NN network phenotype and the discrete actuator force function.
 def eval_genome(genome, config):
+    # Se crea la red neuronal en base al genoma
     net = neat.nn.FeedForwardNetwork.create(genome, config)
+    # Si es el primer turno de la batalla...
+    if neuroevolution.config.iterAgent0 == 0 and neuroevolution.config.iterAgent1 == 0:
+        # Parametros Batalla
+        userUsername = USERS[(genome.key-1)%len(USERS)][0]
+        opponentUsername = USERS[(genome.key-1)%len(USERS)][1]
+        userTeamname = "Eduardo Cunha"
+        # Se determina el equipo del oponente
+        if (genome.key-1)%len(USERS) == 0:
+            opponentTeamname = TEAMS[neuroevolution.config.contBattles0%len(TEAMS)]
+        else:
+            opponentTeamname = TEAMS[neuroevolution.config.contBattles1%len(TEAMS)]
+        # Colas
+        q1 = queue.Queue()
+        q2 = queue.Queue()
+        q50 = queue.Queue()
+        qm50 = queue.Queue()
+        q150 = queue.Queue()
+        # Inicio Batalla - Agente Random
+        opponentThread = Thread(target=AsyncDownload, args=(q2,q2,q2,q2,opponentUsername,"123456",opponentTeamname,"ACCEPT_CHALLENGE",userUsername,True,False,1,))
+        opponentThread.start()
+        time.sleep(0.2)
+        # Inicio Batalla - Agente Inteligente
+        userThread = Thread(target=AsyncDownload, args=(q1,q50,qm50,q150,userUsername,"123456","Eduardo Cunha","CHALLENGE_USER",opponentUsername,True,True,1,))
+        userThread.start()
+    else:
+        # Colas
+        q1 = neuroevolution.config.q1
+        q2 = neuroevolution.config.q2
+        q50 = neuroevolution.config.q50
+        qm50 = neuroevolution.config.qm50
+        q150 = neuroevolution.config.q150
 
-    fitnesses = []
-
-    for runs in range(runs_per_net):
-        sim = cart_pole.CartPole()
-
-        # Run the given simulation for up to num_steps time steps.
-        fitness = 0.0
-        while sim.t < simulation_seconds:
-            inputs = sim.get_scaled_state()
-            action = net.activate(inputs)
-
-            # Apply action to the simulated cart-pole
-            force = cart_pole.discrete_actuator_force(action)
-            sim.step(force)
-
-            # Stop if the network fails to keep the cart within the position or angle limits.
-            # The per-run fitness is the number of time steps the network can balance the pole
-            # without exceeding these limits.
-            if abs(sim.x) >= sim.position_limit or abs(sim.theta) >= sim.angle_limit_radians:
+    # Agente Inteligente
+    while True:
+        try:
+            cola = q1.get(0)
+            if cola[0] == 10:
+                # Recibo el array del estado actual del entorno
+                state = cola[1]
+                # Si es entrenamiento... para este caso siempre lo será
+                if cola[5]:
+                    # Envío el indicativo de que no requiero una acción aleatoria
+                    q50.put([50,False])
+                    # Obtengo el arreglo correspondiente a las acciones
+                    action_values = net.activate(state)
+                    # Obtengo el indice de la acción de acuerdo al estado actual del entorno
+                    action_value = int(action_values.index(max(action_values)))
+                    print("action_value: {}".format(action_value))
+                    # Obtengo la acción en string
+                    action = '/choose ' + diccionario[str(action_value)]
+                    # Lo imprimo más el indice
+                    print("action: {} index: {}".format(action, action_value))
+                    # Envío la acción en formato de mensaje
+                    q150.put([150,action])
+                    # Recibo recompensa obtenida por la acción
+                    while True:
+                        try:
+                            cola = q1.get(0)
+                            #print("cola: {}".format(cola))
+                            if cola[0] == 10:
+                                score = cola[4]
+                                q1.put(cola)
+                            elif cola[0] == -10:
+                                score = cola[4]
+                                q1.put(cola)
+                            else:
+                                print("ERROR - EN SEGUNDO TURNO NO DEBE HABER MAS OPCIÓN")
+                            print("break")
+                            break
+                        except:
+                            ...
+                    # score = ...
+                    # Aumento en indices de iteraciones
+                    if (genome.key-1)%len(USERS) == 0:
+                        neuroevolution.config.iterAgent0 = neuroevolution.config.iterAgent0 + 1
+                        print("neuroevolution.config.iterAgent0: {}".format(neuroevolution.config.iterAgent0))
+                    else:
+                        neuroevolution.config.iterAgent1 = neuroevolution.config.iterAgent1 + 1
+                        print("neuroevolution.config.iterAgent1: {}".format(neuroevolution.config.iterAgent1))
+                    break
+                else:
+                    print("ERROR - SOLICITA ACCIÓN RANDOM")
+            elif cola[0] == -10 or cola[0] == -1:
+                print("fin de batalla")
+                # Fin de Batalla - se reinicia los indices
+                if (genome.key-1)%len(USERS) == 0:
+                    neuroevolution.config.iterAgent0 = 0
+                    neuroevolution.config.contBattles0 = neuroevolution.config.contBattles0 + 1
+                else:
+                    neuroevolution.config.iterAgent1 = 0
+                    neuroevolution.config.contBattles1 = neuroevolution.config.contBattles1 + 1
                 break
-
-            fitness = sim.t
-
-        fitnesses.append(fitness)
-
-    # The genome's fitness is its worst performance across all runs.
-    return min(fitnesses)
-
-
-def eval_genomes(genomes, config):
-    for genome_id, genome in genomes:
-        genome.fitness = eval_genome(genome, config)
+        except:
+            ...
+    # Se asigna el fitness
+    genome.fitness = score
+    print(genome.fitness)
+    return genome.fitness
 
 
 def inicio():
-    # Load the config file, which is assumed to live in
-    # the same directory as this script.
-    local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, 'config-feedforward')
-    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                         config_path)
-
-    pop = neat.Population(config)
-    stats = neat.StatisticsReporter()
-    pop.add_reporter(stats)
-    pop.add_reporter(neat.StdOutReporter(True))
-
+    config_path = "./neuroevolution/config-feedforward"
+    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
+    p = neat.Population(config)
     pe = neat.ParallelEvaluator(multiprocessing.cpu_count(), eval_genome)
-    winner = pop.run(pe.evaluate)
+    winner = p.run(pe.evaluate, 3)
+    print("terminado")
+    # Luego de culminar toda la iteración, se muestra el genoma ganador...
+    #print('\nBest genome:\n{!s}'.format(winner))
 
-    # Save the winner.
-    with open('winner-feedforward', 'wb') as f:
-        pickle.dump(winner, f)
-
-    print(winner)
-
-    visualize.plot_stats(stats, ylog=True, view=True, filename="feedforward-fitness.svg")
-    visualize.plot_species(stats, view=True, filename="feedforward-speciation.svg")
-
-    node_names = {-1: 'x', -2: 'dx', -3: 'theta', -4: 'dtheta', 0: 'control'}
-    visualize.draw_net(config, winner, True, node_names=node_names)
-
-    visualize.draw_net(config, winner, view=True, node_names=node_names,
-                       filename="winner-feedforward.gv")
-    visualize.draw_net(config, winner, view=True, node_names=node_names,
-                       filename="winner-feedforward-enabled-pruned.gv", prune_unused=True)
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     inicio()

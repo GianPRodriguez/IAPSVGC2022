@@ -429,6 +429,7 @@ def inicio():
 		# Inicio Batalla - Agente Random
 		opponentThread = Thread(target=AsyncDownload, args=(q2,q2,q2,q2,"Deep1ODDQN","123456",listAgentTeamname[e%len(listAgentTeamname)],"ACCEPT_CHALLENGE","Deep1UDDQN",True,False,1,))
 		opponentThread.start()
+		time.sleep(0.2)
 		# Inicio Batalla - Agente Inteligente
 		userThread = Thread(target=AsyncDownload, args=(q1,q50,qm50,q150,"Deep1UDDQN","123456","Eduardo Cunha","CHALLENGE_USER","Deep1ODDQN",True,True,1,))
 		userThread.start()

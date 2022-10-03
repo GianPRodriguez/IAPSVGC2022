@@ -1,3 +1,8 @@
+import neat
 from neuroevolution.start import inicio
 
-inicio()
+def comienzo():
+	inicio()
+
+if __name__ == "__main__":
+    comienzo()
