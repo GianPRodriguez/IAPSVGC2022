@@ -121,7 +121,7 @@ async def showdown(q, q50, qm50, q150, username, password, teamname, botmode, op
             if battles_run >= config.run_count:
                 break
     # Fin
-    q.put([-10, winner])
+    q.put([-1000, winner])
     #print("-10 ENVIADO")
     return
 
@@ -132,7 +132,7 @@ async def stop(q, q50, qm50, q150, username, password, teamname, botmode, oppone
         await asyncio.sleep(0.1)
         try:
             cola = q.get(0)
-            if cola[0] == -10:
+            if cola[0] == -1000:
                 poller.cancel()
                 return
         except queue.Empty:
@@ -142,7 +142,7 @@ class AsyncDownload(Thread):
     def __init__(self,q,q50,qm50,q150,username,password,teamname,botmode,opponentUsername,training,agentTraining,numBattles):
         super().__init__()
         if training:
-            asyncio.run(stop(q,q50,qm50,q150,username,password,teamname,botmode,opponentUsername,training,agentTraining,numBattles))
+            asyncio.run(showdown(q,q50,qm50,q150,username,password,teamname,botmode,opponentUsername,training,agentTraining,numBattles))
         else:
             asyncio.run(showdown(q,q50,qm50,q150,username,password,teamname,botmode,opponentUsername,training,agentTraining,numBattles))
         return

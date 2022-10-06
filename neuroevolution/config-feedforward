@@ -2,19 +2,19 @@
 
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = 3.9
+fitness_threshold     = 10000
 pop_size              = 2
 reset_on_extinction   = False
 
 [DefaultGenome]
 # node activation options
-activation_default      = sigmoid
-activation_mutate_rate  = 0.0
-activation_options      = sigmoid
+activation_default      = relu
+activation_mutate_rate  = 0.02
+activation_options      = relu
 
 # node aggregation options
 aggregation_default     = sum
-aggregation_mutate_rate = 0.0
+aggregation_mutate_rate = 0.005
 aggregation_options     = sum
 
 # node bias options
@@ -23,41 +23,41 @@ bias_init_stdev         = 1.0
 bias_max_value          = 30.0
 bias_min_value          = -30.0
 bias_mutate_power       = 0.5
-bias_mutate_rate        = 0.7
-bias_replace_rate       = 0.1
+bias_mutate_rate        = 0.2
+bias_replace_rate       = 0.2
 
 # genome compatibility options
 compatibility_disjoint_coefficient = 1.0
 compatibility_weight_coefficient   = 0.5
 
 # connection add/remove rates
-conn_add_prob           = 0.5
-conn_delete_prob        = 0.5
+conn_add_prob           = 0.3
+conn_delete_prob        = 0.15
 
 # connection enable options
 enabled_default         = True
-enabled_mutate_rate     = 0.01
+enabled_mutate_rate     = 0.005
 
 feed_forward            = True
 initial_connection      = full
 
 # node add/remove rates
-node_add_prob           = 0.2
-node_delete_prob        = 0.2
+node_add_prob           = 0.3
+node_delete_prob        = 0.15
 
 # network parameters
 num_hidden              = 0
 num_inputs              = 219
-num_outputs             = 339
+num_outputs             = 141
 
 # node response options
-response_init_mean      = 1.0
-response_init_stdev     = 0.0
+response_init_mean      = 0.0
+response_init_stdev     = 1.0
 response_max_value      = 30.0
 response_min_value      = -30.0
-response_mutate_power   = 0.0
-response_mutate_rate    = 0.0
-response_replace_rate   = 0.0
+response_mutate_power   = 0.5
+response_mutate_rate    = 0.2
+response_replace_rate   = 0.2
 
 # connection weight options
 weight_init_mean        = 0.0
@@ -65,17 +65,20 @@ weight_init_stdev       = 1.0
 weight_max_value        = 30
 weight_min_value        = -30
 weight_mutate_power     = 0.5
-weight_mutate_rate      = 0.8
-weight_replace_rate     = 0.1
+weight_mutate_rate      = 0.2
+weight_replace_rate     = 0.2
 
 [DefaultSpeciesSet]
-compatibility_threshold = 3.0
+compatibility_threshold = 2.0
 
 [DefaultStagnation]
 species_fitness_func = max
+# Valor no usado... Siempre va a haber 8 genomas
 max_stagnation       = 20
+# Siempre se conservan las 8 genomas
 species_elitism      = 2
 
 [DefaultReproduction]
+# Ninguna especie es preservada de la anterior generación
 elitism            = 0
 survival_threshold = 0.2

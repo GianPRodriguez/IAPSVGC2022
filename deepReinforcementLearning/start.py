@@ -325,7 +325,7 @@ class DDQNAgent:
 
     # Retorna una accion.  
     def get_action(self, state):
-    	if np.random.rand() <= 0.7:
+    	if np.random.rand() <= 0.5:
     		# retorna una accion aleatoria con probabilidad self.epsilon
     		# Solicito msg random
     		self.q50.put([50,True])
@@ -403,7 +403,7 @@ class DDQNAgent:
 
 def inicio():
 	# Número de Batallas: 80000
-	EPISODES = 3
+	EPISODES = 1
 	# Tamaño del lote: 64 = 8 batallas * 8 turnos
 	batch_size = 3
 	# Neuronas de entrada
@@ -427,7 +427,7 @@ def inicio():
 		qm50 = queue.Queue()
 		q150 = queue.Queue()
 		# Inicio Batalla - Agente Random
-		opponentThread = Thread(target=AsyncDownload, args=(q2,q2,q2,q2,"Deep1ODDQN","123456",listAgentTeamname[e%len(listAgentTeamname)],"ACCEPT_CHALLENGE","Deep1UDDQN",True,False,1,))
+		opponentThread = Thread(target=AsyncDownload, args=(q2,q2,q2,q2,"Deep1ODDQN","123456",listAgentTeamname[e%len(listAgentTeamname)+1],"ACCEPT_CHALLENGE","Deep1UDDQN",True,False,1,))
 		opponentThread.start()
 		time.sleep(0.2)
 		# Inicio Batalla - Agente Inteligente
@@ -470,9 +470,11 @@ def inicio():
 					if path.exists(nameFile):
 						with open(nameFile, 'a') as outfile:
 							outfile.write("{}\t{}\t{}\t{}\t{}\n".format(numBattle, turnBattle, reward, score, dt_string))
+							print("{}\t{}\t{}\t{}\t{}".format(numBattle, turnBattle, reward, score, dt_string))
 					else:
 						with open(nameFile, 'w') as outfile:
 							outfile.write("{}\t{}\t{}\t{}\t{}\n".format(numBattle, turnBattle, reward, score, dt_string))
+							print("{}\t{}\t{}\t{}\t{}".format(numBattle, turnBattle, reward, score, dt_string))
 					# Es momento de realizar alguna acción...
 					# Formato de Input de la Red Neuronal
 					#print("listNeuralNetworkInput: {}".format(listNeuralNetworkInput))
@@ -483,7 +485,7 @@ def inicio():
 						action_value = agente.get_action(state)
 						#print("ACTION 0: --{}--".format(action[0]))
 						action = '/choose ' + diccionario[str(action_value)]
-						print("action: {} index: {}".format(action, action_value))
+						#print("action: {} index: {}".format(action, action_value))
 						q150.put([150,action])
 						#print("150 ENVIADO (1) (2)")
 					else:
@@ -502,7 +504,7 @@ def inicio():
 					lastReward = reward
 				elif cola[0] == -10:
 					# Fin de la batalla
-					print("Fin de la Batalla")
+					#print("Fin de la Batalla")
 					break
 				else:
 					print("ERROR {} RECIBIDO P1".format(cola[0]))
@@ -510,9 +512,9 @@ def inicio():
 				...
 		# Actualiza el target_model al final de cada batalla
 		agente.update_target_model()
-		# 
+		# Se almacena el score
 		score_list.append(score)
-		# 
+		# Se almacena el epsilon
 		epsilon_list.append(agente.epsilon)
 		#print("Fin de la Batalla")	# Por ahora mantenerlo
 		nameFile = "deepReinforcementLearning/reportes/wl.txt"
@@ -528,9 +530,9 @@ def inicio():
 		else:
 			with open(nameFile, 'w') as outfile:
 				outfile.write("{}\t{}\t{}\t{}\t{}\n".format(numBattle, win, loss, score, dt_string))
-		# save model
-		agente.save("deepReinforcementLearning/modelos/0/")
-	print("Fin del Entrenamiento")
+	# save model
+	agente.save("deepReinforcementLearning/modelos/0/")
+	#print("Fin del Entrenamiento")
 	return
 
 

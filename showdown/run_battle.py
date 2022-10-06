@@ -2092,11 +2092,15 @@ async def accion_batalla(battle):
     mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
     #print("MENSAJE: {}".format(mensaje))
     if battle.agentTraining:
-        # if invalidAction - reward -10000.0
+        # if invalidAction - reward -9999.0
         battle.q.put([10,listNeuralNetworkInput,battle.turn,reward,score,True])
         #print("10 ENVIADO")
         # Bucle Principal
         while True:
+            try:
+                contador = battle.q50.qsize()
+            except EOFError as e:
+                print(e)
             if battle.q50.qsize() > 0:
                 cola = battle.q50.get(0)
                 if cola[0] == 50:
