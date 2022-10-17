@@ -5,6 +5,7 @@ import config
 import logging
 import requests
 import websockets
+import asyncio
 
 class LoginError(Exception):
     pass
@@ -18,7 +19,6 @@ class PSWebsocketClient:
     login_uri = None
     username = None
     password = None
-    last_message = None
     last_challenge_time = 0
 
     @classmethod
@@ -27,8 +27,9 @@ class PSWebsocketClient:
         self.username = username
         self.password = password
         self.address = "ws://{}/showdown/websocket".format(address)
-        self.websocket = await websockets.connect(self.address)
+        self.websocket = await websockets.connect(self.address, ping_interval=None)
         self.login_uri = "https://play.pokemonshowdown.com/action.php"
+        self.last_message = None
         return self
 
     async def join_room(self, room_name):
@@ -37,15 +38,34 @@ class PSWebsocketClient:
         #logger.info("Joined room '{}'".format(room_name))
 
     async def receive_message(self):
-        message = await self.websocket.recv()
-        #logger.debug(message)
-        #logger.debug("")
+        self.last_message = await self.websocket.recv()
+        return self.last_message
+
+    async def receive_message2(self):
+        time.sleep(1.0)
+        try:
+            await asyncio.wait_for(self.receive_message(), timeout=12.0)
+            message = self.last_message
+        except asyncio.TimeoutError:
+            message = None
         return message
 
     async def send_message(self, room, message_list):
         message = room + "|" + "|".join(message_list) #<class 'list'>
         #logger.debug("Enviando mensaje hacia el websocket: {}".format(message))
-        await self.websocket.send(message)
+        try:
+            await self.websocket.send(message)
+        except websockets.ConnectionClosed as exc:
+            print(exc)
+        self.last_message = message
+
+    async def send_message2(self, room, message_list):
+        time.sleep(1.2)
+        message = room + "|" + "|".join(message_list)
+        try:
+            await self.websocket.send(message)
+        except websockets.ConnectionClosed as exc:
+            print(exc)
         self.last_message = message
 
     async def get_id_and_challstr(self):
@@ -120,20 +140,30 @@ class PSWebsocketClient:
         await self.send_message('', message)
         self.last_challenge_time = time.time()
 
-    async def accept_challenge(self, battle_format, team, room_name, training):
+    async def accept_challenge(self, battle_format, team, room_name, training, q):
         if room_name is not None:
             await self.join_room(room_name)
         if not training:
             print("[INFO]     Esperando una batalla en formato {}".format(battle_format))
         await self.update_team(team)
         username = None
+        contador = 0
         while username is None:
-            msg = await self.receive_message()
-            split_msg = msg.split('|')
-            if (len(split_msg) == 9):
-                if (len(split_msg) == 9 and split_msg[1] == "pm" and split_msg[4].startswith("/challenge") and split_msg[5] == battle_format):
-                    username = split_msg[2].strip()
-
+            time.sleep(1.5)
+            msg = await self.receive_message2()
+            if msg is not None:
+                split_msg = msg.split('|')
+                if (len(split_msg) == 9):
+                    if (len(split_msg) == 9 and split_msg[1] == "pm" and split_msg[4].startswith("/challenge") and split_msg[5] == battle_format):
+                        username = split_msg[2].strip()
+            contador += 1
+            #print("contador: {}".format(contador))
+            if contador == 8 and username is None:
+                #print("q.put([-1])")
+                q.put([-1])
+                contador = 0
+        #print("q.put([0])")
+        q.put([0])
         message = ["/accept " + username]
         await self.send_message('', message)
 

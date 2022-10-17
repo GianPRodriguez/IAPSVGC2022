@@ -16,7 +16,7 @@ def normalize_name(name):
 
 def json_to_packed(json_team):
     def from_json(j):
-        return "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{},{},{}".format(
+        return "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{},{},{},{}".format(
             j['name'],
             j.get('species', ""),
             j['item'],
@@ -30,7 +30,8 @@ def json_to_packed(json_team):
             j.get('level', ''),
             j.get('happiness', ''),
             j.get('pokeball', ''),
-            j.get('hiddenpowertype', '')
+            j.get('hiddenpowertype', ''),
+            j.get('gigantamax', '')
         )
 
     packed_team_string = "]".join(
@@ -70,6 +71,7 @@ def packed_to_json(packed_team):
             j['ivs']['spe'] = ivs[5]
         j['shiny'] = items[9]
         j['level'] = items[10]
+        j['gigantamax'] = items[11]
         final = items[11].split(',')
         if len(final) == 3:
             j['happiness'] = final[0]
@@ -94,6 +96,7 @@ def single_pokemon_export_to_dict(pkmn_export_string):
         "name": "",
         "species": "",
         "level": "",
+        "gigantamax": "",
         "gender": "",
         "item": "",
         "ability": "",
@@ -129,6 +132,8 @@ def single_pokemon_export_to_dict(pkmn_export_string):
             pkmn_dict["ability"] = normalize_name(line.split('Ability: ')[-1])
         elif line.startswith('Level: '):
             pkmn_dict["level"] = normalize_name(line.split('Level: ')[-1])
+        elif line.startswith('Gigantamax: '):
+            pkmn_dict["gigantamax"] = normalize_name(line.split('Gigantamax: ')[-1])
         elif line.startswith('EVs: '):
             evs = line.split('EVs: ')[-1]
             for ev in evs.split('/'):

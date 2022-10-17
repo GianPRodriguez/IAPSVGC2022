@@ -22,7 +22,10 @@ def request(battle, split_msg):
     # split_msg = ["","request","{"active":[{"moves":[{"move":"Fake Out","id":"fakeout","pp":16,"maxpp":16,..."]
     if len(split_msg) >= 3:
         # Se divide el JSON en battle_json
-        battle_json = json.loads(split_msg[2].strip('\''))
+        try:
+            battle_json = json.loads(split_msg[2].strip('\''))
+        except:
+            return battle
         # Obtiene el rqid, que al parecer no se utilizará
         battle.rqid = battle_json[constants.RQID]
         # ¿battle_json tiene "forceSwitch"? Se activa cuando uso U-TURN

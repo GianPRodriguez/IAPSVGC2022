@@ -76,15 +76,31 @@ async def showdown(q, q50, qm50, q150, username, password, teamname, botmode, op
             # Opciones de juego
             if botmode == constants.CHALLENGE_USER:
                 await ps_websocket_client.challenge_user(opponentUsername, config.pokemon_mode, team, training)
+                #print("challenge_user")
+                if agentTraining:
+                    bucle = True
+                    while bucle:
+                        try:
+                            if qm50.qsize() > 0:
+                                cola = qm50.get(0)
+                                if cola[0] == -1:
+                                    return
+                                else:
+                                    bucle = False
+                        except EOFError as e:
+                            ...
             elif botmode == constants.ACCEPT_CHALLENGE:
-                await ps_websocket_client.accept_challenge(config.pokemon_mode, team, config.room_name, training)
+                await ps_websocket_client.accept_challenge(config.pokemon_mode, team, config.room_name, training, q)
             elif botmode == constants.SEARCH_LADDER:
                 # Validación ante Jugadores Humanos
                 await ps_websocket_client.search_for_match(team)
             else:
                 raise ValueError("Invalid Bot Mode")
             # Nueva Batalla Pokémon completo
-            winner, q = await pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, training, agentTraining)
+            winner, q, battle_tag = await pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, training, agentTraining)
+            if winner == "None":
+                 message = ["/forfeit"]
+                 await ps_websocket_client.send_message(battle_tag, message)
             if winner == username:
                 wins += 1
             else:
@@ -121,8 +137,7 @@ async def showdown(q, q50, qm50, q150, username, password, teamname, botmode, op
             if battles_run >= config.run_count:
                 break
     # Fin
-    q.put([-1000, winner])
-    #print("-10 ENVIADO")
+    #raise Exception("FIN DE LA BATALLA")
     return
 
 

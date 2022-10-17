@@ -1,4 +1,3 @@
-import copy
 import warnings
 
 import graphviz
@@ -18,7 +17,7 @@ def plot_stats(statistics, ylog=False, view=False, filename='avg_fitness.svg'):
     stdev_fitness = np.array(statistics.get_fitness_stdev())
 
     plt.plot(generation, avg_fitness, 'b-', label="average")
-    # plt.plot(generation, avg_fitness - stdev_fitness, 'g-.', label="-1 sd")
+    plt.plot(generation, avg_fitness - stdev_fitness, 'g-.', label="-1 sd")
     plt.plot(generation, avg_fitness + stdev_fitness, 'g-.', label="+1 sd")
     plt.plot(generation, best_fitness, 'r-', label="best")
 
@@ -39,17 +38,14 @@ def plot_stats(statistics, ylog=False, view=False, filename='avg_fitness.svg'):
 
 def plot_spikes(spikes, view=False, filename=None, title=None):
     """ Plots the trains for a single spiking neuron. """
-    if plt is None:
-        warnings.warn("This display is not available due to a missing optional dependency (matplotlib)")
-        return
-
-    t_values = [t for t, I, v, u in spikes]
-    v_values = [v for t, I, v, u in spikes]
-    u_values = [u for t, I, v, u in spikes]
-    I_values = [I for t, I, v, u in spikes]
+    t_values = [t for t, I, v, u, f in spikes]
+    v_values = [v for t, I, v, u, f in spikes]
+    u_values = [u for t, I, v, u, f in spikes]
+    I_values = [I for t, I, v, u, f in spikes]
+    f_values = [f for t, I, v, u, f in spikes]
 
     fig = plt.figure()
-    plt.subplot(3, 1, 1)
+    plt.subplot(4, 1, 1)
     plt.ylabel("Potential (mv)")
     plt.xlabel("Time (in ms)")
     plt.grid()
@@ -60,13 +56,19 @@ def plot_spikes(spikes, view=False, filename=None, title=None):
     else:
         plt.title("Izhikevich's spiking neuron model ({0!s})".format(title))
 
-    plt.subplot(3, 1, 2)
+    plt.subplot(4, 1, 2)
+    plt.ylabel("Fired")
+    plt.xlabel("Time (in ms)")
+    plt.grid()
+    plt.plot(t_values, f_values, "r-")
+
+    plt.subplot(4, 1, 3)
     plt.ylabel("Recovery (u)")
     plt.xlabel("Time (in ms)")
     plt.grid()
     plt.plot(t_values, u_values, "r-")
 
-    plt.subplot(3, 1, 3)
+    plt.subplot(4, 1, 4)
     plt.ylabel("Current (I)")
     plt.xlabel("Time (in ms)")
     plt.grid()
@@ -118,9 +120,6 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
 
     # If requested, use a copy of the genome which omits all components that won't affect the output.
     if prune_unused:
-        if show_disabled:
-            warnings.warn("show_disabled has no effect when prune_unused is True")
-
         genome = genome.get_pruned_copy(config.genome_config)
 
     if node_names is None:
@@ -156,15 +155,19 @@ def draw_net(config, genome, view=False, filename=None, node_names=None, show_di
 
         dot.node(name, _attributes=node_attrs)
 
-    for n in genome.nodes.keys():
+    used_nodes = set(genome.nodes.keys())
+    for n in used_nodes:
         if n in inputs or n in outputs:
             continue
 
-        attrs = {'style': 'filled', 'fillcolor': node_colors.get(n, 'white')}
+        attrs = {'style': 'filled',
+                 'fillcolor': node_colors.get(n, 'white')}
         dot.node(str(n), _attributes=attrs)
 
     for cg in genome.connections.values():
         if cg.enabled or show_disabled:
+            # if cg.input not in used_nodes or cg.output not in used_nodes:
+            #    continue
             input, output = cg.key
             a = node_names.get(input, str(input))
             b = node_names.get(output, str(output))

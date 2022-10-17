@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import json
@@ -5,6 +7,7 @@ import neat
 import time
 import queue
 import pickle
+import visualize
 import traceback
 import multiprocessing
 
@@ -28,10 +31,10 @@ def eval_genome(genome, config, iterador, contador, q1, q2, q50, qm50, q150):
     action_values = net.activate(STATE)
     action_value = int(action_values.index(max(action_values)))
     #action = '/choose ' + DICCIONARIO[str(action_value)]
-    print("ANN: {} Index: {}".format((genome.key-1)%len(USERS),action_value))
-    if action_value == 10 or action_value == 11:
+    #print("ANN: {} Index: {}".format((genome.key-1)%len(USERS),action_value))
+    if action_value == 10 or action_value == 11 or action_value == 12 or action_value == 13 or action_value == 14 or action_value == 15 or action_value == 16 or action_value == 17 or action_value == 18 or action_value == 19 or action_value == 20 or action_value == 21:
         genome.fitness = 100.0
-        print("LOGRADO")
+        print("--- LOGRADO ---")
     else:
         genome.fitness = -9999.0
     return genome.fitness
@@ -42,13 +45,29 @@ def inicio():
     config_path = "./neuroevolution/config-feedforward"
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
     p = neat.Population(config)
+    # Add a stdout reporter to show progress in the terminal
+    p.add_reporter(neat.StdOutReporter(True))
+    stats = neat.StatisticsReporter()
+    p.add_reporter(stats)
+    p.add_reporter(neat.Checkpointer(5, 300, './neuroevolution/modelos/neat-checkpoint-'))
     pe = neat.ParallelEvaluator(multiprocessing.cpu_count(), eval_genome, None, None, None, None, None, None, None)
     # Se evalúan las redes neuronales en X cantidad de interacciones
-    winner = p.run(pe.evaluate, 20)
+    winner = p.run(pe.evaluate, 50)
+    # ---
+    p = neat.Checkpointer.restore_checkpoint('./neuroevolution/modelos/neat-checkpoint-49')
+    p.add_reporter(neat.StdOutReporter(True))
+    p.add_reporter(stats)
+    p.add_reporter(neat.Checkpointer(6, 300, './neuroevolution/modelos/neat-checkpoint-'))
+    winner = p.run(pe.evaluate, 60)
+    # ---
+    #visualize.draw_net(config, winner, True)  # dibuja la topologia ganadora
+    visualize.plot_stats(stats, ylog=False, view=True)  # visualiza estadisticas
+    visualize.plot_species(stats, view=True)   # visualiza especies
+    # ---
     netWinner = neat.nn.FeedForwardNetwork.create(winner, config)
     action_values = netWinner.activate(STATE)
     print("NEAT FIN")
-    print("action_values: {}".format(action_values))
+    #print("action_values: {}".format(action_values))
     print("action_value: {}".format(int(action_values.index(max(action_values)))))
     # Luego de culminar toda la iteración, se muestra el genoma ganador...
     #print('\nBest genome:\n{!s}'.format(winner))

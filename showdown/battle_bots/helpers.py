@@ -61,7 +61,8 @@ async def format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, 
     else:
         dynamax2 = "dynamax"
     message = "/choose {} {} {} {}, {} {} {} {}".format(moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
-    return [message, str(battle.rqid)]
+    #return [message, str(battle.rqid)]
+    return [message]
 
 
 async def getMoveName(battle, position, nMoveSwitch, dynamax):
@@ -71,7 +72,7 @@ async def getMoveName(battle, position, nMoveSwitch, dynamax):
             if maxMoveWS in constants.maxMoves:
                 return constants.maxMoves[maxMoveWS]
             else:
-                logger.info("NO DEBE ENTRAR ACÁ - if dynamax == 1 or battle.user.active1.isDynamax == True:")
+                print("NO DEBE ENTRAR ACÁ - if dynamax == 1 or battle.user.active1.isDynamax == True:")
         else:
             return battle.request_json.get('active','False')[position].get('moves','False')[nMoveSwitch].get('move', 'False')
     elif position == 1:
@@ -80,11 +81,12 @@ async def getMoveName(battle, position, nMoveSwitch, dynamax):
             if maxMoveWS in constants.maxMoves:
                 return constants.maxMoves[maxMoveWS]
             else:
-                logger.info("NO DEBE ENTRAR ACÁ - elif position == 1:")
+                #print("maxMoveWS: {}".format(maxMoveWS))
+                print("NO DEBE ENTRAR ACÁ - elif position == 1:")
         else:
             return battle.request_json.get('active','False')[position].get('moves','False')[nMoveSwitch].get('move', 'False')
     else:
-        logger.info("NO DEBE ENTRAR ACÁ - async def getMoveName(battle, position, nMoveSwitch, dynamax):")
+        print("NO DEBE ENTRAR ACÁ - async def getMoveName(battle, position, nMoveSwitch, dynamax):")
 
 
 # async def action_team_preview(self, battle):

@@ -42,6 +42,11 @@ class Battle(ABC):
         self.cadenaTP = json.loads(open("API/JSONs/geneticAlgorithm.json","r").read())
         self.moveTypes = json.loads(open("API/JSONs/pkmnMovesTypes.json","r").read())
         self.movesANN = json.loads(open("API/JSONs/movesANN.json","r").read())
+        self.reward = 0
+        self.score = 0
+        self.cantInvActions = 0
+        self.cantInvActionsSeg = 0
+        self.cantActions = 0
 
     # Only Opponent
     async def initialize_team_preview(self, user_json, opponent_pokemon):
@@ -275,9 +280,11 @@ class Battler:
             # Update Pkmn - Turno 2 en adelante... Moves
             if JSONdict.get("active","False") != "False":
                 for i in range(len(JSONdict.get("active","False")[0].get("moves","False"))):
-                    self.active1.movePP[i] = int(JSONdict.get("active","False")[0].get("moves","False")[i].get("pp","False"))
+                    if JSONdict.get("active","False")[0].get("moves","False")[i].get("pp","False") != 'False':
+                        self.active1.movePP[i] = int(JSONdict.get("active","False")[0].get("moves","False")[i].get("pp","False"))
                 for i in range(len(JSONdict.get("active","False")[1].get("moves","False"))):
-                    self.active2.movePP[i] = int(JSONdict.get("active","False")[1].get("moves","False")[i].get("pp","False"))
+                    if JSONdict.get("active","False")[1].get("moves","False")[i].get("pp","False") != 'False':
+                        self.active2.movePP[i] = int(JSONdict.get("active","False")[1].get("moves","False")[i].get("pp","False"))
             # Reserved
             self.reserved[0].HPB = int(JSONdict["side"]["pokemon"][2]["condition"].partition("/")[0].partition(" ")[0])
             self.reserved[1].HPB = int(JSONdict["side"]["pokemon"][3]["condition"].partition("/")[0].partition(" ")[0])
