@@ -1,4 +1,5 @@
 import multiprocessing
+import time
 import math
 import queue
 import sys
@@ -15,6 +16,7 @@ from PIL import ImageTk, Image
 import requests
 from io import BytesIO
 from teams.team_converter import export_to_packed
+from teams import load_team
 
 async def stop(q, teamText):
 	poller = asyncio.ensure_future(ValidarEquipo(q, teamText))
@@ -848,12 +850,13 @@ class Modulo3(tk.Frame):
     	self.selectOpponents = tk.Button(self, text='Subir Oponentes', anchor="center", command = self.SeleccionarOponentes)
     	self.selectOpponents.configure(width = 20, height = 1, relief = tk.FLAT)
     	self.selectOpponents_widget = self.canvasBody.create_window(400, 115, window=self.selectOpponents)
+    	self.selectOpponents['state'] = tk.DISABLED
     	# Label Cantidad Batallas
     	self.labelSelect = tk.Label(self,text="Cantidad de Batallas", bg = "#283158", font=('Verdana 8 bold'), fg="white")
     	self.LabelSelect_widget = self.canvasBody.create_window(400, 140, window=self.labelSelect)
     	# Scale
     	v = tk.DoubleVar()
-    	self.scale = tk.Scale(self, variable = v, from_ = 8000, to = 80000, resolution = 8000, orient = tk.HORIZONTAL, length = 140, fg="#ffffff", font="#ffffff", bg="#283158", activebackground="#283158", highlightbackground="#283158",highlightcolor="#ffffff",troughcolor="#ffffff")
+    	self.scale = tk.Scale(self, variable = v, from_ = 10, to = 80000, resolution = 10, orient = tk.HORIZONTAL, length = 140, fg="#ffffff", font="#ffffff", bg="#283158", activebackground="#283158", highlightbackground="#283158",highlightcolor="#ffffff",troughcolor="#ffffff")
     	self.Scale_widget = self.canvasBody.create_window(399, 175, window=self.scale)
     	# Botón Iniciar Entrenamiento
     	self.startTraining = tk.Button(self, text='Iniciar Entrenamiento', anchor="center", command = self.IniciarEntrenamiento)
@@ -895,7 +898,100 @@ class Modulo3(tk.Frame):
     		self.selectTeam['state'] = tk.DISABLED
 
     def IniciarEntrenamiento(self):
-    	...
+    	# Add 6 Pokémon
+    	if self.textVar.get() == '' or self.textVar.get() == 'Nuevo Equipo':
+    		if hasattr(self, "textIncorrect"):
+    			self.canvasBody.delete(self.textIncorrect)
+    		self.textIncorrect = self.canvasBody.create_text(120, 235, text="No se ha seleccionado un equipo", fill="orange", font=('Verdana 10'))
+    	else:
+    		# Delete IMG Bar Chart
+    		self.canvasBody.delete(self.barChart_widget)
+    		if hasattr(self, "textIncorrect"):
+    			self.canvasBody.delete(self.textIncorrect)
+    		# Load Team
+    		ruta = './teams/teams/gen8/vgc2022/' + self.textVar.get()
+    		with open(ruta, 'r') as f:
+    			self.teamText = f.read()
+	    	self.q = multiprocessing.Queue()
+	    	isValid, self.listPkmn = asyncio.run(stop(self.q, self.teamText))
+	    	PkmnImg1, PkmnImg2, PkmnImg3, PkmnImg4, PkmnImg5, PkmnImg6 = getPkmnImg(self.listPkmn)
+	    	listElegidos = ['Zacian-Crowned', 'Incineroar', 'Thundurus']
+	    	# Pkmn1
+	    	response = requests.get(PkmnImg1)
+	    	self.pkmn1PNG = Image.open(BytesIO(response.content))
+	    	self.newPkmn1PNG = self.pkmn1PNG.convert(mode="RGBA")
+	    	self.pkmn1PNGResized = self.newPkmn1PNG.resize((95,95), Image.LANCZOS)
+	    	self.pkmn1PNGTK = ImageTk.PhotoImage(self.pkmn1PNGResized)
+	    	self.buttonPkmn1 = tk.Button(self, image=self.pkmn1PNGTK, bd=0)
+	    	self.pkmn1PNG_widget = self.canvasBody.create_window(47.5+12,47.5+8, window=self.buttonPkmn1)
+	    	if self.listPkmn[0] in listElegidos:
+	    		self.buttonPkmn1.config(bg="#599e47")
+	    	# Pkmn4
+	    	response = requests.get(PkmnImg4)
+	    	self.pkmn4PNG = Image.open(BytesIO(response.content))
+	    	self.newPkmn4PNG = self.pkmn4PNG.convert(mode="RGBA")
+	    	self.pkmn4PNGResized = self.newPkmn4PNG.resize((95,95), Image.LANCZOS)
+	    	self.pkmn4PNGTK = ImageTk.PhotoImage(self.pkmn4PNGResized)
+	    	self.buttonPkmn4 = tk.Button(self, image=self.pkmn4PNGTK, bd=0)
+	    	self.pkmn4PNG_widget = self.canvasBody.create_window(47.5+12,142.5+8, window=self.buttonPkmn4)
+	    	if self.listPkmn[3] in listElegidos:
+	    		self.buttonPkmn4.config(bg="#599e47")
+	    	# Pkmn2
+	    	response = requests.get(PkmnImg2)
+	    	self.pkmn2PNG = Image.open(BytesIO(response.content))
+	    	self.newPkmn2PNG = self.pkmn2PNG.convert(mode="RGBA")
+	    	self.pkmn2PNGResized = self.newPkmn2PNG.resize((95,95), Image.LANCZOS)
+	    	self.pkmn2PNGTK = ImageTk.PhotoImage(self.pkmn2PNGResized)
+	    	self.buttonPkmn2 = tk.Button(self, image=self.pkmn2PNGTK, bd=0)
+	    	self.pkmn2PNG_widget = self.canvasBody.create_window(95+47.5+12,47.5+8, window=self.buttonPkmn2)
+	    	if self.listPkmn[1] in listElegidos:
+	    		self.buttonPkmn2.config(bg="#599e47")
+	    	# Pkmn5
+	    	response = requests.get(PkmnImg5)
+	    	self.pkmn5PNG = Image.open(BytesIO(response.content))
+	    	self.newPkmn5PNG = self.pkmn5PNG.convert(mode="RGBA")
+	    	self.pkmn5PNGResized = self.newPkmn5PNG.resize((95,95), Image.LANCZOS)
+	    	self.pkmn5PNGTK = ImageTk.PhotoImage(self.pkmn5PNGResized)
+	    	self.buttonPkmn5 = tk.Button(self, image=self.pkmn5PNGTK, bd=0)
+	    	self.pkmn5PNG_widget = self.canvasBody.create_window(95+47.5+12,142.5+8, window=self.buttonPkmn5)
+	    	if self.listPkmn[4] in listElegidos:
+	    		self.buttonPkmn5.config(bg="#599e47")
+	    	# Pkmn3
+	    	response = requests.get(PkmnImg3)
+	    	self.pkmn3PNG = Image.open(BytesIO(response.content))
+	    	self.newPkmn3PNG = self.pkmn3PNG.convert(mode="RGBA")
+	    	self.pkmn3PNGResized = self.newPkmn3PNG.resize((95,95), Image.LANCZOS)
+	    	self.pkmn3PNGTK = ImageTk.PhotoImage(self.pkmn3PNGResized)
+	    	self.buttonPkmn3 = tk.Button(self, image=self.pkmn3PNGTK, bd=0)
+	    	self.pkmn3PNG_widget = self.canvasBody.create_window(95+47.5+95+12,47.5+8, window=self.buttonPkmn3)
+	    	if self.listPkmn[2] in listElegidos:
+	    		self.buttonPkmn3.config(bg="#599e47")
+	    	# Pkmn6
+	    	response = requests.get(PkmnImg6)
+	    	self.pkmn6PNG = Image.open(BytesIO(response.content))
+	    	self.newPkmn6PNG = self.pkmn6PNG.convert(mode="RGBA")
+	    	self.pkmn6PNGResized = self.newPkmn6PNG.resize((95,95), Image.LANCZOS)
+	    	self.pkmn6PNGTK = ImageTk.PhotoImage(self.pkmn6PNGResized)
+	    	self.buttonPkmn6 = tk.Button(self, image=self.pkmn6PNGTK, bd=0)
+	    	self.pkmn6PNG_widget = self.canvasBody.create_window(95+47.5+95+12,142.5+8, window=self.buttonPkmn6)
+	    	if self.listPkmn[5] in listElegidos:
+	    		self.buttonPkmn6.config(bg="#599e47")
+	    	# Bloquear Widgets
+	    	self.cbbTeam.config(state='disabled')
+	    	self.scale['state'] = tk.DISABLED
+	    	self.startTraining['state'] = tk.DISABLED
+	    	# Add Progress Bar
+	    	self.progreso = ttk.Progressbar(self, orient = "horizontal", length = 250, mode = "determinate")
+	    	self.progreso_widget = self.canvasBody.create_window(135, 142.5+85, window=self.progreso)
+	    	self.labelSelect = tk.Label(self,text= str(int(self.progreso['value'])) + " %", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+	    	self.LabelSelect_widget = self.canvasBody.create_window(285, 142.5+85, window=self.labelSelect)
+	    	# Call NEAT and Run Progress Bar
+	    	
+	    	for x in range(10):
+	    		self.progreso['value'] += 10
+	    		self.labelSelect['text'] = str(int(self.progreso['value'])) + " %"
+	    		self.update_idletasks()
+	    		time.sleep(2)
 
     def SeleccionarOponentes(self):
     	...
