@@ -986,12 +986,20 @@ class Modulo3(tk.Frame):
 	    	self.labelSelect = tk.Label(self,text= str(int(self.progreso['value'])) + " %", bg = "#283158", font=('Verdana 8 bold'), fg="white")
 	    	self.LabelSelect_widget = self.canvasBody.create_window(285, 142.5+85, window=self.labelSelect)
 	    	# Call NEAT and Run Progress Bar
-	    	
+	    	print(self.textVar.get())
+	    	print(self.scale.get())
+	    	#inicio(q, self.textVar.get(), self.scale.get())
+	    	# Progreso
 	    	for x in range(10):
 	    		self.progreso['value'] += 10
 	    		self.labelSelect['text'] = str(int(self.progreso['value'])) + " %"
 	    		self.update_idletasks()
 	    		time.sleep(2)
+	    	# Habilitar Widgets
+	    	self.cbbTeam.config(state='normal')
+	    	self.scale['state'] = tk.NORMAL
+	    	self.startTraining['state'] = tk.NORMAL
+
 
     def SeleccionarOponentes(self):
     	...
