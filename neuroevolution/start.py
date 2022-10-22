@@ -83,10 +83,23 @@ def eval_genome(genome, config, iterador, contador, q1, q2, q50, qm50, q150, lis
                 q50[(genome.id)%len(USERS)].put([50,False])
                 # Obtengo la salida de la red neuronal
                 action_values = net.activate(state)
+                # Acciones Especiales - Como no recibo un forceswitch... si el pokémon está debilitado, corto la acción elegida por la red neuronal como 'pass'
                 # Obtengo el indice de la acción
                 action_value = int(action_values.index(max(action_values)))
                 # Y el mensaje de la acción
                 action = '/choose ' + DICCIONARIO[str(action_value)]
+                # INICIO CORTE PASS
+                if int(state[10]) == 0:
+                    # Pkmn de la izquierda fainted
+                    arreglo = action.split(',')
+                    arreglo[0] = 'pass'
+                    action = '/choose ' + arreglo[0] + ',' + arreglo[1]
+                elif state[33] == 0:
+                    # Pkmn de la derecha fainted
+                    arreglo = action.split(',')
+                    arreglo[1] = 'pass'
+                    action = arreglo[0] + ', ' + arreglo[1]
+                # FIN CORTE PASS
                 # Envío la acción en formato de mensaje
                 q150[(genome.id)%len(USERS)].put([150,action])
                 # Recibo la recompensa obtenida por la acción
@@ -284,7 +297,7 @@ def inicio():
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
     #p = neat.Population(config)
     # Restauración
-    p = neat.Checkpointer.restore_checkpoint('./neuroevolution/modelos/neat-checkpoint-5213')
+    p = neat.Checkpointer.restore_checkpoint('./neuroevolution/modelos/neat-checkpoint-6053')
     # Se agrega un reporte cuyo progreso será mostrado en el terminal
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
@@ -294,7 +307,7 @@ def inicio():
     pe = neat.ParallelEvaluator(multiprocessing.cpu_count(), eval_genome, iterador, contador, q1, q2, q50, qm50, q150, listas)
     # Se evalúan las redes neuronales en 50 cantidad de interacciones, luego se agrupa las gráficas
     try:
-        winner = p.run(pe.evaluate, 700)
+        winner = p.run(pe.evaluate, 500)
     except:
         traceback.print_exc()
     print("--- FIN DEL PROGRAMA ---")

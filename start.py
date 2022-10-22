@@ -580,7 +580,7 @@ class Modulo2(tk.Frame):
             		# ListBox Equipo
             		self.textVar = tk.StringVar(self)
             		self.textVar.set('')
-            		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=["random", "classic", "alternative", "Eduardo Cunha"], width=17)
+            		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values = self.listBoxValues, width=17)
             		self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
             except queue.Empty:
             	...
@@ -827,8 +827,9 @@ class Modulo3(tk.Frame):
     	self.canvasBody.create_rectangle(0,0,310,259, outline='white', width=3)
     	self.canvasBody.pack()
     	# Label Seleccionar Equipo
-    	self.labelSelect = tk.Label(self,text="Seleccionar Equipo", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelSelect_widget = self.canvasBody.create_window(400, 15, window=self.labelSelect)
+    	self.labelSelectTeam = tk.Label(self,text="Seleccionar Equipo", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelSelectTeam_widget = self.canvasBody.create_window(400, 15, window=self.labelSelectTeam)
+    	self.auxLabelSelectTeam_widget = self.LabelSelectTeam_widget
     	# ListBox Equipo
     	self.textVar = tk.StringVar(self)
     	self.textVar.set('')
@@ -838,32 +839,36 @@ class Modulo3(tk.Frame):
     	self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=self.listBoxValues, width=21)
     	self.cbbTeam.bind('<<ComboboxSelected>>', self.definirSeleccionarEquipo)
     	self.listbox_widget = self.canvasBody.create_window(399, 40, window=self.cbbTeam)
-    	self.auxCbbTeam = self.cbbTeam
+    	self.auxListbox_widget = self.listbox_widget
     	# Botón Seleccionar Equipo
-    	self.selectTeam = tk.Button(self, text='Subir Equipo', anchor="center", command = self.SubirEquipo)
-    	self.selectTeam.configure(width = 20, height = 1)
-    	self.selectTeam_widget = self.canvasBody.create_window(400, 65, window=self.selectTeam)
-    	self.selectTeam['state'] = tk.DISABLED
+    	self.selectTeamPkmn = tk.Button(self, text='Subir Equipo', anchor="center", command = self.SubirEquipo)
+    	self.selectTeamPkmn.configure(width = 20, height = 1)
+    	self.selectTeam_widget = self.canvasBody.create_window(400, 65, window=self.selectTeamPkmn)
+    	self.selectTeamPkmn['state'] = tk.DISABLED
     	# Label Seleccionar Oponentes
-    	self.labelSelect = tk.Label(self,text="Subir Oponentes", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelSelect_widget = self.canvasBody.create_window(400, 90, window=self.labelSelect)
+    	self.labelSelectO = tk.Label(self,text="Subir Oponentes", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelSelectOpponents_widget = self.canvasBody.create_window(400, 90, window=self.labelSelectO)
+    	self.auxLabelSelectOpponents_widget = self.LabelSelectOpponents_widget
     	# Botón Seleccionar Oponentes
     	self.selectOpponents = tk.Button(self, text='Subir Oponentes', anchor="center", command = self.SeleccionarOponentes)
     	self.selectOpponents.configure(width = 20, height = 1, relief = tk.FLAT)
     	self.selectOpponents_widget = self.canvasBody.create_window(400, 115, window=self.selectOpponents)
     	self.selectOpponents['state'] = tk.DISABLED
+    	self.auxSelectOpponents_widget = self.selectOpponents_widget
     	# Label Cantidad Batallas
-    	self.labelSelect = tk.Label(self,text="Cantidad de Interacciones", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelSelect_widget = self.canvasBody.create_window(400, 140, window=self.labelSelect)
+    	self.labelSelectCB = tk.Label(self,text="Cantidad de Interacciones", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelSelectInter_widget = self.canvasBody.create_window(400, 140, window=self.labelSelectCB)
+    	self.auxLabelSelectInter_widget = self.LabelSelectInter_widget
     	# Scale
     	v = tk.DoubleVar()
     	self.scale = tk.Scale(self, variable = v, from_ = 10, to = 80000, resolution = 10, orient = tk.HORIZONTAL, length = 140, fg="#ffffff", font="#ffffff", bg="#283158", activebackground="#283158", highlightbackground="#283158",highlightcolor="#ffffff",troughcolor="#ffffff")
     	self.Scale_widget = self.canvasBody.create_window(399, 175, window=self.scale)
+    	self.auxScale_widget = self.Scale_widget
     	# Botón Iniciar Entrenamiento
     	self.startTraining = tk.Button(self, text='Iniciar Entrenamiento', anchor="center", command = self.IniciarEntrenamiento)
     	self.startTraining.configure(width = 20, height = 1)
     	self.startTraining_widget = self.canvasBody.create_window(400, 225, window=self.startTraining)
-    	self.auxStartTraining = self.startTraining
+    	self.auxstartTraining_widget = self.startTraining_widget
     	# IMG Exit
     	self.exitPNG = Image.open("IMGs/exit.png")
     	self.newExitPNG = self.exitPNG.convert(mode="RGBA")
@@ -894,9 +899,9 @@ class Modulo3(tk.Frame):
 
     def definirSeleccionarEquipo(self, eventObject):
     	if self.textVar.get() == "Nuevo Equipo":
-    		self.selectTeam['state'] = tk.NORMAL
+    		self.selectTeamPkmn['state'] = tk.NORMAL
     	else:
-    		self.selectTeam['state'] = tk.DISABLED
+    		self.selectTeamPkmn['state'] = tk.DISABLED
 
     def IniciarEntrenamiento(self):
     	# Add 6 Pokémon
@@ -998,6 +1003,11 @@ class Modulo3(tk.Frame):
 	    	self.update()
 	    	self.monitor(qProgreso)
 
+    def nuevoEntrenamiento(self):
+    	self.cbbTeam.config(state='normal')
+    	self.scale['state'] = tk.NORMAL
+    	self.startTraining['state'] = tk.NORMAL
+
     def monitor(self, q):
     	if self.p.is_alive():
     		# check the thread every 100ms
@@ -1019,9 +1029,153 @@ class Modulo3(tk.Frame):
     					print("Zacian-Crowned: {}".format("Kyogre | Groudon"))
     					print("Incineroar: {}".format("Landorus-Therian | Arcanine | Hitmontop"))
     					print("Thundurus-Incarnate: {}".format("Tornadus-Incarnate | Zapdos | Regieleki"))
+    					self.nuevoEntrenamiento()
+    					self.buttonReport()
     					return
     		except queue.Empty:
     			...
+
+    def buttonReport(self):
+    	# Al hacer clic en cada botón verde, debe aparecer la recomendación a la derecha, hardcodeado
+    	self.buttonPkmn1.configure(command= self.report1)
+    	self.buttonPkmn3.configure(command= self.report3)
+    	self.buttonPkmn6.configure(command= self.report6)
+
+    def report6(self):
+    	# Oculta Barra de la Derecha y aparece los íconos de los otros Pkmn
+    	self.canvasBody.delete(self.LabelSelectTeam_widget)
+    	self.canvasBody.delete(self.selectTeam_widget)
+    	self.canvasBody.delete(self.LabelSelectOpponents_widget)
+    	self.canvasBody.delete(self.Scale_widget)
+    	self.canvasBody.delete(self.startTraining_widget)
+    	self.canvasBody.delete(self.listbox_widget)
+    	self.canvasBody.delete(self.selectOpponents_widget)
+    	self.canvasBody.delete(self.LabelSelectInter_widget)
+    	try:
+    		self.canvasBody.delete(self.LabelR_widget)
+    		self.canvasBody.delete(self.barChart_widget)
+    		self.canvasBody.delete(self.barChart_widget2)
+    		self.canvasBody.delete(self.barChart_widget3)
+    	except:
+    		...
+    	# Report
+    	self.labelR = tk.Label(self,text="Recomendaciones", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelR_widget = self.canvasBody.create_window(400, 15, window=self.labelR)
+    	self.barChartPNG = Image.open("IMGs/tornadus-incarnate.png")
+    	self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
+    	self.barChartResized = self.newBarChartPNG.resize((90,90), Image.LANCZOS)
+    	self.barChartTK = ImageTk.PhotoImage(self.barChartResized)
+    	self.barChart_widget = self.canvasBody.create_image(400-50+10,115-50+5,image=self.barChartTK)
+    	self.barChartPNG2 = Image.open("IMGs/zapdos.png")
+    	self.newBarChartPNG2 = self.barChartPNG2.convert(mode="RGBA")
+    	self.barChartResized2 = self.newBarChartPNG2.resize((90,90), Image.LANCZOS)
+    	self.barChartTK2 = ImageTk.PhotoImage(self.barChartResized2)
+    	self.barChart_widget2 = self.canvasBody.create_image(490-50+10,115-50+5,image=self.barChartTK2)
+    	self.barChartPNG3 = Image.open("IMGs/regieleki.png")
+    	self.newBarChartPNG3 = self.barChartPNG3.convert(mode="RGBA")
+    	self.barChartResized3 = self.newBarChartPNG3.resize((90,90), Image.LANCZOS)
+    	self.barChartTK3 = ImageTk.PhotoImage(self.barChartResized3)
+    	self.barChart_widget3 = self.canvasBody.create_image(400-50+10,115-50+90+5,image=self.barChartTK3)
+    	# Botón Regresar
+    	self.startTraining2 = tk.Button(self, text='Regresar', anchor="center", command = self.regresar)
+    	self.startTraining2.configure(width = 20, height = 1)
+    	self.startTraining_widget2 = self.canvasBody.create_window(400, 225, window=self.startTraining2)
+    	self.LabelSelectTeam_widget = self.canvasBody.create_window(400, 15, window=self.labelSelectTeam)
+
+    def report3(self):
+    	# Oculta Barra de la Derecha y aparece los íconos de los otros Pkmn
+    	self.canvasBody.delete(self.LabelSelectTeam_widget)
+    	self.canvasBody.delete(self.selectTeam_widget)
+    	self.canvasBody.delete(self.LabelSelectOpponents_widget)
+    	self.canvasBody.delete(self.Scale_widget)
+    	self.canvasBody.delete(self.startTraining_widget)
+    	self.canvasBody.delete(self.listbox_widget)
+    	self.canvasBody.delete(self.selectOpponents_widget)
+    	self.canvasBody.delete(self.LabelSelectInter_widget)
+    	try:
+    		self.canvasBody.delete(self.LabelR_widget)
+    		self.canvasBody.delete(self.barChart_widget)
+    		self.canvasBody.delete(self.barChart_widget2)
+    		self.canvasBody.delete(self.barChart_widget3)
+    	except:
+    		...
+    	# Report
+    	self.labelR = tk.Label(self,text="Recomendaciones", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelR_widget = self.canvasBody.create_window(400, 15, window=self.labelR)
+    	self.barChartPNG = Image.open("IMGs/landorus-therian.png")
+    	self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
+    	self.barChartResized = self.newBarChartPNG.resize((90,90), Image.LANCZOS)
+    	self.barChartTK = ImageTk.PhotoImage(self.barChartResized)
+    	self.barChart_widget = self.canvasBody.create_image(400-50+10,115-50+5,image=self.barChartTK)
+    	self.barChartPNG2 = Image.open("IMGs/arcanine.png")
+    	self.newBarChartPNG2 = self.barChartPNG2.convert(mode="RGBA")
+    	self.barChartResized2 = self.newBarChartPNG2.resize((90,90), Image.LANCZOS)
+    	self.barChartTK2 = ImageTk.PhotoImage(self.barChartResized2)
+    	self.barChart_widget2 = self.canvasBody.create_image(490-50+10,115-50+5,image=self.barChartTK2)
+    	self.barChartPNG3 = Image.open("IMGs/hitmontop.png")
+    	self.newBarChartPNG3 = self.barChartPNG3.convert(mode="RGBA")
+    	self.barChartResized3 = self.newBarChartPNG3.resize((90,90), Image.LANCZOS)
+    	self.barChartTK3 = ImageTk.PhotoImage(self.barChartResized3)
+    	self.barChart_widget3 = self.canvasBody.create_image(400-50+10,115-50+90+5,image=self.barChartTK3)
+    	# Botón Regresar
+    	self.startTraining2 = tk.Button(self, text='Regresar', anchor="center", command = self.regresar)
+    	self.startTraining2.configure(width = 20, height = 1)
+    	self.startTraining_widget2 = self.canvasBody.create_window(400, 225, window=self.startTraining2)
+    	self.LabelSelectTeam_widget = self.canvasBody.create_window(400, 15, window=self.labelSelectTeam)
+
+    def report1(self):
+    	# Oculta Barra de la Derecha y aparece los íconos de los otros Pkmn
+    	self.canvasBody.delete(self.LabelSelectTeam_widget)
+    	self.canvasBody.delete(self.selectTeam_widget)
+    	self.canvasBody.delete(self.LabelSelectOpponents_widget)
+    	self.canvasBody.delete(self.Scale_widget)
+    	self.canvasBody.delete(self.startTraining_widget)
+    	self.canvasBody.delete(self.listbox_widget)
+    	self.canvasBody.delete(self.selectOpponents_widget)
+    	self.canvasBody.delete(self.LabelSelectInter_widget)
+    	try:
+    		self.canvasBody.delete(self.LabelR_widget)
+    		self.canvasBody.delete(self.barChart_widget)
+    		self.canvasBody.delete(self.barChart_widget2)
+    		self.canvasBody.delete(self.barChart_widget3)
+    	except:
+    		...
+    	# Report
+    	self.labelR = tk.Label(self,text="Recomendaciones", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.LabelR_widget = self.canvasBody.create_window(400, 15, window=self.labelR)
+    	self.barChartPNG = Image.open("IMGs/kyogre.png")
+    	self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
+    	self.barChartResized = self.newBarChartPNG.resize((90,90), Image.LANCZOS)
+    	self.barChartTK = ImageTk.PhotoImage(self.barChartResized)
+    	self.barChart_widget = self.canvasBody.create_image(400-50+10,115-50,image=self.barChartTK)
+    	self.barChartPNG2 = Image.open("IMGs/groudon.png")
+    	self.newBarChartPNG2 = self.barChartPNG2.convert(mode="RGBA")
+    	self.barChartResized2 = self.newBarChartPNG2.resize((90,90), Image.LANCZOS)
+    	self.barChartTK2 = ImageTk.PhotoImage(self.barChartResized2)
+    	self.barChart_widget2 = self.canvasBody.create_image(490-50+10,115-50,image=self.barChartTK2)
+    	# Botón Regresar
+    	self.startTraining2 = tk.Button(self, text='Regresar', anchor="center", command = self.regresar)
+    	self.startTraining2.configure(width = 20, height = 1)
+    	self.startTraining_widget2 = self.canvasBody.create_window(400, 225, window=self.startTraining2)
+    	self.LabelSelectTeam_widget = self.canvasBody.create_window(400, 15, window=self.labelSelectTeam)
+
+    def regresar(self):
+    	self.canvasBody.delete(self.LabelR_widget)
+    	self.canvasBody.delete(self.barChart_widget)
+    	self.canvasBody.delete(self.barChart_widget2)
+    	try:
+    		self.canvasBody.delete(self.barChart_widget3)
+    	except:
+    		...
+    	self.canvasBody.delete(self.startTraining_widget2)
+    	self.selectTeam_widget = self.canvasBody.create_window(400, 65, window=self.selectTeamPkmn)
+    	self.listbox_widget = self.canvasBody.create_window(399, 40, window=self.cbbTeam)
+    	self.selectOpponents_widget = self.canvasBody.create_window(400, 115, window=self.selectOpponents)
+    	self.startTraining_widget = self.canvasBody.create_window(400, 225, window=self.startTraining)
+    	self.Scale_widget = self.canvasBody.create_window(399, 175, window=self.scale)
+    	self.LabelSelectTeam_widget = self.canvasBody.create_window(400, 15, window=self.labelSelectTeam)
+    	self.LabelSelectInter_widget = self.canvasBody.create_window(400, 140, window=self.labelSelectCB)
+    	self.LabelSelectOpponents_widget = self.canvasBody.create_window(400, 90, window=self.labelSelectO)
 
     def SeleccionarOponentes(self):
     	...
@@ -1072,9 +1226,10 @@ class Modulo3(tk.Frame):
 
     def closeWindows1(self):
     	self.top.destroy()
-    	# Corregir Error
-    	if self.top2 is not None:
+    	try:
     		self.top2.destroy()
+    	except:
+    		...
 
     def preValidarEquipo(self):
     	self.q = multiprocessing.Queue()

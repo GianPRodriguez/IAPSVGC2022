@@ -115,34 +115,46 @@ def NeuralNetworkInput(battle):
             listNeuralNetworkInput.append(1.0)
         else:
             listNeuralNetworkInput.append(0.0)
-        if (battle.request_json)['active'][0]['moves'][0]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][0]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][0]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][0]['target'] == 'all':
+        try:
+            if (battle.request_json)['active'][0]['moves'][0]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][0]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][0]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][0]['target'] == 'all':
+                listNeuralNetworkInput.append(0.0)
+            else:
+                listNeuralNetworkInput.append(1.0)
+        except:
             listNeuralNetworkInput.append(0.0)
-        else:
-            listNeuralNetworkInput.append(1.0)
         if battle.user.active1.movePP[1] > 0:
             listNeuralNetworkInput.append(1.0)
         else:
             listNeuralNetworkInput.append(0.0)
-        if (battle.request_json)['active'][0]['moves'][1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][1]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][1]['target'] == 'all':
+        try:
+            if (battle.request_json)['active'][0]['moves'][1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][1]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][1]['target'] == 'all':
+                listNeuralNetworkInput.append(0.0)
+            else:
+                listNeuralNetworkInput.append(1.0)
+        except:
             listNeuralNetworkInput.append(0.0)
-        else:
-            listNeuralNetworkInput.append(1.0)
         if battle.user.active1.movePP[2] > 0:
             listNeuralNetworkInput.append(1.0)
         else:
             listNeuralNetworkInput.append(0.0)
-        if (battle.request_json)['active'][0]['moves'][2]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][2]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][2]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][2]['target'] == 'all':
+        try:
+            if (battle.request_json)['active'][0]['moves'][2]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][2]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][2]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][2]['target'] == 'all':
+                listNeuralNetworkInput.append(0.0)
+            else:
+                listNeuralNetworkInput.append(1.0)
+        except:
             listNeuralNetworkInput.append(0.0)
-        else:
-            listNeuralNetworkInput.append(1.0)
         if battle.user.active1.movePP[3] > 0:
             listNeuralNetworkInput.append(1.0)
         else:
             listNeuralNetworkInput.append(0.0)
-        if (battle.request_json)['active'][0]['moves'][3]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][3]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][3]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][3]['target'] == 'all':
+        try:
+            if (battle.request_json)['active'][0]['moves'][3]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][3]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][3]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][3]['target'] == 'all':
+                listNeuralNetworkInput.append(0.0)
+            else:
+                listNeuralNetworkInput.append(1.0)
+        except:
             listNeuralNetworkInput.append(0.0)
-        else:
-            listNeuralNetworkInput.append(1.0)
     else:
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
@@ -220,34 +232,46 @@ def NeuralNetworkInput(battle):
             listNeuralNetworkInput.append(1.0)
         else:
             listNeuralNetworkInput.append(0.0)
-        if (battle.request_json)['active'][1]['moves'][0]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][0]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][0]['target'] == 'self' or (battle.request_json)['active'][1]['moves'][0]['target'] == 'all':
+        try:
+            if (battle.request_json)['active'][1]['moves'][0]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][0]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][0]['target'] == 'self' or (battle.request_json)['active'][1]['moves'][0]['target'] == 'all':
+                listNeuralNetworkInput.append(0.0)
+            else:
+                listNeuralNetworkInput.append(1.0)
+        except:
             listNeuralNetworkInput.append(0.0)
-        else:
-            listNeuralNetworkInput.append(1.0)
         if battle.user.active2.movePP[1] > 0:
             listNeuralNetworkInput.append(1.0)
         else:
             listNeuralNetworkInput.append(0.0)
-        if (battle.request_json)['active'][1]['moves'][1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][1]['target'] == 'self' or (battle.request_json)['active'][1]['moves'][1]['target'] == 'all':
+        try:
+            if (battle.request_json)['active'][1]['moves'][1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][1]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][1]['target'] == 'self' or (battle.request_json)['active'][1]['moves'][1]['target'] == 'all':
+                listNeuralNetworkInput.append(0.0)
+            else:
+                listNeuralNetworkInput.append(1.0)
+        except:
             listNeuralNetworkInput.append(0.0)
-        else:
-            listNeuralNetworkInput.append(1.0)
         if battle.user.active2.movePP[2] > 0:
             listNeuralNetworkInput.append(1.0)
         else:
             listNeuralNetworkInput.append(0.0)
-        if (battle.request_json)['active'][1]['moves'][2]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][2]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][2]['target'] == 'self' or (battle.request_json)['active'][1]['moves'][2]['target'] == 'all':
+        try:
+            if (battle.request_json)['active'][1]['moves'][2]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][2]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][2]['target'] == 'self' or (battle.request_json)['active'][1]['moves'][2]['target'] == 'all':
+                listNeuralNetworkInput.append(0.0)
+            else:
+                listNeuralNetworkInput.append(1.0)
+        except:
             listNeuralNetworkInput.append(0.0)
-        else:
-            listNeuralNetworkInput.append(1.0)
         if battle.user.active2.movePP[3] > 0:
             listNeuralNetworkInput.append(1.0)
         else:
             listNeuralNetworkInput.append(0.0)
-        if (battle.request_json)['active'][1]['moves'][3]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][3]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][3]['target'] == 'self' or (battle.request_json)['active'][1]['moves'][3]['target'] == 'all':
+        try:
+            if (battle.request_json)['active'][1]['moves'][3]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][1]['moves'][3]['target'] == 'allySide' or (battle.request_json)['active'][1]['moves'][3]['target'] == 'self' or (battle.request_json)['active'][1]['moves'][3]['target'] == 'all':
+                listNeuralNetworkInput.append(0.0)
+            else:
+                listNeuralNetworkInput.append(1.0)
+        except:
             listNeuralNetworkInput.append(0.0)
-        else:
-            listNeuralNetworkInput.append(1.0)
     else:
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)

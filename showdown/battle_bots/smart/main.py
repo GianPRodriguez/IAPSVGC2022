@@ -215,10 +215,13 @@ class BattleBot(Battle):
                                 dynamax1 = 0
                                 # ¿Actualmente es Dynamax?
                                 if constants.DYNAMAX in battle.user.active1.volatile_statuses:
-                                    if (battle.request_json)['active'][0]['maxMoves']['maxMoves'][nMoveSwitch1-1]['target'] == 'adjacentFoe':
+                                    try:
+                                        if (battle.request_json)['active'][0]['maxMoves']['maxMoves'][nMoveSwitch1-1]['target'] == 'adjacentFoe':
+                                            toMove1 = random.choice([1, 2])
+                                        else: # 'self'
+                                            toMove1 = 0
+                                    except:
                                         toMove1 = random.choice([1, 2])
-                                    else: # 'self'
-                                        toMove1 = 0
                                 else:
                                     # Ahora, ¿tiene un solo objetivo?
                                     if (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacentFoes' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allAdjacent' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'allySide' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'self' or (battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target'] == 'all':
