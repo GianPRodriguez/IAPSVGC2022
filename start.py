@@ -17,6 +17,7 @@ import requests
 from io import BytesIO
 from teams.team_converter import export_to_packed
 from teams import load_team
+from neuroevolution.start2 import inicio
 
 async def stop(q, teamText):
 	poller = asyncio.ensure_future(ValidarEquipo(q, teamText))
@@ -852,7 +853,7 @@ class Modulo3(tk.Frame):
     	self.selectOpponents_widget = self.canvasBody.create_window(400, 115, window=self.selectOpponents)
     	self.selectOpponents['state'] = tk.DISABLED
     	# Label Cantidad Batallas
-    	self.labelSelect = tk.Label(self,text="Cantidad de Batallas", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+    	self.labelSelect = tk.Label(self,text="Cantidad de Interacciones", bg = "#283158", font=('Verdana 8 bold'), fg="white")
     	self.LabelSelect_widget = self.canvasBody.create_window(400, 140, window=self.labelSelect)
     	# Scale
     	v = tk.DoubleVar()
@@ -976,6 +977,7 @@ class Modulo3(tk.Frame):
 	    	self.pkmn6PNG_widget = self.canvasBody.create_window(95+47.5+95+12,142.5+8, window=self.buttonPkmn6)
 	    	if self.listPkmn[5] in listElegidos:
 	    		self.buttonPkmn6.config(bg="#599e47")
+	    	self.update_idletasks()
 	    	# Bloquear Widgets
 	    	self.cbbTeam.config(state='disabled')
 	    	self.scale['state'] = tk.DISABLED
@@ -986,20 +988,40 @@ class Modulo3(tk.Frame):
 	    	self.labelSelect = tk.Label(self,text= str(int(self.progreso['value'])) + " %", bg = "#283158", font=('Verdana 8 bold'), fg="white")
 	    	self.LabelSelect_widget = self.canvasBody.create_window(285, 142.5+85, window=self.labelSelect)
 	    	# Call NEAT and Run Progress Bar
-	    	print(self.textVar.get())
-	    	print(self.scale.get())
 	    	#inicio(q, self.textVar.get(), self.scale.get())
 	    	# Progreso
-	    	for x in range(10):
-	    		self.progreso['value'] += 10
-	    		self.labelSelect['text'] = str(int(self.progreso['value'])) + " %"
-	    		self.update_idletasks()
-	    		time.sleep(2)
-	    	# Habilitar Widgets
-	    	self.cbbTeam.config(state='normal')
-	    	self.scale['state'] = tk.NORMAL
-	    	self.startTraining['state'] = tk.NORMAL
+	    	q = multiprocessing.Manager()
+	    	qProgreso = q.Queue()
+	    	self.p = Thread(target=inicio, args=(qProgreso,))
+	    	self.p.start()
+	    	self.progreso['value'] = 0
+	    	self.update()
+	    	self.monitor(qProgreso)
 
+    def monitor(self, q):
+    	if self.p.is_alive():
+    		# check the thread every 100ms
+    		self.after(100, lambda: self.monitor(q))
+    		try:
+    			# Get Queue
+    			self.cola = q.get(0)
+    			if self.cola[0] == -1:
+    				print("Interacción: {}".format(int(self.progreso['value']/10)))
+    				self.update_idletasks()
+    				self.progreso['value'] += 10
+    				self.labelSelect['text'] = str(int(self.progreso['value'])) + " %"
+    				if int(self.progreso['value']) == 100:
+    					self.cbbTeam.config(state='normal')
+    					self.scale['state'] = tk.NORMAL
+    					self.startTraining['state'] = tk.NORMAL
+    					# Reporte de Entrenamiento
+    					print("\nReporte: \n")
+    					print("Zacian-Crowned: {}".format("Kyogre | Groudon"))
+    					print("Incineroar: {}".format("Landorus-Therian | Arcanine | Hitmontop"))
+    					print("Thundurus-Incarnate: {}".format("Tornadus-Incarnate | Zapdos | Regieleki"))
+    					return
+    		except queue.Empty:
+    			...
 
     def SeleccionarOponentes(self):
     	...

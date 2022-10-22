@@ -2309,7 +2309,7 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
         if agentTraining:
             mensaje = await ps_websocket_client.receive_message2()
             if mensaje is None:
-                print("[WARNING]  DEMORA EN LA RECEPCIÓN DEL ESTADO DEL ENTORNO")
+                #print("[WARNING]  DEMORA EN LA RECEPCIÓN DEL ESTADO DEL ENTORNO")
                 listNeuralNetworkInput = NeuralNetworkInput(battle)
                 if battle.cantActions != 0:
                     q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
@@ -2321,7 +2321,7 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
         # [Invalid choice] Sorry, too late to make a different move; the next turn has already started
         split_msg = mensaje.split('|')
         if len(split_msg) < 3:
-            print("OJO: MENSAJE CON LONGITUD 2: {} - {}".format(split_msg[0], split_msg[1]))
+            #print("OJO: MENSAJE CON LONGITUD 2: {} - {}".format(split_msg[0], split_msg[1]))
             listNeuralNetworkInput = NeuralNetworkInput(battle)
             if battle.cantActions != 0:
                 q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
@@ -2330,7 +2330,7 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
             return "None", q, battle.battle_tag
         else:
             if split_msg[2] == '[Invalid choice] Sorry, too late to make a different move; the next turn has already started':
-                print("[WARNING]  MÁS DE UNA ACCIÓN EN UN TURNO")
+                #print("[WARNING]  MÁS DE UNA ACCIÓN EN UN TURNO")
                 listNeuralNetworkInput = NeuralNetworkInput(battle)
                 if battle.cantActions != 0:
                     q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
@@ -2338,7 +2338,7 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
                     q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(-1)])
                 return "None", q, battle.battle_tag
             if battle.cantInvActionsSeg == 20:
-                print("[WARNING]  MÁS DE 20 ACCIONES INVÁLIDAS SEGUIDAS")
+                #print("[WARNING]  MÁS DE 20 ACCIONES INVÁLIDAS SEGUIDAS")
                 listNeuralNetworkInput = NeuralNetworkInput(battle)
                 if battle.cantActions != 0:
                     q.put([-10,listNeuralNetworkInput,battle.turn+1,-9999,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])

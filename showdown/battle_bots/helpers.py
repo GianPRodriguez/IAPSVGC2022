@@ -68,7 +68,10 @@ async def format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, 
 async def getMoveName(battle, position, nMoveSwitch, dynamax):
     if position == 0:
         if dynamax == 1 or battle.user.active1.isDynamax == True:
-            maxMoveWS = battle.request_json.get('active','False')[position].get('maxMoves','False').get('maxMoves','False')[nMoveSwitch].get('move', 'False')
+            try:
+                maxMoveWS = battle.request_json.get('active','False')[position].get('maxMoves','False').get('maxMoves','False')[nMoveSwitch].get('move', 'False')
+            except:
+                ...
             if maxMoveWS in constants.maxMoves:
                 return constants.maxMoves[maxMoveWS]
             else:
@@ -77,7 +80,10 @@ async def getMoveName(battle, position, nMoveSwitch, dynamax):
             return battle.request_json.get('active','False')[position].get('moves','False')[nMoveSwitch].get('move', 'False')
     elif position == 1:
         if dynamax == 1 or battle.user.active2.isDynamax == True:
-            maxMoveWS = battle.request_json.get('active','False')[position].get('maxMoves','False').get('maxMoves','False')[nMoveSwitch].get('move', 'False')
+            try:
+                maxMoveWS = battle.request_json.get('active','False')[position].get('maxMoves','False').get('maxMoves','False')[nMoveSwitch].get('move', 'False')
+            except:
+                ...
             if maxMoveWS in constants.maxMoves:
                 return constants.maxMoves[maxMoveWS]
             else:
