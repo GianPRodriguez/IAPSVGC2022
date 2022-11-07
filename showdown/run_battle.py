@@ -2232,9 +2232,9 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q)
 
 async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, q50, qm50, q150, botMode, training, agentTraining, set_request_json=True):
     if agentTraining:
-        battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("drl"))
+        battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("smart"))
     else:
-        battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("drl"))
+        battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("smart"))
     # Obtengo el id de la batalla y el nombre del oponente
     battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client, q)
     # Mientras...

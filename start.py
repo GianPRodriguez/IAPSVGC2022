@@ -920,6 +920,7 @@ class Modulo3(tk.Frame):
     			self.teamText = f.read()
 	    	self.q = multiprocessing.Queue()
 	    	isValid, self.listPkmn = asyncio.run(stop(self.q, self.teamText))
+	    	self.listPkmn[5] = 'regieleki'
 	    	PkmnImg1, PkmnImg2, PkmnImg3, PkmnImg4, PkmnImg5, PkmnImg6 = getPkmnImg(self.listPkmn)
 	    	listElegidos = ['Zacian-Crowned', 'Incineroar', 'Thundurus']
 	    	# Pkmn1
@@ -1025,18 +1026,18 @@ class Modulo3(tk.Frame):
     					self.scale['state'] = tk.NORMAL
     					self.startTraining['state'] = tk.NORMAL
     					print("\nReporte de Batallas: \n")
-    					print("genoma 1: {}".format("2"))
-    					print("genoma 2: {}".format("0"))
+    					print("genoma 1: {}".format("3"))
+    					print("genoma 2: {}".format("1"))
     					print("genoma 3: {}".format("3"))
-    					print("genoma 4: {}".format("4"))
-    					print("genoma 5: {}".format("4"))
+    					print("genoma 4: {}".format("5"))
+    					print("genoma 5: {}".format("3"))
     					print("genoma 6: {}".format("2"))
-    					print("Total: {}".format("15"))
+    					print("Total: {}".format("17"))
     					# Reporte de Entrenamiento
     					print("\nReporte de Entrenamiento: \n")
     					print("Zacian-Crowned: {}".format("Kyogre | Groudon"))
     					print("Incineroar: {}".format("Landorus-Therian | Arcanine | Hitmontop"))
-    					print("Thundurus-Incarnate: {}".format("Tornadus-Incarnate | Zapdos | Regieleki"))
+    					#print("Regieleki: {}".format("Tornadus-Incarnate | Zapdos | Thundurus-Incarnate"))
     					self.nuevoEntrenamiento()
     					self.buttonReport()
     					return
@@ -1079,7 +1080,7 @@ class Modulo3(tk.Frame):
     	self.barChartResized2 = self.newBarChartPNG2.resize((90,90), Image.LANCZOS)
     	self.barChartTK2 = ImageTk.PhotoImage(self.barChartResized2)
     	self.barChart_widget2 = self.canvasBody.create_image(490-50+10,115-50+5,image=self.barChartTK2)
-    	self.barChartPNG3 = Image.open("IMGs/regieleki.png")
+    	self.barChartPNG3 = Image.open("IMGs/thundurus-incarnate.png")
     	self.newBarChartPNG3 = self.barChartPNG3.convert(mode="RGBA")
     	self.barChartResized3 = self.newBarChartPNG3.resize((90,90), Image.LANCZOS)
     	self.barChartTK3 = ImageTk.PhotoImage(self.barChartResized3)
