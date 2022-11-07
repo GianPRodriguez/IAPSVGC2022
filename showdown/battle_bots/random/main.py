@@ -30,7 +30,7 @@ class BattleBot(Battle):
         # Regreso los 4 enteros
         return eleccion0, eleccion1, eleccion2, eleccion3
 
-    async def action_battle(self, battle):
+    async def action_battle(self, battle, state):
         moveSwitch1 = None
         nMoveSwitch1 = 0
         dynamax1 = 0

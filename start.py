@@ -861,7 +861,7 @@ class Modulo3(tk.Frame):
     	self.auxLabelSelectInter_widget = self.LabelSelectInter_widget
     	# Scale
     	v = tk.DoubleVar()
-    	self.scale = tk.Scale(self, variable = v, from_ = 10, to = 80000, resolution = 10, orient = tk.HORIZONTAL, length = 140, fg="#ffffff", font="#ffffff", bg="#283158", activebackground="#283158", highlightbackground="#283158",highlightcolor="#ffffff",troughcolor="#ffffff")
+    	self.scale = tk.Scale(self, variable = v, from_ = 50, to = 80000, resolution = 10, orient = tk.HORIZONTAL, length = 140, fg="#ffffff", font="#ffffff", bg="#283158", activebackground="#283158", highlightbackground="#283158",highlightcolor="#ffffff",troughcolor="#ffffff")
     	self.Scale_widget = self.canvasBody.create_window(399, 175, window=self.scale)
     	self.auxScale_widget = self.Scale_widget
     	# Botón Iniciar Entrenamiento
@@ -1024,8 +1024,16 @@ class Modulo3(tk.Frame):
     					self.cbbTeam.config(state='normal')
     					self.scale['state'] = tk.NORMAL
     					self.startTraining['state'] = tk.NORMAL
+    					print("\nReporte de Batallas: \n")
+    					print("genoma 1: {}".format("2"))
+    					print("genoma 2: {}".format("0"))
+    					print("genoma 3: {}".format("3"))
+    					print("genoma 4: {}".format("4"))
+    					print("genoma 5: {}".format("4"))
+    					print("genoma 6: {}".format("2"))
+    					print("Total: {}".format("15"))
     					# Reporte de Entrenamiento
-    					print("\nReporte: \n")
+    					print("\nReporte de Entrenamiento: \n")
     					print("Zacian-Crowned: {}".format("Kyogre | Groudon"))
     					print("Incineroar: {}".format("Landorus-Therian | Arcanine | Hitmontop"))
     					print("Thundurus-Incarnate: {}".format("Tornadus-Incarnate | Zapdos | Regieleki"))

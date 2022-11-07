@@ -1523,6 +1523,7 @@ def NeuralNetworkInput(battle):
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
+        listNeuralNetworkInput.append(0.0)
     elif battle.opponent.active2.type1 == 'dark':
         listNeuralNetworkInput.append(0.0)
         listNeuralNetworkInput.append(0.0)
@@ -2103,6 +2104,7 @@ def battle_is_finished(battle_tag, msg):
 
 # Retorna el Mensaje de Acción
 async def accion_batalla(battle):
+    listNeuralNetworkInput = None
     # ¿Hay solicitud de JSON pendiente?
     if battle.request_json:
         battle.user.updatePkmnUser(battle.request_json, first_turn=False)
@@ -2114,7 +2116,7 @@ async def accion_batalla(battle):
     if battle.agentTraining:
         listNeuralNetworkInput = NeuralNetworkInput(battle)
     # Se define la mejor acción
-    battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, battle.reward, battle.score = await battle.action_battle(battle)
+    battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, battle.reward, battle.score = await battle.action_battle(battle, listNeuralNetworkInput)
     mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
     #print("MENSAJE: {}".format(mensaje))
     # El agente inteligente no toma decisiones en force_switch...
@@ -2232,7 +2234,7 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, 
     if agentTraining:
         battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("drl"))
     else:
-        battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
+        battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("drl"))
     # Obtengo el id de la batalla y el nombre del oponente
     battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client, q)
     # Mientras...
@@ -2386,8 +2388,8 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
             if agentTraining:
                 action_required, battle = await update_battle(battle, mensaje)
                 #battle.imprimir()
-                battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, battle.reward, battle.score = await battle.action_battle(battle)
                 listNeuralNetworkInput = NeuralNetworkInput(battle)
+                battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, battle.reward, battle.score = await battle.action_battle(battle, listNeuralNetworkInput)
                 if battle.cantActions != 0:
                     battle.q.put([-10,listNeuralNetworkInput,battle.turn+1,battle.reward,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
                 else:

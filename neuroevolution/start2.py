@@ -284,7 +284,7 @@ def inicio(qProgreso):
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
     #p = neat.Population(config)
     # Restauración
-    p = neat.Checkpointer.restore_checkpoint('./neuroevolution/modelos/neat-checkpoint-6523')
+    p = neat.Checkpointer.restore_checkpoint('./neuroevolution/modelos/neat-checkpoint-18965')
     # Se agrega un reporte cuyo progreso será mostrado en el terminal
     #p.add_reporter(neat.StdOutReporter(True))
     #stats = neat.StatisticsReporter()

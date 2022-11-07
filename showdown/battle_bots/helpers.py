@@ -70,12 +70,12 @@ async def getMoveName(battle, position, nMoveSwitch, dynamax):
         if dynamax == 1 or battle.user.active1.isDynamax == True:
             try:
                 maxMoveWS = battle.request_json.get('active','False')[position].get('maxMoves','False').get('maxMoves','False')[nMoveSwitch].get('move', 'False')
+                if maxMoveWS in constants.maxMoves:
+                    return constants.maxMoves[maxMoveWS]
+                else:
+                    print("NO DEBE ENTRAR ACÁ - if dynamax == 1 or battle.user.active1.isDynamax == True:")
             except:
                 ...
-            if maxMoveWS in constants.maxMoves:
-                return constants.maxMoves[maxMoveWS]
-            else:
-                print("NO DEBE ENTRAR ACÁ - if dynamax == 1 or battle.user.active1.isDynamax == True:")
         else:
             return battle.request_json.get('active','False')[position].get('moves','False')[nMoveSwitch].get('move', 'False')
     elif position == 1:

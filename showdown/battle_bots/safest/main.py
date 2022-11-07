@@ -22,7 +22,7 @@ class BattleBot(Battle):
         # Regreso los 4 enteros
         return int(eleccion0), int(eleccion1), int(eleccion2), int(eleccion3)
 
-    async def action_battle(self, battle):
+    async def action_battle(self, battle, state):
         # Configurado para INPUT por CMD
         print('Por favor, responda las siguientes preguntas...')
         print()

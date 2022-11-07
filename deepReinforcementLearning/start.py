@@ -42,7 +42,7 @@ class DDQNAgent:
         
         self.epsilon = 1.00 						# Factor de exploration inicial
         self.epsilon_min = 0.01 					# Factor de exploration minimo
-        self.epsilon_decay = 0.998 					# Factor de decaimiento del factor de exploracion: 1*0.998*0.998*...
+        self.epsilon_decay = 0.98 					# Factor de decaimiento del factor de exploracion: 1*0.998*0.998*...
         if model is None:
         	self.model = self._build_model() 		# Construye el modelo neuronal a entrenar 
         else:
@@ -173,7 +173,7 @@ def inicio():
 	# Lista de Rewards
 	score_list = []
 	# Número de Batallas:
-	EPISODES = 500
+	EPISODES = 5000
 	# Tamaño del lote: 500 interacciones
 	batch_size = 50
 	# Neuronas de entrada
@@ -182,7 +182,7 @@ def inicio():
 	action_size = 219
 	# Se crea al agente
 	#agente = DDQNAgent(state_size, action_size, None)
-	agente = DDQNAgent(state_size, action_size, tf.keras.models.load_model("deepReinforcementLearning/modelos/neat-checkpoint-5.0/"))
+	agente = DDQNAgent(state_size, action_size, tf.keras.models.load_model("deepReinforcementLearning/modelos/neat-checkpoint-15.0/"))
 	# Para cada Batalla...
 	for e in range(EPISODES):
 		q1 = queue.Queue()
