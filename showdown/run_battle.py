@@ -2115,6 +2115,7 @@ async def accion_batalla(battle):
     # Actualizo los valores de las Neuronas de Entrada
     if battle.agentTraining:
         listNeuralNetworkInput = NeuralNetworkInput(battle)
+    #listNeuralNetworkInput = NeuralNetworkInput(battle)
     # Se define la mejor acción
     battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, battle.reward, battle.score = await battle.action_battle(battle, listNeuralNetworkInput)
     mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
@@ -2193,7 +2194,7 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
         aux.append(battle.user.reserved[eleccion2-1])
         aux.append(battle.user.reserved[eleccion3-1])
         battle.user.reserved = deepcopy(aux)
-        await ps_websocket_client.send_message(battle.battle_tag, mensaje)
+    await ps_websocket_client.send_message(battle.battle_tag, mensaje)
     return battle
 
 
@@ -2420,3 +2421,4 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
                         await ps_websocket_client.send_message2(battle.battle_tag, mensaje)
                     else:
                         await ps_websocket_client.send_message(battle.battle_tag, mensaje)
+                #await ps_websocket_client.send_message(battle.battle_tag, mensaje)

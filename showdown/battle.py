@@ -62,6 +62,8 @@ class Battle(ABC):
             # pkmn_string = "Lapras, L50, M"
             # Add Types Moves
             name = pkmn_string.partition(",")[0]
+            if name.lower() == 'mimikyu':
+                name = 'mimikyu-disguised'
             if name.lower() in constants.standardName:
                 namePkmn = constants.standardName[name.lower()]
             else:
@@ -410,7 +412,7 @@ class Pokemon:
             print(key, ' : ', value)
 
     def HP_BATTLE_CALCULATE(self, HP_base):
-        return math.floor(((2*HP_base+constants.IV+(constants.EV/4))*constants.LEVEL)/100) + constants.LEVEL + 10
+        return math.floor(((2*int(HP_base)+int(constants.IV)+(int(constants.EV)/4))*int(constants.LEVEL))/100) + int(constants.LEVEL) + 10
 
     def OTHER_STAT_CALCULATE(self, STAT_base, modifier, defense):
         if modifier and defense:

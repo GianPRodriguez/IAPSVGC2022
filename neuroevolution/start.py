@@ -297,7 +297,7 @@ def inicio():
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
     p = neat.Population(config)
     # Restauración
-    #p = neat.Checkpointer.restore_checkpoint('./neuroevolution/modelos/neat-checkpoint-18917')
+    p = neat.Checkpointer.restore_checkpoint('./neuroevolution/modelos/neat-checkpoint-28098')
     # Se agrega un reporte cuyo progreso será mostrado en el terminal
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
@@ -307,7 +307,7 @@ def inicio():
     pe = neat.ParallelEvaluator(multiprocessing.cpu_count(), eval_genome, iterador, contador, q1, q2, q50, qm50, q150, listas)
     # Se evalúan las redes neuronales en 50 cantidad de interacciones, luego se agrupa las gráficas
     try:
-        winner = p.run(pe.evaluate, 10)
+        winner = p.run(pe.evaluate, 500)
     except:
         traceback.print_exc()
     print("--- FIN DEL PROGRAMA ---")
@@ -316,9 +316,9 @@ def inicio():
     #with open(titulo, 'wb') as f:
     #    pickle.dump(winner, f)
     # Se elabora las gráficas correspondientes al entrenamiento
-    visualize.draw_net(config, winner, True)  # dibuja la topologia ganadora
-    #visualize.plot_stats(stats, ylog=False, view=True,filename='./neuroevolution/reportes/avg_fitness.svg')         # visualiza estadisticas
-    #visualize.plot_species(stats, view=True, filename='./neuroevolution/reportes/speciation.svg')                   # visualiza especies
+    # visualize.draw_net(config, winner, True)  # dibuja la topologia ganadora
+    visualize.plot_stats(stats, ylog=False, view=True,filename='./neuroevolution/reportes/avg_fitness.svg')         # visualiza estadisticas
+    visualize.plot_species(stats, view=True, filename='./neuroevolution/reportes/speciation.svg')                   # visualiza especies
     # Prueba pequeña:
     netWinner = neat.nn.FeedForwardNetwork.create(winner, config)
     action_values = netWinner.activate(STATE)

@@ -71,6 +71,8 @@ def switch_or_drag(battle, split_msg):
     # |switch|p1a: Incineroar|Incineroar, L50, M|190/202
     # ¿El cambio es hecho por el opponente?
     name = split_msg[3].partition(",")[0]
+    if name.lower() == 'mimikyu':
+        name = "mimikyu-disguised"
     if name.lower() in constants.standardName:
         namePkmn = constants.standardName[name.lower()]
     else:
@@ -905,45 +907,54 @@ def set_opponent_ability_from_ability_tag(battle, split_msg):
 
 # Cambio de forma permanente
 def form_change(battle, split_msg):
-    # split_msg = ["","detailschange","p2a: Metagross","Metagross-Mega, L76"]
-    # split_msg = ["","detailschange","p1a: Zygarde","Zygarde-Complete, L50"]
+    # split_msg = ["","detailschange","p2a: Metagross","Metagross-Mega", "L76"]
+    # split_msg = ["","detailschange","p1a: Zygarde","Zygarde-Complete", "L50"]
     name = split_msg[3].partition(",")[0]
     if name.lower() in constants.standardName:
         namePkmn = constants.standardName[name.lower()]
     else:
         namePkmn = name.lower()
-    print(namePkmn)
-    if namePkmn == "mimikyu":
-        return battle
     if is_opponent(battle, split_msg):
         if split_msg[2].startswith("p2"):
             # ¿p2a o p2b?
             if split_msg[2].startswith("p2a"):
-                auxDynamax = battle.opponent.active1.isDynamax
-                volatile_statusAux = battle.opponent.active1.volatile_statuses
-                battle.opponent.active1 = Pokemon(namePkmn, 0, True)
-                battle.opponent.active1.isDynamax = auxDynamax
-                battle.opponent.active1.volatile_statuses = volatile_statusAux
+                if namePkmn == 'mimikyu':
+                    battle.opponent.active1.name = 'mimikyu-busted'
+                else:
+                    auxDynamax = battle.opponent.active1.isDynamax
+                    volatile_statusAux = battle.opponent.active1.volatile_statuses
+                    battle.opponent.active1 = Pokemon(namePkmn, 0, True)
+                    battle.opponent.active1.isDynamax = auxDynamax
+                    battle.opponent.active1.volatile_statuses = volatile_statusAux
             else:
-                auxDynamax = battle.opponent.active2.isDynamax
-                volatile_statusAux = battle.opponent.active2.volatile_statuses
-                battle.opponent.active2 = Pokemon(namePkmn, 0, True)
-                battle.opponent.active2.isDynamax = auxDynamax
-                battle.opponent.active2.volatile_statuses = volatile_statusAux
+                if namePkmn == 'mimikyu':
+                    battle.opponent.active2.name = 'mimikyu-busted'
+                else:
+                    auxDynamax = battle.opponent.active2.isDynamax
+                    volatile_statusAux = battle.opponent.active2.volatile_statuses
+                    battle.opponent.active2 = Pokemon(namePkmn, 0, True)
+                    battle.opponent.active2.isDynamax = auxDynamax
+                    battle.opponent.active2.volatile_statuses = volatile_statusAux
         else:
             # ¿p1a o p1b?
             if split_msg[2].startswith("p1a"):
-                auxDynamax = battle.opponent.active1.isDynamax
-                volatile_statusAux = battle.opponent.active1.volatile_statuses
-                battle.opponent.active1 = Pokemon(namePkmn, 0, True)
-                battle.opponent.active1.isDynamax = auxDynamax
-                battle.opponent.active1.volatile_statuses = volatile_statusAux
+                if namePkmn == 'mimikyu':
+                    battle.opponent.active1.name = 'mimikyu-busted'
+                else:
+                    auxDynamax = battle.opponent.active1.isDynamax
+                    volatile_statusAux = battle.opponent.active1.volatile_statuses
+                    battle.opponent.active1 = Pokemon(namePkmn, 0, True)
+                    battle.opponent.active1.isDynamax = auxDynamax
+                    battle.opponent.active1.volatile_statuses = volatile_statusAux
             else:
-                auxDynamax = battle.opponent.active2.isDynamax
-                volatile_statusAux = battle.opponent.active2.volatile_statuses
-                battle.opponent.active2 = Pokemon(namePkmn, 0, True)
-                battle.opponent.active2.isDynamax = auxDynamax
-                battle.opponent.active2.volatile_statuses = volatile_statusAux
+                if namePkmn == 'mimikyu':
+                    battle.opponent.active2.name = 'mimikyu-busted'
+                else:
+                    auxDynamax = battle.opponent.active2.isDynamax
+                    volatile_statusAux = battle.opponent.active2.volatile_statuses
+                    battle.opponent.active2 = Pokemon(namePkmn, 0, True)
+                    battle.opponent.active2.isDynamax = auxDynamax
+                    battle.opponent.active2.volatile_statuses = volatile_statusAux
     else:
         if split_msg[2].startswith("p1"):
             # ¿p1a o p1b?
