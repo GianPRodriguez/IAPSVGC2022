@@ -2113,9 +2113,9 @@ async def accion_batalla(battle):
         # Los imprimo...
         #battle.imprimir()
     # Actualizo los valores de las Neuronas de Entrada
-    if battle.agentTraining:
-        listNeuralNetworkInput = NeuralNetworkInput(battle)
-    #listNeuralNetworkInput = NeuralNetworkInput(battle)
+    #if battle.agentTraining:
+    #    listNeuralNetworkInput = NeuralNetworkInput(battle)
+    listNeuralNetworkInput = NeuralNetworkInput(battle)
     # Se define la mejor acción
     battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, battle.reward, battle.score = await battle.action_battle(battle, listNeuralNetworkInput)
     mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
@@ -2168,8 +2168,8 @@ async def accion_batalla(battle):
                         break
                 else:
                     print("ERROR {} RECIBIDO T".format(cola[0]))
-    #if self.randomTraining: # los parametros vienen de la cola
-    #    mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
+    if self.randomTraining: # los parametros vienen de la cola
+        mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
     # Retorno el mensaje listo para enviarlo al WebSocket
     return battle, mensaje
 
@@ -2233,9 +2233,9 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q)
 
 async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, q50, qm50, q150, botMode, training, agentTraining, set_request_json=True):
     if agentTraining:
-        battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("smart"))
+        battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("drl"))
     else:
-        battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("smart"))
+        battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("drl"))
     # Obtengo el id de la batalla y el nombre del oponente
     battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client, q)
     # Mientras...
@@ -2413,12 +2413,12 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
             if (action_required and not battle.wait):
                 # Escoge el mejor movimiento y lo envía al websocket
                 battle, mensaje = await accion_batalla(battle)
-                if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
-                    if not training:
-                        # Imprimo en CMD la acción
-                        print("[SEND]     {}".format(mensaje))
-                    if agentTraining:
-                        await ps_websocket_client.send_message2(battle.battle_tag, mensaje)
-                    else:
-                        await ps_websocket_client.send_message(battle.battle_tag, mensaje)
-                #await ps_websocket_client.send_message(battle.battle_tag, mensaje)
+                #if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
+                #    if not training:
+                #        # Imprimo en CMD la acción
+                #        print("[SEND]     {}".format(mensaje))
+                #    if agentTraining:
+                #        await ps_websocket_client.send_message2(battle.battle_tag, mensaje)
+                #    else:
+                #        await ps_websocket_client.send_message(battle.battle_tag, mensaje)
+                await ps_websocket_client.send_message(battle.battle_tag, mensaje)
