@@ -334,35 +334,35 @@ class Modulo1(tk.Frame):
 			self.auxController.destroy()
 
 class Modulo2(tk.Frame):
-    def __init__(self, parent, controller):
-    	tk.Frame.__init__(self, parent)
-    	self.auxController = controller
-    	# Canvas Head
-    	self.canvasHead = tk.Canvas(self, width=500, height=50, bg="#283158")
-    	self.canvasHead.place(x=0, y=0, anchor = tk.CENTER)
-    	self.canvasHead.create_text(250, 25, text="Módulo de Análisis", fill="white", font=('Verdana 15 bold'))
-    	self.canvasHead.pack()
+	def __init__(self, parent, controller):
+		tk.Frame.__init__(self, parent)
+		self.auxController = controller
+		# Canvas Head
+		self.canvasHead = tk.Canvas(self, width=500, height=50, bg="#283158")
+		self.canvasHead.place(x=0, y=0, anchor = tk.CENTER)
+		self.canvasHead.create_text(250, 25, text="Módulo de Análisis", fill="white", font=('Verdana 15 bold'))
+		self.canvasHead.pack()
     	# Canvas Body
-    	self.canvasBody = tk.Canvas(self, width=500, height=259, bg="#283158")
-    	self.canvasBody.create_rectangle(0,0,310,259, outline='white', width=3)
-    	self.canvasBody.pack()
+		self.canvasBody = tk.Canvas(self, width=500, height=259, bg="#283158")
+		self.canvasBody.create_rectangle(0,0,310,259, outline='white', width=3)
+		self.canvasBody.pack()
     	# Botón Iniciar Batalla
-    	self.startBattle = tk.Button(self, text='Iniciar Batalla', anchor="center", command= self.IniciarBatalla)
-    	self.startBattle.configure(width = 16, height = 1, relief = tk.FLAT)
-    	self.startBattle_widget = self.canvasBody.create_window(400, 225, window=self.startBattle)
-    	self.auxStartBattle = self.startBattle
+		self.startBattle = tk.Button(self, text='Iniciar Batalla', anchor="center", command= self.IniciarBatalla)
+		self.startBattle.configure(width = 16, height = 1, relief = tk.FLAT)
+		self.startBattle_widget = self.canvasBody.create_window(400, 225, window=self.startBattle)
+		self.auxStartBattle = self.startBattle
     	# Botón Ayuda
-    	self.help = tk.Button(self, text='Ayuda', anchor="center", command= self.MostrarOcultarDatos)
-    	self.help.configure(width = 16, height = 1, relief = tk.FLAT)
-    	self.help_widget = self.canvasBody.create_window(400, 185, window=self.help)
-    	self.help.config(state='disabled')
-    	self.auxHelp = self.help
+		self.help = tk.Button(self, text='Ayuda', anchor="center", command= self.MostrarOcultarDatos)
+		self.help.configure(width = 16, height = 1, relief = tk.FLAT)
+		self.help_widget = self.canvasBody.create_window(400, 185, window=self.help)
+		self.help.config(state='disabled')
+		self.auxHelp = self.help
     	# Label Nombre de Usuario
-    	self.labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelUsername_widget = self.canvasBody.create_window(400, 15, window=self.labelUsername)
+		self.labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.LabelUsername_widget = self.canvasBody.create_window(400, 15, window=self.labelUsername)
     	# Label Password
-    	self.labelPassword = tk.Label(self,text="Contraseña", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelPassword_widget = self.canvasBody.create_window(400, 65, window=self.labelPassword)
+		self.labelPassword = tk.Label(self,text="Contraseña", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.LabelPassword_widget = self.canvasBody.create_window(400, 65, window=self.labelPassword)
     	# Label Equipo
     	self.labelTeam = tk.Label(self,text="Equipo", bg = "#283158", font=('Verdana 8 bold'), fg="white")
     	self.LabelTeam_widget = self.canvasBody.create_window(400, 115, window=self.labelTeam)
@@ -900,7 +900,7 @@ class Modulo3(tk.Frame):
     def definirSeleccionarEquipo(self, eventObject):
     	if self.textVar.get() == "Nuevo Equipo":
     		self.selectTeamPkmn['state'] = tk.NORMAL
-    	else:
+		else:
     		self.selectTeamPkmn['state'] = tk.DISABLED
 
     def IniciarEntrenamiento(self):
