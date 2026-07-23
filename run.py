@@ -38,7 +38,10 @@ def parse_configs():
     if config.bot_mode == constants.CHALLENGE_USER:
         config.user_to_challenge = env("USER_TO_CHALLENGE")
 
-# MAIN
+#################################################################################################################
+# <<MAIN>>
+# (self.q, self.q, self.q, self.q, self.username, self.password, self.teamname, botmode, None, False, False, 1,)
+#################################################################################################################
 async def showdown(q, q50, qm50, q150, username, password, teamname, botmode, opponentUsername, training, agentTraining, numBattles):
     # Configuración de la Aplicación
     parse_configs()
@@ -49,9 +52,11 @@ async def showdown(q, q50, qm50, q150, username, password, teamname, botmode, op
         config.team_name = 'gen8/vgc2022/' + teamname
     else:
         team_name = 'gen8/vgc2022/' + teamname
+    
     if config.bot_mode == constants.SEARCH_LADDER:
         config.username = username
         config.password = password
+    
     if training:
         ps_websocket_client = await PSWebsocketClient.create(username, password, config.websocket_uri)
         isOk = await ps_websocket_client.login(training)
@@ -59,11 +64,13 @@ async def showdown(q, q50, qm50, q150, username, password, teamname, botmode, op
         # Creo una Clase PSWebsocketClient
         ps_websocket_client = await PSWebsocketClient.create(config.username, config.password, config.websocket_uri)
         isOk = await ps_websocket_client.login(training)
+    
     # Se lee "|challstr|4|a6e6e29652941bc1b872a2c34cb0b4e6fdd83355bd3b8787d1519685b29bfb5d267f479f4be9f9fe554605c6c9842160194586f55644f532d991560f817c5939bf7961319b23de0803bac5f6faa2935e395c0f28da55b4c052ece76f0f64e5acdfea8691ac2607012b0d742704920c9fe3c6bc13730b121d6459b84f03d399b8"
     if isOk == -1:
         print("[INFO]     ¡Usuario o contraseña incorrecta!")
         q.put([-5])
         sys.exit()
+    
     # Contadores
     battles_run = numBattles
     wins = 0
@@ -96,6 +103,7 @@ async def showdown(q, q50, qm50, q150, username, password, teamname, botmode, op
                 await ps_websocket_client.search_for_match(team)
             else:
                 raise ValueError("Invalid Bot Mode")
+            
             # Nueva Batalla Pokémon completo
             winner, q, battle_tag = await pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, training, agentTraining)
             if winner == "None":
@@ -109,8 +117,9 @@ async def showdown(q, q50, qm50, q150, username, password, teamname, botmode, op
             if battles_run >= config.run_count:
                 break
     else:
+        # Módulo de Análisis
         while True:
-            # Se lee el EQUIPO dado un Nombre Específico...
+            # team almacena el equipo que se va a usar en la batalla, donde tendré el apoyo del bot
             team = load_team(config.team_name)[0]
             # Opciones de juego
             if config.bot_mode == constants.CHALLENGE_USER:
@@ -121,11 +130,11 @@ async def showdown(q, q50, qm50, q150, username, password, teamname, botmode, op
             elif config.bot_mode == constants.ACCEPT_CHALLENGE:
                 await ps_websocket_client.accept_challenge(config.pokemon_mode, team, config.room_name, False)
             elif config.bot_mode == constants.SEARCH_LADDER:
-                # Validación ante Jugadores Humanos
+                # Módulo de Análisis
                 await ps_websocket_client.search_for_match(team)
             else:
                 raise ValueError("Invalid Bot Mode")
-            # Nueva Batalla Pokémon completo
+            # Nueva Batalla Pokémon completo, pokemon_battle se ejecuta una vez por batalla completa (BO3)
             winner, q, battle_tag = await pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, training, False)
             if winner == config.username:
                 wins += 1
@@ -135,6 +144,7 @@ async def showdown(q, q50, qm50, q150, username, password, teamname, botmode, op
                 print("[INFO]     W: {}\tL: {}".format(wins, losses))
             battles_run += 1
             if battles_run >= config.run_count:
+                # En el Módulo de Análisis debe ser 1, acepta de inmediato el siguiente juego
                 break
     # Fin
     #raise Exception("FIN DE LA BATALLA")
@@ -153,11 +163,18 @@ async def stop(q, q50, qm50, q150, username, password, teamname, botmode, oppone
         except queue.Empty:
             ...
 
+#################################################################################################################
+# Método Principal - Módulo de Análisis
+#################################################################################################################
 class AsyncDownload(Thread):
-    def __init__(self,q,q50,qm50,q150,username,password,teamname,botmode,opponentUsername,training,agentTraining,numBattles):
+    def __init__(self, q, q50, qm50, q150, username, password, teamname,
+                 botmode, opponentUsername, training, agentTraining, numBattles):
         super().__init__()
-        if training:
-            asyncio.run(showdown(q,q50,qm50,q150,username,password,teamname,botmode,opponentUsername,training,agentTraining,numBattles))
-        else:
-            asyncio.run(showdown(q,q50,qm50,q150,username,password,teamname,botmode,opponentUsername,training,agentTraining,numBattles))
-        return
+        asyncio.run(
+            showdown(
+                q, q50, qm50, q150,
+                username, password, teamname,
+                botmode, opponentUsername,
+                training, agentTraining, numBattles
+            )
+        )

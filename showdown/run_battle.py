@@ -2174,30 +2174,12 @@ async def accion_batalla(battle):
     return battle, mensaje
 
 
-async def escoge_accion_team_preview(battle, ps_websocket_client):
-    # Se escoge los 4 Pokémon: eleccion(n) es un entero
-    if not battle.isTraining:
-        print("[INFO]     Vista Previa del Equipo")
-    eleccion0, eleccion1, eleccion2, eleccion3 = await battle.action_team_preview(battle) 
-    # Se prepara el String que se va a enviar al WebSocket
-    # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
-    mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]
-    # Se envía la acción al WebSocket
-    if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
-        # Imprimo en CMD la acción hecha por el agente
-        if not battle.isTraining:
-            print("[SEND]     {}".format(mensaje))
-        # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
-        battle.user.active1 = battle.user.reserved[eleccion0-1]
-        battle.user.active2 = battle.user.reserved[eleccion1-1]
-        aux = []
-        aux.append(battle.user.reserved[eleccion2-1])
-        aux.append(battle.user.reserved[eleccion3-1])
-        battle.user.reserved = deepcopy(aux)
-    await ps_websocket_client.send_message(battle.battle_tag, mensaje)
-    return battle
 
 
+
+#######################################################################################################################
+# ()
+#######################################################################################################################
 async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q):
     # Obtiene las etiquetas que aparecen al iniciar una batalla
     while True:
@@ -2230,7 +2212,35 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q)
             # opponent_name = "Braindeadmeta"
             return battle_tag, opponent_name
 
+#######################################################################################################################
+# (4.2)
+#######################################################################################################################
+async def escoge_accion_team_preview(battle, ps_websocket_client):
+    # Se escoge los 4 Pokémon: eleccion(n) es un entero
+    if not battle.isTraining:
+        print("[INFO]     Vista Previa del Equipo")
+    eleccion0, eleccion1, eleccion2, eleccion3 = await battle.action_team_preview(battle) 
+    # Se prepara el String que se va a enviar al WebSocket
+    # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
+    mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]
+    # Se envía la acción al WebSocket
+    if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
+        # Imprimo en CMD la acción hecha por el agente
+        if not battle.isTraining:
+            print("[SEND]     {}".format(mensaje))
+        # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
+        battle.user.active1 = battle.user.reserved[eleccion0-1]
+        battle.user.active2 = battle.user.reserved[eleccion1-1]
+        aux = []
+        aux.append(battle.user.reserved[eleccion2-1])
+        aux.append(battle.user.reserved[eleccion3-1])
+        battle.user.reserved = deepcopy(aux)
+    await ps_websocket_client.send_message(battle.battle_tag, mensaje)
+    return battle
 
+#######################################################################################################################
+# (4.1)
+#######################################################################################################################
 async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, q50, qm50, q150, botMode, training, agentTraining, set_request_json=True):
     if agentTraining:
         battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("drl"))
@@ -2274,9 +2284,10 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, 
             # Retorna 
             return battle, opponent_id, user_json
 
-
-# Inicia una Batalla VGC 2022
-async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient, q, q50, qm50, q150, botMode, training, agentTraining):
+#######################################################################################################################
+# (3)
+#######################################################################################################################
+async def inicia_batallavgc(ps_websocket_client: PSWebsocketClient, q, q50, qm50, q150, botMode, training, agentTraining):
     # Se obtiene las variables de abajo
     battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, q, q50, qm50, q150, botMode, training, agentTraining, set_request_json=True)
     battle.botMode = botMode
@@ -2309,10 +2320,12 @@ async def inicia_vgc2022(ps_websocket_client: PSWebsocketClient, q, q50, qm50, q
     # Retorno el estado actual de la batalla
     return battle
 
-
+#######################################################################################################################
+# (2)
+#######################################################################################################################
 async def iniciar_batalla(ps_websocket_client, q, q50, qm50, q150, botMode, training, agentTraining):
-    # Inicia la Batalla VGC 2022
-    battle = await inicia_vgc2022(ps_websocket_client, q, q50, qm50, q150, botMode, training, agentTraining)
+    # Inicia la Batalla VGC
+    battle = await inicia_batallavgc(ps_websocket_client, q, q50, qm50, q150, botMode, training, agentTraining)
     # Envía el saludo
     await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
     # Inicia el tiempo
@@ -2321,8 +2334,10 @@ async def iniciar_batalla(ps_websocket_client, q, q50, qm50, q150, botMode, trai
     # Retorna la Clase Batalla
     return battle
 
-
+#######################################################################################################################
 # Nueva Batalla Pokémon completo
+# Flujo Principal
+#######################################################################################################################
 async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, training, agentTraining):
     # Solo inicia la batalla
     try:
@@ -2330,7 +2345,7 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
     except:
         traceback.print_exc()
     #battle.imprimir()
-    # Mientras...
+    # Mientras... Dure la partida, se reciben mensajes del WebSocket y se actualiza el estado de la batalla
     while True:
         # Recibo mensaje del WebSocket
         if agentTraining:
@@ -2344,9 +2359,11 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
                     q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(-1)])
                 return "None", q, battle.battle_tag
         else:
+            # HAPPY PATH - Se recibe el mensaje del WebSocket
             mensaje = await ps_websocket_client.receive_message()
         # [Invalid choice] Sorry, too late to make a different move; the next turn has already started
         split_msg = mensaje.split('|')
+
         if len(split_msg) < 3:
             #print("OJO: MENSAJE CON LONGITUD 2: {} - {}".format(split_msg[0], split_msg[1]))
             listNeuralNetworkInput = NeuralNetworkInput(battle)
@@ -2372,6 +2389,7 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
                 else:
                     q.put([-10,listNeuralNetworkInput,battle.turn+1,-9999,battle.score,math.floor(-1)])
                 return "None", q, battle.battle_tag
+        
         # ¿Ha finalizado la batalla?
         if battle_is_finished(battle.battle_tag, mensaje):
             # Sí ha finalizado la batalla... se obtiene información del ganador

@@ -202,6 +202,9 @@ class Modulo1(tk.Frame):
 			self.p.join()
 			return
 
+#################################################################################################################
+# MAIN
+#################################################################################################################
 	def IniciarBatalla(self):
 		if self.textVar.get() == '':
 			if hasattr(self, "textIncorrect"):
@@ -364,49 +367,49 @@ class Modulo2(tk.Frame):
 		self.labelPassword = tk.Label(self,text="Contraseña", bg = "#283158", font=('Verdana 8 bold'), fg="white")
 		self.LabelPassword_widget = self.canvasBody.create_window(400, 65, window=self.labelPassword)
     	# Label Equipo
-    	self.labelTeam = tk.Label(self,text="Equipo", bg = "#283158", font=('Verdana 8 bold'), fg="white")
-    	self.LabelTeam_widget = self.canvasBody.create_window(400, 115, window=self.labelTeam)
+		self.labelTeam = tk.Label(self,text="Equipo", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.LabelTeam_widget = self.canvasBody.create_window(400, 115, window=self.labelTeam)
     	# Entrada Nombre de Usuario
-    	self.strName = tk.StringVar()
-    	self.nameEntry = ttk.Entry(self, textvariable=self.strName, width=20)
-    	self.strName_widget = self.canvasBody.create_window(400, 40, window=self.nameEntry)
-    	self.auxNameEntry = self.nameEntry
-    	# Entrada Contraseña
-    	self.strPassword = tk.StringVar()
-    	self.passwordEntry = ttk.Entry(self, show="*", textvariable=self.strPassword, width=20)
-    	self.strPassword_widget = self.canvasBody.create_window(400, 90, window=self.passwordEntry)
-    	self.auxPasswordEntry = self.passwordEntry
+		self.strName = tk.StringVar()
+		self.nameEntry = ttk.Entry(self, textvariable=self.strName, width=20)
+		self.strName_widget = self.canvasBody.create_window(400, 40, window=self.nameEntry)
+		self.auxNameEntry = self.nameEntry
+		# Entrada Contraseña
+		self.strPassword = tk.StringVar()
+		self.passwordEntry = ttk.Entry(self, show="*", textvariable=self.strPassword, width=20)
+		self.strPassword_widget = self.canvasBody.create_window(400, 90, window=self.passwordEntry)
+		self.auxPasswordEntry = self.passwordEntry
     	# ListBox Equipo
-    	self.textVar = tk.StringVar(self)
-    	self.textVar.set('')
-    	self.path = 'teams/teams/gen8/vgc2022'
-    	self.listBoxValues = os.listdir(self.path)
-    	self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=self.listBoxValues, width=17)
-    	self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
-    	self.auxCbbTeam = self.cbbTeam
+		self.textVar = tk.StringVar(self)
+		self.textVar.set('')
+		self.path = 'teams/teams/gen8/vgc2022'
+		self.listBoxValues = os.listdir(self.path)
+		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=self.listBoxValues, width=17)
+		self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
+		self.auxCbbTeam = self.cbbTeam
     	# IMG Exit
-    	self.exitPNG = Image.open("IMGs/exit.png")
-    	self.newExitPNG = self.exitPNG.convert(mode="RGBA")
-    	self.exitResized = self.newExitPNG.resize((40,40), Image.LANCZOS)
-    	self.exitTK = ImageTk.PhotoImage(self.exitResized)
-    	self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
-    	self.buttonExit_widget = self.canvasHead.create_window(470, 28, window=self.buttonExit)
+		self.exitPNG = Image.open("IMGs/exit.png")
+		self.newExitPNG = self.exitPNG.convert(mode="RGBA")
+		self.exitResized = self.newExitPNG.resize((40,40), Image.LANCZOS)
+		self.exitTK = ImageTk.PhotoImage(self.exitResized)
+		self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+		self.buttonExit_widget = self.canvasHead.create_window(470, 28, window=self.buttonExit)
     	# IMG Bar Chart
-    	self.barChartPNG = Image.open("IMGs/barChart.png")
-    	self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
-    	self.barChartResized = self.newBarChartPNG.resize((200,200), Image.LANCZOS)
-    	self.barChartTK = ImageTk.PhotoImage(self.barChartResized)
-    	self.barChart_widget = self.canvasBody.create_image(160,125,image=self.barChartTK)
+		self.barChartPNG = Image.open("IMGs/barChart.png")
+		self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
+		self.barChartResized = self.newBarChartPNG.resize((200,200), Image.LANCZOS)
+		self.barChartTK = ImageTk.PhotoImage(self.barChartResized)
+		self.barChart_widget = self.canvasBody.create_image(160,125,image=self.barChartTK)
     	# IMG Info
-    	self.infoPNG = Image.open("IMGs/info.png")
-    	self.newInfoPNG = self.infoPNG.convert(mode="RGBA")
-    	self.infoResized = self.newInfoPNG.resize((38,38), Image.LANCZOS)
-    	self.infoTK = ImageTk.PhotoImage(self.infoResized)
-    	self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Análisis.pdf"'), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
-    	self.buttonInfo_widget = self.canvasHead.create_window(28, 28, window=self.buttonInfo)
+		self.infoPNG = Image.open("IMGs/info.png")
+		self.newInfoPNG = self.infoPNG.convert(mode="RGBA")
+		self.infoResized = self.newInfoPNG.resize((38,38), Image.LANCZOS)
+		self.infoTK = ImageTk.PhotoImage(self.infoResized)
+		self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Análisis.pdf"'), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+		self.buttonInfo_widget = self.canvasHead.create_window(28, 28, window=self.buttonInfo)
     	# Close Windows
-    	self.activeClose = 0
-    	if self.activeClose == 0:
+		self.activeClose = 0
+		if self.activeClose == 0:
     		self.activeClose = 1
     		self.auxController.protocol('WM_DELETE_WINDOW', self.closeWindows)
     	else:
