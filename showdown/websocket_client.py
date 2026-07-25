@@ -206,3 +206,8 @@ class PSWebsocketClient:
                 if post_response.status_code != 200:
                     raise SaveReplayError("POST para guardar la repetición no devolvió un código 200: {}".format(post_response.content))
                 break
+
+    async def close(self):
+        """Cierra la conexión websocket de forma limpia"""
+        if self.websocket:
+            await self.websocket.close()

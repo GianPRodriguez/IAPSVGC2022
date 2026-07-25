@@ -2092,7 +2092,10 @@ def NeuralNetworkInput(battle):
         print("ERROR 11 - NeuralNetworkInput")
     return listNeuralNetworkInput
 
-# Retorna un Boolean
+
+##############################################################################################################################################
+# Retorna True si la batalla ha terminado, False en caso contrario, usa como referencia el battle_tag y el mensaje recibido del WebSocket
+##############################################################################################################################################
 def battle_is_finished(battle_tag, msg):
     #<< >battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw||win|PopplioPeru98
     return (
@@ -2102,83 +2105,31 @@ def battle_is_finished(battle_tag, msg):
     )
 
 
-# Retorna el Mensaje de Acción
-async def accion_batalla(battle):
+##############################################################################################################################################
+# Retorna la acción, en base al estado actual del entorno (battle) y el agente usado, que luego es enviado inmediatamente al WebSocket
+##############################################################################################################################################
+async def createBattleAction(battle):
     listNeuralNetworkInput = None
     # ¿Hay solicitud de JSON pendiente?
     if battle.request_json:
+        # Actualiza el estado de los pkmn del usuario en base al json recibido
         battle.user.updatePkmnUser(battle.request_json, first_turn=False)
         # Actualizo las variables del entorno...
         battle = await updateEnvironment(battle)
-        # Los imprimo...
-        #battle.imprimir()
-    # Actualizo los valores de las Neuronas de Entrada
-    #if battle.agentTraining:
-    #    listNeuralNetworkInput = NeuralNetworkInput(battle)
+
+    # listNeuralNetworkInput es el estado del entorno, una lista de 220 valores que se envía a la red neuronal para que decida la mejor acción
     listNeuralNetworkInput = NeuralNetworkInput(battle)
-    # Se define la mejor acción
+    # Se define la mejor acción en base al listNeuralNetworkInput: battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2
     battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, battle.reward, battle.score = await battle.action_battle(battle, listNeuralNetworkInput)
-    mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
-    #print("MENSAJE: {}".format(mensaje))
-    # El agente inteligente no toma decisiones en force_switch...
-    if battle.agentTraining and not battle.force_switch:
-        # Send to Process
-        battle.q.put([10,listNeuralNetworkInput,battle.turn,battle.reward,battle.score,True])
-        # Bucle Principal
-        while True:
-            continua = False
-            contador = 0
-            try:
-                if battle.q50.qsize() > 0:
-                    cola = battle.q50.get(0)
-                    continua = True
-            except EOFError as e:
-                ...
-            if continua:
-                if cola[0] == 50:
-                    if cola[1]:
-                        #print("{} RECIBIDO".format(cola[0]))
-                        # msg random
-                        battle.qm50.put([-50, mensaje, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2])
-                        #print("-50 ENVIADO")
-                        # msg generado por agente random
-                        while True:
-                            if battle.q150.qsize() > 0:
-                                cola2 = battle.q150.get(0)
-                                #print("{} RECIBIDO".format(cola2[0]))
-                                if cola2[0] == 150:
-                                    msg = cola2[1]  # Enviado desde RANDOM
-                                    break
-                        mensaje[0] = msg
-                        #print("RANDOM: --{}--".format(''.join(mensaje[0]).replace("/choose ","").replace(",","").replace("  ","   ").replace("    ","     ").replace("      ","")))
-                        break
-                    else:
-                        #print("{} RECIBIDO (2)".format(cola[0]))
-                        # msg generado por red neuronal
-                        while True:
-                            if battle.q150.qsize() > 0:
-                                cola2 = battle.q150.get(0)
-                                #print("{} RECIBIDO (2)".format(cola2[0]))
-                                if cola2[0] == 150:
-                                    battle.cantActions += 1
-                                    msg = cola2[1]  # Enviado desde DDQN
-                                    break
-                        mensaje[0] = msg
-                        #print("ANN: --{}--".format(''.join(mensaje[0]).replace("/choose ","").replace(",","").replace("  ","   ").replace("    ","     ").replace("      ","")))
-                        break
-                else:
-                    print("ERROR {} RECIBIDO T".format(cola[0]))
-    if self.randomTraining: # los parametros vienen de la cola
-        mensaje = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
+    # actionToWebSocket es lo que envío directamente al WebSocket para ejecutar la acción, format_decision lo formatea
+    actionToWebSocket = await format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
+
     # Retorno el mensaje listo para enviarlo al WebSocket
-    return battle, mensaje
-
-
-
+    return battle, actionToWebSocket
 
 
 #######################################################################################################################
-# ()
+# Obtiene la etiqueta de la batalla y el nombre del oponente
 #######################################################################################################################
 async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q):
     # Obtiene las etiquetas que aparecen al iniciar una batalla
@@ -2213,12 +2164,11 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q)
             return battle_tag, opponent_name
 
 #######################################################################################################################
-# (4.2)
+# Selecciona la acción para la vista previa del equipo
 #######################################################################################################################
 async def escoge_accion_team_preview(battle, ps_websocket_client):
     # Se escoge los 4 Pokémon: eleccion(n) es un entero
-    if not battle.isTraining:
-        print("[INFO]     Vista Previa del Equipo")
+    print("[INFO]     Vista Previa del Equipo")
     eleccion0, eleccion1, eleccion2, eleccion3 = await battle.action_team_preview(battle) 
     # Se prepara el String que se va a enviar al WebSocket
     # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
@@ -2226,8 +2176,7 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
     # Se envía la acción al WebSocket
     if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
         # Imprimo en CMD la acción hecha por el agente
-        if not battle.isTraining:
-            print("[SEND]     {}".format(mensaje))
+        print("[SEND]     {}".format(mensaje))
         # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
         battle.user.active1 = battle.user.reserved[eleccion0-1]
         battle.user.active2 = battle.user.reserved[eleccion1-1]
@@ -2239,13 +2188,11 @@ async def escoge_accion_team_preview(battle, ps_websocket_client):
     return battle
 
 #######################################################################################################################
-# (4.1)
+
 #######################################################################################################################
-async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, q50, qm50, q150, botMode, training, agentTraining, set_request_json=True):
-    if agentTraining:
-        battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("drl"))
-    else:
-        battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("drl"))
+async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, set_request_json=True):
+    
+    battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("drl"))
     # Obtengo el id de la batalla y el nombre del oponente
     battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client, q)
     # Mientras...
@@ -2265,14 +2212,9 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, 
             # opponent_id = "p2"
             # Aquí se hace el cambio de bot y llamada de BattleBot...
             battle = battle_module.BattleBot(battle_tag)
-            battle.isTraining = training
-            battle.agentTraining = agentTraining
             battle.q = q
-            battle.q50 = q50
-            battle.qm50 = qm50
-            battle.q150 = q150
-            if not training:
-                battle.q.put([0])
+            
+            battle.q.put([0])
             # Actualización
             battle.opponent.id = opponent_id
             # battle.opponent.id = "p2"
@@ -2287,9 +2229,9 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, 
 #######################################################################################################################
 # (3)
 #######################################################################################################################
-async def inicia_batallavgc(ps_websocket_client: PSWebsocketClient, q, q50, qm50, q150, botMode, training, agentTraining):
+async def inicia_batallavgc(ps_websocket_client: PSWebsocketClient, q, botMode):
     # Se obtiene las variables de abajo
-    battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, q, q50, qm50, q150, botMode, training, agentTraining, set_request_json=True)
+    battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, q, set_request_json=True)
     battle.botMode = botMode
     # Inicializa mensaje donde se cargará el TEAM PREVIEW
     msg = ''
@@ -2323,55 +2265,51 @@ async def inicia_batallavgc(ps_websocket_client: PSWebsocketClient, q, q50, qm50
 #######################################################################################################################
 # (2)
 #######################################################################################################################
-async def iniciar_batalla(ps_websocket_client, q, q50, qm50, q150, botMode, training, agentTraining):
+async def iniciar_batalla(ps_websocket_client, q, botMode):
     # Inicia la Batalla VGC
-    battle = await inicia_batallavgc(ps_websocket_client, q, q50, qm50, q150, botMode, training, agentTraining)
+    battle = await inicia_batallavgc(ps_websocket_client, q, botMode)
     # Envía el saludo
     await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
     # Inicia el tiempo
-    if (battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE) and not training:
+    if (battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE):
         await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
     # Retorna la Clase Batalla
     return battle
 
 #######################################################################################################################
-# Nueva Batalla Pokémon completo
-# Flujo Principal
+# Nueva Batalla Pokémon completo - Flujo Principal (BO3)
 #######################################################################################################################
-async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, training, agentTraining):
-    # Solo inicia la batalla
+async def pokemon_battle(ps_websocket_client, q, botmode):
+# Módulo de Análisis
+# botmode = SEARCH_LADDER
+
+    # Crea la Clase Batalla BO3
     try:
-        battle = await iniciar_batalla(ps_websocket_client, q, q50, qm50, q150, botmode, training, agentTraining)
+        battle = await iniciar_batalla(ps_websocket_client, q, botmode)
+        print("async def pokemon_battle - battle: {}.".format(battle.imprimir()))
     except:
         traceback.print_exc()
-    #battle.imprimir()
-    # Mientras... Dure la partida, se reciben mensajes del WebSocket y se actualiza el estado de la batalla
+
+
+    # Bucle activo mientras dure toda la batalla
     while True:
-        # Recibo mensaje del WebSocket
-        if agentTraining:
-            mensaje = await ps_websocket_client.receive_message2()
-            if mensaje is None:
-                #print("[WARNING]  DEMORA EN LA RECEPCIÓN DEL ESTADO DEL ENTORNO")
-                listNeuralNetworkInput = NeuralNetworkInput(battle)
-                if battle.cantActions != 0:
-                    q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
-                else:
-                    q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(-1)])
-                return "None", q, battle.battle_tag
-        else:
-            # HAPPY PATH - Se recibe el mensaje del WebSocket
-            mensaje = await ps_websocket_client.receive_message()
-        # [Invalid choice] Sorry, too late to make a different move; the next turn has already started
+
+        # Se recibe el mensaje del WebSocket puntualmente
+        mensaje = await ps_websocket_client.receive_message()
+        
+        # El mensaje del WebSocket se divide en partes separadas por '|'
         split_msg = mensaje.split('|')
 
+        # Si el mensaje tiene longitud menor a 3, significa que hubo un error, sino OK
         if len(split_msg) < 3:
-            #print("OJO: MENSAJE CON LONGITUD 2: {} - {}".format(split_msg[0], split_msg[1]))
+            # Ok, entonces que el agente me de una acción, en base al estado actual del entorno
             listNeuralNetworkInput = NeuralNetworkInput(battle)
+
             if battle.cantActions != 0:
                 q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
             else:
                 q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(-1)])
-            return "None", q, battle.battle_tag
+            return "None"
         else:
             if split_msg[2] == '[Invalid choice] Sorry, too late to make a different move; the next turn has already started':
                 #print("[WARNING]  MÁS DE UNA ACCIÓN EN UN TURNO")
@@ -2380,63 +2318,42 @@ async def pokemon_battle(ps_websocket_client, q, q50, qm50, q150, botmode, train
                     q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
                 else:
                     q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(-1)])
-                return "None", q, battle.battle_tag
-            if battle.cantInvActionsSeg == 20:
-                #print("[WARNING]  MÁS DE 20 ACCIONES INVÁLIDAS SEGUIDAS")
-                listNeuralNetworkInput = NeuralNetworkInput(battle)
-                if battle.cantActions != 0:
-                    q.put([-10,listNeuralNetworkInput,battle.turn+1,-9999,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
-                else:
-                    q.put([-10,listNeuralNetworkInput,battle.turn+1,-9999,battle.score,math.floor(-1)])
-                return "None", q, battle.battle_tag
+                return "None"
+        
         
         # ¿Ha finalizado la batalla?
         if battle_is_finished(battle.battle_tag, mensaje):
-            # Sí ha finalizado la batalla... se obtiene información del ganador
+
+
+            # Sí ha finalizado la batalla...
             if constants.WIN_STRING in mensaje:
                 # Se obtiene el NOMBRE del ganador
                 winner = mensaje.split(constants.WIN_STRING)[-1].split('\n')[0].strip(" ")
-                if not training:
-                    if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
-                        q.put([-1,winner==battle.opponent.account_name,battle.user.account_name,battle.opponent.account_name])
-                    else:
-                        q.put([-1,winner!=battle.opponent.account_name,battle.opponent.account_name,battle.user.account_name])
             else:
+                # Aún no hay NOMBRE del ganador
                 winner = None
-            # En el entrenamiento, existe un turno x+1
-            if agentTraining:
-                action_required, battle = await update_battle(battle, mensaje)
-                #battle.imprimir()
-                listNeuralNetworkInput = NeuralNetworkInput(battle)
-                battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, battle.reward, battle.score = await battle.action_battle(battle, listNeuralNetworkInput)
-                if battle.cantActions != 0:
-                    battle.q.put([-10,listNeuralNetworkInput,battle.turn+1,battle.reward,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
-                else:
-                    battle.q.put([-10,listNeuralNetworkInput,battle.turn+1,battle.reward,battle.score,math.floor(-1)])
-                #print("-10 ENVIADO")
+
+
             # Y lo imprimo
-            if not training:
-                print("[INFO]     Ganador: {}".format(winner))
+            print("[INFO]     Ganador: {}".format(winner))
+            
+
             # Se envía un mensaje de despedida al contricante
             await ps_websocket_client.send_message(battle.battle_tag, [config.battle_ending_message])
+
             # Es opcional guardar la batalla...
             await ps_websocket_client.leave_battle(battle.battle_tag, save_replay=config.save_replay)
             q = battle.q
+
             # Retorna al ganador
-            return winner, q, battle.battle_tag
+            return winner
+        
         else:
-            # No ha finalizado la batalla... actualizo las variables del entorno
+            # Flujo Principal: No ha finalizado la batalla... actualizo las variables del entorno
             action_required, battle = await update_battle(battle, mensaje)
+
             # action_required es BOOLEAN
             if (action_required and not battle.wait):
                 # Escoge el mejor movimiento y lo envía al websocket
-                battle, mensaje = await accion_batalla(battle)
-                #if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
-                #    if not training:
-                #        # Imprimo en CMD la acción
-                #        print("[SEND]     {}".format(mensaje))
-                #    if agentTraining:
-                #        await ps_websocket_client.send_message2(battle.battle_tag, mensaje)
-                #    else:
-                #        await ps_websocket_client.send_message(battle.battle_tag, mensaje)
+                battle, mensaje = await createBattleAction(battle)
                 await ps_websocket_client.send_message(battle.battle_tag, mensaje)
