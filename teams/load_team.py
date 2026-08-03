@@ -6,9 +6,6 @@ TEAM_JSON_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "teams"
 
 
 def load_team(name):
-    if name is None:
-        return 'null'
-
 
     path = os.path.join(TEAM_JSON_DIR, "{}".format(name))
     if os.path.isdir(path):

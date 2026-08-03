@@ -160,10 +160,10 @@ class PSWebsocketClient:
             #print("contador: {}".format(contador))
             if contador == 8 and username is None:
                 #print("q.put([-1])")
-                q.put([-1])
+                #q.put([-1]) ???
                 contador = 0
         #print("q.put([0])")
-        q.put([0])
+        #q.put([0])
         message = ["/accept " + username]
         await self.send_message('', message)
 

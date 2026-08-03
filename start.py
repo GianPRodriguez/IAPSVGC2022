@@ -32,6 +32,9 @@ async def stop(q, teamText):
 	poller.cancel()
 	return cola[2], cola[1]
 
+#########################################################################################
+# OK - 
+#########################################################################################
 async def ValidarEquipo(q, teamText):
 	team, listPkmn = export_to_packed(teamText)
 	if team is None:
@@ -433,7 +436,9 @@ class Modulo2(tk.Frame):
 			self.nameEntry.config(state='disabled')
 			self.passwordEntry.config(state='disabled')
 			self.cbbTeam.config(state='disabled')
+			###########################################
 			# Start Battle
+			###########################################
 			self.startBattle['state'] = tk.DISABLED
 			self.startBattle.configure(text='Buscando Oponente')
 			self.p = Thread(target=AsyncDownload, args=(self.q, self.username, self.password, self.teamname, botmode, 1,))
@@ -448,6 +453,9 @@ class Modulo2(tk.Frame):
 			try:
 				self.cola = self.q.get(0)
 				if self.cola[0] == 2:
+					#####################################################################################################
+					# (2): Fase: Battle - Se envía el identificador a la cola desde el Agente (main.py)
+					#####################################################################################################
 					self.isBattle = True
 					self.labelMove.configure(text="Movimientos", bg = "#283158", font=('Verdana 12 bold'), fg="white")
 					self.LabelMove_widget = self.canvasBody.create_window(80, 30-5, window=self.labelMove)
@@ -499,6 +507,9 @@ class Modulo2(tk.Frame):
 						self.text5_widget = self.canvasBody.create_text(28+55, 180+20, text=math.floor(self.text5), fill="white", font=('Verdana 12'))
 						self.text6_widget = self.canvasBody.create_text(160+55, 180+20, text=math.floor(self.text6), fill="white", font=('Verdana 12'))
 				elif self.cola[0] == 1:
+					#####################################################################################################
+					# (1): Fase: Team Preview - Se envía el identificador a la cola desde el Agente (main.py)
+					#####################################################################################################
 					self.namePokemon = self.cola
 					# Team Preview
 					self.text1 = self.namePokemon[1]
@@ -524,6 +535,9 @@ class Modulo2(tk.Frame):
 					self.text5_widget = self.canvasBody.create_text(28+55, 180+20, text=self.text5, fill="white", font=('Verdana 12'))
 					self.text6_widget = self.canvasBody.create_text(160+55, 180+20, text=self.text6, fill="white", font=('Verdana 12'))
 				elif self.cola[0] == 0:
+					#####################################################################################################
+					# (0): Fase: New Battle - Se envía el identificador a la cola desde la clase (run_battle.py)
+					#####################################################################################################
 					# New Battle
 					self.startBattle.configure(text='Batalla en Curso')
 					# Bye IMG Bar Chart
@@ -550,6 +564,9 @@ class Modulo2(tk.Frame):
 					self.text3_widget = self.canvasBody.create_text(28+60, 97+20, text="Calculando...", fill="black", font=('Verdana 10'))
 					self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text="Calculando...", fill="black", font=('Verdana 10'))
 				elif self.cola[0] == -1:
+					#####################################################################################################
+					# (-1): Fase: Validate Team
+					#####################################################################################################
 					# Widgets are available
 					self.nameEntry.config(state='normal')
 					self.passwordEntry.config(state='normal')
@@ -562,12 +579,18 @@ class Modulo2(tk.Frame):
 					self.nameOpponent = self.cola[2]
 					self.endBattle()
 				elif self.cola[0] == -3:
+					#####################################################################################################
+					# (-3): 
+					#####################################################################################################
 					self.nameEntry.config(state='normal')
 					self.cbbTeam.config(state='normal')
 					self.startBattle['state'] = tk.NORMAL
 					self.startBattle.configure(text='Iniciar Batalla')
 					self.textIncorrect = self.canvasBody.create_text(155, 235, text="¡El equipo no cumple con las reglas del formato!", fill="orange", font=('Verdana 9'))
 				elif self.cola[0] == -5:
+					#####################################################################################################
+					# (-5): 
+					#####################################################################################################
 					# Username or Password Incorrect
 					self.textIncorrect = self.canvasBody.create_text(120, 235, text="¡Usuario o contraseña incorrecta!", fill="orange", font=('Verdana 10'))
 					self.startBattle['state'] = tk.NORMAL
@@ -586,6 +609,9 @@ class Modulo2(tk.Frame):
 					self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values = self.listBoxValues, width=17)
 					self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
 				elif self.cola[0] == -6:
+					#####################################################################################################
+					# (-6): Error genérico del Sistema, por ejemplo algún reinicio del servidor
+					#####################################################################################################
 					# SYSTEM ERROR
 					self.textIncorrect = self.canvasBody.create_text(120, 235, text="¡Error del sistema!", fill="orange", font=('Verdana 10'))
 					self.startBattle['state'] = tk.NORMAL
@@ -676,6 +702,9 @@ class Modulo2(tk.Frame):
 		os._exit(0)
 		self.auxController.destroy()
 
+#################################################################################################################################
+# Acciones a realizar al finalizar la batalla, bajo cualquier casuistica...
+#################################################################################################################################
 	def endBattle(self):
 		# Clean Canvas
 		self.canvasBody.delete("all")
@@ -693,6 +722,7 @@ class Modulo2(tk.Frame):
 			# Text
 			self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="Has perdido :(", fill="white", font=('Verdana 14'))
 			self.textWinner_widget2 = self.canvasBody.create_text(185, 100, text="Suerte para la próxima", fill="white", font=('Verdana 11'))
+		
 		self.emojiPNG = self.emoji.convert(mode="RGBA")
 		self.emojiResized_image = self.emojiPNG.resize((80,80), Image.LANCZOS)
 		self.emojiTK = ImageTk.PhotoImage(self.emojiResized_image)

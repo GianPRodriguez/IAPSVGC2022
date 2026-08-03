@@ -109,21 +109,25 @@ async def showdown(q, username, password, teamname, botmode, numBattles):
             try:
                 winner = await pokemon_battle(ps_websocket_client, q, config.bot_mode)
             except Exception as e:
-                print(f"[ERROR] Fallo durante la batalla: {e}")
-                q.put([-5])
+                print(f"[ERROR] Ha sucedido algún error durante la batalla: {e}")
                 break
-            
-            if winner == config.username:
-                stats['wins'] += 1
-            else:
-                stats['losses'] += 1
-            print(f"[INFO]     Batallas: {stats['battles_run'] + 1}/{config.run_count} | Victorias: {stats['wins']} | Derrotas: {stats['losses']}")
-            
+
+            if not config.bot_mode == constants.SEARCH_LADDER:
+                if winner is None:
+                    print("[INFO]     Batalla sin resultado válido")
+                elif winner == config.username:
+                    stats['wins'] += 1
+                else:
+                    stats['losses'] += 1
+                print(f"[INFO]     Batallas: {stats['battles_run'] + 1}/{config.run_count} | Victorias: {stats['wins']} | Derrotas: {stats['losses']}")
+
+            # Se incrementa el contador de batallas ejecutadas
             stats['battles_run'] += 1
 
             # En el Módulo de Análisis debe ser 1, acepta de inmediato el siguiente juego
             if stats['battles_run'] >= config.run_count:
                 break
+    
     finally:
         await ps_websocket_client.close()
         print(f"[INFO]     Resumen Final - Batallas: {stats['battles_run']} | Victorias: {stats['wins']} | Derrotas: {stats['losses']}")

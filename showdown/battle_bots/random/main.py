@@ -14,21 +14,45 @@ class BattleBot(Battle):
     def __init__(self, *args, **kwargs):
         super(BattleBot, self).__init__(*args, **kwargs)
 
+    def _choose_switch_slot(self, battle):
+        switch3F = battle.user.reserved[0].fainted
+        switch4F = battle.user.reserved[1].fainted
+        if switch3F is False and switch4F is True:
+            return 3
+        if switch3F is True and switch4F is False:
+            return 4
+        return random.choice([3, 4])
+
+    def _get_available_moves(self, battle, active_index):
+        moves = battle.request_json.get('active', 'False')[active_index].get('moves', 'False')
+        return [index + 1 for index, move in enumerate(moves) if move.get('disabled', 'False') is False]
+
+#######################################################################################################################
+# Escoge los 4 Pokémon de los 6 disponibles de manera aleatoria para el inicio de la batalla
+#######################################################################################################################
     async def action_team_preview(self, battle):
-        eleccion = ''.join(random.sample("123456", 4))
-        eleccion0 = int(eleccion[0])
-        eleccion1 = int(eleccion[1])
-        eleccion2 = int(eleccion[2])
-        eleccion3 = int(eleccion[3])
+
+        # Semilla RANDOM para escoger 4 Pokémon de los 6 disponibles
+        choice = ''.join(random.sample("123456", 4))
+
+        # Se obtienen los 4 enteros escogidos
+        pkmn0 = int(choice[0])
+        pkmn1 = int(choice[1])
+        pkmn2 = int(choice[2])
+        pkmn3 = int(choice[3])
+
         # Se obtiene el nombre de los Pokémon escogidos
-        namePokemon0 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion0-1].get('details', 'False').partition(",")[0]
-        namePokemon1 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion1-1].get('details', 'False').partition(",")[0]
-        namePokemon2 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion2-1].get('details', 'False').partition(",")[0]
-        namePokemon3 = battle.request_json.get('side','False').get('pokemon', 'False')[eleccion3-1].get('details', 'False').partition(",")[0]
-        # Se envía al Queue los 4 Pokémon
+        namePokemon0 = battle.request_json.get('side','False').get('pokemon', 'False')[pkmn0-1].get('details', 'False').partition(",")[0]
+        namePokemon1 = battle.request_json.get('side','False').get('pokemon', 'False')[pkmn1-1].get('details', 'False').partition(",")[0]
+        namePokemon2 = battle.request_json.get('side','False').get('pokemon', 'False')[pkmn2-1].get('details', 'False').partition(",")[0]
+        namePokemon3 = battle.request_json.get('side','False').get('pokemon', 'False')[pkmn3-1].get('details', 'False').partition(",")[0]
+
+        # Se envía al Queue los 4 Pokémon para que se pueda mostrar en la interfaz gráfica
         battle.q.put([1,namePokemon0, namePokemon1, namePokemon2, namePokemon3, 0, 0])
+
         # Regreso los 4 enteros
-        return eleccion0, eleccion1, eleccion2, eleccion3
+        return pkmn0, pkmn1, pkmn2, pkmn3
+
 
     async def action_battle(self, battle, state):
         moveSwitch1 = None
@@ -56,17 +80,7 @@ class BattleBot(Battle):
                 dynamax1 = 0
                 toMove1 = 0
                 # Se toma la decisión...
-                switch3F = battle.user.reserved[0].fainted
-                switch4F = battle.user.reserved[1].fainted
-                if switch3F == False and switch4F == True:
-                    # Solo Pokémon 3 puede reemplazar 
-                    nMoveSwitch1 = 3
-                elif switch3F == True and switch4F == False:
-                    # Solo Pokémon 4 puede reemplazar
-                    nMoveSwitch1 = 4
-                else:
-                    # Pokémon 3 y 4 pueden reemplazar
-                    nMoveSwitch1 = random.choice([3, 4])
+                nMoveSwitch1 = self._choose_switch_slot(battle)
             elif izquierdaSwitch == False and derechaSwitch == True:
                 # izquierda
                 moveSwitch1 = 'pass'
@@ -78,17 +92,7 @@ class BattleBot(Battle):
                 dynamax2 = 0
                 toMove2 =  0
                 # Se toma la decisión...
-                switch3F = battle.user.reserved[0].fainted
-                switch4F = battle.user.reserved[1].fainted
-                if switch3F == False and switch4F == True:
-                    # Solo Pokémon 3 puede reemplazar 
-                    nMoveSwitch2 = 3
-                elif switch3F == True and switch4F == False:
-                    # Solo Pokémon 4 puede reemplazar
-                    nMoveSwitch2 = 4
-                else:
-                    # Pokémon 3 y 4 pueden reemplazar
-                    nMoveSwitch2 = random.choice([3, 4])
+                nMoveSwitch2 = self._choose_switch_slot(battle)
             else: # Los 2 Pokémon hacen cambio... los 2 suplentes deben estar disponibles... o solo hay 1 Pokémon disponible
                 # izquierda... ¿con quién cambio?
                 if battle.user.reserved[0].fainted or battle.user.reserved[1].fainted:
@@ -123,7 +127,7 @@ class BattleBot(Battle):
         else:
             # Para el Pokémon de la izquierda... ¿no está debilitado?
             if battle.user.active1.fainted == False:
-                # Movimiento especial...
+                # Movimiento especial que bloquea el movimiento del Pokémon en el sgte turno
                 if (battle.request_json).get('active','False')[0].get('moves','False')[0].get('pp','False') == 'False':
                     print("The opposing Shedinja used Phantom Force!")
                     # Está atrapado y tiene que hacer ese movimiento...
@@ -136,15 +140,7 @@ class BattleBot(Battle):
                     moveSwitch1 = random.choice(['move', 'switch'])
                     if moveSwitch1 == 'move':
                         # ¿Qué movimientos están disponibles?
-                        pokemon1move = []
-                        if (battle.request_json).get('active','False')[0].get('moves','False')[0].get('disabled','False') == False:
-                            pokemon1move.append(1)
-                        if (battle.request_json).get('active','False')[0].get('moves','False')[1].get('disabled','False') == False:
-                            pokemon1move.append(2)
-                        if (battle.request_json).get('active','False')[0].get('moves','False')[2].get('disabled','False') == False:
-                            pokemon1move.append(3)
-                        if (battle.request_json).get('active','False')[0].get('moves','False')[3].get('disabled','False') == False:
-                            pokemon1move.append(4)
+                        pokemon1move = self._get_available_moves(battle, 0)
                         # ¿Hay al menos algún movimiento para escoger?
                         if len(pokemon1move) > 0:
                             # Sí, hay al menos uno...
@@ -200,17 +196,7 @@ class BattleBot(Battle):
                         else:
                             # No hay ningún movimiento disponible... algo muy poco probable... Struggle se considera como uno... así que solo queda cambiar, sí o sí debe haber al menos 1
                             moveSwitch1 = 'switch'
-                            switch3F = battle.user.reserved[0].fainted
-                            switch4F = battle.user.reserved[1].fainted
-                            if switch3F == False and switch4F == True:
-                                # Solo Pokémon 3 puede reemplazar 
-                                nMoveSwitch1 = 3
-                            elif switch3F == True and switch4F == False:
-                                # Solo Pokémon 4 puede reemplazar
-                                nMoveSwitch1 = 4
-                            else:
-                                # Pokémon 3 y 4 pueden reemplazar
-                                nMoveSwitch1 = random.choice([3, 4])
+                            nMoveSwitch1 = self._choose_switch_slot(battle)
                     else:
                         # El Random ha elegido Switch
                         if ((battle.request_json).get('active','False')[0].get('trapped','False') == True or (battle.request_json).get('active','False')[0].get('maybeTrapped','False') == True) or (battle.user.reserved[0].fainted and battle.user.reserved[1].fainted):
@@ -276,18 +262,8 @@ class BattleBot(Battle):
                                         logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][0]['moves'][nMoveSwitch1-1]['target']))
                         else:
                             # Si no... sí puede hacer un cambio normal
-                            switch3F = battle.user.reserved[0].fainted
-                            switch4F = battle.user.reserved[1].fainted
-                            if switch3F == False and switch4F == True:
-                                # Solo Pokémon 3 puede reemplazar 
-                                nMoveSwitch1 = 3
-                            elif switch3F == True and switch4F == False:
-                                # Solo Pokémon 4 puede reemplazar
-                                nMoveSwitch1 = 4
-                            else:
-                                # Pokémon 3 y 4 pueden reemplazar
-                                nMoveSwitch1 = random.choice([3, 4])
-                                print("CAMBIO ALEATORIO NORMAL PARA 1")
+                            nMoveSwitch1 = self._choose_switch_slot(battle)
+                            print("CAMBIO ALEATORIO NORMAL PARA 1")
             else:
                 moveSwitch1 = 'pass'
                 nMoveSwitch1 = 0
@@ -308,15 +284,7 @@ class BattleBot(Battle):
                     moveSwitch2 = random.choice(['move', 'switch'])
                     if moveSwitch2 == 'move':
                         # ¿Qué movimientos están disponibles?
-                        pokemon2move = []
-                        if (battle.request_json).get('active','False')[1].get('moves','False')[0].get('disabled','False') == False:
-                            pokemon2move.append(1)
-                        if (battle.request_json).get('active','False')[1].get('moves','False')[1].get('disabled','False') == False:
-                            pokemon2move.append(2)
-                        if (battle.request_json).get('active','False')[1].get('moves','False')[2].get('disabled','False') == False:
-                            pokemon2move.append(3)
-                        if (battle.request_json).get('active','False')[1].get('moves','False')[3].get('disabled','False') == False:
-                            pokemon2move.append(4)
+                        pokemon2move = self._get_available_moves(battle, 1)
                         # ¿Hay al menos algún movimiento para escoger?
                         if len(pokemon2move) > 0:
                             # Sí, hay al menos uno...
@@ -370,18 +338,8 @@ class BattleBot(Battle):
                         else:
                             # No hay ningún movimiento disponible... algo muy poco probable... Struggle se considera como uno... así que solo queda cambiar, sí o sí debe haber al menos 1
                             moveSwitch2 = 'switch'
-                            switch3F = battle.user.reserved[0].fainted
-                            switch4F = battle.user.reserved[1].fainted
-                            if switch3F == False and switch4F == True:
-                                # Solo Pokémon 3 puede reemplazar 
-                                nMoveSwitch2 = 3
-                            elif switch3F == True and switch4F == False:
-                                # Solo Pokémon 4 puede reemplazar
-                                nMoveSwitch2 = 4
-                            else:
-                                # Pokémon 3 y 4 pueden reemplazar
-                                nMoveSwitch2 = random.choice([3, 4])
-                                print("CAMBIO ALEATORIO NORMAL PARA 2")
+                            nMoveSwitch2 = self._choose_switch_slot(battle)
+                            print("CAMBIO ALEATORIO NORMAL PARA 2")
                     else:
                         # El Random ha elegido switch
                         if ((battle.request_json).get('active','False')[1].get('trapped','False') == True or (battle.request_json).get('active','False')[1].get('maybeTrapped','False') == True) or ((battle.user.reserved[0].fainted or battle.user.reserved[1].fainted) and (nMoveSwitch1 == 3 or nMoveSwitch1 == 4)) or (battle.user.reserved[0].fainted and battle.user.reserved[1].fainted):
@@ -448,29 +406,18 @@ class BattleBot(Battle):
                                         else:
                                             logger.error("ACCION NO CONTEMPLADA" + str((battle.request_json)['active'][1]['moves'][nMoveSwitch2-1]['target']))
                         else:
-                            switch3F = battle.user.reserved[0].fainted
-                            switch4F = battle.user.reserved[1].fainted
-                            if switch3F == False and switch4F == True:
-                                # Solo Pokémon 3 puede reemplazar
-                                nMoveSwitch2 = 3
-                            elif switch3F == True and switch4F == False:
-                                # Solo Pokémon 4 puede reemplazar
-                                nMoveSwitch2 = 4
+                            if nMoveSwitch1 == 0:
+                                nMoveSwitch2 = self._choose_switch_slot(battle)
                             else:
-                                # Pokémon 3 y 4 pueden reemplazar
-                                if nMoveSwitch1 == 0:
-                                    nMoveSwitch2 = random.choice([3, 4])
-                                else:
-                                    if nMoveSwitch1 == 4:
-                                        nMoveSwitch2 = 3
-                                    else:
-                                        nMoveSwitch2 = 4
+                                nMoveSwitch2 = 3 if nMoveSwitch1 == 4 else 4
             else:
                 moveSwitch2 = 'pass'
                 nMoveSwitch2 = 0
                 dynamax2 = 0
                 toMove2 = 0
-        # Se define los Text
+
+
+        # Se define los Text Pkmn 1
         if moveSwitch1 == 'move':
             text1 = await getMoveName(battle, 0, nMoveSwitch1-1, dynamax1)
             text1Aux = text1.lower().replace(' ', '-')
@@ -489,6 +436,8 @@ class BattleBot(Battle):
             color3 = '#FFFFFF'
         else:
             logger.error("NO DEBE ENTRAR ACÁ - moveSwitch1 == 'switch'")
+
+        # Se define los Text Pkmn 2
         if moveSwitch2 == 'move':
             text2 = await getMoveName(battle, 1, nMoveSwitch2-1, dynamax2)
             text2Aux = text2.lower().replace(' ', '-')
@@ -507,6 +456,8 @@ class BattleBot(Battle):
             color4 = '#FFFFFF'
         else:
             logger.error("NO DEBE ENTRAR ACÁ - moveSwitch2 == 'switch'")
+
+        
         # Se envía al Queue la acción
         lastReward, reward = self.calculateRewards()
         logger.warning([2, text1, color1, text2, color2, text3, color3, text4, color4, lastReward, reward])

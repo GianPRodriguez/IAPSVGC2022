@@ -2136,6 +2136,8 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q)
     while True:
         # El string recibido lo guardo en msg
         msg = await ps_websocket_client.receive_message()
+        print("[get_battle_tag_and_opponent] msg: {}".format(msg))
+
         # msg = ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw|init|battle|title|PopplioPeru98 vs. Braindeadmeta|j|☆PopplioPeru98"
         split_msg = msg.split('|')
         first_msg = split_msg[0]
@@ -2163,58 +2165,76 @@ async def get_battle_tag_and_opponent(ps_websocket_client: PSWebsocketClient, q)
             # opponent_name = "Braindeadmeta"
             return battle_tag, opponent_name
 
+
 #######################################################################################################################
-# Selecciona la acción para la vista previa del equipo
+# OK - Escoge la acción para la vista previa del equipo
 #######################################################################################################################
-async def escoge_accion_team_preview(battle, ps_websocket_client):
-    # Se escoge los 4 Pokémon: eleccion(n) es un entero
+async def choose_action_team_preview(battle, ps_websocket_client):
+
+    # Se imprime en CMD la vista previa del equipo
     print("[INFO]     Vista Previa del Equipo")
-    eleccion0, eleccion1, eleccion2, eleccion3 = await battle.action_team_preview(battle) 
+
+    # Se escoge los 4 Pokémon: eleccion(n) es un entero
+    pkmn0, pkmn1, pkmn2, pkmn3 = await battle.action_team_preview(battle)
+
     # Se prepara el String que se va a enviar al WebSocket
-    # >> battle-gen8vgc2022-1614957698-shk265rg7lhkyzn0tyjofy9lr7myd0gpw|/team 314256|2
-    mensaje = ["/team {}{}{}{}|{}".format(eleccion0, eleccion1, eleccion2, eleccion3, battle.rqid)]
-    # Se envía la acción al WebSocket
+    mensaje = ["/team {}{}{}{}|{}".format(pkmn0, pkmn1, pkmn2, pkmn3, battle.rqid)]
+    # mensaje = "/team 314256|2"
+
+    # NO USADO POR AHORA
     if battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE:
         # Imprimo en CMD la acción hecha por el agente
         print("[SEND]     {}".format(mensaje))
         # Remuevo los 4 Pokémon seleccionados, solo quedan los no seleccionados
-        battle.user.active1 = battle.user.reserved[eleccion0-1]
-        battle.user.active2 = battle.user.reserved[eleccion1-1]
+        battle.user.active1 = battle.user.reserved[pkmn0-1]
+        battle.user.active2 = battle.user.reserved[pkmn1-1]
         aux = []
-        aux.append(battle.user.reserved[eleccion2-1])
-        aux.append(battle.user.reserved[eleccion3-1])
+        aux.append(battle.user.reserved[pkmn2-1])
+        aux.append(battle.user.reserved[pkmn3-1])
         battle.user.reserved = deepcopy(aux)
+    
+    # Se envía la acción al WebSocket y regreso al método que llamó a esta función, que es start_team_preview_phase
     await ps_websocket_client.send_message(battle.battle_tag, mensaje)
-    return battle
+
 
 #######################################################################################################################
 
 #######################################################################################################################
 async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, set_request_json=True):
-    
-    battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("drl"))
+    # Importo el bot de batalla, en este caso el bot "random"
+    battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format("random"))
+
     # Obtengo el id de la batalla y el nombre del oponente
     battle_tag, opponent_name = await get_battle_tag_and_opponent(ps_websocket_client, q)
+    print("[initialize_battle_with_tag] Battle Tag: {}".format(battle_tag))
+    print("[initialize_battle_with_tag] Opponent Name: {}".format(opponent_name))
+
     # Mientras...
     while True:
         # Recibo un mensaje del WebSocket
         msg = await ps_websocket_client.receive_message()
+        print("[initialize_battle_with_tag] msg: {}".format(msg))
+
         split_msg = msg.split('|')
         # ">battle-gen8vgc2022-1615425859-wyhg27ady04ol40g13v0qhy5qf6031rpw|request|{"teamPreview":true,"maxChosenTeamSize":4,"side":{"name":"PopplioPeru98","id":"p1","pokemon":[{"ident":"p1: Incineroar","details":"Incineroar, L50, F","con"
+        
         # Si la cadena de arriba...
         if split_msg[1].strip() == 'request' and split_msg[2].strip():
-            # Se obtiene el JSON 
+            # Se obtiene el JSON TEAM PREVIEW de la batalla
             user_json = json.loads(split_msg[2].strip('\''))
+            print("[initialize_battle_with_tag] User JSON: {}".format(user_json))
+
             # user_json es un diccionario derivado del JSON
             user_id = user_json[constants.SIDE][constants.ID]
             # user_id = "p1"
             opponent_id = constants.ID_LOOKUP[user_id]
             # opponent_id = "p2"
-            # Aquí se hace el cambio de bot y llamada de BattleBot...
+
+            # Aquí se incorpora el battle_tag al bot y se instancia la clase BattleBot, que es la que contiene toda la lógica de la batalla
             battle = battle_module.BattleBot(battle_tag)
             battle.q = q
-            
             battle.q.put([0])
+
             # Actualización
             battle.opponent.id = opponent_id
             # battle.opponent.id = "p2"
@@ -2229,45 +2249,57 @@ async def initialize_battle_with_tag(ps_websocket_client: PSWebsocketClient, q, 
 #######################################################################################################################
 # (3)
 #######################################################################################################################
-async def inicia_batallavgc(ps_websocket_client: PSWebsocketClient, q, botMode):
+async def start_team_preview_phase(ps_websocket_client: PSWebsocketClient, q, botMode):
+
     # Se obtiene las variables de abajo
     battle, opponent_id, user_json = await initialize_battle_with_tag(ps_websocket_client, q, set_request_json=True)
     battle.botMode = botMode
+
     # Inicializa mensaje donde se cargará el TEAM PREVIEW
     msg = ''
+
     # Mientras no aparezca al mensaje de TEAM PREVIEW
     while constants.START_TEAM_PREVIEW not in msg:
         msg = await ps_websocket_client.receive_message()
-    # ">battle-gen8vgc2022-1615320442-rkf1xxub9e146xgon0ekxyzr2hhlfxfpw|player|p2|Jisss|lucas|1112|teamsize|p1|6|teamsize|p2|6|gen|8|tier|[Gen 8] VGC 2022|rated||rule|Species Clause: Limit one of each Pokémon|rule|Item Clause: Limit one of each item|clearpoke|poke|p1|Incineroar, L50, M||poke|p1|Kyogre, L50||poke|p1|Tornadus, L50, M||poke|p1|Zacian-*, L50||poke|p1|Indeedee-F, L50, F||poke|p1|Alcremie, L50, F||poke|p2|Lapras, L50, M||poke|p2|Kyogre, L50||poke|p2|Zacian-*, L50||poke|p2|Tapu Fini, L50||poke|p2|Zapdos, L50||poke|p2|Mimikyu, L50, F||teampreview|4"
+        # ">battle-gen8vgc2022-1615320442-rkf1xxub9e146xgon0ekxyzr2hhlfxfpw|player|p2|Jisss|lucas|1112|teamsize|p1|6|teamsize|p2|6|gen|8|tier|[Gen 8] VGC 2022|rated||rule|Species Clause: Limit one of each Pokémon|rule|Item Clause: Limit one of each item|clearpoke|poke|p1|Incineroar, L50, M||poke|p1|Kyogre, L50||poke|p1|Tornadus, L50, M||poke|p1|Zacian-*, L50||poke|p1|Indeedee-F, L50, F||poke|p1|Alcremie, L50, F||poke|p2|Lapras, L50, M||poke|p2|Kyogre, L50||poke|p2|Zacian-*, L50||poke|p2|Tapu Fini, L50||poke|p2|Zapdos, L50||poke|p2|Mimikyu, L50, F||teampreview|4"
+    
+    # Todo lo que está después de clearpoke será asignado a preview_string_lines... están los 6 Pkmn de cada jugador
     preview_string_lines = msg.split(constants.START_TEAM_PREVIEW)[-1].split('\n')
     # preview_string_lines = "|poke|p1|Incineroar, L50, M||poke|p1|Kyogre, L50||poke|p1|Tornadus, L50, M||poke|p1|Zacian-*, L50||poke|p1|Indeedee-F, L50, F||poke|p1|Alcremie, L50, F||poke|p2|Lapras, L50, M||poke|p2|Kyogre, L50||poke|p2|Zacian-*, L50||poke|p2|Tapu Fini, L50||poke|p2|Zapdos, L50||poke|p2|Mimikyu, L50, F||teampreview|4"
+    
+    # Inicializa la lista de Pokémon del oponente, no es necesario guardar los Pkmn del usuario, ya que el bot tiene acceso a ellos a través del JSON recibido
     opponent_pokemon = []
+
     # Para cada linea...
     for line in preview_string_lines:
         if not line:
-            # Pasa a ETAPA TEAM PREVIEW
+            # Pasa a "ETAPA TEAM PREVIEW"
             continue
         # line = "|poke|p1|Incineroar, L50, M|"
         split_line = line.split('|')
-        # split_line[1] = "poke"
-        # split_line[2] = "p1"
-        # split_line[3] = "Incineroar, L50, M"
+        # split_line[0] = "poke"
+        # split_line[1] = "p1"
+        # split_line[2] = "Incineroar, L50, M"
         if split_line[1] == constants.TEAM_PREVIEW_POKE and split_line[2].strip() == opponent_id:
-            # Voy agrupando: ["Lapras, L50, M","Kyogre, L50","Zacian-*, L50","Tapu Fini, L50","Zapdos, L50","Mimikyu, L50, F"]
             opponent_pokemon.append(split_line[3])
-    # ETAPA TEAM PREVIEW
+    # Al final, opponent_pokemon contendrá ["Lapras, L50, M","Kyogre, L50","Zacian-*, L50","Tapu Fini, L50","Zapdos, L50","Mimikyu, L50, F"]
+
+    # "ETAPA TEAM PREVIEW"... actualizo el entorno battle con todo lo necesario para que el bot pueda decidir la mejor acción a tomar en la vista previa del equipo
     await battle.initialize_team_preview(user_json, opponent_pokemon)
-    # Se escoge la mejor acción y lo envía al WebSocket
-    battle = await escoge_accion_team_preview(battle, ps_websocket_client)
+
+    # Con el entorno battle ya actualizado, se escoge la mejor acción y lo envía al WebSocket
+    await choose_action_team_preview(battle, ps_websocket_client)
+
     # Retorno el estado actual de la batalla
     return battle
+
 
 #######################################################################################################################
 # (2)
 #######################################################################################################################
-async def iniciar_batalla(ps_websocket_client, q, botMode):
+async def start_battle(ps_websocket_client, q, botMode):
     # Inicia la Batalla VGC
-    battle = await inicia_batallavgc(ps_websocket_client, q, botMode)
+    battle = await start_team_preview_phase(ps_websocket_client, q, botMode)
     # Envía el saludo
     await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
     # Inicia el tiempo
@@ -2276,84 +2308,91 @@ async def iniciar_batalla(ps_websocket_client, q, botMode):
     # Retorna la Clase Batalla
     return battle
 
+
+
+async def handle_finished_battle(ps_websocket_client, battle, q, mensaje):
+    # Sí ha finalizado la batalla...
+    if constants.WIN_STRING in mensaje:
+        # Se obtiene el NOMBRE del ganador
+        winner = mensaje.split(constants.WIN_STRING)[-1].split('\n')[0].strip(" ")
+    else:
+        # Aún no hay NOMBRE del ganador
+        winner = None
+
+    # Y lo imprimo
+    print("[INFO]     Ganador: {}".format(winner))
+
+    # Se envía un mensaje de despedida al contricante
+    await ps_websocket_client.send_message(battle.battle_tag, [config.battle_ending_message])
+
+    # Es opcional guardar la batalla...
+    await ps_websocket_client.leave_battle(battle.battle_tag, save_replay=config.save_replay)
+    q = battle.q
+
+    # Retorna al ganador
+    return winner
+
+
+async def handle_active_battle_turn(ps_websocket_client, battle, mensaje):
+    # Flujo Principal: No ha finalizado la batalla... actualizo las variables del entorno
+    action_required, battle = await update_battle(battle, mensaje)
+
+    # action_required es BOOLEAN
+    if action_required and not battle.wait:
+        # Escoge el mejor movimiento y lo envía al websocket
+        battle, mensaje = await createBattleAction(battle)
+        await ps_websocket_client.send_message(battle.battle_tag, mensaje)
+
+    return battle
+
 #######################################################################################################################
-# Nueva Batalla Pokémon completo - Flujo Principal (BO3)
+# OK - 
+#######################################################################################################################
+async def handle_invalid_action(ps_websocket_client, battle, q):
+    # Se genera la entrada de la red neuronal para registrar la acción inválida
+    listNeuralNetworkInput = NeuralNetworkInput(battle)
+
+    if battle.cantActions != 0:
+        q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
+    else:
+        q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(-1)])
+    return "None"
+
+
+async def handle_error_message(ps_websocket_client, battle, q, split_msg):
+    if len(split_msg) < 3 or split_msg[2] == '[Invalid choice] Sorry, too late to make a different move; the next turn has already started':
+        return await handle_invalid_action(ps_websocket_client, battle, q)
+    return None
+
+
+#######################################################################################################################
+# OK - Nueva Batalla Pokémon completo - Flujo Principal (BO3)
 #######################################################################################################################
 async def pokemon_battle(ps_websocket_client, q, botmode):
-# Módulo de Análisis
-# botmode = SEARCH_LADDER
+# Módulo de Análisis: botmode = SEARCH_LADDER
 
     # Crea la Clase Batalla BO3
     try:
-        battle = await iniciar_batalla(ps_websocket_client, q, botmode)
+        battle = await start_battle(ps_websocket_client, q, botmode)
         print("async def pokemon_battle - battle: {}.".format(battle.imprimir()))
     except:
         traceback.print_exc()
 
-
-    # Bucle activo mientras dure toda la batalla
+    # Mientras dure toda la batalla
     while True:
-
-        # Se recibe el mensaje del WebSocket puntualmente
+        # Se recibe el mensaje del WebSocket y se divide en partes separadas por '|'
         mensaje = await ps_websocket_client.receive_message()
         
         # El mensaje del WebSocket se divide en partes separadas por '|'
         split_msg = mensaje.split('|')
 
-        # Si el mensaje tiene longitud menor a 3, significa que hubo un error, sino OK
-        if len(split_msg) < 3:
-            # Ok, entonces que el agente me de una acción, en base al estado actual del entorno
-            listNeuralNetworkInput = NeuralNetworkInput(battle)
-
-            if battle.cantActions != 0:
-                q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
-            else:
-                q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(-1)])
-            return "None"
-        else:
-            if split_msg[2] == '[Invalid choice] Sorry, too late to make a different move; the next turn has already started':
-                #print("[WARNING]  MÁS DE UNA ACCIÓN EN UN TURNO")
-                listNeuralNetworkInput = NeuralNetworkInput(battle)
-                if battle.cantActions != 0:
-                    q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
-                else:
-                    q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(-1)])
-                return "None"
-        
+        # Se analiza si el mensaje recibido es un error, en caso de serlo, se maneja el error y finaliza el método
+        await handle_error_message(ps_websocket_client, battle, q, split_msg)
         
         # ¿Ha finalizado la batalla?
         if battle_is_finished(battle.battle_tag, mensaje):
-
-
-            # Sí ha finalizado la batalla...
-            if constants.WIN_STRING in mensaje:
-                # Se obtiene el NOMBRE del ganador
-                winner = mensaje.split(constants.WIN_STRING)[-1].split('\n')[0].strip(" ")
-            else:
-                # Aún no hay NOMBRE del ganador
-                winner = None
-
-
-            # Y lo imprimo
-            print("[INFO]     Ganador: {}".format(winner))
-            
-
-            # Se envía un mensaje de despedida al contricante
-            await ps_websocket_client.send_message(battle.battle_tag, [config.battle_ending_message])
-
-            # Es opcional guardar la batalla...
-            await ps_websocket_client.leave_battle(battle.battle_tag, save_replay=config.save_replay)
-            q = battle.q
-
-            # Retorna al ganador
-            return winner
-        
+            # Sí ha finalizado la batalla, entonces se obtiene el ganador y se sale del bucle
+            return await handle_finished_battle(ps_websocket_client, battle, q, mensaje)
         else:
-            # Flujo Principal: No ha finalizado la batalla... actualizo las variables del entorno
-            action_required, battle = await update_battle(battle, mensaje)
-
-            # action_required es BOOLEAN
-            if (action_required and not battle.wait):
-                # Escoge el mejor movimiento y lo envía al websocket
-                battle, mensaje = await createBattleAction(battle)
-                await ps_websocket_client.send_message(battle.battle_tag, mensaje)
+            # Si no ha finalizado la batalla, entonces se actualiza el entorno y se escoge la mejor acción a tomar
+            await handle_active_battle_turn(ps_websocket_client, battle, mensaje)
