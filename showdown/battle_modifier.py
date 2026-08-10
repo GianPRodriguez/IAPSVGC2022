@@ -1,14 +1,12 @@
-import re
 import json
 import math
-import logging
+import constants
+
 from copy import deepcopy
 from collections import defaultdict
 from teams.team_converter import normalize_name
-import constants
 from showdown.battle import Pokemon
-from showdown.battle_bots.helpers import getATBoost
-from showdown.battle_bots.helpers import getDEBoost
+from showdown.battle import Battle
 
 # ¿La modificación es para el opponente?
 def is_opponent(battle,  split_msg):
@@ -459,8 +457,9 @@ def move(battle, split_msg):
     # No importa para el agente los movimientos registrados
     return battle
 
-
+#####################################################################################################################################
 # Aumento de estadísticas
+#####################################################################################################################################
 def boost(battle, split_msg):
     # split_msg = ["","-boost","p2b: Celesteela","spe","1"]
     # Se obtiene el nombre de la estadística que ha incrementado... stat = "SPEED"
@@ -1175,224 +1174,127 @@ def noinit(battle, split_msg):
         # logger.debug("Renamed battle to {}".format(battle.battle_tag))
     return battle
 
-# Update Pkmn in Battle()
-def updatePokemon(battle, pkmn, isUser, isReserved):
-    # Reserved: boosts = 0
-    if isReserved:
-        pkmn.boosts = defaultdict(lambda: 0)
-    # Inicializacion - No modificables los valores originales
-    ATK_battle_base =  pkmn.ATK_battle_base
-    DEF_battle_base =  pkmn.DEF_battle_base
-    SPA_battle_base =  pkmn.SPA_battle_base
-    SPD_battle_base =  pkmn.SPD_battle_base
-    VEL_battle_base =  pkmn.VEL_battle_base
-    # Stats Modifiers
-    if 'attack' in pkmn.boosts:
-        if pkmn.boosts['attack'] > 0:
-            ATK_battle_base = math.floor(((2+int(pkmn.boosts['attack']))/2) * pkmn.ATK_battle_base)
-        else:
-            ATK_battle_base = math.floor((2/(2+abs(int(pkmn.boosts['attack'])))) * pkmn.ATK_battle_base)
-    if 'defense' in pkmn.boosts:
-        if pkmn.boosts['defense'] > 0:
-            DEF_battle_base = math.floor(((2+int(pkmn.boosts['defense']))/2) * pkmn.DEF_battle_base)
-        else:
-            DEF_battle_base = math.floor((2/(2+abs(int(pkmn.boosts['defense'])))) * pkmn.DEF_battle_base)
-    if 'special-attack' in pkmn.boosts:
-        if pkmn.boosts['special-attack'] > 0:
-            SPA_battle_base = math.floor(((2+int(pkmn.boosts['special-attack']))/2) * pkmn.SPA_battle_base)
-        else:
-            SPA_battle_base = math.floor((2/(2+abs(int(pkmn.boosts['special-attack'])))) * pkmn.SPA_battle_base)
-    if 'special-defense' in pkmn.boosts:
-        if pkmn.boosts['special-defense'] > 0:
-            SPD_battle_base = math.floor(((2+int(pkmn.boosts['special-defense']))/2) * pkmn.SPD_battle_base)
-        else:
-            SPD_battle_base = math.floor((2/(2+abs(int(pkmn.boosts['special-defense'])))) * pkmn.SPD_battle_base)
-    if 'speed' in pkmn.boosts:
-        if pkmn.boosts['speed'] > 0:
-            VEL_battle_base = math.floor(((2+int(pkmn.boosts['speed']))/2) * pkmn.VEL_battle_base)
-        else:
-            VEL_battle_base = math.floor((2/(2+abs(int(pkmn.boosts['speed'])))) * pkmn.VEL_battle_base)
-    # Volatile Status:
-    if isUser:
-        # Reflect
-        if "reflect" in battle.user.side_conditions and "auroraveil" not in battle.user.side_conditions:
-            DEF_battle_base = math.floor(DEF_battle_base * 4/3)
-        # Light Screen
-        if "lightscreen" in battle.user.side_conditions and "auroraveil" not in battle.user.side_conditions:
-            SPD_battle_base = math.floor(SPD_battle_base * 4/3)
-        # Aurora Veil
-        if "auroraveil" in battle.user.side_conditions:
-            DEF_battle_base = math.floor(DEF_battle_base * 4/3)
-            SPD_battle_base = math.floor(SPD_battle_base * 4/3)
-    else:
-        # Reflect
-        if "reflect" in battle.opponent.side_conditions and "auroraveil" not in battle.opponent.side_conditions:
-            DEF_battle_base = math.floor(DEF_battle_base * 4/3)
-        # Light Screen
-        if "lightscreen" in battle.opponent.side_conditions and "auroraveil" not in battle.opponent.side_conditions:
-            SPD_battle_base = math.floor(SPD_battle_base * 4/3)
-        # Aurora Veil
-        if "auroraveil" in battle.opponent.side_conditions:
-            DEF_battle_base = math.floor(DEF_battle_base * 4/3)
-            SPD_battle_base = math.floor(SPD_battle_base * 4/3)
-    # ATB
-    if pkmn.status == constants.BURN:
-        pkmn.ATB = max(ATK_battle_base/2, SPA_battle_base)
-    elif pkmn.status == constants.SLEEP:
-        pkmn.ASL = 1
-        pkmn.ATB = math.floor(max(ATK_battle_base, SPA_battle_base)/3)
-    elif pkmn.status == constants.FROZEN:
-        pkmn.FRO = 1
-        pkmn.ATB = math.floor(max(ATK_battle_base, SPA_battle_base)/10)
-    else:
-        if constants.DROWSY in pkmn.volatile_statuses:
-            pkmn.DRO = 1
-            pkmn.ATB = math.floor(max(ATK_battle_base, SPA_battle_base)/2)
-        else:
-            pkmn.ATB = max(ATK_battle_base, SPA_battle_base)
-    # DEB - 'None'
-    pkmn.DEB = math.floor((DEF_battle_base + SPD_battle_base)/2)
-    # VEL - 'par'
-    if pkmn.status == constants.PARALYZED:
-        pkmn.PAR = 1
-        pkmn.VEB = math.floor(VEL_battle_base/2)
-    else:
-        pkmn.VEB = VEL_battle_base
-    # Tailwind
-    if isUser:
-        if battle.user.side_conditions['tailwind'] > 0:
-            pkmn.VEB = math.floor(pkmn.VEB*2)
-    else:
-        if battle.opponent.side_conditions['tailwind'] > 0:
-            pkmn.VEB = math.floor(pkmn.VEB*2)
-    # Trick Room
-    if battle.trick_room > 0:
-        if (isUser and battle.user.side_conditions['tailwind'] > 0) or (not isUser and battle.opponent.side_conditions['tailwind'] > 0):
-            pkmn.VEB = math.floor(constants.FASTEST * 2 - pkmn.VEB)     # Pkmn fastest = 1
-        else:
-            pkmn.VEB = math.floor(constants.FASTEST - pkmn.VEB)     # Pkmn fastest = 1
-    # Dynamax - ATB *= 1.3
-    if 'dynamax' in pkmn.volatile_statuses:
-        pkmn.ATB = math.floor(pkmn.ATB * 1.3)
-    # Beneficio por Clima
-    if battle.weather == 'raindance' and pkmn.moveType.get('water',0) > 0.50:
-        pkmn.ATB = math.floor(pkmn.ATB * 1.3)
-    if battle.weather == 'raindance' and pkmn.moveType.get('fire',0) > 0.60:
-        pkmn.ATB = math.floor(pkmn.ATB * 0.7)
-    if battle.weather == 'sunnyday' and pkmn.moveType.get('fire',0) > 0.50:
-        pkmn.ATB = math.floor(pkmn.ATB * 1.3)
-    if battle.weather == 'sunnyday' and pkmn.moveType.get('water',0) > 0.60:
-        pkmn.ATB = math.floor(pkmn.ATB * 0.7)
-    # Beneficio por Terreno
-    if battle.weather == 'electricterrain' and pkmn.moveType.get('electric',0) > 0.50:
-        pkmn.ATB = math.floor(pkmn.ATB * 1.3)
-    if battle.weather == 'grassyterrain' and pkmn.moveType.get('grass',0) > 0.50:
-        pkmn.ATB = math.floor(pkmn.ATB * 1.3)
-    if battle.weather == 'psychicterrain' and pkmn.moveType.get('psychic',0) > 0.50:
-        pkmn.ATB = math.floor(pkmn.ATB * 1.3)
-    # Actualización
-    if isUser:
-        if battle.user.active1.name == pkmn.name:
-            battle.user.active1 = deepcopy(pkmn)
-        elif battle.user.active2.name == pkmn.name:
-            battle.user.active2 = deepcopy(pkmn)
-    else:
-        if battle.opponent.active1.name == pkmn.name:
-            battle.opponent.active1 = deepcopy(pkmn)
-        elif battle.opponent.active2.name == pkmn.name:
-            battle.opponent.active2 = deepcopy(pkmn)
-    # ATBoost & DEBoost
-    if isUser:
-        pkmn.ATBoost = getATBoost(pkmn.moveType, battle.opponent.active1.type1, battle.opponent.active1.type2, battle.opponent.active2.type1, battle.opponent.active2.type2, battle)
-        pkmn.DEBoost = getDEBoost(battle.opponent.active1.moveType, battle.opponent.active2.moveType, pkmn.type1, pkmn.type2, battle)
-    else:
-        pkmn.ATBoost = getATBoost(pkmn.moveType, battle.user.active1.type1, battle.user.active1.type2, battle.user.active2.type1, battle.user.active2.type2, battle)
-        pkmn.DEBoost = getDEBoost(battle.user.active1.moveType, battle.user.active2.moveType, pkmn.type1, pkmn.type2, battle)
-    return battle
+############################################################################################################################################################
+### OK - Estimamos las Estadísticas de Batalla Actuales de cada uno de los PKMN Oponentes Activos, en base a sus Estadísticas Base, Naturaleza y Boosts  ###
+############################################################################################################################################################
+def updateStatsOpponentPKMN(pkmn: Pokemon) -> None:
+    # 1. El HP actual se estima directamente del valor HPB ya actualizado en batalla (por heal_or_damage)
+    pkmn.HPA_battle_actual = max(0, pkmn.HPB)
 
-async def updateEnvironment(battle):
-    # User
-    battle = updatePokemon(battle, battle.user.active1, True, False)
-    battle = updatePokemon(battle, battle.user.active2, True, False)
-    for i in range(len(battle.user.reserved)):
-        battle = updatePokemon(battle, battle.user.reserved[i], True, True)
-    # Opponent
-    battle = updatePokemon(battle, battle.opponent.active1, False, False)
-    battle = updatePokemon(battle, battle.opponent.active2, False, False)
-    for i in range(len(battle.opponent.reserved)):
-        battle = updatePokemon(battle, battle.opponent.reserved[i], False, True)
-    return battle
+    # 2. Inicializamos las demás estadísticas con sus valores base
+    atk = pkmn.ATK_battle_base
+    defe = pkmn.DEF_battle_base
+    spa = pkmn.SPA_battle_base
+    spd = pkmn.SPD_battle_base
+    vel = pkmn.VEL_battle_base
 
-# Actualiza estado
-async def update_battle(battle, msg):
-    msg_lines = msg.split('\n')
+    # 3. Aplicamos los efectos de la Naturaleza si existe y es conocida en el OTS
+    if pkmn.nature:
+        nature_lower = pkmn.nature.lower().strip()
+        effects = constants.NATURE_EFFECTS.get(nature_lower, {})
 
-    action = None
-    for i, line in enumerate(msg_lines):
+        # Aplicamos el aumento (+10%)
+        plus_stat = effects.get("plus")
+        if plus_stat == "attack": atk = math.floor(atk * 1.1)
+        elif plus_stat == "defense": defe = math.floor(defe * 1.1)
+        elif plus_stat == "special-attack": spa = math.floor(spa * 1.1)
+        elif plus_stat == "special-defense": spd = math.floor(spd * 1.1)
+        elif plus_stat == "speed": vel = math.floor(vel * 1.1)
+
+        # Aplicamos la disminución (-10%)
+        minus_stat = effects.get("minus")
+        if minus_stat == "attack": atk = math.floor(atk * 0.9)
+        elif minus_stat == "defense": defe = math.floor(defe * 0.9)
+        elif minus_stat == "special-attack": spa = math.floor(spa * 0.9)
+        elif minus_stat == "special-defense": spd = math.floor(spd * 0.9)
+        elif minus_stat == "speed": vel = math.floor(vel * 0.9)
+
+    # 4. Obtenemos los multiplicadores de boosts directamente de forma ultra rápida
+    atk_mult = constants.BOOST_MULTIPLIERS.get(pkmn.boosts.get("attack", 0), 1.0)
+    def_mult = constants.BOOST_MULTIPLIERS.get(pkmn.boosts.get("defense", 0), 1.0)
+    spa_mult = constants.BOOST_MULTIPLIERS.get(pkmn.boosts.get("special-attack", 0), 1.0)
+    spd_mult = constants.BOOST_MULTIPLIERS.get(pkmn.boosts.get("special-defense", 0), 1.0)
+    vel_mult = constants.BOOST_MULTIPLIERS.get(pkmn.boosts.get("speed", 0), 1.0)
+
+    # 5. Asignamos los valores de batalla reales calculados y redondeados hacia abajo
+    pkmn.ATK_battle_actual = math.floor(atk * atk_mult)
+    pkmn.DEF_battle_actual = math.floor(defe * def_mult)
+    pkmn.SPA_battle_actual = math.floor(spa * spa_mult)
+    pkmn.SPD_battle_actual = math.floor(spd * spd_mult)
+    pkmn.VEL_battle_actual = math.floor(vel * vel_mult)
+
+############################################################################################################################################################
+### OK - Estimamos las Estadísticas de Batalla Actuales de TODOS los PKMN Oponentes Activos                                                              ###
+############################################################################################################################################################
+async def updateStatsOpponents(battle: Battle) -> None:
+    if battle.opponent.active1 is not None:
+        updateStatsOpponentPKMN(battle.opponent.active1)
+    if battle.opponent.active2 is not None:
+        updateStatsOpponentPKMN(battle.opponent.active2)
+
+
+############################################################################################################################################################
+# ???
+############################################################################################################################################################
+BATTLE_MODIFIERS_LOOKUP = {
+    'request': request,
+    'switch': switch_or_drag,
+    'faint': faint,
+    'drag': switch_or_drag,
+    'swap': swap,
+    '-heal': heal_or_damage,
+    '-damage': heal_or_damage,
+    'move': move,
+    '-boost': boost,
+    '-unboost': unboost,
+    '-status': status,
+    '-activate': activate,
+    '-prepare': prepare,
+    '-start': start_volatile_status,
+    '-end': end_volatile_status,
+    '-curestatus': curestatus,
+    '-cureteam': cureteam,
+    '-weather': weather,
+    '-fieldstart': fieldstart,
+    '-fieldend': fieldend,
+    '-sidestart': sidestart,
+    '-sideend': sideend,
+    '-swapsideconditions': swapsideconditions,
+    '-item': set_item,
+    '-enditem': remove_item,
+    '-immune': set_ability,
+    '-ability': set_opponent_ability_from_ability_tag,
+    'detailschange': form_change,
+    'replace': form_change,
+    '-formechange': form_change,
+    '-transform': transform,
+    '-mega': mega,
+    '-zpower': zpower,
+    '-clearnegativeboost': clearnegativeboost,
+    '-clearallboost': clearallboost,
+    '-singleturn': singleturn,
+    'upkeep': upkeep,
+    'inactive': inactive,
+    'inactiveoff': inactiveoff,
+    'turn': turn,
+    'noinit': noinit,
+    'error': error,
+}
+
+async def update_battle_environment(battle: Battle, msg: str, msg_request: str) -> None:
+    # Concatenamos los dos mensajes si existe msg_request para procesar todas las líneas en un solo flujo
+    full_msg = f"{msg}\n{msg_request}" if msg_request else msg
+    msg_lines = full_msg.split('\n')
+
+    for line in msg_lines:
         split_msg = line.split('|')
         if len(split_msg) < 2:
             continue
 
         action = split_msg[1].strip()
 
-        battle_modifiers_lookup = {
-            'request': request,
-            'switch': switch_or_drag,
-            'faint': faint,
-            'drag': switch_or_drag,
-            'swap': swap,
-            '-heal': heal_or_damage,
-            '-damage': heal_or_damage,
-            'move': move,
-            '-boost': boost,
-            '-unboost': unboost,
-            '-status': status,
-            '-activate': activate,
-            '-prepare': prepare,
-            '-start': start_volatile_status,
-            '-end': end_volatile_status,
-            '-curestatus': curestatus,
-            '-cureteam': cureteam,
-            '-weather': weather,
-            '-fieldstart': fieldstart,
-            '-fieldend': fieldend,
-            '-sidestart': sidestart,
-            '-sideend': sideend,
-            '-swapsideconditions': swapsideconditions,
-            '-item': set_item,
-            '-enditem': remove_item,
-            '-immune': set_ability,
-            '-ability': set_opponent_ability_from_ability_tag,
-            'detailschange': form_change,
-            'replace': form_change,
-            '-formechange': form_change,
-            '-transform': transform,
-            '-mega': mega,
-            '-zpower': zpower,
-            '-clearnegativeboost': clearnegativeboost,
-            '-clearallboost': clearallboost,
-            '-singleturn': singleturn,
-            'upkeep': upkeep,
-            'inactive': inactive,
-            'inactiveoff': inactiveoff,
-            'turn': turn,
-            'noinit': noinit,
-            'error': error,
-        }
-
-        function_to_call = battle_modifiers_lookup.get(action)
+        function_to_call = BATTLE_MODIFIERS_LOOKUP.get(action)
         if function_to_call is not None:
             battle = function_to_call(battle, split_msg)
             if action != 'error':
                 battle.error = False
-            else:
-                return True, battle
-        if action == 'turn':
-            return True, battle
-
-    if action in ['inactive', 'updatesearch']:
-        return False, battle
-
-    if action != "request":
-        return battle.force_switch, battle
-    return None, battle

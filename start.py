@@ -38,17 +38,17 @@ async def stop(q, teamText):
 async def ValidarEquipo(q, teamText):
 	team, listPkmn = export_to_packed(teamText)
 	if team is None:
-		q.put([-1, listPkmn, False])
+		q.put([-3, listPkmn, False])
 		return
 	ps_websocket_client = await PSWebsocketClient.create('', '', 'sim.smogon.com:8000')
 	await ps_websocket_client.update_team(team)
 	msg = await ps_websocket_client.receive_message()
 	if msg.startswith("|popup|Your team"):
 		print("[ERROR]    ¡El equipo del agente no cumple con las reglas del formato!")
-		q.put([-1, listPkmn, False])
+		q.put([-3, listPkmn, False])
 		return
 	else:
-		q.put([-1, listPkmn, True])
+		q.put([-3, listPkmn, True])
 		return
 
 class LoremIpsum(tk.Tk):
@@ -454,7 +454,7 @@ class Modulo2(tk.Frame):
 				self.cola = self.q.get(0)
 				if self.cola[0] == 2:
 					#####################################################################################################
-					# (2): Fase: Battle - Se envía el identificador a la cola desde el Agente (main.py)
+					# (2): Fase: Battle Turn - Se envía el identificador a la cola desde el Agente (main.py)
 					#####################################################################################################
 					self.isBattle = True
 					self.labelMove.configure(text="Movimientos", bg = "#283158", font=('Verdana 12 bold'), fg="white")
@@ -565,7 +565,7 @@ class Modulo2(tk.Frame):
 					self.text4_widget = self.canvasBody.create_text(160+60, 97+20, text="Calculando...", fill="black", font=('Verdana 10'))
 				elif self.cola[0] == -1:
 					#####################################################################################################
-					# (-1): Fase: Validate Team
+					# (-1): Fase: End Battle OK
 					#####################################################################################################
 					# Widgets are available
 					self.nameEntry.config(state='normal')
@@ -580,7 +580,7 @@ class Modulo2(tk.Frame):
 					self.endBattle()
 				elif self.cola[0] == -3:
 					#####################################################################################################
-					# (-3): 
+					# (-3): Fase: Invalid Team
 					#####################################################################################################
 					self.nameEntry.config(state='normal')
 					self.cbbTeam.config(state='normal')
@@ -589,7 +589,7 @@ class Modulo2(tk.Frame):
 					self.textIncorrect = self.canvasBody.create_text(155, 235, text="¡El equipo no cumple con las reglas del formato!", fill="orange", font=('Verdana 9'))
 				elif self.cola[0] == -5:
 					#####################################################################################################
-					# (-5): 
+					# (-5): Fase: Username or Password Incorrect
 					#####################################################################################################
 					# Username or Password Incorrect
 					self.textIncorrect = self.canvasBody.create_text(120, 235, text="¡Usuario o contraseña incorrecta!", fill="orange", font=('Verdana 10'))
@@ -610,7 +610,7 @@ class Modulo2(tk.Frame):
 					self.listbox_widget = self.canvasBody.create_window(400, 140, window=self.cbbTeam)
 				elif self.cola[0] == -6:
 					#####################################################################################################
-					# (-6): Error genérico del Sistema, por ejemplo algún reinicio del servidor
+					# (-6): Fase: System Error
 					#####################################################################################################
 					# SYSTEM ERROR
 					self.textIncorrect = self.canvasBody.create_text(120, 235, text="¡Error del sistema!", fill="orange", font=('Verdana 10'))
@@ -703,7 +703,7 @@ class Modulo2(tk.Frame):
 		self.auxController.destroy()
 
 #################################################################################################################################
-# Acciones a realizar al finalizar la batalla, bajo cualquier casuistica...
+# Acciones a realizar al finalizar la batalla, NO CONSIDERA ERROR DEL SISTEMA
 #################################################################################################################################
 	def endBattle(self):
 		# Clean Canvas

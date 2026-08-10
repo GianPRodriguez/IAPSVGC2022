@@ -28,32 +28,33 @@ class BattleBot(Battle):
         return [index + 1 for index, move in enumerate(moves) if move.get('disabled', 'False') is False]
 
 #######################################################################################################################
+# OK - Escoge los 4 Pokémon de los 6 disponibles de manera aleatoria para el inicio de la batalla
+#######################################################################################################################
+    async def action_team_preview(self, battle: Battle) -> tuple[int, ...]:
+        # 1. Obtener 4 índices únicos aleatorios entre 1 y 6
+        pkmn_indices = random.sample(range(1, 7), 4)
+
+        # 2. Acceso seguro a la lista de Pokémon en el JSON
+        pokemon_list = battle.request_json.get('side', {}).get('pokemon', [])
+
+        # 3. Extraer nombres de forma segura usando list comprehension
+        names = []
+        for idx in pkmn_indices:
+            if 0 <= idx - 1 < len(pokemon_list):
+                name = pokemon_list[idx - 1].get('details', '').partition(",")[0]
+            else:
+                name = "Unknown"
+            names.append(name)
+
+        # 4. Enviar a la cola para la interfaz gráfica
+        battle.q.put([1, names[0], names[1], names[2], names[3], 0, 0])
+
+        # 5. Retornar los 4 enteros
+        return tuple(pkmn_indices) # tupla (5, 2, 1, 4)
+
+#######################################################################################################################
 # Escoge los 4 Pokémon de los 6 disponibles de manera aleatoria para el inicio de la batalla
 #######################################################################################################################
-    async def action_team_preview(self, battle):
-
-        # Semilla RANDOM para escoger 4 Pokémon de los 6 disponibles
-        choice = ''.join(random.sample("123456", 4))
-
-        # Se obtienen los 4 enteros escogidos
-        pkmn0 = int(choice[0])
-        pkmn1 = int(choice[1])
-        pkmn2 = int(choice[2])
-        pkmn3 = int(choice[3])
-
-        # Se obtiene el nombre de los Pokémon escogidos
-        namePokemon0 = battle.request_json.get('side','False').get('pokemon', 'False')[pkmn0-1].get('details', 'False').partition(",")[0]
-        namePokemon1 = battle.request_json.get('side','False').get('pokemon', 'False')[pkmn1-1].get('details', 'False').partition(",")[0]
-        namePokemon2 = battle.request_json.get('side','False').get('pokemon', 'False')[pkmn2-1].get('details', 'False').partition(",")[0]
-        namePokemon3 = battle.request_json.get('side','False').get('pokemon', 'False')[pkmn3-1].get('details', 'False').partition(",")[0]
-
-        # Se envía al Queue los 4 Pokémon para que se pueda mostrar en la interfaz gráfica
-        battle.q.put([1,namePokemon0, namePokemon1, namePokemon2, namePokemon3, 0, 0])
-
-        # Regreso los 4 enteros
-        return pkmn0, pkmn1, pkmn2, pkmn3
-
-
     async def action_battle(self, battle, state):
         moveSwitch1 = None
         nMoveSwitch1 = 0
@@ -462,4 +463,4 @@ class BattleBot(Battle):
         lastReward, reward = self.calculateRewards()
         logger.warning([2, text1, color1, text2, color2, text3, color3, text4, color4, lastReward, reward])
         battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4, lastReward, reward])
-        return battle, moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2)
+        return moveSwitch1, int(nMoveSwitch1), dynamax1, int(toMove1), moveSwitch2, int(nMoveSwitch2), dynamax2, int(toMove2)

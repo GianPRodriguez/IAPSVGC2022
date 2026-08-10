@@ -23,7 +23,6 @@ class Battle(ABC):
         self.terrainTurn = 0
         self.trick_room = 0             # [0,4,3,2,1]
         self.turn = 0
-        self.started = False
         self.rqid = None
         self.force_switch = False
         self.wait = False
@@ -40,45 +39,44 @@ class Battle(ABC):
         self.agentTraining = False
         self.cadenaTypes = json.loads(open("API/JSONs/typeChart.json","r").read())
         self.cadenaTP = json.loads(open("API/JSONs/geneticAlgorithm.json","r").read())
-        self.moveTypes = json.loads(open("API/JSONs/pkmnMovesTypes.json","r").read())
         self.movesANN = json.loads(open("API/JSONs/movesANN.json","r").read())
         self.reward = 0
         self.score = 0
         self.cantInvActions = 0
         self.cantInvActionsSeg = 0
         self.cantActions = 0
+        self.battleBO3_tag = None
+        self.battleBO3_count = 1
 
-    # Only Opponent
+###################################################################################################################################################
+# OK - Inicializa la Clase Batalla con los datos de los 6 PKMN usuario y 6 oponente en el TEAM PREVIEW, se ejecuta 1 vez por Batalla Individual
+###################################################################################################################################################
     async def initialize_team_preview(self, user_json, opponent_pokemon):
-        # Insert Pkmn User
-        self.user.updatePkmnUser(user_json, first_turn=True)
-        # The battle has started
-        self.started = True
-        # The rqid is obtained
-        self.rqid = user_json[constants.RQID]
-        # Insert Pkmn Opponent
+        self.user.updatePkmnUser(user_json, first_turn=True) # Inicializa solo los 6 PKMN del Usuario
+        self.rqid = user_json[constants.RQID] # The rqid is obtained
+
         for pkmn_string in opponent_pokemon:
-            # opponent_pokemon = ["Lapras, L50, M","Kyogre, L50","Zacian-*, L50","Tapu Fini, L50","Zapdos, L50","Mimikyu, L50, F"]
-            # pkmn_string = "Lapras, L50, M"
-            # Add Types Moves
-            name = pkmn_string.partition(",")[0]
-            if name.lower() == 'mimikyu':
-                name = 'mimikyu-disguised'
-            if name.lower() in constants.standardName:
-                namePkmn = constants.standardName[name.lower()]
-            else:
-                namePkmn = name.lower()
-            moveDict = self.moveTypes[namePkmn.lower().replace(" ", "-")]
-            for key in moveDict:
-                if moveDict[key] > 0.75:
-                    moveDict[key] = 1
-                elif moveDict[key] > 0.50:
-                    moveDict[key] = 0.75
-                elif moveDict[key] > 0.25:
-                    moveDict[key] = 0.50
-                else:
-                    moveDict[key] = 0.25
-            self.opponent.reserved.append(Pokemon(namePkmn, -1, True, None, None, None, None, moveDict))
+            # pkmn_string = ['Swampert', 'Swampertite', 'Torrent', ['WaveCrash', 'Surf', 'BulkUp', 'FlipTurn'], 'Brave']
+            name = pkmn_string[0]
+            objectPkmn = pkmn_string[1] if len(pkmn_string) > 1 else None
+            abilityPkmn = pkmn_string[2] if len(pkmn_string) > 2 else None
+            nature = pkmn_string[4] if len(pkmn_string) > 4 else None
+
+            moves = pkmn_string[3] if len(pkmn_string) > 3 and isinstance(pkmn_string[3], list) else []
+
+            # Extraer hasta 4 movimientos
+            move1 = moves[0] if len(moves) > 0 else None
+            move2 = moves[1] if len(moves) > 1 else None
+            move3 = moves[2] if len(moves) > 2 else None
+            move4 = moves[3] if len(moves) > 3 else None
+
+            # Normalizar nombre
+            name_lower = 'mimikyu-disguised' if name.lower() == 'mimikyu' else name.lower()
+            namePkmn = constants.standardName.get(name_lower, name_lower)
+
+            self.opponent.reserved.append(
+                Pokemon(namePkmn, -1, True, objectPkmn, abilityPkmn, move1, move2, move3, move4, nature) # Dentro del Constructor se Autocompleta los datos restantes del PKMN Oponente
+            )
 
     @abstractmethod
     async def action_team_preview(self, battle):
@@ -96,7 +94,6 @@ class Battle(ABC):
             print("Estado del Entorno")
             print("------------------")
             print("Turn: " + str(self.turn))
-            print("Started: " + str(self.started))
             print("Weather: " + str(self.weather))
             print("Weather Turn: " + str(self.weatherTurn))
             print("Terrain: " + str(self.terrain))
@@ -174,92 +171,53 @@ class Battler:
         self.isUser = False
         self.opponentPkmnConfirmed = 0
 
-    def getDamageClass(self, move):
-        damageClass = json.loads(open("API/JSONs/moves.json","r").read())[move]['category'].lower()
-        if damageClass != 'status':
-            return move
-        else:
-            return None
-
+###############################################################################################################################################################
+# OK - Actualiza TODOS los datos de los PKMN del usuario en base al JSON recibido por cada tipo de |request|
+###############################################################################################################################################################
     def updatePkmnUser(self, JSONdict, first_turn):
-        if (first_turn):
-            # Update data
+        if (first_turn): # TEAM PREVIEW
+            # Datos Básicos
             self.id = JSONdict["side"]["id"]
             self.account_name = JSONdict["side"]["name"]
             self.isUser = True
-            # Insert Pkmn
-            name = JSONdict["side"]["pokemon"][0]["details"].partition(",")[0]
-            if name.lower() in constants.standardName:
-                namePkmn = constants.standardName[name.lower()]
-            else:
-                namePkmn = name.lower()
-            if len(JSONdict["side"]["pokemon"][0]["moves"]) > 1:
-                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][0]["moves"][0].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][0]["moves"][1].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][0]["moves"][2].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][0]["moves"][3].lower().replace(' ', '-')), None))
-            else:
-                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][0]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][0]["moves"][0].lower().replace(' ', '-')), None, None, None, None))
-            name = JSONdict["side"]["pokemon"][1]["details"].partition(",")[0]
-            if name.lower() in constants.standardName:
-                namePkmn = constants.standardName[name.lower()]
-            else:
-                namePkmn = name.lower()
-            if len(JSONdict["side"]["pokemon"][1]["moves"]) > 1:
-                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][1]["moves"][0].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][1]["moves"][1].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][1]["moves"][2].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][1]["moves"][3].lower().replace(' ', '-')), None))
-            else:
-                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][1]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][1]["moves"][0].lower().replace(' ', '-')), None, None, None, None))
-            name = JSONdict["side"]["pokemon"][2]["details"].partition(",")[0]
-            if name.lower() in constants.standardName:
-                namePkmn = constants.standardName[name.lower()]
-            else:
-                namePkmn = name.lower()
-            if len(JSONdict["side"]["pokemon"][2]["moves"]) > 1:
-                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][2]["moves"][0].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][2]["moves"][1].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][2]["moves"][2].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][2]["moves"][3].lower().replace(' ', '-')), None))
-            else:
-                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][2]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][2]["moves"][0].lower().replace(' ', '-')), None, None, None, None))
-            name = JSONdict["side"]["pokemon"][3]["details"].partition(",")[0]
-            if name.lower() in constants.standardName:
-                namePkmn = constants.standardName[name.lower()]
-            else:
-                namePkmn = name.lower()
-            if len(JSONdict["side"]["pokemon"][3]["moves"]) > 1:
-                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][3]["moves"][0].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][3]["moves"][1].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][3]["moves"][2].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][3]["moves"][3].lower().replace(' ', '-')), None))
-            else:
-                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][3]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][3]["moves"][0].lower().replace(' ', '-')), None, None, None, None))
-            name = JSONdict["side"]["pokemon"][4]["details"].partition(",")[0]
-            if name.lower() in constants.standardName:
-                namePkmn = constants.standardName[name.lower()]
-            else:
-                namePkmn = name.lower()
-            if len(JSONdict["side"]["pokemon"][4]["moves"]) > 1:
-                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][4]["moves"][0].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][4]["moves"][1].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][4]["moves"][2].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][4]["moves"][3].lower().replace(' ', '-')), None))
-            else:
-                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][4]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][4]["moves"][0].lower().replace(' ', '-')), None, None, None, None))
-            name = JSONdict["side"]["pokemon"][5]["details"].partition(",")[0]
-            if name.lower() in constants.standardName:
-                namePkmn = constants.standardName[name.lower()]
-            else:
-                namePkmn = name.lower()
-            if len(JSONdict["side"]["pokemon"][5]["moves"]) > 1:
-                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][5]["moves"][0].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][5]["moves"][1].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][5]["moves"][2].lower().replace(' ', '-')), self.getDamageClass(JSONdict["side"]["pokemon"][5]["moves"][3].lower().replace(' ', '-')), None))
-            else:
-                self.reserved.append(Pokemon(namePkmn, JSONdict["side"]["pokemon"][5]["condition"].partition("/")[2],False, self.getDamageClass(JSONdict["side"]["pokemon"][5]["moves"][0].lower().replace(' ', '-')), None, None, None, None))
-            # Update Pkmn
-            for x in range(len(self.reserved)):
-                self.reserved[x].HPB_battle_base = int(JSONdict["side"]["pokemon"][x]["condition"].partition("/")[0].partition(" ")[0])
-                self.reserved[x].ATK_battle_base = int(JSONdict["side"]["pokemon"][x]["stats"]["atk"])
-                self.reserved[x].DEF_battle_base = int(JSONdict["side"]["pokemon"][x]["stats"]["def"])
-                self.reserved[x].SPA_battle_base = int(JSONdict["side"]["pokemon"][x]["stats"]["spa"])
-                self.reserved[x].SPD_battle_base = int(JSONdict["side"]["pokemon"][x]["stats"]["spd"])
-                self.reserved[x].VEL_battle_base = int(JSONdict["side"]["pokemon"][x]["stats"]["spe"])
-                self.reserved[x].HPB = int(JSONdict["side"]["pokemon"][x]["condition"].partition("/")[0].partition(" ")[0])
-                self.reserved[x].ATB = max(int(JSONdict["side"]["pokemon"][x]["stats"]["atk"]),int(JSONdict["side"]["pokemon"][x]["stats"]["spa"]))
-                self.reserved[x].DEB = int(math.floor((int(JSONdict["side"]["pokemon"][x]["stats"]["def"])+int(JSONdict["side"]["pokemon"][x]["stats"]["spd"]))/2))
-                self.reserved[x].VEB = int(JSONdict["side"]["pokemon"][x]["stats"]["spe"])
+
+            for pkmn_data in JSONdict["side"]["pokemon"]:
+                # Normalizar nombre
+                raw_name = pkmn_data["details"].partition(",")[0].lower()
+                namePkmn = constants.standardName.get(raw_name, raw_name)
+
+                # Extraer datos básicos
+                max_hp = pkmn_data["condition"].partition("/")[2]
+                item = pkmn_data.get("item", "")
+                ability = pkmn_data.get("ability", "")
+                
+                # Extraer hasta 4 movimientos
+                moves = pkmn_data.get("moves", [])
+                m1 = moves[0] if len(moves) > 0 else None
+                m2 = moves[1] if len(moves) > 1 else None
+                m3 = moves[2] if len(moves) > 2 else None
+                m4 = moves[3] if len(moves) > 3 else None
+
+                # Crear instancia
+                pkmn = Pokemon(namePkmn, max_hp, False, item, ability, m1, m2, m3, m4, None)
+
+                # Asignar stats en combate
+                stats = pkmn_data["stats"]
+                pkmn.HPA_battle_actual = int(pkmn_data["condition"].partition("/")[0].partition(" ")[0])
+                pkmn.ATK_battle_actual = int(stats["atk"])
+                pkmn.DEF_battle_actual = int(stats["def"])
+                pkmn.SPA_battle_actual = int(stats["spa"])
+                pkmn.SPD_battle_actual = int(stats["spd"])
+                pkmn.VEL_battle_actual = int(stats["spe"])
+
+                self.reserved.append(pkmn)
         else:
-            if len(self.reserved) == 4:
+            if len(self.reserved) == 4: # Solo quedan 2 PKMN activos para las rondas
                 name1 = self.reserved[0].name
                 name2 = self.reserved[1].name
                 name3 = self.reserved[2].name
                 name4 = self.reserved[3].name
+
                 if JSONdict["side"]["pokemon"][2]["details"].partition(",")[0].lower().replace(" ", "-") in constants.standardName:
                     auxPkmname1 = constants.standardName[JSONdict["side"]["pokemon"][2]["details"].partition(",")[0].lower().replace(" ", "-")]
                 else:
@@ -267,7 +225,8 @@ class Battler:
                 if JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-") in constants.standardName:
                     auxPkmname2 = constants.standardName[JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-")]
                 else:
-                    auxPkmname2 = JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-")                
+                    auxPkmname2 = JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-")
+
                 if name1 != auxPkmname1 and name1 != auxPkmname2:
                     self.reserved.pop(0)
                 if name2 != auxPkmname1 and name2 != auxPkmname2:
@@ -276,6 +235,7 @@ class Battler:
                     self.reserved.pop(abs(2-len(self.reserved)))
                 if name4 != auxPkmname1 and name4 != auxPkmname2:
                     self.reserved.pop(abs(1-len(self.reserved)))
+
             # Update Pkmn - Turno 2 en adelante... HPB
             self.active1.HPB = int(JSONdict["side"]["pokemon"][0]["condition"].partition("/")[0].partition(" ")[0])
             self.active2.HPB = int(JSONdict["side"]["pokemon"][1]["condition"].partition("/")[0].partition(" ")[0])
@@ -326,53 +286,50 @@ class Battler:
             print()
 
 class Pokemon:
-    # Constructor
-    def __init__(self, name: str, max_hp: int, isOpponent: bool, move1: str, move2: str, move3: str, move4: str,  moveDict: dict):
+    # Constructor que sirve tanto para PKMN Usuario y Oponente
+    def __init__(self, name: str, max_hp: int, isOpponent: bool, objectPkmn: str, abilityPkmn: str, move1: str, move2: str, move3: str, move4: str, nature: str):
         self.name = name
         self.max_hp = max_hp
         self.type1 = None
         self.type2 = None
-        self.status = None                      # ['slp', 'brn', 'frz', 'par', 'psn']
-        self.volatile_statuses = []             # dynamax, moveyawn
+        self.nature = None
+
+        self.non_volatile_statuses = defaultdict(lambda: 0)  # ['slp', 'brn', 'frz', 'par', 'psn']
+        self.volatile_statuses = defaultdict(lambda: 0)      # moveyawn
         self.boosts = defaultdict(lambda: 0)
-        if name.startswith('zacian') or name.startswith('zamazenta') or name.startswith('eternatus'):
-            self.can_dynamax = False
-        else:
-            self.can_dynamax = True
-        self.isDynamax = False
+
+        self.isMegaEvo = False
         self.opponent_confirmed = False
+        # Estadisticas Base (SOLO SE LLENA PARA LOS PKMN OPONENTE)
         self.HPB_battle_base = 0
-        self.HPB = 0
         self.ATK_battle_base = 0
-        self.SPA_battle_base = 0
-        self.ATB = 0
-        self.ATBoost = 1
-        self.SPD_battle_base = 0
         self.DEF_battle_base = 0
-        self.DEB = 0
-        self.DEBoost = 1
+        self.SPA_battle_base = 0
+        self.SPD_battle_base = 0
         self.VEL_battle_base = 0
-        self.VEB = 0
-        self.FRO = 0
-        self.ASL = 0
-        self.PAR = 0
-        self.DRO = 0
+        # Estadisticas Actuales (SE ACTUALIZA CADA TURNO PARA AMBOS)
+        self.HPA_battle_actual = 0
+        self.ATK_battle_actual = 0
+        self.DEF_battle_actual = 0
+        self.SPA_battle_actual = 0
+        self.SPD_battle_actual = 0
+        self.VEL_battle_actual = 0
+
+        # Ditto
         if name == 'Ditto':
             self.isDitto = 1
         else:
             self.isDitto = 0
+        
         self.movePP = [-1, -1, -1, -1]
-        self.moveType = defaultdict(lambda: 0)
-        if move1 is not None:
-            self.moveType[self.findMoveType(move1)] = 1
-            if move2 is not None:
-                self.moveType[self.findMoveType(move2)] = 1
-            if move3 is not None:
-                self.moveType[self.findMoveType(move3)] = 1
-            if move4 is not None:
-                self.moveType[self.findMoveType(move4)] = 1
-        else:
-            self.moveType = moveDict
+        # Parámetros OTS
+        self.objectPkmn = objectPkmn
+        self.abilityPkmn = abilityPkmn
+        self.move1 = move1
+        self.move2 = move2
+        self.move3 = move3
+        self.move4 = move4
+
         self.getStatsBattle(isOpponent)
 
     def isFainted(self):
@@ -408,8 +365,6 @@ class Pokemon:
         print("DRO: " + str(self.DRO))
         print("---MOVES---")
         print(self.movePP)
-        for key, value in self.moveType.items():
-            print(key, ' : ', value)
 
     def HP_BATTLE_CALCULATE(self, HP_base):
         return math.floor(((2*int(HP_base)+int(constants.IV)+(int(constants.EV)/4))*int(constants.LEVEL))/100) + int(constants.LEVEL) + 10
@@ -420,12 +375,10 @@ class Pokemon:
         else:
             return math.floor((((2*STAT_base+constants.IV+((constants.EV)/4))*constants.LEVEL)/100 + 5) * constants.NATURE)
 
+
     def getStatsBattle(self, isOpponent):
-        if self.name.lower() in constants.standardName:
-            namePkmn = constants.standardName[self.name.lower()]
-        else:
-            namePkmn = self.name.lower()
-        self.type1, self.type2, HP_base, ATK_base, DEF_base, SPA_base, SPD_base, VEL_base = getPkmnInfo(namePkmn)
+
+        self.type1, self.type2, HP_base, ATK_base, DEF_base, SPA_base, SPD_base, VEL_base = getPkmnInfo(self.name)
         if isOpponent:
             # Stats Battle
             self.HPB_battle_base = self.HP_BATTLE_CALCULATE(HP_base)

@@ -9,27 +9,22 @@ import config
 import queue
 
 #######################################################################################################################
-# Se asignan los valores de configuración a las variables globales del módulo config.py
+# OK - Se asignan los valores de configuración a las variables globales del módulo config.py
 #######################################################################################################################
 def parse_configs(username, password, teamname, botmode, numBattles):
     env = Env()
     env.read_env()
 
-    try:
-        config.battle_bot_module = env("BATTLE_BOT", 'smart')
-        config.save_replay = env.bool("SAVE_REPLAY", config.save_replay)
-        config.use_relative_weights = env.bool("USE_RELATIVE_WEIGHTS", config.use_relative_weights)
-        config.gambit_exe_path = env("GAMBIT_PATH", config.gambit_exe_path)
-        config.search_depth = int(env("MAX_SEARCH_DEPTH", config.search_depth))
-        config.dynamic_search_depth = env.bool("DYNAMIC_SEARCH_DEPTH", config.dynamic_search_depth)
-        config.greeting_message = env("GREETING_MESSAGE", config.greeting_message)
-        config.battle_ending_message = env("BATTLE_OVER_MESSAGE", config.battle_ending_message)
-        config.websocket_uri = env("WEBSOCKET_URI", "sim.smogon.com:8000")
-        config.pokemon_mode = env("POKEMON_MODE", constants.DEFAULT_MODE)
-        config.room_name = env("ROOM_NAME", config.room_name)
-    except (ValueError, KeyError) as e:
-        print(f"[ERROR] Fallo al cargar configuración: {e}")
-        raise
+    config.save_replay = env.bool("SAVE_REPLAY", config.save_replay)
+    config.use_relative_weights = env.bool("USE_RELATIVE_WEIGHTS", config.use_relative_weights)
+    config.gambit_exe_path = env("GAMBIT_PATH", config.gambit_exe_path)
+    config.search_depth = int(env("MAX_SEARCH_DEPTH", config.search_depth))
+    config.dynamic_search_depth = env.bool("DYNAMIC_SEARCH_DEPTH", config.dynamic_search_depth)
+    config.greeting_message = env("GREETING_MESSAGE", config.greeting_message)
+    config.battle_ending_message = env("BATTLE_OVER_MESSAGE", config.battle_ending_message)
+    config.websocket_uri = env("WEBSOCKET_URI", "sim.smogon.com:8000")
+    config.pokemon_mode = env("POKEMON_MODE", constants.DEFAULT_MODE)
+    config.room_name = env("ROOM_NAME", config.room_name)
 
     # Aplicar parámetros del usuario (sobrescriben los del .env)
     config.username = username
@@ -40,36 +35,28 @@ def parse_configs(username, password, teamname, botmode, numBattles):
     config.run_count = numBattles
 
 #######################################################################################################################
-# Función principal que maneja la lógica de conexión, inicio de sesión y ejecución de batallas en Pokémon Showdown
+# OK - Función principal que maneja la lógica de conexión, inicio de sesión y ejecución de batallas en Pokémon Showdown
 #######################################################################################################################
 async def showdown(q, username, password, teamname, botmode, numBattles):
     # Validación de parámetros
     if not username or not password or not teamname:
-        print("[ERROR] ¡Usuario o contraseña incorrecta!")
+        print("[ERROR]  ¡Usuario o contraseña o teamname está vacío!")
         q.put([-5])
         return
     
     # Configuración de la Aplicación
-    try:
-        parse_configs(username, password, teamname, botmode, numBattles)
-    except (ValueError, KeyError) as e:
-        print(f"[ERROR] ¡Error del sistema!: {e}")
-        q.put([-6])
-        return
+    parse_configs(username, password, teamname, botmode, numBattles)
     
     # Inicio de Sesión con Usuario y Contraseña en Pokémon Showdown
+    ps_websocket_client = None
     try:
         ps_websocket_client = await PSWebsocketClient.create(config.username, config.password, config.websocket_uri)
-    except (asyncio.TimeoutError, OSError, ConnectionError) as e:
-        print("[ERROR] ¡Usuario o contraseña incorrecta!")
+        await ps_websocket_client.login(False)
+    except Exception as e:
+        print(f"[ERROR]  Fallo al Iniciar Sesión en Pokémon Showdown: {e}")
         q.put([-5])
-        return
-    
-    # Se inicia sesión en Pokémon Showdown, si es -1 es porque hubo un problema con el usuario o contraseña
-    if await ps_websocket_client.login(False) == -1:
-        print("[ERROR] ¡Usuario o contraseña incorrecta!")
-        q.put([-5])
-        await ps_websocket_client.close()
+        if ps_websocket_client is not None:
+            await ps_websocket_client.close()
         return
     
     # Contadores
@@ -79,29 +66,27 @@ async def showdown(q, username, password, teamname, botmode, numBattles):
     try:
         team = load_team(config.team_name)[0]
     except Exception as e:
-        print(f"[ERROR] ¡El equipo no cumple con las reglas del formato!: '{config.team_name}': {e}")
-        q.put([-3])
+        print(f"[ERROR]  ¡Ha sucedido un error al momento de cargar el equipo!: '{config.team_name}': {e}")
+        q.put([-6])
         await ps_websocket_client.close()
         return
-
-    # Opciones de juego
+    
+    # De acuerdo al Tipo de Batalla a iniciar, se va a comenzar una Batalla dado el equipo dado
     try:
-        if config.bot_mode == constants.CHALLENGE_USER:
+        if config.bot_mode == constants.CHALLENGE_USER: # Módulo de Batallas & Entrenamiento
             await ps_websocket_client.challenge_user(config.user_to_challenge, config.pokemon_mode, team, False)
-        elif config.bot_mode == constants.ACCEPT_CHALLENGE:
+        elif config.bot_mode == constants.ACCEPT_CHALLENGE: # Módulo de Entrenamiento
             await ps_websocket_client.accept_challenge(config.pokemon_mode, team, config.room_name, False)
-        elif config.bot_mode == constants.SEARCH_LADDER:
-            # Módulo de Análisis
+        elif config.bot_mode == constants.SEARCH_LADDER: # Módulo de Análisis
             await ps_websocket_client.search_for_match(team)
         else:
             raise ValueError("Invalid Bot Mode")
     except Exception as e:
-        print(f"[ERROR] Fallo al iniciar las opciones de juego: {e}")
-        q.put([-5])
+        print(f"[ERROR]  ¡Ha sucedido un error al momento de iniciar la Batalla!: {e}")
+        q.put([-6])
         await ps_websocket_client.close()
         return
     
-    # Módulo de Análisis
     try:
         while True:
             
@@ -109,28 +94,33 @@ async def showdown(q, username, password, teamname, botmode, numBattles):
             try:
                 winner = await pokemon_battle(ps_websocket_client, q, config.bot_mode)
             except Exception as e:
-                print(f"[ERROR] Ha sucedido algún error durante la batalla: {e}")
-                break
-
-            if not config.bot_mode == constants.SEARCH_LADDER:
+                # Solo se ejecuta la excepción si no es un entrenamiento, sino debe seguir jugando las batallas que faltan
+                if config.bot_mode == constants.SEARCH_LADDER:
+                    print(f"[ERROR]  ¡Ha sucedido un error durante el BO3 de la Batalla!: {e}")
+                    q.put([-6])
+                    break
+            
+            if config.bot_mode == constants.ACCEPT_CHALLENGE:
                 if winner is None:
-                    print("[INFO]     Batalla sin resultado válido")
+                    print("[INFO]  Batalla sin resultado válido") # En caso haya ocurrido algún error en el entrenamiento, no se cuenta como victoria ni derrota
                 elif winner == config.username:
                     stats['wins'] += 1
+                    stats['battles_run'] += 1
                 else:
                     stats['losses'] += 1
-                print(f"[INFO]     Batallas: {stats['battles_run'] + 1}/{config.run_count} | Victorias: {stats['wins']} | Derrotas: {stats['losses']}")
-
-            # Se incrementa el contador de batallas ejecutadas
-            stats['battles_run'] += 1
-
-            # En el Módulo de Análisis debe ser 1, acepta de inmediato el siguiente juego
+                    stats['battles_run'] += 1
+                
+                # Estadísticas al hilo principal para actualizar la interfaz gráfica
+                print(f"[INFO]  Avance: {100 * stats['battles_run']/config.run_count:.2f} % | Victorias: {stats['wins']} | Derrotas: {stats['losses']}")
+            
+            # En el Módulo de Análisis solo ocurre una batalla
             if stats['battles_run'] >= config.run_count:
                 break
     
     finally:
         await ps_websocket_client.close()
-        print(f"[INFO]     Resumen Final - Batallas: {stats['battles_run']} | Victorias: {stats['wins']} | Derrotas: {stats['losses']}")
+        if config.bot_mode == constants.ACCEPT_CHALLENGE:
+            print(f"[INFO]  Resumen Final - Batallas: {stats['battles_run']} | Victorias: {stats['wins']} | Derrotas: {stats['losses']}")
 
 #######################################################################################################################
 # Usado SOLO en el Módulo 3
@@ -152,7 +142,7 @@ async def stop(q, username, password, teamname, botmode, numBattles):
             pass
 
 #######################################################################################################################
-# Método Principal - Módulo de Análisis
+# OK - Método Principal
 #######################################################################################################################
 class AsyncDownload(Thread):
     def __init__(self, q, username, password, teamname, botmode, numBattles):

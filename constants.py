@@ -2,7 +2,7 @@ CHALLENGE_USER = "CHALLENGE_USER"
 ACCEPT_CHALLENGE = "ACCEPT_CHALLENGE"
 SEARCH_LADDER = "SEARCH_LADDER"
 BOT_MODES = [CHALLENGE_USER, ACCEPT_CHALLENGE, SEARCH_LADDER]
-DEFAULT_MODE = "gen7randombattle"
+DEFAULT_MODE = "gen9championsvgc2026regmbbo3"
 
 STANDARD_BATTLE = "standard_battle"
 RANDOM_BATTLE = "random_battle"
@@ -461,3 +461,51 @@ FASTEST = 278
 standardName = {'zacian':'zacian-crowned','zacian-*':'zacian-crowned','thundurus':'thundurus-incarnate','landorus':'landorus-incarnate','tornadus':'tornadus-incarnate','indeedee-f':'indeedee-female','urshifu-*':'urshifu-single-strike','urshifu':'urshifu-single-strike','necrozma-dusk-mane':'necrozma-dusk','zamazenta':'zamazenta-crowned','zamazenta-*':'zamazenta-crowned','gastrodon-east':'gastrodon','mimikyu-busted':'mimikyu','xerneas-*':'xerneas'}
 colorType = {'normal':'#A8A77A','fire':'#EE8130','water':'#6390F0','electric':'#F7D02C','grass':'#7AC74C','ice':'#96D9D6','fighting':'#C22E28','poison':'#A33EA1','ground':'#E2BF65','flying':'#A98FF3','psychic':'#F95587','bug':'#A6B91A','rock':'#B6A136','ghost':'#735797','dragon':'#6F35FC','dark':'#705746','steel':'#B7B7CE','fairy':'#D685AD'}
 maxMoves = {'maxstrike':'max-strike','maxknuckle':'max-knuckle','maxairstream':'max-airstream','maxooze':'max-ooze','maxquake':'max-quake','maxrockfall':'max-rockfall','maxflutterby':'max-flutterby','maxphantasm':'max-phantasm','maxsteelspike':'max-steelspike','maxflare':'max-flare','maxgeyser':'max-geyser','maxovergrowth':'max-overgrowth','maxlightning':'max-lightning','maxmindstorm':'max-mindstorm','maxhailstorm':'max-hailstorm','maxwyrmwind':'max-wyrmwind','maxdarkness':'max-darkness','maxstarfall':'max-starfall','maxguard':'max-guard','gmaxvinelash':'max-overgrowth','gmaxwildfire':'max-flare','gmaxcannonade':'max-geyser','gmaxbefuddle':'max-flutterby','gmaxvoltcrash':'max-lightning','gmaxgoldrush':'max-strike','gmaxchistrike':'max-knuckle','gmaxterror':'max-phantasm','gmaxfoamburst':'max-geyser','gmaxresonance':'max-hailstorm','gmaxcuddle':'max-strike','gmaxreplenish':'max-strike','gmaxmalodor':'max-ooze','gmaxmeltdown':'max-steelspike','gmaxdrumsolo':'max-overgrowth','gmaxfireball':'max-flare','gmaxhydrosnipe':'max-geyser','gmaxwindrage':'max-airstream','gmaxgravitas':'max-mindstorm','gmaxstonesurge':'max-geyser','gmaxvolcalith':'max-rockfall','gmaxtartness':'max-overgrowth','gmaxsweetness':'max-overgrowth','gmaxsandblast':'max-quake','gmaxstunshock':'max-lightning','gmaxcentiferno':'max-flare','gmaxsmite':'max-starfall','gmaxsnooze':'max-darkness','gmaxfinale':'max-starfall','gmaxsteelsurge':'max-steelspike','gmaxdepletion':'max-wyrmwind','gmaxoneblow':'max-darkness','gmaxrapidflow':'max-geyser'}
+
+
+
+# Mapeo de naturalezas competitivas estándar
+NATURE_EFFECTS = {
+    "adamant": {"plus": "attack", "minus": "special-attack"},
+    "bashful": {},
+    "bold": {"plus": "defense", "minus": "attack"},
+    "brave": {"plus": "attack", "minus": "speed"},
+    "calm": {"plus": "special-defense", "minus": "attack"},
+    "careful": {"plus": "special-defense", "minus": "special-attack"},
+    "docile": {},
+    "gentle": {"plus": "special-defense", "minus": "defense"},
+    "hardy": {},
+    "hasty": {"plus": "speed", "minus": "defense"},
+    "impish": {"plus": "defense", "minus": "special-attack"},
+    "jolly": {"plus": "speed", "minus": "special-attack"},
+    "lax": {"plus": "defense", "minus": "special-defense"},
+    "lonely": {"plus": "attack", "minus": "defense"},
+    "mild": {"plus": "special-attack", "minus": "defense"},
+    "modest": {"plus": "special-attack", "minus": "attack"},
+    "naive": {"plus": "speed", "minus": "special-defense"},
+    "naughty": {"plus": "attack", "minus": "special-defense"},
+    "quiet": {"plus": "special-attack", "minus": "speed"},
+    "quirky": {},
+    "rash": {"plus": "special-attack", "minus": "special-defense"},
+    "relaxed": {"plus": "defense", "minus": "speed"},
+    "sassy": {"plus": "special-defense", "minus": "speed"},
+    "serious": {},
+    "timid": {"plus": "speed", "minus": "attack"},
+}
+
+# Multiplicadores de boost estáticos y optimizados para evitar cálculos redundantes
+BOOST_MULTIPLIERS = {
+    -6: 2 / 8,  # 0.25
+    -5: 2 / 7,
+    -4: 2 / 6,  # 0.33
+    -3: 2 / 5,  # 0.4
+    -2: 2 / 4,  # 0.5
+    -1: 2 / 3,  # 0.66
+     0: 1.0,
+     1: 3 / 2,  # 1.5
+     2: 4 / 2,  # 2.0
+     3: 5 / 2,  # 2.5
+     4: 6 / 2,  # 3.0
+     5: 7 / 2,  # 3.5
+     6: 8 / 2,  # 4.0
+}

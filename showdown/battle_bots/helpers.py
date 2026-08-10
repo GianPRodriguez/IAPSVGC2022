@@ -6,6 +6,7 @@ import requests
 import math
 from collections import defaultdict
 from numpy import sqrt 
+from typing import list
 
 logger = logging.getLogger(__name__)
 
@@ -41,27 +42,30 @@ class pkmnSubReward:
         self.ATBoost = ATBoost
         self.DEBoost = DEBoost
 
-# Formato de Acción
-async def format_decision(battle, moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2):
-    # Formats a decision for communication with Pokemon-Showdown
-    if nMoveSwitch1 == 0:
-        nMoveSwitch1 = ""
-    if toMove1 == 0:
-        toMove1 = ""
-    if nMoveSwitch2 == 0:
-        nMoveSwitch2 = ""
-    if toMove2 == 0:
-        toMove2 = ""
-    if dynamax1 == 0:
-        dynamax1 = ""
-    else:
-        dynamax1 = "dynamax"
-    if dynamax2 == 0:
-        dynamax2 = ""
-    else:
-        dynamax2 = "dynamax"
-    message = "/choose {} {} {} {}, {} {} {} {}".format(moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
-    #return [message, str(battle.rqid)]
+#################################################################################################################################################
+# OK - Helper para formatear una acción individual y eliminar espacios vacíos.
+#################################################################################################################################################
+def _helper_format_action(action_type: str, slot: int, mega: int, target: int) -> str:
+    parts = [
+        action_type,
+        str(slot) if slot != 0 else "",
+        "mega" if mega != 0 else "",
+        str(target) if target != 0 else ""
+    ]
+    # Filtra los elementos vacíos "" y los une con un único espacio
+    return " ".join(p for p in parts if p)
+
+#################################################################################################################################################
+# OK - Se formatea la acción para cada turno de la Batalla
+#################################################################################################################################################
+async def format_decision(move_switch_1: str, n_move_switch_1: int, mega_1: int, to_move_1: int, move_switch_2: str, n_move_switch_2: int, mega_2: int, to_move_2: int) -> list[str]:
+    
+    # Formateamos la acción para cada uno de los dos Pokémon activos
+    action_1 = _helper_format_action(move_switch_1, n_move_switch_1, mega_1, to_move_1)
+    action_2 = _helper_format_action(move_switch_2, n_move_switch_2, mega_2, to_move_2)
+    
+    # Creamos el mensaje final
+    message = f"/choose {action_1}, {action_2}" # message = "/choose move 2 mega 1,move 1 2"
     return [message]
 
 
@@ -233,22 +237,6 @@ def findGroupReward(pkmno1, pkmno2, pkmnor1, pkmnor2, pkmnu1, pkmnu2, pkmnur1, p
     pkmnu2.addTypesMod(getATBoost(pkmnu2.dictMoves, pkmno1.type1, pkmno1.type2, pkmno2.type1, pkmno2.type2, battle), getDEBoost(pkmno1.dictMoves, pkmno2.dictMoves, pkmnu2.type1, pkmnu2.type2, battle))
     pkmno1.addTypesMod(getATBoost(pkmno1.dictMoves, pkmnu1.type1, pkmnu1.type2, pkmnu2.type1, pkmnu2.type2, battle), getDEBoost(pkmnu1.dictMoves, pkmnu2.dictMoves, pkmno1.type1, pkmno1.type2, battle))
     pkmno2.addTypesMod(getATBoost(pkmno2.dictMoves, pkmnu1.type1, pkmnu1.type2, pkmnu2.type1, pkmnu2.type2, battle), getDEBoost(pkmnu1.dictMoves, pkmnu2.dictMoves, pkmno2.type1, pkmno2.type2, battle))
-    #if pkmnu1.type1.lower() == 'psychic' and pkmnu2.type1.lower() == 'grass' and pkmnur1.type1.lower() == 'fairy' and pkmnur2.type1.lower() == 'electric' and pkmno1.type1.lower() == 'water' and pkmno1.type2.lower() == 'ground' and pkmno2.type1.lower() == 'fire' and pkmno2.type2.lower() == 'dark' and pkmnor1.type1.lower() == 'dark' and pkmnor1.type2.lower() == 'flying' and pkmnor2.type1.lower() == 'fairy':
-    #    print("----------")
-    #    print("formula(pkmnu1): ATB: {} ATBoost: {} VEB: {} HPB: {} DEBoost: {} DEB: {}".format(pkmnu1.ATB, pkmnu1.ATBoost, pkmnu1.VEB, pkmnu1.HPB, pkmnu1.DEBoost, pkmnu1.DEB))
-    #    print("formula(pkmnu1)*1.1: {}".format(formula(pkmnu1)*1.1))
-    #    print("formula(pkmnu2): ATB: {} ATBoost: {} VEB: {} HPB: {} DEBoost: {} DEB: {}".format(pkmnu2.ATB, pkmnu2.ATBoost, pkmnu2.VEB, pkmnu2.HPB, pkmnu2.DEBoost, pkmnu2.DEB))
-    #    print("formula(pkmnu2): {}".format(formula(pkmnu2)))
-    #    print("0.9*formula(pkmnur1): {}".format(0.9*formula(pkmnur1)))
-    #    print("0.9*formula(pkmnur2): {}".format(0.9*formula(pkmnur2)))
-    #    print("SUMA USUARIO: {}".format(formula(pkmnu1)*1.1 + formula(pkmnu2) + 0.9*(formula(pkmnur1)+formula(pkmnur2))))
-    #    print("----------")
-    #    print("formula(pkmno1)*1.1: {}".format(formula(pkmno1)*1.1))
-    #    print("formula(pkmno2): {}".format(formula(pkmno2)))
-    #    print("0.9*formula(pkmnor1): {}".format(0.9*formula(pkmnor1)))
-    #    print("0.9*formula(pkmnor2): {}".format(0.9*formula(pkmnor2)))
-    #    print("SUMA OPONENTE: {}".format(-(formula(pkmno1)*1.1 + formula(pkmno2) + 0.9*(formula(pkmnor1)+formula(pkmnor2)))))
-    #    print("TOTAL SUMA: {}".format(formula(pkmnu1)*1.1 + formula(pkmnu2) + 0.9*(formula(pkmnur1)+formula(pkmnur2)) - (formula(pkmno1)*1.1 + formula(pkmno2) + 0.9*(formula(pkmnor1)+formula(pkmnor2)))))
     return formula(pkmnu1)*1.1 + formula(pkmnu2) + 0.9*(formula(pkmnur1)+formula(pkmnur2)) - (formula(pkmno1)*1.1 + formula(pkmno2) + 0.9*(formula(pkmnor1)+formula(pkmnor2)))
 
 
@@ -322,7 +310,6 @@ def getATBoost(dictMoves, o1type1, o1type2, o2type1, o2type2, battle):
         aux1 = max(aux1, float(cadena.get(key,'False').get(o1type1,1)) * float(cadena.get(key,'False').get(o1type2,1)) * dictMoves[key])
         aux2 = max(aux2, float(cadena.get(key,'False').get(o2type1,1)) * float(cadena.get(key,'False').get(o2type2,1)) * dictMoves[key])
     return (aux1 + aux2)/2
-
 
 # Team Preview & Battle
 def getDEBoost(dictMoves1, dictMoves2, utype1, utype2, battle):
