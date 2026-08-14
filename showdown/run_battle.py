@@ -2158,6 +2158,7 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
 
     # 2. Si el turno requiere una acción activa o un cambio forzado (forceSwitch)
     if battle.force_switch or "active" in msg_request or "forceSwitch" in msg_request:
+        battle.error = False
         battle, battle_turn_action = await createBattleAction(battle, msg_request)
         await ps_websocket_client.send_message(battle.battle_tag, battle_turn_action)
         return
