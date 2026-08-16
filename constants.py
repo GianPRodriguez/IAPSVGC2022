@@ -516,6 +516,14 @@ MOVETYPES_WITHOUT_PARAMETERS = (
     'randomNormal', 'scripted'
 )
 
+MOVETYPES_SINGLE_TARGET = ('normal', 'any')
+
+MOVETYPES_ADJACENT_FOE = ('adjacentFoe')
+
+MOVETYPES_ADJACENT_ALLY = ('adjacentAlly')
+
+MOVETYPES_ALLY_OR_SELF = ('adjacentAllyOrSelf')
+
 COLOR_TYPE = {
         'normal': '#A8A77A',
         'fire': '#EE8130',
@@ -536,3 +544,4 @@ COLOR_TYPE = {
         'steel': '#B7B7CE',
         'fairy': '#D685AD'
 }
+

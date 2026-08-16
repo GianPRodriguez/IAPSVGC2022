@@ -5,11 +5,6 @@ from showdown.battle import Battle
 from showdown.battle_bots.helpers import getMoveName
 from showdown.battle_bots.helpers import getToMovePokemon
 
-'''
-    MEJORAS PENDIENTES:
-    - USAR CONSTANTES
-    - EFECTO DE GOTHITELLE
-'''
 
 ############################################################################################################################################################
 # OK - Implementación del bot aleatorio (Random Bot) para Pokémon Showdown VGC                                                                           ###
@@ -24,8 +19,8 @@ class BattleBot(Battle):
 ############################################################################################################################################################
     def _choose_switch_slot(self, battle: Battle) -> int:
 
-        switch3_fainted = battle.user.reserved[0].isFainted()
-        switch4_fainted = battle.user.reserved[1].isFainted()
+        switch3_fainted = battle.user.reserved[0].is_fainted
+        switch4_fainted = battle.user.reserved[1].is_fainted
 
         # Si el Pokémon del slot 3 está debilitado, obligatoriamente elegimos el slot 4
         if not switch3_fainted and switch4_fainted:
@@ -94,7 +89,7 @@ class BattleBot(Battle):
         # CASO 1: Cambio Obligatorio (forceSwitch)
         # =====================================================================
         if battle.force_switch:
-            force_switches = battle.request_json.get("forceSwitch", [False, False])
+            force_switches = battle.request_json.get(constants.FORCE_SWITCH, [False, False])
             izquierdaSwitch = force_switches[0] if len(force_switches) > 0 else False
             derechaSwitch = force_switches[1] if len(force_switches) > 1 else False
 
@@ -112,8 +107,8 @@ class BattleBot(Battle):
                 moveSwitch1 = 'switch'
                 moveSwitch2 = 'switch'
 
-                switch3F = battle.user.reserved[0].isFainted()
-                switch4F = battle.user.reserved[1].isFainted()
+                switch3F = battle.user.reserved[0].is_fainted
+                switch4F = battle.user.reserved[1].is_fainted
 
                 if switch3F and not switch4F:
                     nMoveSwitch1 = 4
@@ -132,10 +127,10 @@ class BattleBot(Battle):
             # -----------------------------------------------------------------
             # POKÉMON IZQUIERDA (Active 1)
             # -----------------------------------------------------------------
-            if not battle.user.active1.isFainted():
+            if not battle.user.active1.is_fainted:
                 active1_info = request_active[0] if len(request_active) > 0 else {}
-                is_trapped = active1_info.get('trapped', False) or active1_info.get('maybeTrapped', False)
-                no_reserves = battle.user.reserved[0].isFainted() and battle.user.reserved[1].isFainted()
+                is_trapped = active1_info.get(constants.TRAPPED, False) or active1_info.get(constants.MAYBE_TRAPPED, False)
+                no_reserves = battle.user.reserved[0].is_fainted and battle.user.reserved[1].is_fainted
 
                 if is_trapped or no_reserves:
                     moveSwitch1 = 'move'
@@ -158,9 +153,9 @@ class BattleBot(Battle):
                         if target_type in constants.MOVETYPES_WITHOUT_PARAMETERS:
                             # Movimientos que no requieren seleccionar objetivo
                             toMove1 = 0
-                        elif target_type in ('normal', 'any'):
+                        elif target_type in constants.MOVETYPES_SINGLE_TARGET:
                             # Pueden apuntar a cualquier Pokémon en 2v2
-                            if not battle.user.active2.isFainted():
+                            if not battle.user.active2.is_fainted:
                                 # Comprobamos si el aliado está vivo
                                 if random.random() < 0.10: 
                                     # 10% de probabilidad de atacar al aliado, 90% a un rival
@@ -170,15 +165,15 @@ class BattleBot(Battle):
                             else:
                                 # Si el aliado está debilitado, 100% de probabilidad a un rival
                                 toMove1 = random.choice([1, 2])
-                        elif target_type == 'adjacentFoe':
+                        elif target_type == constants.MOVETYPES_ADJACENT_FOE:
                             # Exclusivamente para atacar a un rival
                             toMove1 = random.choice([1, 2])
-                        elif target_type == 'adjacentAlly':
+                        elif target_type == constants.MOVETYPES_ADJACENT_ALLY:
                             # Exclusivamente a un aliado (ej. Refuerzo)
                             toMove1 = -1
-                        elif target_type == 'adjacentAllyOrSelf':
+                        elif target_type == constants.MOVETYPES_ALLY_OR_SELF:
                             # 50% de probabilidad al aliado (-2), 50% a sí mismo (0)
-                            if not battle.user.active2.isFainted():
+                            if not battle.user.active2.is_fainted:
                                 toMove1 = random.choice([-2, 0])
                             else:
                                 # Si el aliado está debilitado, se lo aplica a sí mismo 100%
@@ -198,10 +193,10 @@ class BattleBot(Battle):
             # -----------------------------------------------------------------
             # POKÉMON DERECHA (Active 2)
             # -----------------------------------------------------------------
-            if not battle.user.active2.isFainted():
+            if not battle.user.active2.is_fainted:
                 active2_info = request_active[1] if len(request_active) > 1 else {}
                 is_trapped = active2_info.get('trapped', False) or active2_info.get('maybeTrapped', False)
-                no_reserves = battle.user.reserved[0].isFainted() and battle.user.reserved[1].isFainted()
+                no_reserves = battle.user.reserved[0].is_fainted and battle.user.reserved[1].is_fainted
 
                 # Evitamos elegir cambiar al mismo slot reservado que el active1
                 reserved_slot_used = (moveSwitch1 == 'switch')
@@ -227,9 +222,9 @@ class BattleBot(Battle):
                         if target_type in constants.MOVETYPES_WITHOUT_PARAMETERS:
                             # Movimientos que no requieren seleccionar objetivo
                             toMove2 = 0
-                        elif target_type in ('normal', 'any'):
+                        elif target_type in constants.MOVETYPES_SINGLE_TARGET:
                             # Pueden apuntar a cualquier Pokémon en 2v2
-                            if not battle.user.active1.isFainted():
+                            if not battle.user.active1.is_fainted:
                                 # Comprobamos si el aliado está vivo
                                 if random.random() < 0.10: 
                                     # 10% de probabilidad de atacar al aliado, 90% a un rival
@@ -239,15 +234,15 @@ class BattleBot(Battle):
                             else:
                                 # Si el aliado está debilitado, 100% de probabilidad a un rival
                                 toMove2 = random.choice([1, 2])
-                        elif target_type == 'adjacentFoe':
+                        elif target_type == constants.MOVETYPES_ADJACENT_FOE:
                             # Exclusivamente para atacar a un rival
                             toMove2 = random.choice([1, 2])
-                        elif target_type == 'adjacentAlly':
+                        elif target_type == constants.MOVETYPES_ADJACENT_ALLY:
                             # Exclusivamente a un aliado (ej. Refuerzo)
                             toMove2 = -1
-                        elif target_type == 'adjacentAllyOrSelf':
+                        elif target_type == constants.MOVETYPES_ALLY_OR_SELF:
                             # 50% de probabilidad al aliado (-1), 50% a sí mismo (0)
-                            if not battle.user.active1.isFainted():
+                            if not battle.user.active1.is_fainted:
                                 toMove2 = random.choice([-1, 0])
                             else:
                                 # Si el aliado está debilitado, se lo aplica a sí mismo 100%
@@ -271,7 +266,7 @@ class BattleBot(Battle):
         # Formateo de descripciones para interfaz y cálculo de recompensas
         # =====================================================================
         if moveSwitch1 == 'move':
-            text1 = await getMoveName(battle, 0, nMoveSwitch1 - 1, megaEvo1)
+            text1 = await getMoveName(battle, 0, nMoveSwitch1 - 1)
             text1Aux = text1.lower().replace(' ', '-')
             color1 = await getColorMove(text1Aux)
             text3 = await getToMovePokemon(battle, toMove1)
@@ -284,7 +279,7 @@ class BattleBot(Battle):
             color3 = '#FFFFFF'
 
         if moveSwitch2 == 'move':
-            text2 = await getMoveName(battle, 1, nMoveSwitch2 - 1, megaEvo2)
+            text2 = await getMoveName(battle, 1, nMoveSwitch2 - 1)
             text2Aux = text2.lower().replace(' ', '-')
             color2 = await getColorMove(text2Aux)
             text4 = await getToMovePokemon(battle, toMove2)

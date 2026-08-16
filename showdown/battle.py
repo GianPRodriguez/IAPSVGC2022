@@ -12,7 +12,7 @@ from collections import defaultdict
 from API.PokeAPI import getPkmnInfo
 
 ############################################################################################################################################################
-# OK -  Información General de la Batalla                                                                                                                ###
+# OK - CLASE BATTLE                                                                                                                                      ###
 ############################################################################################################################################################
 class Battle(ABC):
     def __init__(self):
@@ -46,10 +46,11 @@ class Battle(ABC):
         self.reward = 0
         self.score = 0
 
+
 ############################################################################################################################################################
-# OK - Inicializa la Clase Batalla con los datos de los 6 PKMN usuario y 6 oponente en el TEAM PREVIEW, se ejecuta 1 vez por Batalla Individual
+# OK - Completa las clases Battler con los datos de los 6 PKMN usuario y 6 oponente en el TEAM PREVIEW, se ejecuta 1 vez por Batalla Individual          ###
 ############################################################################################################################################################
-    async def initialize_team_preview(self, user_json, opponent_pokemon):
+    async def initialize_team_preview(self, user_json: str, opponent_pokemon: list) -> None:
         self.user.updatePkmnUser(user_json, first_turn=True) # Inicializa solo los 6 PKMN del Usuario
         self.rqid = user_json[constants.RQID] # The rqid is obtained
 
@@ -99,7 +100,7 @@ class Battle(ABC):
     def imprimir(self):
         """Imprime por consola y guarda en 'reporte.txt' el estado completo de la batalla."""
         with open('reporte.txt', 'a', encoding='utf-8') as f:
-            print("\n==================================================", file=f)
+            print("==================================================", file=f)
             print("                ESTADO DEL ENTORNO                ", file=f)
             print("==================================================", file=f)
             print(f"Turno: {self.turn} | rqid: {self.rqid}", file=f)
@@ -112,22 +113,13 @@ class Battle(ABC):
             print("\n--------------------------------------------------", file=f)
             print("                     USUARIO                      ", file=f)
             print("--------------------------------------------------", file=f)
-            # Asegúrate de que Battler tenga su propio método imprimir()
-            if hasattr(self.user, 'imprimir'):
-                # Nota: Si el Battler imprime directamente a stdout, 
-                # podrías requerir pasarle el archivo 'f' si deseas que también se guarde allí.
-                self.user.imprimir()
-            else:
-                print(self.user, file=f)
+            self.user.imprimir(f)
 
             print("\n--------------------------------------------------", file=f)
             print("                     OPONENTE                     ", file=f)
             print("--------------------------------------------------", file=f)
-            if hasattr(self.opponent, 'imprimir'):
-                self.opponent.imprimir()
-            else:
-                print(self.opponent, file=f)
-            print("==================================================\n", file=f)
+            self.opponent.imprimir(f)
+            print("==================================================", file=f)
 
 
 ############################################################################################################################################################
@@ -140,25 +132,25 @@ class Battle(ABC):
 
 
 ############################################################################################################################################################
-# OK - 
+# OK - CLASE BATTLER                                                                                                                                     ###
 ############################################################################################################################################################
 class Battler:
-    # Constructor
     def __init__(self):
-        self.name = None                                # String
+        self.id = None                                  # Ejm: p1
         self.account_name = None                        # String
         self.active1 = None                             # class Pokemon or None
         self.active2 = None                             # class Pokemon or None
         self.reserved = []                              # class Pokemon
         self.side_conditions = defaultdict(lambda: 0)   # Tailwind, Stealth Rock, Reflect
-        self.isUser = False
-        self.opponentPkmnConfirmed = 0
+        self.isUser = False                             # Se actualiza en True solo cuando es Usuario
+        self.opponentPkmnConfirmed = 0                  # Contabilizador de oponentes
+
 
 ###############################################################################################################################################################
-# OK - Actualiza TODOS los datos de los PKMN del usuario en base al JSON recibido por cada tipo de |request|
+# OK - Actualiza TODOS los datos de los PKMN del usuario en base al JSON recibido por cada tipo de |request|                                                ###
 ###############################################################################################################################################################
     def updatePkmnUser(self, JSONdict, first_turn):
-        if (first_turn): # TEAM PREVIEW
+        if (first_turn): # TEAM PREVIEW - 6 PKMN
             # Datos Básicos
             self.id = JSONdict["side"]["id"]
             self.account_name = JSONdict["side"]["name"]
@@ -235,45 +227,50 @@ class Battler:
             self.reserved[1].HPB = int(JSONdict["side"]["pokemon"][3]["condition"].partition("/")[0].partition(" ")[0])
 
 
-############################################################################################################################################################
-# OK - 
-############################################################################################################################################################
-    def imprimir(self):
-        print()
-        print("id: " + str(self.id))
-        print("Nombre de la cuenta: " + str(self.account_name))
-        print()
-        if self.isUser == False:
-            print("opponentPkmnConfirmed: " + str(self.opponentPkmnConfirmed))
-        print()
-        print("Side conditions: ")
-        for key, value in self.side_conditions.items():
-            print(key, ' : ', value)
-        print()
+###############################################################################################################################################################
+# OK - Impresión de la clase Battler                                                                                                                        ###
+###############################################################################################################################################################
+    def imprimir(self, f):
+        """Imprime la información del Battler (Usuario u Oponente) en el archivo."""
+        print(f"ID: {self.id} | Cuenta: {self.account_name}", file=f)
+        
+        if not self.isUser:
+            print(f"Pokémon del oponente confirmados: {self.opponentPkmnConfirmed}", file=f)
+            
+        print("\nSide conditions:", file=f)
+        if self.side_conditions:
+            for key, value in self.side_conditions.items():
+                print(f"  {key} : {value}", file=f)
+        else:
+            print("  Ninguna", file=f)
+
+        print("\n--- POKÉMON ACTIVO 1 ---", file=f)
         if self.active1 is not None:
-            print("Active 1: ")
-            print()
-            self.active1.imprimir()
-            print()
+            self.active1.imprimir(f)
         else:
-            print("Active 1: " + str(None))
-            print()
+            print("  Ninguno (None)", file=f)
+
+        print("\n--- POKÉMON ACTIVO 2 ---", file=f)
         if self.active2 is not None:
-            print("Active 2: ")
-            print()
-            self.active2.imprimir()
-            print()
+            self.active2.imprimir(f)
         else:
-            print("Active 2: " + str(None))
-            print()
-        print("List of Reserved: ")
-        print()
-        for pkmn in self.reserved:
-            pkmn.imprimir()
-            print()
+            print("  Ninguno (None)", file=f)
+
+        print("\n--- POKÉMON EN RESERVA ---", file=f)
+        if self.reserved:
+            for i, pkmn in enumerate(self.reserved, start=1):
+                print(f"\n[Reserva {i}]", file=f)
+                if pkmn is not None:
+                    pkmn.imprimir(f)
+                else:
+                    print("  Vacío (None)", file=f)
+        else:
+            print("  Sin reservas", file=f)
+        print("-" * 50, file=f)
+
 
 ############################################################################################################################################################
-# OK - Representa a un Pokémon en combate, ya sea del usuario o del oponente                                                                             ###
+# OK - CLASE POKEMON                                                                                                                                     ###
 ############################################################################################################################################################
 class Pokemon:
     def __init__(
@@ -346,36 +343,30 @@ class Pokemon:
 ############################################################################################################################################################
 # OK - Impresión de la clase Pokemon                                                                                                                     ###
 ############################################################################################################################################################
-    def imprimir(self) -> None:
-        """Imprime por consola el estado actual del Pokémon de forma organizada."""
-        print(f"==================== POKÉMON: {self.name} ====================")
-        print(f"Tipo 1: {self.type1} | Tipo 2: {self.type2}")
-        print(f"Naturaleza: {self.nature} | HP Máximo: {self.max_hp}")
-        print(f"Objeto: {self.objectPkmn} | Habilidad: {self.abilityPkmn}")
-        print(f"Es Oponente: {self.is_opponent} | Confirmado: {self.is_opponent_confirmed}")
-        print(f"Es Mega Evolución: {self.is_mega_evo} | Es Ditto: {self.is_ditto} | ¿Derrotado?: {self.is_fainted}")
+    def imprimir(self, f) -> None:
+        """Imprime por consola o archivo el estado actual del Pokémon de forma organizada."""
+        print(f"  > POKÉMON: {self.name}", file=f)
+        print(f"    Tipo 1: {self.type1} | Tipo 2: {self.type2}", file=f)
+        print(f"    Naturaleza: {self.nature} | HP Máximo: {self.max_hp}", file=f)
+        print(f"    Objeto: {self.objectPkmn} | Habilidad: {self.abilityPkmn}", file=f)
+        print(f"    Es Oponente: {self.is_opponent} | Confirmado: {self.is_opponent_confirmed}", file=f)
+        print(f"    Es Mega Evolución: {self.is_mega_evo} | Es Ditto: {self.is_ditto} | ¿Derrotado?: {self.is_fainted}", file=f)
         
-        print("\n--- ESTADOS Y MODIFICADORES ---")
-        print(f"Estados No Volátiles: {dict(self.non_volatile_statuses)}")
-        print(f"Estados Volátiles: {dict(self.volatile_statuses)}")
+        print("    [Estados y Modificadores]", file=f)
+        print(f"      No Volátiles: {dict(self.non_volatile_statuses)}", file=f)
+        print(f"      Volátiles: {dict(self.volatile_statuses)}", file=f)
         
-        print("Boosts (Modificadores):")
-        if self.boosts:
-            for stat, value in self.boosts.items():
-                if value != 0:  # Opcional: muestra solo los boosts activos
-                    print(f"  {stat}: {value}")
-        else:
-            print("  Ninguno")
+        active_boosts = {k: v for k, v in self.boosts.items() if v != 0}
+        print(f"      Boosts Activos: {active_boosts if active_boosts else 'Ninguno'}", file=f)
 
-        print("\n--- ESTADÍSTICAS BASE ---")
-        print(f"HPB: {self.HPB_battle_base} | ATK: {self.ATK_battle_base} | DEF: {self.DEF_battle_base}")
-        print(f"SPA: {self.SPA_battle_base} | SPD: {self.SPD_battle_base} | VEL: {self.VEL_battle_base}")
+        print("    [Estadísticas Base]", file=f)
+        print(f"      HPB: {self.HPB_battle_base} | ATK: {self.ATK_battle_base} | DEF: {self.DEF_battle_base}", file=f)
+        print(f"      SPA: {self.SPA_battle_base} | SPD: {self.SPD_battle_base} | VEL: {self.VEL_battle_base}", file=f)
 
-        print("\n--- ESTADÍSTICAS ACTUALES ---")
-        print(f"HPA: {self.HPA_battle_actual} | ATK: {self.ATK_battle_actual} | DEF: {self.DEF_battle_actual}")
-        print(f"SPA: {self.SPA_battle_actual} | SPD: {self.SPD_battle_actual} | VEL: {self.VEL_battle_actual}")
+        print("    [Estadísticas Actuales]", file=f)
+        print(f"      HPA: {self.HPA_battle_actual} | ATK: {self.ATK_battle_actual} | DEF: {self.DEF_battle_actual}", file=f)
+        print(f"      SPA: {self.SPA_battle_actual} | SPD: {self.SPD_battle_actual} | VEL: {self.VEL_battle_actual}", file=f)
 
-        print("\n--- MOVIMIENTOS Y PP ---")
+        print("    [Movimientos y PP]", file=f)
         for i, (move, pp) in enumerate(zip(self.moves, self.movesPP), start=1):
-            print(f"  Movimiento {i}: {move} (PP: {pp})")
-        print("=========================================================")
+            print(f"      Movimiento {i}: {move} (PP: {pp})", file=f)
