@@ -2118,9 +2118,9 @@ async def createBattleAction(battle, msg):
     # listNeuralNetworkInput es el estado del entorno, una lista de 220 valores que se envía a la red neuronal para que decida la mejor acción
     listNeuralNetworkInput = NeuralNetworkInput(battle)
     # Se define la mejor acción en base al listNeuralNetworkInput: moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2
-    moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2, battle.reward, battle.score = await battle.action_battle(battle, listNeuralNetworkInput)
+    moveSwitch1, nMoveSwitch1, megaEvo1, toMove1, moveSwitch2, nMoveSwitch2, megaEvo2, toMove2, battle.reward, battle.score = await battle.action_battle(battle, listNeuralNetworkInput)
     # actionToWebSocket es lo que envío directamente al WebSocket para ejecutar la acción, format_decision lo formatea
-    actionToWebSocket = await format_decision(moveSwitch1, nMoveSwitch1, dynamax1, toMove1, moveSwitch2, nMoveSwitch2, dynamax2, toMove2)
+    actionToWebSocket = await format_decision(moveSwitch1, nMoveSwitch1, megaEvo1, toMove1, moveSwitch2, nMoveSwitch2, megaEvo2, toMove2)
 
     # Retorno el mensaje listo para enviarlo al WebSocket
     return battle, actionToWebSocket
@@ -2173,11 +2173,7 @@ async def handle_invalid_action(ps_websocket_client, battle, q):
     # Se genera la entrada de la red neuronal para registrar la acción inválida
     listNeuralNetworkInput = NeuralNetworkInput(battle)
 
-    if battle.cantActions != 0:
-        q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(battle.cantInvActions*100/battle.cantActions)])
-    else:
-        q.put([-10,listNeuralNetworkInput,battle.turn+1,0,battle.score,math.floor(-1)])
-    return "None"
+
 
 
 async def handle_error_message(ps_websocket_client, battle, q, split_msg):

@@ -8,6 +8,11 @@ from teams.team_converter import normalize_name
 from showdown.battle import Pokemon
 from showdown.battle import Battle
 
+'''
+    MEJORAS PENDIENTES:
+    - TAL VEZ HAYA ALGUN MODIFICADOR PENDIENTE
+'''
+
 ############################################################################################################################################################
 ### OK - Devuelve el valor booleando indicativo si la actualización del entorno afecta al oponente o al usuario                                          ###
 ############################################################################################################################################################

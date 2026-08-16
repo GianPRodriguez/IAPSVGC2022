@@ -5,6 +5,12 @@ from showdown.battle_bots.helpers import getMoveName
 from showdown.battle_bots.helpers import getColorMove
 from showdown.battle_bots.helpers import getToMovePokemon
 
+'''
+    MEJORAS PENDIENTES:
+    - USAR CONSTANTES
+    - EFECTO DE GOTHITELLE
+'''
+
 ############################################################################################################################################################
 # OK - Implementación del bot aleatorio (Random Bot) para Pokémon Showdown VGC                                                                           ###
 ############################################################################################################################################################
@@ -71,7 +77,7 @@ class BattleBot(Battle):
 ############################################################################################################################################################
 # OK - Escoge acciones aleatorias válidas para el turno de batalla (Soporta Mega-Evolución VGC)                                                          ###
 ############################################################################################################################################################
-    async def action_battle(self, battle: Battle) -> tuple[str, int, int, int, str, int, int, int]:
+    async def action_battle(self, battle: Battle, _) -> tuple[str, int, int, int, str, int, int, int, float, float]:
         moveSwitch1 = None
         nMoveSwitch1 = 0
         megaEvo1 = 0
@@ -148,15 +154,39 @@ class BattleBot(Battle):
 
                         # Selección de Objetivo (Target)
                         target_type = selected_move_info.get('target', 'normal')
-                        if target_type in ('allAdjacentFoes', 'allySide', 'self', 'all'):
+
+                        if target_type in constants.MOVETYPES_WITHOUT_PARAMETERS:
+                            # Movimientos que no requieren seleccionar objetivo
                             toMove1 = 0
-                        elif target_type in ('normal', 'any', 'selected-pokemon'):
+                        elif target_type in ('normal', 'any'):
+                            # Pueden apuntar a cualquier Pokémon en 2v2
                             if not battle.user.active2.isFainted():
-                                toMove1 = random.choice([-2, 1, 2])
+                                # Comprobamos si el aliado está vivo
+                                if random.random() < 0.10: 
+                                    # 10% de probabilidad de atacar al aliado, 90% a un rival
+                                    toMove1 = -2
+                                else:
+                                    toMove1 = random.choice([1, 2])
                             else:
+                                # Si el aliado está debilitado, 100% de probabilidad a un rival
                                 toMove1 = random.choice([1, 2])
+                        elif target_type == 'adjacentFoe':
+                            # Exclusivamente para atacar a un rival
+                            toMove1 = random.choice([1, 2])
+                        elif target_type == 'adjacentAlly':
+                            # Exclusivamente a un aliado (ej. Refuerzo)
+                            toMove1 = -1
+                        elif target_type == 'adjacentAllyOrSelf':
+                            # 50% de probabilidad al aliado (-2), 50% a sí mismo (0)
+                            if not battle.user.active2.isFainted():
+                                toMove1 = random.choice([-2, 0])
+                            else:
+                                # Si el aliado está debilitado, se lo aplica a sí mismo 100%
+                                toMove1 = 0
                         else:
+                            # Fallback de seguridad en caso de que llegue un dato corrupto
                             toMove1 = 0
+                        
                     else:
                         moveSwitch1 = 'switch'
                         nMoveSwitch1 = self._choose_switch_slot(battle)
@@ -190,18 +220,42 @@ class BattleBot(Battle):
                         # Selección aleatoria de Mega-Evolución si está disponible
                         if active2_info.get('canMegaEvo', False):
                             megaEvo2 = random.choice([0, 1])
-
+                        
                         # Selección de Objetivo (Target)
                         target_type = selected_move_info.get('target', 'normal')
-                        if target_type in ('allAdjacentFoes', 'allySide', 'self', 'all'):
+
+                        if target_type in constants.MOVETYPES_WITHOUT_PARAMETERS:
+                            # Movimientos que no requieren seleccionar objetivo
                             toMove2 = 0
-                        elif target_type in ('normal', 'any', 'selected-pokemon'):
+                        elif target_type in ('normal', 'any'):
+                            # Pueden apuntar a cualquier Pokémon en 2v2
                             if not battle.user.active1.isFainted():
-                                toMove2 = random.choice([-1, 1, 2])
+                                # Comprobamos si el aliado está vivo
+                                if random.random() < 0.10: 
+                                    # 10% de probabilidad de atacar al aliado, 90% a un rival
+                                    toMove2 = -1
+                                else:
+                                    toMove2 = random.choice([1, 2])
                             else:
+                                # Si el aliado está debilitado, 100% de probabilidad a un rival
                                 toMove2 = random.choice([1, 2])
+                        elif target_type == 'adjacentFoe':
+                            # Exclusivamente para atacar a un rival
+                            toMove2 = random.choice([1, 2])
+                        elif target_type == 'adjacentAlly':
+                            # Exclusivamente a un aliado (ej. Refuerzo)
+                            toMove2 = -1
+                        elif target_type == 'adjacentAllyOrSelf':
+                            # 50% de probabilidad al aliado (-1), 50% a sí mismo (0)
+                            if not battle.user.active1.isFainted():
+                                toMove2 = random.choice([-1, 0])
+                            else:
+                                # Si el aliado está debilitado, se lo aplica a sí mismo 100%
+                                toMove2 = 0
                         else:
-                            toMove2 = 0
+                            # Fallback de seguridad en caso de que llegue un dato corrupto
+                            toMove1 = 0
+                        
                     else:
                         moveSwitch2 = 'switch'
                         nMoveSwitch2 = 4 if nMoveSwitch1 == 3 else 3
@@ -220,7 +274,7 @@ class BattleBot(Battle):
             text1 = await getMoveName(battle, 0, nMoveSwitch1 - 1, megaEvo1)
             text1Aux = text1.lower().replace(' ', '-')
             color1 = await getColorMove(text1Aux)
-            text3 = await getToMovePokemon(battle, text1Aux, toMove1)
+            text3 = await getToMovePokemon(battle, toMove1)
             color3 = '#FFFFFF'
         elif moveSwitch1 == 'pass':
             text1, color1, text3, color3 = 'Pass', '#FFFFFF', 'Pass', '#FFFFFF'
@@ -233,7 +287,7 @@ class BattleBot(Battle):
             text2 = await getMoveName(battle, 1, nMoveSwitch2 - 1, megaEvo2)
             text2Aux = text2.lower().replace(' ', '-')
             color2 = await getColorMove(text2Aux)
-            text4 = await getToMovePokemon(battle, text2Aux, toMove2)
+            text4 = await getToMovePokemon(battle, toMove2)
             color4 = '#FFFFFF'
         elif moveSwitch2 == 'pass':
             text2, color2, text4 = 'Pass', '#FFFFFF', 'Pass'
@@ -254,5 +308,7 @@ class BattleBot(Battle):
             moveSwitch2, 
             int(nMoveSwitch2), 
             int(megaEvo2), 
-            int(toMove2)
+            int(toMove2),
+            float(lastReward),
+            float(reward)
         )

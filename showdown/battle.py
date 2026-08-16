@@ -11,18 +11,22 @@ from abc import abstractmethod
 from collections import defaultdict
 from API.PokeAPI import getPkmnInfo
 
+############################################################################################################################################################
 
+############################################################################################################################################################
 class Battle(ABC):
     def __init__(self, battle_tag):
         self.battle_tag = battle_tag
         self.user = Battler()
         self.opponent = Battler()
+        self.turn = 0
+
         self.weather = None             # ['None','raindance','sunnyday','sandstorm','hail']
         self.weatherTurn = 0
         self.terrain = None             # ['None','electricterrain','grassyterrain','mistyterrain','psychicterrain']
         self.terrainTurn = 0
         self.trick_room = 0             # [0,4,3,2,1]
-        self.turn = 0
+
         self.rqid = None
         self.force_switch = False
         self.wait = False
@@ -31,10 +35,7 @@ class Battle(ABC):
         self.reward = 0
         self.lastReward = 0
         self.botMode = None
-        self.q = queue.Queue()
-        self.q50 = queue.Queue()
-        self.qm50 = queue.Queue()
-        self.q150 = queue.Queue()
+
         self.isTraining = False
         self.agentTraining = False
         self.cadenaTypes = json.loads(open("API/JSONs/typeChart.json","r").read())
@@ -42,15 +43,14 @@ class Battle(ABC):
         self.movesANN = json.loads(open("API/JSONs/movesANN.json","r").read())
         self.reward = 0
         self.score = 0
-        self.cantInvActions = 0
-        self.cantInvActionsSeg = 0
-        self.cantActions = 0
+
         self.battleBO3_tag = None
         self.battleBO3_count = 1
 
-###################################################################################################################################################
+
+############################################################################################################################################################
 # OK - Inicializa la Clase Batalla con los datos de los 6 PKMN usuario y 6 oponente en el TEAM PREVIEW, se ejecuta 1 vez por Batalla Individual
-###################################################################################################################################################
+############################################################################################################################################################
     async def initialize_team_preview(self, user_json, opponent_pokemon):
         self.user.updatePkmnUser(user_json, first_turn=True) # Inicializa solo los 6 PKMN del Usuario
         self.rqid = user_json[constants.RQID] # The rqid is obtained
@@ -78,14 +78,26 @@ class Battle(ABC):
                 Pokemon(namePkmn, -1, True, objectPkmn, abilityPkmn, move1, move2, move3, move4, nature) # Dentro del Constructor se Autocompleta los datos restantes del PKMN Oponente
             )
 
+
+############################################################################################################################################################
+# OK - 
+############################################################################################################################################################
     @abstractmethod
     async def action_team_preview(self, battle):
         ...
 
+
+############################################################################################################################################################
+# OK - 
+############################################################################################################################################################
     @abstractmethod
     async def action_battle(self, battle):
         ...        
 
+
+############################################################################################################################################################
+# OK - 
+############################################################################################################################################################
     def imprimir(self):
         original_stdout = sys.stdout
         with open('reporte.txt', 'a') as f:
@@ -110,55 +122,19 @@ class Battle(ABC):
             self.opponent.imprimir()
             sys.stdout = original_stdout
 
-    # Calculate the reward for a specific turn
+
+############################################################################################################################################################
+# PENDIENTE - Cálculos de las Recompensas                                                                                                                ###
+############################################################################################################################################################
     def calculateRewards(self):
-        # Only user
-        user = self.formula(self.user.active1)*1.1 + self.formula(self.user.active2) + 0.9*(self.formula(self.user.reserved[0]) + self.formula(self.user.reserved[1]))
-        #print("user: {}".format(user))
-        #print("user1: {}".format(self.formula(self.user.active1)*1.1))
-        #print("user2: {}".format(self.formula(self.user.active2)))
-        #print("user3: {}".format(0.9*self.formula(self.user.reserved[0])))
-        #print("user4: {}".format(0.9*self.formula(self.user.reserved[1])))
-        # Only opponent
-        if self.opponent.opponentPkmnConfirmed == 2:
-            opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]) + self.formula(self.opponent.reserved[2]) + self.formula(self.opponent.reserved[3]))/2
-            #print("opponent1: {}".format(self.formula(self.opponent.active1)*1.1))
-            #print("opponent2: {}".format(self.formula(self.opponent.active2)))
-            #print("opponent3: {}".format(self.formula(self.opponent.reserved[0])*0.45))
-            #print("opponent4: {}".format(self.formula(self.opponent.reserved[1])*0.45))
-            #print("opponent5: {}".format(self.formula(self.opponent.reserved[2])*0.45))
-            #print("opponent6: {}".format(self.formula(self.opponent.reserved[3])*0.45))
-        elif self.opponent.opponentPkmnConfirmed == 4:
-            opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]))
-        else:   # == 3
-            if self.opponent.reserved[0].opponent_confirmed:
-                opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[0])) + 0.9*(self.formula(self.opponent.reserved[1]) + self.formula(self.opponent.reserved[2]) + self.formula(self.opponent.reserved[3]))/3
-            elif self.opponent.reserved[1].opponent_confirmed:
-                opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[1])) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[2]) + self.formula(self.opponent.reserved[3]))/3
-            elif self.opponent.reserved[2].opponent_confirmed:
-                opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[2])) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]) + self.formula(self.opponent.reserved[3]))/3
-            elif self.opponent.reserved[3].opponent_confirmed:
-                opponent = self.formula(self.opponent.active1)*1.1 + self.formula(self.opponent.active2) + 0.9*(self.formula(self.opponent.reserved[3])) + 0.9*(self.formula(self.opponent.reserved[0]) + self.formula(self.opponent.reserved[1]) + self.formula(self.opponent.reserved[2]))/3
-            else:
-                opponent = 1000000
-        # On the first turn, the reward is the score
-        if self.turn > 1:
-            self.lastReward = (user - opponent) - self.reward
-            self.reward = (user - opponent)
-        else:
-            if self.force_switch:
-                self.lastReward = (user - opponent) - self.reward
-                self.reward = (user - opponent)
-            else:
-                self.lastReward = user - opponent
-                self.reward = user - opponent
+        self.lastReward = 100.00
+        self.reward = 1000.00
         return self.lastReward, self.reward
 
-    # Calculate the reward for the user or for the opponent of 1 Pkmn
-    def formula(self, pkmn):
-        # General Formula - Only 6 variables
-        return sqrt((pkmn.ATB*pkmn.ATBoost*pkmn.VEB)/10)*sqrt((pkmn.HPB*pkmn.DEBoost*pkmn.DEB)/10)
 
+############################################################################################################################################################
+# OK - 
+############################################################################################################################################################
 class Battler:
     # Constructor
     def __init__(self):
@@ -251,6 +227,10 @@ class Battler:
             self.reserved[0].HPB = int(JSONdict["side"]["pokemon"][2]["condition"].partition("/")[0].partition(" ")[0])
             self.reserved[1].HPB = int(JSONdict["side"]["pokemon"][3]["condition"].partition("/")[0].partition(" ")[0])
 
+
+############################################################################################################################################################
+# OK - 
+############################################################################################################################################################
     def imprimir(self):
         print()
         print("id: " + str(self.id))
@@ -285,6 +265,9 @@ class Battler:
             pkmn.imprimir()
             print()
 
+############################################################################################################################################################
+# OK - 
+############################################################################################################################################################
 class Pokemon:
     # Constructor que sirve tanto para PKMN Usuario y Oponente
     def __init__(self, name: str, max_hp: int, isOpponent: bool, objectPkmn: str, abilityPkmn: str, move1: str, move2: str, move3: str, move4: str, nature: str):
@@ -332,12 +315,21 @@ class Pokemon:
 
         self.getStatsBattle(isOpponent)
 
+############################################################################################################################################################
+# OK - 
+############################################################################################################################################################
     def isFainted(self):
         return self.HPB == 0
 
+############################################################################################################################################################
+# OK - 
+############################################################################################################################################################
     def findMoveType(self, move):
         return json.loads(open("API/JSONs/moves.json","r").read())[move]['type'].lower()
 
+############################################################################################################################################################
+# OK - 
+############################################################################################################################################################
     def imprimir(self):
         print("Name: " + str(self.name))
         print("Type 1: " + str(self.type1))
@@ -366,16 +358,24 @@ class Pokemon:
         print("---MOVES---")
         print(self.movePP)
 
+############################################################################################################################################################
+# OK - 
+############################################################################################################################################################
     def HP_BATTLE_CALCULATE(self, HP_base):
         return math.floor(((2*int(HP_base)+int(constants.IV)+(int(constants.EV)/4))*int(constants.LEVEL))/100) + int(constants.LEVEL) + 10
 
+############################################################################################################################################################
+# OK - 
+############################################################################################################################################################
     def OTHER_STAT_CALCULATE(self, STAT_base, modifier, defense):
         if modifier and defense:
             return math.floor((((2*STAT_base+constants.IV+(0/4))*constants.LEVEL)/100 + 5) * 1)
         else:
             return math.floor((((2*STAT_base+constants.IV+((constants.EV)/4))*constants.LEVEL)/100 + 5) * constants.NATURE)
 
-
+############################################################################################################################################################
+# OK - 
+############################################################################################################################################################
     def getStatsBattle(self, isOpponent):
 
         self.type1, self.type2, HP_base, ATK_base, DEF_base, SPA_base, SPD_base, VEL_base = getPkmnInfo(self.name)
