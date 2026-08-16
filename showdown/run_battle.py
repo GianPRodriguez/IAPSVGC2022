@@ -94,18 +94,23 @@ def battleBO3_is_finished(battle_tag: str, msg: str) -> bool:
 async def createBattleAction(battle: Battle, msg_request: str) -> str:
     # 1. Actualiza el estado de los pkmn del usuario en base al json recibido
     battle.user.updatePkmnUser(msg_request, first_turn=False)
+    print("[createBattleAction] 1")
 
     # 2. Actualiza SOLO las estadísticas de los PKMN Oponentes Activos
     await updateStatsOpponents(battle)
+    print("[createBattleAction] 2")
 
     # 3. Se genera el INPUT de la Red Neuronal
     listNeuralNetworkInput = NeuralNetworkInput(battle)
+    print("[createBattleAction] 3")
 
     # 4. Se define la mejor acción en base al listNeuralNetworkInput
     moveSwitch1, nMoveSwitch1, megaEvo1, toMove1, moveSwitch2, nMoveSwitch2, megaEvo2, toMove2, battle.reward, battle.score = await battle.action_battle(battle, listNeuralNetworkInput)
+    print("[createBattleAction] 4")
 
     # 5. Formateo la acción seleccionada para el Turno
     actionToWebSocket = await format_decision(moveSwitch1, nMoveSwitch1, megaEvo1, toMove1, moveSwitch2, nMoveSwitch2, megaEvo2, toMove2)
+    print("[createBattleAction] 5")
 
     # 6. Retorno el mensaje listo para enviarlo al WebSocket
     return actionToWebSocket
@@ -118,8 +123,12 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
     # 1. Recibir el mensaje del WebSocket que contiene el |request|
     msg_request = await ps_websocket_client.receive_message()
 
+    print("[handle_active_battle_turn] msg_request: {}".format(msg_request))
+    print("[handle_active_battle_turn] msg_t: {}".format(msg_t))
+
     # 2. Actualizar todas las variables del entorno (Pokémon activos, stats, estados, etc.) en base a msg_t
     await update_battle_environment(battle, msg_t, msg_request)
+    print("[handle_active_battle_turn] update_battle_environment: FINALIZADO")
 
     # 3. Si el servidor solicita esperar (p. ej. el oponente está realizando U-Turn / cambio)
     if battle.wait:
@@ -127,9 +136,10 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
         return
     
     # 4. Si el turno requiere una acción activa o un cambio forzado (forceSwitch)
-    if battle.force_switch or "active" in msg_request:
+    if battle.force_switch or '"active"' in msg_request:
         print(f"Turno Tipo: forceSwitch o active")
         battle.error = False
+        print("[handle_active_battle_turn] 1")
         battle_turn_action = await createBattleAction(battle, msg_request)
         print("[INFO]  Turno: {}".format(battle.turn))
         await ps_websocket_client.send_message(battle.battle_tag, battle_turn_action)
@@ -330,8 +340,7 @@ async def start_battle(ps_websocket_client: PSWebsocketClient, battle: Battle) -
     await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
 
     # Inicia el contador de tiempo para la Batalla Individual
-    if (battle.botMode == constants.CHALLENGE_USER or battle.botMode == constants.ACCEPT_CHALLENGE):
-        await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
+    await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
 
 
 ############################################################################################################################################################
@@ -339,7 +348,11 @@ async def start_battle(ps_websocket_client: PSWebsocketClient, battle: Battle) -
 ############################################################################################################################################################
 async def start_battleBO3(ps_websocket_client: PSWebsocketClient, botMode: str) -> Battle:
     # Creo la Clase Batalla, que estará con vida durante el BO3, y que contiene toda la información de la Batalla, tanto del usuario como del oponente
-    battle = importlib.import_module('showdown.battle_bots.{}.main'.format("random"))
+    module_bot = importlib.import_module('showdown.battle_bots.{}.main'.format("random"))
+
+    # Instanciamos la clase BattleBot que vive dentro de ese módulo
+    battle = module_bot.BattleBot() 
+
     battle.botMode = botMode
 
     # Inicia la Batalla VGC
@@ -410,15 +423,16 @@ async def pokemon_battle(ps_websocket_client: PSWebsocketClient, q: multiprocess
                     raise
                 break # Y se sale del bucle
             else:
-                if "|inactive|" in msg:
-                    continue
+                if "|t:|" in msg:
+                    await handle_active_battle_turn(ps_websocket_client, battle, msg) # Si no lo tiene, se maneja el nuevo turno confirmado
                 elif "|error|" in msg:
                     await handle_action_error(ps_websocket_client, battle, msg) # Se enviará una nueva acción según el agente, pero se documentará totalmente por qué falló
                 elif "|-message|" in msg and "|win|" in msg:
                     print(f"[MSG]  ¡La Batalla no ha finalizado completamente!")
                     break
                 else:
-                    await handle_active_battle_turn(ps_websocket_client, battle, msg) # Si no lo tiene, se maneja el nuevo turno confirmado
+                    print("[pokemon_battle] continue")
+                    continue
         
         if not (await battleBO3_is_finished(battle.battleBO3_tag, msg)): # ¿Ha finalizado la Batalla BO3?
             await confirm_next_battle(ps_websocket_client, battle.battle_tag, battle.battleBO3_tag) # Si no ha finalizado, entonces se espera la siguiente Batalla Individual | confirmReady

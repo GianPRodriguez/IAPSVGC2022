@@ -26,6 +26,7 @@ class Battle(ABC):
         self.battleBO3_count = 1
         self.botMode = None
         self.battle_tag = None
+        self.q = queue.Queue()
 
         ''' Características del Entorno '''
         self.weather = None             # ['None','raindance','sunnyday','sandstorm','hail']
@@ -329,15 +330,15 @@ class Pokemon:
         self.movesPP = [-1, -1, -1, -1]
 
         # Actualizar atributos POKEAPI
-        self.getStatsBattle(is_opponent)
+        '''self.getStatsBattle(is_opponent)'''
 
 
 ############################################################################################################################################################
 # OK - Actualización Otros Atributos POKEAPI                                                                                                             ###
 ############################################################################################################################################################
-    async def getStatsBattle(self, isOpponent) -> None:
+    '''async def getStatsBattle(self, isOpponent) -> None:
         if isOpponent:
-            self.type1, self.type2, self.HPB_battle_base, self.ATK_battle_base, self.DEF_battle_base, self.SPA_battle_actual, self.SPD_battle_actual, self.VEL_battle_actual = await getPkmnInfo(self.name)
+            self.type1, self.type2, self.HPB_battle_base, self.ATK_battle_base, self.DEF_battle_base, self.SPA_battle_actual, self.SPD_battle_actual, self.VEL_battle_actual = await getPkmnInfo(self.name)'''
 
 
 ############################################################################################################################################################
