@@ -475,7 +475,7 @@ def form_change(battle: Battle, split_msg: list) -> Battle:
         
         # Creamos la nueva instancia del Pokémon con su nueva forma (ej. Aerodactyl-Mega)
         # Pasamos max_hp=0 para que recalcule sus estadísticas base de combate mediante getStatsBattle()
-        new_pkmn = Pokemon(name_pkmn, 0, opponent_turn, current_active.objectPkmn, current_active.abilityPkmn, current_active.move1, current_active.move2, current_active.move3, current_active.move4, getattr(current_active, 'nature', None))
+        new_pkmn = Pokemon(name_pkmn, 0, opponent_turn, current_active.objectPkmn, current_active.abilityPkmn, current_active.moves[0], current_active.moves[1], current_active.moves[2], current_active.moves[3], getattr(current_active, 'nature', None))
         
         # Mantenemos los HP actuales proporcionales o heredados y los estados volátiles
         new_pkmn.HPB = current_active.HPB

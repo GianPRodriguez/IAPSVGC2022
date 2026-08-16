@@ -39,22 +39,6 @@ async def getMoveName(battle, position: int, nMoveSwitch: int) -> str:
 
 
 ############################################################################################################################################################
-# OK - Define Color del Movimiento                                                                                                                       ###
-############################################################################################################################################################
-async def getColorMove(move: str) -> str:
-    url = 'https://pokeapi.co/api/v2/move/'
-
-    urlMove = url + move
-    response = requests.get(urlMove)
-    if response.status_code == 200:
-        payload = response.json()
-        move_type = payload.get('type', {}).get('name', '')
-        return constants.COLOR_TYPE.get(move_type, '#FFFFFF')
-    else:
-        return '#FFFFFF'
-
-
-############################################################################################################################################################
 # OK - ¿A quién va dirigido el movimiento?                                                                                                               ###
 ############################################################################################################################################################
 async def getToMovePokemon(battle: Battle, toMove: str) -> str:

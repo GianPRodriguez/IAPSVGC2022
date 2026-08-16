@@ -12,41 +12,39 @@ from collections import defaultdict
 from API.PokeAPI import getPkmnInfo
 
 ############################################################################################################################################################
-
+# OK -  Información General de la Batalla                                                                                                                ###
 ############################################################################################################################################################
 class Battle(ABC):
-    def __init__(self, battle_tag):
-        self.battle_tag = battle_tag
+    def __init__(self):
+
+        ''' Usuario y Oponente '''
         self.user = Battler()
         self.opponent = Battler()
-        self.turn = 0
 
+        ''' Tag Globales '''
+        self.battleBO3_tag = None
+        self.battleBO3_count = 1
+        self.botMode = None
+        self.battle_tag = None
+
+        ''' Características del Entorno '''
         self.weather = None             # ['None','raindance','sunnyday','sandstorm','hail']
         self.weatherTurn = 0
         self.terrain = None             # ['None','electricterrain','grassyterrain','mistyterrain','psychicterrain']
         self.terrainTurn = 0
         self.trick_room = 0             # [0,4,3,2,1]
 
-        self.rqid = None
+        ''' Estados e Info del Turno '''
+        self.turn = 0
         self.force_switch = False
         self.wait = False
         self.error = False
         self.request_json = None
-        self.reward = 0
-        self.lastReward = 0
-        self.botMode = None
+        self.rqid = None
 
-        self.isTraining = False
-        self.agentTraining = False
-        self.cadenaTypes = json.loads(open("API/JSONs/typeChart.json","r").read())
-        self.cadenaTP = json.loads(open("API/JSONs/geneticAlgorithm.json","r").read())
-        self.movesANN = json.loads(open("API/JSONs/movesANN.json","r").read())
+        ''' Recompensas '''
         self.reward = 0
         self.score = 0
-
-        self.battleBO3_tag = None
-        self.battleBO3_count = 1
-
 
 ############################################################################################################################################################
 # OK - Inicializa la Clase Batalla con los datos de los 6 PKMN usuario y 6 oponente en el TEAM PREVIEW, se ejecuta 1 vez por Batalla Individual
@@ -80,7 +78,7 @@ class Battle(ABC):
 
 
 ############################################################################################################################################################
-# OK - 
+# OK - Método Abstracto BOT TEAM PREVIEW                                                                                                                 ###
 ############################################################################################################################################################
     @abstractmethod
     async def action_team_preview(self, battle):
@@ -88,7 +86,7 @@ class Battle(ABC):
 
 
 ############################################################################################################################################################
-# OK - 
+# OK - Método Abstracto BOT TURNO                                                                                                                        ###
 ############################################################################################################################################################
     @abstractmethod
     async def action_battle(self, battle):
@@ -96,31 +94,40 @@ class Battle(ABC):
 
 
 ############################################################################################################################################################
-# OK - 
+# OK - Impresión de TODA la Batalla                                                                                                                      ###       
 ############################################################################################################################################################
     def imprimir(self):
-        original_stdout = sys.stdout
-        with open('reporte.txt', 'a') as f:
-            sys.stdout = f
-            print()
-            print("Estado del Entorno")
-            print("------------------")
-            print("Turn: " + str(self.turn))
-            print("Weather: " + str(self.weather))
-            print("Weather Turn: " + str(self.weatherTurn))
-            print("Terrain: " + str(self.terrain))
-            print("Terrain Turn: " + str(self.terrainTurn))
-            print("Trick Room: " + str(self.trick_room))
-            print("rqid: " + str(self.rqid))
-            print("Force Switch: " + str(self.force_switch))
-            print("Wait: " + str(self.wait))
-            print()
-            print("USUARIO: ")
-            self.user.imprimir()
-            print()
-            print("OPONENTE: ")
-            self.opponent.imprimir()
-            sys.stdout = original_stdout
+        """Imprime por consola y guarda en 'reporte.txt' el estado completo de la batalla."""
+        with open('reporte.txt', 'a', encoding='utf-8') as f:
+            print("\n==================================================", file=f)
+            print("                ESTADO DEL ENTORNO                ", file=f)
+            print("==================================================", file=f)
+            print(f"Turno: {self.turn} | rqid: {self.rqid}", file=f)
+            print(f"Clima: {self.weather} (Turnos restantes: {self.weatherTurn})", file=f)
+            print(f"Terreno: {self.terrain} (Turnos restantes: {self.terrainTurn})", file=f)
+            print(f"Trick Room: {self.trick_room}", file=f)
+            print(f"Force Switch: {self.force_switch} | Wait: {self.wait} | Error: {self.error}", file=f)
+            print(f"Recompensa actual: {self.reward} | Score: {self.score}", file=f)
+            
+            print("\n--------------------------------------------------", file=f)
+            print("                     USUARIO                      ", file=f)
+            print("--------------------------------------------------", file=f)
+            # Asegúrate de que Battler tenga su propio método imprimir()
+            if hasattr(self.user, 'imprimir'):
+                # Nota: Si el Battler imprime directamente a stdout, 
+                # podrías requerir pasarle el archivo 'f' si deseas que también se guarde allí.
+                self.user.imprimir()
+            else:
+                print(self.user, file=f)
+
+            print("\n--------------------------------------------------", file=f)
+            print("                     OPONENTE                     ", file=f)
+            print("--------------------------------------------------", file=f)
+            if hasattr(self.opponent, 'imprimir'):
+                self.opponent.imprimir()
+            else:
+                print(self.opponent, file=f)
+            print("==================================================\n", file=f)
 
 
 ############################################################################################################################################################
@@ -266,31 +273,53 @@ class Battler:
             print()
 
 ############################################################################################################################################################
-# OK - 
+# OK - Representa a un Pokémon en combate, ya sea del usuario o del oponente                                                                             ###
 ############################################################################################################################################################
 class Pokemon:
-    # Constructor que sirve tanto para PKMN Usuario y Oponente
-    def __init__(self, name: str, max_hp: int, isOpponent: bool, objectPkmn: str, abilityPkmn: str, move1: str, move2: str, move3: str, move4: str, nature: str):
+    def __init__(
+        self, 
+        name: str, 
+        max_hp: int, 
+        is_opponent: bool, 
+        object_pkmn: str, 
+        ability_pkmn: str, 
+        move1: str, 
+        move2: str, 
+        move3: str, 
+        move4: str, 
+        nature: str
+    ):
+        # Identidad y Configuración Básica
         self.name = name
         self.max_hp = max_hp
+        self.nature = nature
+        self.is_opponent = is_opponent
+        self.objectPkmn = object_pkmn
+        self.abilityPkmn = ability_pkmn
+        self.is_mega_evo = False
+        self.can_mega_evo = False
+        self.is_opponent_confirmed = False
+        self.is_ditto = True if name == 'Ditto' else False  # Mantenido como entero por compatibilidad si se requiere
+        self.is_fainted = False
+        
+        # Tipos (Se asignan posteriormente)
         self.type1 = None
         self.type2 = None
-        self.nature = None
 
-        self.non_volatile_statuses = defaultdict(lambda: 0)  # ['slp', 'brn', 'frz', 'par', 'psn']
-        self.volatile_statuses = defaultdict(lambda: 0)      # moveyawn
-        self.boosts = defaultdict(lambda: 0)
+        # Estados y Modificadores de Combate
+        self.non_volatile_statuses = defaultdict(lambda: 0)  # Ej: ['slp', 'brn', 'frz', 'par', 'psn']
+        self.volatile_statuses = defaultdict(lambda: 0)      # Ej: 'yawn', etc.
+        self.boosts = defaultdict(lambda: 0)                 # Modificadores de estadísticas (-6 a +6)
 
-        self.isMegaEvo = False
-        self.opponent_confirmed = False
-        # Estadisticas Base (SOLO SE LLENA PARA LOS PKMN OPONENTE)
+        # Estadísticas Base (Se toma como Base para la actualización de estadísticas del oponente)
         self.HPB_battle_base = 0
         self.ATK_battle_base = 0
         self.DEF_battle_base = 0
         self.SPA_battle_base = 0
         self.SPD_battle_base = 0
         self.VEL_battle_base = 0
-        # Estadisticas Actuales (SE ACTUALIZA CADA TURNO PARA AMBOS)
+
+        # Estadísticas Actuales (Se actualizan cada turno para Ambos)
         self.HPA_battle_actual = 0
         self.ATK_battle_actual = 0
         self.DEF_battle_actual = 0
@@ -298,102 +327,55 @@ class Pokemon:
         self.SPD_battle_actual = 0
         self.VEL_battle_actual = 0
 
-        # Ditto
-        if name == 'Ditto':
-            self.isDitto = 1
-        else:
-            self.isDitto = 0
-        
-        self.movePP = [-1, -1, -1, -1]
-        # Parámetros OTS
-        self.objectPkmn = objectPkmn
-        self.abilityPkmn = abilityPkmn
-        self.move1 = move1
-        self.move2 = move2
-        self.move3 = move3
-        self.move4 = move4
+        # Movimientos y PP
+        self.moves = [move1, move2, move3, move4]
+        self.movesPP = [-1, -1, -1, -1]
 
-        self.getStatsBattle(isOpponent)
+        # Actualizar atributos POKEAPI
+        self.getStatsBattle(is_opponent)
+
 
 ############################################################################################################################################################
-# OK - 
+# OK - Actualización Otros Atributos POKEAPI                                                                                                             ###
 ############################################################################################################################################################
-    def isFainted(self):
-        return self.HPB == 0
-
-############################################################################################################################################################
-# OK - 
-############################################################################################################################################################
-    def findMoveType(self, move):
-        return json.loads(open("API/JSONs/moves.json","r").read())[move]['type'].lower()
-
-############################################################################################################################################################
-# OK - 
-############################################################################################################################################################
-    def imprimir(self):
-        print("Name: " + str(self.name))
-        print("Type 1: " + str(self.type1))
-        print("Type 2: " + str(self.type2))
-        print("Max HP: " + str(self.max_hp))
-        print("Status: " + str(self.status))
-        print("Volatile Status: " + str(self.volatile_statuses))
-        print("Boosts: ")
-        for key, value in self.boosts.items():
-            print(key, ' : ', value)
-        print("Can Dynamax: " + str(self.can_dynamax))
-        print("Is Dynamax: " + str(self.isDynamax))
-        print("Is Ditto: " + str(self.isDitto))
-        print("isOpponentConfirmed: " + str(self.opponent_confirmed))
-        print("Is Fainted?: {}".format(self.isFainted()))
-        print("---STATS---")
-        print("HPB: " + str(self.HPB))
-        print("ATB: " + str(self.ATB))
-        print("DEB: " + str(self.DEB))
-        print("VEB: " + str(self.VEB))
-        print("---HEALTH---")
-        print("FRO: " + str(self.FRO))
-        print("ASL: " + str(self.ASL))
-        print("PAR: " + str(self.PAR))
-        print("DRO: " + str(self.DRO))
-        print("---MOVES---")
-        print(self.movePP)
-
-############################################################################################################################################################
-# OK - 
-############################################################################################################################################################
-    def HP_BATTLE_CALCULATE(self, HP_base):
-        return math.floor(((2*int(HP_base)+int(constants.IV)+(int(constants.EV)/4))*int(constants.LEVEL))/100) + int(constants.LEVEL) + 10
-
-############################################################################################################################################################
-# OK - 
-############################################################################################################################################################
-    def OTHER_STAT_CALCULATE(self, STAT_base, modifier, defense):
-        if modifier and defense:
-            return math.floor((((2*STAT_base+constants.IV+(0/4))*constants.LEVEL)/100 + 5) * 1)
-        else:
-            return math.floor((((2*STAT_base+constants.IV+((constants.EV)/4))*constants.LEVEL)/100 + 5) * constants.NATURE)
-
-############################################################################################################################################################
-# OK - 
-############################################################################################################################################################
-    def getStatsBattle(self, isOpponent):
-
-        self.type1, self.type2, HP_base, ATK_base, DEF_base, SPA_base, SPD_base, VEL_base = getPkmnInfo(self.name)
+    async def getStatsBattle(self, isOpponent) -> None:
         if isOpponent:
-            # Stats Battle
-            self.HPB_battle_base = self.HP_BATTLE_CALCULATE(HP_base)
-            self.max_hp = self.HPB_battle_base
-            self.ATK_battle_base = self.OTHER_STAT_CALCULATE(ATK_base,0,0)
-            self.SPA_battle_base = self.OTHER_STAT_CALCULATE(SPA_base,0,0)
-            if DEF_base > SPD_base:
-                self.SPD_battle_base = self.OTHER_STAT_CALCULATE(SPD_base,0,1)
-                self.DEF_battle_base = self.OTHER_STAT_CALCULATE(DEF_base,1,1)
-            else:
-                self.DEF_battle_base = self.OTHER_STAT_CALCULATE(DEF_base,0,1)
-                self.SPD_battle_base = self.OTHER_STAT_CALCULATE(SPD_base,1,1)
-            self.VEL_battle_base = self.OTHER_STAT_CALCULATE(VEL_base,0,0)
-            # Cálculo del Reward
-            self.HPB = self.HPB_battle_base
-            self.ATB = max(int(self.ATK_battle_base),int(self.SPA_battle_base))
-            self.DEB = int(math.floor((int(self.DEF_battle_base)+int(self.SPD_battle_base))/2))
-            self.VEB = int(self.VEL_battle_base)
+            self.type1, self.type2, self.HPB_battle_base, self.ATK_battle_base, self.DEF_battle_base, self.SPA_battle_actual, self.SPD_battle_actual, self.VEL_battle_actual = await getPkmnInfo(self.name)
+
+
+############################################################################################################################################################
+# OK - Impresión de la clase Pokemon                                                                                                                     ###
+############################################################################################################################################################
+    def imprimir(self) -> None:
+        """Imprime por consola el estado actual del Pokémon de forma organizada."""
+        print(f"==================== POKÉMON: {self.name} ====================")
+        print(f"Tipo 1: {self.type1} | Tipo 2: {self.type2}")
+        print(f"Naturaleza: {self.nature} | HP Máximo: {self.max_hp}")
+        print(f"Objeto: {self.objectPkmn} | Habilidad: {self.abilityPkmn}")
+        print(f"Es Oponente: {self.is_opponent} | Confirmado: {self.is_opponent_confirmed}")
+        print(f"Es Mega Evolución: {self.is_mega_evo} | Es Ditto: {self.is_ditto} | ¿Derrotado?: {self.is_fainted}")
+        
+        print("\n--- ESTADOS Y MODIFICADORES ---")
+        print(f"Estados No Volátiles: {dict(self.non_volatile_statuses)}")
+        print(f"Estados Volátiles: {dict(self.volatile_statuses)}")
+        
+        print("Boosts (Modificadores):")
+        if self.boosts:
+            for stat, value in self.boosts.items():
+                if value != 0:  # Opcional: muestra solo los boosts activos
+                    print(f"  {stat}: {value}")
+        else:
+            print("  Ninguno")
+
+        print("\n--- ESTADÍSTICAS BASE ---")
+        print(f"HPB: {self.HPB_battle_base} | ATK: {self.ATK_battle_base} | DEF: {self.DEF_battle_base}")
+        print(f"SPA: {self.SPA_battle_base} | SPD: {self.SPD_battle_base} | VEL: {self.VEL_battle_base}")
+
+        print("\n--- ESTADÍSTICAS ACTUALES ---")
+        print(f"HPA: {self.HPA_battle_actual} | ATK: {self.ATK_battle_actual} | DEF: {self.DEF_battle_actual}")
+        print(f"SPA: {self.SPA_battle_actual} | SPD: {self.SPD_battle_actual} | VEL: {self.VEL_battle_actual}")
+
+        print("\n--- MOVIMIENTOS Y PP ---")
+        for i, (move, pp) in enumerate(zip(self.moves, self.movesPP), start=1):
+            print(f"  Movimiento {i}: {move} (PP: {pp})")
+        print("=========================================================")
