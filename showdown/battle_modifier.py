@@ -112,7 +112,7 @@ def faint(battle: Battle, split_msg: list) -> Battle:
     pkmn = side.active1 if slot_str.endswith('a') else side.active2
 
     if pkmn:
-        pkmn.HPB = 0
+        pkmn.HPB_battle_base = 0
 
     return battle
 
@@ -134,7 +134,7 @@ def heal_or_damage(battle: Battle, split_msg: list) -> Battle:
     hp_str = split_msg[3].strip()
 
     if constants.FNT in hp_str or hp_str.startswith("0 "):
-        pkmn.HPB = 0
+        pkmn.HPB_battle_base = 0
     else:
         parts = hp_str.split('/')
         current_hp_val = float(parts[0])
@@ -142,11 +142,11 @@ def heal_or_damage(battle: Battle, split_msg: list) -> Battle:
         if opponent_turn:
             # Para el oponente, Showdown reporta porcentajes ("91/100")
             hp_percentage = current_hp_val / 100.0
-            pkmn.HPB = int(pkmn.max_hp * hp_percentage)
+            pkmn.HPB_battle_base = int(pkmn.max_hp * hp_percentage)
         else:
             # Para el usuario, Showdown reporta HP absoluto ("168/282")
             max_hp_val = float(parts[1].split()[0])
-            pkmn.HPB = int(math.ceil(current_hp_val))
+            pkmn.HPB_battle_base = int(math.ceil(current_hp_val))
             pkmn.max_hp = int(math.ceil(max_hp_val))
 
     return battle
@@ -478,7 +478,7 @@ def form_change(battle: Battle, split_msg: list) -> Battle:
         new_pkmn = Pokemon(name_pkmn, 0, opponent_turn, current_active.objectPkmn, current_active.abilityPkmn, current_active.moves[0], current_active.moves[1], current_active.moves[2], current_active.moves[3], getattr(current_active, 'nature', None))
         
         # Mantenemos los HP actuales proporcionales o heredados y los estados volátiles
-        new_pkmn.HPB = current_active.HPB
+        new_pkmn.HPB_battle_base = current_active.HPB_battle_base
         new_pkmn.volatile_statuses = aux_volatile
 
         # Asignamos el nuevo Pokémon al slot activo correspondiente
@@ -519,14 +519,14 @@ def transform(battle: Battle, split_msg: list) -> Battle:
     # 3. Si ambos existen, realizamos la transformación
     if source_pkmn and target_pkmn:
         # Guardamos el HP actual de Ditto antes de transformarse
-        aux_hp = source_pkmn.HPB
+        aux_hp = source_pkmn.HPB_battle_base
         aux_max_hp = source_pkmn.max_hp
 
         # Creamos una copia exacta (deep copy) de las estadísticas y atributos del objetivo
         new_source = deepcopy(target_pkmn)
         
         # Mantenemos el HP actual y el HP máximo que ya tenía Ditto en combate
-        new_source.HPB = aux_hp
+        new_source.HPB_battle_base = aux_hp
         new_source.max_hp = aux_max_hp
         
         # Marcamos explícitamente que sigue siendo Ditto transformado
@@ -682,7 +682,7 @@ def turn(battle: Battle, split_msg: list) -> Battle:
 ############################################################################################################################################################
 def updateStatsOpponentPKMN(pkmn: Pokemon) -> None:
     # 1. El HP actual se estima directamente del valor HPB ya actualizado en batalla (por heal_or_damage)
-    pkmn.HPA_battle_actual = max(0, pkmn.HPB)
+    pkmn.HPA_battle_actual = max(0, pkmn.HPB_battle_base)
 
     # 2. Inicializamos las demás estadísticas con sus valores base
     atk = pkmn.ATK_battle_base

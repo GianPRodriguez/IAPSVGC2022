@@ -93,7 +93,7 @@ def battleBO3_is_finished(battle_tag: str, msg: str) -> bool:
 ############################################################################################################################################################
 async def createBattleAction(battle: Battle, msg_request: str) -> str:
     # 1. Actualiza el estado de los pkmn del usuario en base al json recibido
-    battle.user.updatePkmnUser(msg_request, first_turn=False)
+    battle.user.updatePkmnUser(json.loads(msg_request.split('|request|')[1]), first_turn=False)
     print("[createBattleAction] 1")
 
     # 2. Actualiza SOLO las estadísticas de los PKMN Oponentes Activos

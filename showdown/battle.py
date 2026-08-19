@@ -1,5 +1,4 @@
 import sys
-import json
 import math
 import queue
 import requests
@@ -10,6 +9,9 @@ from numpy import sqrt
 from abc import abstractmethod
 from collections import defaultdict
 from API.PokeAPI import getPkmnInfo
+
+import json
+from typing import Union, Dict, Any
 
 ############################################################################################################################################################
 # OK - CLASE BATTLE                                                                                                                                      ###
@@ -150,14 +152,17 @@ class Battler:
 ###############################################################################################################################################################
 # OK - Actualiza TODOS los datos de los PKMN del usuario en base al JSON recibido por cada tipo de |request|                                                ###
 ###############################################################################################################################################################
-    def updatePkmnUser(self, JSONdict, first_turn):
+    def updatePkmnUser(self, JSONdict: Union[str, Dict[str, Any]], first_turn: bool) -> None:
         if (first_turn): # TEAM PREVIEW - 6 PKMN
             # Datos Básicos
             self.id = JSONdict["side"]["id"]
             self.account_name = JSONdict["side"]["name"]
             self.isUser = True
 
+            print("[updatePkmnUser] A1")
+
             for pkmn_data in JSONdict["side"]["pokemon"]:
+                print("[updatePkmnUser] A2")
                 # Normalizar nombre
                 raw_name = pkmn_data["details"].partition(",")[0].lower()
                 namePkmn = constants.standardName.get(raw_name, raw_name)
@@ -175,7 +180,9 @@ class Battler:
                 m4 = moves[3] if len(moves) > 3 else None
 
                 # Crear instancia
+                print("[updatePkmnUser] A3")
                 pkmn = Pokemon(namePkmn, max_hp, False, item, ability, m1, m2, m3, m4, None)
+                print("[updatePkmnUser] A4")
 
                 # Asignar stats en combate
                 stats = pkmn_data["stats"]
@@ -187,7 +194,9 @@ class Battler:
                 pkmn.VEL_battle_actual = int(stats["spe"])
 
                 self.reserved.append(pkmn)
+                print("[updatePkmnUser] A5")
         else:
+            print("[updatePkmnUser] 3")
             if len(self.reserved) == 4: # Solo quedan 2 PKMN activos para las rondas
                 name1 = self.reserved[0].name
                 name2 = self.reserved[1].name
@@ -202,7 +211,9 @@ class Battler:
                     auxPkmname2 = constants.standardName[JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-")]
                 else:
                     auxPkmname2 = JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-")
-
+                
+                print("[updatePkmnUser] 31")
+                
                 if name1 != auxPkmname1 and name1 != auxPkmname2:
                     self.reserved.pop(0)
                 if name2 != auxPkmname1 and name2 != auxPkmname2:
@@ -212,20 +223,23 @@ class Battler:
                 if name4 != auxPkmname1 and name4 != auxPkmname2:
                     self.reserved.pop(abs(1-len(self.reserved)))
 
-            # Update Pkmn - Turno 2 en adelante... HPB
-            self.active1.HPB = int(JSONdict["side"]["pokemon"][0]["condition"].partition("/")[0].partition(" ")[0])
-            self.active2.HPB = int(JSONdict["side"]["pokemon"][1]["condition"].partition("/")[0].partition(" ")[0])
+            print("[updatePkmnUser] 32")
+            
+            # Update Pkmn - Turno 2 en adelante... HPB_battle_base
+            self.active1.HPB_battle_base = int(JSONdict["side"]["pokemon"][0]["condition"].partition("/")[0].partition(" ")[0])
+            self.active2.HPB_battle_base = int(JSONdict["side"]["pokemon"][1]["condition"].partition("/")[0].partition(" ")[0])
             # Update Pkmn - Turno 2 en adelante... Moves
             if JSONdict.get("active","False") != "False":
                 for i in range(len(JSONdict.get("active","False")[0].get("moves","False"))):
                     if JSONdict.get("active","False")[0].get("moves","False")[i].get("pp","False") != 'False':
-                        self.active1.movePP[i] = int(JSONdict.get("active","False")[0].get("moves","False")[i].get("pp","False"))
+                        self.active1.movesPP[i] = int(JSONdict.get("active","False")[0].get("moves","False")[i].get("pp","False"))
                 for i in range(len(JSONdict.get("active","False")[1].get("moves","False"))):
                     if JSONdict.get("active","False")[1].get("moves","False")[i].get("pp","False") != 'False':
-                        self.active2.movePP[i] = int(JSONdict.get("active","False")[1].get("moves","False")[i].get("pp","False"))
+                        self.active2.movesPP[i] = int(JSONdict.get("active","False")[1].get("moves","False")[i].get("pp","False"))
             # Reserved
-            self.reserved[0].HPB = int(JSONdict["side"]["pokemon"][2]["condition"].partition("/")[0].partition(" ")[0])
-            self.reserved[1].HPB = int(JSONdict["side"]["pokemon"][3]["condition"].partition("/")[0].partition(" ")[0])
+            self.reserved[0].HPB_battle_base = int(JSONdict["side"]["pokemon"][2]["condition"].partition("/")[0].partition(" ")[0])
+            self.reserved[1].HPB_battle_base = int(JSONdict["side"]["pokemon"][3]["condition"].partition("/")[0].partition(" ")[0])
+            print("[updatePkmnUser] 33")
 
 
 ###############################################################################################################################################################
