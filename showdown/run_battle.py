@@ -94,23 +94,18 @@ def battleBO3_is_finished(battle_tag: str, msg: str) -> bool:
 async def createBattleAction(battle: Battle, msg_request: str) -> str:
     # 1. Actualiza el estado de los pkmn del usuario en base al json recibido
     battle.user.updatePkmnUser(json.loads(msg_request.split('|request|')[1]), first_turn=False)
-    print("[createBattleAction] 1")
 
     # 2. Actualiza SOLO las estadísticas de los PKMN Oponentes Activos
     await updateStatsOpponents(battle)
-    print("[createBattleAction] 2")
 
     # 3. Se genera el INPUT de la Red Neuronal
     listNeuralNetworkInput = NeuralNetworkInput(battle)
-    print("[createBattleAction] 3")
 
     # 4. Se define la mejor acción en base al listNeuralNetworkInput
     moveSwitch1, nMoveSwitch1, megaEvo1, toMove1, moveSwitch2, nMoveSwitch2, megaEvo2, toMove2, battle.reward, battle.score = await battle.action_battle(battle, listNeuralNetworkInput)
-    print("[createBattleAction] 4")
 
     # 5. Formateo la acción seleccionada para el Turno
     actionToWebSocket = await format_decision(moveSwitch1, nMoveSwitch1, megaEvo1, toMove1, moveSwitch2, nMoveSwitch2, megaEvo2, toMove2)
-    print("[createBattleAction] 5")
 
     # 6. Retorno el mensaje listo para enviarlo al WebSocket
     return actionToWebSocket
@@ -123,9 +118,6 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
     # 1. Recibir el mensaje del WebSocket que contiene el |request|
     msg_request = await ps_websocket_client.receive_message()
 
-    print("[handle_active_battle_turn] msg_request: {}".format(msg_request))
-    print("[handle_active_battle_turn] msg_t: {}".format(msg_t))
-
     # 2. Actualizar todas las variables del entorno (Pokémon activos, stats, estados, etc.) en base a msg_t
     await update_battle_environment(battle, msg_t, msg_request)
     print("[handle_active_battle_turn] update_battle_environment: FINALIZADO")
@@ -136,10 +128,10 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
         return
     
     # 4. Si el turno requiere una acción activa o un cambio forzado (forceSwitch)
-    if battle.force_switch or '"active"' in msg_request:
-        print(f"Turno Tipo: forceSwitch o active")
+    if battle.force_switch or battle.active:
+        print("force_switch: {}".format(battle.force_switch))
+        print("active: {}".format(battle.active))
         battle.error = False
-        print("[handle_active_battle_turn] 1")
         battle_turn_action = await createBattleAction(battle, msg_request)
         print("[INFO]  Turno: {}".format(battle.turn))
         await ps_websocket_client.send_message(battle.battle_tag, battle_turn_action)

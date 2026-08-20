@@ -135,7 +135,8 @@ class BattleBot(Battle):
                 if is_trapped or no_reserves:
                     moveSwitch1 = 'move'
                 else:
-                    moveSwitch1 = random.choice(['move', 'switch'])
+                    moveSwitch1 = random.choices(['move', 'switch'], weights=(80, 20), k=1)[0]
+                    print("moveSwitch1: {}".format(moveSwitch1))
 
                 if moveSwitch1 == 'move':
                     avail_moves = self._get_available_moves(battle, 0)
@@ -204,7 +205,8 @@ class BattleBot(Battle):
                 if is_trapped or no_reserves or reserved_slot_used:
                     moveSwitch2 = 'move'
                 else:
-                    moveSwitch2 = random.choice(['move', 'switch'])
+                    moveSwitch2 = random.choices(['move', 'switch'], weights=(80, 20), k=1)[0]
+                    print("moveSwitch1: {}".format(moveSwitch2))
 
                 if moveSwitch2 == 'move':
                     avail_moves = self._get_available_moves(battle, 1)

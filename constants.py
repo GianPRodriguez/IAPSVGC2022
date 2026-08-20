@@ -73,6 +73,7 @@ DAMAGE = 'damage'
 HEAL = "heal"
 HEAL_TARGET = "heal_target"
 
+ACTIVE = 'active'
 FORCE_SWITCH = 'forceSwitch'
 WAIT = 'wait'
 TRAPPED = "trapped"

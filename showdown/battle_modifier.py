@@ -38,6 +38,12 @@ def request(battle: Battle, split_msg: list) -> Battle:
     else:
         battle.force_switch = False
 
+    # ¿battle_json tiene "active"? Se activa cuando uso U-TURN
+    if battle_json.get(constants.ACTIVE):
+        battle.active = True
+    else:
+        battle.active = False
+
     # ¿battle_json tiene "wait"? ¿Se activa cuando el oponente usa U-TURN?
     if battle_json.get(constants.WAIT):
         battle.wait = True
@@ -113,6 +119,8 @@ def faint(battle: Battle, split_msg: list) -> Battle:
 
     if pkmn:
         pkmn.HPB_battle_base = 0
+        pkmn.is_fainted = True
+        print("FAINTED: {}".format(pkmn.name))
 
     return battle
 
@@ -142,12 +150,12 @@ def heal_or_damage(battle: Battle, split_msg: list) -> Battle:
         if opponent_turn:
             # Para el oponente, Showdown reporta porcentajes ("91/100")
             hp_percentage = current_hp_val / 100.0
-            pkmn.HPB_battle_base = int(pkmn.max_hp * hp_percentage)
+            pkmn.HPB_battle_base = int(pkmn.HPB_battle_base * hp_percentage)
         else:
             # Para el usuario, Showdown reporta HP absoluto ("168/282")
             max_hp_val = float(parts[1].split()[0])
             pkmn.HPB_battle_base = int(math.ceil(current_hp_val))
-            pkmn.max_hp = int(math.ceil(max_hp_val))
+            pkmn.HPB_battle_base = int(math.ceil(max_hp_val))
 
     return battle
 
@@ -520,14 +528,13 @@ def transform(battle: Battle, split_msg: list) -> Battle:
     if source_pkmn and target_pkmn:
         # Guardamos el HP actual de Ditto antes de transformarse
         aux_hp = source_pkmn.HPB_battle_base
-        aux_max_hp = source_pkmn.max_hp
+        aux_max_hp = source_pkmn.HPB_battle_base
 
         # Creamos una copia exacta (deep copy) de las estadísticas y atributos del objetivo
         new_source = deepcopy(target_pkmn)
         
-        # Mantenemos el HP actual y el HP máximo que ya tenía Ditto en combate
+        # Mantenemos el HP máximo que ya tenía Ditto en combate
         new_source.HPB_battle_base = aux_hp
-        new_source.max_hp = aux_max_hp
         
         # Marcamos explícitamente que sigue siendo Ditto transformado
         new_source.isDitto = 1

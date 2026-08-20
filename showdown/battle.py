@@ -39,6 +39,7 @@ class Battle(ABC):
 
         ''' Estados e Info del Turno '''
         self.turn = 0
+        self.active = False
         self.force_switch = False
         self.wait = False
         self.error = False
@@ -110,7 +111,7 @@ class Battle(ABC):
             print(f"Clima: {self.weather} (Turnos restantes: {self.weatherTurn})", file=f)
             print(f"Terreno: {self.terrain} (Turnos restantes: {self.terrainTurn})", file=f)
             print(f"Trick Room: {self.trick_room}", file=f)
-            print(f"Force Switch: {self.force_switch} | Wait: {self.wait} | Error: {self.error}", file=f)
+            print(f"Force Switch: {self.force_switch} | active: {self.active} | Wait: {self.wait} | Error: {self.error}", file=f)
             print(f"Recompensa actual: {self.reward} | Score: {self.score}", file=f)
             
             print("\n--------------------------------------------------", file=f)
@@ -159,10 +160,7 @@ class Battler:
             self.account_name = JSONdict["side"]["name"]
             self.isUser = True
 
-            print("[updatePkmnUser] A1")
-
             for pkmn_data in JSONdict["side"]["pokemon"]:
-                print("[updatePkmnUser] A2")
                 # Normalizar nombre
                 raw_name = pkmn_data["details"].partition(",")[0].lower()
                 namePkmn = constants.standardName.get(raw_name, raw_name)
@@ -180,9 +178,7 @@ class Battler:
                 m4 = moves[3] if len(moves) > 3 else None
 
                 # Crear instancia
-                print("[updatePkmnUser] A3")
                 pkmn = Pokemon(namePkmn, max_hp, False, item, ability, m1, m2, m3, m4, None)
-                print("[updatePkmnUser] A4")
 
                 # Asignar stats en combate
                 stats = pkmn_data["stats"]
@@ -194,9 +190,7 @@ class Battler:
                 pkmn.VEL_battle_actual = int(stats["spe"])
 
                 self.reserved.append(pkmn)
-                print("[updatePkmnUser] A5")
         else:
-            print("[updatePkmnUser] 3")
             if len(self.reserved) == 4: # Solo quedan 2 PKMN activos para las rondas
                 name1 = self.reserved[0].name
                 name2 = self.reserved[1].name
@@ -212,8 +206,6 @@ class Battler:
                 else:
                     auxPkmname2 = JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-")
                 
-                print("[updatePkmnUser] 31")
-                
                 if name1 != auxPkmname1 and name1 != auxPkmname2:
                     self.reserved.pop(0)
                 if name2 != auxPkmname1 and name2 != auxPkmname2:
@@ -222,8 +214,6 @@ class Battler:
                     self.reserved.pop(abs(2-len(self.reserved)))
                 if name4 != auxPkmname1 and name4 != auxPkmname2:
                     self.reserved.pop(abs(1-len(self.reserved)))
-
-            print("[updatePkmnUser] 32")
             
             # Update Pkmn - Turno 2 en adelante... HPB_battle_base
             self.active1.HPB_battle_base = int(JSONdict["side"]["pokemon"][0]["condition"].partition("/")[0].partition(" ")[0])
@@ -239,7 +229,6 @@ class Battler:
             # Reserved
             self.reserved[0].HPB_battle_base = int(JSONdict["side"]["pokemon"][2]["condition"].partition("/")[0].partition(" ")[0])
             self.reserved[1].HPB_battle_base = int(JSONdict["side"]["pokemon"][3]["condition"].partition("/")[0].partition(" ")[0])
-            print("[updatePkmnUser] 33")
 
 
 ###############################################################################################################################################################
@@ -291,7 +280,7 @@ class Pokemon:
     def __init__(
         self, 
         name: str, 
-        max_hp: int, 
+        HPB_battle_base: int, 
         is_opponent: bool, 
         object_pkmn: str, 
         ability_pkmn: str, 
@@ -303,7 +292,6 @@ class Pokemon:
     ):
         # Identidad y Configuración Básica
         self.name = name
-        self.max_hp = max_hp
         self.nature = nature
         self.is_opponent = is_opponent
         self.objectPkmn = object_pkmn
@@ -324,7 +312,7 @@ class Pokemon:
         self.boosts = defaultdict(lambda: 0)                 # Modificadores de estadísticas (-6 a +6)
 
         # Estadísticas Base (Se toma como Base para la actualización de estadísticas del oponente)
-        self.HPB_battle_base = 0
+        self.HPB_battle_base = HPB_battle_base
         self.ATK_battle_base = 0
         self.DEF_battle_base = 0
         self.SPA_battle_base = 0
@@ -362,10 +350,9 @@ class Pokemon:
         """Imprime por consola o archivo el estado actual del Pokémon de forma organizada."""
         print(f"  > POKÉMON: {self.name}", file=f)
         print(f"    Tipo 1: {self.type1} | Tipo 2: {self.type2}", file=f)
-        print(f"    Naturaleza: {self.nature} | HP Máximo: {self.max_hp}", file=f)
-        print(f"    Objeto: {self.objectPkmn} | Habilidad: {self.abilityPkmn}", file=f)
-        print(f"    Es Oponente: {self.is_opponent} | Confirmado: {self.is_opponent_confirmed}", file=f)
-        print(f"    Es Mega Evolución: {self.is_mega_evo} | Es Ditto: {self.is_ditto} | ¿Derrotado?: {self.is_fainted}", file=f)
+        print(f"    Naturaleza: {self.nature} | Objeto: {self.objectPkmn} | Habilidad: {self.abilityPkmn}", file=f)
+        print(f"    Es Oponente: {self.is_opponent} | Es Oponente Confirmado: {self.is_opponent_confirmed}", file=f)
+        print(f"    Es Mega Evolución: {self.is_mega_evo} | Es Ditto: {self.is_ditto} | ¿Debilitado?: {self.is_fainted}", file=f)
         
         print("    [Estados y Modificadores]", file=f)
         print(f"      No Volátiles: {dict(self.non_volatile_statuses)}", file=f)
