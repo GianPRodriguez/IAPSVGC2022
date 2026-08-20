@@ -229,7 +229,7 @@ class Modulo1(tk.Frame):
 			self.button1['state'] = tk.DISABLED
 			self.button1.configure(text='Esperando Confirmación')
 			# Thread 1
-			self.p = Thread(target=AsyncDownload, args=(q1,q1,q1,q1,username,password,teamname,botmode,None,False,False,1,))
+			self.p = Thread(target=AsyncDownload, args=(q1, username, password, teamname, botmode, 1,))
 			self.p.start()
 			# Monitor
 			self.monitor(q1)

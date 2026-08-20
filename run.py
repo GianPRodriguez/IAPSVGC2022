@@ -34,15 +34,36 @@ def parse_configs(username, password, teamname, botmode, numBattles):
     config.team_name = 'gen8/vgc2022/' + teamname
     config.run_count = numBattles
 
+    if botmode == "CHALLENGE_USER":
+        config.username = env("PS_USERNAME")
+        config.password = env("PS_PASSWORD")
+
 #######################################################################################################################
 # OK - Función principal que maneja la lógica de conexión, inicio de sesión y ejecución de batallas en Pokémon Showdown
 #######################################################################################################################
 async def showdown(q, username, password, teamname, botmode, numBattles):
     # Validación de parámetros
-    if not username or not password or not teamname:
-        print("[ERROR]  ¡Usuario o contraseña o teamname está vacío!")
-        q.put([-5])
-        return
+    # Validamos las credenciales según el modo de juego
+    if botmode == "SEARCH_LADDER":
+        # En el ladder (público) se requiere obligatoriamente usuario, contraseña y equipo
+        if not username or not password or not teamname:
+            print("[ERROR] ¡Usuario, contraseña y teamname son obligatorios para SEARCH_LADDER!")
+            q.put([-5])
+            return
+            
+    elif botmode == "CHALLENGE_USER":
+        # Al retar a un usuario específico, la contraseña puede ser None/vacía, pero se requiere usuario y equipo
+        if not username or not teamname:
+            print("[ERROR] ¡Usuario y teamname son obligatorios para CHALLENGE_USER!")
+            q.put([-5])
+            return
+            
+    else:
+        # Fallback de seguridad si llega un botMode desconocido
+        if not username or not teamname:
+            print("[ERROR] ¡Configuración incompleta: se requiere al menos usuario y teamname!")
+            q.put([-5])
+            return
     
     # Configuración de la Aplicación
     parse_configs(username, password, teamname, botmode, numBattles)

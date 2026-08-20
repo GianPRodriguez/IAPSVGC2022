@@ -1,0 +1,3108 @@
+==================================================
+                ESTADO DEL ENTORNO                
+==================================================
+Turno: 4 | rqid: 11
+Clima: sandstorm (Turnos restantes: 4)
+Terreno: None (Turnos restantes: 0)
+Trick Room: 0
+Force Switch: False | active: True | Wait: False | Error: False
+Recompensa actual: 100.0 | Score: 1000.0
+
+--------------------------------------------------
+                     USUARIO                      
+--------------------------------------------------
+ID: p2 | Cuenta: popplioperu98
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: farigiraf
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: sitrusberry | Habilidad: armortail
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 209 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 222 | ATK: 99 | DEF: 122
+      SPA: 130 | SPD: 108 | VEL: 80
+    [Movimientos y PP]
+      Movimiento 1: psychic (PP: 12)
+      Movimiento 2: thunderbolt (PP: 16)
+      Movimiento 3: trickroom (PP: 8)
+      Movimiento 4: protect (PP: 8)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: aerodactyl
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: aerodactylite | Habilidad: Unnerve
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 181 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 181 | ATK: 132 | DEF: 86
+      SPA: 72 | SPD: 95 | VEL: 200
+    [Movimientos y PP]
+      Movimiento 1: rockslide (PP: 12)
+      Movimiento 2: dualwingbeat (PP: 12)
+      Movimiento 3: icefang (PP: 16)
+      Movimiento 4: tailwind (PP: 16)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: kingambit
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: focussash | Habilidad: defiant
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 177 | ATK: 205 | DEF: 140
+      SPA: 72 | SPD: 105 | VEL: 102
+    [Movimientos y PP]
+      Movimiento 1: kowtowcleave (PP: 12)
+      Movimiento 2: ironhead (PP: 16)
+      Movimiento 3: suckerpunch (PP: 8)
+      Movimiento 4: lowkick (PP: 20)
+
+[Reserva 2]
+  > POKÉMON: charizard
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: charizarditey | Habilidad: blaze
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: True
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 177 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 183 | ATK: 93 | DEF: 129
+      SPA: 143 | SPD: 105 | VEL: 124
+    [Movimientos y PP]
+      Movimiento 1: heatwave (PP: 12)
+      Movimiento 2: solarbeam (PP: 12)
+      Movimiento 3: weatherball (PP: 12)
+      Movimiento 4: protect (PP: 8)
+--------------------------------------------------
+
+--------------------------------------------------
+                     OPONENTE                     
+--------------------------------------------------
+ID: p1 | Cuenta: terry ferry
+Pokémon del oponente confirmados: 2
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: sinistcha
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Relaxed | Objeto: SitrusBerry | Habilidad: Hospitality
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: RagePowder (PP: -1)
+      Movimiento 2: MatchaGotcha (PP: -1)
+      Movimiento 3: TrickRoom (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: tyranitar-mega
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: Tyranitarite | Habilidad: SandStream
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: {'attack': 1, 'speed': 1}
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: DragonDance (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: RockSlide (PP: -1)
+      Movimiento 4: KnockOff (PP: -1)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: scizor
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Adamant | Objeto: Scizorite | Habilidad: LightMetal
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: BulletPunch (PP: -1)
+      Movimiento 2: BugBite (PP: -1)
+      Movimiento 3: SwordsDance (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 2]
+  > POKÉMON: gholdengo
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Timid | Objeto: MetalCoat | Habilidad: GoodasGold
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: NastyPlot (PP: -1)
+      Movimiento 2: MakeItRain (PP: -1)
+      Movimiento 3: ShadowBall (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 3]
+  > POKÉMON: basculegion
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: LifeOrb | Habilidad: Adaptability
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: WaveCrash (PP: -1)
+      Movimiento 2: LastRespects (PP: -1)
+      Movimiento 3: AquaJet (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 4]
+  > POKÉMON: talonflame
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: FocusSash | Habilidad: GaleWings
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: Tailwind (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: BraveBird (PP: -1)
+      Movimiento 4: Uturn (PP: -1)
+--------------------------------------------------
+==================================================
+==================================================
+                ESTADO DEL ENTORNO                
+==================================================
+Turno: 4 | rqid: 11
+Clima: sandstorm (Turnos restantes: 4)
+Terreno: None (Turnos restantes: 0)
+Trick Room: 0
+Force Switch: False | active: True | Wait: False | Error: True
+Recompensa actual: 100.0 | Score: 1000.0
+
+--------------------------------------------------
+                     USUARIO                      
+--------------------------------------------------
+ID: p2 | Cuenta: popplioperu98
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: farigiraf
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: sitrusberry | Habilidad: armortail
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 209 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 222 | ATK: 99 | DEF: 122
+      SPA: 130 | SPD: 108 | VEL: 80
+    [Movimientos y PP]
+      Movimiento 1: psychic (PP: 12)
+      Movimiento 2: thunderbolt (PP: 16)
+      Movimiento 3: trickroom (PP: 8)
+      Movimiento 4: protect (PP: 8)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: aerodactyl
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: aerodactylite | Habilidad: Unnerve
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 181 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 181 | ATK: 132 | DEF: 86
+      SPA: 72 | SPD: 95 | VEL: 200
+    [Movimientos y PP]
+      Movimiento 1: rockslide (PP: 12)
+      Movimiento 2: dualwingbeat (PP: 12)
+      Movimiento 3: icefang (PP: 16)
+      Movimiento 4: tailwind (PP: 16)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: kingambit
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: focussash | Habilidad: defiant
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 177 | ATK: 205 | DEF: 140
+      SPA: 72 | SPD: 105 | VEL: 102
+    [Movimientos y PP]
+      Movimiento 1: kowtowcleave (PP: 12)
+      Movimiento 2: ironhead (PP: 16)
+      Movimiento 3: suckerpunch (PP: 8)
+      Movimiento 4: lowkick (PP: 20)
+
+[Reserva 2]
+  > POKÉMON: charizard
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: charizarditey | Habilidad: blaze
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: True
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 177 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 183 | ATK: 93 | DEF: 129
+      SPA: 143 | SPD: 105 | VEL: 124
+    [Movimientos y PP]
+      Movimiento 1: heatwave (PP: 12)
+      Movimiento 2: solarbeam (PP: 12)
+      Movimiento 3: weatherball (PP: 12)
+      Movimiento 4: protect (PP: 8)
+--------------------------------------------------
+
+--------------------------------------------------
+                     OPONENTE                     
+--------------------------------------------------
+ID: p1 | Cuenta: terry ferry
+Pokémon del oponente confirmados: 2
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: sinistcha
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Relaxed | Objeto: SitrusBerry | Habilidad: Hospitality
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: RagePowder (PP: -1)
+      Movimiento 2: MatchaGotcha (PP: -1)
+      Movimiento 3: TrickRoom (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: tyranitar-mega
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: Tyranitarite | Habilidad: SandStream
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: {'attack': 1, 'speed': 1}
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: DragonDance (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: RockSlide (PP: -1)
+      Movimiento 4: KnockOff (PP: -1)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: scizor
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Adamant | Objeto: Scizorite | Habilidad: LightMetal
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: BulletPunch (PP: -1)
+      Movimiento 2: BugBite (PP: -1)
+      Movimiento 3: SwordsDance (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 2]
+  > POKÉMON: gholdengo
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Timid | Objeto: MetalCoat | Habilidad: GoodasGold
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: NastyPlot (PP: -1)
+      Movimiento 2: MakeItRain (PP: -1)
+      Movimiento 3: ShadowBall (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 3]
+  > POKÉMON: basculegion
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: LifeOrb | Habilidad: Adaptability
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: WaveCrash (PP: -1)
+      Movimiento 2: LastRespects (PP: -1)
+      Movimiento 3: AquaJet (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 4]
+  > POKÉMON: talonflame
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: FocusSash | Habilidad: GaleWings
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: Tailwind (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: BraveBird (PP: -1)
+      Movimiento 4: Uturn (PP: -1)
+--------------------------------------------------
+==================================================
+==================================================
+                ESTADO DEL ENTORNO                
+==================================================
+Turno: 4 | rqid: 11
+Clima: sandstorm (Turnos restantes: 4)
+Terreno: None (Turnos restantes: 0)
+Trick Room: 0
+Force Switch: False | active: True | Wait: False | Error: True
+Recompensa actual: 100.0 | Score: 1000.0
+
+--------------------------------------------------
+                     USUARIO                      
+--------------------------------------------------
+ID: p2 | Cuenta: popplioperu98
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: farigiraf
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: sitrusberry | Habilidad: armortail
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 209 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 222 | ATK: 99 | DEF: 122
+      SPA: 130 | SPD: 108 | VEL: 80
+    [Movimientos y PP]
+      Movimiento 1: psychic (PP: 12)
+      Movimiento 2: thunderbolt (PP: 16)
+      Movimiento 3: trickroom (PP: 8)
+      Movimiento 4: protect (PP: 8)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: aerodactyl
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: aerodactylite | Habilidad: Unnerve
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 181 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 181 | ATK: 132 | DEF: 86
+      SPA: 72 | SPD: 95 | VEL: 200
+    [Movimientos y PP]
+      Movimiento 1: rockslide (PP: 12)
+      Movimiento 2: dualwingbeat (PP: 12)
+      Movimiento 3: icefang (PP: 16)
+      Movimiento 4: tailwind (PP: 16)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: kingambit
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: focussash | Habilidad: defiant
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 177 | ATK: 205 | DEF: 140
+      SPA: 72 | SPD: 105 | VEL: 102
+    [Movimientos y PP]
+      Movimiento 1: kowtowcleave (PP: 12)
+      Movimiento 2: ironhead (PP: 16)
+      Movimiento 3: suckerpunch (PP: 8)
+      Movimiento 4: lowkick (PP: 20)
+
+[Reserva 2]
+  > POKÉMON: charizard
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: charizarditey | Habilidad: blaze
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: True
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 177 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 183 | ATK: 93 | DEF: 129
+      SPA: 143 | SPD: 105 | VEL: 124
+    [Movimientos y PP]
+      Movimiento 1: heatwave (PP: 12)
+      Movimiento 2: solarbeam (PP: 12)
+      Movimiento 3: weatherball (PP: 12)
+      Movimiento 4: protect (PP: 8)
+--------------------------------------------------
+
+--------------------------------------------------
+                     OPONENTE                     
+--------------------------------------------------
+ID: p1 | Cuenta: terry ferry
+Pokémon del oponente confirmados: 2
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: sinistcha
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Relaxed | Objeto: SitrusBerry | Habilidad: Hospitality
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: RagePowder (PP: -1)
+      Movimiento 2: MatchaGotcha (PP: -1)
+      Movimiento 3: TrickRoom (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: tyranitar-mega
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: Tyranitarite | Habilidad: SandStream
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: {'attack': 1, 'speed': 1}
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: DragonDance (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: RockSlide (PP: -1)
+      Movimiento 4: KnockOff (PP: -1)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: scizor
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Adamant | Objeto: Scizorite | Habilidad: LightMetal
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: BulletPunch (PP: -1)
+      Movimiento 2: BugBite (PP: -1)
+      Movimiento 3: SwordsDance (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 2]
+  > POKÉMON: gholdengo
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Timid | Objeto: MetalCoat | Habilidad: GoodasGold
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: NastyPlot (PP: -1)
+      Movimiento 2: MakeItRain (PP: -1)
+      Movimiento 3: ShadowBall (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 3]
+  > POKÉMON: basculegion
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: LifeOrb | Habilidad: Adaptability
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: WaveCrash (PP: -1)
+      Movimiento 2: LastRespects (PP: -1)
+      Movimiento 3: AquaJet (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 4]
+  > POKÉMON: talonflame
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: FocusSash | Habilidad: GaleWings
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: Tailwind (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: BraveBird (PP: -1)
+      Movimiento 4: Uturn (PP: -1)
+--------------------------------------------------
+==================================================
+==================================================
+                ESTADO DEL ENTORNO                
+==================================================
+Turno: 4 | rqid: 11
+Clima: sandstorm (Turnos restantes: 4)
+Terreno: None (Turnos restantes: 0)
+Trick Room: 0
+Force Switch: False | active: True | Wait: False | Error: True
+Recompensa actual: 100.0 | Score: 1000.0
+
+--------------------------------------------------
+                     USUARIO                      
+--------------------------------------------------
+ID: p2 | Cuenta: popplioperu98
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: farigiraf
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: sitrusberry | Habilidad: armortail
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 209 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 222 | ATK: 99 | DEF: 122
+      SPA: 130 | SPD: 108 | VEL: 80
+    [Movimientos y PP]
+      Movimiento 1: psychic (PP: 12)
+      Movimiento 2: thunderbolt (PP: 16)
+      Movimiento 3: trickroom (PP: 8)
+      Movimiento 4: protect (PP: 8)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: aerodactyl
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: aerodactylite | Habilidad: Unnerve
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 181 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 181 | ATK: 132 | DEF: 86
+      SPA: 72 | SPD: 95 | VEL: 200
+    [Movimientos y PP]
+      Movimiento 1: rockslide (PP: 12)
+      Movimiento 2: dualwingbeat (PP: 12)
+      Movimiento 3: icefang (PP: 16)
+      Movimiento 4: tailwind (PP: 16)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: kingambit
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: focussash | Habilidad: defiant
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 177 | ATK: 205 | DEF: 140
+      SPA: 72 | SPD: 105 | VEL: 102
+    [Movimientos y PP]
+      Movimiento 1: kowtowcleave (PP: 12)
+      Movimiento 2: ironhead (PP: 16)
+      Movimiento 3: suckerpunch (PP: 8)
+      Movimiento 4: lowkick (PP: 20)
+
+[Reserva 2]
+  > POKÉMON: charizard
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: charizarditey | Habilidad: blaze
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: True
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 177 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 183 | ATK: 93 | DEF: 129
+      SPA: 143 | SPD: 105 | VEL: 124
+    [Movimientos y PP]
+      Movimiento 1: heatwave (PP: 12)
+      Movimiento 2: solarbeam (PP: 12)
+      Movimiento 3: weatherball (PP: 12)
+      Movimiento 4: protect (PP: 8)
+--------------------------------------------------
+
+--------------------------------------------------
+                     OPONENTE                     
+--------------------------------------------------
+ID: p1 | Cuenta: terry ferry
+Pokémon del oponente confirmados: 2
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: sinistcha
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Relaxed | Objeto: SitrusBerry | Habilidad: Hospitality
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: RagePowder (PP: -1)
+      Movimiento 2: MatchaGotcha (PP: -1)
+      Movimiento 3: TrickRoom (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: tyranitar-mega
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: Tyranitarite | Habilidad: SandStream
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: {'attack': 1, 'speed': 1}
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: DragonDance (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: RockSlide (PP: -1)
+      Movimiento 4: KnockOff (PP: -1)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: scizor
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Adamant | Objeto: Scizorite | Habilidad: LightMetal
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: BulletPunch (PP: -1)
+      Movimiento 2: BugBite (PP: -1)
+      Movimiento 3: SwordsDance (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 2]
+  > POKÉMON: gholdengo
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Timid | Objeto: MetalCoat | Habilidad: GoodasGold
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: NastyPlot (PP: -1)
+      Movimiento 2: MakeItRain (PP: -1)
+      Movimiento 3: ShadowBall (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 3]
+  > POKÉMON: basculegion
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: LifeOrb | Habilidad: Adaptability
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: WaveCrash (PP: -1)
+      Movimiento 2: LastRespects (PP: -1)
+      Movimiento 3: AquaJet (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 4]
+  > POKÉMON: talonflame
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: FocusSash | Habilidad: GaleWings
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: Tailwind (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: BraveBird (PP: -1)
+      Movimiento 4: Uturn (PP: -1)
+--------------------------------------------------
+==================================================
+==================================================
+                ESTADO DEL ENTORNO                
+==================================================
+Turno: 4 | rqid: 11
+Clima: sandstorm (Turnos restantes: 4)
+Terreno: None (Turnos restantes: 0)
+Trick Room: 0
+Force Switch: False | active: True | Wait: False | Error: True
+Recompensa actual: 100.0 | Score: 1000.0
+
+--------------------------------------------------
+                     USUARIO                      
+--------------------------------------------------
+ID: p2 | Cuenta: popplioperu98
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: farigiraf
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: sitrusberry | Habilidad: armortail
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 209 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 222 | ATK: 99 | DEF: 122
+      SPA: 130 | SPD: 108 | VEL: 80
+    [Movimientos y PP]
+      Movimiento 1: psychic (PP: 12)
+      Movimiento 2: thunderbolt (PP: 16)
+      Movimiento 3: trickroom (PP: 8)
+      Movimiento 4: protect (PP: 8)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: aerodactyl
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: aerodactylite | Habilidad: Unnerve
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 181 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 181 | ATK: 132 | DEF: 86
+      SPA: 72 | SPD: 95 | VEL: 200
+    [Movimientos y PP]
+      Movimiento 1: rockslide (PP: 12)
+      Movimiento 2: dualwingbeat (PP: 12)
+      Movimiento 3: icefang (PP: 16)
+      Movimiento 4: tailwind (PP: 16)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: kingambit
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: focussash | Habilidad: defiant
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 177 | ATK: 205 | DEF: 140
+      SPA: 72 | SPD: 105 | VEL: 102
+    [Movimientos y PP]
+      Movimiento 1: kowtowcleave (PP: 12)
+      Movimiento 2: ironhead (PP: 16)
+      Movimiento 3: suckerpunch (PP: 8)
+      Movimiento 4: lowkick (PP: 20)
+
+[Reserva 2]
+  > POKÉMON: charizard
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: charizarditey | Habilidad: blaze
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: True
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 177 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 183 | ATK: 93 | DEF: 129
+      SPA: 143 | SPD: 105 | VEL: 124
+    [Movimientos y PP]
+      Movimiento 1: heatwave (PP: 12)
+      Movimiento 2: solarbeam (PP: 12)
+      Movimiento 3: weatherball (PP: 12)
+      Movimiento 4: protect (PP: 8)
+--------------------------------------------------
+
+--------------------------------------------------
+                     OPONENTE                     
+--------------------------------------------------
+ID: p1 | Cuenta: terry ferry
+Pokémon del oponente confirmados: 2
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: sinistcha
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Relaxed | Objeto: SitrusBerry | Habilidad: Hospitality
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: RagePowder (PP: -1)
+      Movimiento 2: MatchaGotcha (PP: -1)
+      Movimiento 3: TrickRoom (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: tyranitar-mega
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: Tyranitarite | Habilidad: SandStream
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: {'attack': 1, 'speed': 1}
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: DragonDance (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: RockSlide (PP: -1)
+      Movimiento 4: KnockOff (PP: -1)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: scizor
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Adamant | Objeto: Scizorite | Habilidad: LightMetal
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: BulletPunch (PP: -1)
+      Movimiento 2: BugBite (PP: -1)
+      Movimiento 3: SwordsDance (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 2]
+  > POKÉMON: gholdengo
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Timid | Objeto: MetalCoat | Habilidad: GoodasGold
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: NastyPlot (PP: -1)
+      Movimiento 2: MakeItRain (PP: -1)
+      Movimiento 3: ShadowBall (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 3]
+  > POKÉMON: basculegion
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: LifeOrb | Habilidad: Adaptability
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: WaveCrash (PP: -1)
+      Movimiento 2: LastRespects (PP: -1)
+      Movimiento 3: AquaJet (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 4]
+  > POKÉMON: talonflame
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: FocusSash | Habilidad: GaleWings
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: Tailwind (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: BraveBird (PP: -1)
+      Movimiento 4: Uturn (PP: -1)
+--------------------------------------------------
+==================================================
+==================================================
+                ESTADO DEL ENTORNO                
+==================================================
+Turno: 4 | rqid: 11
+Clima: sandstorm (Turnos restantes: 4)
+Terreno: None (Turnos restantes: 0)
+Trick Room: 0
+Force Switch: False | active: True | Wait: False | Error: True
+Recompensa actual: 100.0 | Score: 1000.0
+
+--------------------------------------------------
+                     USUARIO                      
+--------------------------------------------------
+ID: p2 | Cuenta: popplioperu98
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: farigiraf
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: sitrusberry | Habilidad: armortail
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 209 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 222 | ATK: 99 | DEF: 122
+      SPA: 130 | SPD: 108 | VEL: 80
+    [Movimientos y PP]
+      Movimiento 1: psychic (PP: 12)
+      Movimiento 2: thunderbolt (PP: 16)
+      Movimiento 3: trickroom (PP: 8)
+      Movimiento 4: protect (PP: 8)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: aerodactyl
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: aerodactylite | Habilidad: Unnerve
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 181 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 181 | ATK: 132 | DEF: 86
+      SPA: 72 | SPD: 95 | VEL: 200
+    [Movimientos y PP]
+      Movimiento 1: rockslide (PP: 12)
+      Movimiento 2: dualwingbeat (PP: 12)
+      Movimiento 3: icefang (PP: 16)
+      Movimiento 4: tailwind (PP: 16)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: kingambit
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: focussash | Habilidad: defiant
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 177 | ATK: 205 | DEF: 140
+      SPA: 72 | SPD: 105 | VEL: 102
+    [Movimientos y PP]
+      Movimiento 1: kowtowcleave (PP: 12)
+      Movimiento 2: ironhead (PP: 16)
+      Movimiento 3: suckerpunch (PP: 8)
+      Movimiento 4: lowkick (PP: 20)
+
+[Reserva 2]
+  > POKÉMON: charizard
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: charizarditey | Habilidad: blaze
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: True
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 177 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 183 | ATK: 93 | DEF: 129
+      SPA: 143 | SPD: 105 | VEL: 124
+    [Movimientos y PP]
+      Movimiento 1: heatwave (PP: 12)
+      Movimiento 2: solarbeam (PP: 12)
+      Movimiento 3: weatherball (PP: 12)
+      Movimiento 4: protect (PP: 8)
+--------------------------------------------------
+
+--------------------------------------------------
+                     OPONENTE                     
+--------------------------------------------------
+ID: p1 | Cuenta: terry ferry
+Pokémon del oponente confirmados: 2
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: sinistcha
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Relaxed | Objeto: SitrusBerry | Habilidad: Hospitality
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: RagePowder (PP: -1)
+      Movimiento 2: MatchaGotcha (PP: -1)
+      Movimiento 3: TrickRoom (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: tyranitar-mega
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: Tyranitarite | Habilidad: SandStream
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: {'attack': 1, 'speed': 1}
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: DragonDance (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: RockSlide (PP: -1)
+      Movimiento 4: KnockOff (PP: -1)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: scizor
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Adamant | Objeto: Scizorite | Habilidad: LightMetal
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: BulletPunch (PP: -1)
+      Movimiento 2: BugBite (PP: -1)
+      Movimiento 3: SwordsDance (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 2]
+  > POKÉMON: gholdengo
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Timid | Objeto: MetalCoat | Habilidad: GoodasGold
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: NastyPlot (PP: -1)
+      Movimiento 2: MakeItRain (PP: -1)
+      Movimiento 3: ShadowBall (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 3]
+  > POKÉMON: basculegion
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: LifeOrb | Habilidad: Adaptability
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: WaveCrash (PP: -1)
+      Movimiento 2: LastRespects (PP: -1)
+      Movimiento 3: AquaJet (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 4]
+  > POKÉMON: talonflame
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: FocusSash | Habilidad: GaleWings
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: Tailwind (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: BraveBird (PP: -1)
+      Movimiento 4: Uturn (PP: -1)
+--------------------------------------------------
+==================================================
+==================================================
+                ESTADO DEL ENTORNO                
+==================================================
+Turno: 4 | rqid: 11
+Clima: sandstorm (Turnos restantes: 4)
+Terreno: None (Turnos restantes: 0)
+Trick Room: 0
+Force Switch: False | active: True | Wait: False | Error: True
+Recompensa actual: 100.0 | Score: 1000.0
+
+--------------------------------------------------
+                     USUARIO                      
+--------------------------------------------------
+ID: p2 | Cuenta: popplioperu98
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: farigiraf
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: sitrusberry | Habilidad: armortail
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 209 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 222 | ATK: 99 | DEF: 122
+      SPA: 130 | SPD: 108 | VEL: 80
+    [Movimientos y PP]
+      Movimiento 1: psychic (PP: 12)
+      Movimiento 2: thunderbolt (PP: 16)
+      Movimiento 3: trickroom (PP: 8)
+      Movimiento 4: protect (PP: 8)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: aerodactyl
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: aerodactylite | Habilidad: Unnerve
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 181 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 181 | ATK: 132 | DEF: 86
+      SPA: 72 | SPD: 95 | VEL: 200
+    [Movimientos y PP]
+      Movimiento 1: rockslide (PP: 12)
+      Movimiento 2: dualwingbeat (PP: 12)
+      Movimiento 3: icefang (PP: 16)
+      Movimiento 4: tailwind (PP: 16)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: kingambit
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: focussash | Habilidad: defiant
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 177 | ATK: 205 | DEF: 140
+      SPA: 72 | SPD: 105 | VEL: 102
+    [Movimientos y PP]
+      Movimiento 1: kowtowcleave (PP: 12)
+      Movimiento 2: ironhead (PP: 16)
+      Movimiento 3: suckerpunch (PP: 8)
+      Movimiento 4: lowkick (PP: 20)
+
+[Reserva 2]
+  > POKÉMON: charizard
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: charizarditey | Habilidad: blaze
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: True
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 177 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 183 | ATK: 93 | DEF: 129
+      SPA: 143 | SPD: 105 | VEL: 124
+    [Movimientos y PP]
+      Movimiento 1: heatwave (PP: 12)
+      Movimiento 2: solarbeam (PP: 12)
+      Movimiento 3: weatherball (PP: 12)
+      Movimiento 4: protect (PP: 8)
+--------------------------------------------------
+
+--------------------------------------------------
+                     OPONENTE                     
+--------------------------------------------------
+ID: p1 | Cuenta: terry ferry
+Pokémon del oponente confirmados: 2
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: sinistcha
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Relaxed | Objeto: SitrusBerry | Habilidad: Hospitality
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: RagePowder (PP: -1)
+      Movimiento 2: MatchaGotcha (PP: -1)
+      Movimiento 3: TrickRoom (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: tyranitar-mega
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: Tyranitarite | Habilidad: SandStream
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: {'attack': 1, 'speed': 1}
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: DragonDance (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: RockSlide (PP: -1)
+      Movimiento 4: KnockOff (PP: -1)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: scizor
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Adamant | Objeto: Scizorite | Habilidad: LightMetal
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: BulletPunch (PP: -1)
+      Movimiento 2: BugBite (PP: -1)
+      Movimiento 3: SwordsDance (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 2]
+  > POKÉMON: gholdengo
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Timid | Objeto: MetalCoat | Habilidad: GoodasGold
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: NastyPlot (PP: -1)
+      Movimiento 2: MakeItRain (PP: -1)
+      Movimiento 3: ShadowBall (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 3]
+  > POKÉMON: basculegion
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: LifeOrb | Habilidad: Adaptability
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: WaveCrash (PP: -1)
+      Movimiento 2: LastRespects (PP: -1)
+      Movimiento 3: AquaJet (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 4]
+  > POKÉMON: talonflame
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: FocusSash | Habilidad: GaleWings
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: Tailwind (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: BraveBird (PP: -1)
+      Movimiento 4: Uturn (PP: -1)
+--------------------------------------------------
+==================================================
+==================================================
+                ESTADO DEL ENTORNO                
+==================================================
+Turno: 4 | rqid: 11
+Clima: sandstorm (Turnos restantes: 4)
+Terreno: None (Turnos restantes: 0)
+Trick Room: 0
+Force Switch: False | active: True | Wait: False | Error: True
+Recompensa actual: 100.0 | Score: 1000.0
+
+--------------------------------------------------
+                     USUARIO                      
+--------------------------------------------------
+ID: p2 | Cuenta: popplioperu98
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: farigiraf
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: sitrusberry | Habilidad: armortail
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 209 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 222 | ATK: 99 | DEF: 122
+      SPA: 130 | SPD: 108 | VEL: 80
+    [Movimientos y PP]
+      Movimiento 1: psychic (PP: 12)
+      Movimiento 2: thunderbolt (PP: 16)
+      Movimiento 3: trickroom (PP: 8)
+      Movimiento 4: protect (PP: 8)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: aerodactyl
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: aerodactylite | Habilidad: Unnerve
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 181 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 181 | ATK: 132 | DEF: 86
+      SPA: 72 | SPD: 95 | VEL: 200
+    [Movimientos y PP]
+      Movimiento 1: rockslide (PP: 12)
+      Movimiento 2: dualwingbeat (PP: 12)
+      Movimiento 3: icefang (PP: 16)
+      Movimiento 4: tailwind (PP: 16)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: kingambit
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: focussash | Habilidad: defiant
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 177 | ATK: 205 | DEF: 140
+      SPA: 72 | SPD: 105 | VEL: 102
+    [Movimientos y PP]
+      Movimiento 1: kowtowcleave (PP: 12)
+      Movimiento 2: ironhead (PP: 16)
+      Movimiento 3: suckerpunch (PP: 8)
+      Movimiento 4: lowkick (PP: 20)
+
+[Reserva 2]
+  > POKÉMON: charizard
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: charizarditey | Habilidad: blaze
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: True
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 177 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 183 | ATK: 93 | DEF: 129
+      SPA: 143 | SPD: 105 | VEL: 124
+    [Movimientos y PP]
+      Movimiento 1: heatwave (PP: 12)
+      Movimiento 2: solarbeam (PP: 12)
+      Movimiento 3: weatherball (PP: 12)
+      Movimiento 4: protect (PP: 8)
+--------------------------------------------------
+
+--------------------------------------------------
+                     OPONENTE                     
+--------------------------------------------------
+ID: p1 | Cuenta: terry ferry
+Pokémon del oponente confirmados: 2
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: sinistcha
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Relaxed | Objeto: SitrusBerry | Habilidad: Hospitality
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: RagePowder (PP: -1)
+      Movimiento 2: MatchaGotcha (PP: -1)
+      Movimiento 3: TrickRoom (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: tyranitar-mega
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: Tyranitarite | Habilidad: SandStream
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: {'attack': 1, 'speed': 1}
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: DragonDance (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: RockSlide (PP: -1)
+      Movimiento 4: KnockOff (PP: -1)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: scizor
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Adamant | Objeto: Scizorite | Habilidad: LightMetal
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: BulletPunch (PP: -1)
+      Movimiento 2: BugBite (PP: -1)
+      Movimiento 3: SwordsDance (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 2]
+  > POKÉMON: gholdengo
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Timid | Objeto: MetalCoat | Habilidad: GoodasGold
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: NastyPlot (PP: -1)
+      Movimiento 2: MakeItRain (PP: -1)
+      Movimiento 3: ShadowBall (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 3]
+  > POKÉMON: basculegion
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: LifeOrb | Habilidad: Adaptability
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: WaveCrash (PP: -1)
+      Movimiento 2: LastRespects (PP: -1)
+      Movimiento 3: AquaJet (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 4]
+  > POKÉMON: talonflame
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: FocusSash | Habilidad: GaleWings
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: Tailwind (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: BraveBird (PP: -1)
+      Movimiento 4: Uturn (PP: -1)
+--------------------------------------------------
+==================================================
+==================================================
+                ESTADO DEL ENTORNO                
+==================================================
+Turno: 4 | rqid: 11
+Clima: sandstorm (Turnos restantes: 4)
+Terreno: None (Turnos restantes: 0)
+Trick Room: 0
+Force Switch: False | active: True | Wait: False | Error: True
+Recompensa actual: 100.0 | Score: 1000.0
+
+--------------------------------------------------
+                     USUARIO                      
+--------------------------------------------------
+ID: p2 | Cuenta: popplioperu98
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: farigiraf
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: sitrusberry | Habilidad: armortail
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 209 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 222 | ATK: 99 | DEF: 122
+      SPA: 130 | SPD: 108 | VEL: 80
+    [Movimientos y PP]
+      Movimiento 1: psychic (PP: 12)
+      Movimiento 2: thunderbolt (PP: 16)
+      Movimiento 3: trickroom (PP: 8)
+      Movimiento 4: protect (PP: 8)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: aerodactyl
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: aerodactylite | Habilidad: Unnerve
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 181 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 181 | ATK: 132 | DEF: 86
+      SPA: 72 | SPD: 95 | VEL: 200
+    [Movimientos y PP]
+      Movimiento 1: rockslide (PP: 12)
+      Movimiento 2: dualwingbeat (PP: 12)
+      Movimiento 3: icefang (PP: 16)
+      Movimiento 4: tailwind (PP: 16)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: kingambit
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: focussash | Habilidad: defiant
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 177 | ATK: 205 | DEF: 140
+      SPA: 72 | SPD: 105 | VEL: 102
+    [Movimientos y PP]
+      Movimiento 1: kowtowcleave (PP: 12)
+      Movimiento 2: ironhead (PP: 16)
+      Movimiento 3: suckerpunch (PP: 8)
+      Movimiento 4: lowkick (PP: 20)
+
+[Reserva 2]
+  > POKÉMON: charizard
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: charizarditey | Habilidad: blaze
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: True
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 177 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 183 | ATK: 93 | DEF: 129
+      SPA: 143 | SPD: 105 | VEL: 124
+    [Movimientos y PP]
+      Movimiento 1: heatwave (PP: 12)
+      Movimiento 2: solarbeam (PP: 12)
+      Movimiento 3: weatherball (PP: 12)
+      Movimiento 4: protect (PP: 8)
+--------------------------------------------------
+
+--------------------------------------------------
+                     OPONENTE                     
+--------------------------------------------------
+ID: p1 | Cuenta: terry ferry
+Pokémon del oponente confirmados: 2
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: sinistcha
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Relaxed | Objeto: SitrusBerry | Habilidad: Hospitality
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: RagePowder (PP: -1)
+      Movimiento 2: MatchaGotcha (PP: -1)
+      Movimiento 3: TrickRoom (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: tyranitar-mega
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: Tyranitarite | Habilidad: SandStream
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: {'attack': 1, 'speed': 1}
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: DragonDance (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: RockSlide (PP: -1)
+      Movimiento 4: KnockOff (PP: -1)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: scizor
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Adamant | Objeto: Scizorite | Habilidad: LightMetal
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: BulletPunch (PP: -1)
+      Movimiento 2: BugBite (PP: -1)
+      Movimiento 3: SwordsDance (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 2]
+  > POKÉMON: gholdengo
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Timid | Objeto: MetalCoat | Habilidad: GoodasGold
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: NastyPlot (PP: -1)
+      Movimiento 2: MakeItRain (PP: -1)
+      Movimiento 3: ShadowBall (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 3]
+  > POKÉMON: basculegion
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: LifeOrb | Habilidad: Adaptability
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: WaveCrash (PP: -1)
+      Movimiento 2: LastRespects (PP: -1)
+      Movimiento 3: AquaJet (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 4]
+  > POKÉMON: talonflame
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: FocusSash | Habilidad: GaleWings
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: Tailwind (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: BraveBird (PP: -1)
+      Movimiento 4: Uturn (PP: -1)
+--------------------------------------------------
+==================================================
+==================================================
+                ESTADO DEL ENTORNO                
+==================================================
+Turno: 4 | rqid: 11
+Clima: sandstorm (Turnos restantes: 4)
+Terreno: None (Turnos restantes: 0)
+Trick Room: 0
+Force Switch: False | active: True | Wait: False | Error: True
+Recompensa actual: 100.0 | Score: 1000.0
+
+--------------------------------------------------
+                     USUARIO                      
+--------------------------------------------------
+ID: p2 | Cuenta: popplioperu98
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: farigiraf
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: sitrusberry | Habilidad: armortail
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 209 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 222 | ATK: 99 | DEF: 122
+      SPA: 130 | SPD: 108 | VEL: 80
+    [Movimientos y PP]
+      Movimiento 1: psychic (PP: 12)
+      Movimiento 2: thunderbolt (PP: 16)
+      Movimiento 3: trickroom (PP: 8)
+      Movimiento 4: protect (PP: 8)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: aerodactyl
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: aerodactylite | Habilidad: Unnerve
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 181 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 181 | ATK: 132 | DEF: 86
+      SPA: 72 | SPD: 95 | VEL: 200
+    [Movimientos y PP]
+      Movimiento 1: rockslide (PP: 12)
+      Movimiento 2: dualwingbeat (PP: 12)
+      Movimiento 3: icefang (PP: 16)
+      Movimiento 4: tailwind (PP: 16)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: kingambit
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: focussash | Habilidad: defiant
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 177 | ATK: 205 | DEF: 140
+      SPA: 72 | SPD: 105 | VEL: 102
+    [Movimientos y PP]
+      Movimiento 1: kowtowcleave (PP: 12)
+      Movimiento 2: ironhead (PP: 16)
+      Movimiento 3: suckerpunch (PP: 8)
+      Movimiento 4: lowkick (PP: 20)
+
+[Reserva 2]
+  > POKÉMON: charizard
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: charizarditey | Habilidad: blaze
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: True
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 177 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 183 | ATK: 93 | DEF: 129
+      SPA: 143 | SPD: 105 | VEL: 124
+    [Movimientos y PP]
+      Movimiento 1: heatwave (PP: 12)
+      Movimiento 2: solarbeam (PP: 12)
+      Movimiento 3: weatherball (PP: 12)
+      Movimiento 4: protect (PP: 8)
+--------------------------------------------------
+
+--------------------------------------------------
+                     OPONENTE                     
+--------------------------------------------------
+ID: p1 | Cuenta: terry ferry
+Pokémon del oponente confirmados: 2
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: sinistcha
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Relaxed | Objeto: SitrusBerry | Habilidad: Hospitality
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: RagePowder (PP: -1)
+      Movimiento 2: MatchaGotcha (PP: -1)
+      Movimiento 3: TrickRoom (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: tyranitar-mega
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: Tyranitarite | Habilidad: SandStream
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: {'attack': 1, 'speed': 1}
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: DragonDance (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: RockSlide (PP: -1)
+      Movimiento 4: KnockOff (PP: -1)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: scizor
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Adamant | Objeto: Scizorite | Habilidad: LightMetal
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: BulletPunch (PP: -1)
+      Movimiento 2: BugBite (PP: -1)
+      Movimiento 3: SwordsDance (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 2]
+  > POKÉMON: gholdengo
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Timid | Objeto: MetalCoat | Habilidad: GoodasGold
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: NastyPlot (PP: -1)
+      Movimiento 2: MakeItRain (PP: -1)
+      Movimiento 3: ShadowBall (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 3]
+  > POKÉMON: basculegion
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: LifeOrb | Habilidad: Adaptability
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: WaveCrash (PP: -1)
+      Movimiento 2: LastRespects (PP: -1)
+      Movimiento 3: AquaJet (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 4]
+  > POKÉMON: talonflame
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: FocusSash | Habilidad: GaleWings
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: Tailwind (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: BraveBird (PP: -1)
+      Movimiento 4: Uturn (PP: -1)
+--------------------------------------------------
+==================================================
+==================================================
+                ESTADO DEL ENTORNO                
+==================================================
+Turno: 4 | rqid: 11
+Clima: sandstorm (Turnos restantes: 4)
+Terreno: None (Turnos restantes: 0)
+Trick Room: 0
+Force Switch: False | active: True | Wait: False | Error: True
+Recompensa actual: 100.0 | Score: 1000.0
+
+--------------------------------------------------
+                     USUARIO                      
+--------------------------------------------------
+ID: p2 | Cuenta: popplioperu98
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: farigiraf
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: sitrusberry | Habilidad: armortail
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 209 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 222 | ATK: 99 | DEF: 122
+      SPA: 130 | SPD: 108 | VEL: 80
+    [Movimientos y PP]
+      Movimiento 1: psychic (PP: 12)
+      Movimiento 2: thunderbolt (PP: 16)
+      Movimiento 3: trickroom (PP: 8)
+      Movimiento 4: protect (PP: 8)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: aerodactyl
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: aerodactylite | Habilidad: Unnerve
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 181 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 181 | ATK: 132 | DEF: 86
+      SPA: 72 | SPD: 95 | VEL: 200
+    [Movimientos y PP]
+      Movimiento 1: rockslide (PP: 12)
+      Movimiento 2: dualwingbeat (PP: 12)
+      Movimiento 3: icefang (PP: 16)
+      Movimiento 4: tailwind (PP: 16)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: kingambit
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: focussash | Habilidad: defiant
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 177 | ATK: 205 | DEF: 140
+      SPA: 72 | SPD: 105 | VEL: 102
+    [Movimientos y PP]
+      Movimiento 1: kowtowcleave (PP: 12)
+      Movimiento 2: ironhead (PP: 16)
+      Movimiento 3: suckerpunch (PP: 8)
+      Movimiento 4: lowkick (PP: 20)
+
+[Reserva 2]
+  > POKÉMON: charizard
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: charizarditey | Habilidad: blaze
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: True
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 177 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 183 | ATK: 93 | DEF: 129
+      SPA: 143 | SPD: 105 | VEL: 124
+    [Movimientos y PP]
+      Movimiento 1: heatwave (PP: 12)
+      Movimiento 2: solarbeam (PP: 12)
+      Movimiento 3: weatherball (PP: 12)
+      Movimiento 4: protect (PP: 8)
+--------------------------------------------------
+
+--------------------------------------------------
+                     OPONENTE                     
+--------------------------------------------------
+ID: p1 | Cuenta: terry ferry
+Pokémon del oponente confirmados: 2
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: sinistcha
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Relaxed | Objeto: SitrusBerry | Habilidad: Hospitality
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: RagePowder (PP: -1)
+      Movimiento 2: MatchaGotcha (PP: -1)
+      Movimiento 3: TrickRoom (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: tyranitar-mega
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: Tyranitarite | Habilidad: SandStream
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: {'attack': 1, 'speed': 1}
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: DragonDance (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: RockSlide (PP: -1)
+      Movimiento 4: KnockOff (PP: -1)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: scizor
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Adamant | Objeto: Scizorite | Habilidad: LightMetal
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: BulletPunch (PP: -1)
+      Movimiento 2: BugBite (PP: -1)
+      Movimiento 3: SwordsDance (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 2]
+  > POKÉMON: gholdengo
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Timid | Objeto: MetalCoat | Habilidad: GoodasGold
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: NastyPlot (PP: -1)
+      Movimiento 2: MakeItRain (PP: -1)
+      Movimiento 3: ShadowBall (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 3]
+  > POKÉMON: basculegion
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: LifeOrb | Habilidad: Adaptability
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: WaveCrash (PP: -1)
+      Movimiento 2: LastRespects (PP: -1)
+      Movimiento 3: AquaJet (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 4]
+  > POKÉMON: talonflame
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: FocusSash | Habilidad: GaleWings
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: Tailwind (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: BraveBird (PP: -1)
+      Movimiento 4: Uturn (PP: -1)
+--------------------------------------------------
+==================================================
+==================================================
+                ESTADO DEL ENTORNO                
+==================================================
+Turno: 4 | rqid: 11
+Clima: sandstorm (Turnos restantes: 4)
+Terreno: None (Turnos restantes: 0)
+Trick Room: 0
+Force Switch: False | active: True | Wait: False | Error: True
+Recompensa actual: 100.0 | Score: 1000.0
+
+--------------------------------------------------
+                     USUARIO                      
+--------------------------------------------------
+ID: p2 | Cuenta: popplioperu98
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: farigiraf
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: sitrusberry | Habilidad: armortail
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 209 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 222 | ATK: 99 | DEF: 122
+      SPA: 130 | SPD: 108 | VEL: 80
+    [Movimientos y PP]
+      Movimiento 1: psychic (PP: 12)
+      Movimiento 2: thunderbolt (PP: 16)
+      Movimiento 3: trickroom (PP: 8)
+      Movimiento 4: protect (PP: 8)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: aerodactyl
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: aerodactylite | Habilidad: Unnerve
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 181 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 181 | ATK: 132 | DEF: 86
+      SPA: 72 | SPD: 95 | VEL: 200
+    [Movimientos y PP]
+      Movimiento 1: rockslide (PP: 12)
+      Movimiento 2: dualwingbeat (PP: 12)
+      Movimiento 3: icefang (PP: 16)
+      Movimiento 4: tailwind (PP: 16)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: kingambit
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: focussash | Habilidad: defiant
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 177 | ATK: 205 | DEF: 140
+      SPA: 72 | SPD: 105 | VEL: 102
+    [Movimientos y PP]
+      Movimiento 1: kowtowcleave (PP: 12)
+      Movimiento 2: ironhead (PP: 16)
+      Movimiento 3: suckerpunch (PP: 8)
+      Movimiento 4: lowkick (PP: 20)
+
+[Reserva 2]
+  > POKÉMON: charizard
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: None | Objeto: charizarditey | Habilidad: blaze
+    Es Oponente: False | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: True
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 177 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 183 | ATK: 93 | DEF: 129
+      SPA: 143 | SPD: 105 | VEL: 124
+    [Movimientos y PP]
+      Movimiento 1: heatwave (PP: 12)
+      Movimiento 2: solarbeam (PP: 12)
+      Movimiento 3: weatherball (PP: 12)
+      Movimiento 4: protect (PP: 8)
+--------------------------------------------------
+
+--------------------------------------------------
+                     OPONENTE                     
+--------------------------------------------------
+ID: p1 | Cuenta: terry ferry
+Pokémon del oponente confirmados: 2
+
+Side conditions:
+  tailwind : 0
+  reflect : 0
+  lightscreen : 0
+  auroraveil : 0
+
+--- POKÉMON ACTIVO 1 ---
+  > POKÉMON: sinistcha
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Relaxed | Objeto: SitrusBerry | Habilidad: Hospitality
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: RagePowder (PP: -1)
+      Movimiento 2: MatchaGotcha (PP: -1)
+      Movimiento 3: TrickRoom (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+--- POKÉMON ACTIVO 2 ---
+  > POKÉMON: tyranitar-mega
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: Tyranitarite | Habilidad: SandStream
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: {'attack': 1, 'speed': 1}
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: DragonDance (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: RockSlide (PP: -1)
+      Movimiento 4: KnockOff (PP: -1)
+
+--- POKÉMON EN RESERVA ---
+
+[Reserva 1]
+  > POKÉMON: scizor
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Adamant | Objeto: Scizorite | Habilidad: LightMetal
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: BulletPunch (PP: -1)
+      Movimiento 2: BugBite (PP: -1)
+      Movimiento 3: SwordsDance (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 2]
+  > POKÉMON: gholdengo
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Timid | Objeto: MetalCoat | Habilidad: GoodasGold
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: NastyPlot (PP: -1)
+      Movimiento 2: MakeItRain (PP: -1)
+      Movimiento 3: ShadowBall (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 3]
+  > POKÉMON: basculegion
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: LifeOrb | Habilidad: Adaptability
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: WaveCrash (PP: -1)
+      Movimiento 2: LastRespects (PP: -1)
+      Movimiento 3: AquaJet (PP: -1)
+      Movimiento 4: Protect (PP: -1)
+
+[Reserva 4]
+  > POKÉMON: talonflame
+    Tipo 1: None | Tipo 2: None
+    Naturaleza: Jolly | Objeto: FocusSash | Habilidad: GaleWings
+    Es Oponente: True | Es Oponente Confirmado: False
+    Es Mega Evolución: False | Es Ditto: False | ¿Debilitado?: False
+    [Estados y Modificadores]
+      No Volátiles: {}
+      Volátiles: {}
+      Boosts Activos: Ninguno
+    [Estadísticas Base]
+      HPB: -1 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Estadísticas Actuales]
+      HPA: 0 | ATK: 0 | DEF: 0
+      SPA: 0 | SPD: 0 | VEL: 0
+    [Movimientos y PP]
+      Movimiento 1: Tailwind (PP: -1)
+      Movimiento 2: Protect (PP: -1)
+      Movimiento 3: BraveBird (PP: -1)
+      Movimiento 4: Uturn (PP: -1)
+--------------------------------------------------
+==================================================

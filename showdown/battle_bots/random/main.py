@@ -37,10 +37,25 @@ class BattleBot(Battle):
 # OK - Obtiene la lista de los índices de movimientos que están actualmente disponibles (no deshabilitados) para un Pokémon activo específico.           ###
 ############################################################################################################################################################
     def _get_available_moves(self, battle: Battle, active_index: int) -> list[int]:
-        # Obtenemos la lista de movimientos desde el JSON de request actual del servidor de Showdown
         active_pokemon_data = battle.request_json.get('active', [])
+        
         if active_index >= len(active_pokemon_data):
             return []
+
+        # Obtenemos la lista de diccionarios de movimientos del Pokémon en ese slot
+        moves_data = active_pokemon_data[active_index].get('moves', [])
+        
+        available_moves = []
+        for i, move_info in enumerate(moves_data):
+            # Verificamos que el movimiento no esté deshabilitado (disabled) y tenga PP
+            is_disabled = move_info.get('disabled', False)
+            pp = move_info.get('pp', 1)  # Si no tiene el campo pp asumimos que tiene (ej. force-moves)
+            
+            if not is_disabled and pp > 0:
+                # Los índices en Showdown para los movimientos van de 1 a 4
+                available_moves.append(i + 1)
+                
+        return available_moves
 
 
 ############################################################################################################################################################
@@ -140,6 +155,7 @@ class BattleBot(Battle):
 
                 if moveSwitch1 == 'move':
                     avail_moves = self._get_available_moves(battle, 0)
+                    print("avail_moves: {}".format(avail_moves))
                     if avail_moves:
                         nMoveSwitch1 = random.choice(avail_moves)
                         selected_move_info = active1_info.get('moves', [])[nMoveSwitch1 - 1]

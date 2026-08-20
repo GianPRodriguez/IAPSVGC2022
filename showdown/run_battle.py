@@ -1,4 +1,5 @@
 import multiprocessing
+from multiprocessing.pool import INIT
 import os
 import io
 import ast
@@ -273,13 +274,13 @@ async def get_battle_tag(ps_websocket_client: PSWebsocketClient) -> str:
         if not isinstance(msg, str) or not msg.strip():
             raise ValueError("Se recibió un mensaje vacío desde el WebSocket")
 
-        parts = msg.split('|')
-        first_msg = parts[0]
-        # first_msg = ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
-
-        if 'battle' in first_msg:
-            battle_tag = first_msg.replace('>', '').strip()  # battle_tag = "battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
-            return battle_tag
+        if INIT in msg:
+            parts = msg.split('|')
+            first_msg = parts[0].strip()  # Ej: ">battle-gen8vgc2022-1614956049-..."
+            
+            if first_msg.startswith('>battle'):
+                battle_tag = first_msg.replace('>', '').strip()
+                return battle_tag
 
 
 ############################################################################################################################################################
@@ -423,7 +424,6 @@ async def pokemon_battle(ps_websocket_client: PSWebsocketClient, q: multiprocess
                     print(f"[MSG]  ¡La Batalla no ha finalizado completamente!")
                     break
                 else:
-                    print("[pokemon_battle] continue")
                     continue
         
         if not (await battleBO3_is_finished(battle.battleBO3_tag, msg)): # ¿Ha finalizado la Batalla BO3?
