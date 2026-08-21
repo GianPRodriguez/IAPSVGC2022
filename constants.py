@@ -546,4 +546,4 @@ COLOR_TYPE = {
         'fairy': '#D685AD'
 }
 
-INIT = '|init|'
+BO3 = "a best-of-3"

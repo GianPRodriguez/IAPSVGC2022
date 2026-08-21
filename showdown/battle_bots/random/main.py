@@ -160,45 +160,52 @@ class BattleBot(Battle):
                         nMoveSwitch1 = random.choice(avail_moves)
                         selected_move_info = active1_info.get('moves', [])[nMoveSwitch1 - 1]
 
-                        # Selección aleatoria de Mega-Evolución si está disponible
-                        if active1_info.get('canMegaEvo', False):
+                        # Validar si el movimiento carece de 'target' (movimiento de carga/recarga)
+                        is_charging_or_recharging_1 = 'target' not in selected_move_info
+
+                        # Selección aleatoria de Mega-Evolución si está disponible y NO está recargando/cargando
+                        if not is_charging_or_recharging_1 and active1_info.get('canMegaEvo', False):
                             megaEvo1 = random.choice([0, 1])
+                        else:
+                            megaEvo1 = 0
 
                         # Selección de Objetivo (Target)
-                        target_type = selected_move_info.get('target', 'normal')
-
-                        if target_type in constants.MOVETYPES_WITHOUT_PARAMETERS:
-                            # Movimientos que no requieren seleccionar objetivo
+                        if is_charging_or_recharging_1:
                             toMove1 = 0
-                        elif target_type in constants.MOVETYPES_SINGLE_TARGET:
-                            # Pueden apuntar a cualquier Pokémon en 2v2
-                            if not battle.user.active2.is_fainted:
-                                # Comprobamos si el aliado está vivo
-                                if random.random() < 0.10: 
-                                    # 10% de probabilidad de atacar al aliado, 90% a un rival
-                                    toMove1 = -2
-                                else:
-                                    toMove1 = random.choice([1, 2])
-                            else:
-                                # Si el aliado está debilitado, 100% de probabilidad a un rival
-                                toMove1 = random.choice([1, 2])
-                        elif target_type == constants.MOVETYPES_ADJACENT_FOE:
-                            # Exclusivamente para atacar a un rival
-                            toMove1 = random.choice([1, 2])
-                        elif target_type == constants.MOVETYPES_ADJACENT_ALLY:
-                            # Exclusivamente a un aliado (ej. Refuerzo)
-                            toMove1 = -1
-                        elif target_type == constants.MOVETYPES_ALLY_OR_SELF:
-                            # 50% de probabilidad al aliado (-2), 50% a sí mismo (0)
-                            if not battle.user.active2.is_fainted:
-                                toMove1 = random.choice([-2, 0])
-                            else:
-                                # Si el aliado está debilitado, se lo aplica a sí mismo 100%
-                                toMove1 = 0
                         else:
-                            # Fallback de seguridad en caso de que llegue un dato corrupto
-                            toMove1 = 0
-                        
+                            target_type = selected_move_info.get('target', 'normal')
+
+                            if target_type in constants.MOVETYPES_WITHOUT_PARAMETERS:
+                                # Movimientos que no requieren seleccionar objetivo
+                                toMove1 = 0
+                            elif target_type in constants.MOVETYPES_SINGLE_TARGET:
+                                # Pueden apuntar a cualquier Pokémon en 2v2
+                                if not battle.user.active2.is_fainted:
+                                    # Comprobamos si el aliado está vivo
+                                    if random.random() < 0.10: 
+                                        # 10% de probabilidad de atacar al aliado, 90% a un rival
+                                        toMove1 = -2
+                                    else:
+                                        toMove1 = random.choice([1, 2])
+                                else:
+                                    # Si el aliado está debilitado, 100% de probabilidad a un rival
+                                    toMove1 = random.choice([1, 2])
+                            elif target_type == constants.MOVETYPES_ADJACENT_FOE:
+                                # Exclusivamente para atacar a un rival
+                                toMove1 = random.choice([1, 2])
+                            elif target_type == constants.MOVETYPES_ADJACENT_ALLY:
+                                # Exclusivamente a un aliado (ej. Refuerzo)
+                                toMove1 = -1
+                            elif target_type == constants.MOVETYPES_ALLY_OR_SELF:
+                                # 50% de probabilidad al aliado (-2), 50% a sí mismo (0)
+                                if not battle.user.active2.is_fainted:
+                                    toMove1 = random.choice([-2, 0])
+                                else:
+                                    # Si el aliado está debilitado, se lo aplica a sí mismo 100%
+                                    toMove1 = 0
+                            else:
+                                print("Se ha recibido un targetType LEFT desconocido: {}".format(target_type));
+                                raise ValueError("Se ha recibido un targetType LEFT desconocido")
                     else:
                         moveSwitch1 = 'switch'
                         nMoveSwitch1 = self._choose_switch_slot(battle)
@@ -230,44 +237,52 @@ class BattleBot(Battle):
                         nMoveSwitch2 = random.choice(avail_moves)
                         selected_move_info = active2_info.get('moves', [])[nMoveSwitch2 - 1]
 
-                        # Selección aleatoria de Mega-Evolución si está disponible
-                        if active2_info.get('canMegaEvo', False):
-                            megaEvo2 = random.choice([0, 1])
-                        
-                        # Selección de Objetivo (Target)
-                        target_type = selected_move_info.get('target', 'normal')
+                        # Validar si el movimiento carece de 'target' (movimiento de carga/recarga)
+                        is_charging_or_recharging_2 = 'target' not in selected_move_info
 
-                        if target_type in constants.MOVETYPES_WITHOUT_PARAMETERS:
-                            # Movimientos que no requieren seleccionar objetivo
-                            toMove2 = 0
-                        elif target_type in constants.MOVETYPES_SINGLE_TARGET:
-                            # Pueden apuntar a cualquier Pokémon en 2v2
-                            if not battle.user.active1.is_fainted:
-                                # Comprobamos si el aliado está vivo
-                                if random.random() < 0.10: 
-                                    # 10% de probabilidad de atacar al aliado, 90% a un rival
-                                    toMove2 = -1
-                                else:
-                                    toMove2 = random.choice([1, 2])
-                            else:
-                                # Si el aliado está debilitado, 100% de probabilidad a un rival
-                                toMove2 = random.choice([1, 2])
-                        elif target_type == constants.MOVETYPES_ADJACENT_FOE:
-                            # Exclusivamente para atacar a un rival
-                            toMove2 = random.choice([1, 2])
-                        elif target_type == constants.MOVETYPES_ADJACENT_ALLY:
-                            # Exclusivamente a un aliado (ej. Refuerzo)
-                            toMove2 = -1
-                        elif target_type == constants.MOVETYPES_ALLY_OR_SELF:
-                            # 50% de probabilidad al aliado (-1), 50% a sí mismo (0)
-                            if not battle.user.active1.is_fainted:
-                                toMove2 = random.choice([-1, 0])
-                            else:
-                                # Si el aliado está debilitado, se lo aplica a sí mismo 100%
-                                toMove2 = 0
+                        # Selección aleatoria de Mega-Evolución si no está cargando, canMegaEvo es True y el lado 1 no megaevolucionó
+                        if not is_charging_or_recharging_2 and active2_info.get('canMegaEvo', False) and megaEvo1 == 0:
+                            megaEvo2 = random.choice([0, 1])
                         else:
-                            # Fallback de seguridad en caso de que llegue un dato corrupto
-                            toMove1 = 0
+                            megaEvo2 = 0
+
+                        # Selección de Objetivo (Target)
+                        if is_charging_or_recharging_2:
+                            toMove2 = 0
+                        else:
+                            target_type = selected_move_info.get('target', 'normal')
+
+                            if target_type in constants.MOVETYPES_WITHOUT_PARAMETERS:
+                                # Movimientos que no requieren seleccionar objetivo
+                                toMove2 = 0
+                            elif target_type in constants.MOVETYPES_SINGLE_TARGET:
+                                # Pueden apuntar a cualquier Pokémon en 2v2
+                                if not battle.user.active1.is_fainted:
+                                    # Comprobamos si el aliado está vivo
+                                    if random.random() < 0.10: 
+                                        # 10% de probabilidad de atacar al aliado, 90% a un rival
+                                        toMove2 = -1
+                                    else:
+                                        toMove2 = random.choice([1, 2])
+                                else:
+                                    # Si el aliado está debilitado, 100% de probabilidad a un rival
+                                    toMove2 = random.choice([1, 2])
+                            elif target_type == constants.MOVETYPES_ADJACENT_FOE:
+                                # Exclusivamente para atacar a un rival
+                                toMove2 = random.choice([1, 2])
+                            elif target_type == constants.MOVETYPES_ADJACENT_ALLY:
+                                # Exclusivamente a un aliado (ej. Refuerzo)
+                                toMove2 = -1
+                            elif target_type == constants.MOVETYPES_ALLY_OR_SELF:
+                                # 50% de probabilidad al aliado (-1), 50% a sí mismo (0)
+                                if not battle.user.active1.is_fainted:
+                                    toMove2 = random.choice([-1, 0])
+                                else:
+                                    # Si el aliado está debilitado, se lo aplica a sí mismo 100%
+                                    toMove2 = 0
+                            else:
+                                print("Se ha recibido un targetType RIGHT desconocido: {}".format(target_type));
+                                raise ValueError("Se ha recibido un targetType RIGHT desconocido")
                         
                     else:
                         moveSwitch2 = 'switch'

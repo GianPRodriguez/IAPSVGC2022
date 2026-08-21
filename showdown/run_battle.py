@@ -274,7 +274,7 @@ async def get_battle_tag(ps_websocket_client: PSWebsocketClient) -> str:
         if not isinstance(msg, str) or not msg.strip():
             raise ValueError("Se recibió un mensaje vacío desde el WebSocket")
 
-        if INIT in msg:
+        if constants.BO3 in msg:
             parts = msg.split('|')
             first_msg = parts[0].strip()  # Ej: ">battle-gen8vgc2022-1614956049-..."
             
@@ -361,13 +361,14 @@ async def start_battleBO3(ps_websocket_client: PSWebsocketClient, botMode: str) 
         first_part = parts[0]
         # first_part = ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
 
-        # Rechazo de la solicitud de batalla
-        if len(parts) >= 5 and parts[4].startswith("/nonotify"):
+        # Rechazo de la solicitud de batalla para SEARCH_LADDER
+        if len(parts) >= 5 and parts[4].startswith("/nonotify") and botMode == constants.SEARCH_LADDER:
             raise Exception("¡El oponente ha rechazado la solicitud de batalla!")
+        
         # Nombre de usuario no encontrado
         if message.startswith("|popup|The user"):
             raise Exception("¡El nombre de usuario no ha sido encontrado!")
-        
+
         if 'battle' in first_part: # Happy Path
             battle_tag = first_part.replace('>', '').strip()  # battle_tag = "battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
             print("[start_battleBO3] Battle Tag BO3: {}".format(battle_tag))
@@ -394,7 +395,7 @@ async def pokemon_battle(ps_websocket_client: PSWebsocketClient, q: multiprocess
         print(f"[ERROR]  ¡Ha sucedido un error al momento de Comenzar la Batalla BO3!: {e}")
         q.put([-6])
         raise
-    
+
     while True: # Para cada uno de las Batallas Individuales dentro del BO3
         try:
             await start_battle(ps_websocket_client, battle) # Inicialización de la Batalla Individual | init (x), clearpoke, |request|{"teamPreview"...

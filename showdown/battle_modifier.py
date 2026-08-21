@@ -111,12 +111,13 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
 ############################################################################################################################################################
 def faint(battle: Battle, split_msg: list) -> Battle:
     # |faint|p1b: Tornadus
+    print("FAINTED")
     opponent_turn = is_opponent(battle, split_msg)
     side = battle.opponent if opponent_turn else battle.user
-
+    print("FAINTED")
     slot_str = split_msg[2].split(':')[0].strip()
     pkmn = side.active1 if slot_str.endswith('a') else side.active2
-
+    print("FAINTED")
     if pkmn:
         pkmn.HPB_battle_base = 0
         pkmn.is_fainted = True
