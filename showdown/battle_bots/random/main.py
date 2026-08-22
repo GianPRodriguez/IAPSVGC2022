@@ -29,7 +29,7 @@ class BattleBot(Battle):
         if switch3_fainted and not switch4_fainted:
             return 4
         
-        # Si ambos están sanos (o debilitados), seleccionamos uno al azar
+        # Si ambos están sanos, seleccionamos uno al azar
         return random.choice([3, 4])
 
 
@@ -151,11 +151,9 @@ class BattleBot(Battle):
                     moveSwitch1 = 'move'
                 else:
                     moveSwitch1 = random.choices(['move', 'switch'], weights=(80, 20), k=1)[0]
-                    print("moveSwitch1: {}".format(moveSwitch1))
 
                 if moveSwitch1 == 'move':
                     avail_moves = self._get_available_moves(battle, 0)
-                    print("avail_moves: {}".format(avail_moves))
                     if avail_moves:
                         nMoveSwitch1 = random.choice(avail_moves)
                         selected_move_info = active1_info.get('moves', [])[nMoveSwitch1 - 1]
@@ -229,7 +227,6 @@ class BattleBot(Battle):
                     moveSwitch2 = 'move'
                 else:
                     moveSwitch2 = random.choices(['move', 'switch'], weights=(80, 20), k=1)[0]
-                    print("moveSwitch1: {}".format(moveSwitch2))
 
                 if moveSwitch2 == 'move':
                     avail_moves = self._get_available_moves(battle, 1)

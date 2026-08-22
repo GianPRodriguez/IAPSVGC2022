@@ -121,7 +121,6 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
 
     # 2. Actualizar todas las variables del entorno (Pokémon activos, stats, estados, etc.) en base a msg_t
     await update_battle_environment(battle, msg_t, msg_request)
-    print("[handle_active_battle_turn] update_battle_environment: FINALIZADO")
 
     # 3. Si el servidor solicita esperar (p. ej. el oponente está realizando U-Turn / cambio)
     if battle.wait:
@@ -130,10 +129,9 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
     
     # 4. Si el turno requiere una acción activa o un cambio forzado (forceSwitch)
     if battle.force_switch or battle.active:
-        print("force_switch: {}".format(battle.force_switch))
-        print("active: {}".format(battle.active))
         battle.error = False
         battle_turn_action = await createBattleAction(battle, msg_request)
+        battle.imprimir()
         print("[INFO]  Turno: {}".format(battle.turn))
         await ps_websocket_client.send_message(battle.battle_tag, battle_turn_action)
         print("[SEND]  Acción Turno: {}".format(battle_turn_action))
@@ -369,7 +367,7 @@ async def start_battleBO3(ps_websocket_client: PSWebsocketClient, botMode: str) 
         if message.startswith("|popup|The user"):
             raise Exception("¡El nombre de usuario no ha sido encontrado!")
 
-        if 'battle' in first_part: # Happy Path
+        if 'game-bestof3' in first_part: # Happy Path
             battle_tag = first_part.replace('>', '').strip()  # battle_tag = "battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
             print("[start_battleBO3] Battle Tag BO3: {}".format(battle_tag))
             # Asigno el battle_tag de la Batalla BO3
