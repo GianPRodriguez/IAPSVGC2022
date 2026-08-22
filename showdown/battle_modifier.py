@@ -65,44 +65,47 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
     raw_name = split_msg[3].partition(",")[0].strip()
     if raw_name.lower() == 'mimikyu':
         raw_name = "mimikyu-disguised"
+    
     name_pkmn = constants.standardName.get(raw_name.lower(), raw_name.lower())
-
     opponent_turn = is_opponent(battle, split_msg)
     side = battle.opponent if opponent_turn else battle.user
-
+    
     slot_str = split_msg[2].split(':')[0].strip()
     is_active1 = slot_str.endswith('a')
 
-    # Buscamos el Pokémon en la reserva
+    # Buscamos el Pokémon que va a ENTRAR a la lucha dentro de la reserva
+    found_index = -1
     for i, pkmn in enumerate(side.reserved):
         if pkmn is not None and getattr(pkmn, 'name', None) == name_pkmn:
-            # Reseteamos boosts y estados volátiles del Pokémon que entra a luchar
-            pkmn.volatile_statuses = []
-            pkmn.boosts = defaultdict(lambda: 0)
-
-            if opponent_turn:
-                if not getattr(pkmn, 'opponent_confirmed', False):
-                    side.opponentPkmnConfirmed += 1
-                pkmn.opponent_confirmed = True
-
-            # Intercambiamos referencias directamente en O(1)
-            if is_active1:
-                side.active1, side.reserved[i] = pkmn, side.active1
-            else:
-                side.active2, side.reserved[i] = pkmn, side.active2
-
-            # Si es el primer turno / selección inicial (5 o 6 Pokémon), eliminamos el sobrante
-            if len(side.reserved) in (5, 6):
-                side.reserved.pop(i)
-                
+            found_index = i
             break
 
-    # Limpieza de reserva
-    if opponent_turn:
-        if sum(1 for p in side.reserved if p and getattr(p, 'opponent_confirmed', False)) == 2:
-            side.reserved = [p for p in side.reserved if p and getattr(p, 'opponent_confirmed', False)]
-    else:
-        side.reserved = [p for p in side.reserved if p is not None]
+    if found_index != -1:
+        pkmn_entering = side.reserved[found_index]
+        
+        # Reseteamos boosts y estados volátiles del Pokémon que entra a luchar
+        pkmn_entering.volatile_statuses = defaultdict(lambda: 0)
+        pkmn_entering.boosts = defaultdict(lambda: 0)
+        
+        if opponent_turn and not getattr(pkmn_entering, 'opponent_confirmed', False):
+            side.opponentPkmnConfirmed += 1
+            pkmn_entering.opponent_confirmed = True
+
+        # Obtenemos el Pokémon que SALE del campo
+        pkmn_leaving = side.active1 if is_active1 else side.active2
+
+        # Realizamos el intercambio de referencias
+        if is_active1:
+            side.active1 = pkmn_entering
+        else:
+            side.active2 = pkmn_entering
+
+        # Si el Pokémon que salía existía, ocupa el lugar en la reserva
+        if pkmn_leaving is not None:
+            side.reserved[found_index] = pkmn_leaving
+        else:
+            # Si estaba vacío, simplemente eliminamos el elemento que acaba de entrar de la reserva
+            side.reserved.pop(found_index)
 
     return battle
 
