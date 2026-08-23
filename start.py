@@ -169,6 +169,7 @@ class Modulo1(tk.Frame):
 					self.cbbTeam.config(state='normal')
 					self.button1['state'] = tk.NORMAL
 					self.button1.configure(text='Iniciar Batalla')
+					print(f"[INFO]     Cierre Interfaz Ganador...")
 					# Battle results
 					self.isWinner = self.cola[1]
 					self.nameOpponent = self.cola[2]

@@ -84,9 +84,9 @@ def switch_or_drag(battle, split_msg):
                         battle.opponent.active1.name = namePkmn
                         battle.opponent.active1.volatile_statuses = []
                         battle.opponent.active1.boosts = defaultdict(lambda: 0)
-                        if battle.opponent.active1.opponent_confirmed != True:
+                        if battle.opponent.active1.is_opponent_confirmed != True:
                             battle.opponent.opponentPkmnConfirmed += 1
-                        battle.opponent.active1.opponent_confirmed = True
+                        battle.opponent.active1.is_opponent_confirmed = True
                         # Fin - Actualizacion de Stats
                         # logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active1.name) + ": p2a")
                         # Intercambio en Reservados
@@ -98,14 +98,14 @@ def switch_or_drag(battle, split_msg):
                 # ¿Ya se conocen los 4 Pokémon del Oponente?
                 contadorAux = 0
                 for pkmn in battle.opponent.reserved:
-                    if pkmn.opponent_confirmed == True:
+                    if pkmn.is_opponent_confirmed == True:
                         contadorAux += 1
                 if contadorAux == 2:
                     for pkmn in battle.opponent.reserved:
-                        if pkmn.opponent_confirmed == False:
+                        if pkmn.is_opponent_confirmed == False:
                             battle.opponent.reserved.remove(pkmn)
                     for pkmn in battle.opponent.reserved:
-                        if pkmn.opponent_confirmed == False:
+                        if pkmn.is_opponent_confirmed == False:
                             battle.opponent.reserved.remove(pkmn)
                     if len(battle.opponent.reserved) == 3:
                         ...
@@ -120,9 +120,9 @@ def switch_or_drag(battle, split_msg):
                         battle.opponent.active2.name = namePkmn
                         battle.opponent.active2.volatile_statuses = []
                         battle.opponent.active2.boosts = defaultdict(lambda: 0)
-                        if battle.opponent.active2.opponent_confirmed != True:
+                        if battle.opponent.active2.is_opponent_confirmed != True:
                             battle.opponent.opponentPkmnConfirmed += 1
-                        battle.opponent.active2.opponent_confirmed = True
+                        battle.opponent.active2.is_opponent_confirmed = True
                         # Fin - Actualizacion de Stats
                         # logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active2.name) + ": p2b")
                         # Intercambio en Reservados
@@ -134,14 +134,14 @@ def switch_or_drag(battle, split_msg):
                 # ¿Ya se conocen los 4 Pokémon del Oponente?
                 contadorAux = 0
                 for pkmn in battle.opponent.reserved:
-                    if pkmn.opponent_confirmed == True:
+                    if pkmn.is_opponent_confirmed == True:
                         contadorAux += 1
                 if contadorAux == 2:
                     for pkmn in battle.opponent.reserved:
-                        if pkmn.opponent_confirmed == False:
+                        if pkmn.is_opponent_confirmed == False:
                             battle.opponent.reserved.remove(pkmn)
                     for pkmn in battle.opponent.reserved:
-                        if pkmn.opponent_confirmed == False:
+                        if pkmn.is_opponent_confirmed == False:
                             battle.opponent.reserved.remove(pkmn)
                     if len(battle.opponent.reserved) == 3:
                         ...
@@ -158,9 +158,9 @@ def switch_or_drag(battle, split_msg):
                         battle.opponent.active1.name = namePkmn
                         battle.opponent.active1.volatile_statuses = []
                         battle.opponent.active1.boosts = defaultdict(lambda: 0)
-                        if battle.opponent.active1.opponent_confirmed != True:
+                        if battle.opponent.active1.is_opponent_confirmed != True:
                             battle.opponent.opponentPkmnConfirmed += 1
-                        battle.opponent.active1.opponent_confirmed = True
+                        battle.opponent.active1.is_opponent_confirmed = True
                         # Fin - Actualizacion de Stats
                         # logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active1.name) + ": p1a")
                         # Intercambio en Reservados
@@ -172,14 +172,14 @@ def switch_or_drag(battle, split_msg):
                 # ¿Ya se conocen los 4 Pokémon del Oponente?
                 contadorAux = 0
                 for pkmn in battle.opponent.reserved:
-                    if pkmn.opponent_confirmed == True:
+                    if pkmn.is_opponent_confirmed == True:
                         contadorAux += 1
                 if contadorAux == 2:
                     for pkmn in battle.opponent.reserved:
-                        if pkmn.opponent_confirmed == False:
+                        if pkmn.is_opponent_confirmed == False:
                             battle.opponent.reserved.remove(pkmn)
                     for pkmn in battle.opponent.reserved:
-                        if pkmn.opponent_confirmed == False:
+                        if pkmn.is_opponent_confirmed == False:
                             battle.opponent.reserved.remove(pkmn)
                     if len(battle.opponent.reserved) == 3:
                         ...
@@ -194,9 +194,9 @@ def switch_or_drag(battle, split_msg):
                         battle.opponent.active2.name = namePkmn
                         battle.opponent.active2.volatile_statuses = []
                         battle.opponent.active2.boosts = defaultdict(lambda: 0)
-                        if battle.opponent.active2.opponent_confirmed != True:
+                        if battle.opponent.active2.is_opponent_confirmed != True:
                             battle.opponent.opponentPkmnConfirmed += 1
-                        battle.opponent.active2.opponent_confirmed = True
+                        battle.opponent.active2.is_opponent_confirmed = True
                         # Fin - Actualizacion de Stats
                         # logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active2.name) + ": p1b")
                         # Intercambio en Reservados
@@ -208,14 +208,14 @@ def switch_or_drag(battle, split_msg):
                 # ¿Ya se conocen los 4 Pokémon del Oponente?
                 contadorAux = 0
                 for pkmn in battle.opponent.reserved:
-                    if pkmn.opponent_confirmed == True:
+                    if pkmn.is_opponent_confirmed == True:
                         contadorAux += 1
                 if contadorAux == 2:
                     for pkmn in battle.opponent.reserved:
-                        if pkmn.opponent_confirmed == False:
+                        if pkmn.is_opponent_confirmed == False:
                             battle.opponent.reserved.remove(pkmn)
                     for pkmn in battle.opponent.reserved:
-                        if pkmn.opponent_confirmed == False:
+                        if pkmn.is_opponent_confirmed == False:
                             battle.opponent.reserved.remove(pkmn)
                     if len(battle.opponent.reserved) == 3:
                         ...
@@ -419,14 +419,22 @@ def unboost(battle: Battle, split_msg: list) -> Battle:
 ############################################################################################################################################################
 def status(battle: Battle, split_msg: list) -> Battle:
     # |-status|p2a: Slowbro|brn
-    status_name = split_msg[3].strip()
+    if len(split_msg) < 4:
+        return battle
+
+    status_name = split_msg[3].strip().lower()
 
     side = battle.opponent if is_opponent(battle, split_msg) else battle.user
     slot_str = split_msg[2].split(':')[0].strip()
     pkmn = side.active1 if slot_str.endswith('a') else side.active2
 
-    if pkmn:
-        pkmn.non_volatile_statuses = status_name
+    if pkmn and hasattr(pkmn, 'non_volatile_statuses'):
+        # Si non_volatile_statuses es un dict o defaultdict, guardamos el estado con True
+        if isinstance(pkmn.non_volatile_statuses, (dict, defaultdict)):
+            pkmn.non_volatile_statuses[status_name] = True
+        else:
+            # Fallback por seguridad si en algún momento fue un string
+            pkmn.non_volatile_statuses = {status_name: True}
 
     return battle
 

@@ -121,18 +121,17 @@ async def showdown(q, username, password, teamname, botmode, numBattles):
                     q.put([-6])
                     break
             
-            if config.bot_mode == constants.ACCEPT_CHALLENGE:
-                if winner is None:
-                    print("[INFO]  Batalla sin resultado válido") # En caso haya ocurrido algún error en el entrenamiento, no se cuenta como victoria ni derrota
-                elif winner == config.username:
-                    stats['wins'] += 1
-                    stats['battles_run'] += 1
-                else:
-                    stats['losses'] += 1
-                    stats['battles_run'] += 1
-                
-                # Estadísticas al hilo principal para actualizar la interfaz gráfica
-                print(f"[INFO]  Avance: {100 * stats['battles_run']/config.run_count:.2f} % | Victorias: {stats['wins']} | Derrotas: {stats['losses']}")
+            if winner is None:
+                print("[INFO]  Batalla sin resultado válido") # En caso haya ocurrido algún error en el entrenamiento, no se cuenta como victoria ni derrota
+            elif winner == config.username:
+                stats['wins'] += 1
+                stats['battles_run'] += 1
+            else:
+                stats['losses'] += 1
+                stats['battles_run'] += 1
+            
+            # Estadísticas al hilo principal para actualizar la interfaz gráfica
+            print(f"[INFO]     Avance: {100 * stats['battles_run']/config.run_count:.2f} % | Victorias: {stats['wins']} | Derrotas: {stats['losses']}")
             
             # En el Módulo de Análisis solo ocurre una batalla
             if stats['battles_run'] >= config.run_count:

@@ -99,6 +99,49 @@ class Battle(ABC):
 
 
 ############################################################################################################################################################
+# OK - Limpiar Nueva Batalla                                                                                                                             ###       
+############################################################################################################################################################
+    def toClean(self) -> None:
+        """
+        Limpia y reinicia el estado de la batalla para una nueva ronda (por ejemplo, en un BO3),
+        reseteando al usuario, oponente, entorno, turnos y recompensas.
+        Mantiene intactos los Tag Globales.
+        """
+        # =====================================================================
+        # 1. Reiniciar Usuario y Oponente
+        # =====================================================================
+        self.user = Battler()
+        self.opponent = Battler()
+
+        # =====================================================================
+        # 2. Reiniciar Características del Entorno
+        # =====================================================================
+        self.weather = None
+        self.weatherTurn = 0
+        self.terrain = None
+        self.terrainTurn = 0
+        self.trick_room = 0
+
+        # =====================================================================
+        # 3. Reiniciar Estados e Info del Turno
+        # =====================================================================
+        self.turn = 0
+        self.force_switch = False
+        self.wait = False
+        self.error = False
+        self.request_json = None
+        self.rqid = None
+
+        # =====================================================================
+        # 4. Reiniciar Recompensas
+        # =====================================================================
+        self.reward = 0
+        self.score = 0
+
+        # Nota: Los 'Tag Globales' (self.battleBO3_tag, self.battleBO3_count, 
+        # self.botMode, self.battle_tag) NO se tocan y conservan sus valores.
+
+############################################################################################################################################################
 # OK - Impresión de TODA la Batalla                                                                                                                      ###       
 ############################################################################################################################################################
     def imprimir(self):
@@ -119,11 +162,11 @@ class Battle(ABC):
             print("--------------------------------------------------", file=f)
             self.user.imprimir(f)
 
-            print("\n--------------------------------------------------", file=f)
-            print("                     OPONENTE                     ", file=f)
-            print("--------------------------------------------------", file=f)
-            self.opponent.imprimir(f)
-            print("==================================================", file=f)
+            #print("\n--------------------------------------------------", file=f)
+            #print("                     OPONENTE                     ", file=f)
+            #print("--------------------------------------------------", file=f)
+            #self.opponent.imprimir(f)
+            #print("==================================================", file=f)
 
 
 ############################################################################################################################################################
@@ -192,28 +235,26 @@ class Battler:
                 self.reserved.append(pkmn)
         else:
             if len(self.reserved) == 4: # Solo quedan 2 PKMN activos para las rondas
-                name1 = self.reserved[0].name
-                name2 = self.reserved[1].name
-                name3 = self.reserved[2].name
-                name4 = self.reserved[3].name
+                # Creamos una lista temporal con todos los Pokémon actuales de la reserva
+                current_reserved = list(self.reserved)
+                self.reserved = []
 
-                if JSONdict["side"]["pokemon"][2]["details"].partition(",")[0].lower().replace(" ", "-") in constants.standardName:
-                    auxPkmname1 = constants.standardName[JSONdict["side"]["pokemon"][2]["details"].partition(",")[0].lower().replace(" ", "-")]
-                else:
-                    auxPkmname1 = JSONdict["side"]["pokemon"][2]["details"].partition(",")[0].lower().replace(" ", "-")
-                if JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-") in constants.standardName:
-                    auxPkmname2 = constants.standardName[JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-")]
-                else:
-                    auxPkmname2 = JSONdict["side"]["pokemon"][3]["details"].partition(",")[0].lower().replace(" ", "-")
-                
-                if name1 != auxPkmname1 and name1 != auxPkmname2:
-                    self.reserved.pop(0)
-                if name2 != auxPkmname1 and name2 != auxPkmname2:
-                    self.reserved.pop(abs(3-len(self.reserved)))
-                if name3 != auxPkmname1 and name3 != auxPkmname2:
-                    self.reserved.pop(abs(2-len(self.reserved)))
-                if name4 != auxPkmname1 and name4 != auxPkmname2:
-                    self.reserved.pop(abs(1-len(self.reserved)))
+                # Recorremos estrictamente el JSON en el orden en que vienen (índices 2 y 3)
+                for idx in (2, 3):
+                    if idx < len(JSONdict["side"]["pokemon"]):
+                        pkmn_data = JSONdict["side"]["pokemon"][idx]
+                        raw_details = pkmn_data["details"].partition(",")[0].lower().replace(" ", "-")
+                        target_name = constants.standardName.get(raw_details, raw_details)
+
+                        # Buscamos en la reserva anterior cuál coincide con este nombre en este orden exacto
+                        found_pkmn = None
+                        for p in current_reserved:
+                            if p is not None and p.name == target_name:
+                                found_pkmn = p
+                                break
+                        
+                        if found_pkmn:
+                            self.reserved.append(found_pkmn)
             
             # Update Pkmn - Turno 2 en adelante... HPB_battle_base
             self.active1.HPB_battle_base = int(JSONdict["side"]["pokemon"][0]["condition"].partition("/")[0].partition(" ")[0])

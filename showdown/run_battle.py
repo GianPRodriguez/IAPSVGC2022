@@ -35,11 +35,7 @@ def NeuralNetworkInput(battle: Battle) -> list:
 ############################################################################################################################################################
 ### OK - Obtiene el nombre del ganador de la batalla BO3                                                                                                 ###
 ############################################################################################################################################################
-async def handle_finished_battleBO3(battle: Battle, msg: str) -> str:
-    print("\n" + "=" * 80)
-    print("[INFO] ¡Batalla BO3 finalizada detectada!")
-    print("=" * 80)
-
+async def handle_finished_battleBO3(battle: Battle, msg: str, q: multiprocessing.Queue) -> str:
     winner = "Unknown"
     
     # Separamos el mensaje en líneas para buscar el comando '|win|'
@@ -51,7 +47,7 @@ async def handle_finished_battleBO3(battle: Battle, msg: str) -> str:
                 winner = parts[2].strip()
                 break
 
-    print(f"[INFO] Ganador de la partida: {winner}")
+    print(f"[INFO]     Ganador de la partida BO3: {winner}")
 
     # Opcionalmente, registramos el resultado en el archivo de reporte si está activo
     try:
@@ -60,8 +56,7 @@ async def handle_finished_battleBO3(battle: Battle, msg: str) -> str:
     except Exception as e:
         print(f"No se pudo escribir el resultado en el reporte.txt: {e}")
 
-    print("=" * 80 + "\n")
-    
+    q.put([-1, winner == battle.user.account_name, battle.user.account_name, battle.opponent.account_name])
     return winner
 
 
@@ -69,24 +64,31 @@ async def handle_finished_battleBO3(battle: Battle, msg: str) -> str:
 ### OK - Confirma la preparación (ready) para la siguiente batalla en un encuentro al mejor de 3 (BO3)                                                   ###
 ############################################################################################################################################################
 async def confirm_next_battle(ps_websocket_client, battle_tag: str, battleBO3_tag: str) -> None:
-    # Construimos el mensaje de confirmación siguiendo el formato de las salas de Best of 3 de Showdown
-    # Formato esperado: <battle_tag>|/msgroom <battleBO3_tag>,/confirmready
-    message_to_send = f"{battle_tag}|/msgroom {battleBO3_tag},/confirmready"
+    # Preparamos la lista con el comando exacto requerido por Showdown para el chat de la sala BO3
+    # Esto formará internamente: /msgroom <battleBO3_tag>,/confirmready
+    message_list = [f"/msgroom {battleBO3_tag},/confirmready"]
     
-    print(f"[SEND] Confirmando siguiente batalla BO3: {message_to_send}")
+    print(f"[SEND]     Iniciando siguiente batalla...")
     
-    # Enviamos el mensaje a través del cliente WebSocket
-    await ps_websocket_client.send_message(message_to_send)
+    # Enviamos utilizando la firma correcta de send_message(room, message_list)
+    # room = battle_tag
+    # message_list = ["/msgroom .../confirmready"]
+    await ps_websocket_client.send_message(battle_tag, message_list)
 
 
 ############################################################################################################################################################
 ### OK - Retorna True si la batalla BO3 ha terminado                                                                                                     ###
 ############################################################################################################################################################
-def battleBO3_is_finished(battle_tag: str, msg: str) -> bool:
-    return (
-        msg.startswith(">{}".format(battle_tag)) and
-        (constants.WIN_STRING in msg) and constants.CHAT_STRING not in msg
-    )
+async def battleBO3_is_finished(ps_websocket_client, battle_tag: str) -> bool:
+    while True:
+        msg = await ps_websocket_client.receive_message()
+        if "Are you ready for game" in msg:
+            # NEXT BATTLE
+            return False
+        elif msg.startswith(">{}".format(battle_tag)) and (constants.WIN_STRING in msg) and constants.CHAT_STRING not in msg:
+            return True
+        else:
+            continue
 
 
 ############################################################################################################################################################
@@ -95,19 +97,14 @@ def battleBO3_is_finished(battle_tag: str, msg: str) -> bool:
 async def createBattleAction(battle: Battle, msg_request: str) -> str:
     # 1. Actualiza el estado de los pkmn del usuario en base al json recibido
     battle.user.updatePkmnUser(json.loads(msg_request.split('|request|')[1]), first_turn=False)
-
     # 2. Actualiza SOLO las estadísticas de los PKMN Oponentes Activos
     await updateStatsOpponents(battle)
-
     # 3. Se genera el INPUT de la Red Neuronal
     listNeuralNetworkInput = NeuralNetworkInput(battle)
-
     # 4. Se define la mejor acción en base al listNeuralNetworkInput
     moveSwitch1, nMoveSwitch1, megaEvo1, toMove1, moveSwitch2, nMoveSwitch2, megaEvo2, toMove2, battle.reward, battle.score = await battle.action_battle(battle, listNeuralNetworkInput)
-
     # 5. Formateo la acción seleccionada para el Turno
     actionToWebSocket = await format_decision(moveSwitch1, nMoveSwitch1, megaEvo1, toMove1, moveSwitch2, nMoveSwitch2, megaEvo2, toMove2)
-
     # 6. Retorno el mensaje listo para enviarlo al WebSocket
     return actionToWebSocket
 
@@ -118,13 +115,15 @@ async def createBattleAction(battle: Battle, msg_request: str) -> str:
 async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, battle: Battle, msg_t: str) -> None: 
     # 1. Recibir el mensaje del WebSocket que contiene el |request|
     msg_request = await ps_websocket_client.receive_message()
-
     # 2. Actualizar todas las variables del entorno (Pokémon activos, stats, estados, etc.) en base a msg_t
-    await update_battle_environment(battle, msg_t, msg_request)
-
+    try:
+        await update_battle_environment(battle, msg_t, msg_request)
+    except Exception as e:
+        print(f"[ERROR] Ocurrió un error al actualizar el entorno de batalla (update_battle_environment): {e}")
+        raise ValueError(f"Ocurrió un error al actualizar el entorno de batalla: {e}")
+    
     # 3. Si el servidor solicita esperar (p. ej. el oponente está realizando U-Turn / cambio)
     if battle.wait:
-        print(f"Turno Tipo: wait")
         return
     
     # 4. Si el turno requiere una acción activa o un cambio forzado (forceSwitch)
@@ -132,12 +131,12 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
         battle.error = False
         battle_turn_action = await createBattleAction(battle, msg_request)
         battle.imprimir()
-        print("[INFO]  Turno: {}".format(battle.turn))
+        print("[INFO]     Turno: {}".format(battle.turn))
         await ps_websocket_client.send_message(battle.battle_tag, battle_turn_action)
-        print("[SEND]  Acción Turno: {}".format(battle_turn_action))
+        print("[SEND]     Acción Turno: {}".format(battle_turn_action))
         battle.turn = battle.turn + 1
         return
-
+    print("20xx")
     # 5. Si no es ni wait, ni active, ni forceSwitch, lanzamos una excepción específica
     raise ValueError(f"Se ha recibido un tipo de |request| inválido o desconocido: {msg_request}")
 
@@ -182,12 +181,13 @@ async def handle_finished_battle(ps_websocket_client: PSWebsocketClient, battle:
     else:
         raise ValueError("¡La batalla terminó sin un ganador válido") # Sino, se lanza excepción
 
-    q.put([-1, winner == battle.opponent.account_name, battle.user.account_name, battle.opponent.account_name])  # Envío el ganador a la Interfaz e indico que ha finalizado la Batalla Individual
-    print("[INFO]  Batalla Individual: {} - Ganador: {}".format(battle.battleBO3_count, winner))
+    # GANADOR PARCIAL, PRONTO SE USARA PARA LA NUEVA GRAFICA
+    #q.put([-1, winner == battle.opponent.account_name, battle.user.account_name, battle.opponent.account_name])  # Envío el ganador a la Interfaz e indico que ha finalizado la Batalla Individual
+    print("[INFO]     Batalla Individual: {} - Ganador: {}".format(battle.battleBO3_count, winner))
     battle.battleBO3_count = battle.battleBO3_count + 1
 
     await ps_websocket_client.send_message(battle.battle_tag, [config.battle_ending_message])  # Es opcional enviar un mensaje de despedida al oponente...
-    await ps_websocket_client.leave_battle(battle.battle_tag, save_replay=config.save_replay)  # Es opcional guardar la batalla...
+    #await ps_websocket_client.leave_battle(battle.battle_tag, save_replay=config.save_replay)  # Es opcional guardar la batalla...
 
 
 ############################################################################################################################################################
@@ -205,7 +205,7 @@ def battle_is_finished(battle_tag: str, msg: str) -> bool:
 ############################################################################################################################################################
 async def send_action_team_preview(ps_websocket_client: PSWebsocketClient, battle: Battle) -> None:
 
-    print("[INFO]  Acción Vista Previa del Equipo") # Se imprime en CMD la info de la Fase
+    print("[INFO]     Acción Vista Previa del Equipo") # Se imprime en CMD la info de la Fase
 
     # Se escoge los 4 Pokémon: action_team_preview = tupla (5, 2, 1, 4)
     action_team_preview = await battle.action_team_preview(battle)
@@ -216,7 +216,7 @@ async def send_action_team_preview(ps_websocket_client: PSWebsocketClient, battl
     
     # Se envía la acción al WebSocket y regreso al método que llamó a esta función, que es start_team_preview_phase
     await ps_websocket_client.send_message(battle.battle_tag, mensaje)
-    print("[SEND]  Acción Vista Previa del Equipo: {}".format(mensaje))
+    print("[SEND]     Acción Vista Previa del Equipo: {}".format(mensaje))
 
 
 ############################################################################################################################################################
@@ -285,9 +285,11 @@ async def get_battle_tag(ps_websocket_client: PSWebsocketClient) -> str:
 # OK - Inicia una Nueva Batalla Individual Pokémon                                                                                                       ###
 ############################################################################################################################################################
 async def start_battle(ps_websocket_client: PSWebsocketClient, battle: Battle) -> None:
+    # LIMPIAR
+    battle.toClean()
     # Obtengo el battle_tag de la Batalla Individual
     battle.battle_tag = await get_battle_tag(ps_websocket_client)
-    print("[start_battle] battle_tag: {}".format(battle.battle_tag))
+    print("[TAG1]     {}".format(battle.battle_tag))
 
     team_preview_message = ""
 
@@ -331,7 +333,7 @@ async def start_battle(ps_websocket_client: PSWebsocketClient, battle: Battle) -
     await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])
 
     # Inicia el contador de tiempo para la Batalla Individual
-    await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
+    #await ps_websocket_client.send_message(battle.battle_tag, ['/timer on'])
 
 
 ############################################################################################################################################################
@@ -369,7 +371,7 @@ async def start_battleBO3(ps_websocket_client: PSWebsocketClient, botMode: str) 
 
         if 'game-bestof3' in first_part: # Happy Path
             battle_tag = first_part.replace('>', '').strip()  # battle_tag = "battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
-            print("[start_battleBO3] Battle Tag BO3: {}".format(battle_tag))
+            print("[TAG0]     {}".format(battle_tag))
             # Asigno el battle_tag de la Batalla BO3
             battle.battleBO3_tag = battle_tag
             user_name = parts[-1].replace('☆', '').strip()  # user_name = "PopplioPeru98"
@@ -386,7 +388,6 @@ async def start_battleBO3(ps_websocket_client: PSWebsocketClient, botMode: str) 
 # OK - Flujo Principal Batalla BO3, devuelve el ganador o genera excepción si hubo un error                                                              ###
 ############################################################################################################################################################
 async def pokemon_battle(ps_websocket_client: PSWebsocketClient, q: multiprocessing.Queue, botmode: str) -> str:
-
     try:
         battle = await start_battleBO3(ps_websocket_client, botmode) # Crea la Clase Batalla BO3 | init (1)
     except Exception as e:
@@ -419,15 +420,14 @@ async def pokemon_battle(ps_websocket_client: PSWebsocketClient, q: multiprocess
                     await handle_active_battle_turn(ps_websocket_client, battle, msg) # Si no lo tiene, se maneja el nuevo turno confirmado
                 elif "|error|" in msg:
                     await handle_action_error(ps_websocket_client, battle, msg) # Se enviará una nueva acción según el agente, pero se documentará totalmente por qué falló
-                elif "|-message|" in msg and "|win|" in msg:
-                    print(f"[MSG]  ¡La Batalla no ha finalizado completamente!")
-                    break
+                elif msg.startswith(">{}".format(battle.battleBO3_tag)) and (constants.WIN_STRING in msg) and constants.CHAT_STRING not in msg:
+                    winner = await handle_finished_battleBO3(battle, msg, q) # Sí ha finalizado la Batalla BO3, entonces se obtiene el ganador y se sale del bucle
+                    return winner
                 else:
                     continue
         
-        if not (await battleBO3_is_finished(battle.battleBO3_tag, msg)): # ¿Ha finalizado la Batalla BO3?
+        if not (await battleBO3_is_finished(ps_websocket_client, battle.battleBO3_tag)): # ¿Ha finalizado la Batalla BO3?
             await confirm_next_battle(ps_websocket_client, battle.battle_tag, battle.battleBO3_tag) # Si no ha finalizado, entonces se espera la siguiente Batalla Individual | confirmReady
         else:
             winner = await handle_finished_battleBO3(battle, msg) # Sí ha finalizado la Batalla BO3, entonces se obtiene el ganador y se sale del bucle
-            print("[INFO] Ganador de la Batalla BO3: {}".format(winner))
             return winner
