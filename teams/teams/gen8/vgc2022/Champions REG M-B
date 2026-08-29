@@ -1,23 +1,26 @@
-Kingambit @ Focus Sash  
-Ability: Defiant  
-EVs: 2 HP / 32 Atk / 32 Spe  
-Adamant Nature  
-- Kowtow Cleave  
-- Iron Head  
-- Sucker Punch  
-- Low Kick  
+Torkoal (F) @ Focus Sash  
+Ability: White Smoke  
+Level: 50  
+EVs: 32 HP / 32 Atk / 2 Spe  
+Relaxed Nature  
+- Body Press  
+- Body Slam  
+- Will-O-Wisp  
+- Clear Smog  
 
 Charizard @ Charizardite Y  
 Ability: Blaze  
+Level: 50  
 EVs: 30 HP / 31 Def / 1 SpA / 4 Spe  
 Modest Nature  
 - Heat Wave  
 - Solar Beam  
 - Weather Ball  
-- Protect  
+- Helping Hand  
 
 Aerodactyl @ Aerodactylite  
 Ability: Unnerve  
+Level: 50  
 EVs: 26 HP / 7 Atk / 1 Def / 32 Spe  
 Jolly Nature  
 - Rock Slide  
@@ -27,28 +30,30 @@ Jolly Nature
 
 Farigiraf @ Sitrus Berry  
 Ability: Armor Tail  
+Level: 50  
 EVs: 27 HP / 21 Def / 18 SpD  
 Bold Nature  
 - Psychic  
-- Thunderbolt  
+- Psych Up  
 - Trick Room  
-- Protect  
+- Trick  
 
-Garchomp @ Life Orb  
-Ability: Rough Skin  
-EVs: 2 HP / 32 Atk / 32 Spe  
-Jolly Nature  
-- Earthquake  
-- Dragon Claw  
-- Stomping Tantrum  
-- Protect  
+Aegislash @ Leftovers  
+Ability: Stance Change  
+Level: 50  
+EVs: 32 Atk / 32 SpA / 2 Spe  
+Sassy Nature  
+- Air Slash  
+- Brick Break  
+- Close Combat  
+- Destiny Bond  
 
-Sylveon @ Fairy Feather  
-Ability: Pixilate  
-EVs: 5 HP / 21 Def / 30 SpA / 10 Spe  
-Modest Nature  
-- Hyper Voice  
-- Hyper Beam  
-- Quick Attack  
-- Protect  
+Chimecho @ Choice Scarf  
+Ability: Levitate  
+Level: 50  
+EVs: 32 HP / 32 Atk / 2 Spe  
+- Heal Bell  
+- Baton Pass  
+- Calm Mind  
+- Encore  
 

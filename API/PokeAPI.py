@@ -1,6 +1,7 @@
 import json
 import requests
 import constants
+import os
 
 urlPokeAPI = 'https://pokeapi.co/api/v2/'
 
@@ -41,40 +42,42 @@ def getPkmnImg(listPkmn):
 ############################################################################################################################################################
 # OK - Actualización Otros Atributos                                                                                                                     ###
 ############################################################################################################################################################
-async def getPkmnInfo(namePkmn: str):
-    """
-    Obtiene los tipos y estadísticas base de un Pokémon desde la PokéAPI.
-    Retorna: (pkmnType1, pkmnType2, HP_base, ATK_base, DEF_base, SPA_base, SPD_base, VEL_base)
-    """
-    # Formatear el nombre para que coincida con el estándar de la PokéAPI (minúsculas y guiones)
-    formatted_name = namePkmn.strip().lower().replace(' ', '-').replace('.', '').replace("'", "")
-    url = f"{urlPokeAPI}pokemon/{formatted_name}"
+def getPkmnInfo(name_pkmn: str):
+
+    json_path = "API/JSONs/champions_info_stats.json"
     
     try:
-        response = requests.get(url, timeout=5)
-        if response.status_code == 200:
-            payload = response.json()
-            
-            # Extracción segura de estadísticas base usando un diccionario o lista por comprensión
-            stats = {stat['stat']['name']: stat['base_stat'] for stat in payload.get('stats', [])}
-            hp_base = stats.get('hp', 0)
-            atk_base = stats.get('attack', 0)
-            def_base = stats.get('defense', 0)
-            spa_base = stats.get('special-attack', 0)
-            spd_base = stats.get('special-defense', 0)
-            vel_base = stats.get('speed', 0)
-            
-            # Extracción segura de tipos
-            types_list = payload.get('types', [])
-            pkmnType1 = types_list[0]['type']['name'] if len(types_list) > 0 else None
-            pkmnType2 = types_list[1]['type']['name'] if len(types_list) > 1 else None
-            
-            return pkmnType1, pkmnType2, hp_base, atk_base, def_base, spa_base, spd_base, vel_base
-            
-    except requests.exceptions.RequestException as e:
-        print(f"Error de red al consultar la PokéAPI para '{namePkmn}': {e}")
-    except (KeyError, IndexError, TypeError) as e:
-        print(f"Error al procesar el JSON de la PokéAPI para '{namePkmn}': {e}")
+        if not os.path.exists(json_path):
+            print(f"[ERROR] No se encontró el archivo de estadísticas en: {json_path}")
+            return None, None, 0, 0, 0, 0, 0, 0
 
-    # Retorno por defecto en caso de fallo (usando None en lugar de 'Nada' para mantener consistencia numérica)
+        with open(json_path, 'r', encoding='utf-8') as f:
+            stats_data = json.load(f)
+
+        # Buscamos el Pokémon intentando matchear el nombre exacto o de forma flexible (case-insensitive)
+        matched_key = None
+        for key in stats_data.keys():
+            if key.lower() == name_pkmn.lower().strip():
+                matched_key = key
+                break
+        
+        if matched_key:
+            pkmn_info = stats_data[matched_key]
+            type1 = pkmn_info.get("tipo1")
+            type2 = pkmn_info.get("tipo2")
+            hp = pkmn_info.get("hp", 0)
+            atk = pkmn_info.get("ataque", 0)
+            defe = pkmn_info.get("defensa", 0)
+            spa = pkmn_info.get("ataque_especial", 0)
+            spd = pkmn_info.get("defensa_especial", 0)
+            vel = pkmn_info.get("velocidad", 0)
+            
+            return type1, type2, hp, atk, defe, spa, spd, vel
+        else:
+            print(f"[AVISO] Pokémon '{name_pkmn}' no encontrado en champions_info_stats.json")
+            
+    except Exception as e:
+        print(f"[ERROR] Falló la lectura de champions_info_stats.json para '{name_pkmn}': {e}")
+
+    # Retorno por defecto si ocurre algún error o no se encuentra
     return None, None, 0, 0, 0, 0, 0, 0

@@ -17,7 +17,6 @@ import concurrent.futures
 from os import path
 from copy import deepcopy
 from showdown.battle_modifier import update_battle_environment
-from showdown.battle_modifier import updateStatsOpponents
 from showdown.websocket_client import PSWebsocketClient
 from showdown.battle import Battle
 from showdown.battle_bots.helpers import format_decision
@@ -96,9 +95,9 @@ async def battleBO3_is_finished(ps_websocket_client, battle_tag: str) -> bool:
 ############################################################################################################################################################
 async def createBattleAction(battle: Battle, msg_request: str) -> str:
     # 1. Actualiza el estado de los pkmn del usuario en base al json recibido
-    battle.user.updatePkmnUser(json.loads(msg_request.split('|request|')[1]), first_turn=False)
+    first_turn = False
+    battle.user.updatePkmnUser(json.loads(msg_request.split('|request|')[1]), first_turn, None)
     # 2. Actualiza SOLO las estadísticas de los PKMN Oponentes Activos
-    await updateStatsOpponents(battle)
     # 3. Se genera el INPUT de la Red Neuronal
     listNeuralNetworkInput = NeuralNetworkInput(battle)
     # 4. Se define la mejor acción en base al listNeuralNetworkInput
@@ -117,19 +116,24 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
     msg_request = await ps_websocket_client.receive_message()
     # 2. Actualizar todas las variables del entorno (Pokémon activos, stats, estados, etc.) en base a msg_t
     try:
+        print("TRY update_battle_environment")
         await update_battle_environment(battle, msg_t, msg_request)
+        print("FIN update_battle_environment")
     except Exception as e:
         print(f"[ERROR] Ocurrió un error al actualizar el entorno de batalla (update_battle_environment): {e}")
         raise ValueError(f"Ocurrió un error al actualizar el entorno de batalla: {e}")
     
     # 3. Si el servidor solicita esperar (p. ej. el oponente está realizando U-Turn / cambio)
+    print("handle_active_battle_turn 2")
     if battle.wait:
         return
-    
+    print("handle_active_battle_turn 3")
     # 4. Si el turno requiere una acción activa o un cambio forzado (forceSwitch)
     if battle.force_switch or battle.active:
         battle.error = False
+        print("handle_active_battle_turn 4")
         battle_turn_action = await createBattleAction(battle, msg_request)
+        print("handle_active_battle_turn 5")
         battle.imprimir()
         print("[INFO]     Turno: {}".format(battle.turn))
         await ps_websocket_client.send_message(battle.battle_tag, battle_turn_action)
@@ -213,7 +217,10 @@ async def send_action_team_preview(ps_websocket_client: PSWebsocketClient, battl
     action_team_preview_str = "".join(map(str, action_team_preview))
     # Se prepara el String que se va a enviar al WebSocket: mensaje = "/team 314256|2"
     mensaje = ["/team {}|{}".format(action_team_preview_str, battle.rqid)]
-    
+
+    # Se imprime el Estado de la Batalla en el Team Preview
+    battle.imprimir()
+
     # Se envía la acción al WebSocket y regreso al método que llamó a esta función, que es start_team_preview_phase
     await ps_websocket_client.send_message(battle.battle_tag, mensaje)
     print("[SEND]     Acción Vista Previa del Equipo: {}".format(mensaje))
@@ -258,6 +265,41 @@ def get_opponent_team(preview_string_lines: str, opponent_id: str) -> list:
             break
             
     return equipo
+
+
+############################################################################################################################################################
+# OK - Obtiene el equipo del Oponente en base a la vista previa del equipo                                                                               ###
+############################################################################################################################################################
+def get_natures(preview_string_lines: str, opponent_id: str) -> list:
+    natures = []
+    # El prefijo que estamos buscando en las líneas, por ejemplo: "|showteam|p2|"
+    target_prefix = f"|showteam|{opponent_id}|"
+    
+    # Recorremos cada línea del string
+    for linea in preview_string_lines.strip().split('\n'):
+        if linea.startswith(target_prefix):
+            # Removemos el prefijo para quedarnos solo con la cadena de los Pokémon
+            team_data = linea[len(target_prefix):]
+
+            # Cada Pokémon está separado por el carácter ']'
+            pokemon_raw_list = team_data.split(']')
+            
+            for pkmn_str in pokemon_raw_list:
+                if not pkmn_str.strip():
+                    continue
+                
+                # Los atributos de cada Pokémon están separados por '|'
+                atributos = pkmn_str.split('|')
+                
+                # Extraemos según el índice correspondiente en la cadena de Showdown
+                nature = atributos[5]
+
+                natures.append(nature)
+            
+            # Una vez que encontramos y procesamos la línea del equipo, podemos detener la búsqueda
+            break
+
+    return natures
 
 
 ############################################################################################################################################################
@@ -322,12 +364,14 @@ async def start_battle(ps_websocket_client: PSWebsocketClient, battle: Battle) -
             # Actualización de variables de la Clase Batalla
             battle.opponent.id = opponent_id
             battle.request_json = user_json
+            battle.user.id = user_id
             break
 
     opponent_team = get_opponent_team(team_preview_message, battle.opponent.id) # ["Swampert","Swampertite","Torrent",["WaveCrash", "Surf","BulkUp","FlipTurn"],"Brave"] x6
+    natures = get_natures(team_preview_message, battle.user.id)
 
     # Se completa las clases Battler con los datos de los 6 PKMN usuario y oponente, se ejecuta inicialmente 1 vez por Batalla Individual
-    await battle.initialize_team_preview(user_json, opponent_team)
+    await battle.initialize_team_preview(user_json, opponent_team, natures)
 
     # Envía el saludo para la Batalla Individual
     await ps_websocket_client.send_message(battle.battle_tag, [config.greeting_message])

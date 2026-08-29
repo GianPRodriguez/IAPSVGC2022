@@ -54,8 +54,9 @@ class Battle(ABC):
 ############################################################################################################################################################
 # OK - Completa las clases Battler con los datos de los 6 PKMN usuario y 6 oponente en el TEAM PREVIEW, se ejecuta 1 vez por Batalla Individual          ###
 ############################################################################################################################################################
-    async def initialize_team_preview(self, user_json: str, opponent_pokemon: list) -> None:
-        self.user.updatePkmnUser(user_json, first_turn=True) # Inicializa solo los 6 PKMN del Usuario
+    async def initialize_team_preview(self, user_json: str, opponent_pokemon: list, natures: list) -> None:
+        first_turn = True
+        self.user.updatePkmnUser(user_json, first_turn, natures) # Inicializa solo los 6 PKMN del Usuario
         self.rqid = user_json[constants.RQID] # The rqid is obtained
 
         for pkmn_string in opponent_pokemon:
@@ -162,11 +163,11 @@ class Battle(ABC):
             print("--------------------------------------------------", file=f)
             self.user.imprimir(f)
 
-            #print("\n--------------------------------------------------", file=f)
-            #print("                     OPONENTE                     ", file=f)
-            #print("--------------------------------------------------", file=f)
-            #self.opponent.imprimir(f)
-            #print("==================================================", file=f)
+            print("\n--------------------------------------------------", file=f)
+            print("                     OPONENTE                     ", file=f)
+            print("--------------------------------------------------", file=f)
+            self.opponent.imprimir(f)
+            print("==================================================", file=f)
 
 
 ############################################################################################################################################################
@@ -196,14 +197,14 @@ class Battler:
 ###############################################################################################################################################################
 # OK - Actualiza TODOS los datos de los PKMN del usuario en base al JSON recibido por cada tipo de |request|                                                ###
 ###############################################################################################################################################################
-    def updatePkmnUser(self, JSONdict: Union[str, Dict[str, Any]], first_turn: bool) -> None:
+    def updatePkmnUser(self, JSONdict: Union[str, Dict[str, Any]], first_turn: bool, natures: list) -> None:
         if (first_turn): # TEAM PREVIEW - 6 PKMN
             # Datos Básicos
             self.id = JSONdict["side"]["id"]
             self.account_name = JSONdict["side"]["name"]
             self.isUser = True
 
-            for pkmn_data in JSONdict["side"]["pokemon"]:
+            for i, pkmn_data in enumerate(JSONdict["side"]["pokemon"]):
                 # Normalizar nombre
                 raw_name = pkmn_data["details"].partition(",")[0].lower()
                 namePkmn = constants.standardName.get(raw_name, raw_name)
@@ -221,11 +222,10 @@ class Battler:
                 m4 = moves[3] if len(moves) > 3 else None
 
                 # Crear instancia
-                pkmn = Pokemon(namePkmn, max_hp, False, item, ability, m1, m2, m3, m4, None)
+                pkmn = Pokemon(namePkmn, max_hp, False, item, ability, m1, m2, m3, m4, natures[i])
 
                 # Asignar stats en combate
                 stats = pkmn_data["stats"]
-                pkmn.HPA_battle_actual = int(pkmn_data["condition"].partition("/")[0].partition(" ")[0])
                 pkmn.ATK_battle_actual = int(stats["atk"])
                 pkmn.DEF_battle_actual = int(stats["def"])
                 pkmn.SPA_battle_actual = int(stats["spa"])
@@ -238,38 +238,121 @@ class Battler:
                 # Creamos una lista temporal con todos los Pokémon actuales de la reserva
                 current_reserved = list(self.reserved)
                 self.reserved = []
-
+                
                 # Recorremos estrictamente el JSON en el orden en que vienen (índices 2 y 3)
                 for idx in (2, 3):
                     if idx < len(JSONdict["side"]["pokemon"]):
                         pkmn_data = JSONdict["side"]["pokemon"][idx]
                         raw_details = pkmn_data["details"].partition(",")[0].lower().replace(" ", "-")
                         target_name = constants.standardName.get(raw_details, raw_details)
-
+                        
                         # Buscamos en la reserva anterior cuál coincide con este nombre en este orden exacto
                         found_pkmn = None
                         for p in current_reserved:
                             if p is not None and p.name == target_name:
                                 found_pkmn = p
                                 break
-                        
                         if found_pkmn:
                             self.reserved.append(found_pkmn)
+
+            # =========================================================================
+            # UPDATE POKÉMON ACTIVO 1 (Izquierda - Índice 0 del JSON)
+            # =========================================================================
+            pokemon0 = JSONdict["side"]["pokemon"][0]
+            cond0 = pokemon0["condition"]
+            if "/" in cond0:
+                self.active1.HPA_battle_actual = int(cond0.partition("/")[0].partition(" ")[0])
+                self.active1.HPB_battle_base = int(cond0.partition("/")[2].partition(" ")[0])
+            else:
+                self.active1.HPA_battle_actual = 0  # Debilitado (ej. "0 fnt")
+
+            # Estadísticas de combate (Activo 1)
+            stats1 = pokemon0["stats"]
+            self.active1.ATK_battle_actual = int(stats1["atk"])
+            self.active1.DEF_battle_actual = int(stats1["def"])
+            self.active1.SPA_battle_actual = int(stats1["spa"])
+            self.active1.SPD_battle_actual = int(stats1["spd"])
+            self.active1.VEL_battle_actual = int(stats1["spe"])
+
+            # =========================================================================
+            # UPDATE POKÉMON ACTIVO 2 (Derecha - Índice 1 del JSON)
+            # =========================================================================
+            pokemon1 = JSONdict["side"]["pokemon"][1]
+            cond1 = pokemon1["condition"]
+            if "/" in cond1:
+                self.active2.HPA_battle_actual = int(cond1.partition("/")[0].partition(" ")[0])
+                self.active2.HPB_battle_base = int(cond1.partition("/")[2].partition(" ")[0])
+            else:
+                self.active2.HPA_battle_actual = 0  # Debilitado (ej. "0 fnt")
             
-            # Update Pkmn - Turno 2 en adelante... HPB_battle_base
-            self.active1.HPB_battle_base = int(JSONdict["side"]["pokemon"][0]["condition"].partition("/")[0].partition(" ")[0])
-            self.active2.HPB_battle_base = int(JSONdict["side"]["pokemon"][1]["condition"].partition("/")[0].partition(" ")[0])
-            # Update Pkmn - Turno 2 en adelante... Moves
-            if JSONdict.get("active","False") != "False":
-                for i in range(len(JSONdict.get("active","False")[0].get("moves","False"))):
-                    if JSONdict.get("active","False")[0].get("moves","False")[i].get("pp","False") != 'False':
-                        self.active1.movesPP[i] = int(JSONdict.get("active","False")[0].get("moves","False")[i].get("pp","False"))
-                for i in range(len(JSONdict.get("active","False")[1].get("moves","False"))):
-                    if JSONdict.get("active","False")[1].get("moves","False")[i].get("pp","False") != 'False':
-                        self.active2.movesPP[i] = int(JSONdict.get("active","False")[1].get("moves","False")[i].get("pp","False"))
-            # Reserved
-            self.reserved[0].HPB_battle_base = int(JSONdict["side"]["pokemon"][2]["condition"].partition("/")[0].partition(" ")[0])
-            self.reserved[1].HPB_battle_base = int(JSONdict["side"]["pokemon"][3]["condition"].partition("/")[0].partition(" ")[0])
+            # Estadísticas de combate (Activo 2)
+            stats2 = pokemon1["stats"]
+            self.active2.ATK_battle_actual = int(stats2["atk"])
+            self.active2.DEF_battle_actual = int(stats2["def"])
+            self.active2.SPA_battle_actual = int(stats2["spa"])
+            self.active2.SPD_battle_actual = int(stats2["spd"])
+            self.active2.VEL_battle_actual = int(stats2["spe"])
+
+            # Asegurándonos de que 'active' tenga al menos 2 elementos en la lista
+            request_active = JSONdict.get("active", [])
+            
+            # Para el Pokémon de la izquierda (active1 - índice 0)
+            active1_info = request_active[0] if len(request_active) > 0 else {}
+            self.active1.can_mega_evo = bool(active1_info.get("canMegaEvo", False))
+            
+            # Para el Pokémon de la derecha (active2 - índice 1)
+            active2_info = request_active[1] if len(request_active) > 1 else {}
+            self.active2.can_mega_evo = bool(active2_info.get("canMegaEvo", False))
+
+            # Update Pkmn - Turno 2 en adelante... Moves (PPs)
+            # Cambiado por una validación más limpia de existencia de "active"
+            if "active" in JSONdict and JSONdict["active"] is not None:
+                for i in range(len(JSONdict["active"][0].get("moves", []))):
+                    move_data = JSONdict["active"][0]["moves"][i]
+                    if move_data.get("pp") is not None:
+                        self.active1.movesPP[i] = int(move_data["pp"])
+                for i in range(len(JSONdict["active"][1].get("moves", []))):
+                    move_data = JSONdict["active"][1]["moves"][i]
+                    if move_data.get("pp") is not None:
+                        self.active2.movesPP[i] = int(move_data["pp"])
+
+            # =========================================================================
+            # UPDATE POKÉMON RESERVA 1 (Index 2 del JSON)
+            # =========================================================================
+            pokemon2 = JSONdict["side"]["pokemon"][2]
+            cond2 = pokemon2["condition"]
+            if "/" in cond2:
+                self.reserved[0].HPA_battle_actual = int(cond2.partition("/")[0].partition(" ")[0])
+                self.reserved[0].HPB_battle_base = int(cond2.partition("/")[2].partition(" ")[0])
+            else:
+                self.reserved[0].HPA_battle_actual = 0  # Debilitado (ej. "0 fnt")
+            
+            # Estadísticas de combate (Reserva 1)
+            stats3 = pokemon2["stats"]
+            self.reserved[0].ATK_battle_actual = int(stats3["atk"])
+            self.reserved[0].DEF_battle_actual = int(stats3["def"])
+            self.reserved[0].SPA_battle_actual = int(stats3["spa"])
+            self.reserved[0].SPD_battle_actual = int(stats3["spd"])
+            self.reserved[0].VEL_battle_actual = int(stats3["spe"])
+
+            # =========================================================================
+            # UPDATE POKÉMON RESERVA 2 (Index 3 del JSON)
+            # =========================================================================
+            pokemon3 = JSONdict["side"]["pokemon"][3]
+            cond3 = pokemon3["condition"]
+            if "/" in cond3:
+                self.reserved[1].HPA_battle_actual = int(cond3.partition("/")[0].partition(" ")[0])
+                self.reserved[1].HPB_battle_base = int(cond3.partition("/")[2].partition(" ")[0])
+            else:
+                self.reserved[1].HPA_battle_actual = 0  # Debilitado (ej. "0 fnt")
+            
+            # Estadísticas de combate (Reserva 2)
+            stats4 = pokemon3["stats"]
+            self.reserved[1].ATK_battle_actual = int(stats4["atk"])
+            self.reserved[1].DEF_battle_actual = int(stats4["def"])
+            self.reserved[1].SPA_battle_actual = int(stats4["spa"])
+            self.reserved[1].SPD_battle_actual = int(stats4["spd"])
+            self.reserved[1].VEL_battle_actual = int(stats4["spe"])
 
 
 ###############################################################################################################################################################
@@ -342,6 +425,7 @@ class Pokemon:
         self.is_opponent_confirmed = False
         self.is_ditto = True if name == 'Ditto' else False  # Mantenido como entero por compatibilidad si se requiere
         self.is_fainted = False
+        self.is_substitute = False
         
         # Tipos (Se asignan posteriormente)
         self.type1 = None
@@ -352,36 +436,40 @@ class Pokemon:
         self.volatile_statuses = defaultdict(lambda: 0)      # Ej: 'yawn', etc.
         self.boosts = defaultdict(lambda: 0)                 # Modificadores de estadísticas (-6 a +6)
 
-        # Estadísticas Base (Se toma como Base para la actualización de estadísticas del oponente)
+        # Estadísticas Base - Solo se llena una vez para el Oponente, -1 para el Usuario
         self.HPB_battle_base = HPB_battle_base
-        self.ATK_battle_base = 0
-        self.DEF_battle_base = 0
-        self.SPA_battle_base = 0
-        self.SPD_battle_base = 0
-        self.VEL_battle_base = 0
+        self.ATK_battle_base = -1
+        self.DEF_battle_base = -1
+        self.SPA_battle_base = -1
+        self.SPD_battle_base = -1
+        self.VEL_battle_base = -1
 
-        # Estadísticas Actuales (Se actualizan cada turno para Ambos)
-        self.HPA_battle_actual = 0
-        self.ATK_battle_actual = 0
-        self.DEF_battle_actual = 0
-        self.SPA_battle_actual = 0
-        self.SPD_battle_actual = 0
-        self.VEL_battle_actual = 0
+        # Estadísticas Actuales - Se actualiza por cada turno, -1 para el Oponente
+        self.HPA_battle_actual = HPB_battle_base
+        self.ATK_battle_actual = -1
+        self.DEF_battle_actual = -1
+        self.SPA_battle_actual = -1
+        self.SPD_battle_actual = -1
+        self.VEL_battle_actual = -1
 
         # Movimientos y PP
         self.moves = [move1, move2, move3, move4]
         self.movesPP = [-1, -1, -1, -1]
 
-        # Actualizar atributos POKEAPI
-        '''self.getStatsBattle(is_opponent)'''
+        # Actualizar atributos
+        self.getStatsBattle(is_opponent)
 
 
 ############################################################################################################################################################
 # OK - Actualización Otros Atributos POKEAPI                                                                                                             ###
 ############################################################################################################################################################
-    '''async def getStatsBattle(self, isOpponent) -> None:
+    def getStatsBattle(self, isOpponent) -> None:
+        type1, type2, HPB_battle_base, ATK_battle_base, DEF_battle_base, SPA_battle_base, SPD_battle_base, VEL_battle_base = getPkmnInfo(self.name)
         if isOpponent:
-            self.type1, self.type2, self.HPB_battle_base, self.ATK_battle_base, self.DEF_battle_base, self.SPA_battle_actual, self.SPD_battle_actual, self.VEL_battle_actual = await getPkmnInfo(self.name)'''
+            self.type1, self.type2, self.HPB_battle_base, self.ATK_battle_base, self.DEF_battle_base, self.SPA_battle_base, self.SPD_battle_base, self.VEL_battle_base = type1, type2, HPB_battle_base, ATK_battle_base, DEF_battle_base, SPA_battle_base, SPD_battle_base, VEL_battle_base
+            self.HPA_battle_actual = 100
+        else:
+            self.type1, self.type2 = type1, type2
 
 
 ############################################################################################################################################################
@@ -393,22 +481,26 @@ class Pokemon:
         print(f"    Tipo 1: {self.type1} | Tipo 2: {self.type2}", file=f)
         print(f"    Naturaleza: {self.nature} | Objeto: {self.objectPkmn} | Habilidad: {self.abilityPkmn}", file=f)
         print(f"    Es Oponente: {self.is_opponent} | Es Oponente Confirmado: {self.is_opponent_confirmed}", file=f)
-        print(f"    Es Mega Evolución: {self.is_mega_evo} | Es Ditto: {self.is_ditto} | ¿Debilitado?: {self.is_fainted}", file=f)
+        print(f"    Puede Megeevolucionar: {self.can_mega_evo} | Ha Megaevolucionado: {self.is_mega_evo}  ", file=f)
+        print(f"    Es Ditto: {self.is_ditto} | ¿Sustituto?: {self.is_substitute} | ¿Debilitado?: {self.is_fainted}", file=f)
         
         print("    [Estados y Modificadores]", file=f)
         print(f"      No Volátiles: {dict(self.non_volatile_statuses)}", file=f)
         print(f"      Volátiles: {dict(self.volatile_statuses)}", file=f)
-        
-        active_boosts = {k: v for k, v in self.boosts.items() if v != 0}
-        print(f"      Boosts Activos: {active_boosts if active_boosts else 'Ninguno'}", file=f)
+        print(f"      Boosts Activos: {dict(self.boosts)}", file=f)
+
+        print("    [Puntos de Vida]", file=f)
+        print(f"      HPA: {self.HPA_battle_actual} | HPB: {self.HPB_battle_base}", file=f)
 
         print("    [Estadísticas Base]", file=f)
-        print(f"      HPB: {self.HPB_battle_base} | ATK: {self.ATK_battle_base} | DEF: {self.DEF_battle_base}", file=f)
-        print(f"      SPA: {self.SPA_battle_base} | SPD: {self.SPD_battle_base} | VEL: {self.VEL_battle_base}", file=f)
+        print(f"      ATK: {self.ATK_battle_base} | DEF: {self.DEF_battle_base}", file=f)
+        print(f"      SPA: {self.SPA_battle_base} | SPD: {self.SPD_battle_base}", file=f)
+        print(f"      VEL: {self.VEL_battle_base}", file=f)
 
         print("    [Estadísticas Actuales]", file=f)
-        print(f"      HPA: {self.HPA_battle_actual} | ATK: {self.ATK_battle_actual} | DEF: {self.DEF_battle_actual}", file=f)
-        print(f"      SPA: {self.SPA_battle_actual} | SPD: {self.SPD_battle_actual} | VEL: {self.VEL_battle_actual}", file=f)
+        print(f"      ATK: {self.ATK_battle_actual} | DEF: {self.DEF_battle_actual}", file=f)
+        print(f"      SPA: {self.SPA_battle_actual} | SPD: {self.SPD_battle_actual} | ", file=f)
+        print(f"      VEL: {self.VEL_battle_actual}", file=f)
 
         print("    [Movimientos y PP]", file=f)
         for i, (move, pp) in enumerate(zip(self.moves, self.movesPP), start=1):

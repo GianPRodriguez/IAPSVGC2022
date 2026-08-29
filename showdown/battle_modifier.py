@@ -345,7 +345,7 @@ def heal_or_damage(battle: Battle, split_msg: list) -> Battle:
     hp_str = split_msg[3].strip()
 
     if constants.FNT in hp_str or hp_str.startswith("0 "):
-        pkmn.HPB_battle_base = 0
+        pkmn.HPA_battle_actual = 0
     else:
         parts = hp_str.split('/')
         current_hp_val = float(parts[0])
@@ -353,11 +353,11 @@ def heal_or_damage(battle: Battle, split_msg: list) -> Battle:
         if opponent_turn:
             # Para el oponente, Showdown reporta porcentajes ("91/100")
             hp_percentage = current_hp_val / 100.0
-            pkmn.HPB_battle_base = int(pkmn.HPB_battle_base * hp_percentage)
+            pkmn.HPA_battle_actual = int(pkmn.HPB_battle_base * hp_percentage)
         else:
             # Para el usuario, Showdown reporta HP absoluto ("168/282")
             max_hp_val = float(parts[1].split()[0])
-            pkmn.HPB_battle_base = int(math.ceil(current_hp_val))
+            pkmn.HPA_battle_actual = int(math.ceil(current_hp_val))
             pkmn.HPB_battle_base = int(math.ceil(max_hp_val))
 
     return battle
@@ -461,8 +461,12 @@ def start_volatile_status(battle: Battle, split_msg: list) -> Battle:
     pkmn = side.active1 if slot_str.endswith('a') else side.active2
 
     if pkmn and hasattr(pkmn, 'volatile_statuses'):
-        # Al ser volatile_statuses un defaultdict, almacenamos/activamos el estado con valor 1 (o el contador que prefieras)
+        # Registramos el estado volátil en el diccionario
         pkmn.volatile_statuses[volatile_status] = 1
+
+        # Lógica adicional para Substituto
+        if volatile_status == 'substitute':
+            pkmn.is_substitute = True
 
     return battle
 
@@ -487,9 +491,13 @@ def end_volatile_status(battle: Battle, split_msg: list) -> Battle:
     pkmn = side.active1 if slot_str.endswith('a') else side.active2
 
     if pkmn and hasattr(pkmn, 'volatile_statuses'):
-        # Si el estado volátil está registrado en el diccionario, lo eliminamos
+        # Si el estado volátil está registrado, lo eliminamos
         if volatile_status in pkmn.volatile_statuses:
             del pkmn.volatile_statuses[volatile_status]
+            
+        # Lógica adicional para Substituto
+        if volatile_status == 'substitute':
+            pkmn.is_substitute = False
 
     return battle
 
@@ -776,7 +784,7 @@ def mega(battle: Battle, split_msg: list) -> Battle:
 
     if pkmn and hasattr(pkmn, 'isMegaEvo'):
         # Establecemos la bandera de Mega Evolución en True
-        pkmn.isMegaEvo = True
+        pkmn.is_mega_evo = True
 
     return battle
 
@@ -860,9 +868,7 @@ def copyboost(battle: Battle, split_msg: list) -> Battle:
 ### OK - Actualiza el turno y decrementa contadores de clima, terrenos, trick room y estados temporales                                                  ###
 ############################################################################################################################################################
 def turn(battle: Battle, split_msg: list) -> Battle:
-    # Ejemplo de mensaje: |turn|1
-    
-    # Validamos que el mensaje contenga el número de turno
+    # Ejemplo de mensaje: |turn|3
     if len(split_msg) < 3:
         return battle
 
@@ -878,81 +884,24 @@ def turn(battle: Battle, split_msg: list) -> Battle:
     if battle.trick_room > 0:
         battle.trick_room -= 1
 
-    # Decremento de condiciones de bando (Side Conditions) y limpieza de estados en ambos lados
+    # Decremento de condiciones de bando (Side Conditions) y limpieza de estados
     for side in (battle.user, battle.opponent):
-        # Reducimos en 1 turno la duración de las pantallas,tailwind, etc.
+        # Aseguramos que side_conditions sea un diccionario válido para evitar caídas
+        if not isinstance(side.side_conditions, dict):
+            # Si se convirtió en una lista u otro objeto, lo restablecemos a un diccionario limpio
+            side.side_conditions = defaultdict(lambda: 0)
+
         for condition in ('tailwind', 'reflect', 'lightscreen', 'auroraveil'):
-            if side.side_conditions[condition] > 0:
+            if side.side_conditions.get(condition, 0) > 0:
                 side.side_conditions[condition] -= 1
 
-        # Limpieza o gestión de estados volátiles al finalizar el turno (ej: Drowsy por Yawn)
+        # Limpieza o gestión de estados volátiles al finalizar el turno
         for active in (side.active1, side.active2):
-            if active and hasattr(active, 'volatile_statuses'):
-                # Al ser volatile_statuses un defaultdict/diccionario, eliminamos la clave si está presente
+            if active and hasattr(active, 'volatile_statuses') and isinstance(active.volatile_statuses, dict):
                 if constants.DROWSY in active.volatile_statuses:
                     del active.volatile_statuses[constants.DROWSY]
     
     return battle
-
-
-############################################################################################################################################################
-### OK - Estimamos las Estadísticas de Batalla Actuales de cada uno de los PKMN Oponentes Activos, en base a sus Estadísticas Base, Naturaleza y Boosts  ###
-############################################################################################################################################################
-def updateStatsOpponentPKMN(pkmn: Pokemon) -> None:
-    # 1. El HP actual se estima directamente del valor HPB ya actualizado en batalla (por heal_or_damage)
-    pkmn.HPA_battle_actual = max(0, pkmn.HPB_battle_base)
-
-    # 2. Inicializamos las demás estadísticas con sus valores base
-    atk = pkmn.ATK_battle_base
-    defe = pkmn.DEF_battle_base
-    spa = pkmn.SPA_battle_base
-    spd = pkmn.SPD_battle_base
-    vel = pkmn.VEL_battle_base
-
-    # 3. Aplicamos los efectos de la Naturaleza si existe y es conocida en el OTS
-    if pkmn.nature:
-        nature_lower = pkmn.nature.lower().strip()
-        effects = constants.NATURE_EFFECTS.get(nature_lower, {})
-
-        # Aplicamos el aumento (+10%)
-        plus_stat = effects.get("plus")
-        if plus_stat == "attack": atk = math.floor(atk * 1.1)
-        elif plus_stat == "defense": defe = math.floor(defe * 1.1)
-        elif plus_stat == "special-attack": spa = math.floor(spa * 1.1)
-        elif plus_stat == "special-defense": spd = math.floor(spd * 1.1)
-        elif plus_stat == "speed": vel = math.floor(vel * 1.1)
-
-        # Aplicamos la disminución (-10%)
-        minus_stat = effects.get("minus")
-        if minus_stat == "attack": atk = math.floor(atk * 0.9)
-        elif minus_stat == "defense": defe = math.floor(defe * 0.9)
-        elif minus_stat == "special-attack": spa = math.floor(spa * 0.9)
-        elif minus_stat == "special-defense": spd = math.floor(spd * 0.9)
-        elif minus_stat == "speed": vel = math.floor(vel * 0.9)
-
-    # 4. Obtenemos los multiplicadores de boosts directamente de forma ultra rápida
-    atk_mult = constants.BOOST_MULTIPLIERS.get(pkmn.boosts.get("attack", 0), 1.0)
-    def_mult = constants.BOOST_MULTIPLIERS.get(pkmn.boosts.get("defense", 0), 1.0)
-    spa_mult = constants.BOOST_MULTIPLIERS.get(pkmn.boosts.get("special-attack", 0), 1.0)
-    spd_mult = constants.BOOST_MULTIPLIERS.get(pkmn.boosts.get("special-defense", 0), 1.0)
-    vel_mult = constants.BOOST_MULTIPLIERS.get(pkmn.boosts.get("speed", 0), 1.0)
-
-    # 5. Asignamos los valores de batalla reales calculados y redondeados hacia abajo
-    pkmn.ATK_battle_actual = math.floor(atk * atk_mult)
-    pkmn.DEF_battle_actual = math.floor(defe * def_mult)
-    pkmn.SPA_battle_actual = math.floor(spa * spa_mult)
-    pkmn.SPD_battle_actual = math.floor(spd * spd_mult)
-    pkmn.VEL_battle_actual = math.floor(vel * vel_mult)
-
-
-############################################################################################################################################################
-### OK - Estimamos las Estadísticas de Batalla Actuales de TODOS los PKMN Oponentes Activos                                                              ###
-############################################################################################################################################################
-async def updateStatsOpponents(battle: Battle) -> None:
-    if battle.opponent.active1 is not None:
-        updateStatsOpponentPKMN(battle.opponent.active1)
-    if battle.opponent.active2 is not None:
-        updateStatsOpponentPKMN(battle.opponent.active2)
 
 
 ############################################################################################################################################################
@@ -996,7 +945,7 @@ BATTLE_MODIFIERS_LOOKUP = {
 ### OK - Actualiza el entorno de batalla procesando los mensajes de actualización del entorno y tipo |request|                                           ###
 ############################################################################################################################################################
 async def update_battle_environment(battle: Battle, msg: str, msg_request: str) -> None:
-    
+    print("update_battle_environment")
     full_msg = f"{msg}\n{msg_request}" if msg_request else msg # Se concatena ambos mensajes recibidos para procesar todas las líneas en un solo flujo
     msg_lines = full_msg.split('\n')
 
