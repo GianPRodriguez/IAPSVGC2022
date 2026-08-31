@@ -9429,6 +9429,16 @@
     "defensa_especial": 105,
     "velocidad": 96
   },
+  "Mimikyu-Disguised": {
+    "tipo1": "Ghost",
+    "tipo2": "Fairy",
+    "hp": 55,
+    "ataque": 90,
+    "defensa": 80,
+    "ataque_especial": 50,
+    "defensa_especial": 105,
+    "velocidad": 96
+  },
   "Mimikyu-Busted": {
     "tipo1": "Ghost",
     "tipo2": "Fairy",

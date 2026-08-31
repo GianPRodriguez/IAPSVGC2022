@@ -116,12 +116,38 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
     msg_request = await ps_websocket_client.receive_message()
     # 2. Actualizar todas las variables del entorno (Pokémon activos, stats, estados, etc.) en base a msg_t
     try:
-        print("TRY update_battle_environment")
         await update_battle_environment(battle, msg_t, msg_request)
-        print("FIN update_battle_environment")
     except Exception as e:
-        print(f"[ERROR] Ocurrió un error al actualizar el entorno de batalla (update_battle_environment): {e}")
-        raise ValueError(f"Ocurrió un error al actualizar el entorno de batalla: {e}")
+        # Obtener el marco (frame) exacto del código donde ocurrió la excepción interna
+        tb = e.__traceback__
+        last_frame = traceback.extract_tb(tb)[-1]  # El marco más profundo (donde realmente falló)
+        
+        filename = last_frame.filename
+        lineno = last_frame.lineno
+        func_name = last_frame.name
+        code_line = last_frame.line
+
+        # Recorte limpio de variables para no saturar la consola
+        msg_t_preview = str(msg_t)[:100] if msg_t else "N/A"
+        msg_req_preview = str(msg_request)[:100] if msg_request else "N/A"
+
+        print("\n" + "=" * 80)
+        print(f"[ERROR DETALLADO EN EL ENTORNO DE BATALLA]")
+        print(f"  > Módulo/Archivo : {filename}")
+        print(f"  > Función        : {func_name}()")
+        print(f"  > Número de Línea: {lineno}")
+        print(f"  > Código Faltante: {code_line}")
+        print(f"  > Mensaje Error  : {type(e).__name__}: {e}")
+        print("-" * 80)
+        print(f"  > ESTADO DE VARIABLES:")
+        print(f"      Turno actual : {getattr(battle, 'turn', 'N/A')}")
+        print(f"      rqid         : {getattr(battle, 'rqid', 'N/A')}")
+        print(f"      msg_t        : {msg_t_preview}...")
+        print(f"      msg_request  : {msg_req_preview}...")
+        print("=" * 80 + "\n")
+
+        # Re-lanzamos la excepción encadenada
+        raise ValueError(f"Fallo en {filename} -> {func_name}() [Línea {lineno}]: {e}") from e
     
     # 3. Si el servidor solicita esperar (p. ej. el oponente está realizando U-Turn / cambio)
     print("handle_active_battle_turn 2")
@@ -131,9 +157,41 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
     # 4. Si el turno requiere una acción activa o un cambio forzado (forceSwitch)
     if battle.force_switch or battle.active:
         battle.error = False
-        print("handle_active_battle_turn 4")
-        battle_turn_action = await createBattleAction(battle, msg_request)
-        print("handle_active_battle_turn 5")
+        try:
+            print("TRY createBattleAction")
+            battle_turn_action = await createBattleAction(battle, msg_request)
+            print("FIN createBattleAction")
+
+        except Exception as e:
+            # Obtener el marco (frame) exacto del código donde ocurrió la excepción interna
+            tb = e.__traceback__
+            last_frame = traceback.extract_tb(tb)[-1]  # El marco más profundo donde realmente falló
+            
+            filename = last_frame.filename
+            lineno = last_frame.lineno
+            func_name = last_frame.name
+            code_line = last_frame.line
+
+            # Recorte limpio de variables para el log
+            msg_req_preview = str(msg_request)[:100] if msg_request else "N/A"
+
+            print("\n" + "=" * 80)
+            print(f"[ERROR DETALLADO EN createBattleAction]")
+            print(f"  > Módulo/Archivo : {filename}")
+            print(f"  > Función        : {func_name}()")
+            print(f"  > Número de Línea: {lineno}")
+            print(f"  > Código Fallido : {code_line}")
+            print(f"  > Mensaje Error  : {type(e).__name__}: {e}")
+            print("-" * 80)
+            print(f"  > ESTADO DE LA BATALLA:")
+            print(f"      Turno actual : {getattr(battle, 'turn', 'N/A')}")
+            print(f"      rqid         : {getattr(battle, 'rqid', 'N/A')}")
+            print(f"      force_switch : {getattr(battle, 'force_switch', 'N/A')}")
+            print(f"      msg_request  : {msg_req_preview}...")
+            print("=" * 80 + "\n")
+
+            # Re-lanzamos la excepción encadenada para conservar la causa raíz original
+            raise ValueError(f"Fallo en {filename} -> {func_name}() [Línea {lineno}]: {e}") from e
         battle.imprimir()
         print("[INFO]     Turno: {}".format(battle.turn))
         await ps_websocket_client.send_message(battle.battle_tag, battle_turn_action)

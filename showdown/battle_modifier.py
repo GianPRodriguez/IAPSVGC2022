@@ -1,6 +1,7 @@
 import json
 import math
 import constants
+import re
 
 from copy import deepcopy
 from collections import defaultdict
@@ -12,6 +13,42 @@ from showdown.battle import Battle
     MEJORAS PENDIENTES:
     - TAL VEZ HAYA ALGUN MODIFICADOR PENDIENTE
 '''
+
+def _parse_hp_and_status_from_switch(hp_status_str: str):
+    """
+    Extrae (hpa, hpb, status_dict) desde la cadena de condición de un |switch| o |drag|.
+    Ejemplos de entrada:
+      '190/202'       -> (190, 202, {})
+      '28/198 par'    -> (28, 198, {'par': True})
+      '0 fnt'         -> (0, 0, {})
+    """
+    hp_status_str = hp_status_str.strip()
+    
+    if constants.FNT in hp_status_str or hp_status_str.startswith("0"):
+        return 0, 0, {}
+
+    parts = hp_status_str.split('/')
+    if len(parts) >= 2:
+        # Extraemos HPA actual
+        hpa_digits = re.findall(r'\d+', parts[0])
+        hpa_val = int(hpa_digits[0]) if hpa_digits else 0
+
+        # Extraemos HPB base y posible estado
+        rest_parts = parts[1].strip().split()
+        hpb_digits = re.findall(r'\d+', rest_parts[0]) if rest_parts else []
+        hpb_val = int(hpb_digits[0]) if hpb_digits else 0
+
+        # Si hay texto adicional (ej: 'par', 'tox', 'brn'), lo extraemos como estado no volátil
+        non_volatile_dict = defaultdict(lambda: 0)
+        if len(rest_parts) > 1:
+            status_tag = rest_parts[1].lower().strip()
+            if status_tag not in ("fnt", ""):
+                non_volatile_dict[status_tag] = True
+
+        return hpa_val, hpb_val, non_volatile_dict
+
+    return 0, 0, {}
+
 
 ############################################################################################################################################################
 ### OK - Devuelve el valor booleando indicativo si la actualización del entorno afecta al oponente o al usuario                                          ###
@@ -60,247 +97,137 @@ def request(battle: Battle, split_msg: list) -> Battle:
 ############################################################################################################################################################
 ### OK - Se realiza el cambio de un PKMN activo a uno de reserva                                                                                         ###
 ############################################################################################################################################################
-def switch_or_drag(battle, split_msg):
-    # |switch|POKEMON|DETAILS|HP STATUS or |drag|POKEMON|DETAILS|HP STATUS
+def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
     # |switch|p1a: Incineroar|Incineroar, L50, M|190/202
-    # ¿El cambio es hecho por el opponente?
-    name = split_msg[3].partition(",")[0]
-    if name.lower() == 'mimikyu':
-        name = "mimikyu-disguised"
-    if name.lower() in constants.standardName:
-        namePkmn = constants.standardName[name.lower()]
-    else:
-        namePkmn = name.lower()
-    if is_opponent(battle, split_msg):
-        if split_msg[2].startswith("p2"):
-            # ¿p2a o p2b?
-            if split_msg[2].startswith("p2a"):
-                contador = 0
-                for pkmn in battle.opponent.reserved:
-                    if namePkmn == pkmn.name:
-                        pkmnAux = deepcopy(battle.opponent.active1)
-                        battle.opponent.active1 = deepcopy(pkmn)
-                        # Inicio - Actualizacion de Stats
-                        battle.opponent.active1.name = namePkmn
-                        battle.opponent.active1.volatile_statuses = []
-                        battle.opponent.active1.boosts = defaultdict(lambda: 0)
-                        if battle.opponent.active1.is_opponent_confirmed != True:
-                            battle.opponent.opponentPkmnConfirmed += 1
-                        battle.opponent.active1.is_opponent_confirmed = True
-                        # Fin - Actualizacion de Stats
-                        # logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active1.name) + ": p2a")
-                        # Intercambio en Reservados
-                        battle.opponent.reserved[contador] = deepcopy(pkmnAux)
-                        # Si es el primer turno...
-                        if len(battle.opponent.reserved) == 6 or len(battle.opponent.reserved) == 5: 
-                            battle.opponent.reserved.pop(contador)
-                    contador += 1
-                # ¿Ya se conocen los 4 Pokémon del Oponente?
-                contadorAux = 0
-                for pkmn in battle.opponent.reserved:
-                    if pkmn.is_opponent_confirmed == True:
-                        contadorAux += 1
-                if contadorAux == 2:
-                    for pkmn in battle.opponent.reserved:
-                        if pkmn.is_opponent_confirmed == False:
-                            battle.opponent.reserved.remove(pkmn)
-                    for pkmn in battle.opponent.reserved:
-                        if pkmn.is_opponent_confirmed == False:
-                            battle.opponent.reserved.remove(pkmn)
-                    if len(battle.opponent.reserved) == 3:
-                        ...
-                        #logger.error("NO DEBE HABER 3")
+    # |switch|p2a: Dragonite|Dragonite, L50, M|28/198 par|[from] Flip Turn
+    if len(split_msg) < 4:
+        return battle
+
+    raw_name = split_msg[3].partition(",")[0].strip()
+    if raw_name.lower() == 'mimikyu':
+        raw_name = "mimikyu-disguised"
+    namePkmn = constants.standardName.get(raw_name.lower(), raw_name.lower())
+
+    opponent_turn = is_opponent(battle, split_msg)
+    side = battle.opponent if opponent_turn else battle.user
+
+    slot_str = split_msg[2].split(':')[0].strip()  # Ej: "p1a" o "p2b"
+    is_active1 = slot_str.endswith('a')
+
+    # =========================================================================
+    # CASO 1: CAMBIO REALIZADO POR EL OPONENTE
+    # =========================================================================
+    if opponent_turn:
+        current_active = side.active1 if is_active1 else side.active2
+
+        # Extraemos la vida y estado no volátil reales mandados por el servidor
+        hp_status_raw = split_msg[4].strip() if len(split_msg) > 4 else ""
+        hpa_val, hpb_val, new_non_volatile = _parse_hp_and_status_from_switch(hp_status_raw)
+
+        # 1. PASO A: Buscamos PRIMERO si el Pokémon que entra YA ESTÁ en la reserva (reserved)
+        found_in_reserved_idx = -1
+        for contador, pkmn in enumerate(side.reserved):
+            if pkmn is not None and namePkmn == pkmn.name:
+                found_in_reserved_idx = contador
+                break
+
+        # Si ya estaba en la reserva, hacemos un intercambio directo (Swap)
+        if found_in_reserved_idx != -1:
+            pkmnAux = deepcopy(current_active)
+            pkmnAux = _revert_special_pokemon(pkmnAux, side)
+            
+            pkmn_from_reserved = side.reserved[found_in_reserved_idx]
+            new_active = deepcopy(pkmn_from_reserved)
+            
+            # AUTORIDAD DEL LOG: Actualizamos HP y Estado no Volátil con la info del mensaje
+            new_active.HPA_battle_actual = hpa_val if hpa_val > 0 else new_active.HPA_battle_actual
+            if hpb_val > 0:
+                new_active.HPB_battle_base = hpb_val
+            if new_non_volatile:
+                new_active.non_volatile_statuses = new_non_volatile
+
+            new_active.volatile_statuses = defaultdict(lambda: 0)
+            new_active.boosts = defaultdict(lambda: 0)
+
+            if is_active1:
+                side.active1 = new_active
             else:
-                contador = 0
-                for pkmn in battle.opponent.reserved:
-                    if namePkmn == pkmn.name:
-                        pkmnAux = deepcopy(battle.opponent.active2)
-                        battle.opponent.active2 = deepcopy(pkmn)
-                        # Inicio - Actualizacion de Stats
-                        battle.opponent.active2.name = namePkmn
-                        battle.opponent.active2.volatile_statuses = []
-                        battle.opponent.active2.boosts = defaultdict(lambda: 0)
-                        if battle.opponent.active2.is_opponent_confirmed != True:
-                            battle.opponent.opponentPkmnConfirmed += 1
-                        battle.opponent.active2.is_opponent_confirmed = True
-                        # Fin - Actualizacion de Stats
-                        # logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active2.name) + ": p2b")
-                        # Intercambio en Reservados
-                        battle.opponent.reserved[contador] = deepcopy(pkmnAux)
-                        # Si es el primer turno...
-                        if len(battle.opponent.reserved) == 6 or len(battle.opponent.reserved) == 5: 
-                            battle.opponent.reserved.pop(contador)
-                    contador += 1
-                # ¿Ya se conocen los 4 Pokémon del Oponente?
-                contadorAux = 0
-                for pkmn in battle.opponent.reserved:
-                    if pkmn.is_opponent_confirmed == True:
-                        contadorAux += 1
-                if contadorAux == 2:
-                    for pkmn in battle.opponent.reserved:
-                        if pkmn.is_opponent_confirmed == False:
-                            battle.opponent.reserved.remove(pkmn)
-                    for pkmn in battle.opponent.reserved:
-                        if pkmn.is_opponent_confirmed == False:
-                            battle.opponent.reserved.remove(pkmn)
-                    if len(battle.opponent.reserved) == 3:
-                        ...
-                        #logger.error("NO DEBE HABER 3")
+                side.active2 = new_active
+
+            # El Pokémon saliente ocupa el lugar de la reserva que dejó el entrante
+            if pkmnAux is not None:
+                side.reserved[found_in_reserved_idx] = deepcopy(pkmnAux)
+            print(f"El oponente ha cambiado de Pokémon a {new_active.name} ({new_active.HPA_battle_actual}/{new_active.HPB_battle_base}) : {slot_str}")
+
+        # 2. PASO B: Si NO estaba en la reserva, lo buscamos en 'opponents' (Team Preview)
         else:
-            # ¿p1a o p1b?
-            if split_msg[2].startswith("p1a"):
-                contador = 0
-                for pkmn in battle.opponent.reserved:
-                    if namePkmn == pkmn.name:
-                        pkmnAux = deepcopy(battle.opponent.active1)
-                        battle.opponent.active1 = deepcopy(pkmn)
-                        # Inicio - Actualizacion de Stats
-                        battle.opponent.active1.name = namePkmn
-                        battle.opponent.active1.volatile_statuses = []
-                        battle.opponent.active1.boosts = defaultdict(lambda: 0)
-                        if battle.opponent.active1.is_opponent_confirmed != True:
-                            battle.opponent.opponentPkmnConfirmed += 1
-                        battle.opponent.active1.is_opponent_confirmed = True
-                        # Fin - Actualizacion de Stats
-                        # logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active1.name) + ": p1a")
-                        # Intercambio en Reservados
-                        battle.opponent.reserved[contador] = deepcopy(pkmnAux)
-                        # Si es el primer turno...
-                        if len(battle.opponent.reserved) == 6 or len(battle.opponent.reserved) == 5: 
-                            battle.opponent.reserved.pop(contador)
-                    contador += 1
-                # ¿Ya se conocen los 4 Pokémon del Oponente?
-                contadorAux = 0
-                for pkmn in battle.opponent.reserved:
-                    if pkmn.is_opponent_confirmed == True:
-                        contadorAux += 1
-                if contadorAux == 2:
-                    for pkmn in battle.opponent.reserved:
-                        if pkmn.is_opponent_confirmed == False:
-                            battle.opponent.reserved.remove(pkmn)
-                    for pkmn in battle.opponent.reserved:
-                        if pkmn.is_opponent_confirmed == False:
-                            battle.opponent.reserved.remove(pkmn)
-                    if len(battle.opponent.reserved) == 3:
-                        ...
-                        #logger.error("NO DEBE HABER 3")
-            else:
-                contador = 0
-                for pkmn in battle.opponent.reserved:
-                    if namePkmn == pkmn.name:
-                        pkmnAux = deepcopy(battle.opponent.active2)
-                        battle.opponent.active2 = deepcopy(pkmn)
-                        # Inicio - Actualizacion de Stats
-                        battle.opponent.active2.name = namePkmn
-                        battle.opponent.active2.volatile_statuses = []
-                        battle.opponent.active2.boosts = defaultdict(lambda: 0)
-                        if battle.opponent.active2.is_opponent_confirmed != True:
-                            battle.opponent.opponentPkmnConfirmed += 1
-                        battle.opponent.active2.is_opponent_confirmed = True
-                        # Fin - Actualizacion de Stats
-                        # logger.debug("El oponente ha cambiado de Pokémon a " + str(battle.opponent.active2.name) + ": p1b")
-                        # Intercambio en Reservados
-                        battle.opponent.reserved[contador] = deepcopy(pkmnAux)
-                        # Si es el primer turno...
-                        if len(battle.opponent.reserved) == 6 or len(battle.opponent.reserved) == 5: 
-                            battle.opponent.reserved.pop(contador)
-                    contador += 1
-                # ¿Ya se conocen los 4 Pokémon del Oponente?
-                contadorAux = 0
-                for pkmn in battle.opponent.reserved:
-                    if pkmn.is_opponent_confirmed == True:
-                        contadorAux += 1
-                if contadorAux == 2:
-                    for pkmn in battle.opponent.reserved:
-                        if pkmn.is_opponent_confirmed == False:
-                            battle.opponent.reserved.remove(pkmn)
-                    for pkmn in battle.opponent.reserved:
-                        if pkmn.is_opponent_confirmed == False:
-                            battle.opponent.reserved.remove(pkmn)
-                    if len(battle.opponent.reserved) == 3:
-                        ...
-                        #logger.error("NO DEBE HABER 3")
+            for pkmn in side.opponents:
+                if pkmn is not None and namePkmn == pkmn.name:
+                    pkmnAux = deepcopy(current_active)
+                    pkmnAux = _revert_special_pokemon(pkmnAux, side)
+                    
+                    new_active = deepcopy(pkmn)
+                    new_active.name = namePkmn
+                    
+                    # AUTORIDAD DEL LOG: Asignamos HP y Estado no Volátil traídos por el switch
+                    new_active.HPA_battle_actual = hpa_val if hpa_val > 0 else getattr(pkmn, 'HPA_battle_actual', 0)
+                    if hpb_val > 0:
+                        new_active.HPB_battle_base = hpb_val
+                    if new_non_volatile:
+                        new_active.non_volatile_statuses = new_non_volatile
+
+                    new_active.volatile_statuses = defaultdict(lambda: 0)
+                    new_active.boosts = defaultdict(lambda: 0)
+
+                    # Confirmación del Pokémon
+                    if not getattr(new_active, 'is_opponent_confirmed', False):
+                        side.opponentPkmnConfirmed += 1
+                        new_active.is_opponent_confirmed = True
+
+                    # ENRIQUECIMIENTO ZOROARK / OTS: Hereda objeto, habilidad y naturaleza
+                    new_active.objectPkmn = getattr(pkmn, 'objectPkmn', '')
+                    new_active.abilityPkmn = getattr(pkmn, 'abilityPkmn', '')
+                    new_active.nature = getattr(pkmn, 'nature', None)
+
+                    if is_active1:
+                        side.active1 = new_active
+                    else:
+                        side.active2 = new_active
+
+                    print(f"El oponente ha revelado a {new_active.name} ({new_active.HPA_battle_actual}/{new_active.HPB_battle_base}) : {slot_str}")
+
+                    # El Pokémon saliente recién pasa a 'reserved' al dejar el campo
+                    if pkmnAux is not None:
+                        if not any(p is pkmnAux for p in side.reserved if p is not None):
+                            side.reserved.append(deepcopy(pkmnAux))
+                    break
+
+    # =========================================================================
+    # CASO 2: CAMBIO REALIZADO POR EL USUARIO
+    # =========================================================================
     else:
-        if split_msg[2].startswith("p1"):
-            # ¿p1a o p1b?
-            if split_msg[2].startswith("p1a"):
-                contador = 0
-                for pkmn in battle.user.reserved:
-                    if namePkmn == pkmn.name:
-                        aux = deepcopy(battle.user.active1)
-                        battle.user.active1 = deepcopy(pkmn)
-                        # Inicio - Limpieza de Stats
-                        battle.user.active1.volatile_statuses = []
-                        battle.user.active1.boosts = defaultdict(lambda: 0)
-                        # Fin - Limpieza de Stats
-                        battle.user.active1.name = namePkmn
-                        pkmn = deepcopy(aux)
-                        # logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active1.name) + ": p1a")
-                        # Intercambio en Reservados
-                        battle.user.reserved[contador] = deepcopy(pkmn)
-                    contador+=1
-                for pkmn in battle.user.reserved:
-                    if pkmn is None:
-                        battle.user.reserved.remove(pkmn)
-            else:
-                contador = 0
-                for pkmn in battle.user.reserved:
-                    if namePkmn == pkmn.name:
-                        aux = deepcopy(battle.user.active2)
-                        battle.user.active2 = deepcopy(pkmn)
-                        # Inicio - Limpieza de Stats
-                        battle.user.active2.volatile_statuses = []
-                        battle.user.active2.boosts = defaultdict(lambda: 0)
-                        # Fin - Limpieza de Stats
-                        battle.user.active2.name = namePkmn
-                        pkmn = deepcopy(aux)
-                        # logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active2.name) + ": p1b")
-                        # Intercambio en Reservados
-                        battle.user.reserved[contador] = deepcopy(pkmn)
-                    contador+=1
-                for pkmn in battle.user.reserved:
-                    if pkmn is None:
-                        battle.user.reserved.remove(pkmn)
-        else:
-            # ¿p2a o p2b?
-            if split_msg[2].startswith("p2a"):
-                contador = 0
-                for pkmn in battle.user.reserved:
-                    if namePkmn == pkmn.name:
-                        aux = deepcopy(battle.user.active1)
-                        battle.user.active1 = deepcopy(pkmn)
-                        # Inicio - Limpieza de Stats
-                        battle.user.active1.volatile_statuses = []
-                        battle.user.active1.boosts = defaultdict(lambda: 0)
-                        # Fin - Limpieza de Stats
-                        battle.user.active1.name = namePkmn
-                        pkmn = deepcopy(aux)
-                        # logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active1.name) + ": p2a")
-                        # Intercambio en Reservados
-                        battle.user.reserved[contador] = deepcopy(pkmn)
-                    contador+=1
-                for pkmn in battle.user.reserved:
-                    if pkmn is None:
-                        battle.user.reserved.remove(pkmn)
-            else:
-                contador = 0
-                for pkmn in battle.user.reserved:
-                    if namePkmn == pkmn.name:
-                        aux = deepcopy(battle.user.active2)
-                        battle.user.active2 = deepcopy(pkmn)
-                        # Inicio - Limpieza de Stats
-                        battle.user.active2.volatile_statuses = []
-                        battle.user.active2.boosts = defaultdict(lambda: 0)
-                        # Fin - Limpieza de Stats
-                        battle.user.active2.name = namePkmn
-                        pkmn = deepcopy(aux)
-                        # logger.debug("El usuario ha cambiado de Pokémon a " + str(battle.user.active2.name) + ": p2b") 
-                        # Intercambio en Reservados
-                        battle.user.reserved[contador] = deepcopy(pkmn)
-                    contador+=1
-                for pkmn in battle.user.reserved:
-                    if pkmn is None:
-                        battle.user.reserved.remove(pkmn)
+        for contador, pkmn in enumerate(side.reserved):
+            if pkmn is not None and namePkmn == pkmn.name:
+                aux = deepcopy(side.active1 if is_active1 else side.active2)
+                aux = _revert_special_pokemon(aux, side)
+                
+                new_active = deepcopy(pkmn)
+                new_active.name = namePkmn
+                new_active.volatile_statuses = defaultdict(lambda: 0)
+                new_active.boosts = defaultdict(lambda: 0)
+
+                if is_active1:
+                    side.active1 = new_active
+                else:
+                    side.active2 = new_active
+
+                # Intercambio en Reservados
+                side.reserved[contador] = deepcopy(aux)
+                break
+
+        # Limpieza de nulos en reservados del usuario
+        side.reserved = [p for p in side.reserved if p is not None]
+
     return battle
 
 
@@ -324,6 +251,7 @@ def faint(battle: Battle, split_msg: list) -> Battle:
         pkmn.is_fainted = True
         pkmn.boosts = defaultdict(lambda: 0)
         pkmn.volatile_statuses = defaultdict(lambda: 0)
+        pkmn.non_volatile_statuses = defaultdict(lambda: 0)
 
     return battle
 
@@ -332,10 +260,15 @@ def faint(battle: Battle, split_msg: list) -> Battle:
 ### OK - Actualización de HP por daño o curación                                                                                                         ###
 ############################################################################################################################################################
 def heal_or_damage(battle: Battle, split_msg: list) -> Battle:
+    # |-damage|p2a: Zoroark|40/100 brn|[from] brn
     # |-damage|p2a: Tornadus|91/100|[from] item: Life Orb
+    # |-damage|p1a: Raichu|135/167 tox|[from] psn
+    # |-damage|p2a: Blastoise|50/100y
+    if len(split_msg) < 4:
+        return battle
+
     opponent_turn = is_opponent(battle, split_msg)
     side = battle.opponent if opponent_turn else battle.user
-
     slot_str = split_msg[2].split(':')[0].strip()
     pkmn = side.active1 if slot_str.endswith('a') else side.active2
 
@@ -344,21 +277,24 @@ def heal_or_damage(battle: Battle, split_msg: list) -> Battle:
 
     hp_str = split_msg[3].strip()
 
-    if constants.FNT in hp_str or hp_str.startswith("0 "):
+    # Comprobamos si el Pokémon cayó debilitado
+    if constants.FNT in hp_str or hp_str.startswith("0"):
         pkmn.HPA_battle_actual = 0
+        pkmn.is_fainted = True
     else:
         parts = hp_str.split('/')
-        current_hp_val = float(parts[0])
+        if len(parts) >= 2:
+            # Extraemos únicamente los dígitos del HP actual
+            current_digits = re.findall(r'\d+', parts[0])
+            if current_digits:
+                current_hp_val = float(current_digits[0])
+                pkmn.HPA_battle_actual = int(math.ceil(current_hp_val))
 
-        if opponent_turn:
-            # Para el oponente, Showdown reporta porcentajes ("91/100")
-            hp_percentage = current_hp_val / 100.0
-            pkmn.HPA_battle_actual = int(pkmn.HPB_battle_base * hp_percentage)
-        else:
-            # Para el usuario, Showdown reporta HP absoluto ("168/282")
-            max_hp_val = float(parts[1].split()[0])
-            pkmn.HPA_battle_actual = int(math.ceil(current_hp_val))
-            pkmn.HPB_battle_base = int(math.ceil(max_hp_val))
+            # Extraemos únicamente los dígitos del HP máximo (incluso si viene pegado como "100y")
+            max_digits = re.findall(r'\d+', parts[1])
+            if max_digits:
+                max_hp_val = float(max_digits[0])
+                pkmn.HPB_battle_base = int(math.ceil(max_hp_val))
 
     return battle
 
@@ -419,6 +355,7 @@ def unboost(battle: Battle, split_msg: list) -> Battle:
 ############################################################################################################################################################
 def status(battle: Battle, split_msg: list) -> Battle:
     # |-status|p2a: Slowbro|brn
+    # |-status|p2b: Maushold|slp|[from] move: Rest
     if len(split_msg) < 4:
         return battle
 
@@ -440,17 +377,18 @@ def status(battle: Battle, split_msg: list) -> Battle:
 
 
 ############################################################################################################################################################
-# OK - Inicia alterado volatil (ej: 'moveyawn')                                                                                                          ###
+# OK - Inicia alterado volatil (ej: 'moveyawn', 'confusion', 'substitute')                                                                               ###
 ############################################################################################################################################################
 def start_volatile_status(battle: Battle, split_msg: list) -> Battle:
     # Ejemplo de mensaje: |-start|p2a: Incineroar|move: Yawn|[of] p1a: Gastrodon
+    # Ejemplo de mensaje: |-start|p1b: Whimsicott|confusion
     
-    # Validamos que el mensaje tenga la estructura esperada para extraer el estado volátil
+    # Validamos que el mensaje tenga la estructura esperada
     if len(split_msg) < 4:
         return battle
 
     # Extraemos y normalizamos el estado volátil (quitando prefijos como 'move:')
-    raw_status = split_msg[3].split(":")[-1]
+    raw_status = split_msg[3].split(":")[-1].strip()
     volatile_status = normalize_name(raw_status)
 
     # Determinamos a qué bando y Pokémon activo pertenece el estado
@@ -461,8 +399,13 @@ def start_volatile_status(battle: Battle, split_msg: list) -> Battle:
     pkmn = side.active1 if slot_str.endswith('a') else side.active2
 
     if pkmn and hasattr(pkmn, 'volatile_statuses'):
+        # BLINDAJE: Si volatile_statuses no es un dict/defaultdict (ej: si era una list []),
+        # lo re-inicializamos como diccionario seguro
+        if not isinstance(pkmn.volatile_statuses, (dict, defaultdict)):
+            pkmn.volatile_statuses = defaultdict(lambda: 0)
+
         # Registramos el estado volátil en el diccionario
-        pkmn.volatile_statuses[volatile_status] = 1
+        pkmn.volatile_statuses[volatile_status] = True
 
         # Lógica adicional para Substituto
         if volatile_status == 'substitute':
@@ -475,7 +418,8 @@ def start_volatile_status(battle: Battle, split_msg: list) -> Battle:
 # OK - Fin alterado volatil (ej: 'moveyawn')                                                                                                             ###
 ############################################################################################################################################################
 def end_volatile_status(battle: Battle, split_msg: list) -> Battle:
-    # Ejemplo de mensaje: |-end|p1a: Aerodactyl|Encore
+    # |-end|p1a: Aerodactyl|Encore
+    # |-end|p2a: Zoroark|Illusion
     
     # Validamos que el mensaje tenga la longitud necesaria para evitar errores de índice
     if len(split_msg) < 4:
@@ -503,6 +447,113 @@ def end_volatile_status(battle: Battle, split_msg: list) -> Battle:
 
 
 ############################################################################################################################################################
+# OK - Revelación de Illusion (Zoroark sustituye al disfraz en el campo)                                                                                 ###
+############################################################################################################################################################
+def replace_illusion(battle: Battle, split_msg: list) -> Battle:
+    # |replace|p2a: Zoroark|Zoroark, L50, M
+
+    if len(split_msg) < 4:
+        return battle
+
+    raw_name = split_msg[3].partition(",")[0].strip()
+    real_name = constants.standardName.get(raw_name.lower(), raw_name.lower())
+
+    opponent_turn = is_opponent(battle, split_msg)
+    side = battle.opponent if opponent_turn else battle.user
+
+    slot_str = split_msg[2].split(':')[0].strip()
+    is_active1 = slot_str.endswith('a')
+    disguised_active = side.active1 if is_active1 else side.active2
+
+    # Preservamos los estados acumulados durante el combate mientras estuvo disfrazado
+    accumulated_volatile = deepcopy(disguised_active.volatile_statuses) if disguised_active and hasattr(disguised_active, 'volatile_statuses') else defaultdict(lambda: 0)
+    accumulated_non_volatile = deepcopy(disguised_active.non_volatile_statuses) if disguised_active and hasattr(disguised_active, 'non_volatile_statuses') else defaultdict(lambda: 0)
+    accumulated_boosts = deepcopy(disguised_active.boosts) if disguised_active and hasattr(disguised_active, 'boosts') else defaultdict(lambda: 0)
+    current_hpa = disguised_active.HPA_battle_actual if disguised_active else 0
+    current_hpb = disguised_active.HPB_battle_base if disguised_active else 0
+
+    # 1. El Pokémon disfraz (ej. Dragonite) NUNCA estuvo en el campo: lo devolvemos intacto a la reserva
+    if disguised_active and disguised_active.name != real_name:
+        disguised_active.is_fainted = False
+        disguised_active.volatile_statuses = defaultdict(lambda: 0)
+        disguised_active.non_volatile_statuses = defaultdict(lambda: 0)
+        disguised_active.boosts = defaultdict(lambda: 0)
+        
+        # Si el disfraz no estaba en la reserva, lo regresamos
+        if not any(p and p.name == disguised_active.name for p in side.reserved):
+            side.reserved.append(disguised_active)
+
+    # 2. Buscamos la ficha completa de Zoroark en 'opponents' (OTS/Preview) para recuperar Objeto, Habilidad y Naturaleza
+    ots_zoroark = None
+    for p in side.opponents:
+        if p and p.name == real_name:
+            ots_zoroark = p
+            break
+
+    # 3. Buscamos a Zoroark en 'reserved' si ya existía allí
+    zoroark_instance = None
+    zoroark_idx = -1
+    for i, p in enumerate(side.reserved):
+        if p and p.name == real_name:
+            zoroark_instance = p
+            zoroark_idx = i
+            break
+
+    if zoroark_instance:
+        # Si estaba en la reserva, lo removemos de allí porque pasa al campo activo
+        side.reserved.pop(zoroark_idx)
+    else:
+        # Si es del oponente o no estaba instanciado, creamos la nueva instancia con los datos de ots_zoroark
+        obj_item = normalize_name(getattr(ots_zoroark, 'objectPkmn', '') if ots_zoroark else '')
+        obj_ability = normalize_name(getattr(ots_zoroark, 'abilityPkmn', '') if ots_zoroark else '')
+        obj_nature = normalize_name(getattr(ots_zoroark, 'nature', None) if ots_zoroark else None)
+        
+        # Asignamos los 4 movimientos si existen en ots_zoroark
+        m1 = ots_zoroark.moves[0] if ots_zoroark and len(ots_zoroark.moves) > 0 else None
+        m2 = ots_zoroark.moves[1] if ots_zoroark and len(ots_zoroark.moves) > 1 else None
+        m3 = ots_zoroark.moves[2] if ots_zoroark and len(ots_zoroark.moves) > 2 else None
+        m4 = ots_zoroark.moves[3] if ots_zoroark and len(ots_zoroark.moves) > 3 else None
+
+        zoroark_instance = Pokemon(real_name, 0, opponent_turn, obj_item, obj_ability, m1, m2, m3, m4, obj_nature)
+        
+        if opponent_turn:
+            zoroark_instance.is_opponent_confirmed = True
+            if not getattr(zoroark_instance, 'is_opponent_confirmed', False):
+                side.opponentPkmnConfirmed += 1
+
+    # 4. Asignamos Datos Reales de Zoroark (Objeto, Habilidad, Naturaleza y Stats Base)
+    if ots_zoroark:
+        zoroark_instance.objectPkmn = getattr(ots_zoroark, 'objectPkmn', zoroark_instance.objectPkmn)
+        zoroark_instance.abilityPkmn = getattr(ots_zoroark, 'abilityPkmn', zoroark_instance.abilityPkmn)
+        zoroark_instance.nature = getattr(ots_zoroark, 'nature', zoroark_instance.nature)
+        
+        # RESTAURACIÓN DE STATS BASE REALES DE ZOROARK (Descartando las del disfraz)
+        zoroark_instance.HPB_battle_base = getattr(ots_zoroark, 'HPB_battle_base', current_hpb)
+        zoroark_instance.ATK_battle_base = getattr(ots_zoroark, 'ATK_battle_base', 0)
+        zoroark_instance.DEF_battle_base = getattr(ots_zoroark, 'DEF_battle_base', 0)
+        zoroark_instance.SPA_battle_base = getattr(ots_zoroark, 'SPA_battle_base', 0)
+        zoroark_instance.SPD_battle_base = getattr(ots_zoroark, 'SPD_battle_base', 0)
+        zoroark_instance.VEL_battle_base = getattr(ots_zoroark, 'VEL_battle_base', 0)
+
+    # 5. Mantenemos el HP actual y HEREDAMOS los estados acumulados y boosts del combate
+    zoroark_instance.HPA_battle_actual = current_hpa
+    zoroark_instance.volatile_statuses = accumulated_volatile
+    zoroark_instance.non_volatile_statuses = accumulated_non_volatile
+    zoroark_instance.boosts = accumulated_boosts
+    zoroark_instance.is_zoroark = True
+
+    # Asignamos a Zoroark como el activo real
+    if is_active1:
+        side.active1 = zoroark_instance
+    else:
+        side.active2 = zoroark_instance
+
+    print(f"[ILLUSION REVEALED] {real_name} se ha revelado en {slot_str} con HP: {current_hpa}")
+
+    return battle
+
+
+############################################################################################################################################################
 # OK - Curación de estado alterado                                                                                                                       ###
 ############################################################################################################################################################
 def curestatus(battle: Battle, split_msg: list) -> Battle:
@@ -521,7 +572,10 @@ def curestatus(battle: Battle, split_msg: list) -> Battle:
 # OK - Establecimiento / eliminación de clima                                                                                                            ###
 ############################################################################################################################################################
 def weather(battle: Battle, split_msg: list) -> Battle:
-    # |-weather|Sandstorm  o  |-weather|none
+    # |-weather|Sandstorm
+    # |-weather|none
+    # |-weather|Snowscape|[upkeep]
+
     raw_weather = split_msg[2].split(':')[-1].strip()
     weather_name = normalize_name(raw_weather)
 
@@ -534,15 +588,13 @@ def weather(battle: Battle, split_msg: list) -> Battle:
 # OK - Inicio de Terreno, incluye Trick Room                                                                                                             ###
 ############################################################################################################################################################
 def fieldstart(battle: Battle, split_msg: list) -> Battle:
-    # |-fieldstart|move: Grassy Terrain
+    # |-fieldstart|move: Wonder Room|[of] p1b: Starmie
+    # |-fieldstart|move: Electric Terrain
+    # |-fieldstart|move: Trick Room|[of] p2b: Farigiraf
+
     raw_field = split_msg[2].split(':')[-1].strip()
     field_name = normalize_name(raw_field)
-
-    if field_name == constants.TRICK_ROOM:
-        battle.trick_room = 5
-    else:
-        battle.terrain = field_name
-        battle.terrainTurn = 5
+    battle.terrain[field_name] = 5
 
     return battle
 
@@ -551,14 +603,11 @@ def fieldstart(battle: Battle, split_msg: list) -> Battle:
 # OK - Fin de Terreno, incluye Trick Room                                                                                                                ###
 ############################################################################################################################################################
 def fieldend(battle: Battle, split_msg: list) -> Battle:
+    # |-fieldend|move: Trick Room
+
     raw_field = split_msg[2].split(':')[-1].strip()
     field_name = normalize_name(raw_field)
-
-    if field_name == constants.TRICK_ROOM:
-        battle.trick_room = 0
-    else:
-        battle.terrain = None
-        battle.terrainTurn = 0
+    del battle.terrain[field_name]
 
     return battle
 
@@ -593,7 +642,8 @@ def sideend(battle: Battle, split_msg: list) -> Battle:
 # OK - Establece o cambia el objeto equipado de un Pokémon (ej: por movimientos como Trick o Switcheroo)                                               ###
 ############################################################################################################################################################
 def set_item(battle: Battle, split_msg: list) -> Battle:
-    # Ejemplo de mensaje: |-item|p2a: Torkoal|Choice Scarf|[from] move: Trick
+    # |-item|p2a: Torkoal|Choice Scarf|[from] move: Trick
+    # |-item|p1b: Ditto|Sitrus Berry|[from] move: Trick
     
     # Validamos que el mensaje tenga la longitud mínima para extraer el slot y el objeto
     if len(split_msg) < 4:
@@ -617,8 +667,9 @@ def set_item(battle: Battle, split_msg: list) -> Battle:
 # OK - Remueve o consume el objeto equipado de un Pokémon (ej: Knock Off, Focus Sash gastado, Baya)                                                      ###
 ############################################################################################################################################################
 def remove_item(battle: Battle, split_msg: list) -> Battle:
-    # Ejemplo de mensaje: |-enditem|p1b: Kingambit|Focus Sash
-    # Ejemplo de mensaje: |-enditem|p2a: Rillaboom|Grassy Seed|[from] item: Grassy Seed
+    # |-enditem|p1b: Kingambit|Focus Sash
+    # |-enditem|p2a: Rillaboom|Grassy Seed|[from] item: Grassy Seed
+    # |-enditem|p1b: Ditto|Sitrus Berry|[eat]
     
     # Validamos que el mensaje tenga la longitud mínima requerida
     if len(split_msg) < 3:
@@ -667,8 +718,9 @@ def set_opponent_ability_from_ability_tag(battle: Battle, split_msg: list) -> Ba
 # OK - Cambio de forma permanente (MegaEvolución, Mimikyu Busted, etc.)                                                                                  ###
 ############################################################################################################################################################
 def form_change(battle: Battle, split_msg: list) -> Battle:
-    # Ejemplo de mensaje: |detailschange|p1a: Aerodactyl|Aerodactyl-Mega, L50, M
-    # Ejemplo de mensaje: |detailschange|p1a: Mimikyu|Mimikyu-Busted, L50, F
+    # |detailschange|p1a: Aerodactyl|Aerodactyl-Mega, L50, M
+    # |detailschange|p1a: Mimikyu|Mimikyu-Busted, L50, F
+    # |-formechange|p1b: Aegislash|Aegislash-Blade|
     
     # Validamos que el mensaje tenga la estructura esperada
     if len(split_msg) < 4:
@@ -735,8 +787,6 @@ def transform(battle: Battle, split_msg: list) -> Battle:
     source_pkmn = source_side.active1 if source_is_active1 else source_side.active2
 
     # 2. Identificamos al Pokémon que está siendo copiado (target)
-    # Nota: El target puede estar en el bando contrario o incluso en el mismo (ej. Ally Transform)
-    # Por lo general, Showdown indica el bando en split_msg[3]. Analizamos su slot:
     target_slot_full = split_msg[3].split(':')[0].strip() # Ej: "p2a" o "p1b"
     target_is_opponent = not target_slot_full.startswith(battle.user.id)
     target_side = battle.opponent if target_is_opponent else battle.user
@@ -745,18 +795,41 @@ def transform(battle: Battle, split_msg: list) -> Battle:
 
     # 3. Si ambos existen, realizamos la transformación
     if source_pkmn and target_pkmn:
-        # Guardamos el HP actual de Ditto antes de transformarse
-        aux_hp = source_pkmn.HPB_battle_base
-        aux_max_hp = source_pkmn.HPB_battle_base
+        # Guardamos la información única de Ditto que NUNCA cambia al transformarse
+        original_item = source_pkmn.objectPkmn
+        original_hpa = source_pkmn.HPA_battle_actual
+        original_hpb = source_pkmn.HPB_battle_base
 
-        # Creamos una copia exacta (deep copy) de las estadísticas y atributos del objetivo
+        # Creamos una copia exacta de los atributos del objetivo (tipos, habilidad, stats base, movimientos, etc.)
         new_source = deepcopy(target_pkmn)
-        
-        # Mantenemos el HP máximo que ya tenía Ditto en combate
-        new_source.HPB_battle_base = aux_hp
-        
-        # Marcamos explícitamente que sigue siendo Ditto transformado
-        new_source.isDitto = 1
+
+        # MODIFICACIÓN 1: Restauramos el objeto propio de Ditto (no copia el del objetivo)
+        new_source.objectPkmn = original_item
+
+        # Mantenemos los HP originales de Ditto (HP no cambia en la transformación)
+        new_source.HPA_battle_actual = original_hpa
+        new_source.HPB_battle_base = original_hpb
+
+        # MODIFICACIÓN 2: Reglas de estadísticas personalizadas para Ditto
+        if not transform_opponent:  # Caso A: El Ditto es del BOT (Usuario)
+            # Copia estadísticas base del oponente (ya heredadas en 'deepcopy')
+            # Sus estadísticas actuales se llenan con -1
+            new_source.ATK_battle_actual = -1
+            new_source.DEF_battle_actual = -1
+            new_source.SPA_battle_actual = -1
+            new_source.SPD_battle_actual = -1
+            new_source.VEL_battle_actual = -1
+        else:                      # Caso B: El Ditto es del OPONENTE
+            # Sus estadísticas base se convierten en -1
+            new_source.ATK_battle_base = -1
+            new_source.DEF_battle_base = -1
+            new_source.SPA_battle_base = -1
+            new_source.SPD_battle_base = -1
+            new_source.VEL_battle_base = -1
+            # Sus estadísticas actuales son las mías del Pokémon que copió (ya heredadas en 'deepcopy')
+
+        # Marcamos explícitamente que es Ditto transformado
+        new_source.is_ditto = True
 
         # Reemplazamos al Pokémon transformado en su slot activo correspondiente
         if source_is_active1:
@@ -782,7 +855,7 @@ def mega(battle: Battle, split_msg: list) -> Battle:
     slot_str = split_msg[2].split(':')[0].strip()
     pkmn = side.active1 if slot_str.endswith('a') else side.active2
 
-    if pkmn and hasattr(pkmn, 'isMegaEvo'):
+    if pkmn and hasattr(pkmn, 'is_mega_evo'):
         # Establecemos la bandera de Mega Evolución en True
         pkmn.is_mega_evo = True
 
@@ -793,6 +866,7 @@ def mega(battle: Battle, split_msg: list) -> Battle:
 # OK -  Restablece las estadísticas (boosts) de TODOS los Pokémon activos en el campo (ej: por efecto de Haze / Niebla)                                  ###
 ############################################################################################################################################################
 def clearallboost(battle: Battle, _=None) -> Battle:
+    # |-clearallboost
     # Agrupamos todos los Pokémon activos posibles en el campo de dobles
     active_pokemons = (
         battle.user.active1,
@@ -865,6 +939,50 @@ def copyboost(battle: Battle, split_msg: list) -> Battle:
 
 
 ############################################################################################################################################################
+# OK - Activación de efectos/movimientos especiales (ej: Skill Swap para cambiar habilidades)                                                           ###
+############################################################################################################################################################
+def activate(battle: Battle, split_msg: list) -> Battle:
+    # Ejemplo de mensaje: |-activate|p2b: Starmie|Skill Swap|Drought|Natural Cure|[of] p1b: Torkoal
+    if len(split_msg) < 6:
+        return battle
+
+    trigger_effect = split_msg[3].strip().lower()
+
+    # 1. Validamos que el activador sea estrictamente "skill swap"
+    if "skill swap" in trigger_effect:
+        # --- DATOS DEL POKÉMON 1 (Emisor / p2b: Starmie) ---
+        pkmn1_slot_full = split_msg[2].strip()  # Ej: "p2b: Starmie"
+        pkmn1_opponent = is_opponent(battle, ["", "", pkmn1_slot_full])
+        pkmn1_side = battle.opponent if pkmn1_opponent else battle.user
+        pkmn1_is_active1 = pkmn1_slot_full.split(':')[0].strip().endswith('a')
+        pkmn1 = pkmn1_side.active1 if pkmn1_is_active1 else pkmn1_side.active2
+
+        # --- DATOS DEL POKÉMON 2 (Receptor / [of] p1b: Torkoal) ---
+        # Extraemos el identificador de bando (p1b) limpiando el "[of]" de la cadena
+        of_part = split_msg[6].partition("[of] ")[2].strip()  # Ej: "p1b: Torkoal"
+        if not of_part:
+            return battle
+            
+        pkmn2_slot_full = of_part
+        pkmn2_opponent = is_opponent(battle, ["", "", pkmn2_slot_full])
+        pkmn2_side = battle.opponent if pkmn2_opponent else battle.user
+        pkmn2_is_active1 = pkmn2_slot_full.split(':')[0].strip().endswith('a')
+        pkmn2 = pkmn2_side.active1 if pkmn2_is_active1 else pkmn2_side.active2
+
+        # --- INTERCAMBIO DE HABILIDADES EN MEMORIA ---
+        if pkmn1 and pkmn2:
+            new_ability_pkmn1 = normalize_name(split_msg[4].strip())  # "Drought"  
+            new_ability_pkmn2 = normalize_name(split_msg[5].strip())  # "Natural Cure"
+
+            pkmn1.abilityPkmn = new_ability_pkmn1
+            pkmn2.abilityPkmn = new_ability_pkmn2
+
+            print(f"[SKILL SWAP] {pkmn1.name} ahora tiene {new_ability_pkmn1} | {pkmn2.name} ahora tiene {new_ability_pkmn2}")
+
+    return battle
+
+
+############################################################################################################################################################
 ### OK - Actualiza el turno y decrementa contadores de clima, terrenos, trick room y estados temporales                                                  ###
 ############################################################################################################################################################
 def turn(battle: Battle, split_msg: list) -> Battle:
@@ -879,10 +997,11 @@ def turn(battle: Battle, split_msg: list) -> Battle:
     # Decremento de duraciones globales del campo de batalla
     if battle.weatherTurn > 0:
         battle.weatherTurn -= 1
-    if battle.terrainTurn > 0:
-        battle.terrainTurn -= 1
-    if battle.trick_room > 0:
-        battle.trick_room -= 1
+
+    # Decremento de turnos para cada terreno activo en el diccionario
+    for terr, turns in list(battle.terrain.items()):
+        if turns > 1:
+            battle.terrain[terr] -= 1
 
     # Decremento de condiciones de bando (Side Conditions) y limpieza de estados
     for side in (battle.user, battle.opponent):
@@ -930,13 +1049,14 @@ BATTLE_MODIFIERS_LOOKUP = {
     '-enditem': remove_item,
     '-ability': set_opponent_ability_from_ability_tag,
     'detailschange': form_change,
-    'replace': form_change,
+    'replace': replace_illusion,
     '-formechange': form_change,
     '-transform': transform,
     '-mega': mega,
     '-clearallboost': clearallboost,
     '-clearboost': clearboost,
     '-copyboost': copyboost,
+    '-activate': activate,
     'turn': turn
 }
 

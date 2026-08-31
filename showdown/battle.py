@@ -13,6 +13,8 @@ from API.PokeAPI import getPkmnInfo
 import json
 from typing import Union, Dict, Any
 
+from teams.team_converter import normalize_name
+
 ############################################################################################################################################################
 # OK - CLASE BATTLE                                                                                                                                      ###
 ############################################################################################################################################################
@@ -31,11 +33,9 @@ class Battle(ABC):
         self.q = queue.Queue()
 
         ''' Características del Entorno '''
-        self.weather = None             # ['None','raindance','sunnyday','sandstorm','hail']
+        self.weather = None                     # ['None','raindance','sunnyday','sandstorm','hail']
         self.weatherTurn = 0
-        self.terrain = None             # ['None','electricterrain','grassyterrain','mistyterrain','psychicterrain']
-        self.terrainTurn = 0
-        self.trick_room = 0             # [0,4,3,2,1]
+        self.terrain = defaultdict(lambda: 0)   # ['electricterrain','grassyterrain','mistyterrain','psychicterrain', 'wonderroom', 'trickroom']
 
         ''' Estados e Info del Turno '''
         self.turn = 0
@@ -55,16 +55,18 @@ class Battle(ABC):
 # OK - Completa las clases Battler con los datos de los 6 PKMN usuario y 6 oponente en el TEAM PREVIEW, se ejecuta 1 vez por Batalla Individual          ###
 ############################################################################################################################################################
     async def initialize_team_preview(self, user_json: str, opponent_pokemon: list, natures: list) -> None:
+        # Lado Usuario
         first_turn = True
         self.user.updatePkmnUser(user_json, first_turn, natures) # Inicializa solo los 6 PKMN del Usuario
         self.rqid = user_json[constants.RQID] # The rqid is obtained
 
+        # Lado Oponente
         for pkmn_string in opponent_pokemon:
             # pkmn_string = ['Swampert', 'Swampertite', 'Torrent', ['WaveCrash', 'Surf', 'BulkUp', 'FlipTurn'], 'Brave']
             name = pkmn_string[0]
-            objectPkmn = pkmn_string[1] if len(pkmn_string) > 1 else None
-            abilityPkmn = pkmn_string[2] if len(pkmn_string) > 2 else None
-            nature = pkmn_string[4] if len(pkmn_string) > 4 else None
+            objectPkmn = normalize_name(pkmn_string[1] if len(pkmn_string) > 1 else None)
+            abilityPkmn = normalize_name(pkmn_string[2] if len(pkmn_string) > 2 else None)
+            nature = normalize_name(pkmn_string[4] if len(pkmn_string) > 4 else None)
 
             moves = pkmn_string[3] if len(pkmn_string) > 3 and isinstance(pkmn_string[3], list) else []
 
@@ -78,7 +80,7 @@ class Battle(ABC):
             name_lower = 'mimikyu-disguised' if name.lower() == 'mimikyu' else name.lower()
             namePkmn = constants.standardName.get(name_lower, name_lower)
 
-            self.opponent.reserved.append(
+            self.opponent.opponents.append(
                 Pokemon(namePkmn, -1, True, objectPkmn, abilityPkmn, move1, move2, move3, move4, nature) # Dentro del Constructor se Autocompleta los datos restantes del PKMN Oponente
             )
 
@@ -119,9 +121,7 @@ class Battle(ABC):
         # =====================================================================
         self.weather = None
         self.weatherTurn = 0
-        self.terrain = None
-        self.terrainTurn = 0
-        self.trick_room = 0
+        self.terrain = defaultdict(lambda: 0)
 
         # =====================================================================
         # 3. Reiniciar Estados e Info del Turno
@@ -148,13 +148,13 @@ class Battle(ABC):
     def imprimir(self):
         """Imprime por consola y guarda en 'reporte.txt' el estado completo de la batalla."""
         with open('reporte.txt', 'a', encoding='utf-8') as f:
-            print("==================================================", file=f)
+            print("**************************************************", file=f)
+            print("##################################################", file=f)
             print("                ESTADO DEL ENTORNO                ", file=f)
-            print("==================================================", file=f)
+            print("##################################################", file=f)
             print(f"Turno: {self.turn} | rqid: {self.rqid}", file=f)
             print(f"Clima: {self.weather} (Turnos restantes: {self.weatherTurn})", file=f)
-            print(f"Terreno: {self.terrain} (Turnos restantes: {self.terrainTurn})", file=f)
-            print(f"Trick Room: {self.trick_room}", file=f)
+            print(f"Terrenos: {dict(self.terrain)}", file=f)
             print(f"Force Switch: {self.force_switch} | active: {self.active} | Wait: {self.wait} | Error: {self.error}", file=f)
             print(f"Recompensa actual: {self.reward} | Score: {self.score}", file=f)
             
@@ -167,7 +167,7 @@ class Battle(ABC):
             print("                     OPONENTE                     ", file=f)
             print("--------------------------------------------------", file=f)
             self.opponent.imprimir(f)
-            print("==================================================", file=f)
+            print("**************************************************", file=f)
 
 
 ############################################################################################################################################################
@@ -189,9 +189,10 @@ class Battler:
         self.active1 = None                             # class Pokemon or None
         self.active2 = None                             # class Pokemon or None
         self.reserved = []                              # class Pokemon
+        self.opponents = []                             # class Pokemon
         self.side_conditions = defaultdict(lambda: 0)   # Tailwind, Stealth Rock, Reflect
         self.isUser = False                             # Se actualiza en True solo cuando es Usuario
-        self.opponentPkmnConfirmed = 0                  # Contabilizador de oponentes
+        self.opponentPkmnConfirmed = 0                  # Contabilizador de reservados
 
 
 ###############################################################################################################################################################
@@ -359,28 +360,28 @@ class Battler:
 # OK - Impresión de la clase Battler                                                                                                                        ###
 ###############################################################################################################################################################
     def imprimir(self, f):
-        """Imprime la información del Battler (Usuario u Oponente) en el archivo."""
         print(f"ID: {self.id} | Cuenta: {self.account_name}", file=f)
         
         if not self.isUser:
             print(f"Pokémon del oponente confirmados: {self.opponentPkmnConfirmed}", file=f)
-            
-        print("\nSide conditions:", file=f)
+
+        # 1. Side conditions en una sola línea si no hay ninguna
         if self.side_conditions:
+            print("Side conditions:", file=f)
             for key, value in self.side_conditions.items():
                 print(f"  {key} : {value}", file=f)
         else:
-            print("  Ninguna", file=f)
+            print("Side conditions: Ninguna", file=f)
 
         print("\n--- POKÉMON ACTIVO 1 ---", file=f)
         if self.active1 is not None:
-            self.active1.imprimir(f)
+            self.active1.imprimir(f, not self.isUser)
         else:
             print("  Ninguno (None)", file=f)
 
         print("\n--- POKÉMON ACTIVO 2 ---", file=f)
         if self.active2 is not None:
-            self.active2.imprimir(f)
+            self.active2.imprimir(f, not self.isUser)
         else:
             print("  Ninguno (None)", file=f)
 
@@ -389,11 +390,28 @@ class Battler:
             for i, pkmn in enumerate(self.reserved, start=1):
                 print(f"\n[Reserva {i}]", file=f)
                 if pkmn is not None:
-                    pkmn.imprimir(f)
+                    pkmn.imprimir(f, not self.isUser)
                 else:
                     print("  Vacío (None)", file=f)
         else:
             print("  Sin reservas", file=f)
+
+        # 2. Sección de Pokémon Oponentes solo para el bando oponente
+        if not self.isUser:
+            # Obtenemos la lista usando 'not_confirmed' o 'opponents' según cómo esté definida en tu clase
+            lista_oponentes = getattr(self, 'opponents', [])
+            
+            print("\n--- POKÉMON OPONENTES ---", file=f)
+            if lista_oponentes:
+                for i, pkmn in enumerate(lista_oponentes, start=1):
+                    print(f"\n[Oponente {i}]", file=f)
+                    if pkmn is not None:
+                        pkmn.imprimir(f, not self.isUser)
+                    else:
+                        print("  Vacío (None)", file=f)
+            else:
+                print("  Sin Pokémon oponentes en lista de preview", file=f)
+
         print("-" * 50, file=f)
 
 
@@ -423,7 +441,8 @@ class Pokemon:
         self.is_mega_evo = False
         self.can_mega_evo = False
         self.is_opponent_confirmed = False
-        self.is_ditto = True if name == 'Ditto' else False  # Mantenido como entero por compatibilidad si se requiere
+        self.is_ditto = True if name == 'ditto' else False
+        self.is_zoroark = True if name == 'Zoroark' or name == 'zoroark-hisui' else False
         self.is_fainted = False
         self.is_substitute = False
         
@@ -475,14 +494,16 @@ class Pokemon:
 ############################################################################################################################################################
 # OK - Impresión de la clase Pokemon                                                                                                                     ###
 ############################################################################################################################################################
-    def imprimir(self, f) -> None:
+    def imprimir(self, f, isOpponent) -> None:
         """Imprime por consola o archivo el estado actual del Pokémon de forma organizada."""
         print(f"  > POKÉMON: {self.name}", file=f)
         print(f"    Tipo 1: {self.type1} | Tipo 2: {self.type2}", file=f)
         print(f"    Naturaleza: {self.nature} | Objeto: {self.objectPkmn} | Habilidad: {self.abilityPkmn}", file=f)
-        print(f"    Es Oponente: {self.is_opponent} | Es Oponente Confirmado: {self.is_opponent_confirmed}", file=f)
+        if isOpponent:
+            print(f"    Es Oponente: {self.is_opponent} | Es Oponente Confirmado: {self.is_opponent_confirmed}", file=f)
         print(f"    Puede Megeevolucionar: {self.can_mega_evo} | Ha Megaevolucionado: {self.is_mega_evo}  ", file=f)
-        print(f"    Es Ditto: {self.is_ditto} | ¿Sustituto?: {self.is_substitute} | ¿Debilitado?: {self.is_fainted}", file=f)
+        print(f"    Es Ditto: {self.is_ditto} | Es Zoroark: {self.is_zoroark}", file=f)
+        print(f"    ¿Sustituto?: {self.is_substitute} | ¿Debilitado?: {self.is_fainted}", file=f)
         
         print("    [Estados y Modificadores]", file=f)
         print(f"      No Volátiles: {dict(self.non_volatile_statuses)}", file=f)
