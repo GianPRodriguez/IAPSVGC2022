@@ -148,7 +148,14 @@ class Battle(ABC):
     def imprimir(self):
         """Imprime por consola y guarda en 'reporte.txt' el estado completo de la batalla."""
         with open('reporte.txt', 'a', encoding='utf-8') as f:
-            print("**************************************************", file=f)
+            print("", file=f)
+            print("", file=f)
+            print("", file=f)
+            print("", file=f)
+            print("", file=f)
+            print("", file=f)
+            print("", file=f)
+            print("", file=f)
             print("##################################################", file=f)
             print("                ESTADO DEL ENTORNO                ", file=f)
             print("##################################################", file=f)

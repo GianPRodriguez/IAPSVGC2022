@@ -49,6 +49,128 @@ def _parse_hp_and_status_from_switch(hp_status_str: str):
 
     return 0, 0, {}
 
+def _canonical_species_name(name: str) -> str:
+    """Normaliza nombres variantes para que Zoroark y Zoroark-Hisui se consideren la misma especie."""
+    if not name:
+        return ''
+
+    normalized = normalize_name(str(name)).lower().replace(' ', '-')
+    if normalized.startswith('zoroark'):
+        return 'zoroark'
+    return normalized
+
+
+def _species_exists_on_side(side, species_name: str, exclude=None, ignore_active_slot=None, include_opponents: bool = False) -> bool:
+    """Devuelve True si el Pokémon ya está presente en el lado actual.
+
+    La lista de preview ('opponents') NO debe bloquear la reserva del Pokémon que acaba de salir,
+    porque ahí se listan todos los miembros del equipo aunque todavía no hayan sido revelados.
+    """
+    if not species_name:
+        return False
+
+    species = _canonical_species_name(species_name)
+    candidates = [
+        getattr(side, 'active1', None),
+        getattr(side, 'active2', None),
+        *getattr(side, 'reserved', []),
+    ]
+    if include_opponents:
+        candidates.extend(getattr(side, 'opponents', []))
+
+    for candidate in candidates:
+        if candidate is None or candidate is exclude:
+            continue
+        if ignore_active_slot is not None and candidate is ignore_active_slot:
+            continue
+        if _canonical_species_name(getattr(candidate, 'name', '')) == species:
+            return True
+
+    return False
+
+
+def _remove_exact_reserve_entry(side, pkmn) -> None:
+    """Elimina solo la referencia exacta de una entrada en reserva, sin borrar otras especies confirmadas."""
+    if pkmn is None:
+        return
+
+    side.reserved = [
+        p for p in getattr(side, 'reserved', [])
+        if p is not pkmn
+    ]
+
+
+def _revert_special_pokemon(pkmn_leaving: Pokemon, side) -> Pokemon:
+    """
+    Función de ayuda para revertir a Ditto y Aegislash a sus formas y 
+    estadísticas originales al momento de ser retirados a la reserva.
+    Conserva siempre sus puntos de vida actuales (HPA_battle_actual) y su estado no volátil.
+    """
+    if pkmn_leaving is None:
+        return None
+
+    opponents_list = getattr(side, 'opponents', getattr(side, 'not_confirmed', []))
+
+    # =========================================================================
+    # 1. REVERSIÓN DE DITTO
+    # =========================================================================
+    if getattr(pkmn_leaving, 'is_ditto', False):
+        # Buscamos la ficha original de Ditto en la lista de opponents para recuperar sus datos reales
+        ditto_template = None
+        for p in opponents_list:
+            if p and getattr(p, 'name', '').lower() == 'ditto':
+                ditto_template = p
+                break
+        
+        if ditto_template:
+            reverted = deepcopy(ditto_template)
+            reverted.HPA_battle_actual = pkmn_leaving.HPA_battle_actual
+            reverted.HPB_battle_base = pkmn_leaving.HPB_battle_base
+            reverted.non_volatile_statuses = deepcopy(pkmn_leaving.non_volatile_statuses)
+            reverted.is_ditto = True
+            return reverted
+        else:
+            # Fallback manual por seguridad si no se encontrara el template
+            pkmn_leaving.name = 'ditto'
+            pkmn_leaving.is_ditto = True
+            pkmn_leaving.ATK_battle_base = 48
+            pkmn_leaving.DEF_battle_base = 48
+            pkmn_leaving.SPA_battle_base = 48
+            pkmn_leaving.SPD_battle_base = 48
+            pkmn_leaving.VEL_battle_base = 48
+            pkmn_leaving.moves = ['transform', None, None, None]
+            pkmn_leaving.movesPP = [16, -1, -1, -1]
+            pkmn_leaving.abilityPkmn = 'imposter'
+            return pkmn_leaving
+
+    # =========================================================================
+    # 2. REVERSIÓN DE AEGISLASH (De Blade Form a Shield Form)
+    # =========================================================================
+    if getattr(pkmn_leaving, 'name', '').lower() == 'aegislash-blade':
+        # Buscamos la ficha original de Aegislash en la lista de opponents
+        aegislash_template = None
+        for p in opponents_list:
+            if p and getattr(p, 'name', '').lower() == 'aegislash':
+                aegislash_template = p
+                break
+        
+        if aegislash_template:
+            reverted = deepcopy(aegislash_template)
+            reverted.HPA_battle_actual = pkmn_leaving.HPA_battle_actual
+            reverted.HPB_battle_base = pkmn_leaving.HPB_battle_base
+            reverted.non_volatile_statuses = deepcopy(pkmn_leaving.non_volatile_statuses)
+            return reverted
+        else:
+            # Fallback manual con los stats oficiales de Aegislash Shield Form (Gen 8/9 VGC)
+            pkmn_leaving.name = 'aegislash'
+            pkmn_leaving.ATK_battle_base = 50
+            pkmn_leaving.DEF_battle_base = 140
+            pkmn_leaving.SPA_battle_base = 50
+            pkmn_leaving.SPD_battle_base = 140
+            pkmn_leaving.VEL_battle_base = 60
+            return pkmn_leaving
+
+    return pkmn_leaving
 
 ############################################################################################################################################################
 ### OK - Devuelve el valor booleando indicativo si la actualización del entorno afecta al oponente o al usuario                                          ###
@@ -127,7 +249,7 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
         # 1. PASO A: Buscamos PRIMERO si el Pokémon que entra YA ESTÁ en la reserva (reserved)
         found_in_reserved_idx = -1
         for contador, pkmn in enumerate(side.reserved):
-            if pkmn is not None and namePkmn == pkmn.name:
+            if pkmn is not None and _canonical_species_name(namePkmn) == _canonical_species_name(getattr(pkmn, 'name', '')):
                 found_in_reserved_idx = contador
                 break
 
@@ -162,7 +284,7 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
         # 2. PASO B: Si NO estaba en la reserva, lo buscamos en 'opponents' (Team Preview)
         else:
             for pkmn in side.opponents:
-                if pkmn is not None and namePkmn == pkmn.name:
+                if pkmn is not None and _canonical_species_name(namePkmn) == _canonical_species_name(getattr(pkmn, 'name', '')):
                     pkmnAux = deepcopy(current_active)
                     pkmnAux = _revert_special_pokemon(pkmnAux, side)
                     
@@ -198,8 +320,20 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
 
                     # El Pokémon saliente recién pasa a 'reserved' al dejar el campo
                     if pkmnAux is not None:
-                        if not any(p is pkmnAux for p in side.reserved if p is not None):
-                            side.reserved.append(deepcopy(pkmnAux))
+                        reserved_copy = deepcopy(pkmnAux)
+                        # El Pokémon que sale del campo debe pasar a reserva aunque el mismo nombre siga
+                        # presente en el slot activo que acaba de quedar vacante. Ese slot se ignora aquí.
+                        if not _species_exists_on_side(
+                            side,
+                            getattr(reserved_copy, 'name', ''),
+                            exclude=reserved_copy,
+                            ignore_active_slot=current_active,
+                            include_opponents=False,
+                        ):
+                            if not any(p is pkmnAux for p in side.reserved if p is not None):
+                                side.reserved.append(reserved_copy)
+                        else:
+                            _remove_exact_reserve_entry(side, reserved_copy)
                     break
 
     # =========================================================================
@@ -207,7 +341,7 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
     # =========================================================================
     else:
         for contador, pkmn in enumerate(side.reserved):
-            if pkmn is not None and namePkmn == pkmn.name:
+            if pkmn is not None and _canonical_species_name(namePkmn) == _canonical_species_name(getattr(pkmn, 'name', '')):
                 aux = deepcopy(side.active1 if is_active1 else side.active2)
                 aux = _revert_special_pokemon(aux, side)
                 
@@ -473,20 +607,24 @@ def replace_illusion(battle: Battle, split_msg: list) -> Battle:
     current_hpb = disguised_active.HPB_battle_base if disguised_active else 0
 
     # 1. El Pokémon disfraz (ej. Dragonite) NUNCA estuvo en el campo: lo devolvemos intacto a la reserva
-    if disguised_active and disguised_active.name != real_name:
+    if disguised_active and _canonical_species_name(disguised_active.name) != _canonical_species_name(real_name):
         disguised_active.is_fainted = False
         disguised_active.volatile_statuses = defaultdict(lambda: 0)
         disguised_active.non_volatile_statuses = defaultdict(lambda: 0)
         disguised_active.boosts = defaultdict(lambda: 0)
-        
-        # Si el disfraz no estaba en la reserva, lo regresamos
-        if not any(p and p.name == disguised_active.name for p in side.reserved):
+
+        # Si la especie disfrazada ya está conocida en el campo o reserva, no la volvemos a guardar.
+        # Importante: la lista de preview (opponents) NO debe invalidar la reserva real que acaba de salir
+        # y, sobre todo, NO se debe borrar toda la reserva de esa especie; solo debe quitarse la copia exacta
+        # que era el disfraz del Zoroark, no la entrada ya confirmada del mismo Pokémon real.
+        _remove_exact_reserve_entry(side, disguised_active)
+        if not _species_exists_on_side(side, disguised_active.name, exclude=disguised_active):
             side.reserved.append(disguised_active)
 
     # 2. Buscamos la ficha completa de Zoroark en 'opponents' (OTS/Preview) para recuperar Objeto, Habilidad y Naturaleza
     ots_zoroark = None
     for p in side.opponents:
-        if p and p.name == real_name:
+        if p and _canonical_species_name(p.name) == _canonical_species_name(real_name):
             ots_zoroark = p
             break
 
@@ -494,14 +632,17 @@ def replace_illusion(battle: Battle, split_msg: list) -> Battle:
     zoroark_instance = None
     zoroark_idx = -1
     for i, p in enumerate(side.reserved):
-        if p and p.name == real_name:
+        if p and _canonical_species_name(p.name) == _canonical_species_name(real_name):
             zoroark_instance = p
             zoroark_idx = i
             break
 
     if zoroark_instance:
-        # Si estaba en la reserva, lo removemos de allí porque pasa al campo activo
+        # Si estaba en la reserva, lo removemos de allí porque pasa al campo activo.
+        # Importante: no se limpia toda la reserva por especie; solo se elimina la referencia exacta
+        # del Zoroark real que estaba ahí, no cualquier otros Pokémon ya confirmados del mismo nombre.
         side.reserved.pop(zoroark_idx)
+        _remove_exact_reserve_entry(side, zoroark_instance)
     else:
         # Si es del oponente o no estaba instanciado, creamos la nueva instancia con los datos de ots_zoroark
         obj_item = normalize_name(getattr(ots_zoroark, 'objectPkmn', '') if ots_zoroark else '')
@@ -547,6 +688,9 @@ def replace_illusion(battle: Battle, split_msg: list) -> Battle:
         side.active1 = zoroark_instance
     else:
         side.active2 = zoroark_instance
+
+    # Limpieza final: solo eliminamos entradas exactas de la misma referencia que ya no pertenecen a la reserva.
+    _remove_exact_reserve_entry(side, zoroark_instance)
 
     print(f"[ILLUSION REVEALED] {real_name} se ha revelado en {slot_str} con HP: {current_hpa}")
 
@@ -799,37 +943,48 @@ def transform(battle: Battle, split_msg: list) -> Battle:
         original_item = source_pkmn.objectPkmn
         original_hpa = source_pkmn.HPA_battle_actual
         original_hpb = source_pkmn.HPB_battle_base
+        original_ability = getattr(source_pkmn, 'abilityPkmn', None)
 
-        # Creamos una copia exacta de los atributos del objetivo (tipos, habilidad, stats base, movimientos, etc.)
+        # Creamos una copia exacta de los atributos del objetivo (tipos, movimientos, etc.)
         new_source = deepcopy(target_pkmn)
 
-        # MODIFICACIÓN 1: Restauramos el objeto propio de Ditto (no copia el del objetivo)
+        # Reforzamos la identidad de Ditto y aquella parte que debe mantenerse inmutable
+        new_source.name = target_pkmn.name
         new_source.objectPkmn = original_item
-
-        # Mantenemos los HP originales de Ditto (HP no cambia en la transformación)
+        new_source.abilityPkmn = original_ability if original_ability else getattr(new_source, 'abilityPkmn', None)
         new_source.HPA_battle_actual = original_hpa
         new_source.HPB_battle_base = original_hpb
+        new_source.is_ditto = True
 
-        # MODIFICACIÓN 2: Reglas de estadísticas personalizadas para Ditto
-        if not transform_opponent:  # Caso A: El Ditto es del BOT (Usuario)
-            # Copia estadísticas base del oponente (ya heredadas en 'deepcopy')
-            # Sus estadísticas actuales se llenan con -1
+        # Regla 1: si el Ditto es del usuario y copia al oponente, sus base stats son las del objetivo,
+        # pero sus stats actuales deben quedar como -1 porque no sabemos ese valor exacto de la copia exacta.
+        if not transform_opponent:
+            new_source.ATK_battle_base = target_pkmn.ATK_battle_base
+            new_source.DEF_battle_base = target_pkmn.DEF_battle_base
+            new_source.SPA_battle_base = target_pkmn.SPA_battle_base
+            new_source.SPD_battle_base = target_pkmn.SPD_battle_base
+            new_source.VEL_battle_base = target_pkmn.VEL_battle_base
+
             new_source.ATK_battle_actual = -1
             new_source.DEF_battle_actual = -1
             new_source.SPA_battle_actual = -1
             new_source.SPD_battle_actual = -1
             new_source.VEL_battle_actual = -1
-        else:                      # Caso B: El Ditto es del OPONENTE
-            # Sus estadísticas base se convierten en -1
+
+        # Regla 2: si el Ditto es del oponente y copia al usuario, sus base stats deben quedar como -1,
+        # pero sus stats actuales se toman del Pokémon que está copiando porque sí sabemos sus valores actuales.
+        else:
             new_source.ATK_battle_base = -1
             new_source.DEF_battle_base = -1
             new_source.SPA_battle_base = -1
             new_source.SPD_battle_base = -1
             new_source.VEL_battle_base = -1
-            # Sus estadísticas actuales son las mías del Pokémon que copió (ya heredadas en 'deepcopy')
 
-        # Marcamos explícitamente que es Ditto transformado
-        new_source.is_ditto = True
+            new_source.ATK_battle_actual = target_pkmn.ATK_battle_actual
+            new_source.DEF_battle_actual = target_pkmn.DEF_battle_actual
+            new_source.SPA_battle_actual = target_pkmn.SPA_battle_actual
+            new_source.SPD_battle_actual = target_pkmn.SPD_battle_actual
+            new_source.VEL_battle_actual = target_pkmn.VEL_battle_actual
 
         # Reemplazamos al Pokémon transformado en su slot activo correspondiente
         if source_is_active1:
