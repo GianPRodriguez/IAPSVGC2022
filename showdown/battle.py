@@ -312,17 +312,23 @@ class Battler:
             active2_info = request_active[1] if len(request_active) > 1 else {}
             self.active2.can_mega_evo = bool(active2_info.get("canMegaEvo", False))
 
-            # Update Pkmn - Turno 2 en adelante... Moves (PPs)
-            # Cambiado por una validación más limpia de existencia de "active"
-            if "active" in JSONdict and JSONdict["active"] is not None:
-                for i in range(len(JSONdict["active"][0].get("moves", []))):
-                    move_data = JSONdict["active"][0]["moves"][i]
-                    if move_data.get("pp") is not None:
-                        self.active1.movesPP[i] = int(move_data["pp"])
-                for i in range(len(JSONdict["active"][1].get("moves", []))):
-                    move_data = JSONdict["active"][1]["moves"][i]
-                    if move_data.get("pp") is not None:
-                        self.active2.movesPP[i] = int(move_data["pp"])
+            # Update Pkmn - Turno 2 en adelante... Moves y PP
+            request_active = JSONdict.get("active") or []
+            for index, active_pkmn in enumerate((self.active1, self.active2)):
+                if active_pkmn is None or index >= len(request_active):
+                    continue
+
+                move_data_list = request_active[index].get("moves", [])
+                active_pkmn.moves = [
+                    move_data.get("id")
+                    for move_data in move_data_list[:4]
+                ]
+                active_pkmn.moves.extend([None] * (4 - len(active_pkmn.moves)))
+                active_pkmn.movesPP = [
+                    int(move_data["pp"]) if move_data.get("pp") is not None else -1
+                    for move_data in move_data_list[:4]
+                ]
+                active_pkmn.movesPP.extend([-1] * (4 - len(active_pkmn.movesPP)))
 
             # =========================================================================
             # UPDATE POKÉMON RESERVA 1 (Index 2 del JSON)

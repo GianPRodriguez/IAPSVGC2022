@@ -100,6 +100,52 @@ def _remove_exact_reserve_entry(side, pkmn) -> None:
     ]
 
 
+def _clear_reserve_effects(pkmn: Pokemon) -> Pokemon:
+    """Limpia efectos temporales al guardar un Pokémon en la reserva."""
+    if pkmn is None:
+        return None
+
+    pkmn.volatile_statuses = defaultdict(lambda: 0)
+    pkmn.boosts = defaultdict(lambda: 0)
+    return pkmn
+
+
+def _is_zoroark(pkmn: Pokemon) -> bool:
+    return bool(
+        pkmn
+        and (
+            getattr(pkmn, 'is_zoroark', False)
+            or _canonical_species_name(getattr(pkmn, 'name', '')).startswith('zoroark')
+        )
+    )
+
+
+def _infer_zoroark_from_disguise(pkmn_leaving: Pokemon, side, opponents_list):
+    """Devuelve la ficha de Zoroark si el disfraz contradice la reserva conocida."""
+    if pkmn_leaving is None or _is_zoroark(pkmn_leaving):
+        return None
+
+    disguised_species = _canonical_species_name(getattr(pkmn_leaving, 'name', ''))
+    if not disguised_species or not getattr(pkmn_leaving, 'non_volatile_statuses', {}):
+        return None
+
+    zoroark_template = next((
+        p for p in opponents_list if _is_zoroark(p)
+    ), None)
+    if zoroark_template is None:
+        return None
+
+    # Si la especie mostrada tiene una copia sana en reserva, el activo no podía
+    # ser esa especie real: era el disfraz de Zoroark.
+    has_clean_reserved_species = any(
+        p is not None
+        and _canonical_species_name(getattr(p, 'name', '')) == disguised_species
+        and not getattr(p, 'non_volatile_statuses', {})
+        for p in getattr(side, 'reserved', [])
+    )
+    return zoroark_template if has_clean_reserved_species else None
+
+
 def _revert_special_pokemon(pkmn_leaving: Pokemon, side) -> Pokemon:
     """
     Función de ayuda para revertir a Ditto y Aegislash a sus formas y 
@@ -128,20 +174,55 @@ def _revert_special_pokemon(pkmn_leaving: Pokemon, side) -> Pokemon:
             reverted.HPB_battle_base = pkmn_leaving.HPB_battle_base
             reverted.non_volatile_statuses = deepcopy(pkmn_leaving.non_volatile_statuses)
             reverted.is_ditto = True
-            return reverted
+            if getattr(side, 'isUser', False):
+                for stat_name in ('ATK', 'DEF', 'SPA', 'SPD', 'VEL'):
+                    setattr(reverted, f'{stat_name}_battle_base', -1)
+                    setattr(reverted, f'{stat_name}_battle_actual', getattr(pkmn_leaving, f'{stat_name}_battle_actual'))
+            else:
+                for stat_name in ('ATK', 'DEF', 'SPA', 'SPD', 'VEL'):
+                    setattr(reverted, f'{stat_name}_battle_base', getattr(ditto_template, f'{stat_name}_battle_base'))
+                    setattr(reverted, f'{stat_name}_battle_actual', -1)
+            return _clear_reserve_effects(reverted)
         else:
             # Fallback manual por seguridad si no se encontrara el template
             pkmn_leaving.name = 'ditto'
             pkmn_leaving.is_ditto = True
-            pkmn_leaving.ATK_battle_base = 48
-            pkmn_leaving.DEF_battle_base = 48
-            pkmn_leaving.SPA_battle_base = 48
-            pkmn_leaving.SPD_battle_base = 48
-            pkmn_leaving.VEL_battle_base = 48
+            if getattr(side, 'isUser', False):
+                pkmn_leaving.ATK_battle_base = -1
+                pkmn_leaving.DEF_battle_base = -1
+                pkmn_leaving.SPA_battle_base = -1
+                pkmn_leaving.SPD_battle_base = -1
+                pkmn_leaving.VEL_battle_base = -1
+            else:
+                pkmn_leaving.ATK_battle_base = 48
+                pkmn_leaving.DEF_battle_base = 48
+                pkmn_leaving.SPA_battle_base = 48
+                pkmn_leaving.SPD_battle_base = 48
+                pkmn_leaving.VEL_battle_base = 48
+                pkmn_leaving.ATK_battle_actual = -1
+                pkmn_leaving.DEF_battle_actual = -1
+                pkmn_leaving.SPA_battle_actual = -1
+                pkmn_leaving.SPD_battle_actual = -1
+                pkmn_leaving.VEL_battle_actual = -1
             pkmn_leaving.moves = ['transform', None, None, None]
             pkmn_leaving.movesPP = [16, -1, -1, -1]
             pkmn_leaving.abilityPkmn = 'imposter'
-            return pkmn_leaving
+            return _clear_reserve_effects(pkmn_leaving)
+
+    # =========================================================================
+    # 2. RESTAURACIÓN / INFERENCIA DE ZOROARK
+    # =========================================================================
+    inferred_zoroark = _infer_zoroark_from_disguise(pkmn_leaving, side, opponents_list)
+    if _is_zoroark(pkmn_leaving) or inferred_zoroark:
+        if inferred_zoroark:
+            reverted = deepcopy(inferred_zoroark)
+            reverted.name = inferred_zoroark.name
+            reverted.is_zoroark = True
+            reverted.HPA_battle_actual = pkmn_leaving.HPA_battle_actual
+            reverted.HPB_battle_base = pkmn_leaving.HPB_battle_base
+            reverted.non_volatile_statuses = deepcopy(pkmn_leaving.non_volatile_statuses)
+            pkmn_leaving = reverted
+        return _clear_reserve_effects(pkmn_leaving)
 
     # =========================================================================
     # 2. REVERSIÓN DE AEGISLASH (De Blade Form a Shield Form)
@@ -159,7 +240,7 @@ def _revert_special_pokemon(pkmn_leaving: Pokemon, side) -> Pokemon:
             reverted.HPA_battle_actual = pkmn_leaving.HPA_battle_actual
             reverted.HPB_battle_base = pkmn_leaving.HPB_battle_base
             reverted.non_volatile_statuses = deepcopy(pkmn_leaving.non_volatile_statuses)
-            return reverted
+            return _clear_reserve_effects(reverted)
         else:
             # Fallback manual con los stats oficiales de Aegislash Shield Form (Gen 8/9 VGC)
             pkmn_leaving.name = 'aegislash'
@@ -168,9 +249,7 @@ def _revert_special_pokemon(pkmn_leaving: Pokemon, side) -> Pokemon:
             pkmn_leaving.SPA_battle_base = 50
             pkmn_leaving.SPD_battle_base = 140
             pkmn_leaving.VEL_battle_base = 60
-            return pkmn_leaving
-
-    return pkmn_leaving
+            return _clear_reserve_effects(pkmn_leaving)
 
 ############################################################################################################################################################
 ### OK - Devuelve el valor booleando indicativo si la actualización del entorno afecta al oponente o al usuario                                          ###
@@ -765,7 +844,7 @@ def sidestart(battle: Battle, split_msg: list) -> Battle:
     condition = normalize_name(raw_condition)
 
     side = battle.opponent if is_opponent(battle, split_msg) else battle.user
-    side.side_conditions[condition] = 5
+    side.side_conditions[condition] = 3 if condition == 'tailwind' else 5
     return battle
 
 
@@ -956,35 +1035,19 @@ def transform(battle: Battle, split_msg: list) -> Battle:
         new_source.HPB_battle_base = original_hpb
         new_source.is_ditto = True
 
-        # Regla 1: si el Ditto es del usuario y copia al oponente, sus base stats son las del objetivo,
-        # pero sus stats actuales deben quedar como -1 porque no sabemos ese valor exacto de la copia exacta.
+        stat_names = ('ATK', 'DEF', 'SPA', 'SPD', 'VEL')
+
+        # El Ditto del agente copia las bases visibles del rival, pero sus valores actuales
+        # quedan desconocidos. El Ditto rival copia los valores actuales visibles del agente,
+        # pero sus bases no son observables. En ambos casos sus HP siguen siendo los originales.
         if not transform_opponent:
-            new_source.ATK_battle_base = target_pkmn.ATK_battle_base
-            new_source.DEF_battle_base = target_pkmn.DEF_battle_base
-            new_source.SPA_battle_base = target_pkmn.SPA_battle_base
-            new_source.SPD_battle_base = target_pkmn.SPD_battle_base
-            new_source.VEL_battle_base = target_pkmn.VEL_battle_base
-
-            new_source.ATK_battle_actual = -1
-            new_source.DEF_battle_actual = -1
-            new_source.SPA_battle_actual = -1
-            new_source.SPD_battle_actual = -1
-            new_source.VEL_battle_actual = -1
-
-        # Regla 2: si el Ditto es del oponente y copia al usuario, sus base stats deben quedar como -1,
-        # pero sus stats actuales se toman del Pokémon que está copiando porque sí sabemos sus valores actuales.
+            for stat_name in stat_names:
+                setattr(new_source, f'{stat_name}_battle_base', getattr(target_pkmn, f'{stat_name}_battle_base'))
+                setattr(new_source, f'{stat_name}_battle_actual', -1)
         else:
-            new_source.ATK_battle_base = -1
-            new_source.DEF_battle_base = -1
-            new_source.SPA_battle_base = -1
-            new_source.SPD_battle_base = -1
-            new_source.VEL_battle_base = -1
-
-            new_source.ATK_battle_actual = target_pkmn.ATK_battle_actual
-            new_source.DEF_battle_actual = target_pkmn.DEF_battle_actual
-            new_source.SPA_battle_actual = target_pkmn.SPA_battle_actual
-            new_source.SPD_battle_actual = target_pkmn.SPD_battle_actual
-            new_source.VEL_battle_actual = target_pkmn.VEL_battle_actual
+            for stat_name in stat_names:
+                setattr(new_source, f'{stat_name}_battle_base', -1)
+                setattr(new_source, f'{stat_name}_battle_actual', getattr(target_pkmn, f'{stat_name}_battle_actual'))
 
         # Reemplazamos al Pokémon transformado en su slot activo correspondiente
         if source_is_active1:
