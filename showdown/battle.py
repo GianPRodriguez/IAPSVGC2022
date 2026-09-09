@@ -242,26 +242,49 @@ class Battler:
 
                 self.reserved.append(pkmn)
         else:
-            if len(self.reserved) == 4: # Solo quedan 2 PKMN activos para las rondas
-                # Creamos una lista temporal con todos los Pokémon actuales de la reserva
-                current_reserved = list(self.reserved)
-                self.reserved = []
-                
-                # Recorremos estrictamente el JSON en el orden en que vienen (índices 2 y 3)
-                for idx in (2, 3):
-                    if idx < len(JSONdict["side"]["pokemon"]):
-                        pkmn_data = JSONdict["side"]["pokemon"][idx]
-                        raw_details = pkmn_data["details"].partition(",")[0].lower().replace(" ", "-")
-                        target_name = constants.standardName.get(raw_details, raw_details)
-                        
-                        # Buscamos en la reserva anterior cuál coincide con este nombre en este orden exacto
-                        found_pkmn = None
-                        for p in current_reserved:
-                            if p is not None and p.name == target_name:
-                                found_pkmn = p
-                                break
-                        if found_pkmn:
-                            self.reserved.append(found_pkmn)
+            request_pokemon = JSONdict["side"].get("pokemon", [])[:4]
+            current_pokemon = [self.active1, self.active2, *self.reserved]
+            ordered_pokemon = []
+
+            def request_pokemon_name(pkmn_data):
+                raw_name = pkmn_data["details"].partition(",")[0].lower().replace(" ", "-")
+                if "-mega" in raw_name:
+                    raw_name = raw_name.partition("-mega")[0]
+                return constants.standardName.get(raw_name, raw_name)
+
+            def create_pokemon(pkmn_data, name):
+                condition = pkmn_data.get("condition", "0/0")
+                max_hp = condition.partition("/")[2].partition(" ")[0]
+                moves = pkmn_data.get("moves", [])[:4]
+                pkmn = Pokemon(
+                    name,
+                    max_hp,
+                    False,
+                    pkmn_data.get("item", ""),
+                    pkmn_data.get("ability", ""),
+                    *(moves + [None] * (4 - len(moves))),
+                    None,
+                )
+                return pkmn
+
+            for pkmn_data in request_pokemon:
+                target_name = request_pokemon_name(pkmn_data)
+                found_pkmn = next(
+                    (
+                        pkmn for pkmn in current_pokemon
+                        if pkmn is not None and pkmn not in ordered_pokemon
+                        and request_pokemon_name({"details": pkmn.name}) == target_name
+                    ),
+                    None,
+                )
+                if found_pkmn is None:
+                    found_pkmn = create_pokemon(pkmn_data, target_name)
+                if found_pkmn is not None:
+                    ordered_pokemon.append(found_pkmn)
+
+            if len(ordered_pokemon) >= 2:
+                self.active1, self.active2 = ordered_pokemon[:2]
+                self.reserved = ordered_pokemon[2:4]
 
             # =========================================================================
             # UPDATE POKÉMON ACTIVO 1 (Izquierda - Índice 0 del JSON)

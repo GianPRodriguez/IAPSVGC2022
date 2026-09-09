@@ -100,6 +100,23 @@ def _remove_exact_reserve_entry(side, pkmn) -> None:
     ]
 
 
+def _keep_highest_hp_reserve_for_species(side, species_name: str) -> None:
+    """Conserva una sola reserva de la especie indicada, priorizando su mayor HP."""
+    species = _canonical_species_name(species_name)
+    matching = [
+        p for p in getattr(side, 'reserved', [])
+        if p is not None and _canonical_species_name(getattr(p, 'name', '')) == species
+    ]
+    if len(matching) < 2:
+        return
+
+    survivor = max(matching, key=lambda p: getattr(p, 'HPA_battle_actual', 0))
+    side.reserved = [
+        p for p in side.reserved
+        if p not in matching or p is survivor
+    ]
+
+
 def _clear_reserve_effects(pkmn: Pokemon) -> Pokemon:
     """Limpia efectos temporales al guardar un Pokémon en la reserva."""
     if pkmn is None:
@@ -251,6 +268,8 @@ def _revert_special_pokemon(pkmn_leaving: Pokemon, side) -> Pokemon:
             pkmn_leaving.VEL_battle_base = 60
             return _clear_reserve_effects(pkmn_leaving)
 
+    return _clear_reserve_effects(pkmn_leaving)
+
 ############################################################################################################################################################
 ### OK - Devuelve el valor booleando indicativo si la actualización del entorno afecta al oponente o al usuario                                          ###
 ############################################################################################################################################################
@@ -400,19 +419,12 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                     # El Pokémon saliente recién pasa a 'reserved' al dejar el campo
                     if pkmnAux is not None:
                         reserved_copy = deepcopy(pkmnAux)
-                        # El Pokémon que sale del campo debe pasar a reserva aunque el mismo nombre siga
-                        # presente en el slot activo que acaba de quedar vacante. Ese slot se ignora aquí.
-                        if not _species_exists_on_side(
-                            side,
-                            getattr(reserved_copy, 'name', ''),
-                            exclude=reserved_copy,
-                            ignore_active_slot=current_active,
-                            include_opponents=False,
-                        ):
-                            if not any(p is pkmnAux for p in side.reserved if p is not None):
-                                side.reserved.append(reserved_copy)
-                        else:
-                            _remove_exact_reserve_entry(side, reserved_copy)
+                        # El entrante no estaba en reserved, por lo que el slot
+                        # que abandona el campo siempre debe ocupar una reserva.
+                        # No deduplicamos por especie: dos instancias distintas
+                        # pueden compartir especie y la lista de preview no es
+                        # la reserva real.
+                        side.reserved.append(reserved_copy)
                     break
 
     # =========================================================================
@@ -465,6 +477,11 @@ def faint(battle: Battle, split_msg: list) -> Battle:
         pkmn.boosts = defaultdict(lambda: 0)
         pkmn.volatile_statuses = defaultdict(lambda: 0)
         pkmn.non_volatile_statuses = defaultdict(lambda: 0)
+
+        if _is_zoroark(pkmn):
+            pkmn.is_zoroark = True
+            pkmn.is_opponent_confirmed = True
+            _keep_highest_hp_reserve_for_species(side, pkmn.name)
 
     return battle
 
@@ -748,7 +765,7 @@ def replace_illusion(battle: Battle, split_msg: list) -> Battle:
         zoroark_instance.nature = getattr(ots_zoroark, 'nature', zoroark_instance.nature)
         
         # RESTAURACIÓN DE STATS BASE REALES DE ZOROARK (Descartando las del disfraz)
-        zoroark_instance.HPB_battle_base = getattr(ots_zoroark, 'HPB_battle_base', current_hpb)
+        zoroark_instance.HPB_battle_base = 100 if opponent_turn else getattr(ots_zoroark, 'HPB_battle_base', current_hpb)
         zoroark_instance.ATK_battle_base = getattr(ots_zoroark, 'ATK_battle_base', 0)
         zoroark_instance.DEF_battle_base = getattr(ots_zoroark, 'DEF_battle_base', 0)
         zoroark_instance.SPA_battle_base = getattr(ots_zoroark, 'SPA_battle_base', 0)
@@ -803,7 +820,10 @@ def weather(battle: Battle, split_msg: list) -> Battle:
     weather_name = normalize_name(raw_weather)
 
     battle.weather = weather_name
-    battle.weatherTurn = 0 if weather_name in ("none", "null") else 5
+    if weather_name in ("none", "null"):
+        battle.weatherTurn = 0
+    elif not any(part.strip().lower() == "[upkeep]" for part in split_msg[3:]):
+        battle.weatherTurn = 5
     return battle
 
 
@@ -817,7 +837,7 @@ def fieldstart(battle: Battle, split_msg: list) -> Battle:
 
     raw_field = split_msg[2].split(':')[-1].strip()
     field_name = normalize_name(raw_field)
-    battle.terrain[field_name] = 5
+    battle.terrain[field_name] = 4
 
     return battle
 
@@ -840,7 +860,14 @@ def fieldend(battle: Battle, split_msg: list) -> Battle:
 ############################################################################################################################################################
 def sidestart(battle: Battle, split_msg: list) -> Battle:
     # |-sidestart|p1: PopplioPeru98|move: Tailwind
-    raw_condition = split_msg[3].split(':')[-1].strip()
+    raw_condition = next(
+        (
+            part.split(':', 1)[1].strip()
+            for part in split_msg[3:]
+            if ':' in part and part.split(':', 1)[0].strip().lower() in ('move', 'ability')
+        ),
+        split_msg[-1].strip() if len(split_msg) > 3 else '',
+    )
     condition = normalize_name(raw_condition)
 
     side = battle.opponent if is_opponent(battle, split_msg) else battle.user
@@ -1023,6 +1050,8 @@ def transform(battle: Battle, split_msg: list) -> Battle:
         original_hpa = source_pkmn.HPA_battle_actual
         original_hpb = source_pkmn.HPB_battle_base
         original_ability = getattr(source_pkmn, 'abilityPkmn', None)
+        original_non_volatile = deepcopy(source_pkmn.non_volatile_statuses)
+        original_volatile = deepcopy(source_pkmn.volatile_statuses)
 
         # Creamos una copia exacta de los atributos del objetivo (tipos, movimientos, etc.)
         new_source = deepcopy(target_pkmn)
@@ -1034,12 +1063,15 @@ def transform(battle: Battle, split_msg: list) -> Battle:
         new_source.HPA_battle_actual = original_hpa
         new_source.HPB_battle_base = original_hpb
         new_source.is_ditto = True
+        new_source.non_volatile_statuses = original_non_volatile
+        new_source.volatile_statuses = original_volatile
 
         stat_names = ('ATK', 'DEF', 'SPA', 'SPD', 'VEL')
 
         # El Ditto del agente copia las bases visibles del rival, pero sus valores actuales
         # quedan desconocidos. El Ditto rival copia los valores actuales visibles del agente,
         # pero sus bases no son observables. En ambos casos sus HP siguen siendo los originales.
+        new_source.boosts = deepcopy(target_pkmn.boosts)
         if not transform_opponent:
             for stat_name in stat_names:
                 setattr(new_source, f'{stat_name}_battle_base', getattr(target_pkmn, f'{stat_name}_battle_base'))
@@ -1213,7 +1245,7 @@ def turn(battle: Battle, split_msg: list) -> Battle:
     battle.turn = new_turn
 
     # Decremento de duraciones globales del campo de batalla
-    if battle.weatherTurn > 0:
+    if new_turn > 1 and battle.weatherTurn > 1:
         battle.weatherTurn -= 1
 
     # Decremento de turnos para cada terreno activo en el diccionario
