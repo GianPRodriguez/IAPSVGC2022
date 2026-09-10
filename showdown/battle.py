@@ -250,6 +250,8 @@ class Battler:
                 raw_name = pkmn_data["details"].partition(",")[0].lower().replace(" ", "-")
                 if "-mega" in raw_name:
                     raw_name = raw_name.partition("-mega")[0]
+                if raw_name in ("aegislash-blade", "aegislash-shield"):
+                    raw_name = "aegislash"
                 return constants.standardName.get(raw_name, raw_name)
 
             def create_pokemon(pkmn_data, name):
@@ -273,7 +275,10 @@ class Battler:
                     (
                         pkmn for pkmn in current_pokemon
                         if pkmn is not None and pkmn not in ordered_pokemon
-                        and request_pokemon_name({"details": pkmn.name}) == target_name
+                        and (
+                            request_pokemon_name({"details": pkmn.name}) == target_name
+                            or (pkmn.is_ditto and target_name == "ditto")
+                        )
                     ),
                     None,
                 )
@@ -299,11 +304,12 @@ class Battler:
 
             # Estadísticas de combate (Activo 1)
             stats1 = pokemon0["stats"]
-            self.active1.ATK_battle_actual = int(stats1["atk"])
-            self.active1.DEF_battle_actual = int(stats1["def"])
-            self.active1.SPA_battle_actual = int(stats1["spa"])
-            self.active1.SPD_battle_actual = int(stats1["spd"])
-            self.active1.VEL_battle_actual = int(stats1["spe"])
+            if not (self.active1.is_ditto and self.active1.name != "ditto"):
+                self.active1.ATK_battle_actual = int(stats1["atk"])
+                self.active1.DEF_battle_actual = int(stats1["def"])
+                self.active1.SPA_battle_actual = int(stats1["spa"])
+                self.active1.SPD_battle_actual = int(stats1["spd"])
+                self.active1.VEL_battle_actual = int(stats1["spe"])
 
             # =========================================================================
             # UPDATE POKÉMON ACTIVO 2 (Derecha - Índice 1 del JSON)
@@ -318,11 +324,12 @@ class Battler:
             
             # Estadísticas de combate (Activo 2)
             stats2 = pokemon1["stats"]
-            self.active2.ATK_battle_actual = int(stats2["atk"])
-            self.active2.DEF_battle_actual = int(stats2["def"])
-            self.active2.SPA_battle_actual = int(stats2["spa"])
-            self.active2.SPD_battle_actual = int(stats2["spd"])
-            self.active2.VEL_battle_actual = int(stats2["spe"])
+            if not (self.active2.is_ditto and self.active2.name != "ditto"):
+                self.active2.ATK_battle_actual = int(stats2["atk"])
+                self.active2.DEF_battle_actual = int(stats2["def"])
+                self.active2.SPA_battle_actual = int(stats2["spa"])
+                self.active2.SPD_battle_actual = int(stats2["spd"])
+                self.active2.VEL_battle_actual = int(stats2["spe"])
 
             # Asegurándonos de que 'active' tenga al menos 2 elementos en la lista
             request_active = JSONdict.get("active", [])
@@ -348,7 +355,9 @@ class Battler:
                 ]
                 active_pkmn.moves.extend([None] * (4 - len(active_pkmn.moves)))
                 active_pkmn.movesPP = [
-                    int(move_data["pp"]) if move_data.get("pp") is not None else -1
+                    1 if move_data.get("id") == "struggle" else (
+                        int(move_data["pp"]) if move_data.get("pp") is not None else -1
+                    )
                     for move_data in move_data_list[:4]
                 ]
                 active_pkmn.movesPP.extend([-1] * (4 - len(active_pkmn.movesPP)))
@@ -480,7 +489,6 @@ class Pokemon:
         self.is_ditto = True if name == 'ditto' else False
         self.is_zoroark = True if name == 'Zoroark' or name == 'zoroark-hisui' else False
         self.is_fainted = False
-        self.is_substitute = False
         
         # Tipos (Se asignan posteriormente)
         self.type1 = None
@@ -538,8 +546,7 @@ class Pokemon:
         if isOpponent:
             print(f"    Es Oponente: {self.is_opponent} | Es Oponente Confirmado: {self.is_opponent_confirmed}", file=f)
         print(f"    Puede Megeevolucionar: {self.can_mega_evo} | Ha Megaevolucionado: {self.is_mega_evo}  ", file=f)
-        print(f"    Es Ditto: {self.is_ditto} | Es Zoroark: {self.is_zoroark}", file=f)
-        print(f"    ¿Sustituto?: {self.is_substitute} | ¿Debilitado?: {self.is_fainted}", file=f)
+        print(f"    Es Ditto: {self.is_ditto} | Es Zoroark: {self.is_zoroark} | ¿Debilitado?: {self.is_fainted}", file=f)
         
         print("    [Estados y Modificadores]", file=f)
         print(f"      No Volátiles: {dict(self.non_volatile_statuses)}", file=f)

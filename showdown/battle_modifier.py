@@ -610,8 +610,9 @@ def status(battle: Battle, split_msg: list) -> Battle:
 # OK - Inicia alterado volatil (ej: 'moveyawn', 'confusion', 'substitute')                                                                               ###
 ############################################################################################################################################################
 def start_volatile_status(battle: Battle, split_msg: list) -> Battle:
-    # Ejemplo de mensaje: |-start|p2a: Incineroar|move: Yawn|[of] p1a: Gastrodon
-    # Ejemplo de mensaje: |-start|p1b: Whimsicott|confusion
+    # |-start|p2a: Incineroar|move: Yawn|[of] p1a: Gastrodon
+    # |-start|p1b: Whimsicott|confusion
+    # |-start|p1a: Aegislash|Substitute
     
     # Validamos que el mensaje tenga la estructura esperada
     if len(split_msg) < 4:
@@ -636,10 +637,6 @@ def start_volatile_status(battle: Battle, split_msg: list) -> Battle:
 
         # Registramos el estado volátil en el diccionario
         pkmn.volatile_statuses[volatile_status] = True
-
-        # Lógica adicional para Substituto
-        if volatile_status == 'substitute':
-            pkmn.is_substitute = True
 
     return battle
 
@@ -668,10 +665,6 @@ def end_volatile_status(battle: Battle, split_msg: list) -> Battle:
         # Si el estado volátil está registrado, lo eliminamos
         if volatile_status in pkmn.volatile_statuses:
             del pkmn.volatile_statuses[volatile_status]
-            
-        # Lógica adicional para Substituto
-        if volatile_status == 'substitute':
-            pkmn.is_substitute = False
 
     return battle
 
@@ -705,6 +698,7 @@ def replace_illusion(battle: Battle, split_msg: list) -> Battle:
     # 1. El Pokémon disfraz (ej. Dragonite) NUNCA estuvo en el campo: lo devolvemos intacto a la reserva
     if disguised_active and _canonical_species_name(disguised_active.name) != _canonical_species_name(real_name):
         disguised_active.is_fainted = False
+        disguised_active.HPA_battle_actual = disguised_active.HPB_battle_base
         disguised_active.volatile_statuses = defaultdict(lambda: 0)
         disguised_active.non_volatile_statuses = defaultdict(lambda: 0)
         disguised_active.boosts = defaultdict(lambda: 0)
@@ -837,7 +831,7 @@ def fieldstart(battle: Battle, split_msg: list) -> Battle:
 
     raw_field = split_msg[2].split(':')[-1].strip()
     field_name = normalize_name(raw_field)
-    battle.terrain[field_name] = 4
+    battle.terrain[field_name] = 5
 
     return battle
 
@@ -850,7 +844,7 @@ def fieldend(battle: Battle, split_msg: list) -> Battle:
 
     raw_field = split_msg[2].split(':')[-1].strip()
     field_name = normalize_name(raw_field)
-    del battle.terrain[field_name]
+    battle.terrain.pop(field_name, None)
 
     return battle
 
@@ -880,11 +874,12 @@ def sidestart(battle: Battle, split_msg: list) -> Battle:
 ############################################################################################################################################################
 def sideend(battle: Battle, split_msg: list) -> Battle:
     # |-sideend|p2: PopplioPeru98|move: Tailwind
+    # |-sideend|p2: popplioperu98|move: Light Screen
     raw_condition = split_msg[3].split(':')[-1].strip()
     condition = normalize_name(raw_condition)
 
     side = battle.opponent if is_opponent(battle, split_msg) else battle.user
-    side.side_conditions[condition] = 0
+    side.side_conditions.pop(condition, None)
     return battle
 
 
@@ -941,7 +936,6 @@ def remove_item(battle: Battle, split_msg: list) -> Battle:
 # OK - Establece la habilidad revelada o cambiada de un Pokémon (ej: al entrar al campo con Intimidate, Drizzle, Unnerve, o por Skill Swap)              ###
 ############################################################################################################################################################
 def set_opponent_ability_from_ability_tag(battle: Battle, split_msg: list) -> Battle:
-    # Ejemplos de mensaje de Showdown:
     # |-ability|p1a: Aerodactyl|Unnerve
     # |-ability|p2a: Incineroar|Intimidate|[from] ability: Intimidate|[of] p2a: Incineroar
     
@@ -1263,6 +1257,8 @@ def turn(battle: Battle, split_msg: list) -> Battle:
         for condition in ('tailwind', 'reflect', 'lightscreen', 'auroraveil'):
             if side.side_conditions.get(condition, 0) > 0:
                 side.side_conditions[condition] -= 1
+                if side.side_conditions[condition] == 0:
+                    del side.side_conditions[condition]
 
         # Limpieza o gestión de estados volátiles al finalizar el turno
         for active in (side.active1, side.active2):

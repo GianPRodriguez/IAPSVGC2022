@@ -4,8 +4,15 @@ sys.path.insert(0, '.')
 from showdown.battle import Battle, Pokemon
 from showdown.battle_modifier import (
     _revert_special_pokemon,
+    end_volatile_status,
+    fieldend,
+    fieldstart,
+    form_change,
+    replace_illusion,
     sidestart,
+    sideend,
     switch_or_drag,
+    turn,
     transform,
 )
 
@@ -60,7 +67,7 @@ def test_update_pkmn_user_replaces_active_moves_from_request():
     battle.user.updatePkmnUser(request, False, None)
 
     assert battle.user.active1.moves == ['struggle', None, None, None]
-    assert battle.user.active1.movesPP == [-1, -1, -1, -1]
+    assert battle.user.active1.movesPP == [1, -1, -1, -1]
     assert battle.user.active2.moves == ['yawn', 'bodyslam', 'willowisp', 'clearsmog']
     assert battle.user.active2.movesPP == [12, 16, 16, 15]
 
@@ -205,3 +212,109 @@ def test_opponent_ditto_transform_keeps_its_base_minus_one_and_copies_current_st
     for stat_name in ('ATK', 'DEF', 'SPA', 'SPD', 'VEL'):
         assert getattr(transformed, f'{stat_name}_battle_base') == -1
         assert getattr(transformed, f'{stat_name}_battle_actual') == getattr(battle.user.active1, f'{stat_name}_battle_actual')
+
+
+def test_field_and_side_effects_expire_without_zero_entries():
+    battle = TestBattle()
+    battle.user.id = 'p1'
+    battle.opponent.id = 'p2'
+
+    fieldstart(battle, ['', '-fieldstart', 'move: Wonder Room'])
+    assert battle.terrain['wonderroom'] == 5
+    turn(battle, ['', 'turn', '2'])
+    assert battle.terrain['wonderroom'] == 4
+
+    sidestart(battle, ['', '-sidestart', 'p2: Opponent', 'move: Light Screen'])
+    sideend(battle, ['', '-sideend', 'p2: Opponent', 'move: Light Screen'])
+    assert 'lightscreen' not in battle.opponent.side_conditions
+    fieldend(battle, ['', '-fieldend', 'move: Wonder Room'])
+    assert 'wonderroom' not in battle.terrain
+
+
+def test_zoroark_illusion_keeps_damage_on_zoroark_only():
+    battle = TestBattle()
+    battle.user.id = 'p1'
+    battle.opponent.id = 'p2'
+    battle.opponent.active1 = build_pkmn('dragonite', is_opponent=True, hp=100)
+    battle.opponent.active1.HPB_battle_base = 100
+    battle.opponent.active1.HPA_battle_actual = 64
+    zoroark = build_pkmn('zoroark', is_opponent=True)
+    zoroark.nature = 'serious'
+    battle.opponent.opponents = [zoroark]
+
+    replace_illusion(battle, ['', 'replace', 'p2a: Zoroark', 'Zoroark, L50, M'])
+
+    assert battle.opponent.active1.name == 'zoroark'
+    assert battle.opponent.active1.HPA_battle_actual == 64
+    dragonite = next(p for p in battle.opponent.reserved if p.name == 'dragonite')
+    assert dragonite.HPA_battle_actual == dragonite.HPB_battle_base == 100
+
+
+def test_substitute_survives_aegislash_form_change():
+    battle = TestBattle()
+    battle.user.id = 'p1'
+    battle.opponent.id = 'p2'
+    battle.user.active1 = build_pkmn('aegislash', is_opponent=False, hp=135)
+    battle.user.active1.volatile_statuses['substitute'] = True
+
+    form_change(battle, ['', '-formechange', 'p1a: Aegislash', 'Aegislash-Blade'])
+
+    assert battle.user.active1.volatile_statuses['substitute'] is True
+
+
+def test_request_keeps_transformed_ditto_identity_and_aegislash_substitute():
+    battle = TestBattle()
+    battle.user.id = 'p1'
+    battle.opponent.id = 'p2'
+    battle.user.active1 = build_pkmn('ditto', is_opponent=False, hp=155)
+    battle.user.active2 = build_pkmn('aegislash', is_opponent=False, hp=135)
+    battle.user.active2.volatile_statuses['substitute'] = True
+    battle.user.reserved = [
+        build_pkmn('raichu', is_opponent=False, hp=167),
+        build_pkmn('torkoal', is_opponent=False, hp=177),
+    ]
+    battle.opponent.active1 = build_pkmn('starmie', is_opponent=True, hp=100)
+    for index, stat_name in enumerate(('ATK', 'DEF', 'SPA', 'SPD', 'VEL'), start=1):
+        setattr(battle.opponent.active1, f'{stat_name}_battle_base', index * 10)
+
+    transform(battle, ['', '-transform', 'p1a: Ditto', 'p2a: Starmie', '[from] ability: Imposter'])
+    form_change(battle, ['', '-formechange', 'p1b: Aegislash', 'Aegislash-Blade'])
+
+    request = {
+        'active': [{'moves': []}, {'moves': []}],
+        'side': {'pokemon': [
+            {'details': 'Ditto, L50', 'condition': '155/155', 'stats': {'atk': 61, 'def': 68, 'spa': 68, 'spd': 68, 'spe': 74}},
+            {'details': 'Aegislash, L50, F', 'condition': '135/135', 'stats': {'atk': 102, 'def': 160, 'spa': 102, 'spd': 176, 'spe': 73}},
+            {'details': 'Raichu, L50', 'condition': '167/167', 'stats': {'atk': 99, 'def': 75, 'spa': 156, 'spd': 100, 'spe': 130}},
+            {'details': 'Torkoal, L50', 'condition': '177/177', 'stats': {'atk': 137, 'def': 176, 'spa': 105, 'spd': 90, 'spe': 37}},
+        ]},
+    }
+    battle.user.updatePkmnUser(request, False, None)
+
+    assert battle.user.active1.name == 'starmie'
+    assert battle.user.active1.ATK_battle_base == 10
+    assert battle.user.active1.ATK_battle_actual == -1
+    assert battle.user.active2.volatile_statuses['substitute'] is True
+
+
+def test_struggle_gets_one_pp_when_request_omits_pp():
+    battle = TestBattle()
+    battle.user.active1 = build_pkmn('ditto', is_opponent=False, hp=155)
+    battle.user.active2 = build_pkmn('torkoal', is_opponent=False, hp=177)
+    battle.user.reserved = [build_pkmn('raichu', is_opponent=False, hp=167), build_pkmn('ditto', is_opponent=False, hp=155)]
+    request = {
+        'active': [
+            {'moves': [{'move': 'Struggle', 'id': 'struggle', 'disabled': False}]},
+            {'moves': []},
+        ],
+        'side': {'pokemon': [
+            {'details': 'Ditto, L50', 'condition': '155/155', 'stats': {'atk': 61, 'def': 68, 'spa': 68, 'spd': 68, 'spe': 74}},
+            {'details': 'Torkoal, L50', 'condition': '177/177', 'stats': {'atk': 137, 'def': 176, 'spa': 105, 'spd': 90, 'spe': 37}},
+            {'details': 'Raichu, L50', 'condition': '167/167', 'stats': {'atk': 99, 'def': 75, 'spa': 156, 'spd': 100, 'spe': 130}},
+            {'details': 'Ditto, L50', 'condition': '155/155', 'stats': {'atk': 61, 'def': 68, 'spa': 68, 'spd': 68, 'spe': 74}},
+        ]},
+    }
+
+    battle.user.updatePkmnUser(request, False, None)
+
+    assert battle.user.active1.movesPP[0] == 1
