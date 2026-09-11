@@ -1,3 +1,3 @@
-from API.PokeAPI import getPkmnInfo
+from API.PokemonData import getPkmnInfo
 
 print(getPkmnInfo("primarina"))

@@ -8,7 +8,7 @@ from abc import ABC
 from numpy import sqrt
 from abc import abstractmethod
 from collections import defaultdict
-from API.PokeAPI import getPkmnInfo
+from API.PokemonData import getPkmnInfo
 
 import json
 from typing import Union, Dict, Any

@@ -1,5 +1,5 @@
 import random
-from API.PokeAPI import getColorMove
+from API.MoveData import getColorMove
 import constants
 from showdown.battle import Battle
 from showdown.battle_bots.helpers import getMoveName
