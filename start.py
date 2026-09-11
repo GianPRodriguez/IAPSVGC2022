@@ -19,6 +19,44 @@ from teams.team_converter import export_to_packed
 from teams import load_team
 from neuroevolution.start2 import inicio
 
+BG = "#000000"
+FG = "#ffffff"
+
+def apply_dark_theme(root):
+	root.configure(bg=BG)
+	root.tk_setPalette(
+		background=BG,
+		foreground=FG,
+		activeBackground="#222222",
+		activeForeground=FG,
+		highlightColor=FG,
+		highlightBackground=BG,
+		insertBackground=FG,
+		selectBackground="#333333",
+		selectForeground=FG,
+		troughColor="#222222",
+	)
+	style = ttk.Style(root)
+	try:
+		style.theme_use("clam")
+	except tk.TclError:
+		...
+	style.configure("TFrame", background=BG)
+	style.configure("TLabel", background=BG, foreground=FG)
+	style.configure("TEntry", fieldbackground="#111111", foreground=FG, background=BG, insertcolor=FG)
+	style.configure("TCombobox", fieldbackground="#111111", foreground=FG, background=BG, arrowcolor=FG)
+	style.map(
+		"TCombobox",
+		fieldbackground=[("readonly", "#111111"), ("disabled", "#111111")],
+		foreground=[("readonly", FG), ("disabled", "#888888")],
+		background=[("readonly", BG)],
+	)
+	style.configure("TProgressbar", background="#33B5E5", troughcolor="#222222")
+	root.option_add("*TCombobox*Listbox.background", "#111111")
+	root.option_add("*TCombobox*Listbox.foreground", FG)
+	root.option_add("*TCombobox*Listbox.selectBackground", "#333333")
+	root.option_add("*TCombobox*Listbox.selectForeground", FG)
+
 async def stop(q, teamText):
 	poller = asyncio.ensure_future(ValidarEquipo(q, teamText))
 	while True:
@@ -54,8 +92,9 @@ async def ValidarEquipo(q, teamText):
 class LoremIpsum(tk.Tk):
 	def __init__(self, *args, **kwargs):
 		tk.Tk.__init__(self, *args, **kwargs)
+		apply_dark_theme(self)
 		# Container
-		container = tk.Frame(self)
+		container = tk.Frame(self, bg=BG)
 		container.pack(side="top", fill="both", expand=True)
 		container.grid_rowconfigure(0, weight=1)
 		container.grid_columnconfigure(0, weight=1)
@@ -79,41 +118,41 @@ class LoremIpsum(tk.Tk):
 
 class StartPage(tk.Frame):
 	def __init__(self, parent, controller):
-		tk.Frame.__init__(self, parent)
+		tk.Frame.__init__(self, parent, bg=BG)
 		self.controller = controller
 		# Canvas Head
-		canvasHead = tk.Canvas(self, width=500, height=50, bg="#283158")
+		canvasHead = tk.Canvas(self, width=500, height=50, bg=BG, highlightthickness=0)
 		canvasHead.place(x=0, y=0, anchor = tk.CENTER)
 		canvasHead.create_text(250, 25, text="Lorem ipsum dolor sit amet", fill="white", font=('Verdana 15 bold'))
 		canvasHead.pack()
 		# Canvas Body
-		canvasBody = tk.Canvas(self, width=500, height=259, bg="#283158")
+		canvasBody = tk.Canvas(self, width=500, height=259, bg=BG, highlightthickness=0)
 		canvasBody.place(x=0, y=50, anchor = tk.CENTER)
 		canvasBody.pack()
 
 		button1 = tk.Button(self, text='Módulo de Batallas', anchor="center", command=lambda: controller.show_frame("Modulo1"))
-		button1.configure(width = 50, height = 2, activebackground = "#33B5E5", relief = tk.FLAT)
+		button1.configure(width = 50, height = 2, bg="#1a1a1a", fg=FG, activebackground = "#33B5E5", relief = tk.FLAT)
 		button1_widget = canvasBody.create_window(70, 35, anchor=tk.NW, window=button1)
 
 		button2 = tk.Button(self, text='Módulo de Análisis', anchor="center", command=lambda: controller.show_frame("Modulo2"))
-		button2.configure(width = 50, height = 2, activebackground = "#33B5E5", relief = tk.FLAT)
+		button2.configure(width = 50, height = 2, bg="#1a1a1a", fg=FG, activebackground = "#33B5E5", relief = tk.FLAT)
 		button2_widget = canvasBody.create_window(70, 105, anchor=tk.NW, window=button2)
 
 		button3 = tk.Button(self, text='Módulo de Entrenamiento', anchor="center", command=lambda: controller.show_frame("Modulo3"))
-		button3.configure(width = 50, height = 2, activebackground = "#33B5E5", relief = tk.FLAT)
+		button3.configure(width = 50, height = 2, bg="#1a1a1a", fg=FG, activebackground = "#33B5E5", relief = tk.FLAT)
 		button3_widget = canvasBody.create_window(70, 175, anchor=tk.NW, window=button3)
 
 class Modulo1(tk.Frame):
 	def __init__(self, parent, controller):
-		tk.Frame.__init__(self, parent)
+		tk.Frame.__init__(self, parent, bg=BG)
 		self.auxController = controller
 		# Canvas Head
-		self.canvasHead = tk.Canvas(self, width=500, height=50, bg="#283158")
+		self.canvasHead = tk.Canvas(self, width=500, height=50, bg=BG, highlightthickness=0)
 		self.canvasHead.place(x=0, y=0, anchor = tk.CENTER)
 		self.canvasHead.create_text(250, 25, text="Módulo de Batallas", fill="white", font=('Verdana 15 bold'))
 		self.canvasHead.pack()
 		# Canvas Body
-		self.canvasBody = tk.Canvas(self, width=500, height=259, bg="#283158")
+		self.canvasBody = tk.Canvas(self, width=500, height=259, bg=BG, highlightthickness=0)
 		self.canvasBody.pack()
 		# Button Start Battle
 		self.button1 = tk.Button(self, text='Iniciar Batalla', anchor="center")
@@ -121,10 +160,10 @@ class Modulo1(tk.Frame):
 		self.button1_widget = self.canvasBody.create_window(250, 180, window=self.button1)
 		self.auxButton1 = self.button1
 		# Label Username
-		self.labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelUsername_widget = self.canvasBody.create_window(250, 30, window=self.labelUsername)
 		# Label AgentTeam
-		self.labelTeam = tk.Label(self,text="Equipo del Agente", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelTeam = tk.Label(self,text="Equipo del Agente", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelTeam_widget = self.canvasBody.create_window(250, 85, window=self.labelTeam)
 		# Entry Username
 		self.strName = tk.StringVar()
@@ -144,7 +183,7 @@ class Modulo1(tk.Frame):
 		self.newSalirPNG = self.salirPNG.convert(mode="RGBA")
 		self.resized_image= self.newSalirPNG.resize((40,40), Image.LANCZOS)
 		self.salirTK = ImageTk.PhotoImage(self.resized_image)
-		self.buttonSalir = tk.Button(self, image=self.salirTK, command=lambda: controller.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+		self.buttonSalir = tk.Button(self, image=self.salirTK, command=lambda: controller.show_frame("StartPage"), bg="#000000", activebackground="#000000", highlightthickness = 0, bd = 0)
 		self.buttonSalir_widget = self.canvasHead.create_window(470, 28, window=self.buttonSalir)
 		# Close Windows
 		self.activeClose = 0
@@ -323,10 +362,10 @@ class Modulo1(tk.Frame):
 		# Botón Iniciar Batalla
 		self.button1_widget = self.canvasBody.create_window(250, 180, window=self.auxButton1)
 		# Label Nombre de Usuario
-		self.labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelUsername_widget = self.canvasBody.create_window(250, 30, window=self.labelUsername)
 		# Label Equipo del Agente
-		self.labelTeam = tk.Label(self,text="Equipo del Agente", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelTeam = tk.Label(self,text="Equipo del Agente", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelTeam_widget = self.canvasBody.create_window(250, 85, window=self.labelTeam)
 		# Entrada Nombre de Usuario
 		self.strName_widget = self.canvasBody.create_window(250, 55, window=self.auxNameEntry)
@@ -342,15 +381,15 @@ class Modulo1(tk.Frame):
 
 class Modulo2(tk.Frame):
 	def __init__(self, parent, controller):
-		tk.Frame.__init__(self, parent)
+		tk.Frame.__init__(self, parent, bg=BG)
 		self.auxController = controller
 		# Canvas Head
-		self.canvasHead = tk.Canvas(self, width=500, height=50, bg="#283158")
+		self.canvasHead = tk.Canvas(self, width=500, height=50, bg=BG, highlightthickness=0)
 		self.canvasHead.place(x=0, y=0, anchor = tk.CENTER)
 		self.canvasHead.create_text(250, 25, text="Módulo de Análisis", fill="white", font=('Verdana 15 bold'))
 		self.canvasHead.pack()
 		# Canvas Body
-		self.canvasBody = tk.Canvas(self, width=500, height=259, bg="#283158")
+		self.canvasBody = tk.Canvas(self, width=500, height=259, bg=BG, highlightthickness=0)
 		self.canvasBody.create_rectangle(0,0,310,259, outline='white', width=3)
 		self.canvasBody.pack()
 		# Botón Iniciar Batalla
@@ -365,13 +404,13 @@ class Modulo2(tk.Frame):
 		self.help.config(state='disabled')
 		self.auxHelp = self.help
 		# Label Nombre de Usuario
-		self.labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelUsername_widget = self.canvasBody.create_window(400, 15, window=self.labelUsername)
 		# Label Password
-		self.labelPassword = tk.Label(self,text="Contraseña", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelPassword = tk.Label(self,text="Contraseña", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelPassword_widget = self.canvasBody.create_window(400, 65, window=self.labelPassword)
 		# Label Equipo
-		self.labelTeam = tk.Label(self,text="Equipo", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelTeam = tk.Label(self,text="Equipo", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelTeam_widget = self.canvasBody.create_window(400, 115, window=self.labelTeam)
 		# Entrada Nombre de Usuario
 		self.strName = tk.StringVar()
@@ -396,7 +435,7 @@ class Modulo2(tk.Frame):
 		self.newExitPNG = self.exitPNG.convert(mode="RGBA")
 		self.exitResized = self.newExitPNG.resize((40,40), Image.LANCZOS)
 		self.exitTK = ImageTk.PhotoImage(self.exitResized)
-		self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+		self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#000000", activebackground="#000000", highlightthickness = 0, bd = 0)
 		self.buttonExit_widget = self.canvasHead.create_window(470, 28, window=self.buttonExit)
 		# IMG Bar Chart
 		self.barChartPNG = Image.open("IMGs/barChart.png")
@@ -409,7 +448,7 @@ class Modulo2(tk.Frame):
 		self.newInfoPNG = self.infoPNG.convert(mode="RGBA")
 		self.infoResized = self.newInfoPNG.resize((38,38), Image.LANCZOS)
 		self.infoTK = ImageTk.PhotoImage(self.infoResized)
-		self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Análisis.pdf"'), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+		self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Análisis.pdf"'), bg="#000000", activebackground="#000000", highlightthickness = 0, bd = 0)
 		self.buttonInfo_widget = self.canvasHead.create_window(28, 28, window=self.buttonInfo)
 		# Close Windows
 		self.activeClose = 0
@@ -458,7 +497,7 @@ class Modulo2(tk.Frame):
 					# (2): Fase: Battle Turn - Se envía el identificador a la cola desde el Agente (main.py)
 					#####################################################################################################
 					self.isBattle = True
-					self.labelMove.configure(text="Movimientos", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+					self.labelMove.configure(text="Movimientos", bg = "#000000", font=('Verdana 12 bold'), fg="white")
 					self.LabelMove_widget = self.canvasBody.create_window(80, 30-5, window=self.labelMove)
 					# New Turn
 					self.text1 = self.cola[1]
@@ -474,11 +513,11 @@ class Modulo2(tk.Frame):
 					self.text6 = self.cola[11]
 					self.color6 = self.cola[12]
 					# Label Rendimiento
-					self.labelR = tk.Label(self,text="Rendimiento", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+					self.labelR = tk.Label(self,text="Rendimiento", bg = "#000000", font=('Verdana 12 bold'), fg="white")
 					self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
-					self.labelR1 = tk.Label(self,text="Último turno", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+					self.labelR1 = tk.Label(self,text="Último turno", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 					self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
-					self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+					self.labelR2 = tk.Label(self,text="Histórico", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 					self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
 					# Create Rectangle
 					if self.help.config('text')[-1] == 'Ayuda':
@@ -544,15 +583,15 @@ class Modulo2(tk.Frame):
 					# Bye IMG Bar Chart
 					self.canvasBody.delete(self.barChart_widget)
 					# Label Team Preview
-					self.labelMove = tk.Label(self,text="Vista Previa del Equipo", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+					self.labelMove = tk.Label(self,text="Vista Previa del Equipo", bg = "#000000", font=('Verdana 12 bold'), fg="white")
 					self.LabelMove_widget = self.canvasBody.create_window(130, 30-5, window=self.labelMove)
 					# Team Preview Rectangles
 					self.color1 = '#ffffff'
 					self.color2 = '#ffffff'
 					self.color3 = '#ffffff'
 					self.color4 = '#ffffff'
-					self.color5 = '#283158'
-					self.color6 = '#283158'
+					self.color5 = '#000000'
+					self.color6 = '#000000'
 					self.color1_widget = self.canvasBody.create_rectangle(28,50-5,148,90-5, fill=self.color1, outline=self.color1)
 					self.color2_widget = self.canvasBody.create_rectangle(160,50-5,280,90-5, fill=self.color2, outline=self.color2)
 					self.color3_widget = self.canvasBody.create_rectangle(28,102-5,148,142-5, fill=self.color3, outline=self.color3)
@@ -743,16 +782,16 @@ class Modulo2(tk.Frame):
 		self.canvasBody.delete(self.rectangle1)
 		# Label Turn
 		if self.isBattle:
-			self.labelMove = tk.Label(self,text="Movimientos", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+			self.labelMove = tk.Label(self,text="Movimientos", bg = "#000000", font=('Verdana 12 bold'), fg="white")
 			self.LabelMove_widget = self.canvasBody.create_window(80, 30-5, window=self.labelMove)
-			self.labelR = tk.Label(self,text="Rendimiento", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+			self.labelR = tk.Label(self,text="Rendimiento", bg = "#000000", font=('Verdana 12 bold'), fg="white")
 			self.LabelR_widget = self.canvasBody.create_window(80, 165-5, window=self.labelR)
-			self.labelR1 = tk.Label(self,text="Último turno", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+			self.labelR1 = tk.Label(self,text="Último turno", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 			self.LabelR1_widget = self.canvasBody.create_window(68, 238-5, window=self.labelR1)
-			self.labelR2 = tk.Label(self,text="Histórico", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+			self.labelR2 = tk.Label(self,text="Histórico", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 			self.LabelR2_widget = self.canvasBody.create_window(188, 238-5, window=self.labelR2)
 		else:
-			self.labelMove = tk.Label(self,text="Vista Previa del Equipo", bg = "#283158", font=('Verdana 12 bold'), fg="white")
+			self.labelMove = tk.Label(self,text="Vista Previa del Equipo", bg = "#000000", font=('Verdana 12 bold'), fg="white")
 			self.LabelMove_widget = self.canvasBody.create_window(130, 30-5, window=self.labelMove)
 		# Rectangles
 		if self.isBattle:
@@ -831,13 +870,13 @@ class Modulo2(tk.Frame):
 		# Botón Ayuda
 		self.help_widget = self.canvasBody.create_window(400, 185, window=self.auxHelp)
 		# Label Nombre de Usuario
-		self.labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelUsername = tk.Label(self,text="Nombre de Usuario", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelUsername_widget = self.canvasBody.create_window(400, 15, window=self.labelUsername)
 		# Label Password
-		self.labelPassword = tk.Label(self,text="Contraseña", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelPassword = tk.Label(self,text="Contraseña", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelPassword_widget = self.canvasBody.create_window(400, 65, window=self.labelPassword)
 		# Label Equipo
-		self.labelTeam = tk.Label(self,text="Equipo", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelTeam = tk.Label(self,text="Equipo", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelTeam_widget = self.canvasBody.create_window(400, 115, window=self.labelTeam)
 		# Last Entries
 		self.strName_widget = self.canvasBody.create_window(400, 40, window=self.auxNameEntry)
@@ -848,14 +887,14 @@ class Modulo2(tk.Frame):
 		self.newExitPNG = self.exitPNG.convert(mode="RGBA")
 		self.exitResized = self.newExitPNG.resize((40,40), Image.LANCZOS)
 		self.exitTK = ImageTk.PhotoImage(self.exitResized)
-		self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+		self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#000000", activebackground="#000000", highlightthickness = 0, bd = 0)
 		self.buttonExit_widget = self.canvasHead.create_window(470, 28, window=self.buttonExit)
 		# IMG Info
 		self.infoPNG = Image.open("IMGs/info.png")
 		self.newInfoPNG = self.infoPNG.convert(mode="RGBA")
 		self.infoResized = self.newInfoPNG.resize((38,38), Image.LANCZOS)
 		self.infoTK = ImageTk.PhotoImage(self.infoResized)
-		self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Análisis.pdf"'), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+		self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Análisis.pdf"'), bg="#000000", activebackground="#000000", highlightthickness = 0, bd = 0)
 		self.buttonInfo_widget = self.canvasHead.create_window(28, 28, window=self.buttonInfo)
 		# Close Windows
 		self.activeClose = 0
@@ -867,19 +906,19 @@ class Modulo2(tk.Frame):
 
 class Modulo3(tk.Frame):
 	def __init__(self, parent, controller):
-		tk.Frame.__init__(self, parent)
+		tk.Frame.__init__(self, parent, bg=BG)
 		self.auxController = controller
 		# Canvas Head
-		self.canvasHead = tk.Canvas(self, width=500, height=50, bg="#283158")
+		self.canvasHead = tk.Canvas(self, width=500, height=50, bg=BG, highlightthickness=0)
 		self.canvasHead.place(x=0, y=0, anchor = tk.CENTER)
 		self.canvasHead.create_text(250, 25, text="Módulo de Entrenamiento", fill="white", font=('Verdana 15 bold'))
 		self.canvasHead.pack()
 		# Canvas Body
-		self.canvasBody = tk.Canvas(self, width=500, height=259, bg="#283158")
+		self.canvasBody = tk.Canvas(self, width=500, height=259, bg=BG, highlightthickness=0)
 		self.canvasBody.create_rectangle(0,0,310,259, outline='white', width=3)
 		self.canvasBody.pack()
 		# Label Seleccionar Equipo
-		self.labelSelectTeam = tk.Label(self,text="Seleccionar Equipo", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelSelectTeam = tk.Label(self,text="Seleccionar Equipo", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelSelectTeam_widget = self.canvasBody.create_window(400, 15, window=self.labelSelectTeam)
 		self.auxLabelSelectTeam_widget = self.LabelSelectTeam_widget
 		# ListBox Equipo
@@ -898,7 +937,7 @@ class Modulo3(tk.Frame):
 		self.selectTeam_widget = self.canvasBody.create_window(400, 65, window=self.selectTeamPkmn)
 		self.selectTeamPkmn['state'] = tk.DISABLED
 		# Label Seleccionar Oponentes
-		self.labelSelectO = tk.Label(self,text="Subir Oponentes", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelSelectO = tk.Label(self,text="Subir Oponentes", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelSelectOpponents_widget = self.canvasBody.create_window(400, 90, window=self.labelSelectO)
 		self.auxLabelSelectOpponents_widget = self.LabelSelectOpponents_widget
 		# Botón Seleccionar Oponentes
@@ -908,12 +947,12 @@ class Modulo3(tk.Frame):
 		self.selectOpponents['state'] = tk.DISABLED
 		self.auxSelectOpponents_widget = self.selectOpponents_widget
 		# Label Cantidad Batallas
-		self.labelSelectCB = tk.Label(self,text="Cantidad de Interacciones", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelSelectCB = tk.Label(self,text="Cantidad de Interacciones", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelSelectInter_widget = self.canvasBody.create_window(400, 140, window=self.labelSelectCB)
 		self.auxLabelSelectInter_widget = self.LabelSelectInter_widget
 		# Scale
 		v = tk.DoubleVar()
-		self.scale = tk.Scale(self, variable = v, from_ = 50, to = 80000, resolution = 10, orient = tk.HORIZONTAL, length = 140, fg="#ffffff", font="#ffffff", bg="#283158", activebackground="#283158", highlightbackground="#283158",highlightcolor="#ffffff",troughcolor="#ffffff")
+		self.scale = tk.Scale(self, variable = v, from_ = 50, to = 80000, resolution = 10, orient = tk.HORIZONTAL, length = 140, fg="#ffffff", font="#ffffff", bg="#000000", activebackground="#000000", highlightbackground="#000000",highlightcolor="#ffffff",troughcolor="#333333")
 		self.Scale_widget = self.canvasBody.create_window(399, 175, window=self.scale)
 		self.auxScale_widget = self.Scale_widget
 		# Botón Iniciar Entrenamiento
@@ -926,7 +965,7 @@ class Modulo3(tk.Frame):
 		self.newExitPNG = self.exitPNG.convert(mode="RGBA")
 		self.exitResized = self.newExitPNG.resize((40,40), Image.LANCZOS)
 		self.exitTK = ImageTk.PhotoImage(self.exitResized)
-		self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+		self.buttonExit = tk.Button(self, image=self.exitTK, command=lambda: self.auxController.show_frame("StartPage"), bg="#000000", activebackground="#000000", highlightthickness = 0, bd = 0)
 		self.buttonExit_widget = self.canvasHead.create_window(470, 28, window=self.buttonExit)
 		# IMG Bar Chart
 		self.barChartPNG = Image.open("IMGs/chartIncreasing.png")
@@ -939,7 +978,7 @@ class Modulo3(tk.Frame):
 		self.newInfoPNG = self.infoPNG.convert(mode="RGBA")
 		self.infoResized = self.newInfoPNG.resize((38,38), Image.LANCZOS)
 		self.infoTK = ImageTk.PhotoImage(self.infoResized)
-		self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Entrenamiento.pdf"'), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+		self.buttonInfo = tk.Button(self, image=self.infoTK, command=lambda: os.system('"PDFs/Módulo de Entrenamiento.pdf"'), bg="#000000", activebackground="#000000", highlightthickness = 0, bd = 0)
 		self.buttonInfo_widget = self.canvasHead.create_window(28, 28, window=self.buttonInfo)
 		# Close Windows
 		self.activeClose = 0
@@ -1043,7 +1082,7 @@ class Modulo3(tk.Frame):
 			# Add Progress Bar
 			self.progreso = ttk.Progressbar(self, orient = "horizontal", length = 250, mode = "determinate")
 			self.progreso_widget = self.canvasBody.create_window(135, 142.5+85, window=self.progreso)
-			self.labelSelect = tk.Label(self,text= str(int(self.progreso['value'])) + " %", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+			self.labelSelect = tk.Label(self,text= str(int(self.progreso['value'])) + " %", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 			self.LabelSelect_widget = self.canvasBody.create_window(285, 142.5+85, window=self.labelSelect)
 			# Call NEAT and Run Progress Bar
 			#inicio(q, self.textVar.get(), self.scale.get())
@@ -1120,7 +1159,7 @@ class Modulo3(tk.Frame):
 		except:
 			...
 		# Report
-		self.labelR = tk.Label(self,text="Recomendaciones", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelR = tk.Label(self,text="Recomendaciones", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelR_widget = self.canvasBody.create_window(400, 15, window=self.labelR)
 		self.barChartPNG = Image.open("IMGs/tornadus-incarnate.png")
 		self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
@@ -1161,7 +1200,7 @@ class Modulo3(tk.Frame):
 		except:
 			...
 		# Report
-		self.labelR = tk.Label(self,text="Recomendaciones", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelR = tk.Label(self,text="Recomendaciones", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelR_widget = self.canvasBody.create_window(400, 15, window=self.labelR)
 		self.barChartPNG = Image.open("IMGs/landorus-therian.png")
 		self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
@@ -1202,7 +1241,7 @@ class Modulo3(tk.Frame):
 		except:
 			...
 		# Report
-		self.labelR = tk.Label(self,text="Recomendaciones", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.labelR = tk.Label(self,text="Recomendaciones", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.LabelR_widget = self.canvasBody.create_window(400, 15, window=self.labelR)
 		self.barChartPNG = Image.open("IMGs/kyogre.png")
 		self.newBarChartPNG = self.barChartPNG.convert(mode="RGBA")
@@ -1243,6 +1282,7 @@ class Modulo3(tk.Frame):
 
 	def SubirEquipo(self):
 		self.top = tk.Toplevel(self)
+		self.top.configure(bg=BG)
 		self.top.geometry("500x309")
 		self.top.resizable(False, False)
 		self.top.iconbitmap("icon.ico")
@@ -1254,18 +1294,18 @@ class Modulo3(tk.Frame):
 		h = self.top.winfo_height()
 		self.top.geometry("%dx%d+%d+%d" % (w, h, x + 480, y + 100))
 		# Canvas Head
-		self.canvasHead2 = tk.Canvas(self.top, width=500, height=50, bg="#283158")
+		self.canvasHead2 = tk.Canvas(self.top, width=500, height=50, bg=BG, highlightthickness=0)
 		self.canvasHead2.place(x=0, y=0, anchor = tk.CENTER)
 		self.canvasHead2.create_text(270, 25, text="Módulo de Construcción de Equipos", fill="white", font=('Verdana 15 bold'))
 		self.canvasHead2.pack()
 		# Canvas Body
-		self.canvasBody2 = tk.Canvas(self.top, width=500, height=259, bg="#283158")
+		self.canvasBody2 = tk.Canvas(self.top, width=500, height=259, bg=BG, highlightthickness=0)
 		self.canvasBody2.pack()
 		# Label Paste Team
-		self.pasteTeam = tk.Label(self.top, text="Pegue su equipo usando el formato de Pokémon Showdown!", bg = "#283158", font=('Verdana 8 bold'), fg="white")
+		self.pasteTeam = tk.Label(self.top, text="Pegue su equipo usando el formato de Pokémon Showdown!", bg = "#000000", font=('Verdana 8 bold'), fg="white")
 		self.PasteTeam_widget = self.canvasBody2.create_window(205, 18, window=self.pasteTeam)
 		# Text
-		self.textTeam = tk.Text(self.top, height = 9, width = 60)
+		self.textTeam = tk.Text(self.top, height = 9, width = 60, bg="#111111", fg=FG, insertbackground=FG)
 		self.textTeam_widget = self.canvasBody2.create_window(250, 112, window=self.textTeam)
 		# Boton Validar
 		self.validate = tk.Button(self.top, text='Validar', anchor="center", command = self.preValidarEquipo)
@@ -1280,7 +1320,7 @@ class Modulo3(tk.Frame):
 		self.newInfoPNG2 = self.infoPNG2.convert(mode="RGBA")
 		self.infoResized2 = self.newInfoPNG2.resize((38,38), Image.LANCZOS)
 		self.infoTK2 = ImageTk.PhotoImage(self.infoResized2)
-		self.buttonInfo2 = tk.Button(self.top, image=self.infoTK2, command=lambda: os.system('"PDFs/Módulo de Construcción de Equipos.pdf"'), bg="#283158", activebackground="#283158", highlightthickness = 0, bd = 0)
+		self.buttonInfo2 = tk.Button(self.top, image=self.infoTK2, command=lambda: os.system('"PDFs/Módulo de Construcción de Equipos.pdf"'), bg="#000000", activebackground="#000000", highlightthickness = 0, bd = 0)
 		self.buttonInfo_widget2 = self.canvasHead2.create_window(28, 28, window=self.buttonInfo2)
 		# Close Windows
 		self.top.protocol('WM_DELETE_WINDOW', self.closeWindows1)
@@ -1310,6 +1350,7 @@ class Modulo3(tk.Frame):
 			self.cancel.config(state=tk.DISABLED)
 			# TopLevel2
 			self.top2 = tk.Toplevel(self)
+			self.top2.configure(bg=BG)
 			self.top2.geometry("291x345")
 			self.top2.resizable(False, False)
 			self.top2.iconbitmap("icon.ico")
@@ -1321,12 +1362,12 @@ class Modulo3(tk.Frame):
 			self.top2.geometry("%dx%d+%d+%d" % (w, h, x + 480, y + 200))
 			self.top2.title("Selección")
 			# Canvas Body
-			self.canvasBody2 = tk.Canvas(self.top2, width=291, height=285+60, bg="#283158", bd=0)
+			self.canvasBody2 = tk.Canvas(self.top2, width=291, height=285+60, bg=BG, bd=0, highlightthickness=0)
 			self.canvasBody2.pack()
 			# Label Paste Team
-			self.pasteTeam = tk.Label(self.top2, text="Seleccione los Pokémon que no formarán", bg = "#283158", borderwidth=0, font=('Verdana 8 bold'), fg="white")
+			self.pasteTeam = tk.Label(self.top2, text="Seleccione los Pokémon que no formarán", bg = "#000000", borderwidth=0, font=('Verdana 8 bold'), fg="white")
 			self.PasteTeam_widget = self.canvasBody2.create_window(140, 18, window=self.pasteTeam)
-			self.pasteTeam = tk.Label(self.top2, text="parte de la evaluación", bg = "#283158", borderwidth=0, font=('Verdana 8 bold'), fg="white")
+			self.pasteTeam = tk.Label(self.top2, text="parte de la evaluación", bg = "#000000", borderwidth=0, font=('Verdana 8 bold'), fg="white")
 			self.PasteTeam_widget = self.canvasBody2.create_window(140, 36, window=self.pasteTeam)
 			# API
 			PkmnImg1, PkmnImg2, PkmnImg3, PkmnImg4, PkmnImg5, PkmnImg6 = getPkmnImg(self.listPkmn)
@@ -1385,10 +1426,10 @@ class Modulo3(tk.Frame):
 			self.pkmn6PNG_widget = self.canvasBody2.create_window(95+47.5+95+2,142.5+54, window=self.buttonPkmn6)
 			self.clicked6 = False
 			# Label Name Team
-			self.pasteTeam = tk.Label(self.top2, text="Escriba el nombre del equipo", bg = "#283158", borderwidth=0, font=('Verdana 8 bold'), fg="white")
+			self.pasteTeam = tk.Label(self.top2, text="Escriba el nombre del equipo", bg = "#000000", borderwidth=0, font=('Verdana 8 bold'), fg="white")
 			self.PasteTeam_widget = self.canvasBody2.create_window(140, 246+15, window=self.pasteTeam)
 			# Text Name Team
-			self.textNameTeam = tk.Text(self.top2, height = 1, width = 30)
+			self.textNameTeam = tk.Text(self.top2, height = 1, width = 30, bg="#111111", fg=FG, insertbackground=FG)
 			self.textNameTeam_widget = self.canvasBody2.create_window(140, 246+25+15, window=self.textNameTeam)
 			# Boton Validar
 			self.validate2 = tk.Button(self.top2, text='Registrar', anchor="center", command = self.IncluirEquipo)
@@ -1473,7 +1514,7 @@ class Modulo3(tk.Frame):
 			self.buttonPkmn1.config(bg="#599e47")
 			self.clicked1 = True
 		else:
-			self.buttonPkmn1.config(bg="#F0F0F0")
+			self.buttonPkmn1.config(bg=BG)
 			self.clicked1 = False
 
 	def buttonPkmn2Select(self):
@@ -1481,7 +1522,7 @@ class Modulo3(tk.Frame):
 			self.buttonPkmn2.config(bg="#599e47")
 			self.clicked2 = True
 		else:
-			self.buttonPkmn2.config(bg="#F0F0F0")
+			self.buttonPkmn2.config(bg=BG)
 			self.clicked2 = False
 
 	def buttonPkmn3Select(self):
@@ -1489,7 +1530,7 @@ class Modulo3(tk.Frame):
 			self.buttonPkmn3.config(bg="#599e47")
 			self.clicked3 = True
 		else:
-			self.buttonPkmn3.config(bg="#F0F0F0")
+			self.buttonPkmn3.config(bg=BG)
 			self.clicked3 = False
 
 	def buttonPkmn4Select(self):
@@ -1497,7 +1538,7 @@ class Modulo3(tk.Frame):
 			self.buttonPkmn4.config(bg="#599e47")
 			self.clicked4 = True
 		else:
-			self.buttonPkmn4.config(bg="#F0F0F0")
+			self.buttonPkmn4.config(bg=BG)
 			self.clicked4 = False
 
 	def buttonPkmn5Select(self):
@@ -1505,7 +1546,7 @@ class Modulo3(tk.Frame):
 			self.buttonPkmn5.config(bg="#599e47")
 			self.clicked5 = True
 		else:
-			self.buttonPkmn5.config(bg="#F0F0F0")
+			self.buttonPkmn5.config(bg=BG)
 			self.clicked5 = False
 
 	def buttonPkmn6Select(self):
@@ -1513,7 +1554,7 @@ class Modulo3(tk.Frame):
 			self.buttonPkmn6.config(bg="#599e47")
 			self.clicked6 = True
 		else:
-			self.buttonPkmn6.config(bg="#F0F0F0")
+			self.buttonPkmn6.config(bg=BG)
 			self.clicked6 = False
 
 	def exitWindows(self):
