@@ -1,0 +1,59 @@
+Whimsicott @ Focus Sash
+Ability: Prankster
+Level: 50
+EVs: 2 HP / 32 SpA / 32 Spe
+Timid Nature
+- Protect
+- Tailwind
+- Encore
+- Moonblast
+
+Floette-Eternal @ Floettite
+Ability: Fairy Aura
+Level: 50
+EVs: 2 HP / 32 SpA / 32 Spe
+Modest Nature
+- Protect
+- Dazzling Gleam
+- Moonblast
+- Light of Ruin
+
+Sneasler @ Life Orb
+Ability: Unburden
+Level: 50
+EVs: 2 HP / 32 Atk / 32 Spe
+Jolly Nature
+- Protect
+- Rock Tomb
+- Dire Claw
+- Close Combat
+
+Metagross @ Metagrossite
+Ability: Tough Claws
+Level: 50
+EVs: 32 Atk / 12 Def / 22 Spe
+Jolly Nature
+- Protect
+- Body Press
+- Iron Head
+- Psychic Fangs
+
+Swampert @ Leftovers
+Ability: Torrent
+Level: 50
+EVs: 32 HP / 32 Atk / 2 Def
+Adamant Nature
+- Protect
+- Wide Guard
+- High Horsepower
+- Wave Crash
+
+Incineroar @ Sitrus Berry
+Ability: Intimidate
+Level: 50
+EVs: 32 HP / 32 Atk / 2 Def
+Adamant Nature
+- Fake Out
+- Parting Shot
+- Throat Chop
+- Flare Blitz

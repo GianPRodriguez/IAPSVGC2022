@@ -32,10 +32,32 @@ const CATEGORY = { Physical: 'p', Special: 's', Status: 't' };
 const meta = {};
 for (const move of gen.moves) {
   const id = move.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  // ?? y no || : prioridades negativas (Trick Room -7) deben preservarse.
   meta[id] = {
-    p: move.priority || 0,
+    p: move.priority ?? 0,
     c: CATEGORY[move.category] || 't',
   };
+}
+
+// @smogon/calc a veces omite prioridades negativas; alinear con PS Gen 9.
+const PS_PRIORITY_OVERRIDES = {
+  trickroom: -7,
+  roar: -6,
+  whirlwind: -6,
+  teleport: -6,
+  circlethrow: -6,
+  dragontail: -6,
+  counter: -5,
+  mirrorcoat: -5,
+  revenge: -4,
+  avalanche: -4,
+  focuspunch: -3,
+  beakblast: -3,
+  shelltrap: -3,
+  vitalthrow: -1,
+};
+for (const [id, priority] of Object.entries(PS_PRIORITY_OVERRIDES)) {
+  if (meta[id]) meta[id].p = priority;
 }
 
 fs.writeFileSync(outPath, JSON.stringify(meta, null, 1));

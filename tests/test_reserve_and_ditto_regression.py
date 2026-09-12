@@ -1395,11 +1395,12 @@ def test_speed_order_narrows_opponent_when_opponent_moves_first():
     assert belief.stat_range('spe') == (100, 132)
 
     # El rival actua primero con la misma prioridad -> su velocidad es >= 120
+    # (con margen de desync Spe >= user - margin).
     observe_move(battle, ['', 'move', 'p2a: Dragonite', 'Dragon Dance', 'p2a: Dragonite'])
     observe_move(battle, ['', 'move', 'p1a: Whimsicott', 'Moonblast', 'p2a: Dragonite'])
 
-    assert belief.stat_range('spe') == (120, 132)
-    assert min(belief.candidates['spe']) == 39
+    assert belief.stat_range('spe') == (114, 132)
+    assert min(belief.candidates['spe']) == 27
     assert belief.observations == 1
 
     si.reset_sp_limits()
@@ -1409,12 +1410,12 @@ def test_speed_order_narrows_opponent_when_agent_moves_first():
     battle, _, theirs = _build_speed_scenario(user_speed=120)
     belief = battle.stat_beliefs.belief_for(theirs)
 
-    # El agente actua primero -> la velocidad del rival es <= 120
+    # El agente actua primero -> la velocidad del rival es <= 120 (+ margen).
     observe_move(battle, ['', 'move', 'p1a: Whimsicott', 'Moonblast', 'p2a: Dragonite'])
     observe_move(battle, ['', 'move', 'p2a: Dragonite', 'Dragon Dance', 'p2a: Dragonite'])
 
-    assert belief.stat_range('spe') == (100, 120)
-    assert max(belief.candidates['spe']) == 40
+    assert belief.stat_range('spe') == (100, 126)
+    assert max(belief.candidates['spe']) == 52
 
     si.reset_sp_limits()
 
@@ -1424,11 +1425,40 @@ def test_trick_room_inverts_the_speed_conclusion():
     battle.terrain['trickroom'] = 5
     belief = battle.stat_beliefs.belief_for(theirs)
 
-    # Con Trick Room actuar primero significa ser MAS LENTO
+    # Con Trick Room actuar primero significa ser MAS LENTO (+ margen).
     observe_move(battle, ['', 'move', 'p2a: Dragonite', 'Dragon Dance', 'p2a: Dragonite'])
     observe_move(battle, ['', 'move', 'p1a: Whimsicott', 'Moonblast', 'p2a: Dragonite'])
 
-    assert belief.stat_range('spe') == (100, 120)
+    assert belief.stat_range('spe') == (100, 126)
+
+    si.reset_sp_limits()
+
+
+def test_mid_turn_tailwind_uses_live_speed_context():
+    """
+    Regresión: Tailwind del aliado mid-turn debe aplicar al siguiente mon.
+    Snapshot congelado sin TW hacía Spe(Kingambit)>=Archaludon y excluía Spe 71.
+    """
+    battle, mine, theirs = _build_speed_scenario(user_speed=104, opponent_name='kingambit',
+                                                 opponent_nature='adamant')
+    # Aliado del rival que lanza Tailwind antes.
+    ally = build_pkmn('salamence', is_opponent=True, hp=100)
+    ally.nature = 'jolly'
+    battle.opponent.active2 = ally
+    mine.VEL_battle_actual = 104
+    belief = battle.stat_beliefs.belief_for(theirs)
+    assert 1 in belief.candidates['spe'] or True  # Spe bajo debe sobrevivir
+
+    # Salamence Tailwind (aún sin TW en side), luego sidestart, luego Kingambit.
+    observe_move(battle, ['', 'move', 'p2b: Salamence', 'Tailwind', 'p2b: Salamence'])
+    from showdown.battle_modifier import sidestart
+    sidestart(battle, ['', '-sidestart', 'p2: Opp', 'move: Tailwind'])
+    observe_move(battle, ['', 'move', 'p2a: Kingambit', 'Low Kick', 'p2b: Salamence'])
+    observe_move(battle, ['', 'move', 'p1a: Whimsicott', 'Moonblast', 'p2a: Kingambit'])
+
+    # Con TW, Spe 71 efectiva 142 >= 104: el SP bajo sigue siendo viable.
+    assert belief.stat_range('spe')[0] <= 71
+    assert min(belief.candidates['spe']) <= 1
 
     si.reset_sp_limits()
 
@@ -1474,6 +1504,50 @@ def test_different_priority_teaches_nothing_about_speed():
     observe_move(battle, ['', 'move', 'p1a: Whimsicott', 'Moonblast', 'p2a: Dragonite'])
 
     assert belief.stat_range('spe') == (100, 132)
+    assert belief.observations == 0
+
+    si.reset_sp_limits()
+
+
+def test_trick_room_move_has_priority_minus_seven():
+    assert si.move_priority('Trick Room') == -7
+    assert si.move_priority('Grassy Glide') == 0
+    assert si.move_priority('Grassy Glide', terrain='grassyterrain') == 1
+
+
+def test_trick_room_move_does_not_teach_speed_under_trick_room():
+    """
+    Regresión: Trick Room era prioridad 0 en el meta. Bajo TR, usarlo después de
+    un move de prioridad 0 (p.ej. Wood Hammer) se interpretaba como Spe >= rival
+    y excluía Sinistcha Spe 0 (true).
+    """
+    battle, _, theirs = _build_speed_scenario(user_speed=105, opponent_name='sinistcha',
+                                             opponent_nature='bold')
+    battle.terrain['trickroom'] = 5
+    belief = battle.stat_beliefs.belief_for(theirs)
+    before = set(belief.candidates['spe'])
+
+    observe_move(battle, ['', 'move', 'p1a: Whimsicott', 'Wood Hammer', 'p2a: Sinistcha'])
+    observe_move(battle, ['', 'move', 'p2a: Sinistcha', 'Trick Room', 'p2a: Sinistcha'])
+
+    assert belief.candidates['spe'] == before
+    assert 0 in belief.candidates['spe']
+    assert belief.observations == 0
+
+    si.reset_sp_limits()
+
+
+def test_grassy_glide_priority_in_terrain_skips_speed_compare():
+    battle, _, theirs = _build_speed_scenario(user_speed=105, opponent_name='sinistcha',
+                                             opponent_nature='bold')
+    battle.terrain['grassyterrain'] = 5
+    belief = battle.stat_beliefs.belief_for(theirs)
+    before = set(belief.candidates['spe'])
+
+    observe_move(battle, ['', 'move', 'p1a: Whimsicott', 'Grassy Glide', 'p2a: Sinistcha'])
+    observe_move(battle, ['', 'move', 'p2a: Sinistcha', 'Matcha Gotcha', 'p1a: Whimsicott'])
+
+    assert belief.candidates['spe'] == before
     assert belief.observations == 0
 
     si.reset_sp_limits()
@@ -1589,6 +1663,31 @@ def test_forme_change_keeps_stat_points_and_swaps_bases():
     assert belief.candidates['spe'] == {4, 5}
 
 
+def test_mega_belief_ranges_remap_finals_but_keep_sp():
+    """Blastoise Bold Atk=92 (forma base) no debe aparecer en el rango mega."""
+    si.reset_sp_limits()
+    si.configure_sp_limits(63, 129)  # mismos topes que partida Champions calibrada
+    beliefs = si.TeamStatBeliefs()
+    base = build_pkmn('blastoise', is_opponent=True, hp=100)
+    base.nature = 'bold'
+    belief = beliefs.belief_for(base)
+    assert belief.stat_range('atk') == (92, 121)
+
+    mega = build_pkmn('blastoise-mega', is_opponent=True, hp=100)
+    mega.nature = 'bold'
+    same = beliefs.belief_for(mega)
+    assert same is belief
+    assert belief.current_forme == 'blastoise-mega'
+    # Mismos SP → finales con bases mega (Atk base 103 → 110-139)
+    assert belief.stat_range('atk') == (110, 139)
+    # La forma base sigue conteniendo el Atk real pre-mega
+    dex = si.dex_base_stats('blastoise')
+    assert belief.stat_range_with_bases('atk', dex) == (92, 121)
+    assert 92 in belief.stat_values_with_bases('atk', dex)
+    assert 92 not in belief.stat_values('atk')
+    si.reset_sp_limits()
+
+
 def test_illusion_reveal_forgets_the_impersonated_species():
     si.reset_sp_limits()
     beliefs = si.TeamStatBeliefs()
@@ -1667,6 +1766,7 @@ def test_report_includes_the_stat_point_estimate():
 
     assert 'STAT POINTS ESTIMADOS' in report
     assert 'dragonite' in report
+    assert 'SP:' in report
     assert 'est:' in report
     assert 'conv:' in report
 

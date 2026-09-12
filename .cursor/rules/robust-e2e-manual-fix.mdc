@@ -1,0 +1,35 @@
+---
+description: Fix manual del E2E robusto solo cuando el usuario lo pide
+alwaysApply: true
+---
+
+# Robust E2E — fix manual (créditos Cursor)
+
+## Quién corre el batch
+El usuario ejecuta solo (sin agente):
+
+```bat
+python -m showdown.inference_sim.run_robust_e2e --teams 100
+```
+
+Al terminar mira `NEED_FIX=` en la línea `DONE` o:
+
+```bat
+python -m showdown.inference_sim.robust_fixplan
+```
+
+- `NEED_FIX=NO` → **no abras el agente / no gastes créditos**.
+- `NEED_FIX=YES` → el usuario pedirá **manualmente** en el chat algo como: «corrige el fixplan robusto».
+- `NEED_FLAGS_ADD=YES` → informativo (gaps Battle/calc); **no** gastes créditos salvo que pidan «agrega flags de inferencia».
+
+## Cuando el usuario pide corregir
+1. Leer **solo** `logs/robust_e2e_fixplan.txt` (targets + samples). No releer logs de batalla ni protocolo.
+2. Parchear el mínimo en `TARGETS` del fixplan (sync → `battle_modifier`/`battle`; inferencia → `stat_inference`; runtime → heuristic).
+3. Smoke barato: `python -m showdown.inference_sim.run_robust_e2e --teams 4`
+4. Confirmar `NEED_FIX=NO` en el nuevo `DONE` / fixplan.
+5. **No** lanzar `--teams 100` salvo petición explícita.
+
+## Prohibido
+- Auto-fixear durante el batch de 100.
+- Analizar turnos o `logs_showdown.txt` / `reporte.txt` para este flujo.
+- Re-ejecutar el batch completo “por si acaso” si `NEED_FIX=NO`.

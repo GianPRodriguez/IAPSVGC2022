@@ -19,6 +19,7 @@ descartada solo cuesta un turno.
 Fuentes de evidencia:
   1. Orden de accion (velocidad / Spe).
   2. Dano observado via damage-calc Champions (Atk/SpA y Def/SpD).
+  3. Con dano en % HP del rival, tambien HP (par Def|SpD + HP).
 """
 
 from __future__ import annotations
@@ -125,6 +126,9 @@ class StatBelief:
         self.species = species
         self.nature = nature
         self.base_stats = dict(base_stats)
+        # Forma cuyas bases están en base_stats (mega, blade, etc.). Los SP
+        # son del Pokemon; al megaevolucionar solo cambian las bases.
+        self.current_forme: str = species
         max_sp, _ = sp_limits()
         self.candidates: Dict[str, Set[int]] = {
             stat: set(range(SP_MIN, max_sp + 1)) for stat in STAT_KEYS
@@ -134,25 +138,49 @@ class StatBelief:
 
     # -- consultas -------------------------------------------------------- #
 
-    def stat_values(self, stat: str) -> Set[int]:
-        """Valores finales de stat compatibles con los SP que quedan."""
-        base = self.base_stats.get(stat)
+    def stat_values_with_bases(self, stat: str, bases: Dict[str, int]) -> Set[int]:
+        """Valores finales con un set de bases concreto (p.ej. forma base vs mega)."""
+        base = bases.get(stat)
         if not base or base <= 0:
             return set()
         return {
-            champions_stat(base, sp, self.nature, stat)
+            champions_stat(int(base), sp, self.nature, stat)
             for sp in self.candidates[stat]
         }
 
-    def stat_range(self, stat: str) -> Optional[Tuple[int, int]]:
-        values = self.stat_values(stat)
+    def stat_values(self, stat: str) -> Set[int]:
+        """Valores finales de stat compatibles con los SP que quedan."""
+        return self.stat_values_with_bases(stat, self.base_stats)
+
+    def stat_range_with_bases(
+        self, stat: str, bases: Dict[str, int]
+    ) -> Optional[Tuple[int, int]]:
+        values = self.stat_values_with_bases(stat, bases)
         if not values:
             return None
         return min(values), max(values)
 
+    def stat_range(self, stat: str) -> Optional[Tuple[int, int]]:
+        return self.stat_range_with_bases(stat, self.base_stats)
+
     def is_resolved(self, stat: str) -> bool:
         """True cuando ya solo queda un valor final posible."""
         return len(self.stat_values(stat)) == 1
+
+    def point_estimate_stats(self) -> Dict[str, int]:
+        """
+        Stats finales puntuales para decisión (greedy): SP mediano del
+        conjunto candidato actual → champions_stat.
+        """
+        out: Dict[str, int] = {}
+        for stat in STAT_KEYS:
+            sps = sorted(self.candidates.get(stat) or [])
+            base = int(self.base_stats.get(stat) or 0)
+            if not sps or base <= 0:
+                continue
+            mid_sp = sps[len(sps) // 2]
+            out[stat] = champions_stat(base, mid_sp, self.nature, stat)
+        return out
 
     def sp_range(self, stat: str) -> Optional[Tuple[int, int]]:
         sps = self.candidates.get(stat)
@@ -186,11 +214,19 @@ class StatBelief:
         Aplica el tope global de Stat Points: un candidato es viable solo si,
         sumado al minimo obligatorio de los demas stats, no se pasa del
         presupuesto.
+
+        Solo se confia en el minimo de un stat cuando ya esta casi resuelto
+        (<=3 candidatos). Si Spe/Atk siguen abiertos, usar su minimo como suelo
+        duro envenena SpD/HP (p.ej. Spe mal acotado deja SpD=0 como unico
+        valor presupuestariamente viable).
         """
         _, budget = sp_limits()
         for _ in range(len(STAT_KEYS)):
             changed = False
-            floors = {stat: min(self.candidates[stat]) for stat in STAT_KEYS}
+            floors = {}
+            for stat in STAT_KEYS:
+                cands = self.candidates[stat]
+                floors[stat] = min(cands) if len(cands) <= 3 else 0
             for stat in STAT_KEYS:
                 others = sum(v for s, v in floors.items() if s != stat)
                 viable = {sp for sp in self.candidates[stat] if sp + others <= budget}
@@ -202,17 +238,42 @@ class StatBelief:
 
     # -- reporte ---------------------------------------------------------- #
 
-    def summary_line(self) -> str:
-        """Una linea compacta con el rango estimado de cada stat."""
+    def summary_line_with_bases(self, bases: Dict[str, int]) -> str:
+        """Una linea compacta con el rango estimado de cada stat (bases dadas)."""
         parts = []
         for stat, label in (
+            ('hp', 'HP'),
             ('atk', 'Atk'),
             ('def', 'Def'),
             ('spa', 'SpA'),
             ('spd', 'SpD'),
             ('spe', 'Spe'),
         ):
-            rng = self.stat_range(stat)
+            rng = self.stat_range_with_bases(stat, bases)
+            if rng is None:
+                parts.append(f'{label}=?')
+            elif rng[0] == rng[1]:
+                parts.append(f'{label}={rng[0]}!')
+            else:
+                parts.append(f'{label}={rng[0]}-{rng[1]}')
+        return ' '.join(parts)
+
+    def summary_line(self) -> str:
+        """Rango final con las bases actuales (mega/blade si aplica)."""
+        return self.summary_line_with_bases(self.base_stats)
+
+    def sp_summary_line(self) -> str:
+        """Rangos de Stat Points candidatos (invariantes a la forma)."""
+        parts = []
+        for stat, label in (
+            ('hp', 'HP'),
+            ('atk', 'Atk'),
+            ('def', 'Def'),
+            ('spa', 'SpA'),
+            ('spd', 'SpD'),
+            ('spe', 'Spe'),
+        ):
+            rng = self.sp_range(stat)
             if rng is None:
                 parts.append(f'{label}=?')
             elif rng[0] == rng[1]:
@@ -225,6 +286,7 @@ class StatBelief:
         """Cuantos valores finales quedan por stat (menos es mejor, 1 = resuelto)."""
         parts = []
         for stat, label in (
+            ('hp', 'HP'),
             ('atk', 'Atk'),
             ('def', 'Def'),
             ('spa', 'SpA'),
@@ -233,6 +295,15 @@ class StatBelief:
         ):
             parts.append(f'{label}={len(self.stat_values(stat))}')
         return f'obs={self.observations} ' + ' '.join(parts)
+
+    def is_narrow(self, stat: str, *, max_cands: int = 8) -> bool:
+        """True si el SP de este stat ya está lo bastante estrecho para confiar."""
+        cands = self.candidates.get(stat) or set()
+        if not cands:
+            return False
+        if self.is_resolved(stat):
+            return True
+        return len(cands) <= max_cands
 
 
 # --------------------------------------------------------------------------- #
@@ -327,18 +398,31 @@ def move_id(name: Optional[str]) -> str:
     return ''.join(ch for ch in (name or '').lower() if ch.isalnum())
 
 
-def move_priority(name: Optional[str], ability: Optional[str] = None) -> Optional[int]:
+def move_priority(
+    name: Optional[str],
+    ability: Optional[str] = None,
+    terrain: Optional[str] = None,
+) -> Optional[int]:
     """
-    Prioridad del movimiento, incluyendo el +1 de Prankster sobre movimientos de
-    estado. Devuelve None si el movimiento es desconocido, para que quien llame
+    Prioridad del movimiento, incluyendo:
+      - +1 de Prankster sobre movimientos de estado
+      - +1 de Grassy Glide bajo Grassy Terrain
+
+    Devuelve None si el movimiento es desconocido, para que quien llame
     pueda descartar la observacion en lugar de asumir prioridad 0.
     """
-    meta = _move_meta().get(move_id(name))
+    mid = move_id(name)
+    meta = _move_meta().get(mid)
     if meta is None:
         return None
-    priority = int(meta.get('p', 0) or 0)
+    # No usar `or 0`: prioridades negativas (Trick Room = -7) son validas.
+    raw = meta.get('p')
+    priority = int(raw) if raw is not None else 0
     abi = (ability or '').strip().lower().replace(' ', '')
     if abi == 'prankster' and meta.get('c') == 't':
+        priority += 1
+    terr = (terrain or '').strip().lower().replace(' ', '')
+    if mid == 'grassyglide' and terr == 'grassyterrain':
         priority += 1
     return priority
 
@@ -388,6 +472,8 @@ class DamageContext:
         weather: Optional[str] = None,
         terrain: Optional[str] = None,
         wonder_room: bool = False,
+        magic_room: bool = False,
+        gravity: bool = False,
         reflect: bool = False,
         light_screen: bool = False,
         aurora_veil: bool = False,
@@ -397,6 +483,21 @@ class DamageContext:
         is_spread: bool = False,
         is_crit: bool = False,
         defender_hp_fraction: Optional[float] = None,
+        attacker_ability_on: bool = False,
+        defender_ability_on: bool = False,
+        attacker_types: Optional[List[str]] = None,
+        defender_types: Optional[List[str]] = None,
+        attacker_tera: Optional[str] = None,
+        defender_tera: Optional[str] = None,
+        is_battery: bool = False,
+        is_power_spot: bool = False,
+        is_steely_spirit: bool = False,
+        is_flower_gift: bool = False,
+        is_beads_of_ruin: bool = False,
+        is_sword_of_ruin: bool = False,
+        is_tablets_of_ruin: bool = False,
+        is_vessel_of_ruin: bool = False,
+        attacker_allies_fainted: int = 0,
     ):
         self.atk_boost = atk_boost
         self.def_boost = def_boost
@@ -411,6 +512,8 @@ class DamageContext:
         self.weather = weather
         self.terrain = terrain
         self.wonder_room = wonder_room
+        self.magic_room = magic_room
+        self.gravity = gravity
         self.reflect = reflect
         self.light_screen = light_screen
         self.aurora_veil = aurora_veil
@@ -421,6 +524,21 @@ class DamageContext:
         self.is_crit = is_crit
         # 1.0 = full HP (Multiscale / Shadow Shield). None = asumir full.
         self.defender_hp_fraction = defender_hp_fraction
+        self.attacker_ability_on = bool(attacker_ability_on)
+        self.defender_ability_on = bool(defender_ability_on)
+        self.attacker_types = list(attacker_types) if attacker_types else None
+        self.defender_types = list(defender_types) if defender_types else None
+        self.attacker_tera = attacker_tera
+        self.defender_tera = defender_tera
+        self.is_battery = bool(is_battery)
+        self.is_power_spot = bool(is_power_spot)
+        self.is_steely_spirit = bool(is_steely_spirit)
+        self.is_flower_gift = bool(is_flower_gift)
+        self.is_beads_of_ruin = bool(is_beads_of_ruin)
+        self.is_sword_of_ruin = bool(is_sword_of_ruin)
+        self.is_tablets_of_ruin = bool(is_tablets_of_ruin)
+        self.is_vessel_of_ruin = bool(is_vessel_of_ruin)
+        self.attacker_allies_fainted = max(0, int(attacker_allies_fainted or 0))
 
     @property
     def is_uncertain(self) -> bool:
@@ -477,6 +595,24 @@ def _terrain_for_calc(terrain: Optional[str]) -> Optional[str]:
     return mapping.get(key)
 
 
+def _species_types(species: Optional[str]) -> List[str]:
+    """Tipos para el calc cuando la especie no está en el dex Champions."""
+    if not species:
+        return []
+    try:
+        from API.PokemonData import getPkmnInfo
+        info = getPkmnInfo(species)
+    except Exception:
+        return []
+    if not info:
+        return []
+    out = []
+    for tip in (info[0], info[1]):
+        if tip:
+            out.append(str(tip))
+    return out
+
+
 def _poke_payload(
     species: str,
     nature: Optional[str],
@@ -487,6 +623,10 @@ def _poke_payload(
     status: Optional[str] = None,
     boosts: Optional[Dict[str, int]] = None,
     cur_hp: Optional[int] = None,
+    ability_on: bool = False,
+    types: Optional[List[str]] = None,
+    tera_type: Optional[str] = None,
+    allies_fainted: int = 0,
 ) -> Dict:
     max_hp = int(stats.get('hp', 1) or 1)
     payload = {
@@ -511,8 +651,21 @@ def _poke_payload(
             'spe': int(stats.get('spe', 1) or 1),
         },
     }
+    live = [t for t in (types or []) if t]
+    if live:
+        payload['types'] = live
+    else:
+        dex_types = _species_types(species)
+        if dex_types:
+            payload['types'] = dex_types
     if cur_hp is not None and cur_hp > 0:
         payload['curHP'] = min(int(cur_hp), max_hp)
+    if ability_on:
+        payload['abilityOn'] = True
+    if tera_type:
+        payload['teraType'] = tera_type
+    if allies_fainted and int(allies_fainted) > 0:
+        payload['alliesFainted'] = int(allies_fainted)
     return payload
 
 
@@ -530,6 +683,14 @@ def _field_payload(ctx: DamageContext, category: str) -> Dict:
         attacker_side['isHelpingHand'] = True
     if ctx.charge:
         attacker_side['isCharge'] = True
+    if ctx.is_battery:
+        attacker_side['isBattery'] = True
+    if ctx.is_power_spot:
+        attacker_side['isPowerSpot'] = True
+    if ctx.is_steely_spirit:
+        attacker_side['isSteelySpirit'] = True
+    if ctx.is_flower_gift:
+        attacker_side['isFlowerGift'] = True
 
     # Pantallas: Aurora Veil tiene prioridad semántica propia.
     if ctx.aurora_veil:
@@ -548,31 +709,53 @@ def _field_payload(ctx: DamageContext, category: str) -> Dict:
         'weather': _weather_for_calc(ctx.weather),
         'terrain': _terrain_for_calc(ctx.terrain),
         'isWonderRoom': bool(ctx.wonder_room),
+        'isMagicRoom': bool(ctx.magic_room),
+        'isGravity': bool(ctx.gravity),
         'isSpread': bool(ctx.is_spread),
+        'isBeadsOfRuin': bool(ctx.is_beads_of_ruin),
+        'isSwordOfRuin': bool(ctx.is_sword_of_ruin),
+        'isTabletsOfRuin': bool(ctx.is_tablets_of_ruin),
+        'isVesselOfRuin': bool(ctx.is_vessel_of_ruin),
         'attackerSide': attacker_side,
         'defenderSide': defender_side,
     }
 
 
-def _rolls_match_absolute(min_roll: int, max_roll: int, observed: int) -> bool:
+# Desync tipico calc Champions vs PS: pantallas+terreno, redondeo de % HP,
+# shells de especies ausentes en el dex. Preferimos no podar el verdadero.
+_ABS_DAMAGE_TOLERANCE = 8
+_PERCENT_DAMAGE_TOLERANCE = 6
+# Margen en Spe efectiva: Tailwind 80→160 vs Spe 163, empates, mega mid-turn.
+_SPEED_COMPARE_MARGIN = 6
+
+
+def _rolls_match_absolute(
+    min_roll: int, max_roll: int, observed: int, *, is_ko: bool = False
+) -> bool:
+    """
+    Cota unilateral (soundness): el SP es viable si el calc PUEDE alcanzar el
+    dano observado. No excluimos Atk/SpA altos (ni Def/SpD bajos) porque el calc
+    sobreestime el golpe — esa fue la fuente de falsos negativos e2e.
+    """
     if observed <= 0:
         return False
-    return min_roll <= observed <= max_roll
+    tol = _ABS_DAMAGE_TOLERANCE
+    # Capaz de hacer al menos el dano visto (KO/overkill incluido).
+    return max_roll >= max(1, observed - tol)
 
 
 def _rolls_match_percent(
-    min_roll: int, max_roll: int, max_hp: int, delta_pct: int
+    min_roll: int, max_roll: int, max_hp: int, delta_pct: int, *, is_ko: bool = False
 ) -> bool:
     """
-    El rival reporta HP en %. Aceptamos un SP si algun roll cae en la franja
-    de porcentaje observada (+/- 1 punto de tolerancia por redondeo PS).
+    Igual que absolute pero en franja de % HP del rival: solo cota inferior de
+    dano (max_roll debe alcanzar el delta observado).
     """
     if max_hp <= 0 or delta_pct <= 0:
         return False
-    # Dano absoluto compatible con delta_pct mostrado
-    low = max(1, (delta_pct - 1) * max_hp // 100)
-    high = max(low, (delta_pct + 1) * max_hp // 100 + (max_hp // 100))
-    return not (max_roll < low or min_roll > high)
+    tol = _PERCENT_DAMAGE_TOLERANCE
+    low = max(1, (delta_pct - tol) * max_hp // 100)
+    return max_roll >= low
 
 
 # --------------------------------------------------------------------------- #
@@ -671,6 +854,16 @@ def _base_from_pokedex(name: str, stat: str) -> int:
         return 0
 
 
+def dex_base_stats(name: str) -> Dict[str, int]:
+    """Bases de especie (hp/atk/def/spa/spd/spe) desde el dex Champions."""
+    out: Dict[str, int] = {}
+    for stat in STAT_KEYS:
+        value = _base_from_pokedex(name, stat)
+        if value > 0:
+            out[stat] = value
+    return out
+
+
 _FORME_SUFFIXES = ('-mega-x', '-mega-y', '-mega', '-blade', '-shield', '-gmax')
 
 
@@ -752,13 +945,16 @@ class TeamStatBeliefs:
         if 'spe' not in base_stats:
             return None  # sin bases fiables no se puede inferir nada
 
+        forme = (getattr(pkmn, 'name', '') or species).strip().lower().replace(' ', '-')
         belief = self.beliefs.get(species)
         if belief is None:
             belief = StatBelief(species, base_stats, getattr(pkmn, 'nature', None))
+            belief.current_forme = forme
             self.beliefs[species] = belief
         else:
             # Cambio de forma (Mega, Blade/Shield): mismas SP, bases distintas.
             belief.base_stats.update(base_stats)
+            belief.current_forme = forme
         return belief
 
     # -- evidencia de velocidad ------------------------------------------- #
@@ -792,13 +988,23 @@ class TeamStatBeliefs:
         # empate exacto se resuelve al azar y el que gano pudo ir igualado).
         # Ambas direcciones son inclusivas, asi que no son complementarias entre si.
         allowed = set()
+        margin = _SPEED_COMPARE_MARGIN
         for sp in belief.candidates['spe']:
             stat = champions_stat(base_spe, sp, belief.nature, 'spe')
             speed = opponent_ctx.speed_of(stat)
+            # Cotas inclusivas + margen: ante desync menor no expulsar el Spe real.
             if trick_room:
-                ok = speed <= user_speed if opponent_first else speed >= user_speed
+                ok = (
+                    speed <= user_speed + margin
+                    if opponent_first
+                    else speed >= user_speed - margin
+                )
             else:
-                ok = speed >= user_speed if opponent_first else speed <= user_speed
+                ok = (
+                    speed >= user_speed - margin
+                    if opponent_first
+                    else speed <= user_speed + margin
+                )
             if ok:
                 allowed.add(sp)
 
@@ -828,13 +1034,18 @@ class TeamStatBeliefs:
         known_nature: Optional[str],
         ctx: DamageContext,
         known_hp: Optional[int] = None,
+        is_ko: bool = False,
     ) -> bool:
         """
         Estrecha Atk/SpA (si el rival ataca) o Def/SpD (si el rival recibe) segun
         el dano observado y los rolls de damage-calc Champions.
 
+        Con dano en % HP del rival (protocolo Showdown), tambien estrecha HP:
+        el mismo golpe debe reproducirse para el par (Def|SpD, HP).
+
         known_stats: stats finales del Pokemon propio involucrado (atk/def/spa/spd/spe/hp).
         observed_damage: puntos de HP (absolutos) o delta de porcentaje (si damage_is_percent).
+        is_ko: el golpe dejo al defensor a 0 HP; el dano observado es cota inferior.
         """
         if category not in ('p', 's') or observed_damage <= 0:
             return False
@@ -854,13 +1065,6 @@ class TeamStatBeliefs:
         if unknown_stat not in belief.base_stats:
             return False
 
-        opp_boosts = {
-            'atk': ctx.atk_boost if opponent_is_attacker else 0,
-            'def': ctx.def_boost if not opponent_is_attacker else 0,
-            'spa': ctx.spa_boost if opponent_is_attacker else 0,
-            'spd': ctx.spd_boost if not opponent_is_attacker else 0,
-            'spe': 0,
-        }
         # Cuando el rival defiende, sus boosts defensivos vienen del ctx;
         # cuando ataca, los ofensivos. El lado propio usa known + boosts del ctx
         # en el otro rol.
@@ -936,27 +1140,41 @@ class TeamStatBeliefs:
         field = _field_payload(ctx, category)
         move_label = move_name  # el worker resuelve por nombre
 
+        # Inferir HP solo cuando el rival es el defensor y el protocolo da % HP.
+        infer_hp = (
+            damage_is_percent
+            and not opponent_is_attacker
+            and 'hp' in belief.base_stats
+        )
         hp_sp_list: list
-        if damage_is_percent and 'hp' in belief.base_stats:
+        if infer_hp:
+            # Un representante SP por HP final unico (barato y completo).
+            by_final_hp: Dict[int, int] = {}
+            for hp_sp in sorted(belief.candidates['hp']):
+                fh = champions_stat(
+                    belief.base_stats['hp'], hp_sp, belief.nature, 'hp'
+                )
+                by_final_hp.setdefault(fh, hp_sp)
+            hp_sp_list = list(by_final_hp.values())
+        elif damage_is_percent and 'hp' in belief.base_stats:
             hp_sps = sorted(belief.candidates['hp'])
-            if len(hp_sps) > 5:
-                mid = hp_sps[len(hp_sps) // 2]
-                hp_sp_list = sorted({hp_sps[0], mid, hp_sps[-1]})
-            else:
-                hp_sp_list = hp_sps
+            mid = hp_sps[len(hp_sps) // 2]
+            hp_sp_list = sorted({hp_sps[0], mid, hp_sps[-1]})
         else:
             hp_sp_list = [None]
 
-        # Coalesce: muchos SP producen el mismo stat final -> 1 calc por valor unico.
-        # Clave (final_unknown, final_hp) -> lista de SP a marcar si el roll encaja.
-        groups: Dict[Tuple[int, int], List[int]] = {}
+        # Coalesce: (final_unknown, final_hp) -> SP unknown + SP hp que mapean ahi.
+        groups: Dict[Tuple[int, int], Dict[str, Set[int]]] = {}
         group_payloads: Dict[Tuple[int, int], Dict[str, Any]] = {}
 
         for sp in list(belief.candidates[unknown_stat]):
             for hp_sp in hp_sp_list:
                 opp_stats = _opp_stats_for(sp, hp_sp)
                 key = (opp_stats[unknown_stat], opp_stats['hp'])
-                groups.setdefault(key, []).append(sp)
+                bucket = groups.setdefault(key, {'unknown': set(), 'hp': set()})
+                bucket['unknown'].add(sp)
+                if hp_sp is not None:
+                    bucket['hp'].add(hp_sp)
                 if key in group_payloads:
                     continue
                 if opponent_is_attacker:
@@ -966,8 +1184,9 @@ class TeamStatBeliefs:
                         max(1, int(round(known_payload_stats['hp'] * def_frac)))
                         if def_frac is not None else None
                     )
+                    atk_species = getattr(belief, 'current_forme', None) or belief.species
                     attacker = _poke_payload(
-                        belief.species,
+                        atk_species,
                         belief.nature,
                         opp_stats,
                         item=atk_item,
@@ -975,6 +1194,10 @@ class TeamStatBeliefs:
                         status=atk_status,
                         boosts=opp_boosts,
                         cur_hp=atk_cur,
+                        ability_on=ctx.attacker_ability_on,
+                        types=ctx.attacker_types,
+                        tera_type=ctx.attacker_tera,
+                        allies_fainted=ctx.attacker_allies_fainted,
                     )
                     defender = _poke_payload(
                         known_species,
@@ -985,6 +1208,9 @@ class TeamStatBeliefs:
                         status=def_status,
                         boosts=known_boosts,
                         cur_hp=def_cur,
+                        ability_on=ctx.defender_ability_on,
+                        types=ctx.defender_types,
+                        tera_type=ctx.defender_tera,
                     )
                 else:
                     def_frac = ctx.defender_hp_fraction
@@ -1000,9 +1226,13 @@ class TeamStatBeliefs:
                         ability=atk_abi,
                         status=atk_status,
                         boosts=known_boosts,
+                        ability_on=ctx.attacker_ability_on,
+                        types=ctx.attacker_types,
+                        tera_type=ctx.attacker_tera,
+                        allies_fainted=ctx.attacker_allies_fainted,
                     )
                     defender = _poke_payload(
-                        belief.species,
+                        getattr(belief, 'current_forme', None) or belief.species,
                         belief.nature,
                         opp_stats,
                         item=def_item,
@@ -1010,6 +1240,9 @@ class TeamStatBeliefs:
                         status=def_status,
                         boosts=opp_boosts,
                         cur_hp=def_cur,
+                        ability_on=ctx.defender_ability_on,
+                        types=ctx.defender_types,
+                        tera_type=ctx.defender_tera,
                     )
                 group_payloads[key] = {
                     'attacker': attacker,
@@ -1028,7 +1261,13 @@ class TeamStatBeliefs:
                       for key in keys_ordered]
         rolls_list = damage_ranges_batch(batch_reqs)
 
-        allowed: Set[int] = set()
+        # Si algun calc falla (especie/item ausente en dex), no podar: un None
+        # tratado como "no encaja" expulsaria SP validos.
+        if any(rolls is None for rolls in rolls_list):
+            return False
+
+        allowed_u: Set[int] = set()
+        allowed_hp: Set[int] = set()
         any_calc = False
         for key, rolls in zip(keys_ordered, rolls_list):
             if rolls is None:
@@ -1037,22 +1276,42 @@ class TeamStatBeliefs:
             min_roll, max_roll = rolls
             hp_val = group_payloads[key]['_hp']
             if damage_is_percent:
-                ok = _rolls_match_percent(min_roll, max_roll, hp_val, observed_damage)
+                ok = _rolls_match_percent(
+                    min_roll, max_roll, hp_val, observed_damage, is_ko=is_ko
+                )
             else:
-                ok = _rolls_match_absolute(min_roll, max_roll, observed_damage)
+                ok = _rolls_match_absolute(
+                    min_roll, max_roll, observed_damage, is_ko=is_ko
+                )
             if ok:
-                allowed.update(groups[key])
+                allowed_u.update(groups[key]['unknown'])
+                allowed_hp.update(groups[key]['hp'])
 
         if not any_calc:
             return False
 
+        if not allowed_u:
+            # Ningun SP reproduce el dano: premisa dudosa (sash, desync, etc.).
+            belief.skipped += 1
+            return False
+
         belief.observations += 1
-        changed = belief.narrow(unknown_stat, allowed)
+        changed = belief.narrow(unknown_stat, allowed_u)
+        if infer_hp and allowed_hp:
+            changed = belief.narrow('hp', allowed_hp) or changed
         if changed:
             rng = belief.stat_range(unknown_stat)
             label = {'atk': 'Atk', 'def': 'Def', 'spa': 'SpA', 'spd': 'SpD'}[unknown_stat]
+            extra = ''
+            if infer_hp:
+                hp_rng = belief.stat_range('hp')
+                if hp_rng:
+                    extra = (
+                        f' | HP {hp_rng[0]}-{hp_rng[1]} '
+                        f'({len(belief.candidates["hp"])} SP)'
+                    )
             print(
                 f'[STAT-INF] {belief.species} {label} -> {rng[0]}-{rng[1]} '
-                f'({len(belief.candidates[unknown_stat])} SP posibles)'
+                f'({len(belief.candidates[unknown_stat])} SP posibles){extra}'
             )
         return changed

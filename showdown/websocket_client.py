@@ -145,32 +145,53 @@ class PSWebsocketClient:
         await self.send_message('', message)
         self.last_challenge_time = time.time()
 
-    async def accept_challenge(self, battle_format, team, room_name, training, q):
+    @staticmethod
+    def _challenge_from_pm(msg, battle_format, only_from=None):
+        """Extrae el retador de un PM `/challenge` si el formato coincide."""
+        if not msg:
+            return None
+        parts = msg.split('|')
+        if len(parts) < 5 or parts[1] != 'pm':
+            return None
+        fmt = None
+        for i, part in enumerate(parts):
+            if not part.startswith('/challenge'):
+                continue
+            rest = part[len('/challenge'):].lstrip()
+            if rest:
+                fmt = rest.split(',')[0].strip()
+            elif i + 1 < len(parts):
+                fmt = (parts[i + 1] or '').split(',')[0].strip()
+            break
+        if not fmt or fmt != battle_format:
+            return None
+        challenger = parts[2].strip().lstrip('!★☆ ')
+        if not challenger:
+            return None
+        if only_from:
+            want = only_from.strip().lstrip('!★☆ ').lower()
+            if challenger.lower() != want:
+                return None
+        return challenger
+
+    async def accept_challenge(self, battle_format, team, room_name, training, q=None, only_from=None):
+        """Espera un desafío del formato dado y lo acepta de inmediato."""
         if room_name is not None:
             await self.join_room(room_name)
         if not training:
-            print("[INFO]     Esperando una batalla en formato {}".format(battle_format))
+            who = f" de {only_from}" if only_from else ""
+            print(f"[INFO]     Esperando desafío{who} en formato {battle_format}...")
         await self.update_team(team)
         username = None
-        contador = 0
         while username is None:
-            time.sleep(1.5)
-            msg = await self.receive_message2()
-            if msg is not None:
-                split_msg = msg.split('|')
-                if (len(split_msg) == 9):
-                    if (len(split_msg) == 9 and split_msg[1] == "pm" and split_msg[4].startswith("/challenge") and split_msg[5] == battle_format):
-                        username = split_msg[2].strip()
-            contador += 1
-            #print("contador: {}".format(contador))
-            if contador == 8 and username is None:
-                #print("q.put([-1])")
-                #q.put([-1]) ???
-                contador = 0
-        #print("q.put([0])")
-        #q.put([0])
-        message = ["/accept " + username]
-        await self.send_message('', message)
+            try:
+                msg = await asyncio.wait_for(self.receive_message(), timeout=2.0)
+            except asyncio.TimeoutError:
+                msg = None
+            username = self._challenge_from_pm(msg, battle_format, only_from=only_from)
+        if not training:
+            print(f"[INFO]     Aceptando desafío de {username}...")
+        await self.send_message('', [f"/accept {username}"])
 
     async def search_for_match(self, team):
         print("[INFO]     Buscando una batalla en formato {}...".format(config.pokemon_mode))

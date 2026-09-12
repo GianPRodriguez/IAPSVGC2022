@@ -34,19 +34,40 @@ Variables útiles: `DAMAGE_CALC_ROOT`, `DAMAGE_CALC_HOST`, `DAMAGE_CALC_PORT`, `
 
 Valida soundness de Stat Points contra equipos reales Reg M-C ([MetaVGC](https://metavgc.com/teams/featured/regulation-mc)).
 
-1. Arranca el PS Champions local (`noguestsecurity = true` en `config/config.js`):
+1. Arranca el PS Champions local **con `--no-security`** (default del repo; sin rate limits):
    ```bat
    cd ..\pokemon-showdown
-   node pokemon-showdown start
+   node pokemon-showdown start --no-security
    ```
-2. Corre batallas mirror:
+   Opt-out solo si hace falta: `set PS_NO_SECURITY=0` antes de `--start-ps`.
+2. Corre batch heurístico vs random (default 100 BO1, rápido, reporte autónomo).
+   Si el PS ya estaba sin `--no-security`, reinícialo:
    ```bat
    set DAMAGE_CALC_FORCE_LOCAL=1
-   python -m showdown.inference_sim.runner --battles 3
+   python -m showdown.inference_sim.run_heuristic_e2e --battles 100 --restart-ps
    ```
-3. Reporte: `logs/inference_sim_report.txt`
+   Salida mínima: progreso cada 10 + línea `DONE ... report=logs\heuristic_e2e_report.txt`.
+   Progreso crash-safe: `logs\heuristic_e2e_progress.json`.
+3. Soundness mirror (opcional): `python -m showdown.inference_sim.runner --battles 10`
+4. **Validación Battle vs PS local** (módulo aparte; heuristic vs random + contraste de estado):
+   ```bat
+   python -m showdown.inference_sim.run_battle_state_e2e --battles 20 --restart-ps
+   ```
+   Salida: `DONE ... state_mismatch=YES|NO ... report=logs\battle_state_e2e_report.txt`
+   Progreso: `logs\battle_state_e2e_progress.json`. No revisar turno a turno.
+5. **Robusto A/B + BO3 + sync + inferencia OTS** (recomendado tras cambios de reglas):
+   ```bat
+   python -m showdown.inference_sim.run_robust_e2e --teams 100
+   ```
+   N par → N/2 BO3 (pool A heuristic / pool B random, sin solape). Reporte:
+   `logs\robust_e2e_report.txt` + `logs\robust_e2e_fixplan.txt`
+   (`NEED_FIX=YES|NO`, `NEED_FLAGS_ADD=YES|NO`).
+   - `NEED_FIX=NO` → no abras Cursor por sync/SP.
+   - `NEED_FLAGS_ADD=YES` → gaps de flags Battle/calc (informativo; no gasta créditos
+     solo); pedir «agrega flags de inferencia» si quieres implementarlos.
+   Consulta: `python -m showdown.inference_sim.robust_fixplan`
 
-Equipos embebidos: `showdown/inference_sim/team_factory.py` (SableyeVGC, Robin_VGC, Roid Blancaflor).
+Para refrescar equipos desde la web: `python showdown/inference_sim/scrape_metavgc.py`.
 
 Para empezar limpio a mano:
 

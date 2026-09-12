@@ -11,7 +11,7 @@ import queue
 #######################################################################################################################
 # OK - Se asignan los valores de configuración a las variables globales del módulo config.py
 #######################################################################################################################
-def parse_configs(username, password, teamname, botmode, numBattles):
+def parse_configs(username, password, teamname, botmode, numBattles, pokemon_mode=None, battle_bot=None, only_from=None):
     env = Env()
     env.read_env()
 
@@ -28,49 +28,66 @@ def parse_configs(username, password, teamname, botmode, numBattles):
     config.team_dir = env("TEAM_DIR", config.team_dir).strip().strip("/")
     config.battle_bot = env("BATTLE_BOT", config.battle_bot).strip().lower() or "random"
 
-    # Aplicar parámetros del usuario (sobrescriben los del .env)
-    config.username = username
-    config.password = password
-    config.user_to_challenge = username
+    # Overrides desde la UI (si vienen)
+    if pokemon_mode:
+        config.pokemon_mode = str(pokemon_mode).strip()
+    if battle_bot:
+        config.battle_bot = str(battle_bot).strip().lower() or config.battle_bot
+
     config.bot_mode = botmode
     config.team_name = f"{config.team_dir}/{teamname}"
     config.run_count = numBattles
+    config.user_to_challenge = None
 
-    if botmode == "CHALLENGE_USER":
+    if botmode == constants.CHALLENGE_USER:
+        # Retar a un oponente: credenciales del bot desde .env; username UI = oponente
+        config.user_to_challenge = username
         config.username = env("PS_USERNAME")
         config.password = env("PS_PASSWORD")
+    elif botmode == constants.ACCEPT_CHALLENGE:
+        # Esperar desafíos: credenciales del bot desde la UI (prefills .env)
+        config.username = username
+        config.password = password
+        filter_user = (only_from or env("USER_TO_ACCEPT", "") or "").strip()
+        config.user_to_challenge = filter_user or None
+    else:
+        # SEARCH_LADDER u otros: credenciales desde la UI
+        config.username = username
+        config.password = password
 
 #######################################################################################################################
 # OK - Función principal que maneja la lógica de conexión, inicio de sesión y ejecución de batallas en Pokémon Showdown
 #######################################################################################################################
-async def showdown(q, username, password, teamname, botmode, numBattles):
+async def showdown(q, username, password, teamname, botmode, numBattles, pokemon_mode=None, battle_bot=None, only_from=None):
     # Validación de parámetros
-    # Validamos las credenciales según el modo de juego
-    if botmode == "SEARCH_LADDER":
-        # En el ladder (público) se requiere obligatoriamente usuario, contraseña y equipo
+    if botmode == constants.SEARCH_LADDER:
         if not username or not password or not teamname:
             print("[ERROR] ¡Usuario, contraseña y teamname son obligatorios para SEARCH_LADDER!")
             q.put([-5])
             return
-            
-    elif botmode == "CHALLENGE_USER":
-        # Al retar a un usuario específico, la contraseña puede ser None/vacía, pero se requiere usuario y equipo
+    elif botmode == constants.CHALLENGE_USER:
         if not username or not teamname:
             print("[ERROR] ¡Usuario y teamname son obligatorios para CHALLENGE_USER!")
             q.put([-5])
             return
-            
+    elif botmode == constants.ACCEPT_CHALLENGE:
+        if not username or not password or not teamname:
+            print("[ERROR] ¡Usuario, contraseña y teamname son obligatorios para ACCEPT_CHALLENGE!")
+            q.put([-5])
+            return
     else:
-        # Fallback de seguridad si llega un botMode desconocido
         if not username or not teamname:
             print("[ERROR] ¡Configuración incompleta: se requiere al menos usuario y teamname!")
             q.put([-5])
             return
-    
-    # Configuración de la Aplicación
-    parse_configs(username, password, teamname, botmode, numBattles)
-    
-    # Inicio de Sesión con Usuario y Contraseña en Pokémon Showdown
+
+    parse_configs(
+        username, password, teamname, botmode, numBattles,
+        pokemon_mode=pokemon_mode,
+        battle_bot=battle_bot,
+        only_from=only_from,
+    )
+
     ps_websocket_client = None
     try:
         ps_websocket_client = await PSWebsocketClient.create(config.username, config.password, config.websocket_uri)
@@ -81,11 +98,9 @@ async def showdown(q, username, password, teamname, botmode, numBattles):
         if ps_websocket_client is not None:
             await ps_websocket_client.close()
         return
-    
-    # Contadores
+
     stats = {'battles_run': 0, 'wins': 0, 'losses': 0}
-    
-    # Team almacena el equipo que se va a usar en la batalla, donde tendré el apoyo del bot
+
     try:
         team = load_team(config.team_name)[0]
     except Exception as e:
@@ -93,52 +108,69 @@ async def showdown(q, username, password, teamname, botmode, numBattles):
         q.put([-6])
         await ps_websocket_client.close()
         return
-    
-    # De acuerdo al Tipo de Batalla a iniciar, se va a comenzar una Batalla dado el equipo dado
-    try:
-        if config.bot_mode == constants.CHALLENGE_USER: # Módulo de Batallas & Entrenamiento
-            await ps_websocket_client.challenge_user(config.user_to_challenge, config.pokemon_mode, team, False)
-        elif config.bot_mode == constants.ACCEPT_CHALLENGE: # Módulo de Entrenamiento
-            await ps_websocket_client.accept_challenge(config.pokemon_mode, team, config.room_name, False)
-        elif config.bot_mode == constants.SEARCH_LADDER: # Módulo de Análisis
-            await ps_websocket_client.search_for_match(team)
-        else:
-            raise ValueError("Invalid Bot Mode")
-    except Exception as e:
-        print(f"[ERROR]  ¡Ha sucedido un error al momento de iniciar la Batalla!: {e}")
-        q.put([-6])
+
+    if not team:
+        print(
+            f"[ERROR]  Equipo vacío o no empaquetable: '{config.team_name}'. "
+            "Revisa el export Showdown (6 Pokémon separados por línea en blanco)."
+        )
+        q.put([-3])
         await ps_websocket_client.close()
         return
-    
+
     try:
+        # Primer matchmaking (ACCEPT se hace dentro del bucle para poder re-esperar)
+        if config.bot_mode == constants.CHALLENGE_USER:
+            await ps_websocket_client.challenge_user(config.user_to_challenge, config.pokemon_mode, team, False)
+        elif config.bot_mode == constants.SEARCH_LADDER:
+            await ps_websocket_client.search_for_match(team)
+        elif config.bot_mode == constants.ACCEPT_CHALLENGE:
+            pass
+        else:
+            raise ValueError("Invalid Bot Mode")
+
         while True:
-            
-            # Nueva Batalla Pokémon completo, pokemon_battle se ejecuta una vez por batalla completa (BO3)
+            if config.bot_mode == constants.ACCEPT_CHALLENGE:
+                await ps_websocket_client.accept_challenge(
+                    config.pokemon_mode,
+                    team,
+                    config.room_name,
+                    False,
+                    q,
+                    only_from=config.user_to_challenge,
+                )
+
             try:
                 winner = await pokemon_battle(ps_websocket_client, q, config.bot_mode)
             except Exception as e:
-                # Solo se ejecuta la excepción si no es un entrenamiento, sino debe seguir jugando las batallas que faltan
                 if config.bot_mode == constants.SEARCH_LADDER:
                     print(f"[ERROR]  ¡Ha sucedido un error durante el BO3 de la Batalla!: {e}")
                     q.put([-6])
                     break
-            
+                print(f"[ERROR]  ¡Ha sucedido un error durante la Batalla!: {e}")
+                q.put([-6])
+                break
+
             if winner is None:
-                print("[INFO]  Batalla sin resultado válido") # En caso haya ocurrido algún error en el entrenamiento, no se cuenta como victoria ni derrota
+                print("[INFO]  Batalla sin resultado válido")
             elif winner == config.username:
                 stats['wins'] += 1
                 stats['battles_run'] += 1
             else:
                 stats['losses'] += 1
                 stats['battles_run'] += 1
-            
-            # Estadísticas al hilo principal para actualizar la interfaz gráfica
+
             print(f"[INFO]     Avance: {100 * stats['battles_run']/config.run_count:.2f} % | Victorias: {stats['wins']} | Derrotas: {stats['losses']}")
-            
-            # En el Módulo de Análisis solo ocurre una batalla
+
             if stats['battles_run'] >= config.run_count:
                 break
-    
+
+            # Re-matchmaking entre batallas (si run_count > 1)
+            if config.bot_mode == constants.CHALLENGE_USER:
+                await ps_websocket_client.challenge_user(config.user_to_challenge, config.pokemon_mode, team, False)
+            elif config.bot_mode == constants.SEARCH_LADDER:
+                await ps_websocket_client.search_for_match(team)
+
     finally:
         await ps_websocket_client.close()
         if config.bot_mode == constants.ACCEPT_CHALLENGE:
@@ -167,7 +199,18 @@ async def stop(q, username, password, teamname, botmode, numBattles):
 # OK - Hilo que ejecuta showdown() sin bloquear el __init__ (usar .start())
 #######################################################################################################################
 class AsyncDownload(Thread):
-    def __init__(self, q, username, password, teamname, botmode, numBattles):
+    def __init__(
+        self,
+        q,
+        username,
+        password,
+        teamname,
+        botmode,
+        numBattles,
+        pokemon_mode=None,
+        battle_bot=None,
+        only_from=None,
+    ):
         super().__init__(daemon=True)
         self.q = q
         self.username = username
@@ -175,6 +218,9 @@ class AsyncDownload(Thread):
         self.teamname = teamname
         self.botmode = botmode
         self.numBattles = numBattles
+        self.pokemon_mode = pokemon_mode
+        self.battle_bot = battle_bot
+        self.only_from = only_from
 
     def run(self):
         asyncio.run(
@@ -185,5 +231,8 @@ class AsyncDownload(Thread):
                 self.teamname,
                 self.botmode,
                 self.numBattles,
+                pokemon_mode=self.pokemon_mode,
+                battle_bot=self.battle_bot,
+                only_from=self.only_from,
             )
         )

@@ -1,0 +1,57 @@
+---
+description: Local Pokémon Showdown must use --no-security by default
+alwaysApply: true
+---
+
+# Local Showdown: `--no-security`
+
+Whenever this project starts or documents a **local** Pokémon Showdown server (direct CLI, `ensure_ps` / `--start-ps`, scripts, README, or agent instructions), use:
+
+```bat
+node pokemon-showdown start --no-security
+```
+
+- Canonical helper: `showdown.inference_sim.ps_server.ps_start_argv()` / `ps_start_hint()`.
+- Default is on. Opt-out only with `PS_NO_SECURITY=0`.
+- Do not recommend bare `node pokemon-showdown start` for local harnesses (poke-env / inference_sim / heuristic E2E).
+
+## Batch heuristic vs random (créditos Cursor)
+
+Para N partidas heuristic vs random **no** analices turno a turno. Solo:
+
+```bat
+python -m showdown.inference_sim.run_heuristic_e2e --battles N
+```
+
+Espera la línea `DONE ...` y lee `logs/heuristic_e2e_report.txt` (o resume esa línea). No vuelques logs largos al chat.
+
+## Batch validación Battle vs PS local (créditos Cursor)
+
+Módulo aparte (estado `Battle` / subclases vs protocolo Showdown local + heuristic vs random):
+
+```bat
+python -m showdown.inference_sim.run_battle_state_e2e --battles N
+```
+
+Espera `DONE ... state_mismatch=YES|NO ...` y lee `logs/battle_state_e2e_report.txt`. No analices turnos ni dumps de protocolo.
+
+## Batch robusto A/B + BO3 + sync + inferencia OTS (créditos Cursor)
+
+`--teams N` (N par) → pools A/B disjuntos → N/2 series BO3. Valida sync Battle y soundness SP vs OTS.
+
+```bat
+python -m showdown.inference_sim.run_robust_e2e --teams 100
+```
+
+Espera `DONE ... state_mismatch=... inference_ok=... NEED_FIX=... NEED_FLAGS_ADD=...` y lee `logs/robust_e2e_report.txt`. Solo el reporte final; no analices turnos.
+
+Tras el batch se escribe `logs/robust_e2e_fixplan.txt`:
+- `NEED_FIX=NO` → no gastes créditos Cursor.
+- `NEED_FIX=YES` → el usuario puede pedir en el chat «corrige el fixplan robusto»; el agente solo lee el fixplan y hace un smoke `--teams 4`.
+- `NEED_FLAGS_ADD=YES` → gaps de flags Battle/calc (informativo); no abras agente solo por eso. Solo si piden «agrega flags de inferencia».
+
+Consulta rápida sin batallas:
+
+```bat
+python -m showdown.inference_sim.robust_fixplan
+```

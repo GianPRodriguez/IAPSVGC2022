@@ -33,10 +33,21 @@ class SoundnessReport:
     battle_errors: int = 0
     # Especie -> lista de snapshots {turn, event, ranges, true_*}
     timelines: Dict[str, List[dict]] = field(default_factory=dict)
+    _failure_cap: int = 60
+    _total_failures: int = 0
 
     @property
     def ok(self) -> bool:
-        return not self.failures
+        return self._total_failures == 0 and not self.failures
+
+    def add_failure(self, fail: SoundnessFailure) -> None:
+        self._total_failures += 1
+        if len(self.failures) < self._failure_cap:
+            self.failures.append(fail)
+
+    @property
+    def failure_count(self) -> int:
+        return self._total_failures or len(self.failures)
 
 
 def snapshot_beliefs(battle: Battle, opp_meta: TeamMeta, *, turn: int, event: str) -> Dict[str, dict]:
@@ -174,7 +185,7 @@ def check_soundness(
             rng = belief.stat_range(stat)
 
             if tsp not in cands:
-                report.failures.append(SoundnessFailure(
+                report.add_failure(SoundnessFailure(
                     battle_tag=battle_tag,
                     species=sid,
                     stat=stat,
@@ -187,7 +198,7 @@ def check_soundness(
                 ))
                 continue
             if rng is not None and not (rng[0] <= tf <= rng[1]):
-                report.failures.append(SoundnessFailure(
+                report.add_failure(SoundnessFailure(
                     battle_tag=battle_tag,
                     species=sid,
                     stat=stat,
@@ -285,13 +296,13 @@ def format_report(report: SoundnessReport, *, battles: int, teams: List[str]) ->
         f'Battles requested: {battles}',
         f'Teams: {", ".join(teams)}',
         f'Soundness checks: {report.checks}',
-        f'Soundness failures: {len(report.failures)}',
+        f'Soundness failures: {report.failure_count}',
         f'Battle infra errors/timeouts: {battle_errors}',
         f'Belief observations (sum): {report.observations}',
         f'Belief skips (sum): {report.skipped}',
         '',
     ]
-    if not report.failures:
+    if report.ok:
         lines.append('RESULT: PASS — true SP/final siempre dentro de candidatos/rango.')
         if battle_errors:
             lines.append(

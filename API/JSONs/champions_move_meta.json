@@ -68,7 +68,7 @@
   "c": "t"
  },
  "counter": {
-  "p": 0,
+  "p": -5,
   "c": "p"
  },
  "crabhammer": {
@@ -264,7 +264,7 @@
   "c": "t"
  },
  "roar": {
-  "p": 0,
+  "p": -6,
   "c": "t"
  },
  "rockslide": {
@@ -372,7 +372,7 @@
   "c": "p"
  },
  "whirlwind": {
-  "p": 0,
+  "p": -6,
   "c": "t"
  },
  "wingattack": {
@@ -544,7 +544,7 @@
   "c": "t"
  },
  "teleport": {
-  "p": 0,
+  "p": -6,
   "c": "t"
  },
  "agility": {
@@ -748,7 +748,7 @@
   "c": "t"
  },
  "mirrorcoat": {
-  "p": 0,
+  "p": -5,
   "c": "s"
  },
  "moonlight": {
@@ -1080,7 +1080,7 @@
   "c": "p"
  },
  "vitalthrow": {
-  "p": 0,
+  "p": -1,
   "c": "p"
  },
  "armthrust": {
@@ -1184,7 +1184,7 @@
   "c": "s"
  },
  "revenge": {
-  "p": 0,
+  "p": -4,
   "c": "p"
  },
  "rockblast": {
@@ -1260,7 +1260,7 @@
   "c": "p"
  },
  "focuspunch": {
-  "p": 0,
+  "p": -3,
   "c": "p"
  },
  "imprison": {
@@ -1508,7 +1508,7 @@
   "c": "p"
  },
  "avalanche": {
-  "p": 0,
+  "p": -4,
   "c": "p"
  },
  "bravebird": {
@@ -1656,7 +1656,7 @@
   "c": "t"
  },
  "trickroom": {
-  "p": 0,
+  "p": -7,
   "c": "t"
  },
  "uturn": {
@@ -2160,7 +2160,7 @@
   "c": "p"
  },
  "circlethrow": {
-  "p": 0,
+  "p": -6,
   "c": "p"
  },
  "clearsmog": {
@@ -2176,7 +2176,7 @@
   "c": "t"
  },
  "dragontail": {
-  "p": 0,
+  "p": -6,
   "c": "p"
  },
  "drillrun": {
@@ -2580,7 +2580,7 @@
   "c": "t"
  },
  "beakblast": {
-  "p": 0,
+  "p": -3,
   "c": "p"
  },
  "blackholeeclipse": {
@@ -2876,7 +2876,7 @@
   "c": "t"
  },
  "shelltrap": {
-  "p": 0,
+  "p": -3,
   "c": "s"
  },
  "smartstrike": {

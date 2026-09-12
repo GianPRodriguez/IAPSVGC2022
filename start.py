@@ -30,12 +30,34 @@ def load_ui_config():
 	"""Lee ajustes de .env usados por la UI (formato, carpeta de equipos, bot)."""
 	env = Env()
 	env.read_env()
+	team_name = env("TEAM_NAME", "") or ""
+	# TEAM_NAME puede venir como "dir/archivo"; la UI solo necesita el archivo
+	team_file = os.path.basename(team_name.strip().replace("\\", "/")) if team_name else ""
 	return {
 		"pokemon_mode": env("POKEMON_MODE", "gen9championsvgc2026regmcbo3"),
 		"team_dir": env("TEAM_DIR", "gen8/vgc2022").strip().strip("/"),
 		"battle_bot": env("BATTLE_BOT", "random").strip().lower() or "random",
 		"ps_username": env("PS_USERNAME", ""),
+		"ps_password": env("PS_PASSWORD", ""),
+		"team_file": team_file,
+		"user_to_accept": env("USER_TO_ACCEPT", ""),
+		"run_count": int(env("RUN_COUNT", 1) or 1),
 	}
+
+
+def list_battle_bots():
+	"""Bots con main.py bajo showdown/battle_bots/."""
+	root = os.path.join("showdown", "battle_bots")
+	bots = []
+	try:
+		for name in sorted(os.listdir(root)):
+			if name.startswith("_") or name == "__pycache__":
+				continue
+			if os.path.isfile(os.path.join(root, name, "main.py")):
+				bots.append(name)
+	except FileNotFoundError:
+		pass
+	return bots or ["random"]
 
 def apply_dark_theme(root):
 	root.configure(bg=BG)
@@ -116,7 +138,7 @@ class VGCApp(tk.Tk):
 		container.grid_columnconfigure(0, weight=1)
 		# Configuración Ventana
 		self.title(APP_TITLE)
-		self.geometry("500x360")
+		self.geometry("500x420")
 		self.resizable(False, False)
 		try:
 			self.iconbitmap("icon.ico")
@@ -125,7 +147,7 @@ class VGCApp(tk.Tk):
 		self.protocol("WM_DELETE_WINDOW", self._on_close_request)
 		# Frames
 		self.frames = {}
-		for F in (StartPage, Modulo1, Modulo2, Modulo3):
+		for F in (StartPage, Modulo1, ModuloAccept, Modulo2, Modulo3):
 			page_name = F.__name__
 			frame = F(parent=container, controller=self)
 			self.frames[page_name] = frame
@@ -156,31 +178,35 @@ class StartPage(tk.Frame):
 		canvasHead.create_text(250, 25, text=APP_TITLE, fill="white", font=('Verdana 14 bold'))
 		canvasHead.pack()
 		# Canvas Body
-		canvasBody = tk.Canvas(self, width=500, height=310, bg=BG, highlightthickness=0)
+		canvasBody = tk.Canvas(self, width=500, height=370, bg=BG, highlightthickness=0)
 		canvasBody.place(x=0, y=50, anchor = tk.CENTER)
 		canvasBody.pack()
 
 		button1 = tk.Button(self, text='Módulo de Batallas', anchor="center", command=lambda: controller.show_frame("Modulo1"))
 		button1.configure(width = 50, height = 2, bg="#1a1a1a", fg=FG, activebackground = ACCENT, relief = tk.FLAT)
-		canvasBody.create_window(70, 25, anchor=tk.NW, window=button1)
+		canvasBody.create_window(70, 18, anchor=tk.NW, window=button1)
+
+		buttonAccept = tk.Button(self, text='Aceptar Desafíos (vs usuario)', anchor="center", command=lambda: controller.show_frame("ModuloAccept"))
+		buttonAccept.configure(width = 50, height = 2, bg="#1a1a1a", fg=FG, activebackground = ACCENT, relief = tk.FLAT)
+		canvasBody.create_window(70, 78, anchor=tk.NW, window=buttonAccept)
 
 		button2 = tk.Button(self, text='Módulo de Análisis', anchor="center", command=lambda: controller.show_frame("Modulo2"))
 		button2.configure(width = 50, height = 2, bg="#1a1a1a", fg=FG, activebackground = ACCENT, relief = tk.FLAT)
-		canvasBody.create_window(70, 95, anchor=tk.NW, window=button2)
+		canvasBody.create_window(70, 138, anchor=tk.NW, window=button2)
 
 		button3 = tk.Button(self, text='Módulo de Entrenamiento', anchor="center", command=lambda: controller.show_frame("Modulo3"))
 		button3.configure(width = 50, height = 2, bg="#1a1a1a", fg=FG, activebackground = ACCENT, relief = tk.FLAT)
-		canvasBody.create_window(70, 165, anchor=tk.NW, window=button3)
+		canvasBody.create_window(70, 198, anchor=tk.NW, window=button3)
 
 		canvasBody.create_text(
-			250, 250,
+			250, 280,
 			text=f"Formato: {cfg['pokemon_mode']}  ·  Bot: {cfg['battle_bot']}",
 			fill="#888888",
 			font=('Verdana 8'),
 		)
 		if cfg.get("ps_username"):
 			canvasBody.create_text(
-				250, 275,
+				250, 305,
 				text=f"Cuenta PS: {cfg['ps_username']}",
 				fill="#666666",
 				font=('Verdana 8'),
@@ -384,7 +410,335 @@ class Modulo1(tk.Frame):
 		self.listbox_widget = self.canvasBody.create_window(250, 108, window=self.auxCbbTeam)
 		self.meta_widget = self.canvasBody.create_text(250, 148, text=self.meta_text, fill="#888888", font=('Verdana 8'), justify=tk.CENTER)
 
+
+class ModuloAccept(tk.Frame):
+	"""Espera desafíos de un usuario humano y los acepta al instante (ACCEPT_CHALLENGE)."""
+
+	def __init__(self, parent, controller):
+		tk.Frame.__init__(self, parent, bg=BG)
+		self.auxController = controller
+		self.cfg = controller.ui_config
+		self.p = None
+		self.isWinner = False
+		self.nameOpponent = ""
+		self.bots = list_battle_bots()
+
+		self.canvasHead = tk.Canvas(self, width=500, height=50, bg=BG, highlightthickness=0)
+		self.canvasHead.create_text(250, 25, text="Aceptar Desafíos", fill="white", font=('Verdana 15 bold'))
+		self.canvasHead.pack()
+		self.canvasBody = tk.Canvas(self, width=500, height=370, bg=BG, highlightthickness=0)
+		self.canvasBody.pack()
+
+		# Columna izquierda: credenciales / filtro
+		self.labelUsername = tk.Label(self, text="Cuenta bot (PS)", bg=BG, font=('Verdana 8 bold'), fg="white")
+		self.LabelUsername_widget = self.canvasBody.create_window(130, 18, window=self.labelUsername)
+		self.strName = tk.StringVar(value=self.cfg.get("ps_username", "") or "")
+		self.nameEntry = ttk.Entry(self, textvariable=self.strName, width=22)
+		self.strName_widget = self.canvasBody.create_window(130, 42, window=self.nameEntry)
+		self.auxNameEntry = self.nameEntry
+
+		self.labelPassword = tk.Label(self, text="Contraseña bot", bg=BG, font=('Verdana 8 bold'), fg="white")
+		self.LabelPassword_widget = self.canvasBody.create_window(130, 70, window=self.labelPassword)
+		self.strPassword = tk.StringVar(value=self.cfg.get("ps_password", "") or "")
+		self.passwordEntry = ttk.Entry(self, show="*", textvariable=self.strPassword, width=22)
+		self.strPassword_widget = self.canvasBody.create_window(130, 94, window=self.passwordEntry)
+		self.auxPasswordEntry = self.passwordEntry
+
+		self.labelOnly = tk.Label(self, text="Solo aceptar de (opcional)", bg=BG, font=('Verdana 8 bold'), fg="white")
+		self.LabelOnly_widget = self.canvasBody.create_window(130, 122, window=self.labelOnly)
+		self.strOnly = tk.StringVar(value=self.cfg.get("user_to_accept", "") or "")
+		self.onlyEntry = ttk.Entry(self, textvariable=self.strOnly, width=22)
+		self.strOnly_widget = self.canvasBody.create_window(130, 146, window=self.onlyEntry)
+		self.auxOnlyEntry = self.onlyEntry
+
+		# Columna derecha: formato / bot / equipo
+		self.labelFormat = tk.Label(self, text="Formato / reglas", bg=BG, font=('Verdana 8 bold'), fg="white")
+		self.LabelFormat_widget = self.canvasBody.create_window(370, 18, window=self.labelFormat)
+		self.strFormat = tk.StringVar(value=self.cfg.get("pokemon_mode", "") or "")
+		self.formatEntry = ttk.Entry(self, textvariable=self.strFormat, width=24)
+		self.strFormat_widget = self.canvasBody.create_window(370, 42, window=self.formatEntry)
+		self.auxFormatEntry = self.formatEntry
+
+		self.labelBot = tk.Label(self, text="Tipo de bot", bg=BG, font=('Verdana 8 bold'), fg="white")
+		self.LabelBot_widget = self.canvasBody.create_window(370, 70, window=self.labelBot)
+		self.strBot = tk.StringVar(value=self.cfg.get("battle_bot", "random") or "random")
+		self.cbbBot = ttk.Combobox(self, textvariable=self.strBot, state="readonly", values=self.bots, width=21)
+		if self.strBot.get() not in self.bots:
+			self.strBot.set(self.bots[0])
+		self.cbbBot_widget = self.canvasBody.create_window(370, 94, window=self.cbbBot)
+		self.auxCbbBot = self.cbbBot
+
+		self.labelTeam = tk.Label(self, text="Equipo del agente", bg=BG, font=('Verdana 8 bold'), fg="white")
+		self.LabelTeam_widget = self.canvasBody.create_window(370, 122, window=self.labelTeam)
+		self.textVar = tk.StringVar(self)
+		self.path = os.path.join("teams", "teams", self.cfg["team_dir"])
+		try:
+			self.listBoxValues = sorted(os.listdir(self.path))
+		except FileNotFoundError:
+			self.listBoxValues = []
+		default_team = self.cfg.get("team_file") or ""
+		if default_team in self.listBoxValues:
+			self.textVar.set(default_team)
+		elif self.listBoxValues:
+			self.textVar.set(self.listBoxValues[0])
+		else:
+			self.textVar.set("")
+		self.cbbTeam = ttk.Combobox(self, textvariable=self.textVar, state="readonly", values=self.listBoxValues, width=21)
+		self.listbox_widget = self.canvasBody.create_window(370, 146, window=self.cbbTeam)
+		self.auxCbbTeam = self.cbbTeam
+
+		self.meta_text = (
+			f"Modo: ACCEPT_CHALLENGE  ·  TEAM_DIR: {self.cfg['team_dir']}\n"
+			f"Logs: logs/reporte.txt · logs_showdown.txt (igual que Mód. 1/2)"
+		)
+		self.meta_widget = self.canvasBody.create_text(
+			250, 188, text=self.meta_text, fill="#888888", font=("Verdana 8"), justify=tk.CENTER
+		)
+
+		self.button1 = tk.Button(self, text="Esperar desafíos", anchor="center")
+		self.button1.configure(
+			width=28, height=2, relief=tk.FLAT, bg="#1a1a1a", fg=FG, activebackground=ACCENT, command=self.IniciarBatalla
+		)
+		self.button1_widget = self.canvasBody.create_window(250, 245, window=self.button1)
+		self.auxButton1 = self.button1
+
+		self.hint_widget = self.canvasBody.create_text(
+			250,
+			300,
+			text="Desde tu cuenta PS: reta a la cuenta bot en el mismo formato.",
+			fill="#666666",
+			font=("Verdana 8"),
+			justify=tk.CENTER,
+			width=460,
+		)
+
+		self.salirPNG = Image.open("assets/images/exit.png")
+		self.newSalirPNG = self.salirPNG.convert(mode="RGBA")
+		self.resized_image = self.newSalirPNG.resize((40, 40), Image.LANCZOS)
+		self.salirTK = ImageTk.PhotoImage(self.resized_image)
+		self.buttonSalir = tk.Button(
+			self,
+			image=self.salirTK,
+			command=lambda: controller.show_frame("StartPage"),
+			bg=BG,
+			activebackground=BG,
+			highlightthickness=0,
+			bd=0,
+		)
+		self.canvasHead.create_window(470, 28, window=self.buttonSalir)
+
+	def _form_widgets(self):
+		return (
+			self.button1_widget,
+			self.listbox_widget,
+			self.LabelUsername_widget,
+			self.LabelPassword_widget,
+			self.LabelOnly_widget,
+			self.LabelFormat_widget,
+			self.LabelBot_widget,
+			self.LabelTeam_widget,
+			self.strName_widget,
+			self.strPassword_widget,
+			self.strOnly_widget,
+			self.strFormat_widget,
+			self.cbbBot_widget,
+			self.meta_widget,
+			self.hint_widget,
+		)
+
+	def _show_error(self, text, x=250):
+		if hasattr(self, "textIncorrect"):
+			self.canvasBody.delete(self.textIncorrect)
+		self.textIncorrect = self.canvasBody.create_text(x, 330, text=text, fill="orange", font=("Verdana 9"))
+
+	def _unlock_form(self):
+		self.nameEntry.config(state="normal")
+		self.passwordEntry.config(state="normal")
+		self.onlyEntry.config(state="normal")
+		self.formatEntry.config(state="normal")
+		self.cbbBot.config(state="readonly")
+		self.cbbTeam.config(state="readonly")
+		self.button1["state"] = tk.NORMAL
+		self.button1.configure(text="Esperar desafíos")
+
+	def monitor(self, q):
+		if self.p is not None and self.p.is_alive():
+			self.after(100, lambda: self.monitor(q))
+			try:
+				self.cola = q.get(0)
+				code = self.cola[0]
+				if code == 0:
+					self.button1.configure(text="Batalla en Curso")
+				elif code == -1:
+					self._unlock_form()
+					print("[INFO]     Cierre Interfaz Ganador...")
+					self.isWinner = self.cola[1]
+					self.nameOpponent = self.cola[3] if len(self.cola) > 3 else self.cola[2]
+					self.endBattle()
+				elif code == -2:
+					self._unlock_form()
+					self._show_error("¡El oponente rechazó / canceló la batalla!")
+				elif code == -3:
+					self._unlock_form()
+					self._show_error("¡El equipo no cumple las reglas del formato!")
+				elif code == -4:
+					self._unlock_form()
+					self._show_error("¡Usuario no encontrado!")
+				elif code == -5:
+					self._unlock_form()
+					self._show_error("¡Usuario o contraseña PS incorrectos!")
+				elif code == -6:
+					self._unlock_form()
+					self._show_error("¡Error del sistema al iniciar/jugar la batalla!")
+			except queue.Empty:
+				pass
+		elif self.p is not None:
+			self.p.join(timeout=0.1)
+
+	def IniciarBatalla(self):
+		if hasattr(self, "textIncorrect"):
+			self.canvasBody.delete(self.textIncorrect)
+		username = self.nameEntry.get().strip()
+		password = self.passwordEntry.get()
+		teamname = self.textVar.get()
+		pokemon_mode = self.formatEntry.get().strip()
+		battle_bot = self.strBot.get().strip()
+		only_from = self.onlyEntry.get().strip() or None
+		if not username:
+			self._show_error("Indica la cuenta bot de Pokémon Showdown")
+			return
+		if not password:
+			self._show_error("Indica la contraseña de la cuenta bot")
+			return
+		if not pokemon_mode:
+			self._show_error("Indica el formato / reglas (POKEMON_MODE)")
+			return
+		if not teamname:
+			self._show_error("No se ha seleccionado un equipo")
+			return
+		if not self.listBoxValues:
+			self._show_error(f"No hay equipos en {self.path}")
+			return
+		q1 = multiprocessing.Queue()
+		botmode = "ACCEPT_CHALLENGE"
+		self.nameEntry.config(state="disabled")
+		self.passwordEntry.config(state="disabled")
+		self.onlyEntry.config(state="disabled")
+		self.formatEntry.config(state="disabled")
+		self.cbbBot.config(state="disabled")
+		self.cbbTeam.config(state="disabled")
+		self.button1["state"] = tk.DISABLED
+		self.button1.configure(text="Esperando desafío...")
+		self.p = AsyncDownload(
+			q1,
+			username,
+			password,
+			teamname,
+			botmode,
+			1,
+			pokemon_mode=pokemon_mode,
+			battle_bot=battle_bot,
+			only_from=only_from,
+		)
+		self.p.start()
+		self.monitor(q1)
+
+	def closeWindows(self):
+		status = self.button1.config("text")[-1]
+		if status not in ("Batalla en Curso", "Esperando desafío..."):
+			self.exitWindows()
+			return
+		self.isCloseWindows = True
+		self.rectangle1 = self.canvasBody.create_rectangle(0, 0, 500, 370, fill="#4e2858")
+		for widget_id in self._form_widgets():
+			self.canvasBody.delete(widget_id)
+		self.emoji = Image.open("assets/images/close.png")
+		self.emojiPNG = self.emoji.convert(mode="RGBA")
+		self.emojiResized_image = self.emojiPNG.resize((80, 80), Image.LANCZOS)
+		self.emojiTK = ImageTk.PhotoImage(self.emojiResized_image)
+		self.emoji_widget = self.canvasBody.create_image(420, 85, image=self.emojiTK)
+		self.textClose_widget1 = self.canvasBody.create_text(185, 75, text="¡Hay una sesión activa!", fill="white", font=("Verdana 14"))
+		self.textClose_widget2 = self.canvasBody.create_text(185, 100, text="¿Está seguro de salir?", fill="white", font=("Verdana 11"))
+		self.buttonYes = tk.Button(self, text="Sí", anchor="center")
+		self.buttonYes.configure(width=23, height=2, relief=tk.FLAT, command=self.exitWindows)
+		self.buttonYes_widget = self.canvasBody.create_window(150, 220, window=self.buttonYes)
+		self.buttonNo = tk.Button(self, text="No", anchor="center")
+		self.buttonNo.configure(width=23, height=2, relief=tk.FLAT, command=self.screenNormalClose)
+		self.buttonNo_widget = self.canvasBody.create_window(350, 220, window=self.buttonNo)
+
+	def exitWindows(self):
+		sys.exit(0)
+
+	def endBattle(self):
+		for widget_id in self._form_widgets():
+			self.canvasBody.delete(widget_id)
+		opponent = self.nameOpponent or "oponente"
+		if self.isWinner:
+			self.emoji = Image.open("assets/images/winner.png")
+			self.rectangle1 = self.canvasBody.create_rectangle(0, 0, 500, 370, fill="#325928")
+			self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="¡Felicidades!", fill="white", font=("Verdana 14"))
+			self.textWinner_widget2 = self.canvasBody.create_text(185, 105, text=f"Victoria vs {opponent}", fill="white", font=("Verdana 11"))
+		else:
+			self.emoji = Image.open("assets/images/noWinner.png")
+			self.rectangle1 = self.canvasBody.create_rectangle(0, 0, 500, 370, fill="#582831")
+			self.textWinner_widget1 = self.canvasBody.create_text(185, 75, text="Has perdido", fill="white", font=("Verdana 14"))
+			self.textWinner_widget2 = self.canvasBody.create_text(185, 105, text=f"Derrota vs {opponent}", fill="white", font=("Verdana 11"))
+		self.emojiPNG = self.emoji.convert(mode="RGBA")
+		self.emojiResized_image = self.emojiPNG.resize((80, 80), Image.LANCZOS)
+		self.emojiTK = ImageTk.PhotoImage(self.emojiResized_image)
+		self.emoji_widget = self.canvasBody.create_image(420, 85, image=self.emojiTK)
+		self.buttonHide = tk.Button(self, text="¡Seguir esperando!", anchor="center")
+		self.buttonHide.configure(width=23, height=2, relief=tk.FLAT, command=self.screenNormalEnd)
+		self.buttonHide_widget = self.canvasBody.create_window(250, 220, window=self.buttonHide)
+
+	def screenNormalClose(self):
+		self.canvasBody.delete(self.buttonYes_widget)
+		self.canvasBody.delete(self.buttonNo_widget)
+		self.canvasBody.delete(self.textClose_widget1)
+		self.canvasBody.delete(self.textClose_widget2)
+		self.canvasBody.delete(self.emoji_widget)
+		self.canvasBody.delete(self.rectangle1)
+		self.screenNormal()
+
+	def screenNormalEnd(self):
+		self.canvasBody.delete(self.buttonHide_widget)
+		self.canvasBody.delete(self.textWinner_widget1)
+		self.canvasBody.delete(self.textWinner_widget2)
+		self.canvasBody.delete(self.emoji_widget)
+		self.canvasBody.delete(self.rectangle1)
+		self.screenNormal()
+
+	def screenNormal(self):
+		self.LabelUsername_widget = self.canvasBody.create_window(130, 18, window=self.labelUsername)
+		self.strName_widget = self.canvasBody.create_window(130, 42, window=self.auxNameEntry)
+		self.LabelPassword_widget = self.canvasBody.create_window(130, 70, window=self.labelPassword)
+		self.strPassword_widget = self.canvasBody.create_window(130, 94, window=self.auxPasswordEntry)
+		self.LabelOnly_widget = self.canvasBody.create_window(130, 122, window=self.labelOnly)
+		self.strOnly_widget = self.canvasBody.create_window(130, 146, window=self.auxOnlyEntry)
+		self.LabelFormat_widget = self.canvasBody.create_window(370, 18, window=self.labelFormat)
+		self.strFormat_widget = self.canvasBody.create_window(370, 42, window=self.auxFormatEntry)
+		self.LabelBot_widget = self.canvasBody.create_window(370, 70, window=self.labelBot)
+		self.cbbBot_widget = self.canvasBody.create_window(370, 94, window=self.auxCbbBot)
+		self.LabelTeam_widget = self.canvasBody.create_window(370, 122, window=self.labelTeam)
+		self.listbox_widget = self.canvasBody.create_window(370, 146, window=self.auxCbbTeam)
+		self.meta_widget = self.canvasBody.create_text(
+			250, 188, text=self.meta_text, fill="#888888", font=("Verdana 8"), justify=tk.CENTER
+		)
+		self.button1_widget = self.canvasBody.create_window(250, 245, window=self.auxButton1)
+		self.hint_widget = self.canvasBody.create_text(
+			250,
+			300,
+			text="Desde tu cuenta PS: reta a la cuenta bot en el mismo formato.",
+			fill="#666666",
+			font=("Verdana 8"),
+			justify=tk.CENTER,
+			width=460,
+		)
+		self._unlock_form()
+
+
 class Modulo2(tk.Frame):
+
 	def __init__(self, parent, controller):
 		tk.Frame.__init__(self, parent, bg=BG)
 		self.auxController = controller

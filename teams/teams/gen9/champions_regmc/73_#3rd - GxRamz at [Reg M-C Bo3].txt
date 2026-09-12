@@ -1,0 +1,59 @@
+Swampert @ Swampertite
+Ability: Swift Swim
+Level: 50
+EVs: 25 HP / 26 Atk / 15 Spe
+Adamant Nature
+- Earthquake
+- Ice Punch
+- Protect
+- Wave Crash
+
+Pelipper @ Damp Rock
+Ability: Drizzle
+Level: 50
+EVs: 31 HP / 1 Def / 5 SpA / 18 SpD / 11 Spe
+Modest Nature
+- Hurricane
+- Protect
+- U-turn
+- Weather Ball
+
+Golisopod @ Golisopite
+Ability: Tough Claws
+Level: 50
+EVs: 32 HP / 32 Atk / 2 Def
+Adamant Nature
+- Swords Dance
+- Leech Life
+- Liquidation
+- Iron Head
+
+Rillaboom @ Miracle Seed
+Ability: Grassy Surge
+Level: 50
+EVs: 32 HP / 5 Atk / 29 SpD
+Adamant Nature
+- Fake Out
+- Grassy Glide
+- Wood Hammer
+- U-turn
+
+Farigiraf @ Colbur Berry
+Ability: Armor Tail
+Level: 50
+EVs: 25 HP / 26 Def / 15 SpD
+Bold Nature
+- Trick Room
+- Twin Beam
+- Protect
+- Imprison
+
+Archaludon @ Leftovers
+Ability: Stamina
+Level: 50
+EVs: 32 HP / 1 Def / 2 SpA / 20 SpD / 11 Spe
+Modest Nature
+- Electro Shot
+- Protect
+- Dragon Pulse
+- Flash Cannon

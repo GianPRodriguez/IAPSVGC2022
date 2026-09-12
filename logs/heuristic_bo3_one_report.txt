@@ -1,0 +1,13 @@
+=== Heuristic vs Random — 1x BO3 ===
+time_utc: 2026-09-12T18:01:01.102057+00:00
+format: gen9championsvgc2026regmc
+ps_up: True
+pair: #1st - Forblaze at SNT Reg M-C (heuristic) vs #1st - SableyeVGC at r/VGC Regulation (random)
+games_requested: 3
+games_finished: 3
+heuristic_wins: 3
+random_wins: 0
+elapsed_s: 4.4
+preview_last: 1356
+error: -
+verdict: heuristic

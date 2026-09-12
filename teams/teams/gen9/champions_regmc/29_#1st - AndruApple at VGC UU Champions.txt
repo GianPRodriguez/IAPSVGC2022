@@ -1,0 +1,59 @@
+Charizard @ Charizardite X
+Ability: Tough Claws
+Level: 50
+EVs: 2 HP / 32 Atk / 32 Spe
+Adamant Nature
+- Flare Blitz
+- Breaking Swipe
+- Roost
+- Protect
+
+Empoleon @ Sitrus Berry
+Ability: Competitive
+Level: 50
+EVs: 32 HP / 2 Atk / 32 SpA
+Modest Nature
+- Hydro Pump
+- Flash Cannon
+- Icy Wind
+- Protect
+
+Meowscarada @ Choice Scarf
+Ability: Protean
+Level: 50
+EVs: 25 HP / 27 Atk / 7 SpD / 7 Spe
+Adamant Nature
+- Flower Trick
+- Knock Off
+- Triple Axel
+- Low Kick
+
+Glimmora @ Focus Sash
+Ability: Toxic Debris
+Level: 50
+EVs: 1 HP / 1 Def / 32 SpA / 32 Spe
+Timid Nature
+- Power Gem
+- Sludge Bomb
+- Earth Power
+- Spiky Shield
+
+Sylveon @ Fairy Feather
+Ability: Pixilate
+Level: 50
+EVs: 32 HP / 2 Atk / 32 SpA
+Modest Nature
+- Hyper Voice
+- Hyper Beam
+- Quick Attack
+- Detect
+
+Dragonite @ Dragon Fang
+Ability: Inner Focus
+Level: 50
+EVs: 31 HP / 32 Atk / 3 SpD
+Adamant Nature
+- Scale Shot
+- Stomping Tantrum
+- Tailwind
+- Protect

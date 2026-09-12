@@ -1,0 +1,362 @@
+[
+  {
+    "species": "Rillaboom",
+    "count": 62,
+    "pct": 62.0
+  },
+  {
+    "species": "Sneasler",
+    "count": 49,
+    "pct": 49.0
+  },
+  {
+    "species": "Salamence",
+    "count": 46,
+    "pct": 46.0
+  },
+  {
+    "species": "Basculegion",
+    "count": 32,
+    "pct": 32.0
+  },
+  {
+    "species": "Floette-Eternal",
+    "count": 30,
+    "pct": 30.0
+  },
+  {
+    "species": "Kingambit",
+    "count": 30,
+    "pct": 30.0
+  },
+  {
+    "species": "Incineroar",
+    "count": 25,
+    "pct": 25.0
+  },
+  {
+    "species": "Pelipper",
+    "count": 23,
+    "pct": 23.0
+  },
+  {
+    "species": "Arcanine-Hisui",
+    "count": 22,
+    "pct": 22.0
+  },
+  {
+    "species": "Archaludon",
+    "count": 22,
+    "pct": 22.0
+  },
+  {
+    "species": "Golisopod",
+    "count": 22,
+    "pct": 22.0
+  },
+  {
+    "species": "Gholdengo",
+    "count": 21,
+    "pct": 21.0
+  },
+  {
+    "species": "Indeedee-F",
+    "count": 17,
+    "pct": 17.0
+  },
+  {
+    "species": "Swampert",
+    "count": 12,
+    "pct": 12.0
+  },
+  {
+    "species": "Charizard",
+    "count": 11,
+    "pct": 11.0
+  },
+  {
+    "species": "Farigiraf",
+    "count": 11,
+    "pct": 11.0
+  },
+  {
+    "species": "Grimmsnarl",
+    "count": 10,
+    "pct": 10.0
+  },
+  {
+    "species": "Whimsicott",
+    "count": 10,
+    "pct": 10.0
+  },
+  {
+    "species": "Armarouge",
+    "count": 8,
+    "pct": 8.0
+  },
+  {
+    "species": "Baxcalibur",
+    "count": 8,
+    "pct": 8.0
+  },
+  {
+    "species": "Milotic",
+    "count": 7,
+    "pct": 7.0
+  },
+  {
+    "species": "Raichu",
+    "count": 7,
+    "pct": 7.0
+  },
+  {
+    "species": "Sylveon",
+    "count": 7,
+    "pct": 7.0
+  },
+  {
+    "species": "Froslass",
+    "count": 6,
+    "pct": 6.0
+  },
+  {
+    "species": "Pawmot",
+    "count": 6,
+    "pct": 6.0
+  },
+  {
+    "species": "Sinistcha",
+    "count": 6,
+    "pct": 6.0
+  },
+  {
+    "species": "Toxapex",
+    "count": 5,
+    "pct": 5.0
+  },
+  {
+    "species": "Venusaur",
+    "count": 5,
+    "pct": 5.0
+  },
+  {
+    "species": "Annihilape",
+    "count": 4,
+    "pct": 4.0
+  },
+  {
+    "species": "Delphox",
+    "count": 4,
+    "pct": 4.0
+  },
+  {
+    "species": "Dragonite",
+    "count": 4,
+    "pct": 4.0
+  },
+  {
+    "species": "Excadrill",
+    "count": 4,
+    "pct": 4.0
+  },
+  {
+    "species": "Garchomp",
+    "count": 4,
+    "pct": 4.0
+  },
+  {
+    "species": "Tyranitar",
+    "count": 4,
+    "pct": 4.0
+  },
+  {
+    "species": "Volcarona",
+    "count": 4,
+    "pct": 4.0
+  },
+  {
+    "species": "Aerodactyl",
+    "count": 3,
+    "pct": 3.0
+  },
+  {
+    "species": "Glimmora",
+    "count": 3,
+    "pct": 3.0
+  },
+  {
+    "species": "Staraptor",
+    "count": 3,
+    "pct": 3.0
+  },
+  {
+    "species": "Absol",
+    "count": 2,
+    "pct": 2.0
+  },
+  {
+    "species": "Blastoise",
+    "count": 2,
+    "pct": 2.0
+  },
+  {
+    "species": "Camerupt",
+    "count": 2,
+    "pct": 2.0
+  },
+  {
+    "species": "Gardevoir",
+    "count": 2,
+    "pct": 2.0
+  },
+  {
+    "species": "Gengar",
+    "count": 2,
+    "pct": 2.0
+  },
+  {
+    "species": "Lucario",
+    "count": 2,
+    "pct": 2.0
+  },
+  {
+    "species": "Metagross",
+    "count": 2,
+    "pct": 2.0
+  },
+  {
+    "species": "Primarina",
+    "count": 2,
+    "pct": 2.0
+  },
+  {
+    "species": "Tinkaton",
+    "count": 2,
+    "pct": 2.0
+  },
+  {
+    "species": "Aegislash",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Aggron",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Araquanid",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Blaziken",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Chandelure",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Crabominable",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Empoleon",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Gallade",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Hatterene",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Heracross",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Hydreigon",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Kleavor",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Maushold",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Meowscarada",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Mr-Mime",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Ninetales-Alola",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Pincurchin",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Politoed",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Sableye",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Samurott-Hisui",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Scrafty",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Snorlax",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Torkoal",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Tsareena",
+    "count": 1,
+    "pct": 1.0
+  },
+  {
+    "species": "Vivillon",
+    "count": 1,
+    "pct": 1.0
+  }
+]

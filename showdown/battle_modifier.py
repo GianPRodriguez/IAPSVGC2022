@@ -24,8 +24,11 @@ def _parse_hp_and_status_from_switch(hp_status_str: str):
       '62/100 brn'    -> (62, 100, {'brn': True})
       '0 fnt'         -> (0, 0, {})
       '0/100'         -> (0, 0, {})
+    Retorna hpa=-1 si la condición está ausente/ilegible (no forzar KO).
     """
-    hp_status_str = hp_status_str.strip()
+    hp_status_str = (hp_status_str or '').strip()
+    if not hp_status_str:
+        return -1, -1, {}
 
     # Debilitado: '0 fnt', '0/100', o exactamente '0'
     if (
@@ -55,7 +58,22 @@ def _parse_hp_and_status_from_switch(hp_status_str: str):
 
         return hpa_val, hpb_val, non_volatile_dict
 
-    return 0, 0, {}
+    return -1, -1, {}
+
+
+def _apply_switch_condition(pkmn, hpa_val: int, hpb_val: int, new_non_volatile) -> None:
+    """Aplica HP/estado del |switch|/|drag| y sincroniza is_fainted."""
+    if hpb_val > 0:
+        pkmn.HPB_battle_base = hpb_val
+    if hpa_val > 0:
+        pkmn.HPA_battle_actual = hpa_val
+        pkmn.is_fainted = False
+    elif hpa_val == 0:
+        pkmn.HPA_battle_actual = 0
+        pkmn.is_fainted = True
+    # hpa_val < 0 → condición desconocida: no tocar faint/HP
+    if new_non_volatile:
+        pkmn.non_volatile_statuses = new_non_volatile
 
 
 # Estados mayores mutuamente excluyentes en Showdown / Pokémon.
@@ -66,9 +84,13 @@ def _canonical_species_name(name: str) -> str:
     if not name:
         return ''
 
-    normalized = normalize_name(str(name)).lower().replace(' ', '-')
+    normalized = normalize_name(str(name)).lower().replace(' ', '-').replace('.', '')
     if normalized.startswith('zoroark'):
         return 'zoroark'
+    # Mr. Mime / Mime Jr. / Mr. Rime
+    compact = normalized.replace('-', '')
+    if compact in ('mrmime', 'mimejr', 'mrrime'):
+        return compact
     return normalized
 
 
@@ -102,6 +124,15 @@ def _active_status_keys(status_dict) -> set:
 def _mega_forme_ability(forme_name: str) -> str:
     key = _canonical_species_name(forme_name)
     return MEGA_FORME_ABILITIES.get(key, '')
+
+
+def _count_side_fainted(side) -> int:
+    """Cuántos del party (activos+reserva) están fainted — Last Respects / Supreme Overlord."""
+    n = 0
+    for p in _iter_side_pokemon(side, include_opponents=False):
+        if getattr(p, 'is_fainted', False) or int(getattr(p, 'HPA_battle_actual', 1) or 0) <= 0:
+            n += 1
+    return n
 
 
 def _iter_side_pokemon(side, include_opponents: bool = False):
@@ -331,6 +362,8 @@ def _clear_reserve_effects(pkmn: Pokemon) -> Pokemon:
     pkmn.is_drowsy = False
     pkmn.perish_count = 0
     _clear_all_field_temp_flags(pkmn)
+    pkmn.ability_on = False
+    pkmn.just_switched = False
     # Illusion: el disfraz solo aplica mientras está en campo
     pkmn.illusion_disguise = None
     pkmn.illusion_protocol_revealed = False
@@ -354,8 +387,10 @@ _PROTECT_SINGLETURN = frozenset(getattr(
 _HELPING_HAND_IDS = frozenset({'helpinghand'})
 _DESTINY_BOND_IDS = frozenset({'destinybond'})
 _CHARGE_IDS = frozenset({'charge'})
+_REDIRECT_SINGLETURN = frozenset({'followme', 'ragepowder', 'spotlight'})
 _EPHEMERAL_TURN_VOLATILES = (
-    _PROTECT_SINGLETURN | _HELPING_HAND_IDS | frozenset({'roost', 'focuspunch', 'beakblast', 'shelltrap'})
+    _PROTECT_SINGLETURN | _HELPING_HAND_IDS | _REDIRECT_SINGLETURN
+    | frozenset({'roost', 'focuspunch', 'beakblast', 'shelltrap'})
 )
 
 # Moves Eléctricos (Champions/gen9) para consumir Charge. Preferible a moves.json
@@ -424,16 +459,27 @@ def _clear_ephemeral_turn_flags(pkmn: Pokemon) -> None:
     """Protect / Helping Hand / roost-like: mueren al cerrar el turno."""
     if pkmn is None:
         return
+    had_roost = False
+    vs = getattr(pkmn, 'volatile_statuses', None)
+    if isinstance(vs, (dict, defaultdict)):
+        had_roost = bool(vs.get('roost'))
     pkmn.is_protected = False
     pkmn.is_helping_hand = False
-    vs = getattr(pkmn, 'volatile_statuses', None)
+    pkmn.is_redirecting = False
     if isinstance(vs, (dict, defaultdict)):
         for key in list(vs.keys()):
             if key in _EPHEMERAL_TURN_VOLATILES:
                 vs.pop(key, None)
+    if had_roost:
+        try:
+            from API.PokemonData import getPkmnInfo
+            t1, t2, *_rest = getPkmnInfo(pkmn.name)
+            pkmn.type1, pkmn.type2 = t1, t2
+        except Exception:
+            pass
 
 
-def _clear_all_field_temp_flags(pkmn: Pokemon) -> None:
+def _clear_all_field_temp_flags(pkmn: Pokemon, *, entering: bool = False) -> None:
     """Limpia Protect/HH/Destiny/Charge al entrar, salir o faint."""
     if pkmn is None:
         return
@@ -443,6 +489,9 @@ def _clear_all_field_temp_flags(pkmn: Pokemon) -> None:
     if isinstance(getattr(pkmn, 'volatile_statuses', None), (dict, defaultdict)):
         pkmn.volatile_statuses.pop('destinybond', None)
         pkmn.volatile_statuses.pop('charge', None)
+    if entering:
+        pkmn.ability_on = False
+        pkmn.just_switched = True
 
 
 def _clear_all_ephemeral_turn_flags(battle: Battle) -> None:
@@ -514,6 +563,78 @@ def _ally_has_friend_guard(side, defender) -> bool:
     return False
 
 
+def _ally_has_ability(side, self_mon, ability_ids) -> bool:
+    want = {normalize_name(a) for a in ability_ids}
+    for attr in ('active1', 'active2'):
+        ally = getattr(side, attr, None)
+        if ally is None or ally is self_mon:
+            continue
+        if getattr(ally, 'is_fainted', False) or int(getattr(ally, 'HPA_battle_actual', 0) or 0) <= 0:
+            continue
+        if normalize_name(getattr(ally, 'abilityPkmn', '') or '') in want:
+            return True
+    return False
+
+
+def _active_has_ability(battle: Battle, ability_ids) -> bool:
+    want = {normalize_name(a) for a in ability_ids}
+    for side in (battle.user, battle.opponent):
+        for attr in ('active1', 'active2'):
+            mon = getattr(side, attr, None)
+            if mon is None:
+                continue
+            if getattr(mon, 'is_fainted', False) or int(getattr(mon, 'HPA_battle_actual', 0) or 0) <= 0:
+                continue
+            if normalize_name(getattr(mon, 'abilityPkmn', '') or '') in want:
+                return True
+    return False
+
+
+def _live_types(pkmn) -> Optional[list]:
+    if pkmn is None:
+        return None
+    t1 = getattr(pkmn, 'type1', None)
+    t2 = getattr(pkmn, 'type2', None)
+    out = [str(t) for t in (t1, t2) if t]
+    return out or None
+
+
+def _apply_typechange(pkmn, raw_types: str) -> None:
+    if pkmn is None or not raw_types:
+        return
+    parts = [p for p in re.split(r'[/,\s]+', str(raw_types).strip()) if p]
+    if not parts:
+        return
+    pkmn.type1 = parts[0]
+    pkmn.type2 = parts[1] if len(parts) > 1 else None
+
+
+def _strip_flying_for_roost(pkmn) -> None:
+    if pkmn is None:
+        return
+    for attr in ('type1', 'type2'):
+        if str(getattr(pkmn, attr, '') or '').lower() == 'flying':
+            setattr(pkmn, attr, None)
+    if pkmn.type1 is None and pkmn.type2 is not None:
+        pkmn.type1, pkmn.type2 = pkmn.type2, None
+    if pkmn.type1 is None and pkmn.type2 is None:
+        pkmn.type1 = 'Normal'
+
+
+def _ability_on_for_calc(pkmn, *, side=None, foe=None) -> bool:
+    """Valor abilityOn que espera @smogon/calc para esta habilidad."""
+    if pkmn is None:
+        return False
+    abi = normalize_name(getattr(pkmn, 'abilityPkmn', '') or '')
+    if abi in ('flashfire', 'slowstart', 'electromorphosis'):
+        return bool(getattr(pkmn, 'ability_on', False))
+    if abi in ('plus', 'minus') and side is not None:
+        return _ally_has_ability(side, pkmn, ('plus', 'minus'))
+    if abi == 'stakeout' and foe is not None:
+        return bool(getattr(foe, 'just_switched', False))
+    return bool(getattr(pkmn, 'ability_on', False))
+
+
 def _hp_fraction_before_hit(pkmn) -> Optional[float]:
     """Fracción de HP del defensor antes del golpe (Multiscale)."""
     try:
@@ -529,10 +650,25 @@ def _hp_fraction_before_hit(pkmn) -> Optional[float]:
     return max(0.0, min(1.0, cur / mx))
 
 
+def _set_redirecting(pkmn: Pokemon, value: bool, volatile_id: str = 'followme') -> None:
+    if pkmn is None:
+        return
+    pkmn.is_redirecting = bool(value)
+    if not isinstance(getattr(pkmn, 'volatile_statuses', None), (dict, defaultdict)):
+        pkmn.volatile_statuses = defaultdict(lambda: 0)
+    if value:
+        # Solo un redirector efectivo por bando: limpia aliado.
+        pkmn.volatile_statuses[volatile_id] = True
+    else:
+        for key in list(_REDIRECT_SINGLETURN):
+            pkmn.volatile_statuses.pop(key, None)
+
+
 def singleturn(battle: Battle, split_msg: list) -> Battle:
     # |-singleturn|p1a: Primarina|Protect
     # |-singleturn|p1a: Manectric|Helping Hand
     # |-singleturn|p2a: Talonflame|Roost
+    # |-singleturn|p1b: Indeedee|Follow Me
     if len(split_msg) < 4:
         return battle
 
@@ -551,11 +687,22 @@ def singleturn(battle: Battle, split_msg: list) -> Battle:
     if effect_id in _CHARGE_IDS:
         _set_charged(pkmn, True)
         return battle
+    if effect_id in _REDIRECT_SINGLETURN:
+        # Nuevo Follow Me / Rage Powder: este mon redirige; limpia el otro activo.
+        side = battle.opponent if getattr(pkmn, 'is_opponent', False) else battle.user
+        for attr in ('active1', 'active2'):
+            other = getattr(side, attr, None)
+            if other is not None and other is not pkmn:
+                _set_redirecting(other, False)
+        _set_redirecting(pkmn, True, effect_id)
+        return battle
 
     # Otros singleturn (Roost, Focus Punch…): solo registro en volatiles.
     if not isinstance(getattr(pkmn, 'volatile_statuses', None), (dict, defaultdict)):
         pkmn.volatile_statuses = defaultdict(lambda: 0)
     pkmn.volatile_statuses[effect_id] = True
+    if effect_id == 'roost':
+        _strip_flying_for_roost(pkmn)
     return battle
 
 
@@ -887,15 +1034,11 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
             # PS sigue mostrando namePkmn (disfraz); guardamos para reporte dual
             new_active.illusion_disguise = _base_species_name(namePkmn)
             new_active.illusion_protocol_revealed = False
-            new_active.HPA_battle_actual = hpa_val if hpa_val > 0 else new_active.HPA_battle_actual
-            if hpb_val > 0:
-                new_active.HPB_battle_base = hpb_val
-            if new_non_volatile:
-                new_active.non_volatile_statuses = new_non_volatile
+            _apply_switch_condition(new_active, hpa_val, hpb_val, new_non_volatile)
             new_active.volatile_statuses = defaultdict(lambda: 0)
             new_active.boosts = defaultdict(lambda: 0)
             new_active.is_drowsy = False
-            _clear_all_field_temp_flags(new_active)
+            _clear_all_field_temp_flags(new_active, entering=True)
             new_active.perish_count = 0
 
             if is_active1:
@@ -930,17 +1073,13 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
             pkmn_from_reserved = side.reserved[found_in_reserved_idx]
             new_active = deepcopy(pkmn_from_reserved)
             
-            # AUTORIDAD DEL LOG: Actualizamos HP y Estado no Volátil con la info del mensaje
-            new_active.HPA_battle_actual = hpa_val if hpa_val > 0 else new_active.HPA_battle_actual
-            if hpb_val > 0:
-                new_active.HPB_battle_base = hpb_val
-            if new_non_volatile:
-                new_active.non_volatile_statuses = new_non_volatile
+            # AUTORIDAD DEL LOG: HP / faint / status del mensaje de switch
+            _apply_switch_condition(new_active, hpa_val, hpb_val, new_non_volatile)
 
             new_active.volatile_statuses = defaultdict(lambda: 0)
             new_active.boosts = defaultdict(lambda: 0)
             new_active.is_drowsy = False
-            _clear_all_field_temp_flags(new_active)
+            _clear_all_field_temp_flags(new_active, entering=True)
             new_active.perish_count = 0
 
             if is_active1:
@@ -964,17 +1103,13 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                     new_active = deepcopy(pkmn)
                     new_active.name = namePkmn
                     
-                    # AUTORIDAD DEL LOG: Asignamos HP y Estado no Volátil traídos por el switch
-                    new_active.HPA_battle_actual = hpa_val if hpa_val > 0 else getattr(pkmn, 'HPA_battle_actual', 0)
-                    if hpb_val > 0:
-                        new_active.HPB_battle_base = hpb_val
-                    if new_non_volatile:
-                        new_active.non_volatile_statuses = new_non_volatile
+                    # AUTORIDAD DEL LOG: HP / faint / status del mensaje de switch
+                    _apply_switch_condition(new_active, hpa_val, hpb_val, new_non_volatile)
 
                     new_active.volatile_statuses = defaultdict(lambda: 0)
                     new_active.boosts = defaultdict(lambda: 0)
                     new_active.is_drowsy = False
-                    _clear_all_field_temp_flags(new_active)
+                    _clear_all_field_temp_flags(new_active, entering=True)
                     new_active.perish_count = 0
 
                     # Confirmación del Pokémon
@@ -1019,10 +1154,17 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                 
                 new_active = deepcopy(pkmn)
                 new_active.name = namePkmn
+                # Switch propio: el request suele traer HP exacto en el mismo frame;
+                # si el log trae condición, aplicarla; si no, asegurar no-fainted al entrar.
+                if len(split_msg) > 4:
+                    hpa_u, hpb_u, nvs_u = _parse_hp_and_status_from_switch(split_msg[4].strip())
+                    _apply_switch_condition(new_active, hpa_u, hpb_u, nvs_u)
+                else:
+                    new_active.is_fainted = False
                 new_active.volatile_statuses = defaultdict(lambda: 0)
                 new_active.boosts = defaultdict(lambda: 0)
                 new_active.is_drowsy = False
-                _clear_all_field_temp_flags(new_active)
+                _clear_all_field_temp_flags(new_active, entering=True)
                 new_active.perish_count = 0
 
                 if is_active1:
@@ -1313,6 +1455,10 @@ def start_volatile_status(battle: Battle, split_msg: list) -> Battle:
             _set_helping_hand(pkmn, True)
         elif volatile_status in _PROTECT_SINGLETURN:
             _set_protected(pkmn, True, volatile_status)
+        elif volatile_status in ('flashfire', 'slowstart', 'electromorphosis'):
+            pkmn.ability_on = True
+        elif volatile_status == 'typechange' and len(split_msg) > 4:
+            _apply_typechange(pkmn, split_msg[4].strip())
 
     return battle
 
@@ -1355,6 +1501,10 @@ def end_volatile_status(battle: Battle, split_msg: list) -> Battle:
             _set_destiny_bonded(pkmn, False)
         if volatile_status in _CHARGE_IDS:
             _set_charged(pkmn, False)
+        if volatile_status in ('flashfire', 'slowstart', 'electromorphosis'):
+            pkmn.ability_on = False
+        if volatile_status in _REDIRECT_SINGLETURN:
+            _set_redirecting(pkmn, False)
 
     return battle
 
@@ -1634,16 +1784,28 @@ def weather(battle: Battle, split_msg: list) -> Battle:
     return battle
 
 
+# Solo uno de estos cuatro a la vez. Rooms (trickroom/wonderroom) sí pueden
+# coexistir entre sí y con un terreno.
+_EXCLUSIVE_TERRAINS = frozenset({
+    'electricterrain', 'grassyterrain', 'mistyterrain', 'psychicterrain',
+})
+
+
 ############################################################################################################################################################
-# OK - Inicio de Terreno, incluye Trick Room, puede haber varios terrenos a la vez                                                                       ###
+# OK - Inicio de Terreno / Room (Trick/Wonder). Terrenos exclusivos se reemplazan.                                                                       ###
 ############################################################################################################################################################
 def fieldstart(battle: Battle, split_msg: list) -> Battle:
     # |-fieldstart|move: Wonder Room|[of] p1b: Starmie
     # |-fieldstart|move: Electric Terrain
     # |-fieldstart|move: Trick Room|[of] p2b: Farigiraf
+    # PS a veces no manda -fieldend del terreno anterior antes del nuevo.
 
     raw_field = split_msg[2].split(':')[-1].strip()
     field_name = normalize_name(raw_field)
+    if field_name in _EXCLUSIVE_TERRAINS:
+        for other in _EXCLUSIVE_TERRAINS:
+            if other != field_name:
+                battle.terrain.pop(other, None)
     battle.terrain[field_name] = 5
 
     return battle
@@ -1757,6 +1919,10 @@ def remove_item(battle: Battle, split_msg: list) -> Battle:
         return battle
 
     item_name = normalize_name(split_msg[3].strip()) if len(split_msg) > 3 else ''
+
+    # Focus Sash/Band: el |-damage| siguiente NO es un roll completo (queda a 1 HP).
+    if item_name in ('focussash', 'focusband'):
+        battle.pending_damage_sash = True
 
     # Determinamos a qué bando y Pokémon activo pertenece la pérdida del objeto
     side = battle.opponent if is_opponent(battle, split_msg) else battle.user
@@ -1979,7 +2145,7 @@ def mega(battle: Battle, split_msg: list) -> Battle:
     # |-mega|p2a: Blastoise|Blastoise|Blastoisinite
     # |-mega|p1b: Charizard|Charizard|Charizardite Y
     # La forma y stats definitivas suelen llegar justo después en |detailschange|.
-    
+
     # Validamos que el mensaje tenga la estructura esperada
     if len(split_msg) < 3:
         return battle
@@ -2006,6 +2172,27 @@ def mega(battle: Battle, split_msg: list) -> Battle:
             if mega_ability:
                 pkmn.abilityPkmn = mega_ability
 
+    return battle
+
+
+############################################################################################################################################################
+# OK - Terastallize (Champions / gen9)                                                                                                                    ###
+############################################################################################################################################################
+def terastallize(battle: Battle, split_msg: list) -> Battle:
+    # |-terastallize|p1a: Incineroar|Fire
+    # |-terastallize|p2b: Rillaboom|Grass
+    if len(split_msg) < 4:
+        return battle
+    pkmn = _resolve_active_from_ident(battle, split_msg[2].strip())
+    if pkmn is None:
+        return battle
+    tera = split_msg[3].strip()
+    if tera:
+        pkmn.tera_type = tera
+        pkmn.is_terastallized = True
+        # Tipo efectivo para el calc mientras está terastallizado.
+        pkmn.type1 = tera
+        pkmn.type2 = None
     return battle
 
 
@@ -2049,6 +2236,47 @@ def clearboost(battle: Battle, split_msg: list) -> Battle:
     if pkmn and hasattr(pkmn, 'boosts'):
         # Limpiamos todos los boosts acumulados (vuelven a 0)
         pkmn.boosts.clear()
+
+    return battle
+
+
+############################################################################################################################################################
+# OK - Solo limpia boosts negativos (White Herb → |-clearnegativeboost|)                                                                                 ###
+############################################################################################################################################################
+def clearnegativeboost(battle: Battle, split_msg: list) -> Battle:
+    # |-clearnegativeboost|p1a: Salamence|[silent]
+    # |-clearnegativeboost|p2b: Incineroar|[from] item: White Herb
+    if len(split_msg) < 3:
+        return battle
+
+    side = battle.opponent if is_opponent(battle, split_msg) else battle.user
+    slot_str = split_msg[2].split(':')[0].strip()
+    pkmn = side.active1 if slot_str.endswith('a') else side.active2
+
+    if pkmn and hasattr(pkmn, 'boosts'):
+        for key, val in list(pkmn.boosts.items()):
+            if int(val or 0) < 0:
+                pkmn.boosts[key] = 0
+
+    return battle
+
+
+############################################################################################################################################################
+# OK - Solo limpia boosts positivos (Mirror Herb / similares → |-clearpositiveboost|)                                                                    ###
+############################################################################################################################################################
+def clearpositiveboost(battle: Battle, split_msg: list) -> Battle:
+    # |-clearpositiveboost|p1a: Pokemon|[from] item: Mirror Herb  (raro; paridad PS)
+    if len(split_msg) < 3:
+        return battle
+
+    side = battle.opponent if is_opponent(battle, split_msg) else battle.user
+    slot_str = split_msg[2].split(':')[0].strip()
+    pkmn = side.active1 if slot_str.endswith('a') else side.active2
+
+    if pkmn and hasattr(pkmn, 'boosts'):
+        for key, val in list(pkmn.boosts.items()):
+            if int(val or 0) > 0:
+                pkmn.boosts[key] = 0
 
     return battle
 
@@ -2204,6 +2432,13 @@ def activate(battle: Battle, split_msg: list) -> Battle:
             )
         return battle
 
+    # Flash Fire / Electromorphosis: |-activate|pXa: Mon|ability: Flash Fire
+    if 'flash fire' in trigger_effect or 'electromorphosis' in trigger_effect:
+        pkmn = _resolve_active_from_ident(battle, split_msg[2].strip())
+        if pkmn is not None:
+            pkmn.ability_on = True
+        return battle
+
     # --- Guard Split: promediar Def / SpD (PS solo manda -activate, sin números) ---
     if 'guard split' in trigger_effect:
         source = _resolve_active_from_ident(battle, split_msg[2].strip())
@@ -2221,6 +2456,10 @@ def activate(battle: Battle, split_msg: list) -> Battle:
     # el pending entero (los otros hits del spread sí aportan SP).
     if any(pid in normalize_name(trigger_effect) for pid in _PROTECT_SINGLETURN):
         return battle
+
+    # Sturdy / Disguise: daño truncado como Focus Sash.
+    if 'sturdy' in trigger_effect or 'disguise' in trigger_effect:
+        battle.pending_damage_sash = True
 
     return battle
 
@@ -2244,6 +2483,7 @@ def turn(battle: Battle, split_msg: list) -> Battle:
     battle.turn_speed_snapshot = None
     battle.pending_damage_ctx = None
     battle.pending_crit_target = None
+    battle.pending_damage_sash = False
 
     # Decremento de duraciones globales del campo de batalla
     if new_turn > 1 and battle.weatherTurn > 1:
@@ -2273,6 +2513,13 @@ def turn(battle: Battle, split_msg: list) -> Battle:
     # Protect / Helping Hand / roost: solo viven dentro del turno que termina.
     # Destiny Bond y Charge NO se limpian aquí (cruzan |turn| hasta move/switch).
     _clear_all_ephemeral_turn_flags(battle)
+
+    # Stakeout: just_switched solo vale el turno de entrada.
+    for side in (battle.user, battle.opponent):
+        for attr in ('active1', 'active2'):
+            mon = getattr(side, attr, None)
+            if mon is not None:
+                mon.just_switched = False
 
     return battle
 
@@ -2380,9 +2627,10 @@ def _record_action_for_speed(battle: Battle, split_msg: list) -> None:
     Anota que un Pokémon acaba de actuar y, contra lo ya anotado en este turno,
     estrecha la velocidad del rival.
 
-    Showdown fija el orden al comienzo del turno, así que solo son comparables
-    las velocidades de ese instante: el contexto se congela en el primer |move|
-    del turno, cuando los cambios ya se resolvieron y ningún efecto se aplicó.
+    El contexto de velocidad se toma en el instante de cada |move| (no al inicio
+    del turno): Tailwind / Trick Room aplicados mid-turn sí afectan a los que
+    actúan después, y congelar el snapshot del primer move excluye Spe reales
+    (p.ej. Kingambit 71 bajo TW del aliado vs Archaludon 104).
     """
     tags = ' '.join(split_msg[4:]).lower()
 
@@ -2407,31 +2655,24 @@ def _record_action_for_speed(battle: Battle, split_msg: list) -> None:
         return
 
     ability = getattr(pkmn, 'abilityPkmn', None)
-    priority = move_priority(split_msg[3].strip(), ability)
+    # Terreno activo (Grassy Glide +1 bajo Grassy Terrain).
+    active_terrain = None
+    for terr_name, turns in (battle.terrain or {}).items():
+        if terr_name in ('trickroom', 'wonderroom', 'magicroom'):
+            continue
+        if int(turns or 0) > 0:
+            active_terrain = terr_name
+            break
+    priority = move_priority(split_msg[3].strip(), ability, active_terrain)
     if priority is None:
         return  # movimiento desconocido: mejor no asumir prioridad 0
 
-    # Congelamos el contexto en el primer movimiento del turno.
+    # Marca de turno iniciado (para limpiar en |turn|); ya no congelamos TW/TR.
     if not battle.turn_actions:
-        battle.turn_speed_snapshot = {
-            'trickroom': int(battle.terrain.get('trickroom', 0) or 0) > 0,
-            'contexts': {},
-        }
-        for slot_side, tag in ((battle.user, battle.user.id), (battle.opponent, battle.opponent.id)):
-            for suffix, attr in (('a', 'active1'), ('b', 'active2')):
-                active = getattr(slot_side, attr, None)
-                if active is not None:
-                    battle.turn_speed_snapshot['contexts'][f'{tag}{suffix}'] = (
-                        _speed_context_for(battle, slot_side, active)
-                    )
+        battle.turn_speed_snapshot = {'live': True}
 
-    snapshot = battle.turn_speed_snapshot or {}
-    contexts = snapshot.get('contexts', {})
-    trick_room = bool(snapshot.get('trickroom'))
-
-    ctx = contexts.get(slot_str)
-    if ctx is None:
-        return
+    ctx = _speed_context_for(battle, side, pkmn)
+    trick_room = int(battle.terrain.get('trickroom', 0) or 0) > 0
 
     current = {
         'slot': slot_str,
@@ -2439,6 +2680,7 @@ def _record_action_for_speed(battle: Battle, split_msg: list) -> None:
         'pkmn': pkmn,
         'priority': priority,
         'ctx': ctx,
+        'trick_room': trick_room,
     }
 
     for earlier in battle.turn_actions:
@@ -2446,6 +2688,10 @@ def _record_action_for_speed(battle: Battle, split_msg: list) -> None:
         if earlier['is_opponent'] == from_opponent:
             continue
         if earlier['priority'] != priority:
+            continue
+        # Si Trick Room se activó/desactivó entre las dos acciones, el orden
+        # ya no es comparable con una sola regla.
+        if bool(earlier.get('trick_room')) != trick_room:
             continue
 
         if earlier['is_opponent']:
@@ -2581,6 +2827,19 @@ def _build_hit_damage_context(
     frac = defender_hp_fraction
     if frac is None:
         frac = _hp_fraction_before_hit(defender)
+
+    atk_side = battle.opponent if getattr(attacker, 'is_opponent', False) else battle.user
+    if attacker is battle.opponent.active1 or attacker is battle.opponent.active2:
+        atk_side = battle.opponent
+    elif attacker is battle.user.active1 or attacker is battle.user.active2:
+        atk_side = battle.user
+
+    sun = normalize_name(str(weather or '')) in ('sunnyday', 'desolateland')
+    flower = (
+        normalize_name(getattr(attacker, 'abilityPkmn', '') or '') == 'flowergift'
+        or _ally_has_ability(atk_side, attacker, ('flowergift',))
+    ) and sun
+
     return DamageContext(
         atk_boost=_boost_val(attacker, constants.ATTACK),
         def_boost=_boost_val(defender, constants.DEFENSE),
@@ -2595,6 +2854,8 @@ def _build_hit_damage_context(
         weather=weather,
         terrain=_active_terrain_name(battle),
         wonder_room=int(battle.terrain.get('wonderroom', 0) or 0) > 0,
+        magic_room=int(battle.terrain.get('magicroom', 0) or 0) > 0,
+        gravity=int(battle.terrain.get('gravity', 0) or 0) > 0,
         reflect=_side_has(def_side, 'reflect') and not has_aurora,
         light_screen=_side_has(def_side, 'lightscreen') and not has_aurora,
         aurora_veil=has_aurora,
@@ -2604,6 +2865,27 @@ def _build_hit_damage_context(
         is_spread=is_spread,
         is_crit=False,
         defender_hp_fraction=frac,
+        attacker_ability_on=_ability_on_for_calc(attacker, side=atk_side, foe=defender),
+        defender_ability_on=_ability_on_for_calc(defender, side=def_side, foe=attacker),
+        attacker_types=_live_types(attacker),
+        defender_types=_live_types(defender),
+        attacker_tera=(
+            getattr(attacker, 'tera_type', None)
+            if getattr(attacker, 'is_terastallized', False) else None
+        ),
+        defender_tera=(
+            getattr(defender, 'tera_type', None)
+            if getattr(defender, 'is_terastallized', False) else None
+        ),
+        is_battery=_ally_has_ability(atk_side, attacker, ('battery',)),
+        is_power_spot=_ally_has_ability(atk_side, attacker, ('powerspot',)),
+        is_steely_spirit=_ally_has_ability(atk_side, attacker, ('steelyspirit',)),
+        is_flower_gift=flower,
+        is_beads_of_ruin=_active_has_ability(battle, ('beadsofruin',)),
+        is_sword_of_ruin=_active_has_ability(battle, ('swordofruin',)),
+        is_tablets_of_ruin=_active_has_ability(battle, ('tabletsofruin',)),
+        is_vessel_of_ruin=_active_has_ability(battle, ('vesselofruin',)),
+        attacker_allies_fainted=_count_side_fainted(atk_side),
     )
 
 
@@ -2647,6 +2929,7 @@ def _set_pending_damage_from_move(battle: Battle, split_msg: list) -> None:
 
     # Nuevo golpe: limpia crits del move anterior.
     battle.pending_crit_target = None
+    battle.pending_damage_sash = False
     is_spread = _move_is_spread(move_name, tags)
 
     battle.pending_damage_ctx = {
@@ -2667,6 +2950,13 @@ def _maybe_infer_from_damage(battle: Battle, split_msg: list, pkmn, old_hp: int,
     """Tras aplicar |-damage|, intenta estrechar Atk/SpA/Def/SpD del rival."""
     pending = getattr(battle, 'pending_damage_ctx', None)
     if not pending:
+        return
+
+    # Focus Sash/Band o Sturdy: el daño observado está truncado a 1 HP.
+    if getattr(battle, 'pending_damage_sash', False):
+        battle.pending_damage_sash = False
+        if not pending.get('is_spread'):
+            battle.pending_damage_ctx = None
         return
 
     # Residuales / items: no son el golpe del move pendiente.
@@ -2753,6 +3043,8 @@ def _maybe_infer_from_damage(battle: Battle, split_msg: list, pkmn, old_hp: int,
     if observed <= 0:
         return
 
+    is_ko = bool(getattr(pkmn, 'is_fainted', False) or new_hp <= 0)
+
     # Fracción de HP ANTES del golpe (Multiscale); old_hp ya lo capturó heal_or_damage.
     pre_frac = None
     try:
@@ -2792,6 +3084,7 @@ def _maybe_infer_from_damage(battle: Battle, split_msg: list, pkmn, old_hp: int,
         known_nature=getattr(user_mon, 'nature', None),
         ctx=ctx,
         known_hp=known_stats.get('hp'),
+        is_ko=is_ko,
     )
 
     # Single-target: un solo hit útil. Spread: seguir hasta el próximo |move|/|turn|.
@@ -2918,8 +3211,11 @@ BATTLE_MODIFIERS_LOOKUP = {
     '-formechange': form_change,
     '-transform': transform,
     '-mega': mega,
+    '-terastallize': terastallize,
     '-clearallboost': clearallboost,
     '-clearboost': clearboost,
+    '-clearnegativeboost': clearnegativeboost,
+    '-clearpositiveboost': clearpositiveboost,
     '-copyboost': copyboost,
     '-swapboost': swapboost,
     '-activate': activate,

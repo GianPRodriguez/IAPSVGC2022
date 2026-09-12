@@ -1,0 +1,24 @@
+salamence-mega: html=746284 team_links=10 teamish=10 reg=6 new=0
+rillaboom: html=745231 team_links=10 teamish=10 reg=7 new=0
+floette-mega: html=748515 team_links=10 teamish=10 reg=2 new=0
+sneasler: html=749314 team_links=10 teamish=10 reg=4 new=0
+golisopod-mega: html=745020 team_links=10 teamish=10 reg=6 new=0
+swampert-mega: html=742361 team_links=10 teamish=10 reg=3 new=0
+kingambit: html=744794 team_links=10 teamish=10 reg=2 new=0
+incineroar: html=745135 team_links=10 teamish=10 reg=3 new=0
+gholdengo: html=747851 team_links=10 teamish=10 reg=4 new=0
+raichu-mega-y: html=751950 team_links=10 teamish=10 reg=3 new=0
+farigiraf: html=743156 team_links=10 teamish=10 reg=0 new=0
+basculegion-male: html=744775 team_links=10 teamish=10 reg=1 new=0
+arcanine-hisui: html=747005 team_links=10 teamish=10 reg=5 new=0
+whimsicott: html=742086 team_links=10 teamish=10 reg=0 new=0
+dragonite: html=746484 team_links=10 teamish=10 reg=1 new=0
+metagross-mega: html=748781 team_links=10 teamish=10 reg=1 new=0
+charizard-mega-x: html=749976 team_links=10 teamish=10 reg=2 new=0
+blaziken: html=747265 team_links=10 teamish=10 reg=0 new=0
+sinistcha: html=749858 team_links=10 teamish=10 reg=2 new=0
+archaludon: html=743833 team_links=10 teamish=10 reg=2 new=0
+
+unique new from /with/: 0
+neighbors from first 8 existing: 11
+total unique new candidates: 11

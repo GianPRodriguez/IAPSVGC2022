@@ -1,0 +1,24 @@
+=== Battle State E2E Report (heuristic vs random + Battle sync) ===
+time_utc: 2026-09-12T18:38:15.566869+00:00
+format: gen9championsvgc2026regmc
+ps_up: True
+team_pool: 100
+battles: 3
+seed: 42
+elapsed_s: 4.3
+battles_per_s: 0.692
+
+heuristic_wins: 3
+heuristic_losses: 0
+errors: 0
+win_rate: 100.0%
+verdict: YES - heuristic beat random overall
+
+state_mismatch: NO
+state_checks: 17
+state_mismatches: 0
+feed_errors: 0
+battle_errors: 0
+
+Player A = ValidatedGreedyPlayer | Player B = RandomPlayer
+Contrast: IAP Battle/Battler/Pokemon vs poke-env (PS local protocol)

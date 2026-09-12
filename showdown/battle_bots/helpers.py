@@ -4,10 +4,16 @@ from showdown.battle import Battle
 # OK - Helper para formatear una acción individual y eliminar espacios vacíos                                                                            ###
 ############################################################################################################################################################
 def _helper_format_action(action_type: str, slot: int, mega: int, target: int) -> str:
+    # mega: 0=none, 1=mega, 2=terastallize (heurístico)
+    special = ""
+    if mega == 1:
+        special = "mega"
+    elif mega == 2:
+        special = "terastallize"
     parts = [
         action_type,
         str(slot) if slot != 0 else "",
-        "mega" if mega != 0 else "",
+        special,
         str(target) if target != 0 else ""
     ]
     # Filtra los elementos vacíos "" y los une con un único espacio

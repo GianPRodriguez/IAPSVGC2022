@@ -485,12 +485,13 @@ async def start_battle(ps_websocket_client: PSWebsocketClient, battle: Battle) -
 def _queue_battle_start_error(q: multiprocessing.Queue, error: Exception) -> None:
     """Mapea excepciones de inicio de BO3 a códigos de la UI (-2/-3/-4/-6)."""
     text = str(error).lower()
-    if "rechazado" in text or "rejected" in text:
+    # "Your team was rejected" / equipo vacío debe ir a -3, no a -2 (rechazo humano).
+    if "equipo" in text or "team" in text or "formato" in text or "utm" in text:
+        q.put([-3])
+    elif "rechazado" in text or ("rejected" in text and "team" not in text):
         q.put([-2])
     elif "no ha sido encontrado" in text or "user not found" in text:
         q.put([-4])
-    elif "equipo" in text or "team" in text or "formato" in text:
-        q.put([-3])
     else:
         q.put([-6])
 
@@ -542,8 +543,10 @@ async def start_battleBO3(ps_websocket_client: PSWebsocketClient, botMode: str) 
         ):
             raise Exception("¡El nombre de usuario no ha sido encontrado!")
 
-        # Equipo inválido para el formato
-        if message.startswith("|popup|Your team"):
+        # Equipo inválido / vacío (Showdown: "requires you to use your own team")
+        if message.startswith("|popup|Your team") or (
+            message.startswith("|popup|") and "own team" in message.lower()
+        ):
             raise Exception("¡El equipo del agente no cumple con las reglas del formato!")
 
         if 'game-bestof3' in first_part: # Happy Path

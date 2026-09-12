@@ -1,0 +1,64 @@
+=== Robust E2E Report (A/B pools + BO3 + sync + OTS inference) ===
+time_utc: 2026-09-12T20:11:27.509962+00:00
+format: gen9championsvgc2026regmcbo3
+ps_up: True
+team_pool_available: 100
+teams_used: 100 (A=50 heuristic, B=50 random, disjoint)
+bo3_series: 50
+seed: -
+elapsed_s: 42.0
+bo3_per_s: 1.189
+
+--- results ---
+heuristic_wins: 50
+random_wins: 0
+errors: 0
+win_rate_heuristic: 100.0%
+verdict: YES - heuristic beat random overall
+
+--- sync (Battle vs PS local) ---
+state_mismatch: NO
+state_checks: 584
+state_mismatches: 0
+feed_errors: 0
+
+--- inference (OTS ground truth) ---
+inference_ok: YES
+soundness_checks: 10104
+soundness_failures: 0
+belief_observations: 4290
+belief_skips: 255
+narrowing_events: 56
+battle_errors: 0
+
+--- inference flags (Battle storage / calc wiring) ---
+NEED_FLAGS_ADD: NO
+flags_storage_ok: 16
+flags_missing_storage: 0
+flags_missing_wire: 0
+flags_gaps_high_med: 0
+flags_samples:
+- meta_abilities_relevant: Flash Fire→abilityOn
+
+--- improvements / notes for next runs ---
+- OK: sin desync ni exclusión de SP verdadero. Próxima corrida: subir --teams o cambiar seed tras reglas nuevas.
+
+
+------------------------------------------------------------------------
+EJEMPLO DE INFERENCIA EN EL TIEMPO: baxcalibur-mega (stat=def)
+True SP=0  True final=137
+
+  T 3 [turn   ]  SP    0-32  final   137-153  cand=33  obs=3
+  T 1 [turn   ]  SP    0-32  final   137-153  cand=33  obs=2
+  T 2 [turn   ]  SP    0-32  final   137-153  cand=33  obs=2
+  T 4 [turn   ]  SP    0-10  final   137-142  cand=11  obs=3  << estrech? 33->11
+
+Estado final de baxcalibur-mega:
+   hp: SP    0-32 | final   190-206 | cand=33 | true_sp=2 true_final=191
+  atk: SP    0-32 | final   214-232 | cand=33 | true_sp=32 true_final=232
+  def: SP    0-10 | final   137-142 | cand=11 | true_sp=0 true_final=137
+  spa: SP    0-32 | final   112-126 | cand=33 | true_sp=0 true_final=112
+  spd: SP    0-32 | final   121-137 | cand=33 | true_sp=0 true_final=121
+  spe: SP    0-32 | final   107-123 | cand=33 | true_sp=32 true_final=123
+
+Player A = ValidatedGreedyPlayer | Player B = RandomPlayer

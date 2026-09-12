@@ -1,0 +1,37 @@
+URL https://metavgc.com/teams/featured/regulation-mc
+  html_len=738063 team_links_in=10 reg_mc=7
+  sample=['https://metavgc.com/teams/featured/regulation-mc', 'https://metavgc.com/teams/featured/regulation-mc', 'https://metavgc.com/teams/featured/regulation-mc', '/teams/finder', '/teams/tournaments', '/teams/golisopod-mega-swampert-mega-by-forblaze-at-snt-reg-m-c-tour-1-place-1st', '/teams/salamence-mega-rillaboom-by-sableyevgc-at-r-vgc-regulation-m-c-kickoff-cup-place-1st', '/teams/salamence-mega-froslass-mega-by-nbryu-at-reg-m-c-bo3-thursday-night-throwdown-3-place-1st', '/teams/salamence-mega-floette-mega-by-robin-vgc-at-reg-m-c-qualifier-for-rookideevgc-grand-tourney-place-1st', '/teams/raichu-mega-y-staraptor-mega-by-stjopa-at-champions-reg-m-c-crown-fight-bo3-tour-85-place-1st', '/teams/floette-mega-salamence-mega-by-kotori-at-pomelo-late-night-tour-m-c-place-1st', '/teams/floette-mega-raichu-mega-y-by-maxibeasm-at-chadweezy95-vgc-champions-tournament-ep-11-place-1st']
+  pageish=[]
+  NEXT_DATA=False
+  api_paths=[]
+
+URL https://metavgc.com/teams/finder?format=pokemonchampions-regc
+  html_len=89147 team_links_in=0 reg_mc=0
+  sample=['https://metavgc.com/teams/finder', 'https://metavgc.com/teams/finder', 'https://metavgc.com/teams/finder', '/teams/finder', '/teams/tournaments']
+  pageish=[]
+  NEXT_DATA=False
+  api_paths=[]
+
+URL https://metavgc.com/teams/finder?format=pokemonchampions-regc&page=2
+  html_len=89194 team_links_in=0 reg_mc=0
+  sample=['https://metavgc.com/teams/finder', 'https://metavgc.com/teams/finder', 'https://metavgc.com/teams/finder', '/teams/finder', '/teams/tournaments']
+  pageish=[]
+  NEXT_DATA=False
+  api_paths=[]
+
+URL https://metavgc.com/teams
+  FAIL <HTTPError 404: 'Not Found'>
+
+URL https://metavgc.com/pokemon/salamence-mega
+  html_len=309394 team_links_in=22 reg_mc=6
+  sample=['/teams/finder', '/teams/tournaments', '/teams/with/salamence-mega', '/teams/with/rillaboom', '/teams/with/sneasler', '/teams/with/kingambit', '/teams/with/incineroar', '/teams/with/basculegion-male', '/teams/with/floette-mega', '/teams/with/arcanine-hisui', '/teams/with/gholdengo', '/teams/with/farigiraf']
+  pageish=[]
+  NEXT_DATA=False
+  api_paths=[]
+
+URL https://metavgc.com/pokemon/rillaboom
+  html_len=333631 team_links_in=22 reg_mc=7
+  sample=['/teams/finder', '/teams/tournaments', '/teams/with/rillaboom', '/teams/with/sneasler', '/teams/with/incineroar', '/teams/with/salamence-mega', '/teams/with/floette-mega', '/teams/with/kingambit', '/teams/with/basculegion-male', '/teams/with/farigiraf', '/teams/with/gholdengo', '/teams/with/arcanine-hisui']
+  pageish=[]
+  NEXT_DATA=False
+  api_paths=[]

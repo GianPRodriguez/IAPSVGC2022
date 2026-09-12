@@ -13,7 +13,7 @@ import json
 from typing import Union, Dict, Any
 
 from teams.team_converter import normalize_name
-from showdown.stat_inference import TeamStatBeliefs, calibrate_from_known_team, sp_limits
+from showdown.stat_inference import TeamStatBeliefs, calibrate_from_known_team, dex_base_stats, sp_limits
 
 
 def _fmt_mapping(mapping) -> str:
@@ -239,6 +239,8 @@ class Battle(ABC):
         self.pending_damage_ctx = None
         # Objetivo del próximo |-damage| marcado por |-crit| (None = sin crit pendiente).
         self.pending_crit_target = None
+        # Focus Sash / Sturdy: el próximo daño está truncado.
+        self.pending_damage_sash = False
 
         ''' Recompensas '''
         self.reward = 0
@@ -346,6 +348,7 @@ class Battle(ABC):
         self.pending_damage_ctx = None
         # Objetivo del próximo |-damage| marcado por |-crit| (None = sin crit pendiente).
         self.pending_crit_target = None
+        self.pending_damage_sash = False
 
         # =====================================================================
         # 4. Reiniciar Recompensas
@@ -433,8 +436,17 @@ class Battle(ABC):
             w('-' * 72)
             w(f' STAT POINTS ESTIMADOS (rival)  |  tope {max_sp}/stat, {budget} total:')
             for species, belief in sorted(beliefs.beliefs.items()):
-                w(f'  {species}  nat={belief.nature or "-"}')
+                forme = (getattr(belief, 'current_forme', None) or species).lower()
+                forme_tag = f'  forme={forme}' if forme != species else ''
+                w(f'  {species}  nat={belief.nature or "-"}{forme_tag}')
+                w(f'      SP:   {belief.sp_summary_line()}')
                 w(f'      est:  {belief.summary_line()}')
+                # Mega/Blade: mismos SP, otras bases → el final "base" (p.ej. Atk 92)
+                # no tiene por qué caer en el rango mega (Atk 110-139).
+                if forme != species:
+                    dex = dex_base_stats(species)
+                    if dex:
+                        w(f'      base: {belief.summary_line_with_bases(dex)}  (forma {species})')
                 w(f'      conv: {belief.convergence_line()}')
 
         # OTS solo una vez por partida (team preview / primer dump)
@@ -831,6 +843,15 @@ class Pokemon:
         self.is_destiny_bonded = False
         # Charge: hasta move Eléctrico / |-end| / switch.
         self.is_charged = False
+        # Follow Me / Rage Powder / Spotlight: redirige ataques single-target.
+        self.is_redirecting = False
+        # abilityOn del calc (@smogon): Flash Fire absorbed, Slow Start activo, etc.
+        self.ability_on = False
+        # Entró este turno (Stakeout del rival atacante).
+        self.just_switched = False
+        # Terastallize (Champions / gen9).
+        self.tera_type = None
+        self.is_terastallized = False
 
         # Tipos (Se asignan posteriormente)
         self.type1 = None

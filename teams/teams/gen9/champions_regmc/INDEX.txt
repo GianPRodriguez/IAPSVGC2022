@@ -1,0 +1,100 @@
+01	#1st - Forblaze at SNT Reg M-C	https://metavgc.com/teams/golisopod-mega-swampert-mega-by-forblaze-at-snt-reg-m-c-tour-1-place-1st
+02	#1st - SableyeVGC at r/VGC Regulation	https://metavgc.com/teams/salamence-mega-rillaboom-by-sableyevgc-at-r-vgc-regulation-m-c-kickoff-cup-place-1st
+03	#1st - Nbryu at [Reg M-C Bo3]	https://metavgc.com/teams/salamence-mega-froslass-mega-by-nbryu-at-reg-m-c-bo3-thursday-night-throwdown-3-place-1st
+04	#1st - Robin_VGC at Reg M-C	https://metavgc.com/teams/salamence-mega-floette-mega-by-robin-vgc-at-reg-m-c-qualifier-for-rookideevgc-grand-tourney-place-1st
+05	#1st - Stjopa at CHAMPIONS REG.	https://metavgc.com/teams/raichu-mega-y-staraptor-mega-by-stjopa-at-champions-reg-m-c-crown-fight-bo3-tour-85-place-1st
+06	#1st - Kotori at Pomelo Late Night	https://metavgc.com/teams/floette-mega-salamence-mega-by-kotori-at-pomelo-late-night-tour-m-c-place-1st
+07	#1st - maxibeasm at ⛩️Chadweezy95	https://metavgc.com/teams/floette-mega-raichu-mega-y-by-maxibeasm-at-chadweezy95-vgc-champions-tournament-ep-11-place-1st
+08	#1st - GeniusMatti at Meeklosh's	https://metavgc.com/teams/raichu-mega-y-salamence-mega-by-geniusmatti-at-meeklosh-s-fight-night-friday-reg-m-c-place-1st
+09	#1st - DoubleBad17 at Intimidators	https://metavgc.com/teams/salamence-mega-floette-mega-by-doublebad17-at-intimidators-champions-challenge-42-reg-m-c-place-1st
+10	#1st - Suruga at Off Meta Fight	https://metavgc.com/teams/swampert-mega-golisopod-mega-by-suruga-at-off-meta-fight-club-2-40-usd-prize-pool-place-1st
+11	#48th - Forblaze at Tenki's Cart	https://metavgc.com/teams/golisopod-mega-swampert-mega-by-forblaze-at-tenki-s-cart-weekly-117-reg-m-c-place-48th
+12	#3rd - Luca33 at Tenki's Cart Weekly	https://metavgc.com/teams/salamence-mega-rillaboom-by-luca33-at-tenki-s-cart-weekly-117-reg-m-c-place-3rd
+13	#12th - Antonylicz at London	https://metavgc.com/teams/salamence-mega-rillaboom-by-antonylicz-at-london-corviknights-vgc-weekly-tour-12-reg-m-c-place-12th
+14	#35th - Hops at Alpensee Tour (Reg	https://metavgc.com/teams/froslass-mega-salamence-mega-by-hops-at-alpensee-tour-reg-m-c-swiss-only-74-place-35th
+15	#81st - Alessio Ferrara at Tenki's	https://metavgc.com/teams/froslass-mega-salamence-mega-by-alessio-ferrara-at-tenki-s-cart-weekly-117-reg-m-c-place-81st
+16	#3rd - HollowedHollowed at r/VGC	https://metavgc.com/teams/floette-mega-raichu-mega-y-by-hollowedhollowed-at-r-vgc-regulation-m-c-kickoff-cup-place-3rd
+17	#1st - Algebits_1 at Friday	https://metavgc.com/teams/salamence-mega-charizard-mega-y-by-algebits-1-at-friday-fight-night-72-reg-m-c-bo3-place-1st
+18	#1st - CptAuroOG at London	https://metavgc.com/teams/floette-mega-raichu-mega-y-by-cptauroog-at-london-corviknights-vgc-weekly-tour-12-reg-m-c-place-1st
+19	#1st - LittlePotato13 at Pokepal	https://metavgc.com/teams/froslass-mega-floette-mega-by-littlepotato13-at-pokepal-smackdown-157-champions-reg-m-c-place-1st
+20	#1st - M_rada at Alpensee Tour (Reg M-C	https://metavgc.com/teams/gengar-mega-snorlax-by-m-rada-at-alpensee-tour-reg-m-c-swiss-only-74-place-1st
+21	#1st - Shaggy96 at X1 Remote	https://metavgc.com/teams/swampert-mega-golisopod-mega-by-shaggy96-at-x1-remote-battle-league-8-edicao-reg-m-c-place-1st
+22	#2nd - Noktuska at Reg M-C	https://metavgc.com/teams/golisopod-mega-charizard-mega-y-by-noktuska-at-reg-m-c-qualifier-for-rookideevgc-grand-tourney-place-2nd
+23	#2nd - dylanman5 at Pokepal Smackdown	https://metavgc.com/teams/golisopod-mega-kleavor-by-dylanman5-at-pokepal-smackdown-157-champions-reg-m-c-place-2nd
+24	#3rd - NihatAglar at Talon's FIGHT	https://metavgc.com/teams/swampert-mega-golisopod-mega-by-nihataglar-at-talon-s-fight-club-101-pokemon-champions-reg-m-c-place-3rd
+25	#3rd - oppePoiZ at CHAMPIONS REG.	https://metavgc.com/teams/golisopod-mega-salamence-mega-by-oppepoiz-at-champions-reg-m-c-crown-fight-bo3-tour-85-place-3rd
+26	#1st - Okarin at TARTAN TAKEDOWN	https://metavgc.com/teams/charizard-mega-y-swampert-mega-by-okarin-at-tartan-takedown-36-champions-reg-m-b-place-1st
+27	#1st - Sooner at TARTAN TAKEDOWN #35!	https://metavgc.com/teams/floette-mega-whimsicott-by-sooner-at-tartan-takedown-35-champions-reg-m-b-place-1st
+28	#1st - LittlePotato13 at Pokepal	https://metavgc.com/teams/floette-mega-metagross-mega-by-littlepotato13-at-pokepal-smackdown-153-champions-reg-m-b-place-1st
+29	#1st - AndruApple at VGC UU Champions	https://metavgc.com/teams/charizard-mega-x-empoleon-by-andruapple-at-vgc-uu-champions-regulation-m-a-quot-paris-regional-quot-place-1st
+30	#68th - betelnutceo at Talon's	https://metavgc.com/teams/golisopod-mega-swampert-mega-by-betelnutceo-at-talon-s-fight-club-101-pokemon-champions-reg-m-c-place-68th
+31	#21st - Noktuska at Tenki's	https://metavgc.com/teams/golisopod-mega-charizard-mega-y-by-noktuska-at-tenki-s-cart-weekly-117-reg-m-c-place-21st
+32	#35th - Chisu at Tenki's Cart	https://metavgc.com/teams/golisopod-mega-charizard-mega-y-by-chisu-at-tenki-s-cart-weekly-117-reg-m-c-place-35th
+33	#1st - Gopher at 𝗡𝗲𝗺𝗲	https://metavgc.com/teams/salamence-mega-tyranitar-mega-by-gopher-place-1st
+34	#1st - Kotori at Pomelo Late Night	https://metavgc.com/teams/salamence-mega-floette-mega-by-kotori-at-pomelo-late-night-tour-m-c-place-1st
+35	#1st - Roid Blancaflor at Mid-Week	https://metavgc.com/teams/basculegion-male-farigiraf-by-roid-blancaflor-at-mid-week-smoke-10-place-1st
+36	#1st - B2K at Circuito VGC #7 REG MC | Z2	https://metavgc.com/teams/floette-mega-sneasler-by-b2k-at-circuito-vgc-7-reg-mc-z2-gaming-place-1st
+37	#1st - The_Andrw at Finisterrae	https://metavgc.com/teams/salamence-mega-tyranitar-mega-by-the-andrw-at-finisterrae-series-vgc-3-place-1st
+38	#1st - MeganVGC at Hatterene	https://metavgc.com/teams/glimmora-mega-charizard-mega-y-by-meganvgc-at-hatterene-series-weekly-2-2027-6pm-utc-m-c-place-1st
+39	#1st - Haru1899 at WARTORTLE	https://metavgc.com/teams/aerodactyl-mega-baxcalibur-mega-by-haru1899-at-wartortle-wednesdays-65-reg-m-c-bo3-ots-place-1st
+40	#1st - Fluffy_m1n at BPL MC KICKOFF	https://metavgc.com/teams/delphox-mega-floette-mega-by-fluffy-m1n-at-bpl-mc-kickoff-tournament-place-1st
+41	#1st - Hazarai at Wolfey Patreon	https://metavgc.com/teams/blastoise-mega-golisopod-mega-by-hazarai-at-wolfey-patreon-tournament-m-c-launch-casual-tour-place-1st
+42	#2nd - reTakeshi at Devils Den	https://metavgc.com/teams/golisopod-mega-annihilape-by-retakeshi-at-devils-den-tournaments-89-25-for-first-place-2nd
+43	#2nd - Contrapple at Talon's FIGHT	https://metavgc.com/teams/baxcalibur-mega-archaludon-by-contrapple-at-talon-s-fight-club-101-pokemon-champions-reg-m-c-place-2nd
+44	#2nd - MrBurns at	https://metavgc.com/teams/salamence-mega-floette-mega-by-mrburns-at-sitrus-series-champions-mc-50-to-first-75-place-2nd
+45	#2nd - PokeReplay at SNT Reg M-C	https://metavgc.com/teams/charizard-mega-y-rillaboom-by-pokereplay-at-snt-reg-m-c-tour-1-place-2nd
+46	#2nd - Sapitoch at CHAMPIONS REG. M-C	https://metavgc.com/teams/salamence-mega-sneasler-by-sapitoch-at-champions-reg-m-c-crown-fight-bo3-tour-85-place-2nd
+47	#2nd - karlin22 at r/VGC Regulation	https://metavgc.com/teams/camerupt-mega-indeedee-female-by-karlin22-at-r-vgc-regulation-m-c-kickoff-cup-place-2nd
+48	#2nd - Sooner at Pomelo Late Night	https://metavgc.com/teams/swampert-mega-salamence-mega-by-sooner-at-pomelo-late-night-tour-m-c-place-2nd
+49	#2nd - 415jason at Friday Fight	https://metavgc.com/teams/floette-mega-raichu-mega-y-by-415jason-at-friday-fight-night-72-reg-m-c-bo3-place-2nd
+50	#2nd - JSplat at WARTORTLE WEDNESDAYS	https://metavgc.com/teams/salamence-mega-sneasler-by-jsplat-at-wartortle-wednesdays-65-reg-m-c-bo3-ots-place-2nd
+51	#2nd - rinp at Off Meta Fight Club #2	https://metavgc.com/teams/salamence-mega-incineroar-by-rinp-at-off-meta-fight-club-2-40-usd-prize-pool-place-2nd
+52	#2nd - MichaelderBeste at Alpensee	https://metavgc.com/teams/salamence-mega-raichu-mega-y-by-michaelderbeste-at-alpensee-tour-reg-m-c-swiss-only-74-place-2nd
+53	#2nd - Vinnamon at Pomelo Late Night Tour	https://metavgc.com/teams/golisopod-mega-archaludon-by-vinnamon-at-pomelo-late-night-tour-m-c-place-2nd
+54	#2nd - Cartman at Pomelo Late Night	https://metavgc.com/teams/salamence-mega-floette-mega-by-cartman-at-pomelo-late-night-tour-m-c-place-2nd
+55	#2nd - coolskeleton at [Reg M-C Bo3]	https://metavgc.com/teams/salamence-mega-basculegion-male-by-coolskeleton-at-reg-m-c-bo3-thursday-night-throwdown-3-place-2nd
+56	#2nd - John Vincent Salinas at	https://metavgc.com/teams/metagross-indeedee-female-by-john-vincent-salinas-at-mid-week-smoke-10-place-2nd
+57	#2nd - Meaghan B at Hatterene Series	https://metavgc.com/teams/salamence-mega-rillaboom-by-meaghan-b-at-hatterene-series-weekly-2-2027-6pm-utc-m-c-place-2nd
+58	#2nd - Shaboogles at Wolfey	https://metavgc.com/teams/charizard-mega-y-floette-mega-by-shaboogles-at-wolfey-patreon-tournament-m-c-launch-casual-tour-place-2nd
+59	#2nd - Ban3x at Pokemon Dominicana	https://metavgc.com/teams/salamence-mega-floette-mega-by-ban3x-at-pokemon-dominicana-champions-league-13-place-2nd
+60	#2nd - beelzebruno at 3º Torneio	https://metavgc.com/teams/salamence-mega-froslass-mega-by-beelzebruno-at-3-torneio-remoto-pokemon-champions-liga-cwb-place-2nd
+61	#2nd - Javivarela at Finisterrae	https://metavgc.com/teams/salamence-mega-gholdengo-by-javivarela-at-finisterrae-series-vgc-3-place-2nd
+62	#2nd - Hunter Sanders at Cusca Champions	https://metavgc.com/teams/gengar-mega-rillaboom-by-hunter-sanders-at-cusca-champions-weekly-m-c-12-pcvgc-place-2nd
+63	#2nd - Messyboi at BPL MC KICKOFF	https://metavgc.com/teams/floette-mega-rillaboom-by-messyboi-at-bpl-mc-kickoff-tournament-place-2nd
+64	#3rd - Dess ㅤ at Intimidators Champions	https://metavgc.com/teams/salamence-mega-lucario-by-dess-at-intimidators-champions-challenge-42-reg-m-c-place-3rd
+65	#3rd - ikerdds at Reg M-C Qualifier	https://metavgc.com/teams/salamence-mega-floette-mega-by-ikerdds-at-reg-m-c-qualifier-for-rookideevgc-grand-tourney-place-3rd
+66	#3rd - benguins10 at Devils Den	https://metavgc.com/teams/golisopod-mega-pelipper-by-benguins10-at-devils-den-tournaments-89-25-for-first-place-3rd
+67	#3rd - Topo at SNT Reg M-C Tour #1	https://metavgc.com/teams/delphox-mega-heracross-mega-by-topo-at-snt-reg-m-c-tour-1-place-3rd
+68	#3rd - Guffumbo at 𝗡𝗲𝗺𝗲	https://metavgc.com/teams/salamence-mega-tyranitar-mega-by-guffumbo-place-3rd
+69	#3rd - SrRoxasKun at X1 Remote	https://metavgc.com/teams/floette-mega-salamence-mega-by-srroxaskun-at-x1-remote-battle-league-8-edicao-reg-m-c-place-3rd
+70	#3rd - TViewier at Pomelo Late Night	https://metavgc.com/teams/camerupt-mega-pincurchin-by-tviewier-at-pomelo-late-night-tour-m-c-place-3rd
+71	#3rd - Amethyst_sys at London Corviknights VGC	https://metavgc.com/teams/absol-garchomp-by-amethyst-sys-at-london-corviknights-vgc-weekly-tour-12-reg-m-c-place-3rd
+72	#3rd - FatherOf7 at Alpensee	https://metavgc.com/teams/baxcalibur-mega-staraptor-mega-by-fatherof7-at-alpensee-tour-reg-m-c-swiss-only-74-place-3rd
+73	#3rd - GxRamz at [Reg M-C Bo3]	https://metavgc.com/teams/swampert-mega-golisopod-mega-by-gxramz-at-reg-m-c-bo3-thursday-night-throwdown-3-place-3rd
+74	#3rd - MrBear21 at Friday Fight Night	https://metavgc.com/teams/baxcalibur-mega-arcanine-hisui-by-mrbear21-at-friday-fight-night-72-reg-m-c-bo3-place-3rd
+75	#3rd - dracojack at Off Meta Fight	https://metavgc.com/teams/aerodactyl-mega-floette-mega-by-dracojack-at-off-meta-fight-club-2-40-usd-prize-pool-place-3rd
+76	#3rd - itzricc at ⛩️Chadweezy95	https://metavgc.com/teams/salamence-mega-golisopod-mega-by-itzricc-at-chadweezy95-vgc-champions-tournament-ep-11-place-3rd
+77	#3rd - Alex123 at Pomelo Late Night	https://metavgc.com/teams/salamence-mega-floette-mega-by-alex123-at-pomelo-late-night-tour-m-c-place-3rd
+78	#3rd - Shark032 at Meeklosh's	https://metavgc.com/teams/salamence-mega-gardevoir-mega-by-shark032-at-meeklosh-s-fight-night-friday-reg-m-c-place-3rd
+79	#3rd - Cole J at Pokepal Smackdown	https://metavgc.com/teams/froslass-mega-salamence-mega-by-cole-j-at-pokepal-smackdown-157-champions-reg-m-c-place-3rd
+80	#3rd - Veaga at 3º Torneio Remoto Pokémon	https://metavgc.com/teams/garchomp-sneasler-by-veaga-at-3-torneio-remoto-pokemon-champions-liga-cwb-place-3rd
+81	#3rd - Andres Giovanni Machado at	https://metavgc.com/teams/swampert-mega-golisopod-mega-by-andres-giovanni-machado-at-cusca-champions-weekly-m-c-12-pcvgc-place-3rd
+82	#3rd - BrainDamageVGC at BPL MC	https://metavgc.com/teams/golisopod-mega-salamence-mega-by-braindamagevgc-at-bpl-mc-kickoff-tournament-place-3rd
+83	#3rd - Zady_11 at Finisterrae	https://metavgc.com/teams/floette-mega-salamence-mega-by-zady-11-at-finisterrae-series-vgc-3-place-3rd
+84	#3rd - juanortiiz at Circuito VGC	https://metavgc.com/teams/floette-mega-aerodactyl-mega-by-juanortiiz-at-circuito-vgc-7-reg-mc-z2-gaming-place-3rd
+85	#3rd - Fluna at Hatterene Series	https://metavgc.com/teams/gardevoir-mega-baxcalibur-mega-by-fluna-at-hatterene-series-weekly-2-2027-6pm-utc-m-c-place-3rd
+86	#3rd - LucyHale at WARTORTLE	https://metavgc.com/teams/floette-mega-delphox-mega-by-lucyhale-at-wartortle-wednesdays-65-reg-m-c-bo3-ots-place-3rd
+87	#4th - ChefRich22 at	https://metavgc.com/teams/salamence-mega-floette-mega-by-chefrich22-at-sitrus-series-champions-mc-50-to-first-75-place-4th
+88	#4th - notsamantha111 at	https://metavgc.com/teams/salamence-mega-charizard-mega-y-by-notsamantha111-at-tenki-s-cart-weekly-117-reg-m-c-place-4th
+89	#4th - Annihilist at Devils Den	https://metavgc.com/teams/golisopod-mega-salamence-mega-by-annihilist-at-devils-den-tournaments-89-25-for-first-place-4th
+90	#4th - AVEornot at r/VGC Regulation	https://metavgc.com/teams/charizard-mega-y-venusaur-by-aveornot-at-r-vgc-regulation-m-c-kickoff-cup-place-4th
+91	#4th - gostzin at Reg M-C Qualifier	https://metavgc.com/teams/blastoise-mega-delphox-mega-by-gostzin-at-reg-m-c-qualifier-for-rookideevgc-grand-tourney-place-4th
+92	#4th - JoMcCloud23 at Alpensee Tour (Reg	https://metavgc.com/teams/swampert-mega-pelipper-by-jomccloud23-at-alpensee-tour-reg-m-c-swiss-only-74-place-4th
+93	#4th - GlowGameplay at SNT Reg M-C	https://metavgc.com/teams/dragonite-mega-rillaboom-by-glowgameplay-at-snt-reg-m-c-tour-1-place-4th
+94	#4th - Contrapple at Off Meta Fight	https://metavgc.com/teams/baxcalibur-mega-archaludon-by-contrapple-at-off-meta-fight-club-2-40-usd-prize-pool-place-4th
+95	#4th - Kotori at Pomelo Late Night	https://metavgc.com/teams/salamence-mega-floette-mega-by-kotori-at-pomelo-late-night-tour-m-c-place-4th
+96	#4th - Maggrosbeat at London	https://metavgc.com/teams/floette-mega-salamence-mega-by-maggrosbeat-at-london-corviknights-vgc-weekly-tour-12-reg-m-c-place-4th
+97	#4th - GiantRex16 at [Reg M-C	https://metavgc.com/teams/baxcalibur-mega-golisopod-mega-by-giantrex16-at-reg-m-c-bo3-thursday-night-throwdown-3-place-4th
+98	#4th - Scar_B0rga at Meeklosh's Fight	https://metavgc.com/teams/golisopod-mega-staraptor-by-scar-b0rga-at-meeklosh-s-fight-night-friday-reg-m-c-place-4th
+99	#4th - Kyle Bibon at Mid-Week	https://metavgc.com/teams/salamence-kingambit-by-kyle-bibon-at-mid-week-smoke-10-place-4th
+100	#4th - Avalos at ⛩️Chadweezy95 VGC	https://metavgc.com/teams/floette-mega-salamence-mega-by-avalos-at-chadweezy95-vgc-champions-tournament-ep-11-place-4th

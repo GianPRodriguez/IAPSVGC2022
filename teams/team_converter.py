@@ -151,17 +151,18 @@ def single_pokemon_export_to_dict(pkmn_export_string):
 def export_to_packed(export_string):
     try:
         team_dict = list()
-        team_members = export_string.split('\n\n')
-        # Metadata
-        # team_members[6]
-        # Lo elimino, para que solo quede el equipo
-        team_members.remove(team_members[6])
+        # Bloques no vacíos; exports de PS a veces traen un 7º bloque de metadata.
+        team_members = [m for m in export_string.split('\n\n') if m.strip()]
+        if len(team_members) > 6:
+            # Conservar solo los 6 sets (el resto suele ser nota/metadata).
+            team_members = team_members[:6]
+        if len(team_members) < 1:
+            return None, None
         listPkmn = []
-        # Para los 6 Pokémon...
-        for pkmn in filter(None, team_members):
+        for pkmn in team_members:
             listPkmn.append(pkmn.split(' ')[0])
             pkmn_dict = single_pokemon_export_to_dict(pkmn)
             team_dict.append(pkmn_dict)
         return json_to_packed(team_dict), listPkmn
-    except:
+    except Exception:
         return None, None

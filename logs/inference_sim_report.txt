@@ -1,36 +1,60 @@
 ========================================================================
 INFERENCE SIM REPORT (pokemon-showdown + poke-env + MetaVGC Reg M-C)
 ========================================================================
-Battles requested: 3
-Teams: SableyeVGC Kickoff Cup #1 vs Robin_VGC Rookidee Qualifier #1, Robin_VGC Rookidee Qualifier #1 vs Roid Blancaflor Mid-Week Smoke #1, Roid Blancaflor Mid-Week Smoke #1 vs SableyeVGC Kickoff Cup #1
-Soundness checks: 2802
+Battles requested: 10
+Teams: #1st - Forblaze at SNT Reg M-C vs #1st - SableyeVGC at r/VGC Regulation, #1st - Nbryu at [Reg M-C Bo3] vs #1st - Robin_VGC at Reg M-C, #1st - Stjopa at CHAMPIONS REG. vs #1st - Kotori at Pomelo Late Night, #1st - maxibeasm at ⛩️Chadweezy95 vs #1st - GeniusMatti at Meeklosh's, #1st - DoubleBad17 at Intimidators vs #1st - Suruga at Off Meta Fight, #48th - Forblaze at Tenki's Cart vs #3rd - Luca33 at Tenki's Cart Weekly, #12th - Antonylicz at London vs #35th - Hops at Alpensee Tour (Reg, #81st - Alessio Ferrara at Tenki's vs #3rd - HollowedHollowed at r/VGC, #1st - Algebits_1 at Friday vs #1st - CptAuroOG at London, #1st - LittlePotato13 at Pokepal vs #1st - M_rada at Alpensee Tour (Reg M-C
+Soundness checks: 8502
 Soundness failures: 0
 Battle infra errors/timeouts: 0
-Belief observations (sum): 717
-Belief skips (sum): 192
+Belief observations (sum): 3184
+Belief skips (sum): 460
 
 RESULT: PASS — true SP/final siempre dentro de candidatos/rango.
 
 ------------------------------------------------------------------------
-EJEMPLO DE INFERENCIA EN EL TIEMPO: sneasler (stat=spd)
-True SP=0  True final=100
+EJEMPLO DE INFERENCIA EN EL TIEMPO: rillaboom (stat=spe)
+True SP=8  True final=109
 
-  T 0 [switch ]  SP    0-32  final   100-116  cand=33  obs=0
-  T 1 [turn   ]  SP    0-32  final   100-116  cand=33  obs=0
-  T 2 [turn   ]  SP    0-32  final   100-116  cand=33  obs=0
-  T 3 [turn   ]  SP    0-32  final   100-116  cand=33  obs=0
-  T 4 [turn   ]  SP    0-32  final   100-116  cand=33  obs=0
-  T 5 [turn   ]  SP    0-32  final   100-116  cand=33  obs=0
-  T 6 [turn   ]  SP    0-32  final   100-116  cand=33  obs=1
-  T 6 [-damage]  SP     0-4  final   100-102  cand=5  obs=2  << estrechó 33->5
-  T 7 [turn   ]  SP     0-4  final   100-102  cand=5  obs=2
-  T 8 [turn   ]  SP     0-4  final   100-102  cand=5  obs=3
+  T 1 [switch ]  SP    0-32  final   105-121  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final   105-121  cand=33  obs=0
+  T10 [turn   ]  SP    0-32  final   105-121  cand=33  obs=2
+  T 1 [turn   ]  SP    0-32  final   105-121  cand=33  obs=0
+  T 7 [turn   ]  SP    0-32  final   105-121  cand=33  obs=0
+  T 8 [turn   ]  SP    0-32  final   105-121  cand=33  obs=2
+  T 9 [turn   ]  SP    0-32  final   105-121  cand=33  obs=4
+  T10 [turn   ]  SP    0-32  final   105-121  cand=33  obs=4
+  T11 [turn   ]  SP    0-32  final   105-121  cand=33  obs=4
+  T16 [turn   ]  SP    0-32  final   105-121  cand=33  obs=4
+  T 1 [turn   ]  SP    0-32  final   105-121  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final   105-121  cand=33  obs=0
+  T 3 [turn   ]  SP    0-32  final   105-121  cand=33  obs=1
+  T 4 [turn   ]  SP    0-32  final   105-121  cand=33  obs=1
+  T 4 [move   ]  SP    0-12  final   105-111  cand=13  obs=3  << estrechó 33->13
+  T 5 [turn   ]  SP    0-12  final   105-111  cand=13  obs=3
+  T 6 [turn   ]  SP    0-12  final   105-111  cand=13  obs=3
+  T 7 [turn   ]  SP    0-12  final   105-111  cand=13  obs=3
+  T 8 [turn   ]  SP    0-12  final   105-111  cand=13  obs=4
+  T 9 [turn   ]  SP    0-12  final   105-111  cand=13  obs=7
+  T 0 [switch ]  SP    0-32  final   105-121  cand=33  obs=0
+  T 1 [turn   ]  SP    0-32  final   105-121  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final   105-121  cand=33  obs=1
+  T 3 [turn   ]  SP    0-32  final   105-121  cand=33  obs=2
+  T 4 [turn   ]  SP    0-32  final   105-121  cand=33  obs=3
+  T 2 [turn   ]  SP    0-32  final   105-121  cand=33  obs=0
+  T 3 [turn   ]  SP    0-32  final   105-121  cand=33  obs=1
+  T 4 [turn   ]  SP    0-32  final   105-121  cand=33  obs=3
+  T 5 [turn   ]  SP    0-32  final   105-121  cand=33  obs=4
+  T 6 [turn   ]  SP    0-32  final   105-121  cand=33  obs=4
+  T 7 [turn   ]  SP    0-32  final   105-121  cand=33  obs=4
+  T 8 [turn   ]  SP    0-32  final   105-121  cand=33  obs=4
+  T 9 [turn   ]  SP    0-32  final   105-121  cand=33  obs=4
+  T 1 [turn   ]  SP    0-32  final   115-133  cand=33  obs=0
 
-Estado final de sneasler:
-   hp: SP    0-32 | final   155-171 | cand=33 | true_sp=16 true_final=163
-  atk: SP   17-32 | final   174-182 | cand=16 | true_sp=20 true_final=176
-  def: SP    0-32 | final     80-96 | cand=33 | true_sp=0 true_final=80
-  spa: SP    0-32 | final     54-68 | cand=33 | true_sp=0 true_final=54
-  spd: SP     0-4 | final   100-102 | cand=5 | true_sp=0 true_final=100
-  spe: SP    0-32 | final   140-156 | cand=33 | true_sp=30 true_final=155
+Estado final de rillaboom:
+   hp: SP    0-32 | final   175-191 | cand=33 | true_sp=2 true_final=176
+  atk: SP    0-32 | final   145-161 | cand=33 | true_sp=32 true_final=161
+  def: SP    0-32 | final   110-126 | cand=33 | true_sp=0 true_final=110
+  spa: SP    0-32 | final     72-86 | cand=33 | true_sp=0 true_final=72
+  spd: SP    0-32 | final    90-106 | cand=33 | true_sp=0 true_final=90
+  spe: SP    0-32 | final   115-133 | cand=33 | true_sp=32 true_final=133
 ========================================================================

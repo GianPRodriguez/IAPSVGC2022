@@ -1,9 +1,11 @@
 """Equipos Reg M-C basados en MetaVGC + empaquetado Showdown (EVs = Stat Points)."""
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List
+from pathlib import Path
+from typing import Dict, List, Optional
 
 from showdown.stat_inference import STAT_KEYS, champions_stat
 from teams.team_converter import normalize_name
@@ -212,9 +214,159 @@ ROID_BLANCAFLOR = TeamMeta(
 
 METAVGC_TEAMS: List[TeamMeta] = [SABLEYEVGC, ROBIN_VGC, ROID_BLANCAFLOR]
 
+_JSON_PATH = Path(__file__).resolve().parent / 'metavgc_regmc_teams.json'
+
+
+def _mon_from_dict(d: dict) -> MonSet:
+    sp = d.get('sp') or {}
+    return MonSet(
+        species=d['species'],
+        item=d['item'],
+        ability=d.get('ability') or '',
+        nature=d.get('nature') or 'Serious',
+        moves=list(d.get('moves') or []),
+        sp={
+            'hp': int(sp.get('hp', 0) or 0),
+            'atk': int(sp.get('atk', 0) or 0),
+            'def': int(sp.get('def', 0) or 0),
+            'spa': int(sp.get('spa', 0) or 0),
+            'spd': int(sp.get('spd', 0) or 0),
+            'spe': int(sp.get('spe', 0) or 0),
+        },
+        gender=d.get('gender') or '',
+        tera=d.get('tera') or '',
+    )
+
+
+def _item_id(item: str) -> str:
+    return ''.join(ch for ch in (item or '').lower() if ch.isalnum())
+
+
+def team_passes_item_clause(meta: TeamMeta) -> bool:
+    """Reg M-C / VGC: como máximo 1 de cada ítem (Item Clause)."""
+    seen = set()
+    for mon in meta.mons or []:
+        iid = _item_id(getattr(mon, 'item', '') or '')
+        if not iid:
+            continue
+        if iid in seen:
+            return False
+        seen.add(iid)
+    return True
+
+
+def load_scraped_teams(path: Optional[Path] = None) -> List[TeamMeta]:
+    p = path or _JSON_PATH
+    if not p.is_file():
+        return []
+    raw = json.loads(p.read_text(encoding='utf-8'))
+    out: List[TeamMeta] = []
+    for row in raw:
+        try:
+            out.append(TeamMeta(
+                name=row.get('name') or row.get('slug') or 'MetaVGC',
+                source_url=row.get('source_url') or '',
+                mons=[_mon_from_dict(m) for m in row.get('mons') or []],
+            ))
+        except Exception as exc:
+            print(f'[team_factory] skip scraped team: {exc!r}')
+    return out
+
+
+def active_teams() -> List[TeamMeta]:
+    scraped = load_scraped_teams()
+    pool = scraped if len(scraped) >= 2 else list(METAVGC_TEAMS)
+    ok: List[TeamMeta] = []
+    for t in pool:
+        if team_passes_item_clause(t):
+            ok.append(t)
+        else:
+            dups = []
+            counts: Dict[str, int] = {}
+            for mon in t.mons:
+                iid = _item_id(mon.item)
+                if not iid:
+                    continue
+                counts[iid] = counts.get(iid, 0) + 1
+            dups = [k for k, n in counts.items() if n > 1]
+            print(
+                f'[team_factory] skip Item Clause: {t.name} '
+                f'(dup items: {", ".join(dups) or "?"})'
+            )
+    if len(ok) < 2:
+        raise RuntimeError(
+            'Tras filtrar Item Clause quedan <2 equipos MetaVGC válidos'
+        )
+    return ok
+
 
 def team_by_index(i: int) -> TeamMeta:
-    return METAVGC_TEAMS[i % len(METAVGC_TEAMS)]
+    teams = active_teams()
+    return teams[i % len(teams)]
+
+
+def battle_pairings(n_battles: int) -> List[tuple]:
+    """Empareja equipos distintos para n batallas BO1.
+
+    Con 2n equipos, usa pares disjuntos 0-1, 2-3, ... para maximizar cobertura.
+    Si hay menos equipos, rota con offset.
+    """
+    teams = active_teams()
+    n = len(teams)
+    if n < 2:
+        raise RuntimeError('Se necesitan al menos 2 equipos MetaVGC')
+    pairs = []
+    if n >= 2 * n_battles:
+        for i in range(n_battles):
+            pairs.append((teams[2 * i], teams[2 * i + 1]))
+        return pairs
+    for i in range(n_battles):
+        a = teams[i % n]
+        b = teams[(i + 1 + (i // max(n - 1, 1))) % n]
+        if a.name == b.name:
+            b = teams[(i + 1) % n]
+        pairs.append((a, b))
+    return pairs
+
+
+def random_battle_pairings(n_battles: int, *, seed: Optional[int] = None) -> List[tuple]:
+    """Pares aleatorios (equipos distintos) del pool activo."""
+    import random as _rnd
+
+    teams = active_teams()
+    n = len(teams)
+    if n < 2:
+        raise RuntimeError('Se necesitan al menos 2 equipos MetaVGC')
+    rng = _rnd.Random(seed)
+    pairs: List[tuple] = []
+    for _ in range(n_battles):
+        a, b = rng.sample(teams, 2)
+        pairs.append((a, b))
+    return pairs
+
+
+def disjoint_ab_pairings(n_teams: int, *, seed: Optional[int] = None) -> List[tuple]:
+    """
+    Toma N equipos (N par), los baraja y parte en pools A/B sin solape.
+    Devuelve N/2 pares (A[i], B[i]) para BO3 heurístico vs random.
+    """
+    import random as _rnd
+
+    if n_teams < 2 or n_teams % 2 != 0:
+        raise ValueError(f'n_teams debe ser par y >= 2 (recibido {n_teams})')
+    teams = list(active_teams())
+    if len(teams) < n_teams:
+        raise RuntimeError(
+            f'Se necesitan {n_teams} equipos MetaVGC; hay {len(teams)}. '
+            'Amplía metavgc_regmc_teams.json / export.'
+        )
+    rng = _rnd.Random(seed)
+    picked = rng.sample(teams, n_teams)
+    rng.shuffle(picked)
+    half = n_teams // 2
+    pool_a = picked[:half]
+    pool_b = picked[half:]
+    return list(zip(pool_a, pool_b))
 
 
 def parse_sp_line(text: str) -> Dict[str, int]:

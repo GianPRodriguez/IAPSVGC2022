@@ -11,6 +11,17 @@ python start.py
 
 Credenciales y formato en `.env` (`PS_USERNAME`, `PS_PASSWORD`, `POKEMON_MODE`, `TEAM_DIR`, `BATTLE_BOT`).
 
+En la UI:
+
+| Pantalla | Modo | Uso |
+|----------|------|-----|
+| Módulo de Batallas | `CHALLENGE_USER` | El bot reta a un usuario |
+| **Aceptar Desafíos** | `ACCEPT_CHALLENGE` | El bot espera y acepta retos de tu cuenta |
+| Módulo de Análisis | `SEARCH_LADDER` | Ladder |
+| Módulo de Entrenamiento | NEAT | Entrenamiento local |
+
+En **Aceptar Desafíos** se preflllean credenciales/formato/bot/equipo desde `.env` (editables). Opcional: `USER_TO_ACCEPT` para filtrar retador. Los logs son los mismos que Mód. 1/2 (`logs/reporte.txt`, `logs/logs_showdown.txt`).
+
 Dependencias opcionales:
 
 ```bash

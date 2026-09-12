@@ -57,6 +57,38 @@ def _setup_cross_hit(*, user_speed_stats=True):
     return battle, mine, theirs
 
 
+def test_ohko_keeps_high_atk_candidates():
+    """
+    KO / overkill: el daño reportado es solo el HP restante. Atk altos cuya
+    ventana de rolls queda por encima de ese tope deben seguir siendo válidos.
+    """
+    battle, mine, theirs = _setup_cross_hit()
+    belief = battle.stat_beliefs.belief_for(theirs)
+
+    def fake_range(req):
+        atk = req['attacker']['stats']['atk']
+        if atk >= 185:
+            return (200, 240)  # overkill vs Whimsicott 155 HP
+        return (40, 50)
+
+    set_damage_range_override(fake_range)
+    try:
+        observe_move(
+            battle,
+            ['', 'move', 'p2a: Dragonite', 'Extreme Speed', 'p1a: Whimsicott'],
+        )
+        mine.HPA_battle_actual = 155
+        heal_or_damage(battle, ['', '-damage', 'p1a: Whimsicott', '0 fnt'])
+
+        assert belief.observations >= 1
+        assert max(belief.candidates['atk']) == 32
+        # Los Atk bajos que no llegan a matar sí se pueden excluir
+        assert min(belief.candidates['atk']) > 0 or 32 in belief.candidates['atk']
+    finally:
+        set_damage_range_override(None)
+        si.reset_sp_limits()
+
+
 def test_opponent_physical_hit_narrows_atk_with_mock_bridge():
     battle, mine, theirs = _setup_cross_hit()
     belief = battle.stat_beliefs.belief_for(theirs)

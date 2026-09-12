@@ -1,0 +1,17 @@
+=== Heuristic Baseline E2E Report ===
+time_utc: 2026-09-12T17:56:59.228949+00:00
+format: gen9championsvgc2026regmc
+ps_up: True
+team_pool: 100
+battles: 3
+seed: 42
+elapsed_s: 19.1
+battles_per_s: 0.157
+
+heuristic_wins: 3
+heuristic_losses: 0
+errors: 0
+win_rate: 100.0%
+verdict: YES - heuristic beat random overall
+
+Player A = GreedyDamagePlayer | Player B = RandomPlayer

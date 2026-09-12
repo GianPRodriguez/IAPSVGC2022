@@ -11,9 +11,14 @@ from poke_env.ps_client import AccountConfiguration, LocalhostServerConfiguratio
 
 from showdown.inference_sim.mirror_player import InferenceMirrorPlayer
 from showdown.inference_sim.paths import BATTLE_FORMAT, REPORT_PATH
-from showdown.inference_sim.ps_server import ensure_ps, is_ps_up
+from showdown.inference_sim.ps_server import ensure_ps, is_ps_up, ps_start_hint
 from showdown.inference_sim.soundness import SoundnessFailure, SoundnessReport, format_report
-from showdown.inference_sim.team_factory import METAVGC_TEAMS, team_by_index, to_showdown_export
+from showdown.inference_sim.team_factory import (
+    METAVGC_TEAMS,
+    active_teams,
+    battle_pairings,
+    to_showdown_export,
+)
 
 
 async def run_battles(
@@ -25,15 +30,16 @@ async def run_battles(
     if not ensure_ps(start=start_ps):
         raise RuntimeError(
             'Pokémon Showdown no responde en localhost:8000. '
-            'Arranca: node pokemon-showdown start  (repo Champions) o --start-ps'
+            f'Arranca: {ps_start_hint()}  (repo Champions) o --start-ps'
         )
 
     report = SoundnessReport()
     teams_used: List[str] = []
+    pairs = battle_pairings(n_battles)
+    pool = active_teams()
+    print(f'Team pool: {len(pool)} MetaVGC sets')
 
-    for i in range(n_battles):
-        user_meta = team_by_index(i)
-        opp_meta = team_by_index(i + 1)
+    for i, (user_meta, opp_meta) in enumerate(pairs):
         teams_used.append(f'{user_meta.name} vs {opp_meta.name}')
         print(f'\n=== Battle {i + 1}/{n_battles}: {teams_used[-1]} ===')
 
@@ -54,7 +60,7 @@ async def run_battles(
         )
 
         try:
-            await asyncio.wait_for(mirror.battle_against(foe, n_battles=1), timeout=180)
+            await asyncio.wait_for(mirror.battle_against(foe, n_battles=1), timeout=300)
             print(
                 f'  finished wins={mirror.n_won_battles} '
                 f'checks_so_far={report.checks} fails={len(report.failures)} '
@@ -66,7 +72,7 @@ async def run_battles(
             if 'Timeout' in type(exc).__name__ or 'timeout' in str(exc).lower():
                 report.battle_errors += 1
             else:
-                report.failures.append(SoundnessFailure(
+                report.add_failure(SoundnessFailure(
                     battle_tag=f'battle-{i}',
                     species='?',
                     stat='?',
@@ -98,7 +104,7 @@ def main(argv: List[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.list_teams:
-        for t in METAVGC_TEAMS:
+        for t in active_teams():
             print(f'- {t.name}\n  {t.source_url}')
         return 0
 
@@ -106,7 +112,7 @@ def main(argv: List[str] | None = None) -> int:
     report = asyncio.run(
         run_battles(args.battles, format_id=args.format, start_ps=args.start_ps)
     )
-    teams = getattr(report, '_teams_used', [t.name for t in METAVGC_TEAMS])
+    teams = getattr(report, '_teams_used', [t.name for t in active_teams()])
     text = format_report(report, battles=args.battles, teams=teams)
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text(text, encoding='utf-8')
