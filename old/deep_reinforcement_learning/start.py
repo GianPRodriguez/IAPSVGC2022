@@ -182,7 +182,7 @@ def inicio():
 	action_size = 219
 	# Se crea al agente
 	#agente = DDQNAgent(state_size, action_size, None)
-	agente = DDQNAgent(state_size, action_size, tf.keras.models.load_model("deepReinforcementLearning/modelos/neat-checkpoint-15.0/"))
+	agente = DDQNAgent(state_size, action_size, tf.keras.models.load_model("old/deep_reinforcement_learning/modelos/neat-checkpoint-15.0/"))
 	# Para cada Batalla...
 	for e in range(EPISODES):
 		q1 = queue.Queue()
@@ -300,23 +300,23 @@ def inicio():
 		else:
 			scoreBatalla = str(scoreBatalla).zfill(7)
 		dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-		rutaWinLoss = "./deepReinforcementLearning/reportes/WinLoss/" + str(0) + ".txt"
+		rutaWinLoss = "./old/deep_reinforcement_learning/reportes/WinLoss/" + str(0) + ".txt"
 		with open(rutaWinLoss, 'a') as WLScore:
 			WLScore.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(numBattle, win, loss, indexOT, scoreBatalla, dt_string))
 		# Archivos de Registro - Score$.txt
-		rutaScore = "./deepReinforcementLearning/reportes/Score/" + str(0) + ".txt"
+		rutaScore = "./old/deep_reinforcement_learning/reportes/Score/" + str(0) + ".txt"
 		with open(rutaScore, 'a') as fScore:
 			fScore.write("{}\n".format(scoreBatalla))
 		# Archivos de Registro - InvalidActions$.txt
 		perInvalidActions = cola[5]
-		rutaInvalidActions = "./deepReinforcementLearning/reportes/InvalidActions/" + str(0) + ".txt"
+		rutaInvalidActions = "./old/deep_reinforcement_learning/reportes/InvalidActions/" + str(0) + ".txt"
 		with open(rutaInvalidActions, 'a') as IAScore:
 			IAScore.write("{}\n".format(perInvalidActions))
 		# Actualiza el target_model al final de cada batalla
 		agente.update_target_model()
 		# Guardo una copia de la red neuronal cada 05 batallas - ejemplo 1
 		if (int(e)+1)%10 == 0:	# (int(e)+1)%10 == 0
-			rutaSave = "deepReinforcementLearning/modelos/neat-checkpoint-" + str((int(e)+1)/10) + "/"
+			rutaSave = "old/deep_reinforcement_learning/modelos/neat-checkpoint-" + str((int(e)+1)/10) + "/"
 			agente.save(rutaSave)
 	# Fin del bucle...
 	print("--- FIN DEL PROGRAMA ---")

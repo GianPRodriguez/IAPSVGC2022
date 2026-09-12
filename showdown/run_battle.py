@@ -50,10 +50,12 @@ async def handle_finished_battleBO3(battle: Battle, msg: str, q: multiprocessing
 
     # Opcionalmente, registramos el resultado en el archivo de reporte si está activo
     try:
-        with open('reporte.txt', 'a', encoding='utf-8') as f:
+        import os
+        os.makedirs('logs', exist_ok=True)
+        with open('logs/reporte.txt', 'a', encoding='utf-8') as f:
             print(f"\n[FIN DE PARTIDA BO3] Ganador: {winner} (Turno: {battle.turn})", file=f)
     except Exception as e:
-        print(f"No se pudo escribir el resultado en el reporte.txt: {e}")
+        print(f"No se pudo escribir el resultado en logs/reporte.txt: {e}")
 
     q.put([-1, winner == battle.user.account_name, battle.user.account_name, battle.opponent.account_name])
     return winner
@@ -194,9 +196,16 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
             raise ValueError(f"Fallo en {filename} -> {func_name}() [Línea {lineno}]: {e}") from e
         battle.imprimir()
         print("[INFO]     Turno: {}".format(battle.turn))
+        print("[STATE]    {}".format(
+            f"turn={battle.turn} | "
+            f"{getattr(battle.user, 'account_name', '?')} vs {getattr(battle.opponent, 'account_name', '?')} | "
+            f"ver logs/latest_state.txt"
+        ))
         await ps_websocket_client.send_message(battle.battle_tag, battle_turn_action)
         print("[SEND]     Acción Turno: {}".format(battle_turn_action))
-        battle.turn = battle.turn + 1
+        # El contador de turno / clima / side conditions lo actualiza únicamente |turn|
+        # del protocolo. No adelantar battle.turn aquí: si no, un force-switch mid-turn
+        # muestra el turno siguiente con el clima aún sin decrementar.
         return
     print("20xx")
     # 5. Si no es ni wait, ni active, ni forceSwitch, lanzamos una excepción específica
@@ -211,7 +220,7 @@ async def handle_action_error(ps_websocket_client: PSWebsocketClient, battle: Ba
     print("\n" + "!" * 80)
     print(f"[ERROR DE ACCIÓN DETECTADO EN SHOWDOWN]")
     print(f"  > Mensaje del servidor: {error_message}")
-    print(f"  > Entorno Batalla: {battle.imprimir()}")
+    print(f"  > Entorno Batalla: {battle.imprimir() or '(ver logs/latest_state.txt)'}")
     print("!" * 80 + "\n")
     battle.error = True
 
@@ -441,9 +450,29 @@ async def start_battle(ps_websocket_client: PSWebsocketClient, battle: Battle) -
 ############################################################################################################################################################
 # OK - Inicia la Batalla BO3, deja todo listo para que inicie la Batalla Individual, retorno la Clase Batalla con el bo3_tag                             ###
 ############################################################################################################################################################
+def _queue_battle_start_error(q: multiprocessing.Queue, error: Exception) -> None:
+    """Mapea excepciones de inicio de BO3 a códigos de la UI (-2/-3/-4/-6)."""
+    text = str(error).lower()
+    if "rechazado" in text or "rejected" in text:
+        q.put([-2])
+    elif "no ha sido encontrado" in text or "user not found" in text:
+        q.put([-4])
+    elif "equipo" in text or "team" in text or "formato" in text:
+        q.put([-3])
+    else:
+        q.put([-6])
+
+
 async def start_battleBO3(ps_websocket_client: PSWebsocketClient, botMode: str) -> Battle:
     # Creo la Clase Batalla, que estará con vida durante el BO3, y que contiene toda la información de la Batalla, tanto del usuario como del oponente
-    module_bot = importlib.import_module('showdown.battle_bots.{}.main'.format("random"))
+    bot_name = (config.battle_bot or "random").strip().lower()
+    try:
+        module_bot = importlib.import_module('showdown.battle_bots.{}.main'.format(bot_name))
+    except ModuleNotFoundError:
+        print(f"[WARN]     BATTLE_BOT '{bot_name}' no existe; usando 'random'")
+        bot_name = "random"
+        module_bot = importlib.import_module('showdown.battle_bots.random.main')
+    print(f"[INFO]     Battle bot activo: {bot_name}")
 
     # Instanciamos la clase BattleBot que vive dentro de ese módulo
     battle = module_bot.BattleBot() 
@@ -463,13 +492,21 @@ async def start_battleBO3(ps_websocket_client: PSWebsocketClient, botMode: str) 
         first_part = parts[0]
         # first_part = ">battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
 
-        # Rechazo de la solicitud de batalla para SEARCH_LADDER
-        if len(parts) >= 5 and parts[4].startswith("/nonotify") and botMode == constants.SEARCH_LADDER:
+        # Rechazo de la solicitud de batalla
+        if len(parts) >= 5 and parts[4].startswith("/nonotify"):
+            raise Exception("¡El oponente ha rechazado la solicitud de batalla!")
+        if message.startswith("|popup|") and ("rejected" in message.lower() or "rechaz" in message.lower()):
             raise Exception("¡El oponente ha rechazado la solicitud de batalla!")
         
         # Nombre de usuario no encontrado
-        if message.startswith("|popup|The user"):
+        if message.startswith("|popup|The user") or (
+            message.startswith("|popup|") and "could not be found" in message.lower()
+        ):
             raise Exception("¡El nombre de usuario no ha sido encontrado!")
+
+        # Equipo inválido para el formato
+        if message.startswith("|popup|Your team"):
+            raise Exception("¡El equipo del agente no cumple con las reglas del formato!")
 
         if 'game-bestof3' in first_part: # Happy Path
             battle_tag = first_part.replace('>', '').strip()  # battle_tag = "battle-gen8vgc2022-1614956049-sefnavzupbfhf6qq7ge3ckmkpoqyilkpw"
@@ -494,8 +531,11 @@ async def pokemon_battle(ps_websocket_client: PSWebsocketClient, q: multiprocess
         battle = await start_battleBO3(ps_websocket_client, botmode) # Crea la Clase Batalla BO3 | init (1)
     except Exception as e:
         print(f"[ERROR]  ¡Ha sucedido un error al momento de Comenzar la Batalla BO3!: {e}")
-        q.put([-6])
+        _queue_battle_start_error(q, e)
         raise
+
+    q.put([0])  # UI: batalla en curso
+    battle.q = q  # Misma cola para Team Preview / turnos (Módulo de Análisis)
 
     while True: # Para cada uno de las Batallas Individuales dentro del BO3
         try:
@@ -531,5 +571,5 @@ async def pokemon_battle(ps_websocket_client: PSWebsocketClient, q: multiprocess
         if not (await battleBO3_is_finished(ps_websocket_client, battle.battleBO3_tag)): # ¿Ha finalizado la Batalla BO3?
             await confirm_next_battle(ps_websocket_client, battle.battle_tag, battle.battleBO3_tag) # Si no ha finalizado, entonces se espera la siguiente Batalla Individual | confirmReady
         else:
-            winner = await handle_finished_battleBO3(battle, msg) # Sí ha finalizado la Batalla BO3, entonces se obtiene el ganador y se sale del bucle
+            winner = await handle_finished_battleBO3(battle, msg, q) # Sí ha finalizado la Batalla BO3, entonces se obtiene el ganador y se sale del bucle
             return winner

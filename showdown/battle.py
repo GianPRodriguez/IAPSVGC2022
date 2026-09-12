@@ -5,7 +5,6 @@ import requests
 import constants
 
 from abc import ABC
-from numpy import sqrt
 from abc import abstractmethod
 from collections import defaultdict
 from API.PokemonData import getPkmnInfo
@@ -14,6 +13,20 @@ import json
 from typing import Union, Dict, Any
 
 from teams.team_converter import normalize_name
+
+
+def _fmt_mapping(mapping) -> str:
+    """Compacta dicts/defaultdicts vacíos como '-' para reportes legibles."""
+    if not mapping:
+        return '-'
+    data = dict(mapping)
+    if not data:
+        return '-'
+    return ', '.join(f'{k}:{v}' for k, v in data.items())
+
+
+def _fmt_stat_line(atk, df, spa, spd, spe) -> str:
+    return f"Atk {atk} | Def {df} | SpA {spa} | SpD {spd} | Spe {spe}"
 
 ############################################################################################################################################################
 # OK - CLASE BATTLE                                                                                                                                      ###
@@ -146,35 +159,63 @@ class Battle(ABC):
 # OK - Impresión de TODA la Batalla                                                                                                                      ###       
 ############################################################################################################################################################
     def imprimir(self):
-        """Imprime por consola y guarda en 'reporte.txt' el estado completo de la batalla."""
-        with open('reporte.txt', 'a', encoding='utf-8') as f:
-            print("", file=f)
-            print("", file=f)
-            print("", file=f)
-            print("", file=f)
-            print("", file=f)
-            print("", file=f)
-            print("", file=f)
-            print("", file=f)
-            print("##################################################", file=f)
-            print("                ESTADO DEL ENTORNO                ", file=f)
-            print("##################################################", file=f)
-            print(f"Turno: {self.turn} | rqid: {self.rqid}", file=f)
-            print(f"Clima: {self.weather} (Turnos restantes: {self.weatherTurn})", file=f)
-            print(f"Terrenos: {dict(self.terrain)}", file=f)
-            print(f"Force Switch: {self.force_switch} | active: {self.active} | Wait: {self.wait} | Error: {self.error}", file=f)
-            print(f"Recompensa actual: {self.reward} | Score: {self.score}", file=f)
-            
-            print("\n--------------------------------------------------", file=f)
-            print("                     USUARIO                      ", file=f)
-            print("--------------------------------------------------", file=f)
-            self.user.imprimir(f)
+        """
+        Guarda el estado de la batalla para pruebas:
+        - logs/latest_state.txt  → solo el estado actual (se sobrescribe; fácil de refrescar)
+        - logs/reporte.txt       → historial append con timestamp
+        Devuelve un resumen corto para consola.
+        """
+        import os
+        from datetime import datetime
 
-            print("\n--------------------------------------------------", file=f)
-            print("                     OPONENTE                     ", file=f)
-            print("--------------------------------------------------", file=f)
+        os.makedirs('logs', exist_ok=True)
+        stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        tag = getattr(self, 'battle_tag', None) or getattr(self, 'battleBO3_tag', None) or '?'
+        summary = (
+            f"[{stamp}] turn={self.turn} rqid={self.rqid} "
+            f"{getattr(self.user, 'account_name', '?')} vs {getattr(self.opponent, 'account_name', '?')} "
+            f"| weather={self.weather}/{self.weatherTurn} force={self.force_switch} err={self.error}"
+        )
+
+        def _write(f, header: bool):
+            if header:
+                print("=" * 72, file=f)
+                print(f"  SNAPSHOT  {stamp}", file=f)
+                print(f"  Tag: {tag}  |  BO3 game: {getattr(self, 'battleBO3_count', '?')}", file=f)
+                print("=" * 72, file=f)
+            else:
+                print("=" * 72, file=f)
+                print(f"  ESTADO ACTUAL  {stamp}", file=f)
+                print(f"  Tag: {tag}", file=f)
+                print("=" * 72, file=f)
+
+            print(f"Turno: {self.turn} | rqid: {self.rqid} | modo: {self.botMode}", file=f)
+            print(
+                f"Clima: {self.weather or '-'} ({self.weatherTurn}) | "
+                f"Terreno/campo: {_fmt_mapping(self.terrain)}",
+                file=f,
+            )
+            print(
+                f"Flags: force_switch={self.force_switch} active={self.active} "
+                f"wait={self.wait} error={self.error}",
+                file=f,
+            )
+            print(f"Reward/Score: {self.reward} / {self.score}", file=f)
+
+            print("\n--- USUARIO ---", file=f)
+            self.user.imprimir(f)
+            print("\n--- OPONENTE ---", file=f)
             self.opponent.imprimir(f)
-            print("**************************************************", file=f)
+            print("=" * 72, file=f)
+
+        with open('logs/latest_state.txt', 'w', encoding='utf-8') as f:
+            _write(f, header=False)
+
+        with open('logs/reporte.txt', 'a', encoding='utf-8') as f:
+            print(file=f)
+            _write(f, header=True)
+
+        return summary
 
 
 ############################################################################################################################################################
@@ -406,58 +447,45 @@ class Battler:
 ###############################################################################################################################################################
     def imprimir(self, f):
         print(f"ID: {self.id} | Cuenta: {self.account_name}", file=f)
-        
         if not self.isUser:
-            print(f"Pokémon del oponente confirmados: {self.opponentPkmnConfirmed}", file=f)
+            print(f"Confirmados oponente: {self.opponentPkmnConfirmed}", file=f)
+        print(f"Side conditions: {_fmt_mapping(self.side_conditions)}", file=f)
 
-        # 1. Side conditions en una sola línea si no hay ninguna
-        if self.side_conditions:
-            print("Side conditions:", file=f)
-            for key, value in self.side_conditions.items():
-                print(f"  {key} : {value}", file=f)
-        else:
-            print("Side conditions: Ninguna", file=f)
-
-        print("\n--- POKÉMON ACTIVO 1 ---", file=f)
+        print("\n  [Activo 1]", file=f)
         if self.active1 is not None:
             self.active1.imprimir(f, not self.isUser)
         else:
-            print("  Ninguno (None)", file=f)
+            print("    (vacío)", file=f)
 
-        print("\n--- POKÉMON ACTIVO 2 ---", file=f)
+        print("\n  [Activo 2]", file=f)
         if self.active2 is not None:
             self.active2.imprimir(f, not self.isUser)
         else:
-            print("  Ninguno (None)", file=f)
+            print("    (vacío)", file=f)
 
-        print("\n--- POKÉMON EN RESERVA ---", file=f)
+        print("\n  [Reserva]", file=f)
         if self.reserved:
             for i, pkmn in enumerate(self.reserved, start=1):
-                print(f"\n[Reserva {i}]", file=f)
+                print(f"  -- Reserva {i} --", file=f)
                 if pkmn is not None:
                     pkmn.imprimir(f, not self.isUser)
                 else:
-                    print("  Vacío (None)", file=f)
+                    print("    (vacío)", file=f)
         else:
-            print("  Sin reservas", file=f)
+            print("    (sin reservas)", file=f)
 
-        # 2. Sección de Pokémon Oponentes solo para el bando oponente
         if not self.isUser:
-            # Obtenemos la lista usando 'not_confirmed' o 'opponents' según cómo esté definida en tu clase
             lista_oponentes = getattr(self, 'opponents', [])
-            
-            print("\n--- POKÉMON OPONENTES ---", file=f)
+            print("\n  [Lista preview oponentes]", file=f)
             if lista_oponentes:
                 for i, pkmn in enumerate(lista_oponentes, start=1):
-                    print(f"\n[Oponente {i}]", file=f)
+                    print(f"  -- Preview {i} --", file=f)
                     if pkmn is not None:
                         pkmn.imprimir(f, not self.isUser)
                     else:
-                        print("  Vacío (None)", file=f)
+                        print("    (vacío)", file=f)
             else:
-                print("  Sin Pokémon oponentes en lista de preview", file=f)
-
-        print("-" * 50, file=f)
+                print("    (vacía)", file=f)
 
 
 ############################################################################################################################################################
@@ -489,6 +517,11 @@ class Pokemon:
         self.is_ditto = True if name == 'ditto' else False
         self.is_zoroark = True if name == 'Zoroark' or name == 'zoroark-hisui' else False
         self.is_fainted = False
+        # Yawn: True desde |-start|move: Yawn hasta dormir / salir / |-end|Yawn.
+        # Durante el turno de decisión previo al slp el mon sigue despierto y puede actuar.
+        self.is_drowsy = False
+        # Perish Song: 0 = sin efecto; 3/2/1 = contador visible de Showdown (| -start|perishN).
+        self.perish_count = 0
         
         # Tipos (Se asignan posteriormente)
         self.type1 = None
@@ -496,7 +529,7 @@ class Pokemon:
 
         # Estados y Modificadores de Combate
         self.non_volatile_statuses = defaultdict(lambda: 0)  # Ej: ['slp', 'brn', 'frz', 'par', 'psn']
-        self.volatile_statuses = defaultdict(lambda: 0)      # Ej: 'yawn', etc.
+        self.volatile_statuses = defaultdict(lambda: 0)      # Ej: 'yawn', 'confusion', 'substitute'
         self.boosts = defaultdict(lambda: 0)                 # Modificadores de estadísticas (-6 a +6)
 
         # Estadísticas Base - Solo se llena una vez para el Oponente, -1 para el Usuario
@@ -539,33 +572,56 @@ class Pokemon:
 # OK - Impresión de la clase Pokemon                                                                                                                     ###
 ############################################################################################################################################################
     def imprimir(self, f, isOpponent) -> None:
-        """Imprime por consola o archivo el estado actual del Pokémon de forma organizada."""
-        print(f"  > POKÉMON: {self.name}", file=f)
-        print(f"    Tipo 1: {self.type1} | Tipo 2: {self.type2}", file=f)
-        print(f"    Naturaleza: {self.nature} | Objeto: {self.objectPkmn} | Habilidad: {self.abilityPkmn}", file=f)
-        if isOpponent:
-            print(f"    Es Oponente: {self.is_opponent} | Es Oponente Confirmado: {self.is_opponent_confirmed}", file=f)
-        print(f"    Puede Megeevolucionar: {self.can_mega_evo} | Ha Megaevolucionado: {self.is_mega_evo}  ", file=f)
-        print(f"    Es Ditto: {self.is_ditto} | Es Zoroark: {self.is_zoroark} | ¿Debilitado?: {self.is_fainted}", file=f)
-        
-        print("    [Estados y Modificadores]", file=f)
-        print(f"      No Volátiles: {dict(self.non_volatile_statuses)}", file=f)
-        print(f"      Volátiles: {dict(self.volatile_statuses)}", file=f)
-        print(f"      Boosts Activos: {dict(self.boosts)}", file=f)
+        """Impresión compacta orientada a pruebas / depuración de estado."""
+        flags = []
+        if self.is_fainted:
+            flags.append('FAINTED')
+        if getattr(self, 'is_drowsy', False):
+            flags.append('DROWSY')
+        if getattr(self, 'perish_count', 0):
+            flags.append(f'PERISH{self.perish_count}')
+        if self.is_ditto:
+            flags.append('DITTO')
+        if self.is_zoroark:
+            flags.append('ZOROARK')
+        if self.is_mega_evo:
+            flags.append('MEGA')
+        if self.can_mega_evo:
+            flags.append('CAN_MEGA')
+        if isOpponent and self.is_opponent_confirmed:
+            flags.append('CONFIRMED')
 
-        print("    [Puntos de Vida]", file=f)
-        print(f"      HPA: {self.HPA_battle_actual} | HPB: {self.HPB_battle_base}", file=f)
+        types = f"{self.type1}" + (f"/{self.type2}" if self.type2 else "")
+        hp_pct = ''
+        try:
+            max_hp = int(float(str(self.HPB_battle_base).split()[0]))
+            cur_hp = int(float(str(self.HPA_battle_actual).split()[0]))
+            if max_hp > 0:
+                hp_pct = f" ({100 * cur_hp / max_hp:.0f}%)"
+        except Exception:
+            hp_pct = ''
 
-        print("    [Estadísticas Base]", file=f)
-        print(f"      ATK: {self.ATK_battle_base} | DEF: {self.DEF_battle_base}", file=f)
-        print(f"      SPA: {self.SPA_battle_base} | SPD: {self.SPD_battle_base}", file=f)
-        print(f"      VEL: {self.VEL_battle_base}", file=f)
-
-        print("    [Estadísticas Actuales]", file=f)
-        print(f"      ATK: {self.ATK_battle_actual} | DEF: {self.DEF_battle_actual}", file=f)
-        print(f"      SPA: {self.SPA_battle_actual} | SPD: {self.SPD_battle_actual} | ", file=f)
-        print(f"      VEL: {self.VEL_battle_actual}", file=f)
-
-        print("    [Movimientos y PP]", file=f)
-        for i, (move, pp) in enumerate(zip(self.moves, self.movesPP), start=1):
-            print(f"      Movimiento {i}: {move} (PP: {pp})", file=f)
+        print(f"    {self.name} [{types}]  HP {self.HPA_battle_actual}/{self.HPB_battle_base}{hp_pct}", file=f)
+        print(
+            f"      item={self.objectPkmn or '-'} | abi={self.abilityPkmn or '-'} | nat={self.nature or '-'}",
+            file=f,
+        )
+        if flags:
+            print(f"      flags: {', '.join(flags)}", file=f)
+        print(
+            f"      status={_fmt_mapping(self.non_volatile_statuses)} | "
+            f"volatile={_fmt_mapping(self.volatile_statuses)} | "
+            f"boosts={_fmt_mapping(self.boosts)}",
+            file=f,
+        )
+        print(
+            f"      stats: {_fmt_stat_line(self.ATK_battle_actual, self.DEF_battle_actual, self.SPA_battle_actual, self.SPD_battle_actual, self.VEL_battle_actual)}",
+            file=f,
+        )
+        if any(v != -1 for v in (self.ATK_battle_base, self.DEF_battle_base, self.SPA_battle_base, self.SPD_battle_base, self.VEL_battle_base)):
+            print(
+                f"      base:  {_fmt_stat_line(self.ATK_battle_base, self.DEF_battle_base, self.SPA_battle_base, self.SPD_battle_base, self.VEL_battle_base)}",
+                file=f,
+            )
+        moves = [f"{move}({pp})" for move, pp in zip(self.moves, self.movesPP) if move]
+        print(f"      moves: {', '.join(moves) if moves else '-'}", file=f)

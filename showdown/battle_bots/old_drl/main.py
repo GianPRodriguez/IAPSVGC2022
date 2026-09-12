@@ -160,10 +160,10 @@ class BattleBot(Battle):
                         nMoveSwitch2 = 3
         else:
             # Lee el Genoma
-            with open("./neuroevolution/modelos/winner.pkl", "rb") as f:
+            with open("./old/neuroevolution/modelos/winner.pkl", "rb") as f:
                 genome = pickle.load(f)
             # Archivo de Configuración
-            config_path = "./neuroevolution/config-feedforward"
+            config_path = "./old/neuroevolution/config-feedforward"
             config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
             # Crea la Red Neuronal
             net = neat.nn.FeedForwardNetwork.create(genome, config)

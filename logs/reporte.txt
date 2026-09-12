@@ -1,0 +1,2483 @@
+
+========================================================================
+  SNAPSHOT  2026-09-12 01:59:56
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 4 | rqid: 12 | modo: CHALLENGE_USER
+Clima: sunnyday (2) | Terreno/campo: -
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    farigiraf [Normal/Psychic]  HP 222/222 (100%)
+      item=sitrusberry | abi=armortail | nat=Bold
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(10), trickroom(8), trick(12)
+
+  [Activo 2]
+    torkoal [Fire]  HP 157/177 (89%)
+      item=focussash | abi=drought | nat=Relaxed
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(16), clearsmog(15)
+
+  [Reserva]
+  -- Reserva 1 --
+    ditto [Normal]  HP 155/155 (100%)
+      item=choicescarf | abi=imposter | nat=Timid
+      flags: DITTO
+      status=- | volatile=- | boosts=-
+      stats: Atk 61 | Def 68 | SpA 68 | SpD 68 | Spe 74
+      moves: transform(-1)
+  -- Reserva 2 --
+    gengar [Ghost/Poison]  HP 167/167 (100%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      flags: CAN_MEGA
+      status=- | volatile=- | boosts=-
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(12), brickbreak(16), corrosivegas(20)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 4
+Side conditions: lightscreen:4
+
+  [Activo 1]
+    zoroark [Dark]  HP 74/100 (74%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Activo 2]
+    dragonite [Dragon/Flying]  HP 100/100 (100%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: DROWSY, CONFIRMED
+      status=- | volatile=yawn:True | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    pawmot [Electric/Fighting]  HP 100/100 (100%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Reserva 2 --
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:01:15
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 5 | rqid: 14 | modo: CHALLENGE_USER
+Clima: sunnyday (1) | Terreno/campo: trickroom:4
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    farigiraf [Normal/Psychic]  HP 222/222 (100%)
+      item=sitrusberry | abi=armortail | nat=Bold
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(10), trickroom(7), trick(12)
+
+  [Activo 2]
+    torkoal [Fire]  HP 157/177 (89%)
+      item=focussash | abi=drought | nat=Relaxed
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+
+  [Reserva]
+  -- Reserva 1 --
+    ditto [Normal]  HP 155/155 (100%)
+      item=choicescarf | abi=imposter | nat=Timid
+      flags: DITTO
+      status=- | volatile=- | boosts=-
+      stats: Atk 61 | Def 68 | SpA 68 | SpD 68 | Spe 74
+      moves: transform(-1)
+  -- Reserva 2 --
+    gengar [Ghost/Poison]  HP 167/167 (100%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      flags: CAN_MEGA
+      status=- | volatile=- | boosts=-
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(12), brickbreak(16), corrosivegas(20)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 4
+Side conditions: lightscreen:3
+
+  [Activo 1]
+    pawmot [Electric/Fighting]  HP 100/100 (100%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Activo 2]
+    dragonite [Dragon/Flying]  HP 100/100 (100%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=slp:True | volatile=- | boosts=attack:1, speed:1
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    zoroark [Dark]  HP 74/100 (74%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Reserva 2 --
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:02:36
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 6 | rqid: 16 | modo: CHALLENGE_USER
+Clima: none (0) | Terreno/campo: trickroom:3
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    farigiraf [Normal/Psychic]  HP 222/222 (100%)
+      item=sitrusberry | abi=armortail | nat=Bold
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(10), trickroom(7), trick(11)
+
+  [Activo 2]
+    gengar [Ghost/Poison]  HP 167/167 (100%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      flags: CAN_MEGA
+      status=- | volatile=- | boosts=-
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(12), brickbreak(16), corrosivegas(20)
+
+  [Reserva]
+  -- Reserva 1 --
+    ditto [Normal]  HP 155/155 (100%)
+      item=choicescarf | abi=imposter | nat=Timid
+      flags: DITTO
+      status=- | volatile=- | boosts=-
+      stats: Atk 61 | Def 68 | SpA 68 | SpD 68 | Spe 74
+      moves: transform(-1)
+  -- Reserva 2 --
+    torkoal [Fire]  HP 157/177 (89%)
+      item=focussash | abi=drought | nat=Relaxed
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 4
+Side conditions: lightscreen:2
+
+  [Activo 1]
+    zoroark [Dark]  HP 74/100 (74%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Activo 2]
+    dragonite [Dragon/Flying]  HP 100/100 (100%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=slp:True | volatile=- | boosts=attack:1, speed:1
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    pawmot [Electric/Fighting]  HP 100/100 (100%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Reserva 2 --
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:03:55
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 7 | rqid: 18 | modo: CHALLENGE_USER
+Clima: sunnyday (4) | Terreno/campo: trickroom:2
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    farigiraf [Normal/Psychic]  HP 222/222 (100%)
+      item=sitrusberry | abi=armortail | nat=Bold
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(10), trickroom(7), trick(11)
+
+  [Activo 2]
+    gengar [Ghost/Poison]  HP 167/167 (100%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      flags: CAN_MEGA
+      status=- | volatile=- | boosts=-
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(11), brickbreak(16), corrosivegas(20)
+
+  [Reserva]
+  -- Reserva 1 --
+    ditto [Normal]  HP 155/155 (100%)
+      item=choicescarf | abi=imposter | nat=Timid
+      flags: DITTO
+      status=- | volatile=- | boosts=-
+      stats: Atk 61 | Def 68 | SpA 68 | SpD 68 | Spe 74
+      moves: transform(-1)
+  -- Reserva 2 --
+    torkoal [Fire]  HP 66/177 (37%)
+      item=focussash | abi=drought | nat=Relaxed
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 4
+Side conditions: lightscreen:1
+
+  [Activo 1]
+    pawmot [Electric/Fighting]  HP 51/100 (51%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Activo 2]
+    dragonite [Dragon/Flying]  HP 88/100 (88%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=attack:1, speed:1
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    zoroark [Dark]  HP 74/100 (74%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Reserva 2 --
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:05:17
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 8 | rqid: 20 | modo: CHALLENGE_USER
+Clima: snowscape (4) | Terreno/campo: -
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    farigiraf [Normal/Psychic]  HP 222/222 (100%)
+      item=sitrusberry | abi=armortail | nat=Bold
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(10), trickroom(6), trick(11)
+
+  [Activo 2]
+    torkoal [Fire]  HP 66/177 (37%)
+      item=focussash | abi=drought | nat=Relaxed
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+
+  [Reserva]
+  -- Reserva 1 --
+    ditto [Normal]  HP 155/155 (100%)
+      item=choicescarf | abi=imposter | nat=Timid
+      flags: DITTO
+      status=- | volatile=- | boosts=-
+      stats: Atk 61 | Def 68 | SpA 68 | SpD 68 | Spe 74
+      moves: transform(-1)
+  -- Reserva 2 --
+    gengar [Ghost/Poison]  HP 167/167 (100%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      flags: CAN_MEGA
+      status=- | volatile=- | boosts=-
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(11), brickbreak(16), corrosivegas(20)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 4
+Side conditions: -
+
+  [Activo 1]
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Activo 2]
+    dragonite [Dragon/Flying]  HP 88/100 (88%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=attack:1, speed:1
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    zoroark [Dark]  HP 74/100 (74%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Reserva 2 --
+    pawmot [Electric/Fighting]  HP 51/100 (51%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:06:10
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 8 | rqid: 22 | modo: CHALLENGE_USER
+Clima: snowscape (4) | Terreno/campo: -
+Flags: force_switch=True active=False wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    farigiraf [Normal/Psychic]  HP 222/222 (100%)
+      item=sitrusberry | abi=armortail | nat=Bold
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(10), trickroom(6), trick(11)
+
+  [Activo 2]
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+
+  [Reserva]
+  -- Reserva 1 --
+    ditto [Normal]  HP 155/155 (100%)
+      item=choicescarf | abi=imposter | nat=Timid
+      flags: DITTO
+      status=- | volatile=- | boosts=-
+      stats: Atk 61 | Def 68 | SpA 68 | SpD 68 | Spe 74
+      moves: transform(-1)
+  -- Reserva 2 --
+    gengar [Ghost/Poison]  HP 167/167 (100%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      flags: CAN_MEGA
+      status=- | volatile=- | boosts=-
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(11), brickbreak(16), corrosivegas(20)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 4
+Side conditions: -
+
+  [Activo 1]
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Activo 2]
+    zoroark [Dark]  HP 74/100 (74%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    dragonite [Dragon/Flying]  HP 88/100 (88%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Reserva 2 --
+    pawmot [Electric/Fighting]  HP 51/100 (51%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:06:10
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 9 | rqid: 24 | modo: CHALLENGE_USER
+Clima: snowscape (3) | Terreno/campo: -
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    farigiraf [Normal/Psychic]  HP 222/222 (100%)
+      item=sitrusberry | abi=armortail | nat=Bold
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(10), trickroom(6), trick(10)
+
+  [Activo 2]
+    blastoise [Water]  HP 155/155 (100%)
+      item=choicescarf | abi=imposter | nat=quiet
+      flags: DITTO
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: haze(5), flipturn(5), whirlpool(5), mirrorcoat(5)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    gengar [Ghost/Poison]  HP 167/167 (100%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      flags: CAN_MEGA
+      status=- | volatile=- | boosts=-
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(11), brickbreak(16), corrosivegas(20)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 4
+Side conditions: -
+
+  [Activo 1]
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Activo 2]
+    zoroark [Dark]  HP 74/100 (74%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    dragonite [Dragon/Flying]  HP 88/100 (88%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Reserva 2 --
+    pawmot [Electric/Fighting]  HP 51/100 (51%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:10:05
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 10 | rqid: 28 | modo: CHALLENGE_USER
+Clima: snowscape (2) | Terreno/campo: -
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    farigiraf [Normal/Psychic]  HP 192/222 (86%)
+      item=sitrusberry | abi=armortail | nat=Bold
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(9), trickroom(6), trick(10)
+
+  [Activo 2]
+    blastoise [Water]  HP 155/155 (100%)
+      item=choicescarf | abi=imposter | nat=quiet
+      flags: DITTO
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: haze(4), flipturn(5), whirlpool(5), mirrorcoat(5)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    gengar [Ghost/Poison]  HP 167/167 (100%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      flags: CAN_MEGA
+      status=- | volatile=- | boosts=-
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(11), brickbreak(16), corrosivegas(20)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 4
+Side conditions: -
+
+  [Activo 1]
+    zoroark [Dark]  HP 74/100 (74%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Activo 2]
+    pawmot [Electric/Fighting]  HP 51/100 (51%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    dragonite [Dragon/Flying]  HP 88/100 (88%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Reserva 2 --
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:10:52
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 11 | rqid: 32 | modo: CHALLENGE_USER
+Clima: snowscape (1) | Terreno/campo: trickroom:4
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    farigiraf [Normal/Psychic]  HP 67/222 (30%)
+      item=- | abi=armortail | nat=Bold
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(9), trickroom(5), trick(10)
+
+  [Activo 2]
+    blastoise [Water]  HP 95/155 (61%)
+      item=choicescarf | abi=imposter | nat=quiet
+      flags: DITTO
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: haze(3), flipturn(5), whirlpool(5), mirrorcoat(5)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    gengar [Ghost/Poison]  HP 167/167 (100%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      flags: CAN_MEGA
+      status=- | volatile=- | boosts=-
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(11), brickbreak(16), corrosivegas(20)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 4
+Side conditions: -
+
+  [Activo 1]
+    zoroark [Dark]  HP 74/100 (74%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Activo 2]
+    dragonite [Dragon/Flying]  HP 88/100 (88%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    pawmot [Electric/Fighting]  HP 51/100 (51%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Reserva 2 --
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:12:35
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 12 | rqid: 34 | modo: CHALLENGE_USER
+Clima: none (0) | Terreno/campo: trickroom:3
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    gengar [Ghost/Poison]  HP 167/167 (100%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      flags: CAN_MEGA
+      status=- | volatile=- | boosts=-
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(11), brickbreak(16), corrosivegas(20)
+
+  [Activo 2]
+    blastoise [Water]  HP 41/155 (26%)
+      item=- | abi=imposter | nat=quiet
+      flags: DITTO
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: haze(2), flipturn(5), whirlpool(5), mirrorcoat(5)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    farigiraf [Normal/Psychic]  HP 67/222 (30%)
+      item=- | abi=armortail | nat=Bold
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(9), trickroom(5), trick(10)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 4
+Side conditions: -
+
+  [Activo 1]
+    zoroark [Dark]  HP 74/100 (74%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Activo 2]
+    pawmot [Electric/Fighting]  HP 51/100 (51%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    dragonite [Dragon/Flying]  HP 88/100 (88%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Reserva 2 --
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:14:19
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 12 | rqid: 36 | modo: CHALLENGE_USER
+Clima: none (0) | Terreno/campo: trickroom:3
+Flags: force_switch=True active=False wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    gengar [Ghost/Poison]  HP 167/167 (100%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      status=- | volatile=- | boosts=-
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(11), brickbreak(16), corrosivegas(20)
+
+  [Activo 2]
+    blastoise [Water]  HP 41/155 (26%)
+      item=- | abi=imposter | nat=quiet
+      flags: DITTO
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: haze(2), flipturn(5), whirlpool(5), mirrorcoat(5)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    farigiraf [Normal/Psychic]  HP 67/222 (30%)
+      item=- | abi=armortail | nat=Bold
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(9), trickroom(5), trick(10)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 4
+Side conditions: -
+
+  [Activo 1]
+    zoroark [Dark]  HP 74/100 (74%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Activo 2]
+    pawmot [Electric/Fighting]  HP 22/100 (22%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    dragonite [Dragon/Flying]  HP 88/100 (88%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Reserva 2 --
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:14:40
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 12 | rqid: 40 | modo: CHALLENGE_USER
+Clima: none (0) | Terreno/campo: trickroom:3
+Flags: force_switch=True active=False wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    gengar [Ghost/Poison]  HP 45/167 (27%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      status=- | volatile=- | boosts=special-attack:-1
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(11), brickbreak(16), corrosivegas(20)
+
+  [Activo 2]
+    farigiraf [Normal/Psychic]  HP 0/222 (0%)
+      item=- | abi=armortail | nat=Bold
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(9), trickroom(5), trick(10)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    ditto [Water]  HP 41/155 (26%)
+      item=- | abi=imposter | nat=quiet
+      flags: DITTO
+      status=- | volatile=- | boosts=-
+      stats: Atk 61 | Def 68 | SpA 68 | SpD 68 | Spe 74
+      moves: transform(16)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 5
+Side conditions: -
+
+  [Activo 1]
+    zoroark [Dark]  HP 47/100 (47%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=disable:True | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Activo 2]
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    dragonite [Dragon/Flying]  HP 88/100 (88%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Reserva 2 --
+    pawmot [Electric/Fighting]  HP 22/100 (22%)
+      item=- | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:14:41
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 13 | rqid: 42 | modo: CHALLENGE_USER
+Clima: none (0) | Terreno/campo: trickroom:2
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    gengar [Ghost/Poison]  HP 45/167 (27%)
+      item=gengarite | abi=cursedbody | nat=Modest
+      flags: CAN_MEGA
+      status=- | volatile=- | boosts=special-attack:-1
+      stats: Atk 76 | Def 80 | SpA 200 | SpD 95 | Spe 132
+      moves: perishsong(8), sludgewave(11), brickbreak(16), corrosivegas(19)
+
+  [Activo 2]
+    zoroark [Dark]  HP 41/155 (26%)
+      item=- | abi=imposter | nat=modest
+      flags: DITTO, ZOROARK
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: calmmind(5), toxic(5), knockoff(5), snarl(5)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    farigiraf [Normal/Psychic]  HP 0/222 (0%)
+      item=- | abi=armortail | nat=Bold
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(9), trickroom(5), trick(10)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 5
+Side conditions: -
+
+  [Activo 1]
+    zoroark [Dark]  HP 47/100 (47%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=disable:True | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Activo 2]
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    dragonite [Dragon/Flying]  HP 88/100 (88%)
+      item=habanberry | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Reserva 2 --
+    pawmot [Electric/Fighting]  HP 22/100 (22%)
+      item=- | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:18:18
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 14 | rqid: 46 | modo: CHALLENGE_USER
+Clima: none (0) | Terreno/campo: trickroom:1
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    gengar-mega [Ghost/Poison]  HP 45/167 (27%)
+      item=gengarite | abi=shadowtag | nat=Modest
+      flags: MEGA
+      status=- | volatile=- | boosts=special-attack:-1
+      stats: Atk 76 | Def 100 | SpA 244 | SpD 115 | Spe 152
+      moves: perishsong(8), sludgewave(11), brickbreak(16), corrosivegas(18)
+
+  [Activo 2]
+    zoroark [Dark]  HP 32/155 (21%)
+      item=- | abi=imposter | nat=modest
+      flags: DITTO, ZOROARK
+      status=tox:True | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: calmmind(5), toxic(4), knockoff(5), snarl(5)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    farigiraf [Normal/Psychic]  HP 0/222 (0%)
+      item=- | abi=armortail | nat=Bold
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(9), trickroom(5), trick(10)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 5
+Side conditions: -
+
+  [Activo 1]
+    zoroark [Dark]  HP 14/100 (14%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=tox:True | volatile=disable:True | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Activo 2]
+    dragonite [Dragon/Flying]  HP 88/100 (88%)
+      item=- | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Reserva 2 --
+    pawmot [Electric/Fighting]  HP 22/100 (22%)
+      item=- | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:20:05
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 15 | rqid: 51 | modo: CHALLENGE_USER
+Clima: none (0) | Terreno/campo: -
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    gengar-mega [Ghost/Poison]  HP 45/167 (27%)
+      item=gengarite | abi=shadowtag | nat=Modest
+      flags: MEGA
+      status=- | volatile=- | boosts=special-attack:-1
+      stats: Atk 76 | Def 100 | SpA 244 | SpD 115 | Spe 152
+      moves: perishsong(8), sludgewave(11), brickbreak(15), corrosivegas(18)
+
+  [Activo 2]
+    zoroark [Dark]  HP 0/155 (0%)
+      item=- | abi=imposter | nat=modest
+      flags: FAINTED, DITTO, ZOROARK
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: transform(12)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    farigiraf [Normal/Psychic]  HP 0/222 (0%)
+      item=- | abi=armortail | nat=Bold
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(9), trickroom(5), trick(10)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 5
+Side conditions: -
+
+  [Activo 1]
+    pawmot [Electric/Fighting]  HP 22/100 (22%)
+      item=- | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Activo 2]
+    dragonite [Dragon/Flying]  HP 82/100 (82%)
+      item=- | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=tox:True | volatile=- | boosts=attack:1, speed:1
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Reserva 2 --
+    zoroark [Dark]  HP 0/100 (0%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: FAINTED, ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:20:51
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 16 | rqid: 55 | modo: CHALLENGE_USER
+Clima: none (0) | Terreno/campo: -
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    gengar-mega [Ghost/Poison]  HP 45/167 (27%)
+      item=gengarite | abi=shadowtag | nat=Modest
+      flags: MEGA
+      status=- | volatile=- | boosts=special-attack:-1
+      stats: Atk 76 | Def 100 | SpA 244 | SpD 115 | Spe 152
+      moves: perishsong(8), sludgewave(11), brickbreak(14), corrosivegas(18)
+
+  [Activo 2]
+    zoroark [Dark]  HP 0/155 (0%)
+      item=- | abi=imposter | nat=modest
+      flags: FAINTED, DITTO, ZOROARK
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: transform(12)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    farigiraf [Normal/Psychic]  HP 0/222 (0%)
+      item=- | abi=armortail | nat=Bold
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(9), trickroom(5), trick(10)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 5
+Side conditions: -
+
+  [Activo 1]
+    pawmot [Electric/Fighting]  HP 22/100 (22%)
+      item=- | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Activo 2]
+    dragonite [Dragon/Flying]  HP 65/100 (65%)
+      item=- | abi=multiscale | nat=calm
+      flags: CONFIRMED
+      status=tox:True | volatile=- | boosts=attack:1, speed:1
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Reserva 2 --
+    zoroark [Dark]  HP 49/100 (49%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: ZOROARK, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:21:48
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 17 | rqid: 59 | modo: CHALLENGE_USER
+Clima: none (0) | Terreno/campo: -
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    gengar-mega [Ghost/Poison]  HP 45/167 (27%)
+      item=gengarite | abi=shadowtag | nat=Modest
+      flags: PERISH3, MEGA
+      status=- | volatile=perish3:True, perishsong:True | boosts=special-attack:-1
+      stats: Atk 76 | Def 100 | SpA 244 | SpD 115 | Spe 152
+      moves: perishsong(7), sludgewave(11), brickbreak(14), corrosivegas(18)
+
+  [Activo 2]
+    zoroark [Dark]  HP 0/155 (0%)
+      item=- | abi=imposter | nat=modest
+      flags: FAINTED, DITTO, ZOROARK
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: transform(12)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    farigiraf [Normal/Psychic]  HP 0/222 (0%)
+      item=- | abi=armortail | nat=Bold
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(9), trickroom(5), trick(10)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 5
+Side conditions: lightscreen:4
+
+  [Activo 1]
+    zoroark [Dark]  HP 49/100 (49%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: PERISH3, ZOROARK, CONFIRMED
+      status=- | volatile=perish3:True, perishsong:True | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Activo 2]
+    dragonite [Dragon/Flying]  HP 34/100 (34%)
+      item=- | abi=multiscale | nat=calm
+      flags: PERISH3, CONFIRMED
+      status=tox:True | volatile=perish3:True, perishsong:True | boosts=attack:1, speed:1
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Reserva 2 --
+    pawmot [Electric/Fighting]  HP 22/100 (22%)
+      item=- | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:23:43
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 18 | rqid: 63 | modo: CHALLENGE_USER
+Clima: snowscape (4) | Terreno/campo: -
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    gengar-mega [Ghost/Poison]  HP 45/167 (27%)
+      item=gengarite | abi=shadowtag | nat=Modest
+      flags: PERISH2, MEGA
+      status=- | volatile=perish2:True, perishsong:True | boosts=special-attack:-1
+      stats: Atk 76 | Def 100 | SpA 244 | SpD 115 | Spe 152
+      moves: perishsong(7), sludgewave(11), brickbreak(14), corrosivegas(17)
+
+  [Activo 2]
+    zoroark [Dark]  HP 0/155 (0%)
+      item=- | abi=imposter | nat=modest
+      flags: FAINTED, DITTO, ZOROARK
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: transform(12)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    farigiraf [Normal/Psychic]  HP 0/222 (0%)
+      item=- | abi=armortail | nat=Bold
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(9), trickroom(5), trick(10)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 5
+Side conditions: lightscreen:3
+
+  [Activo 1]
+    zoroark [Dark]  HP 49/100 (49%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: PERISH2, ZOROARK, CONFIRMED
+      status=- | volatile=perish2:True, perishsong:True | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Activo 2]
+    blastoise [Water]  HP 88/100 (88%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    dragonite [Dragon/Flying]  HP 0/100 (0%)
+      item=- | abi=multiscale | nat=calm
+      flags: FAINTED, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Reserva 2 --
+    pawmot [Electric/Fighting]  HP 22/100 (22%)
+      item=- | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================
+
+========================================================================
+  SNAPSHOT  2026-09-12 02:24:08
+  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw  |  BO3 game: 1
+========================================================================
+Turno: 19 | rqid: 65 | modo: CHALLENGE_USER
+Clima: snowscape (3) | Terreno/campo: -
+Flags: force_switch=False active=True wait=False error=False
+Reward/Score: 100.0 / 1000.0
+
+--- USUARIO ---
+ID: p1 | Cuenta: Deep1ODDQN
+Side conditions: -
+
+  [Activo 1]
+    gengar-mega [Ghost/Poison]  HP 45/167 (27%)
+      item=gengarite | abi=shadowtag | nat=Modest
+      flags: PERISH1, MEGA
+      status=- | volatile=perish1:True, perishsong:True | boosts=-
+      stats: Atk 76 | Def 100 | SpA 244 | SpD 115 | Spe 152
+      moves: perishsong(7), sludgewave(10), brickbreak(14), corrosivegas(17)
+
+  [Activo 2]
+    zoroark [Dark]  HP 0/155 (0%)
+      item=- | abi=imposter | nat=modest
+      flags: FAINTED, DITTO, ZOROARK
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: transform(12)
+
+  [Reserva]
+  -- Reserva 1 --
+    torkoal [Fire]  HP 0/177 (0%)
+      item=focussash | abi=drought | nat=Relaxed
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
+      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
+  -- Reserva 2 --
+    farigiraf [Normal/Psychic]  HP 0/222 (0%)
+      item=- | abi=armortail | nat=Bold
+      flags: FAINTED
+      status=- | volatile=- | boosts=-
+      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
+      moves: psychic(12), psychup(9), trickroom(5), trick(10)
+
+--- OPONENTE ---
+ID: p2 | Cuenta: None
+Confirmados oponente: 6
+Side conditions: lightscreen:2
+
+  [Activo 1]
+    zoroark [Dark]  HP 16/100 (16%)
+      item=expertbelt | abi=illusion | nat=modest
+      flags: PERISH1, ZOROARK, CONFIRMED
+      status=- | volatile=perish1:True, perishsong:True | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+
+  [Activo 2]
+    blastoise-mega [Water]  HP 65/100 (65%)
+      item=blastoisinite | abi=megalauncher | nat=quiet
+      flags: MEGA, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 103 | Def 120 | SpA 135 | SpD 115 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+
+  [Reserva]
+  -- Reserva 1 --
+    dragonite [Dragon/Flying]  HP 0/100 (0%)
+      item=- | abi=multiscale | nat=calm
+      flags: FAINTED, CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Reserva 2 --
+    pawmot [Electric/Fighting]  HP 22/100 (22%)
+      item=- | abi=voltabsorb | nat=adamant
+      flags: CONFIRMED
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+
+  [Lista preview oponentes]
+  -- Preview 1 --
+    zoroark [Dark]  HP 100/60 (167%)
+      item=expertbelt | abi=illusion | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
+      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
+  -- Preview 2 --
+    pawmot [Electric/Fighting]  HP 100/70 (143%)
+      item=mistyseed | abi=voltabsorb | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
+      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
+  -- Preview 3 --
+    blastoise [Water]  HP 100/79 (127%)
+      item=blastoisinite | abi=raindish | nat=quiet
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
+      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
+  -- Preview 4 --
+    dragonite [Dragon/Flying]  HP 100/91 (110%)
+      item=habanberry | abi=multiscale | nat=calm
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
+      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
+  -- Preview 5 --
+    indeedee-female [None]  HP 100/0
+      item=terrainextender | abi=psychicsurge | nat=modest
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
+      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
+  -- Preview 6 --
+    maushold-four [Normal]  HP 100/74 (135%)
+      item=lifeorb | abi=technician | nat=adamant
+      status=- | volatile=- | boosts=-
+      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
+      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
+      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+========================================================================

@@ -3,11 +3,13 @@ import logging
 
 # Valores por defecto
 battle_bot_module = None
+battle_bot = "random"
 websocket_uri = None
 username = None
 password = None
 bot_mode = None
 team_name = None
+team_dir = "gen8/vgc2022"
 pokemon_mode = None
 run_count = None
 user_to_challenge = None

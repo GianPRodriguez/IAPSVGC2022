@@ -42,22 +42,22 @@ def eval_genome(genome, config, iterador, contador, q1, q2, q50, qm50, q150):
 
 def inicio():
     # Neuroevolución
-    config_path = "./neuroevolution/config-feedforward"
+    config_path = "./old/neuroevolution/config-feedforward"
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
     p = neat.Population(config)
     # Add a stdout reporter to show progress in the terminal
     p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
-    p.add_reporter(neat.Checkpointer(5, 300, './neuroevolution/modelos/neat-checkpoint-'))
+    p.add_reporter(neat.Checkpointer(5, 300, './old/neuroevolution/modelos/neat-checkpoint-'))
     pe = neat.ParallelEvaluator(multiprocessing.cpu_count(), eval_genome, None, None, None, None, None, None, None)
     # Se evalúan las redes neuronales en X cantidad de interacciones
     winner = p.run(pe.evaluate, 50)
     # ---
-    p = neat.Checkpointer.restore_checkpoint('./neuroevolution/modelos/neat-checkpoint-49')
+    p = neat.Checkpointer.restore_checkpoint('./old/neuroevolution/modelos/neat-checkpoint-49')
     p.add_reporter(neat.StdOutReporter(True))
     p.add_reporter(stats)
-    p.add_reporter(neat.Checkpointer(6, 300, './neuroevolution/modelos/neat-checkpoint-'))
+    p.add_reporter(neat.Checkpointer(6, 300, './old/neuroevolution/modelos/neat-checkpoint-'))
     winner = p.run(pe.evaluate, 60)
     # ---
     #visualize.draw_net(config, winner, True)  # dibuja la topologia ganadora

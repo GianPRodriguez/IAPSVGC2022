@@ -25,13 +25,15 @@ def parse_configs(username, password, teamname, botmode, numBattles):
     config.websocket_uri = env("WEBSOCKET_URI", "sim.smogon.com:8000")
     config.pokemon_mode = env("POKEMON_MODE", constants.DEFAULT_MODE)
     config.room_name = env("ROOM_NAME", config.room_name)
+    config.team_dir = env("TEAM_DIR", config.team_dir).strip().strip("/")
+    config.battle_bot = env("BATTLE_BOT", config.battle_bot).strip().lower() or "random"
 
     # Aplicar parámetros del usuario (sobrescriben los del .env)
     config.username = username
     config.password = password
     config.user_to_challenge = username
     config.bot_mode = botmode
-    config.team_name = 'gen8/vgc2022/' + teamname
+    config.team_name = f"{config.team_dir}/{teamname}"
     config.run_count = numBattles
 
     if botmode == "CHALLENGE_USER":
@@ -162,13 +164,26 @@ async def stop(q, username, password, teamname, botmode, numBattles):
             pass
 
 #######################################################################################################################
-# OK - Método Principal
+# OK - Hilo que ejecuta showdown() sin bloquear el __init__ (usar .start())
 #######################################################################################################################
 class AsyncDownload(Thread):
     def __init__(self, q, username, password, teamname, botmode, numBattles):
-        super().__init__()
+        super().__init__(daemon=True)
+        self.q = q
+        self.username = username
+        self.password = password
+        self.teamname = teamname
+        self.botmode = botmode
+        self.numBattles = numBattles
+
+    def run(self):
         asyncio.run(
             showdown(
-                q, username, password, teamname, botmode, numBattles
+                self.q,
+                self.username,
+                self.password,
+                self.teamname,
+                self.botmode,
+                self.numBattles,
             )
         )

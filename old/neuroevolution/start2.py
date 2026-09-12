@@ -1,5 +1,12 @@
 from __future__ import print_function
 
+import sys
+from pathlib import Path as _Path
+_ROOT = _Path(__file__).resolve().parents[2]
+_SCRIPTS = _ROOT / "old" / "scripts"
+if str(_SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS))
+
 import os
 import sys
 import math
@@ -112,16 +119,16 @@ def eval_genome(genome, config, iterador, contador, q1, q2, q50, qm50, q150, qPr
                             else:
                                 scoreBatalla = str(scoreBatalla).zfill(7)
                             dt_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-                            rutaWinLoss = "./neuroevolution/reportes/WinLoss/" + str((genome.id)%len(USERS)) + ".txt"
+                            rutaWinLoss = "./old/neuroevolution/reportes/WinLoss/" + str((genome.id)%len(USERS)) + ".txt"
                             with open(rutaWinLoss, 'a') as WLScore:
                                 WLScore.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(numBattle, win, loss, indexOT, scoreBatalla, dt_string))
                             # Archivos de Registro - Score$.txt
-                            rutaScore = "./neuroevolution/reportes/Score/" + str((genome.id)%len(USERS)) + ".txt"
+                            rutaScore = "./old/neuroevolution/reportes/Score/" + str((genome.id)%len(USERS)) + ".txt"
                             with open(rutaScore, 'a') as fScore:
                                 fScore.write("{}\n".format(scoreBatalla))
                             # Archivos de Registro - InvalidActions$.txt
                             perInvalidActions = cola[5]
-                            rutaInvalidActions = "./neuroevolution/reportes/InvalidActions/" + str((genome.id)%len(USERS)) + ".txt"
+                            rutaInvalidActions = "./old/neuroevolution/reportes/InvalidActions/" + str((genome.id)%len(USERS)) + ".txt"
                             with open(rutaInvalidActions, 'a') as IAScore:
                                 IAScore.write("{}\n".format(perInvalidActions))
                             # Fin de Batalla - Actualización de Índices
@@ -144,7 +151,7 @@ def eval_genome(genome, config, iterador, contador, q1, q2, q50, qm50, q150, qPr
     if (genome.id)%len(USERS) == 0:
         qProgreso.put([-1])
     # Save the winner.
-    #titulo = "neuroevolution/modelos/0/winner" + str((genome.id)%len(USERS))
+    #titulo = "old/neuroevolution/modelos/0/winner" + str((genome.id)%len(USERS))
     #with open(titulo, 'wb') as f:
     #    pickle.dump(genome, f)
     # Reporte CMD
@@ -280,16 +287,16 @@ def inicio(qProgreso):
     contador.append(0)
     contador.append(0)
     # Neuroevolución
-    config_path = "./neuroevolution/config-feedforward"
+    config_path = "./old/neuroevolution/config-feedforward"
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
     #p = neat.Population(config)
     # Restauración
-    p = neat.Checkpointer.restore_checkpoint('./neuroevolution/modelos/neat-checkpoint-18965')
+    p = neat.Checkpointer.restore_checkpoint('./old/neuroevolution/modelos/neat-checkpoint-18965')
     # Se agrega un reporte cuyo progreso será mostrado en el terminal
     #p.add_reporter(neat.StdOutReporter(True))
     #stats = neat.StatisticsReporter()
     #p.add_reporter(stats)
-    p.add_reporter(neat.Checkpointer(10, 300, './neuroevolution/modelos/neat-checkpoint-'))     # Cada 20 iteraciones
+    p.add_reporter(neat.Checkpointer(10, 300, './old/neuroevolution/modelos/neat-checkpoint-'))     # Cada 20 iteraciones
     # Se evaluará de manera paralela los genomas
     pe = neat.ParallelEvaluator(multiprocessing.cpu_count(), eval_genome, iterador, contador, q1, q2, q50, qm50, q150, qProgreso)
     # Se evalúan las redes neuronales en 50 cantidad de interacciones, luego se agrupa las gráficas
@@ -299,8 +306,8 @@ def inicio(qProgreso):
         traceback.print_exc()
     #print("--- FIN DEL ENTRENAMIENTO ---")
     # Se elabora las gráficas correspondientes al entrenamiento
-    #visualize.plot_stats(stats, ylog=False, view=True,filename='./neuroevolution/reportes/avg_fitness.svg')         # visualiza estadisticas
-    #visualize.plot_species(stats, view=True, filename='./neuroevolution/reportes/speciation.svg')                   # visualiza especies
+    #visualize.plot_stats(stats, ylog=False, view=True,filename='./old/neuroevolution/reportes/avg_fitness.svg')         # visualiza estadisticas
+    #visualize.plot_species(stats, view=True, filename='./old/neuroevolution/reportes/speciation.svg')                   # visualiza especies
     # Prueba pequeña:
     netWinner = neat.nn.FeedForwardNetwork.create(winner, config)
     action_values = netWinner.activate(STATE)

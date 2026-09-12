@@ -1,0 +1,10 @@
+# IAs legacy (old/neuroevolution, old/deep_reinforcement_learning, bots old_smart/old_drl)
+# Instalar encima del runtime activo:
+#   pip install -r requirements.txt
+#   pip install -r requirements-legacy.txt
+
+-r requirements.txt
+
+neat-python>=0.92,<3
+numpy>=2.0,<3
+tensorflow>=2.16,<3

@@ -1,5 +1,5 @@
 import neat
-from neuroevolution.start import inicio
+from old.neuroevolution.start import inicio
 
 def comienzo():
 	inicio()

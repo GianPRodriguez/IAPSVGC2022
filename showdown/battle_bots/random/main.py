@@ -1,3 +1,4 @@
+import math
 import random
 from API.MoveData import getColorMove
 import constants
@@ -77,8 +78,9 @@ class BattleBot(Battle):
                 name = "Unknown"
             names.append(name)
 
-        # 4. Enviar a la cola para la interfaz gráfica
-        battle.q.put([1, names[0], names[1], names[2], names[3], 0, 0])
+        # 4. Enviar a la cola para la interfaz gráfica (Módulo de Análisis)
+        if getattr(battle, 'q', None) is not None:
+            battle.q.put([1, names[0], names[1], names[2], names[3], 0, 0])
 
         # 5. Retornar los 4 enteros
         return tuple(pkmn_indices) # tupla (5, 2, 1, 4)
@@ -323,7 +325,22 @@ class BattleBot(Battle):
             color4 = '#FFFFFF'
 
         lastReward, reward = self.calculateRewards()
-        battle.q.put([2, text1, color1, text2, color2, text3, color3, text4, color4, lastReward, reward])
+        delta = math.floor(lastReward)
+        total = math.floor(reward)
+        if delta > 0:
+            color5 = "#325928"
+        elif delta >= 0:
+            color5 = "#565828"
+        else:
+            color5 = "#582831"
+        color6 = "#325928" if total > 0 else "#582831"
+
+        # Formato UI Módulo 2: [2, t1,c1,t2,c2,t3,c3,t4,c4, delta, c5, reward, c6]
+        if getattr(battle, 'q', None) is not None:
+            battle.q.put([
+                2, text1, color1, text2, color2, text3, color3, text4, color4,
+                delta, color5, total, color6,
+            ])
 
         return (
             moveSwitch1, 
