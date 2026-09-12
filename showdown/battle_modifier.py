@@ -1,14 +1,17 @@
 import json
 import math
+import os
 import constants
 import re
 
 from copy import deepcopy
 from collections import defaultdict
+from typing import Optional
 from teams.team_converter import normalize_name
 from showdown.battle import Pokemon
 from showdown.battle import Battle
 from showdown.mega_abilities import MEGA_FORME_ABILITIES
+from showdown.stat_inference import SpeedContext, move_priority, move_category, DamageContext
 
 
 
@@ -327,7 +330,255 @@ def _clear_reserve_effects(pkmn: Pokemon) -> Pokemon:
     # Yawn / Perish Song se limpian al salir del campo.
     pkmn.is_drowsy = False
     pkmn.perish_count = 0
+    _clear_all_field_temp_flags(pkmn)
+    # Illusion: el disfraz solo aplica mientras está en campo
+    pkmn.illusion_disguise = None
+    pkmn.illusion_protocol_revealed = False
+    # Guard Split termina al salir (como en PS)
+    pkmn.guard_split_active = False
+    if getattr(pkmn, 'is_opponent', False):
+        pkmn.DEF_battle_actual = -1
+        pkmn.SPD_battle_actual = -1
     return pkmn
+
+
+# --------------------------------------------------------------------------- #
+# Flags efímeros de turno (Protect, Helping Hand, Destiny Bond, Charge, …)
+# --------------------------------------------------------------------------- #
+
+_PROTECT_SINGLETURN = frozenset(getattr(
+    constants, 'PROTECT_SINGLETURN_IDS',
+    {'protect', 'detect', 'spikyshield', 'banefulbunker', 'kingsshield',
+     'obstruct', 'silktrap', 'burningbulwark', 'maxguard'},
+))
+_HELPING_HAND_IDS = frozenset({'helpinghand'})
+_DESTINY_BOND_IDS = frozenset({'destinybond'})
+_CHARGE_IDS = frozenset({'charge'})
+_EPHEMERAL_TURN_VOLATILES = (
+    _PROTECT_SINGLETURN | _HELPING_HAND_IDS | frozenset({'roost', 'focuspunch', 'beakblast', 'shelltrap'})
+)
+
+# Moves Eléctricos (Champions/gen9) para consumir Charge. Preferible a moves.json
+# (no está en el repo); si aparece type en un JSON futuro, _move_is_electric lo usa.
+_ELECTRIC_MOVE_IDS = frozenset({
+    'thunder', 'thunderwave', 'thunderbolt', 'thunderpunch', 'thundershock',
+    'zapcannon', 'spark', 'volttackle', 'shockwave', 'chargebeam', 'discharge',
+    'thunderfang', 'electroball', 'voltswitch', 'boltstrike', 'electroweb',
+    'fusionbolt', 'wildcharge', 'paraboliccharge', 'nuzzle', 'plasmafists',
+    'zingzap', 'aurawheel', 'boltbeak', 'overdrive', 'risingvoltage',
+    'thundercage', 'doubleshock', 'electrodrift', 'electroshot', 'supercellslam',
+    'thunderclap', 'wildboltstorm',
+})
+
+_MOVES_JSON_CACHE: Optional[dict] = None
+
+
+def _moves_json() -> dict:
+    global _MOVES_JSON_CACHE
+    if _MOVES_JSON_CACHE is None:
+        try:
+            path = os.path.join('API', 'JSONs', 'moves.json')
+            with open(path, encoding='utf-8') as handle:
+                _MOVES_JSON_CACHE = json.load(handle)
+        except Exception:
+            _MOVES_JSON_CACHE = {}
+    return _MOVES_JSON_CACHE
+
+
+def _move_type_name(move_name: Optional[str]) -> Optional[str]:
+    mid = normalize_name(move_name or '')
+    if not mid:
+        return None
+    entry = _moves_json().get(mid) or {}
+    t = entry.get('type')
+    return str(t) if t else None
+
+
+def _move_is_electric(move_name: Optional[str]) -> bool:
+    t = _move_type_name(move_name)
+    if t:
+        return t.lower() == 'electric'
+    return normalize_name(move_name or '') in _ELECTRIC_MOVE_IDS
+
+
+# Targets PS que golpean a más de un activo (daño / Inferencia isSpread).
+_SPREAD_MOVE_TARGETS = frozenset({
+    'alladjacent',
+    'alladjacentfoes',
+})
+
+
+def _move_is_spread(move_name: Optional[str], tags: str = '') -> bool:
+    """True si el |move| es spread ([spread] en protocolo o target allAdjacent*)."""
+    if '[spread]' in (tags or '').lower():
+        return True
+    mid = normalize_name(move_name or '')
+    if not mid:
+        return False
+    entry = _moves_json().get(mid) or {}
+    target = str(entry.get('target') or '').replace(' ', '').lower()
+    return target in _SPREAD_MOVE_TARGETS
+
+
+def _clear_ephemeral_turn_flags(pkmn: Pokemon) -> None:
+    """Protect / Helping Hand / roost-like: mueren al cerrar el turno."""
+    if pkmn is None:
+        return
+    pkmn.is_protected = False
+    pkmn.is_helping_hand = False
+    vs = getattr(pkmn, 'volatile_statuses', None)
+    if isinstance(vs, (dict, defaultdict)):
+        for key in list(vs.keys()):
+            if key in _EPHEMERAL_TURN_VOLATILES:
+                vs.pop(key, None)
+
+
+def _clear_all_field_temp_flags(pkmn: Pokemon) -> None:
+    """Limpia Protect/HH/Destiny/Charge al entrar, salir o faint."""
+    if pkmn is None:
+        return
+    _clear_ephemeral_turn_flags(pkmn)
+    pkmn.is_destiny_bonded = False
+    pkmn.is_charged = False
+    if isinstance(getattr(pkmn, 'volatile_statuses', None), (dict, defaultdict)):
+        pkmn.volatile_statuses.pop('destinybond', None)
+        pkmn.volatile_statuses.pop('charge', None)
+
+
+def _clear_all_ephemeral_turn_flags(battle: Battle) -> None:
+    for side in (battle.user, battle.opponent):
+        for attr in ('active1', 'active2'):
+            _clear_ephemeral_turn_flags(getattr(side, attr, None))
+
+
+def _set_protected(pkmn: Pokemon, value: bool, volatile_id: str = 'protect') -> None:
+    if pkmn is None:
+        return
+    pkmn.is_protected = bool(value)
+    if not isinstance(getattr(pkmn, 'volatile_statuses', None), (dict, defaultdict)):
+        pkmn.volatile_statuses = defaultdict(lambda: 0)
+    if value:
+        pkmn.volatile_statuses[volatile_id] = True
+    else:
+        for key in list(_PROTECT_SINGLETURN):
+            pkmn.volatile_statuses.pop(key, None)
+
+
+def _set_helping_hand(pkmn: Pokemon, value: bool) -> None:
+    if pkmn is None:
+        return
+    pkmn.is_helping_hand = bool(value)
+    if not isinstance(getattr(pkmn, 'volatile_statuses', None), (dict, defaultdict)):
+        pkmn.volatile_statuses = defaultdict(lambda: 0)
+    if value:
+        pkmn.volatile_statuses['helpinghand'] = True
+    else:
+        pkmn.volatile_statuses.pop('helpinghand', None)
+
+
+def _set_destiny_bonded(pkmn: Pokemon, value: bool) -> None:
+    if pkmn is None:
+        return
+    pkmn.is_destiny_bonded = bool(value)
+    if not isinstance(getattr(pkmn, 'volatile_statuses', None), (dict, defaultdict)):
+        pkmn.volatile_statuses = defaultdict(lambda: 0)
+    if value:
+        pkmn.volatile_statuses['destinybond'] = True
+    else:
+        pkmn.volatile_statuses.pop('destinybond', None)
+
+
+def _set_charged(pkmn: Pokemon, value: bool) -> None:
+    if pkmn is None:
+        return
+    pkmn.is_charged = bool(value)
+    if not isinstance(getattr(pkmn, 'volatile_statuses', None), (dict, defaultdict)):
+        pkmn.volatile_statuses = defaultdict(lambda: 0)
+    if value:
+        pkmn.volatile_statuses['charge'] = True
+    else:
+        pkmn.volatile_statuses.pop('charge', None)
+
+
+def _ally_has_friend_guard(side, defender) -> bool:
+    """Friend Guard protege al aliado (no a sí mismo)."""
+    for attr in ('active1', 'active2'):
+        ally = getattr(side, attr, None)
+        if ally is None or ally is defender:
+            continue
+        if getattr(ally, 'is_fainted', False) or int(getattr(ally, 'HPA_battle_actual', 0) or 0) <= 0:
+            continue
+        abi = normalize_name(getattr(ally, 'abilityPkmn', '') or '')
+        if abi == 'friendguard':
+            return True
+    return False
+
+
+def _hp_fraction_before_hit(pkmn) -> Optional[float]:
+    """Fracción de HP del defensor antes del golpe (Multiscale)."""
+    try:
+        cur = float(getattr(pkmn, 'HPA_battle_actual', 0) or 0)
+        mx = float(getattr(pkmn, 'HPB_battle_base', 0) or 0)
+    except (TypeError, ValueError):
+        return None
+    if mx <= 0 or cur <= 0:
+        return None
+    # Rival suele reportar xx/100 → cur ya es %.
+    if getattr(pkmn, 'is_opponent', False) and mx == 100:
+        return max(0.0, min(1.0, cur / 100.0))
+    return max(0.0, min(1.0, cur / mx))
+
+
+def singleturn(battle: Battle, split_msg: list) -> Battle:
+    # |-singleturn|p1a: Primarina|Protect
+    # |-singleturn|p1a: Manectric|Helping Hand
+    # |-singleturn|p2a: Talonflame|Roost
+    if len(split_msg) < 4:
+        return battle
+
+    raw = split_msg[3].split(':')[-1].strip()
+    effect_id = normalize_name(raw)
+    pkmn = _resolve_active_from_ident(battle, split_msg[2].strip())
+    if pkmn is None:
+        return battle
+
+    if effect_id in _PROTECT_SINGLETURN:
+        _set_protected(pkmn, True, effect_id)
+        return battle
+    if effect_id in _HELPING_HAND_IDS:
+        _set_helping_hand(pkmn, True)
+        return battle
+    if effect_id in _CHARGE_IDS:
+        _set_charged(pkmn, True)
+        return battle
+
+    # Otros singleturn (Roost, Focus Punch…): solo registro en volatiles.
+    if not isinstance(getattr(pkmn, 'volatile_statuses', None), (dict, defaultdict)):
+        pkmn.volatile_statuses = defaultdict(lambda: 0)
+    pkmn.volatile_statuses[effect_id] = True
+    return battle
+
+
+def singlemove(battle: Battle, split_msg: list) -> Battle:
+    # |-singlemove|p1a: Gengar|Destiny Bond
+    # |-singlemove|p2a: Shedinja|Grudge
+    if len(split_msg) < 4:
+        return battle
+
+    raw = split_msg[3].split(':')[-1].strip()
+    effect_id = normalize_name(raw)
+    pkmn = _resolve_active_from_ident(battle, split_msg[2].strip())
+    if pkmn is None:
+        return battle
+
+    if effect_id in _DESTINY_BOND_IDS:
+        _set_destiny_bonded(pkmn, True)
+        return battle
+
+    if not isinstance(getattr(pkmn, 'volatile_statuses', None), (dict, defaultdict)):
+        pkmn.volatile_statuses = defaultdict(lambda: 0)
+    pkmn.volatile_statuses[effect_id] = True
+    return battle
 
 
 def _is_yawn_volatile_name(name: str) -> bool:
@@ -462,6 +713,7 @@ def _revert_special_pokemon(pkmn_leaving: Pokemon, side) -> Pokemon:
             reverted.HPB_battle_base = pkmn_leaving.HPB_battle_base
             reverted.non_volatile_statuses = deepcopy(pkmn_leaving.non_volatile_statuses)
             reverted.is_ditto = True
+            reverted.is_zoroark = False
             if getattr(side, 'isUser', False):
                 for stat_name in ('ATK', 'DEF', 'SPA', 'SPD', 'VEL'):
                     setattr(reverted, f'{stat_name}_battle_base', -1)
@@ -475,6 +727,7 @@ def _revert_special_pokemon(pkmn_leaving: Pokemon, side) -> Pokemon:
             # Fallback manual por seguridad si no se encontrara el template
             pkmn_leaving.name = 'ditto'
             pkmn_leaving.is_ditto = True
+            pkmn_leaving.is_zoroark = False
             if getattr(side, 'isUser', False):
                 pkmn_leaving.ATK_battle_base = -1
                 pkmn_leaving.DEF_battle_base = -1
@@ -495,6 +748,8 @@ def _revert_special_pokemon(pkmn_leaving: Pokemon, side) -> Pokemon:
             pkmn_leaving.moves = ['transform', None, None, None]
             pkmn_leaving.movesPP = [16, -1, -1, -1]
             pkmn_leaving.abilityPkmn = 'imposter'
+            pkmn_leaving.type1 = 'Normal'
+            pkmn_leaving.type2 = None
             return _clear_reserve_effects(pkmn_leaving)
 
     # =========================================================================
@@ -580,9 +835,8 @@ def request(battle: Battle, split_msg: list) -> Battle:
     else:
         battle.wait = False
 
-    # Se almacena el JSON para elegir una acción
-    if not battle.wait:
-        battle.request_json = battle_json
+    # Se almacena el JSON siempre (incl. wait) para depuración / paridad con Showdown
+    battle.request_json = battle_json
 
     return battle
 
@@ -630,6 +884,9 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
 
             new_active = deepcopy(side.reserved[illusion_idx])
             new_active.is_zoroark = True
+            # PS sigue mostrando namePkmn (disfraz); guardamos para reporte dual
+            new_active.illusion_disguise = _base_species_name(namePkmn)
+            new_active.illusion_protocol_revealed = False
             new_active.HPA_battle_actual = hpa_val if hpa_val > 0 else new_active.HPA_battle_actual
             if hpb_val > 0:
                 new_active.HPB_battle_base = hpb_val
@@ -638,6 +895,7 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
             new_active.volatile_statuses = defaultdict(lambda: 0)
             new_active.boosts = defaultdict(lambda: 0)
             new_active.is_drowsy = False
+            _clear_all_field_temp_flags(new_active)
             new_active.perish_count = 0
 
             if is_active1:
@@ -682,6 +940,7 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
             new_active.volatile_statuses = defaultdict(lambda: 0)
             new_active.boosts = defaultdict(lambda: 0)
             new_active.is_drowsy = False
+            _clear_all_field_temp_flags(new_active)
             new_active.perish_count = 0
 
             if is_active1:
@@ -715,6 +974,7 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                     new_active.volatile_statuses = defaultdict(lambda: 0)
                     new_active.boosts = defaultdict(lambda: 0)
                     new_active.is_drowsy = False
+                    _clear_all_field_temp_flags(new_active)
                     new_active.perish_count = 0
 
                     # Confirmación del Pokémon
@@ -762,6 +1022,7 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                 new_active.volatile_statuses = defaultdict(lambda: 0)
                 new_active.boosts = defaultdict(lambda: 0)
                 new_active.is_drowsy = False
+                _clear_all_field_temp_flags(new_active)
                 new_active.perish_count = 0
 
                 if is_active1:
@@ -790,12 +1051,18 @@ def faint(battle: Battle, split_msg: list) -> Battle:
     slot_str = split_msg[2].split(':')[0].strip()
     
     # Identificamos si es la posición A o B
-    if slot_str.endswith('a'):
-        pkmn = side.active1
-    else:
-        pkmn = side.active2
+    is_active1 = slot_str.endswith('a')
+    pkmn = side.active1 if is_active1 else side.active2
 
     if pkmn:
+        # Ditto transformado: revertir a Ditto base antes de marcar faint
+        if getattr(pkmn, 'is_ditto', False) and _canonical_species_name(getattr(pkmn, 'name', '')) != 'ditto':
+            pkmn = _revert_special_pokemon(pkmn, side)
+            if is_active1:
+                side.active1 = pkmn
+            else:
+                side.active2 = pkmn
+
         pkmn.HPA_battle_actual = 0
         pkmn.is_fainted = True
         pkmn.boosts = defaultdict(lambda: 0)
@@ -803,6 +1070,7 @@ def faint(battle: Battle, split_msg: list) -> Battle:
         pkmn.non_volatile_statuses = defaultdict(lambda: 0)
         pkmn.is_drowsy = False
         pkmn.perish_count = 0
+        _clear_all_field_temp_flags(pkmn)
 
         if _is_zoroark(pkmn):
             pkmn.is_zoroark = True
@@ -859,6 +1127,15 @@ def heal_or_damage(battle: Battle, split_msg: list) -> Battle:
     if not pkmn:
         return battle
 
+    # HP antes del evento (para Δ daño / inferencia de SP)
+    try:
+        old_hp = int(getattr(pkmn, 'HPA_battle_actual', 0) or 0)
+        old_max = int(getattr(pkmn, 'HPB_battle_base', 0) or 0)
+    except (TypeError, ValueError):
+        old_hp, old_max = 0, 0
+
+    is_damage_event = len(split_msg) > 1 and split_msg[1].strip() == '-damage'
+
     hp_str = split_msg[3].strip()
 
     # Comprobamos si el Pokémon cayó debilitado
@@ -888,6 +1165,9 @@ def heal_or_damage(battle: Battle, split_msg: list) -> Battle:
                 f"[REVIVAL BLESSING] {pkmn.name} revive con "
                 f"{pkmn.HPA_battle_actual}/{pkmn.HPB_battle_base}"
             )
+
+    if is_damage_event and not is_party_target:
+        _maybe_infer_from_damage(battle, split_msg, pkmn, old_hp, old_max)
 
     return battle
 
@@ -1025,6 +1305,14 @@ def start_volatile_status(battle: Battle, split_msg: list) -> Battle:
             pkmn.is_drowsy = True
             # Clave canónica para el volátil (Showdown normaliza a 'yawn').
             pkmn.volatile_statuses['yawn'] = True
+        elif volatile_status in _CHARGE_IDS:
+            _set_charged(pkmn, True)
+        elif volatile_status in _DESTINY_BOND_IDS:
+            _set_destiny_bonded(pkmn, True)
+        elif volatile_status in _HELPING_HAND_IDS:
+            _set_helping_hand(pkmn, True)
+        elif volatile_status in _PROTECT_SINGLETURN:
+            _set_protected(pkmn, True, volatile_status)
 
     return battle
 
@@ -1059,6 +1347,14 @@ def end_volatile_status(battle: Battle, split_msg: list) -> Battle:
             _set_drowsy(pkmn, False)
         if volatile_status.startswith('perish') or volatile_status == 'perishsong':
             _clear_perish(pkmn)
+        if volatile_status in _PROTECT_SINGLETURN:
+            _set_protected(pkmn, False)
+        if volatile_status in _HELPING_HAND_IDS:
+            _set_helping_hand(pkmn, False)
+        if volatile_status in _DESTINY_BOND_IDS:
+            _set_destiny_bonded(pkmn, False)
+        if volatile_status in _CHARGE_IDS:
+            _set_charged(pkmn, False)
 
     return battle
 
@@ -1066,10 +1362,11 @@ def end_volatile_status(battle: Battle, split_msg: list) -> Battle:
 ############################################################################################################################################################
 # OK - Revelación de Illusion (Zoroark sustituye al disfraz en el campo)                                                                                 ###
 ############################################################################################################################################################
-def replace_illusion(battle: Battle, split_msg: list) -> Battle:
+def replace_illusion(battle: Battle, split_msg: list, *, protocol_reveal: bool = True) -> Battle:
     # |replace|p2a: Zoroark|Zoroark, L50, M
     # |replace|p2b: Zoroark|Zoroark-Hisui, L50, F
     # Suele ir precedido de |-end|p2a: <Disfraz>|Illusion
+    # protocol_reveal=False: deducción por move ilegal (PS aún muestra el disfraz)
 
     if len(split_msg) < 4:
         return battle
@@ -1154,7 +1451,12 @@ def replace_illusion(battle: Battle, split_msg: list) -> Battle:
 
     # 4. Asignamos Datos Reales de Zoroark (Objeto, Habilidad, Naturaleza y Stats Base)
     if ots_zoroark:
-        zoroark_instance.objectPkmn = getattr(ots_zoroark, 'objectPkmn', zoroark_instance.objectPkmn)
+        # No reintroducir un item ya consumido/robado: OTS se sincroniza en -enditem.
+        ots_item = getattr(ots_zoroark, 'objectPkmn', None)
+        if ots_item is not None and str(ots_item).strip() != '':
+            zoroark_instance.objectPkmn = ots_item
+        else:
+            zoroark_instance.objectPkmn = None
         zoroark_instance.abilityPkmn = getattr(ots_zoroark, 'abilityPkmn', zoroark_instance.abilityPkmn)
         zoroark_instance.nature = getattr(ots_zoroark, 'nature', zoroark_instance.nature)
         
@@ -1172,6 +1474,23 @@ def replace_illusion(battle: Battle, split_msg: list) -> Battle:
     zoroark_instance.non_volatile_statuses = accumulated_non_volatile
     zoroark_instance.boosts = accumulated_boosts
     zoroark_instance.is_zoroark = True
+    # Conservar disfraz para reporte dual
+    if disguised_active and _canonical_species_name(getattr(disguised_active, 'name', '')) != _canonical_species_name(real_name):
+        zoroark_instance.illusion_disguise = getattr(disguised_active, 'name', None)
+    elif getattr(disguised_active, 'illusion_disguise', None):
+        zoroark_instance.illusion_disguise = disguised_active.illusion_disguise
+    else:
+        zoroark_instance.illusion_disguise = getattr(zoroark_instance, 'illusion_disguise', None)
+
+    if protocol_reveal:
+        zoroark_instance.illusion_protocol_revealed = True
+    else:
+        # Deducción temprana: no pisar si PS ya reveló en un |replace| previo
+        if not getattr(zoroark_instance, 'illusion_protocol_revealed', False):
+            zoroark_instance.illusion_protocol_revealed = False
+        # Heredar flag del activo disfrazado si ya estaba revelado
+        if disguised_active and getattr(disguised_active, 'illusion_protocol_revealed', False):
+            zoroark_instance.illusion_protocol_revealed = True
 
     # Asignamos a Zoroark como el activo real
     if is_active1:
@@ -1181,6 +1500,12 @@ def replace_illusion(battle: Battle, split_msg: list) -> Battle:
 
     # Limpieza final: solo eliminamos entradas exactas de la misma referencia que ya no pertenecen a la reserva.
     _remove_exact_reserve_entry(side, zoroark_instance)
+
+    # Lo observado mientras iba disfrazado se atribuyó a la especie equivocada:
+    # esas conclusiones eran de Zoroark, así que se descartan.
+    disguise = getattr(zoroark_instance, 'illusion_disguise', None)
+    if opponent_turn and disguise:
+        battle.stat_beliefs.forget(disguise)
 
     print(f"[ILLUSION REVEALED] {real_name} se ha revelado en {slot_str} con HP: {current_hpa}")
 
@@ -1408,6 +1733,16 @@ def set_item(battle: Battle, split_msg: list) -> Battle:
     return battle
 
 
+def _clear_item_everywhere(side, item_name: str) -> None:
+    """Item Clause: limpia el objeto en activos, reserva y plantilla OTS."""
+    item = normalize_name(item_name or '')
+    if not item:
+        return
+    for pkmn in _iter_side_pokemon(side, include_opponents=True):
+        if normalize_name(getattr(pkmn, 'objectPkmn', '') or '') == item:
+            pkmn.objectPkmn = None
+
+
 ############################################################################################################################################################
 # OK - Remueve o consume el objeto equipado de un Pokémon (ej: Knock Off, Focus Sash gastado, Baya)                                                      ###
 ############################################################################################################################################################
@@ -1415,10 +1750,13 @@ def remove_item(battle: Battle, split_msg: list) -> Battle:
     # |-enditem|p1b: Kingambit|Focus Sash
     # |-enditem|p2a: Rillaboom|Grassy Seed|[from] item: Grassy Seed
     # |-enditem|p1b: Ditto|Sitrus Berry|[eat]
+    # |-enditem|p2a: Dragonite|Expert Belt|[from] move: Corrosive Gas  (puede ser Illusion)
     
     # Validamos que el mensaje tenga la longitud mínima requerida
     if len(split_msg) < 3:
         return battle
+
+    item_name = normalize_name(split_msg[3].strip()) if len(split_msg) > 3 else ''
 
     # Determinamos a qué bando y Pokémon activo pertenece la pérdida del objeto
     side = battle.opponent if is_opponent(battle, split_msg) else battle.user
@@ -1426,8 +1764,12 @@ def remove_item(battle: Battle, split_msg: list) -> Battle:
     pkmn = side.active1 if slot_str.endswith('a') else side.active2
 
     if pkmn and hasattr(pkmn, 'objectPkmn'):
-        # Limpiamos el objeto equipado del Pokémon
+        # Limpiamos el objeto equipado del Pokémon activo
         pkmn.objectPkmn = None
+
+    # Sincroniza plantillas OTS / reserva (crítico con Illusion: el log muestra el item real)
+    if item_name:
+        _clear_item_everywhere(side, item_name)
 
     return battle
 
@@ -1580,7 +1922,6 @@ def transform(battle: Battle, split_msg: list) -> Battle:
         original_item = source_pkmn.objectPkmn
         original_hpa = source_pkmn.HPA_battle_actual
         original_hpb = source_pkmn.HPB_battle_base
-        original_ability = getattr(source_pkmn, 'abilityPkmn', None)
         original_non_volatile = deepcopy(source_pkmn.non_volatile_statuses)
         original_volatile = deepcopy(source_pkmn.volatile_statuses)
         original_drowsy = bool(getattr(source_pkmn, 'is_drowsy', False))
@@ -1592,10 +1933,15 @@ def transform(battle: Battle, split_msg: list) -> Battle:
         # Reforzamos la identidad de Ditto y aquella parte que debe mantenerse inmutable
         new_source.name = target_pkmn.name
         new_source.objectPkmn = original_item
-        new_source.abilityPkmn = original_ability if original_ability else getattr(new_source, 'abilityPkmn', None)
+        # Habilidad efectiva = la del objetivo (como en el |request| de Showdown)
+        target_ability = normalize_name(getattr(target_pkmn, 'abilityPkmn', '') or '')
+        new_source.abilityPkmn = target_ability or 'imposter'
         new_source.HPA_battle_actual = original_hpa
         new_source.HPB_battle_base = original_hpb
         new_source.is_ditto = True
+        new_source.is_zoroark = False  # Nunca heredar bandera Illusion del objetivo
+        new_source.is_mega_evo = False
+        new_source.can_mega_evo = False
         new_source.non_volatile_statuses = original_non_volatile
         new_source.volatile_statuses = original_volatile
         new_source.is_drowsy = original_drowsy
@@ -1740,48 +2086,141 @@ def copyboost(battle: Battle, split_msg: list) -> Battle:
 
 
 ############################################################################################################################################################
-# OK - Activación de efectos/movimientos especiales (ej: Skill Swap para cambiar habilidades)                                                           ###
+# OK - Intercambia boosts entre dos Pokémon (Guard Swap / Heart Swap / …)                                                                                ###
+############################################################################################################################################################
+def swapboost(battle: Battle, split_msg: list) -> Battle:
+    # |-swapboost|p2a: Indeedee|p1b: Torkoal|def, spd|[from] move: Guard Swap
+    # |-swapboost|p1a: Magearna|p2a: Incineroar|atk, def, spa, spd, spe, accuracy, evasion|[from] move: Heart Swap
+    if len(split_msg) < 5:
+        return battle
+
+    source = _resolve_active_from_ident(battle, split_msg[2].strip())
+    target = _resolve_active_from_ident(battle, split_msg[3].strip())
+    if not source or not target:
+        return battle
+    if not hasattr(source, 'boosts') or not hasattr(target, 'boosts'):
+        return battle
+
+    raw_stats = split_msg[4].strip()
+    if not raw_stats or raw_stats.startswith('['):
+        return battle
+
+    for token in raw_stats.split(','):
+        abbr = token.strip().lower()
+        if not abbr:
+            continue
+        key = constants.STAT_ABBREVIATION_LOOKUPS.get(abbr, abbr)
+        src_val = int(source.boosts.get(key, 0) or 0)
+        tgt_val = int(target.boosts.get(key, 0) or 0)
+        source.boosts[key] = tgt_val
+        target.boosts[key] = src_val
+
+    print(
+        f"[SWAPBOOST] {getattr(source, 'name', '?')} <-> {getattr(target, 'name', '?')} "
+        f"stats={raw_stats}"
+    )
+    return battle
+
+
+def _stat_for_guard_split(pkmn, actual_attr: str, base_attr: str):
+    """Valor usable para promediar Guard Split (actual si >0; si no, base de especie)."""
+    if pkmn is None:
+        return None
+    try:
+        actual = int(getattr(pkmn, actual_attr, -1) or -1)
+    except (TypeError, ValueError):
+        actual = -1
+    if actual > 0:
+        return actual
+    try:
+        base = int(getattr(pkmn, base_attr, -1) or -1)
+    except (TypeError, ValueError):
+        base = -1
+    return base if base > 0 else None
+
+
+def _apply_guard_split(source, target) -> bool:
+    """
+    Promedia Def/SpD como PS (storedStats). Persistimos en *_battle_actual.
+    Al salir del campo el rival vuelve a -1 (base) vía _clear_reserve_effects;
+    el usuario se corrige con el siguiente |request|.
+    """
+    if source is None or target is None:
+        return False
+
+    src_def = _stat_for_guard_split(source, 'DEF_battle_actual', 'DEF_battle_base')
+    tgt_def = _stat_for_guard_split(target, 'DEF_battle_actual', 'DEF_battle_base')
+    src_spd = _stat_for_guard_split(source, 'SPD_battle_actual', 'SPD_battle_base')
+    tgt_spd = _stat_for_guard_split(target, 'SPD_battle_actual', 'SPD_battle_base')
+
+    applied = False
+    if src_def is not None and tgt_def is not None:
+        new_def = (src_def + tgt_def) // 2
+        source.DEF_battle_actual = new_def
+        target.DEF_battle_actual = new_def
+        applied = True
+    if src_spd is not None and tgt_spd is not None:
+        new_spd = (src_spd + tgt_spd) // 2
+        source.SPD_battle_actual = new_spd
+        target.SPD_battle_actual = new_spd
+        applied = True
+    if applied:
+        source.guard_split_active = True
+        target.guard_split_active = True
+    return applied
+
+
+############################################################################################################################################################
+# OK - Activación de efectos/movimientos especiales (Skill Swap, Guard Split, …)                                                                         ###
 ############################################################################################################################################################
 def activate(battle: Battle, split_msg: list) -> Battle:
     # |-activate|p2b: Starmie|move: Skill Swap|Drought|Natural Cure|[of] p1b: Torkoal
+    # |-activate|p2b: Indeedee|move: Guard Split|[of] p1b: Torkoal
     # |-activate|p1a: Indeedee|ability: Psychic Surge
-    # Hoy solo persistimos Skill Swap (intercambio de habilidades). Otros -activate se ignoran.
-    # Skill Swap necesita 7 campos: emisor, efecto, hab1, hab2, [of] receptor.
-    if len(split_msg) < 7:
+    if len(split_msg) < 4:
         return battle
 
     trigger_effect = split_msg[3].strip().lower()
 
-    # 1. Validamos que el activador sea estrictamente "skill swap"
-    if "skill swap" in trigger_effect:
-        # --- DATOS DEL POKÉMON 1 (Emisor / p2b: Starmie) ---
-        pkmn1_slot_full = split_msg[2].strip()  # Ej: "p2b: Starmie"
-        pkmn1_opponent = is_opponent(battle, ["", "", pkmn1_slot_full])
-        pkmn1_side = battle.opponent if pkmn1_opponent else battle.user
-        pkmn1_is_active1 = pkmn1_slot_full.split(':')[0].strip().endswith('a')
-        pkmn1 = pkmn1_side.active1 if pkmn1_is_active1 else pkmn1_side.active2
+    # --- Skill Swap: intercambio de habilidades (PS incluye ambas habilidades) ---
+    if 'skill swap' in trigger_effect:
+        if len(split_msg) < 7:
+            return battle
 
-        # --- DATOS DEL POKÉMON 2 (Receptor / [of] p1b: Torkoal) ---
-        # Extraemos el identificador de bando (p1b) limpiando el "[of]" de la cadena
-        of_part = split_msg[6].partition("[of] ")[2].strip()  # Ej: "p1b: Torkoal"
+        pkmn1 = _resolve_active_from_ident(battle, split_msg[2].strip())
+        of_part = _extract_of_ident(split_msg)
         if not of_part:
             return battle
-            
-        pkmn2_slot_full = of_part
-        pkmn2_opponent = is_opponent(battle, ["", "", pkmn2_slot_full])
-        pkmn2_side = battle.opponent if pkmn2_opponent else battle.user
-        pkmn2_is_active1 = pkmn2_slot_full.split(':')[0].strip().endswith('a')
-        pkmn2 = pkmn2_side.active1 if pkmn2_is_active1 else pkmn2_side.active2
+        pkmn2 = _resolve_active_from_ident(battle, of_part)
 
-        # --- INTERCAMBIO DE HABILIDADES EN MEMORIA ---
         if pkmn1 and pkmn2:
-            new_ability_pkmn1 = normalize_name(split_msg[4].strip())  # "Drought"  
-            new_ability_pkmn2 = normalize_name(split_msg[5].strip())  # "Natural Cure"
-
+            new_ability_pkmn1 = normalize_name(split_msg[4].strip())
+            new_ability_pkmn2 = normalize_name(split_msg[5].strip())
             pkmn1.abilityPkmn = new_ability_pkmn1
             pkmn2.abilityPkmn = new_ability_pkmn2
+            print(
+                f"[SKILL SWAP] {pkmn1.name} ahora tiene {new_ability_pkmn1} | "
+                f"{pkmn2.name} ahora tiene {new_ability_pkmn2}"
+            )
+        return battle
 
-            print(f"[SKILL SWAP] {pkmn1.name} ahora tiene {new_ability_pkmn1} | {pkmn2.name} ahora tiene {new_ability_pkmn2}")
+    # --- Guard Split: promediar Def / SpD (PS solo manda -activate, sin números) ---
+    if 'guard split' in trigger_effect:
+        source = _resolve_active_from_ident(battle, split_msg[2].strip())
+        of_part = _extract_of_ident(split_msg)
+        target = _resolve_active_from_ident(battle, of_part) if of_part else None
+        if _apply_guard_split(source, target):
+            print(
+                f"[GUARD SPLIT] {getattr(source, 'name', '?')} <-> {getattr(target, 'name', '?')} "
+                f"DEF={getattr(source, 'DEF_battle_actual', '?')} "
+                f"SPD={getattr(source, 'SPD_battle_actual', '?')}"
+            )
+        return battle
+
+    # Protect en un objetivo de spread: ese mon no recibe |-damage|; no tumbar
+    # el pending entero (los otros hits del spread sí aportan SP).
+    if any(pid in normalize_name(trigger_effect) for pid in _PROTECT_SINGLETURN):
+        return battle
 
     return battle
 
@@ -1799,6 +2238,12 @@ def turn(battle: Battle, split_msg: list) -> Battle:
     # Actualizamos el número de turno actual de la batalla
     new_turn = int(split_msg[2].strip())
     battle.turn = new_turn
+
+    # El orden de acción es evidencia de un solo turno: se reinicia en cada uno.
+    battle.turn_actions = []
+    battle.turn_speed_snapshot = None
+    battle.pending_damage_ctx = None
+    battle.pending_crit_target = None
 
     # Decremento de duraciones globales del campo de batalla
     if new_turn > 1 and battle.weatherTurn > 1:
@@ -1824,8 +2269,618 @@ def turn(battle: Battle, split_msg: list) -> Battle:
 
         # Yawn / is_drowsy: NO se limpia aquí. Debe sobrevivir al |turn| del turno
         # de decisión y solo caer con |-status|slp, |-end|Yawn, switch o faint.
-    
+
+    # Protect / Helping Hand / roost: solo viven dentro del turno que termina.
+    # Destiny Bond y Charge NO se limpian aquí (cruzan |turn| hasta move/switch).
+    _clear_all_ephemeral_turn_flags(battle)
+
     return battle
+
+
+############################################################################################################################################################
+# OK - Nombres de cuenta desde |player|p1|Nick|avatar|                                                                                                   ###
+############################################################################################################################################################
+def set_player(battle: Battle, split_msg: list) -> Battle:
+    # |player|p1|Deep1ODDQN|167|
+    # |player|p2|popplioperu98|winona|
+    if len(split_msg) < 4:
+        return battle
+
+    player_id = split_msg[2].strip()
+    account = split_msg[3].strip()
+    if not account:
+        return battle
+
+    user_id = getattr(battle.user, 'id', None)
+    opp_id = getattr(battle.opponent, 'id', None)
+
+    if user_id and player_id == user_id:
+        battle.user.account_name = account
+    elif opp_id and player_id == opp_id:
+        battle.opponent.account_name = account
+    elif player_id.endswith('1') and not battle.user.account_name:
+        # Antes de conocer side.id: p1 suele ser el retador o el host; se corrige luego
+        battle.user.account_name = account
+    elif player_id.endswith('2') and not battle.opponent.account_name:
+        battle.opponent.account_name = account
+
+    return battle
+
+
+def _normalized_move_set(moves) -> set:
+    return {normalize_name(m) for m in (moves or []) if m}
+
+
+def _ots_moves_for_species(side, species_name: str) -> set:
+    """Movimientos registrados en showteam/OTS para la especie (forma base)."""
+    species = _base_species_name(species_name)
+    if not species:
+        return set()
+    collected = set()
+    for p in getattr(side, 'opponents', []) or []:
+        if p is None:
+            continue
+        if _base_species_name(getattr(p, 'name', '')) == species:
+            collected |= _normalized_move_set(getattr(p, 'moves', None))
+    return collected
+
+
+def _zoroark_still_available(side) -> bool:
+    """True si Illusion sigue siendo posible (Zoroark vivo o aún no sacado)."""
+    field_or_reserve = [
+        getattr(side, 'active1', None),
+        getattr(side, 'active2', None),
+        *getattr(side, 'reserved', []),
+    ]
+    seen = [p for p in field_or_reserve if p is not None and _is_zoroark(p)]
+    if seen:
+        return any(not getattr(p, 'is_fainted', False) for p in seen)
+    return any(_is_zoroark(p) for p in (getattr(side, 'opponents', []) or []))
+
+
+def _ots_zoroark_details(side) -> str:
+    for p in getattr(side, 'opponents', []) or []:
+        if p is not None and _is_zoroark(p):
+            raw = getattr(p, 'name', 'zoroark') or 'zoroark'
+            # Showdown details usan mayúscula inicial / Hisui
+            if raw.lower() == 'zoroark-hisui':
+                return 'Zoroark-Hisui, L50'
+            return 'Zoroark, L50'
+    return 'Zoroark, L50'
+
+
+############################################################################################################################################################
+# OK - Observa |move|: si el mon oponente usa un move fuera de su OTS y hay Zoroark, deduce Illusion                                                     ###
+############################################################################################################################################################
+############################################################################################################################################################
+### OK - Orden de acción del turno → evidencia de velocidad del rival                                                                                    ###
+############################################################################################################################################################
+
+# Efectos que reordenan el turno: si aparecen, el orden observado ya no refleja
+# la velocidad y se descarta el turno completo.
+_ORDER_ALTERING_EFFECTS = ('after you', 'quash', 'instruct')
+
+
+def _speed_context_for(battle: Battle, side, pkmn) -> SpeedContext:
+    """Modificadores de velocidad afirmables para un Pokémon en campo."""
+    statuses = getattr(pkmn, 'non_volatile_statuses', None) or {}
+    boosts = getattr(pkmn, 'boosts', None) or {}
+    side_conditions = getattr(side, 'side_conditions', None) or {}
+    return SpeedContext(
+        boost=int(boosts.get(constants.SPEED, 0) or 0),
+        item=getattr(pkmn, 'objectPkmn', None),
+        ability=getattr(pkmn, 'abilityPkmn', None),
+        paralyzed=bool(statuses.get('par')),
+        tailwind=int(side_conditions.get('tailwind', 0) or 0) > 0,
+    )
+
+
+def _record_action_for_speed(battle: Battle, split_msg: list) -> None:
+    """
+    Anota que un Pokémon acaba de actuar y, contra lo ya anotado en este turno,
+    estrecha la velocidad del rival.
+
+    Showdown fija el orden al comienzo del turno, así que solo son comparables
+    las velocidades de ese instante: el contexto se congela en el primer |move|
+    del turno, cuando los cambios ya se resolvieron y ningún efecto se aplicó.
+    """
+    tags = ' '.join(split_msg[4:]).lower()
+
+    # Un |move| con [from] es un movimiento llamado (Sleep Talk, Copycat...), no
+    # la acción elegida: no aporta información de orden.
+    if '[from]' in tags or '[still]' in tags:
+        return
+    if any(effect in tags for effect in _ORDER_ALTERING_EFFECTS):
+        battle.turn_actions = []
+        battle.turn_speed_snapshot = 'discarded'
+        return
+    if battle.turn_speed_snapshot == 'discarded':
+        return
+
+    slot_str = split_msg[2].split(':')[0].strip()
+    if not slot_str:
+        return
+    from_opponent = not slot_str.startswith(battle.user.id)
+    side = battle.opponent if from_opponent else battle.user
+    pkmn = side.active1 if slot_str.endswith('a') else side.active2
+    if pkmn is None:
+        return
+
+    ability = getattr(pkmn, 'abilityPkmn', None)
+    priority = move_priority(split_msg[3].strip(), ability)
+    if priority is None:
+        return  # movimiento desconocido: mejor no asumir prioridad 0
+
+    # Congelamos el contexto en el primer movimiento del turno.
+    if not battle.turn_actions:
+        battle.turn_speed_snapshot = {
+            'trickroom': int(battle.terrain.get('trickroom', 0) or 0) > 0,
+            'contexts': {},
+        }
+        for slot_side, tag in ((battle.user, battle.user.id), (battle.opponent, battle.opponent.id)):
+            for suffix, attr in (('a', 'active1'), ('b', 'active2')):
+                active = getattr(slot_side, attr, None)
+                if active is not None:
+                    battle.turn_speed_snapshot['contexts'][f'{tag}{suffix}'] = (
+                        _speed_context_for(battle, slot_side, active)
+                    )
+
+    snapshot = battle.turn_speed_snapshot or {}
+    contexts = snapshot.get('contexts', {})
+    trick_room = bool(snapshot.get('trickroom'))
+
+    ctx = contexts.get(slot_str)
+    if ctx is None:
+        return
+
+    current = {
+        'slot': slot_str,
+        'is_opponent': from_opponent,
+        'pkmn': pkmn,
+        'priority': priority,
+        'ctx': ctx,
+    }
+
+    for earlier in battle.turn_actions:
+        # Solo comparamos bandos distintos y misma prioridad.
+        if earlier['is_opponent'] == from_opponent:
+            continue
+        if earlier['priority'] != priority:
+            continue
+
+        if earlier['is_opponent']:
+            opponent_action, user_action, opponent_first = earlier, current, True
+        else:
+            opponent_action, user_action, opponent_first = current, earlier, False
+
+        user_pkmn = user_action['pkmn']
+        try:
+            user_stat_speed = int(getattr(user_pkmn, 'VEL_battle_actual', -1) or -1)
+        except (TypeError, ValueError):
+            user_stat_speed = -1
+        if user_stat_speed <= 0:
+            continue
+
+        battle.stat_beliefs.observe_speed_order(
+            opponent_action['pkmn'],
+            opponent_action['ctx'],
+            user_action['ctx'].speed_of(user_stat_speed),
+            user_action['ctx'],
+            opponent_first=opponent_first,
+            trick_room=trick_room,
+        )
+
+    battle.turn_actions.append(current)
+
+
+def note_crit(battle: Battle, split_msg: list = None) -> Battle:
+    # |-crit|p1a: Farigiraf
+    # Solo invalida el próximo |-damage| de ESE objetivo (spreads: los otros hits valen).
+    # Si ya había un crit pendiente de otro mon, se acumula en un set.
+    if split_msg and len(split_msg) >= 3:
+        target = _resolve_active_from_ident(battle, split_msg[2].strip())
+        prev = getattr(battle, 'pending_crit_target', None)
+        if target is None:
+            battle.pending_crit_target = True
+        elif prev is True:
+            pass  # ya invalida el próximo daño cualquiera
+        elif prev is None:
+            battle.pending_crit_target = target
+        elif isinstance(prev, set):
+            prev.add(id(target))
+            battle.pending_crit_target = prev
+        else:
+            # Había un mon; ahora hay dos (spread con varios crits).
+            battle.pending_crit_target = {id(prev), id(target)}
+    else:
+        battle.pending_crit_target = True  # legacy: siguiente daño cualquiera
+    return battle
+
+
+def _major_status_id(pkmn) -> str:
+    statuses = getattr(pkmn, 'non_volatile_statuses', None) or {}
+    for key in ('brn', 'par', 'slp', 'frz', 'psn', 'tox'):
+        if statuses.get(key):
+            return key
+    return ''
+
+
+def _boost_val(pkmn, const_key: str) -> int:
+    boosts = getattr(pkmn, 'boosts', None) or {}
+    try:
+        return int(boosts.get(const_key, 0) or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _side_has(side, condition: str) -> bool:
+    conds = getattr(side, 'side_conditions', None) or {}
+    try:
+        return int(conds.get(condition, 0) or 0) > 0
+    except (TypeError, ValueError):
+        return False
+
+
+def _active_terrain_name(battle: Battle) -> Optional[str]:
+    for name in (
+        'electricterrain', 'grassyterrain', 'mistyterrain', 'psychicterrain',
+    ):
+        if int(battle.terrain.get(name, 0) or 0) > 0:
+            return name
+    return None
+
+
+def _known_user_stats(pkmn) -> dict:
+    def _v(attr, default=1):
+        try:
+            val = int(getattr(pkmn, attr, -1) or -1)
+        except (TypeError, ValueError):
+            return default
+        return val if val > 0 else default
+
+    return {
+        'hp': _v('HPB_battle_base', 100),
+        'atk': _v('ATK_battle_actual'),
+        'def': _v('DEF_battle_actual'),
+        'spa': _v('SPA_battle_actual'),
+        'spd': _v('SPD_battle_actual'),
+        'spe': _v('VEL_battle_actual'),
+    }
+
+
+def _illusion_blocks_damage_inference(pkmn) -> bool:
+    """True si el mon es un disfraz Illusion aún opaco (no atribuir a esa especie)."""
+    if pkmn is None:
+        return False
+    if getattr(pkmn, 'illusion_disguise', None) and not getattr(
+        pkmn, 'illusion_protocol_revealed', False
+    ):
+        return not getattr(pkmn, 'is_zoroark', False)
+    return False
+
+
+def _build_hit_damage_context(
+    battle: Battle,
+    attacker,
+    defender,
+    *,
+    is_spread: bool,
+    defender_hp_fraction: Optional[float] = None,
+) -> DamageContext:
+    """Contexto afirmable para UN hit (screens/FG/boosts del defensor de ese golpe)."""
+    weather = battle.weather if battle.weather and battle.weather != 'none' else None
+    def_side = battle.user
+    if defender is battle.opponent.active1 or defender is battle.opponent.active2:
+        def_side = battle.opponent
+    elif defender is battle.user.active1 or defender is battle.user.active2:
+        def_side = battle.user
+    elif getattr(defender, 'is_opponent', False):
+        def_side = battle.opponent
+
+    has_aurora = _side_has(def_side, 'auroraveil')
+    frac = defender_hp_fraction
+    if frac is None:
+        frac = _hp_fraction_before_hit(defender)
+    return DamageContext(
+        atk_boost=_boost_val(attacker, constants.ATTACK),
+        def_boost=_boost_val(defender, constants.DEFENSE),
+        spa_boost=_boost_val(attacker, constants.SPECIAL_ATTACK),
+        spd_boost=_boost_val(defender, constants.SPECIAL_DEFENSE),
+        attacker_item=getattr(attacker, 'objectPkmn', None),
+        defender_item=getattr(defender, 'objectPkmn', None),
+        attacker_ability=getattr(attacker, 'abilityPkmn', None),
+        defender_ability=getattr(defender, 'abilityPkmn', None),
+        attacker_status=_major_status_id(attacker),
+        defender_status=_major_status_id(defender),
+        weather=weather,
+        terrain=_active_terrain_name(battle),
+        wonder_room=int(battle.terrain.get('wonderroom', 0) or 0) > 0,
+        reflect=_side_has(def_side, 'reflect') and not has_aurora,
+        light_screen=_side_has(def_side, 'lightscreen') and not has_aurora,
+        aurora_veil=has_aurora,
+        helping_hand=bool(getattr(attacker, 'is_helping_hand', False)),
+        friend_guard=_ally_has_friend_guard(def_side, defender),
+        charge=bool(getattr(attacker, 'is_charged', False)),
+        is_spread=is_spread,
+        is_crit=False,
+        defender_hp_fraction=frac,
+    )
+
+
+def _set_pending_damage_from_move(battle: Battle, split_msg: list) -> None:
+    """
+    Congela el ataque para el/los |-damage| siguientes.
+
+    - Single-target: un hit cruzado; se limpia tras usarlo.
+    - Spread ([spread]): varios |-damage| (foes y a veces aliados); cada hit
+      cruzado aporta Atk/SpA o Def/SpD del rival involucrado.
+    """
+    tags = ' '.join(split_msg[4:]).lower()
+    if '[from]' in tags or '[still]' in tags:
+        battle.pending_damage_ctx = None
+        battle.pending_crit_target = None
+        return
+
+    if len(split_msg) < 4:
+        return
+
+    move_name = split_msg[3].strip()
+    category = move_category(move_name)
+    if category not in ('p', 's'):
+        battle.pending_damage_ctx = None
+        battle.pending_crit_target = None
+        return
+
+    atk_slot = split_msg[2].split(':')[0].strip()
+    if not atk_slot:
+        return
+    atk_opp = not atk_slot.startswith(battle.user.id)
+    atk_side = battle.opponent if atk_opp else battle.user
+    attacker = atk_side.active1 if atk_slot.endswith('a') else atk_side.active2
+    if attacker is None:
+        return
+
+    if _illusion_blocks_damage_inference(attacker):
+        battle.pending_damage_ctx = None
+        battle.pending_crit_target = None
+        return
+
+    # Nuevo golpe: limpia crits del move anterior.
+    battle.pending_crit_target = None
+    is_spread = _move_is_spread(move_name, tags)
+
+    battle.pending_damage_ctx = {
+        'move_name': move_name,
+        'category': category,
+        'attacker': attacker,
+        'opponent_is_attacker': atk_opp,
+        'is_spread': is_spread,
+        # Charge se consume en observe_move tras el |move|; congelar aquí.
+        'attacker_charge': bool(getattr(attacker, 'is_charged', False)),
+        'attacker_helping_hand': bool(getattr(attacker, 'is_helping_hand', False)),
+        # Hits ya usados (id del objeto Pokemon) para no doblar el mismo mon.
+        'hit_ids': set(),
+    }
+
+
+def _maybe_infer_from_damage(battle: Battle, split_msg: list, pkmn, old_hp: int, old_max: int) -> None:
+    """Tras aplicar |-damage|, intenta estrechar Atk/SpA/Def/SpD del rival."""
+    pending = getattr(battle, 'pending_damage_ctx', None)
+    if not pending:
+        return
+
+    # Residuales / items: no son el golpe del move pendiente.
+    from_parts = [part.lower() for part in split_msg[4:]]
+    if any('[from]' in part for part in from_parts):
+        return
+
+    # Crit solo para este objetivo (no tumbar el flag de otro mon del spread).
+    crit_target = getattr(battle, 'pending_crit_target', None)
+    if crit_target is not None:
+        is_this_crit = False
+        if crit_target is True:
+            is_this_crit = True
+            battle.pending_crit_target = None
+        elif isinstance(crit_target, set):
+            if id(pkmn) in crit_target:
+                is_this_crit = True
+                crit_target.discard(id(pkmn))
+                battle.pending_crit_target = crit_target or None
+        elif crit_target is pkmn:
+            is_this_crit = True
+            battle.pending_crit_target = None
+        if is_this_crit:
+            # Spread: mantener pending para otros hits no-crit.
+            if not pending.get('is_spread'):
+                battle.pending_damage_ctx = None
+            return
+
+    attacker = pending.get('attacker')
+    if attacker is None or pkmn is None:
+        return
+
+    atk_opp = bool(pending['opponent_is_attacker'])
+    def_opp = bool(getattr(pkmn, 'is_opponent', False))
+    # Preferir identidad de slot activa sobre el flag del objeto.
+    if pkmn is battle.user.active1 or pkmn is battle.user.active2:
+        def_opp = False
+    elif pkmn is battle.opponent.active1 or pkmn is battle.opponent.active2:
+        def_opp = True
+
+    # Solo hits cruzados (atacante rival ↔ defensor nuestro, o al revés).
+    if atk_opp == def_opp:
+        return
+
+    if _illusion_blocks_damage_inference(pkmn):
+        return
+
+    if getattr(pkmn, 'is_protected', False):
+        return
+
+    volatiles = getattr(pkmn, 'volatile_statuses', None) or {}
+    if volatiles.get('substitute'):
+        return
+
+    hit_ids = pending.setdefault('hit_ids', set())
+    pid = id(pkmn)
+    if pid in hit_ids:
+        return
+    hit_ids.add(pid)
+
+    try:
+        new_hp = int(getattr(pkmn, 'HPA_battle_actual', 0) or 0)
+        new_max = int(getattr(pkmn, 'HPB_battle_base', 0) or 0)
+    except (TypeError, ValueError):
+        return
+
+    opponent_is_attacker = atk_opp
+    damage_is_percent = opponent_is_attacker is False
+
+    if damage_is_percent:
+        if old_hp <= 0 or new_max <= 0:
+            return
+        delta_pct = max(0, int(old_hp) - int(new_hp))
+        if pkmn.is_fainted or new_hp <= 0:
+            delta_pct = max(delta_pct, 1)
+        observed = delta_pct
+    else:
+        if old_hp <= 0:
+            return
+        observed = max(0, int(old_hp) - int(new_hp))
+        if observed <= 0 and (pkmn.is_fainted or new_hp <= 0):
+            observed = int(old_hp)
+
+    if observed <= 0:
+        return
+
+    # Fracción de HP ANTES del golpe (Multiscale); old_hp ya lo capturó heal_or_damage.
+    pre_frac = None
+    try:
+        if def_opp:
+            pre_frac = max(0.0, min(1.0, float(old_hp) / 100.0))
+        elif old_max > 0:
+            pre_frac = max(0.0, min(1.0, float(old_hp) / float(old_max)))
+    except (TypeError, ValueError):
+        pre_frac = None
+
+    ctx = _build_hit_damage_context(
+        battle,
+        attacker,
+        pkmn,
+        is_spread=bool(pending.get('is_spread')),
+        defender_hp_fraction=pre_frac,
+    )
+    # Snapshot del |move|: Charge/HH pueden caer antes del |-damage|.
+    if pending.get('attacker_charge'):
+        ctx.charge = True
+    if pending.get('attacker_helping_hand'):
+        ctx.helping_hand = True
+
+    user_mon = pkmn if opponent_is_attacker else attacker
+    opp_mon = attacker if opponent_is_attacker else pkmn
+    known_stats = _known_user_stats(user_mon)
+
+    battle.stat_beliefs.observe_damage(
+        opponent_pkmn=opp_mon,
+        move_name=pending['move_name'],
+        category=pending['category'],
+        opponent_is_attacker=opponent_is_attacker,
+        observed_damage=observed,
+        damage_is_percent=damage_is_percent,
+        known_stats=known_stats,
+        known_species=getattr(user_mon, 'name', '') or 'Magikarp',
+        known_nature=getattr(user_mon, 'nature', None),
+        ctx=ctx,
+        known_hp=known_stats.get('hp'),
+    )
+
+    # Single-target: un solo hit útil. Spread: seguir hasta el próximo |move|/|turn|.
+    if not pending.get('is_spread'):
+        battle.pending_damage_ctx = None
+
+
+def observe_move(battle: Battle, split_msg: list) -> Battle:
+    # |move|p2a: Dragonite|Calm Mind|p2a: Dragonite
+    # |move|p2b: Pawmot|Coaching|p2a: Dragonite
+    # Típico T1: el "lead" usa un move del set de Zoroark (no del disfraz) → Illusion
+    if len(split_msg) < 4:
+        return battle
+
+    actor = _resolve_active_from_ident(battle, split_msg[2].strip())
+    move_name = split_msg[3].strip()
+    move_nid = normalize_name(move_name)
+    still = any(part.strip().lower() == '[still]' for part in split_msg[4:])
+
+    # Destiny Bond cae al usar otro move (no al propio Destiny Bond).
+    if (
+        actor is not None
+        and not still
+        and getattr(actor, 'is_destiny_bonded', False)
+        and move_nid not in _DESTINY_BOND_IDS
+    ):
+        _set_destiny_bonded(actor, False)
+
+    # El orden de acción se registra para AMBOS bandos: es la evidencia con la
+    # que se estrecha la velocidad del rival.
+    _record_action_for_speed(battle, split_msg)
+    # Congela contexto de daño para el |-damage| inmediato del move.
+    _set_pending_damage_from_move(battle, split_msg)
+
+    # Charge se consume tras un move Eléctrico (después de congelar el ctx).
+    if (
+        actor is not None
+        and not still
+        and getattr(actor, 'is_charged', False)
+        and _move_is_electric(move_name)
+    ):
+        _set_charged(actor, False)
+
+    # Solo oponente: el agente no usa Illusion de forma opaca en nuestro estado
+    if not is_opponent(battle, split_msg):
+        return battle
+
+    # Ignorar moves que no llegaron a ejecutarse
+    if any(part.strip().lower() == '[still]' for part in split_msg[4:]):
+        return battle
+
+    move_id = normalize_name(split_msg[3].strip())
+    if not move_id or move_id == 'struggle':
+        return battle
+
+    side = battle.opponent
+    slot_str = split_msg[2].split(':')[0].strip()
+    is_active1 = slot_str.endswith('a')
+    pkmn = side.active1 if is_active1 else side.active2
+    if pkmn is None:
+        return battle
+
+    # Ya revelado / ya tratado como Zoroark
+    if _is_zoroark(pkmn) or _canonical_species_name(getattr(pkmn, 'name', '')).startswith('zoroark'):
+        return battle
+
+    if not _zoroark_still_available(side):
+        return battle
+
+    known_moves = _ots_moves_for_species(side, getattr(pkmn, 'name', ''))
+    if not known_moves:
+        known_moves = _normalized_move_set(getattr(pkmn, 'moves', None))
+    if not known_moves:
+        return battle
+
+    if move_id in known_moves:
+        return battle
+
+    # Move ilegal para la especie OTS → debe ser Illusion (Champions con showteam)
+    print(
+        f"[ILLUSION DEDUCED BY MOVE] {getattr(pkmn, 'name', '?')} uso '{move_id}' "
+        f"(no esta en OTS {sorted(known_moves)}) -> Zoroark"
+    )
+    details = _ots_zoroark_details(side)
+    return replace_illusion(
+        battle,
+        ['', 'replace', f'{slot_str}: Zoroark', details],
+        protocol_reveal=False,
+    )
 
 
 ############################################################################################################################################################
@@ -1833,17 +2888,22 @@ def turn(battle: Battle, split_msg: list) -> Battle:
 ############################################################################################################################################################
 BATTLE_MODIFIERS_LOOKUP = {
     'request': request,
+    'player': set_player,
     'switch': switch_or_drag,
     'faint': faint,
     'drag': switch_or_drag,
     'swap': swap,
+    'move': observe_move,
     '-heal': heal_or_damage,
     '-damage': heal_or_damage,
+    '-crit': note_crit,
     '-boost': boost,
     '-unboost': unboost,
     '-status': status,
     '-start': start_volatile_status,
     '-end': end_volatile_status,
+    '-singleturn': singleturn,
+    '-singlemove': singlemove,
     '-curestatus': curestatus,
     '-weather': weather,
     '-fieldstart': fieldstart,
@@ -1861,6 +2921,7 @@ BATTLE_MODIFIERS_LOOKUP = {
     '-clearallboost': clearallboost,
     '-clearboost': clearboost,
     '-copyboost': copyboost,
+    '-swapboost': swapboost,
     '-activate': activate,
     'turn': turn
 }
@@ -1870,7 +2931,6 @@ BATTLE_MODIFIERS_LOOKUP = {
 ### OK - Actualiza el entorno de batalla procesando los mensajes de actualización del entorno y tipo |request|                                           ###
 ############################################################################################################################################################
 async def update_battle_environment(battle: Battle, msg: str, msg_request: str) -> None:
-    print("update_battle_environment")
     full_msg = f"{msg}\n{msg_request}" if msg_request else msg # Se concatena ambos mensajes recibidos para procesar todas las líneas en un solo flujo
     msg_lines = full_msg.split('\n')
 

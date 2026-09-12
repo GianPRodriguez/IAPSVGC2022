@@ -2,3 +2,6 @@
 -r requirements.txt
 
 pytest>=8.0,<10
+
+# Cliente Showdown para harness e2e de inferencia SP (repo hermano)
+-e ../poke-env

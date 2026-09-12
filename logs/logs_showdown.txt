@@ -1,0 +1,1142 @@
+
+========================================================================
+  RECV  2026-09-12 06:20:13
+========================================================================
+|updatesearch|{"searching":[],"games":null}
+
+========================================================================
+  RECV  2026-09-12 06:20:13
+========================================================================
+|updateuser| Deep1ODDQN|1|101|{"blockChallenges":false,"blockPMs":false,"ignoreTickets":false,"hideBattlesFromTrainerCard":false,"blockInvites":false,"doNotDisturb":false,"blockFriendRequests":false,"allowFriendNotifications":false,"displayBattlesToFriends":false,"hideLogins":false,"hiddenNextBattle":false,"inviteOnlyNextBattle":false,"language":null}
+
+========================================================================
+  RECV  2026-09-12 06:20:13
+========================================================================
+|updatesearch|{"searching":[],"games":null}
+
+========================================================================
+  RECV  2026-09-12 06:20:14
+========================================================================
+|pm| Deep1ODDQN| popplioperu98|/challenge gen9championsvgc2026regmcbo3|gen9championsvgc2026regmcbo3|||
+
+========================================================================
+  RECV  2026-09-12 06:20:14
+========================================================================
+|pm| Deep1ODDQN| popplioperu98|/log Deep1ODDQN wants to battle!
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+|pm| popplioperu98| Deep1ODDQN|/challenge
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+|updatesearch|{"searching":[],"games":null}
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2679883633":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|init|battle
+|title|Deep1ODDQN vs. popplioperu98
+|fieldhtml|<center><br /><strong>Deep1ODDQN and popplioperu98's Best-of-3 progress:</strong><br /><table><tr><td>Deep1ODDQN: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr><tr><td>popplioperu98: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr></table><br /><br /><table><tr><td><center><strong>Deep1ODDQN</strong></center></td><td></td><td><center><strong>popplioperu98</strong></center></td></tr><tr><td><center><img class="trainersprite" style="transform: scaleX(-1)" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td><td></td><td><center><img class="trainersprite" src="https://play.pokemonshowdown.com/sprites/trainers/winona.png" /></center></td></tr><tr><td><psicon pokemon="Farigiraf" style="transform: scaleX(-1)" /><psicon pokemon="Aegislash" style="transform: scaleX(-1)" /><psicon pokemon="Whimsicott" style="transform: scaleX(-1)" /><br /><psicon pokemon="Gengar" style="transform: scaleX(-1)" /><psicon pokemon="Torkoal" style="transform: scaleX(-1)" /><psicon pokemon="Ditto" style="transform: scaleX(-1)" /></td><td> vs </td><td><psicon pokemon="Dragonite" /><psicon pokemon="Zoroark-Hisui" /><psicon pokemon="Blastoise" /><br /><psicon pokemon="Runerigus" /><psicon pokemon="Venusaur" /><psicon pokemon="Primarina" /></td></tr></table></center>
+|controlshtml|<center></center>
+|j|☆Deep1ODDQN
+
+########################################################################
+  BATTLE START  2026-09-12 06:20:17  |  game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+########################################################################
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|cantleave|
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|tempnotifyoff|choice
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|c|~|/uhtml controls,
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|j|☆popplioperu98
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+|pm| popplioperu98| Deep1ODDQN|/nonotify popplioperu98 accepted the challenge, starting &laquo;<a href="/game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw">game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw</a>&raquo;
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|tempnotifyoff|choice
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|c|~|/uhtml controls,
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2679883634":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2679883634":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|init|battle
+|title|Deep1ODDQN vs. popplioperu98
+|j|☆Deep1ODDQN
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|j|☆popplioperu98
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|html|<table width="100%"><tr><td align="left">Deep1ODDQN</td><td align="right">popplioperu98</tr><tr><td align="left"><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> </td><td align="right"><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> </tr></table>
+|uhtml|bestof|<h2><strong>Game 1</strong> of <a href="/game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw">a best-of-3</a></h2>
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|html|<h2>Game 1</h2>
+|uhtml|game1|<a href="/battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw">Deep1ODDQN vs. popplioperu98</a>
+|fieldhtml|<center><br /><strong>Deep1ODDQN and popplioperu98's Best-of-3 progress:</strong><br /><table><tr><td>Deep1ODDQN: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr><tr><td>popplioperu98: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr></table><br /><br /><table><tr><td><center><strong>Deep1ODDQN</strong></center></td><td></td><td><center><strong>popplioperu98</strong></center></td></tr><tr><td><center><img class="trainersprite" style="transform: scaleX(-1)" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td><td></td><td><center><img class="trainersprite" src="https://play.pokemonshowdown.com/sprites/trainers/winona.png" /></center></td></tr><tr><td><psicon pokemon="Farigiraf" style="transform: scaleX(-1)" /><psicon pokemon="Aegislash" style="transform: scaleX(-1)" /><psicon pokemon="Whimsicott" style="transform: scaleX(-1)" /><br /><psicon pokemon="Gengar" style="transform: scaleX(-1)" /><psicon pokemon="Torkoal" style="transform: scaleX(-1)" /><psicon pokemon="Ditto" style="transform: scaleX(-1)" /></td><td> vs </td><td><psicon pokemon="Dragonite" /><psicon pokemon="Zoroark-Hisui" /><psicon pokemon="Blastoise" /><br /><psicon pokemon="Runerigus" /><psicon pokemon="Venusaur" /><psicon pokemon="Primarina" /></td></tr></table></center>
+|controlshtml|<center><p>Game 1: <a href="/battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw"><strong>being played</strong></a></p></center>
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|t:|1789212017
+|gametype|doubles
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|player|p1|Deep1ODDQN|101|
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|player|p2|popplioperu98|winona|
+|gen|9
+|tier|[Gen 9 Champions] VGC 2026 Reg M-C (Bo3)
+|rule|Species Clause: Limit one of each Pokémon
+|rule|Item Clause: Limit 1 of each item
+|clearpoke
+|poke|p1|Farigiraf, L50, M|
+|poke|p1|Aegislash, L50, F|
+|poke|p1|Whimsicott, L50, F|
+|poke|p1|Gengar, L50, M|
+|poke|p1|Torkoal, L50, F|
+|poke|p1|Ditto, L50|
+|poke|p2|Dragonite, L50, M|
+|poke|p2|Zoroark-Hisui, L50, F|
+|poke|p2|Blastoise, L50, M|
+|poke|p2|Runerigus, L50, M|
+|poke|p2|Venusaur, L50, M|
+|poke|p2|Primarina, L50, F|
+|teampreview|4
+|showteam|p1|Farigiraf||SitrusBerry|ArmorTail|Psychic,PsychUp,TrickRoom,Trick|Bold||M|||50|]Aegislash||Leftovers|StanceChange|Substitute,BrickBreak,CloseCombat,DestinyBond|Sassy||F|||50|]Whimsicott||OccaBerry|Prankster|Moonblast,Tailwind,Charm,LightScreen|Timid||F|||50|]Gengar||Gengarite|CursedBody|PerishSong,SludgeWave,BrickBreak,CorrosiveGas|Modest||M|||50|]Torkoal||FocusSash|Drought|Yawn,BodySlam,WillOWisp,ClearSmog|Relaxed||F|||50|]Ditto||ChoiceScarf|Imposter|Transform|Timid|||||50|
+|showteam|p2|Dragonite||HabanBerry|Multiscale|Roar,DragonDance,LightScreen,ExtremeSpeed|Adamant||M|||50|]Zoroark-Hisui||LifeOrb|Illusion|PainSplit,WillOWisp,ConfuseRay,Spite|Serious||F|||50|]Blastoise||Blastoisinite|RainDish|Haze,FlipTurn,Whirlpool,MirrorCoat|Bold||M|||50|]Runerigus||AirBalloon|WanderingSpirit|AllySwitch,GuardSplit,GuardSwap,Trick|Impish||M|||50|]Venusaur||Venusaurite|Overgrow|WorrySeed,SleepPowder,SludgeBomb,LeafStorm|Modest||M|||50|]Primarina||Leftovers|Torrent|SparklingAria,Moonblast,CalmMind,Protect|Modest||F|||50|
+
+########################################################################
+  BATTLE START  2026-09-12 06:20:17  |  battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+########################################################################
+
+========================================================================
+  RECV  2026-09-12 06:20:17
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"teamPreview":true,"maxChosenTeamSize":4,"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Farigiraf","details":"Farigiraf, L50, M","condition":"222/222","active":true,"stats":{"atk":99,"def":122,"spa":130,"spd":108,"spe":80},"moves":["psychic","psychup","trickroom","trick"],"baseAbility":"armortail","item":"sitrusberry","pokeball":"pokeball","ability":"armortail","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"135/135","active":true,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Whimsicott","details":"Whimsicott, L50, F","condition":"155/155","active":false,"stats":{"atk":78,"def":111,"spa":105,"spd":95,"spe":184},"moves":["moonblast","tailwind","charm","lightscreen"],"baseAbility":"prankster","item":"occaberry","pokeball":"pokeball","ability":"prankster","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"167/167","active":false,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"177/177","active":false,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"155/155","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false}]},"rqid":2}
+
+========================================================================
+  SEND  2026-09-12 06:20:18
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|hf
+
+========================================================================
+  SEND  2026-09-12 06:20:18
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/team 6254|2
+
+========================================================================
+  RECV  2026-09-12 06:20:18
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|c|☆Deep1ODDQN|hf
+
+========================================================================
+  RECV  2026-09-12 06:20:24
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212023
+|teamsize|p1|4
+|teamsize|p2|4
+|start
+|switch|p1a: Ditto|Ditto, L50|155/155
+|switch|p1b: Aegislash|Aegislash, L50, F|135/135
+|switch|p2a: Primarina|Primarina, L50, F|100/100
+|switch|p2b: Runerigus|Runerigus, L50, M|100/100
+|-transform|p1a: Ditto|p2b: Runerigus|[from] ability: Imposter
+|-item|p2b: Runerigus|Air Balloon
+|turn|1
+
+========================================================================
+  RECV  2026-09-12 06:20:24
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"active":[{"moves":[{"move":"Ally Switch","id":"allyswitch","pp":5,"maxpp":5,"target":"self","disabled":false},{"move":"Guard Split","id":"guardsplit","pp":5,"maxpp":5,"target":"normal","disabled":false},{"move":"Guard Swap","id":"guardswap","pp":5,"maxpp":5,"target":"normal","disabled":false},{"move":"Trick","id":"trick","pp":5,"maxpp":5,"target":"normal","disabled":false}]},{"moves":[{"move":"Substitute","id":"substitute","pp":12,"maxpp":12,"target":"self","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Close Combat","id":"closecombat","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Destiny Bond","id":"destinybond","pp":8,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Ditto","details":"Ditto, L50","condition":"155/155","active":true,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["allyswitch","guardsplit","guardswap","trick"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"wanderingspirit","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"135/135","active":true,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"177/177","active":false,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"167/167","active":false,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false}]},"rqid":4}
+
+========================================================================
+  SEND  2026-09-12 06:20:24
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose move 3 2, move 4
+
+========================================================================
+  RECV  2026-09-12 06:20:31
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212031
+|switch|p2b: Dragonite|Dragonite, L50, M|100/100
+|move|p2a: Primarina|Moonblast|p1b: Aegislash
+|-resisted|p1b: Aegislash|1
+|-damage|p1b: Aegislash|105/135
+|move|p1a: Ditto|Guard Swap|p2b: Dragonite
+|-swapboost|p1a: Ditto|p2b: Dragonite|def, spd|[from] move: Guard Swap
+|move|p1b: Aegislash|Destiny Bond|p1b: Aegislash
+|-singlemove|p1b: Aegislash|Destiny Bond
+|
+|-heal|p1b: Aegislash|113/135|[from] item: Leftovers
+|upkeep
+|turn|2
+
+========================================================================
+  RECV  2026-09-12 06:20:31
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"active":[{"moves":[{"move":"Ally Switch","id":"allyswitch","pp":5,"maxpp":5,"target":"self","disabled":true},{"move":"Guard Split","id":"guardsplit","pp":5,"maxpp":5,"target":"normal","disabled":true},{"move":"Guard Swap","id":"guardswap","pp":4,"maxpp":5,"target":"normal","disabled":false},{"move":"Trick","id":"trick","pp":5,"maxpp":5,"target":"normal","disabled":true}]},{"moves":[{"move":"Substitute","id":"substitute","pp":12,"maxpp":12,"target":"self","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Close Combat","id":"closecombat","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Destiny Bond","id":"destinybond","pp":7,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Ditto","details":"Ditto, L50","condition":"155/155","active":true,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["allyswitch","guardsplit","guardswap","trick"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"wanderingspirit","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"113/135","active":true,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"177/177","active":false,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"167/167","active":false,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false}]},"rqid":6}
+
+========================================================================
+  SEND  2026-09-12 06:20:32
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose move 3 1, move 3 -1
+
+========================================================================
+  RECV  2026-09-12 06:20:47
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212047
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|1
+|-boost|p2b: Dragonite|spe|1
+|move|p2a: Primarina|Moonblast|p1a: Ditto
+|-damage|p1a: Ditto|59/155
+|move|p1a: Ditto|Guard Swap|p2a: Primarina
+|-swapboost|p1a: Ditto|p2a: Primarina|def, spd|[from] move: Guard Swap
+|-formechange|p1b: Aegislash|Aegislash-Blade|
+|move|p1b: Aegislash|Close Combat|p1a: Ditto
+|-immune|p1a: Ditto
+|
+|-heal|p1b: Aegislash|121/135|[from] item: Leftovers
+|upkeep
+|turn|3
+
+========================================================================
+  RECV  2026-09-12 06:20:47
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"active":[{"moves":[{"move":"Ally Switch","id":"allyswitch","pp":5,"maxpp":5,"target":"self","disabled":true},{"move":"Guard Split","id":"guardsplit","pp":5,"maxpp":5,"target":"normal","disabled":true},{"move":"Guard Swap","id":"guardswap","pp":3,"maxpp":5,"target":"normal","disabled":false},{"move":"Trick","id":"trick","pp":5,"maxpp":5,"target":"normal","disabled":true}]},{"moves":[{"move":"Substitute","id":"substitute","pp":12,"maxpp":12,"target":"self","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Close Combat","id":"closecombat","pp":7,"maxpp":8,"target":"normal","disabled":false},{"move":"Destiny Bond","id":"destinybond","pp":7,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Ditto","details":"Ditto, L50","condition":"59/155","active":true,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["allyswitch","guardsplit","guardswap","trick"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"wanderingspirit","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"121/135","active":true,"stats":{"atk":192,"def":70,"spa":192,"spd":77,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"177/177","active":false,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"167/167","active":false,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false}]},"rqid":8}
+
+========================================================================
+  SEND  2026-09-12 06:20:48
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose move 3 1, move 2 -1
+
+========================================================================
+  RECV  2026-09-12 06:21:05
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212065
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|1
+|-boost|p2b: Dragonite|spe|1
+|move|p2a: Primarina|Moonblast|p1b: Aegislash
+|-resisted|p1b: Aegislash|1
+|-damage|p1b: Aegislash|43/135
+|move|p1a: Ditto|Guard Swap|p2a: Primarina
+|-swapboost|p1a: Ditto|p2a: Primarina|def, spd|[from] move: Guard Swap
+|move|p1b: Aegislash|Brick Break|p1a: Ditto
+|-immune|p1a: Ditto
+|
+|-heal|p1b: Aegislash|51/135|[from] item: Leftovers
+|upkeep
+|turn|4
+
+========================================================================
+  RECV  2026-09-12 06:21:05
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"active":[{"moves":[{"move":"Ally Switch","id":"allyswitch","pp":5,"maxpp":5,"target":"self","disabled":true},{"move":"Guard Split","id":"guardsplit","pp":5,"maxpp":5,"target":"normal","disabled":true},{"move":"Guard Swap","id":"guardswap","pp":2,"maxpp":5,"target":"normal","disabled":false},{"move":"Trick","id":"trick","pp":5,"maxpp":5,"target":"normal","disabled":true}]},{"moves":[{"move":"Substitute","id":"substitute","pp":12,"maxpp":12,"target":"self","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Close Combat","id":"closecombat","pp":7,"maxpp":8,"target":"normal","disabled":false},{"move":"Destiny Bond","id":"destinybond","pp":7,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Ditto","details":"Ditto, L50","condition":"59/155","active":true,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["allyswitch","guardsplit","guardswap","trick"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"wanderingspirit","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"51/135","active":true,"stats":{"atk":192,"def":70,"spa":192,"spd":77,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"177/177","active":false,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"167/167","active":false,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false}]},"rqid":10}
+
+========================================================================
+  SEND  2026-09-12 06:21:06
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose move 3 2, move 3 1
+
+========================================================================
+  RECV  2026-09-12 06:21:27
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212087
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|1
+|-boost|p2b: Dragonite|spe|1
+|move|p2a: Primarina|Moonblast|p1a: Ditto
+|-damage|p1a: Ditto|0 fnt
+|faint|p1a: Ditto
+|move|p1b: Aegislash|Close Combat|p2a: Primarina
+|-resisted|p2a: Primarina|1
+|-damage|p2a: Primarina|73/100
+|-unboost|p1b: Aegislash|def|1
+|-unboost|p1b: Aegislash|spd|1
+|
+|-heal|p2a: Primarina|79/100|[from] item: Leftovers
+|-heal|p1b: Aegislash|59/135|[from] item: Leftovers
+|upkeep
+
+========================================================================
+  RECV  2026-09-12 06:21:27
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"forceSwitch":[true,false],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Ditto","details":"Ditto, L50","condition":"0 fnt","active":true,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"59/135","active":true,"stats":{"atk":192,"def":70,"spa":192,"spd":77,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"177/177","active":false,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"167/167","active":false,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false}]},"noCancel":true,"rqid":12}
+
+========================================================================
+  SEND  2026-09-12 06:21:28
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose switch 3, pass
+
+========================================================================
+  RECV  2026-09-12 06:21:28
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212088
+|switch|p1a: Torkoal|Torkoal, L50, F|177/177
+|-weather|SunnyDay|[from] ability: Drought|[of] p1a: Torkoal
+|turn|5
+
+========================================================================
+  RECV  2026-09-12 06:21:28
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"active":[{"moves":[{"move":"Yawn","id":"yawn","pp":12,"maxpp":12,"target":"normal","disabled":false},{"move":"Body Slam","id":"bodyslam","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Will-O-Wisp","id":"willowisp","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Clear Smog","id":"clearsmog","pp":16,"maxpp":16,"target":"normal","disabled":false}]},{"moves":[{"move":"Substitute","id":"substitute","pp":12,"maxpp":12,"target":"self","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Close Combat","id":"closecombat","pp":6,"maxpp":8,"target":"normal","disabled":false},{"move":"Destiny Bond","id":"destinybond","pp":7,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"177/177","active":true,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"59/135","active":true,"stats":{"atk":192,"def":70,"spa":192,"spd":77,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"0 fnt","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"167/167","active":false,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false}]},"rqid":14}
+
+========================================================================
+  SEND  2026-09-12 06:21:28
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose move 1 2, move 3 2
+
+========================================================================
+  RECV  2026-09-12 06:21:39
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212099
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|1
+|-boost|p2b: Dragonite|spe|1
+|move|p2a: Primarina|Moonblast|p1a: Torkoal
+|-resisted|p1a: Torkoal|1
+|-damage|p1a: Torkoal|120/177
+|move|p1b: Aegislash|Close Combat|p2b: Dragonite
+|-resisted|p2b: Dragonite|1
+|-damage|p2b: Dragonite|88/100
+|-unboost|p1b: Aegislash|def|1
+|-unboost|p1b: Aegislash|spd|1
+|move|p1a: Torkoal|Yawn|p2b: Dragonite
+|-start|p2b: Dragonite|move: Yawn|[of] p1a: Torkoal
+|
+|-weather|SunnyDay|[upkeep]
+|-heal|p2a: Primarina|85/100|[from] item: Leftovers
+|-heal|p1b: Aegislash|67/135|[from] item: Leftovers
+|upkeep
+|turn|6
+
+========================================================================
+  RECV  2026-09-12 06:21:39
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"active":[{"moves":[{"move":"Yawn","id":"yawn","pp":11,"maxpp":12,"target":"normal","disabled":false},{"move":"Body Slam","id":"bodyslam","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Will-O-Wisp","id":"willowisp","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Clear Smog","id":"clearsmog","pp":16,"maxpp":16,"target":"normal","disabled":false}]},{"moves":[{"move":"Substitute","id":"substitute","pp":12,"maxpp":12,"target":"self","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Close Combat","id":"closecombat","pp":5,"maxpp":8,"target":"normal","disabled":false},{"move":"Destiny Bond","id":"destinybond","pp":7,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"120/177","active":true,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"67/135","active":true,"stats":{"atk":192,"def":70,"spa":192,"spd":77,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"0 fnt","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"167/167","active":false,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false}]},"rqid":16}
+
+========================================================================
+  SEND  2026-09-12 06:21:39
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose switch 4, move 1
+
+========================================================================
+  RECV  2026-09-12 06:21:51
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212111
+|switch|p1a: Gengar|Gengar, L50, M|167/167
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|1
+|-boost|p2b: Dragonite|spe|1
+|move|p2a: Primarina|Moonblast|p1a: Gengar
+|-resisted|p1a: Gengar|1
+|-damage|p1a: Gengar|113/167
+|move|p1b: Aegislash|Substitute|p1b: Aegislash
+|-start|p1b: Aegislash|Substitute
+|-damage|p1b: Aegislash|34/135
+|
+|-weather|SunnyDay|[upkeep]
+|-heal|p2a: Primarina|91/100|[from] item: Leftovers
+|-heal|p1b: Aegislash|42/135|[from] item: Leftovers
+|-end|p2b: Dragonite|move: Yawn|[silent]
+|-status|p2b: Dragonite|slp
+|upkeep
+|turn|7
+
+========================================================================
+  RECV  2026-09-12 06:21:51
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"active":[{"moves":[{"move":"Perish Song","id":"perishsong","pp":8,"maxpp":8,"target":"all","disabled":false},{"move":"Sludge Wave","id":"sludgewave","pp":12,"maxpp":12,"target":"allAdjacent","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Corrosive Gas","id":"corrosivegas","pp":20,"maxpp":20,"target":"allAdjacent","disabled":false}],"canMegaEvo":true},{"moves":[{"move":"Substitute","id":"substitute","pp":11,"maxpp":12,"target":"self","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Close Combat","id":"closecombat","pp":5,"maxpp":8,"target":"normal","disabled":false},{"move":"Destiny Bond","id":"destinybond","pp":7,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"113/167","active":true,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"42/135","active":true,"stats":{"atk":192,"def":70,"spa":192,"spd":77,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"0 fnt","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"120/177","active":false,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false}]},"rqid":18}
+
+========================================================================
+  SEND  2026-09-12 06:21:51
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose move 2 mega, switch 4
+
+========================================================================
+  RECV  2026-09-12 06:22:02
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212121
+|switch|p1b: Torkoal|Torkoal, L50, F|120/177
+|detailschange|p1a: Gengar|Gengar-Mega, L50, M
+|-mega|p1a: Gengar|Gengar|Gengarite
+|cant|p2b: Dragonite|slp
+|move|p1a: Gengar|Sludge Wave|p2b: Dragonite|[spread] p1b,p2a,p2b
+|-supereffective|p2a: Primarina|1
+|-damage|p1b: Torkoal|2/177
+|-damage|p2a: Primarina|6/100
+|-damage|p2b: Dragonite|46/100 slp
+|move|p2a: Primarina|Moonblast|p1a: Gengar
+|-resisted|p1a: Gengar|1
+|-crit|p1a: Gengar
+|-damage|p1a: Gengar|32/167
+|
+|-weather|SunnyDay|[upkeep]
+|-heal|p2a: Primarina|12/100|[from] item: Leftovers
+|upkeep
+|turn|8
+
+========================================================================
+  RECV  2026-09-12 06:22:02
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"active":[{"moves":[{"move":"Perish Song","id":"perishsong","pp":8,"maxpp":8,"target":"all","disabled":false},{"move":"Sludge Wave","id":"sludgewave","pp":11,"maxpp":12,"target":"allAdjacent","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Corrosive Gas","id":"corrosivegas","pp":20,"maxpp":20,"target":"allAdjacent","disabled":false}]},{"moves":[{"move":"Yawn","id":"yawn","pp":11,"maxpp":12,"target":"normal","disabled":false},{"move":"Body Slam","id":"bodyslam","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Will-O-Wisp","id":"willowisp","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Clear Smog","id":"clearsmog","pp":16,"maxpp":16,"target":"normal","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Gengar","details":"Gengar-Mega, L50, M","condition":"32/167","active":true,"stats":{"atk":76,"def":100,"spa":244,"spd":115,"spe":152},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"shadowtag","item":"gengarite","pokeball":"pokeball","ability":"shadowtag","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"2/177","active":true,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"0 fnt","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"42/135","active":false,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false}]},"rqid":20}
+
+========================================================================
+  SEND  2026-09-12 06:22:02
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose move 4, move 1 2
+
+========================================================================
+  RECV  2026-09-12 06:22:36
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212156
+|cant|p2b: Dragonite|slp
+|move|p1a: Gengar|Corrosive Gas|p2a: Primarina|[spread] p1b,p2a,p2b
+|-enditem|p1b: Torkoal|Focus Sash|[from] move: Corrosive Gas|[of] p1a: Gengar
+|-enditem|p2a: Primarina|Leftovers|[from] move: Corrosive Gas|[of] p1a: Gengar
+|-enditem|p2b: Dragonite|Haban Berry|[from] move: Corrosive Gas|[of] p1a: Gengar
+|move|p2a: Primarina|Moonblast|p1a: Gengar
+|-resisted|p1a: Gengar|1
+|-damage|p1a: Gengar|0 fnt
+|faint|p1a: Gengar
+|move|p1b: Torkoal|Yawn||[still]
+|-fail|p1b: Torkoal
+|
+|-weather|SunnyDay|[upkeep]
+|upkeep
+
+========================================================================
+  RECV  2026-09-12 06:22:36
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"forceSwitch":[true,false],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Gengar","details":"Gengar-Mega, L50, M","condition":"0 fnt","active":true,"stats":{"atk":76,"def":100,"spa":244,"spd":115,"spe":152},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"shadowtag","item":"gengarite","pokeball":"pokeball","ability":"shadowtag","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"2/177","active":true,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"0 fnt","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"42/135","active":false,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false}]},"noCancel":true,"rqid":22}
+
+========================================================================
+  SEND  2026-09-12 06:22:36
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose switch 4, pass
+
+========================================================================
+  RECV  2026-09-12 06:22:36
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212156
+|switch|p1a: Aegislash|Aegislash, L50, F|42/135
+|turn|9
+
+========================================================================
+  RECV  2026-09-12 06:22:36
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"active":[{"moves":[{"move":"Substitute","id":"substitute","pp":11,"maxpp":12,"target":"self","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Close Combat","id":"closecombat","pp":5,"maxpp":8,"target":"normal","disabled":false},{"move":"Destiny Bond","id":"destinybond","pp":7,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Yawn","id":"yawn","pp":10,"maxpp":12,"target":"normal","disabled":false},{"move":"Body Slam","id":"bodyslam","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Will-O-Wisp","id":"willowisp","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Clear Smog","id":"clearsmog","pp":16,"maxpp":16,"target":"normal","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"42/135","active":true,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"2/177","active":true,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"0 fnt","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar-Mega, L50, M","condition":"0 fnt","active":false,"stats":{"atk":76,"def":100,"spa":244,"spd":115,"spe":152},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"shadowtag","item":"gengarite","pokeball":"pokeball","ability":"shadowtag","commanding":false,"reviving":false}]},"rqid":24}
+
+========================================================================
+  SEND  2026-09-12 06:22:36
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose move 1, move 2 2
+
+========================================================================
+  RECV  2026-09-12 06:22:44
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212164
+|-curestatus|p2b: Dragonite|slp|[msg]
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|1
+|-boost|p2b: Dragonite|spe|1
+|move|p2a: Primarina|Moonblast|p1a: Aegislash
+|-resisted|p1a: Aegislash|1
+|-damage|p1a: Aegislash|10/135
+|move|p1a: Aegislash|Substitute|p1a: Aegislash
+|-fail|p1a: Aegislash|move: Substitute|[weak]
+|move|p1b: Torkoal|Body Slam|p2b: Dragonite
+|-damage|p2b: Dragonite|25/100
+|
+|-weather|none
+|-heal|p1a: Aegislash|18/135|[from] item: Leftovers
+|upkeep
+|turn|10
+
+========================================================================
+  RECV  2026-09-12 06:22:44
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"active":[{"moves":[{"move":"Substitute","id":"substitute","pp":10,"maxpp":12,"target":"self","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Close Combat","id":"closecombat","pp":5,"maxpp":8,"target":"normal","disabled":false},{"move":"Destiny Bond","id":"destinybond","pp":7,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Yawn","id":"yawn","pp":10,"maxpp":12,"target":"normal","disabled":false},{"move":"Body Slam","id":"bodyslam","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Will-O-Wisp","id":"willowisp","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Clear Smog","id":"clearsmog","pp":16,"maxpp":16,"target":"normal","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"18/135","active":true,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"2/177","active":true,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"0 fnt","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar-Mega, L50, M","condition":"0 fnt","active":false,"stats":{"atk":76,"def":100,"spa":244,"spd":115,"spe":152},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"shadowtag","item":"gengarite","pokeball":"pokeball","ability":"shadowtag","commanding":false,"reviving":false}]},"rqid":26}
+
+========================================================================
+  SEND  2026-09-12 06:22:45
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose move 3 2, move 3 2
+
+========================================================================
+  RECV  2026-09-12 06:23:08
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212188
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|0
+|-boost|p2b: Dragonite|spe|0
+|move|p2a: Primarina|Moonblast|p1a: Aegislash
+|-resisted|p1a: Aegislash|1
+|-damage|p1a: Aegislash|0 fnt
+|faint|p1a: Aegislash
+|move|p1b: Torkoal|Will-O-Wisp|p2b: Dragonite
+|-status|p2b: Dragonite|brn
+|
+|-damage|p2b: Dragonite|19/100 brn|[from] brn
+|upkeep
+|turn|11
+
+========================================================================
+  RECV  2026-09-12 06:23:08
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|request|{"active":[{"moves":[{"move":"Substitute","id":"substitute","pp":10,"maxpp":12,"target":"self","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Close Combat","id":"closecombat","pp":5,"maxpp":8,"target":"normal","disabled":false},{"move":"Destiny Bond","id":"destinybond","pp":7,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Yawn","id":"yawn","pp":10,"maxpp":12,"target":"normal","disabled":false},{"move":"Body Slam","id":"bodyslam","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Will-O-Wisp","id":"willowisp","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Clear Smog","id":"clearsmog","pp":16,"maxpp":16,"target":"normal","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Aegislash","details":"Aegislash, L50, F","condition":"0 fnt","active":true,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"2/177","active":true,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"0 fnt","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar-Mega, L50, M","condition":"0 fnt","active":false,"stats":{"atk":76,"def":100,"spa":244,"spd":115,"spe":152},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"shadowtag","item":"gengarite","pokeball":"pokeball","ability":"shadowtag","commanding":false,"reviving":false}]},"rqid":28}
+
+========================================================================
+  SEND  2026-09-12 06:23:08
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/choose pass, move 3 2
+
+========================================================================
+  RECV  2026-09-12 06:23:10
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|
+|t:|1789212190
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|0
+|-boost|p2b: Dragonite|spe|0
+|move|p2a: Primarina|Moonblast|p1b: Torkoal
+|-resisted|p1b: Torkoal|1
+|-damage|p1b: Torkoal|0 fnt
+|faint|p1b: Torkoal
+|
+|win|popplioperu98
+
+========================================================================
+  SEND  2026-09-12 06:23:11
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|gg
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|html|popplioperu98 won game 1!
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|fieldhtml|<center><br /><strong>Deep1ODDQN and popplioperu98's Best-of-3 progress:</strong><br /><table><tr><td>Deep1ODDQN: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr><tr><td>popplioperu98: </td><td><i class="fa fa-circle"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr></table><br /><br /><table><tr><td><center><strong>Deep1ODDQN</strong></center></td><td></td><td><center><strong>popplioperu98</strong></center></td></tr><tr><td><center><img class="trainersprite" style="transform: scaleX(-1)" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td><td></td><td><center><img class="trainersprite" src="https://play.pokemonshowdown.com/sprites/trainers/winona.png" /></center></td></tr><tr><td><psicon pokemon="Farigiraf" style="transform: scaleX(-1)" /><psicon pokemon="Aegislash" style="transform: scaleX(-1)" /><psicon pokemon="Whimsicott" style="transform: scaleX(-1)" /><br /><psicon pokemon="Gengar" style="transform: scaleX(-1)" /><psicon pokemon="Torkoal" style="transform: scaleX(-1)" /><psicon pokemon="Ditto" style="transform: scaleX(-1)" /></td><td> vs </td><td><psicon pokemon="Dragonite" /><psicon pokemon="Zoroark-Hisui" /><psicon pokemon="Blastoise" /><br /><psicon pokemon="Runerigus" /><psicon pokemon="Venusaur" /><psicon pokemon="Primarina" /></td></tr></table></center>
+|controlshtml|<center><p>Game 1: <a href="/battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw"><strong>won by popplioperu98</strong></a></p></center>
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|tempnotify|choice|Next game|It's time for game 2 in your best-of-3!
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|c|~|/uhtml controls,<div class="infobox"><p style="margin:6px">Are you ready for game 2, Deep1ODDQN?</p><p style="margin:6px"><button class="button notifying" name="send" value="/msgroom game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw,/confirmready">I'm ready!</button></p></div>
+
+========================================================================
+  SEND  2026-09-12 06:23:11
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw|/msgroom game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw,/confirmready
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|c|~|/uhtml controls,<div class="infobox"><p style="margin:6px">Are you ready for game 2, Deep1ODDQN?</p><p style="margin:6px"><button class="button notifying" name="send" value="/msgroom game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw,/confirmready">I'm ready!</button></p></div>
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|tempnotify|choice|Next game|It's time for game 2 in your best-of-3!
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|c|☆Deep1ODDQN|gg
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|tempnotifyoff|choice
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|tempnotifyoff|choice
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|c|~|/uhtml controls,<div class="infobox"><p style="margin:6px">Are you ready for game 2, Deep1ODDQN?</p><p style="margin:6px"><button class="button" disabled><i class="fa fa-check"></i> I'm ready!</button> &ndash; waiting for opponent...</p></div>
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|c|~|/uhtml controls,<div class="infobox"><p style="margin:6px">Are you ready for game 2, Deep1ODDQN?</p><p style="margin:6px"><button class="button" disabled><i class="fa fa-check"></i> I'm ready!</button> &ndash; waiting for opponent...</p></div>
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+||Deep1ODDQN is ready for game 2.
+
+========================================================================
+  RECV  2026-09-12 06:23:11
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+||Deep1ODDQN is ready for game 2.
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+||popplioperu98 is ready for game 2.
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+||popplioperu98 is ready for game 2.
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|tempnotifyoff|choice
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|tempnotifyoff|choice
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|c|~|/uhtml controls,
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|c|~|/uhtml controls,
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2679884510":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2679884510":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|init|battle
+|title|Deep1ODDQN vs. popplioperu98
+|j|☆Deep1ODDQN
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|j|☆popplioperu98
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|html|<table width="100%"><tr><td align="left">Deep1ODDQN</td><td align="right">popplioperu98</tr><tr><td align="left"><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> </td><td align="right"><i class="fa fa-circle-o"></i> <i class="fa fa-circle"></i> </tr></table>
+|uhtml|bestof|<h2><strong>Game 2</strong> of <a href="/game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw">a best-of-3</a></h2>
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|html|<h2>Game 2</h2>
+|uhtml|game2|<a href="/battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw">Deep1ODDQN vs. popplioperu98</a>
+|fieldhtml|<center><br /><strong>Deep1ODDQN and popplioperu98's Best-of-3 progress:</strong><br /><table><tr><td>Deep1ODDQN: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr><tr><td>popplioperu98: </td><td><i class="fa fa-circle"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr></table><br /><br /><table><tr><td><center><strong>Deep1ODDQN</strong></center></td><td></td><td><center><strong>popplioperu98</strong></center></td></tr><tr><td><center><img class="trainersprite" style="transform: scaleX(-1)" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td><td></td><td><center><img class="trainersprite" src="https://play.pokemonshowdown.com/sprites/trainers/winona.png" /></center></td></tr><tr><td><psicon pokemon="Farigiraf" style="transform: scaleX(-1)" /><psicon pokemon="Aegislash" style="transform: scaleX(-1)" /><psicon pokemon="Whimsicott" style="transform: scaleX(-1)" /><br /><psicon pokemon="Gengar" style="transform: scaleX(-1)" /><psicon pokemon="Torkoal" style="transform: scaleX(-1)" /><psicon pokemon="Ditto" style="transform: scaleX(-1)" /></td><td> vs </td><td><psicon pokemon="Dragonite" /><psicon pokemon="Zoroark-Hisui" /><psicon pokemon="Blastoise" /><br /><psicon pokemon="Runerigus" /><psicon pokemon="Venusaur" /><psicon pokemon="Primarina" /></td></tr></table></center>
+|controlshtml|<center><p>Game 1: <a href="/battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw"><strong>won by popplioperu98</strong></a></p><p>Game 2: <a href="/battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw"><strong>being played</strong></a></p></center>
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|uhtml|next|Next: <a href="/battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw"><strong>Game 2 of 3</strong></a>
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|t:|1789212193
+|gametype|doubles
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|player|p1|Deep1ODDQN|101|
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|player|p2|popplioperu98|winona|
+|gen|9
+|tier|[Gen 9 Champions] VGC 2026 Reg M-C (Bo3)
+|rule|Species Clause: Limit one of each Pokémon
+|rule|Item Clause: Limit 1 of each item
+|clearpoke
+|poke|p1|Farigiraf, L50, F|
+|poke|p1|Aegislash, L50, M|
+|poke|p1|Whimsicott, L50, F|
+|poke|p1|Gengar, L50, M|
+|poke|p1|Torkoal, L50, F|
+|poke|p1|Ditto, L50|
+|poke|p2|Dragonite, L50, M|
+|poke|p2|Zoroark-Hisui, L50, F|
+|poke|p2|Blastoise, L50, F|
+|poke|p2|Runerigus, L50, M|
+|poke|p2|Venusaur, L50, F|
+|poke|p2|Primarina, L50, F|
+|teampreview|4
+|showteam|p1|Farigiraf||SitrusBerry|ArmorTail|Psychic,PsychUp,TrickRoom,Trick|Bold||F|||50|]Aegislash||Leftovers|StanceChange|Substitute,BrickBreak,CloseCombat,DestinyBond|Sassy||M|||50|]Whimsicott||OccaBerry|Prankster|Moonblast,Tailwind,Charm,LightScreen|Timid||F|||50|]Gengar||Gengarite|CursedBody|PerishSong,SludgeWave,BrickBreak,CorrosiveGas|Modest||M|||50|]Torkoal||FocusSash|Drought|Yawn,BodySlam,WillOWisp,ClearSmog|Relaxed||F|||50|]Ditto||ChoiceScarf|Imposter|Transform|Timid|||||50|
+|showteam|p2|Dragonite||HabanBerry|Multiscale|Roar,DragonDance,LightScreen,ExtremeSpeed|Adamant||M|||50|]Zoroark-Hisui||LifeOrb|Illusion|PainSplit,WillOWisp,ConfuseRay,Spite|Serious||F|||50|]Blastoise||Blastoisinite|RainDish|Haze,FlipTurn,Whirlpool,MirrorCoat|Bold||F|||50|]Runerigus||AirBalloon|WanderingSpirit|AllySwitch,GuardSplit,GuardSwap,Trick|Impish||M|||50|]Venusaur||Venusaurite|Overgrow|WorrySeed,SleepPowder,SludgeBomb,LeafStorm|Modest||F|||50|]Primarina||Leftovers|Torrent|SparklingAria,Moonblast,CalmMind,Protect|Modest||F|||50|
+
+########################################################################
+  BATTLE START  2026-09-12 06:23:13  |  battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+########################################################################
+
+========================================================================
+  RECV  2026-09-12 06:23:13
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|request|{"teamPreview":true,"maxChosenTeamSize":4,"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Farigiraf","details":"Farigiraf, L50, F","condition":"222/222","active":true,"stats":{"atk":99,"def":122,"spa":130,"spd":108,"spe":80},"moves":["psychic","psychup","trickroom","trick"],"baseAbility":"armortail","item":"sitrusberry","pokeball":"pokeball","ability":"armortail","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, M","condition":"135/135","active":true,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Whimsicott","details":"Whimsicott, L50, F","condition":"155/155","active":false,"stats":{"atk":78,"def":111,"spa":105,"spd":95,"spe":184},"moves":["moonblast","tailwind","charm","lightscreen"],"baseAbility":"prankster","item":"occaberry","pokeball":"pokeball","ability":"prankster","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"167/167","active":false,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"177/177","active":false,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"155/155","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false}]},"rqid":2}
+
+========================================================================
+  SEND  2026-09-12 06:23:14
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw|hf
+
+========================================================================
+  SEND  2026-09-12 06:23:14
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw|/team 2465|2
+
+========================================================================
+  RECV  2026-09-12 06:23:14
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|c|☆Deep1ODDQN|hf
+
+========================================================================
+  RECV  2026-09-12 06:23:21
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|
+|t:|1789212200
+|teamsize|p1|4
+|teamsize|p2|4
+|start
+|switch|p1a: Aegislash|Aegislash, L50, M|135/135
+|switch|p1b: Gengar|Gengar, L50, M|167/167
+|switch|p2a: Primarina|Primarina, L50, F|100/100
+|switch|p2b: Dragonite|Dragonite, L50, M|100/100
+|turn|1
+
+========================================================================
+  RECV  2026-09-12 06:23:21
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|request|{"active":[{"moves":[{"move":"Substitute","id":"substitute","pp":12,"maxpp":12,"target":"self","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Close Combat","id":"closecombat","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Destiny Bond","id":"destinybond","pp":8,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Perish Song","id":"perishsong","pp":8,"maxpp":8,"target":"all","disabled":false},{"move":"Sludge Wave","id":"sludgewave","pp":12,"maxpp":12,"target":"allAdjacent","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Corrosive Gas","id":"corrosivegas","pp":20,"maxpp":20,"target":"allAdjacent","disabled":false}],"canMegaEvo":true}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Aegislash","details":"Aegislash, L50, M","condition":"135/135","active":true,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"167/167","active":true,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"155/155","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"177/177","active":false,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false}]},"rqid":4}
+
+========================================================================
+  SEND  2026-09-12 06:23:21
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw|/choose move 2 2, move 2
+
+========================================================================
+  RECV  2026-09-12 06:23:23
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|
+|t:|1789212203
+|move|p1b: Gengar|Sludge Wave|p2b: Dragonite|[spread] p2a,p2b
+|-immune|p1a: Aegislash
+|-supereffective|p2a: Primarina|1
+|-damage|p2a: Primarina|37/100
+|-damage|p2b: Dragonite|83/100
+|-status|p2b: Dragonite|psn
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|1
+|-boost|p2b: Dragonite|spe|1
+|move|p2a: Primarina|Moonblast|p1b: Gengar
+|-resisted|p1b: Gengar|1
+|-damage|p1b: Gengar|109/167
+|-formechange|p1a: Aegislash|Aegislash-Blade|
+|move|p1a: Aegislash|Brick Break|p2b: Dragonite
+|-resisted|p2b: Dragonite|1
+|-damage|p2b: Dragonite|71/100 psn
+|
+|-heal|p2a: Primarina|43/100|[from] item: Leftovers
+|-damage|p2b: Dragonite|59/100 psn|[from] psn
+|upkeep
+|turn|2
+
+========================================================================
+  RECV  2026-09-12 06:23:23
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|request|{"active":[{"moves":[{"move":"Substitute","id":"substitute","pp":12,"maxpp":12,"target":"self","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Close Combat","id":"closecombat","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Destiny Bond","id":"destinybond","pp":8,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Perish Song","id":"perishsong","pp":8,"maxpp":8,"target":"all","disabled":false},{"move":"Sludge Wave","id":"sludgewave","pp":11,"maxpp":12,"target":"allAdjacent","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Corrosive Gas","id":"corrosivegas","pp":20,"maxpp":20,"target":"allAdjacent","disabled":false}],"canMegaEvo":true}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Aegislash","details":"Aegislash, L50, M","condition":"135/135","active":true,"stats":{"atk":192,"def":70,"spa":192,"spd":77,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"109/167","active":true,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"155/155","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"177/177","active":false,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"focussash","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false}]},"rqid":6}
+
+========================================================================
+  SEND  2026-09-12 06:23:24
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw|/choose switch 4, move 4
+
+========================================================================
+  RECV  2026-09-12 06:23:31
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|
+|t:|1789212211
+|switch|p1a: Torkoal|Torkoal, L50, F|177/177
+|-weather|SunnyDay|[from] ability: Drought|[of] p1a: Torkoal
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|1
+|-boost|p2b: Dragonite|spe|1
+|move|p1b: Gengar|Corrosive Gas|p2a: Primarina|[spread] p1a,p2a,p2b
+|-enditem|p1a: Torkoal|Focus Sash|[from] move: Corrosive Gas|[of] p1b: Gengar
+|-enditem|p2a: Primarina|Leftovers|[from] move: Corrosive Gas|[of] p1b: Gengar
+|-enditem|p2b: Dragonite|Haban Berry|[from] move: Corrosive Gas|[of] p1b: Gengar
+|move|p2a: Primarina|Moonblast|p1a: Torkoal
+|-resisted|p1a: Torkoal|1
+|-damage|p1a: Torkoal|115/177
+|
+|-weather|SunnyDay|[upkeep]
+|-damage|p2b: Dragonite|46/100 psn|[from] psn
+|upkeep
+|turn|3
+
+========================================================================
+  RECV  2026-09-12 06:23:31
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|request|{"active":[{"moves":[{"move":"Yawn","id":"yawn","pp":12,"maxpp":12,"target":"normal","disabled":false},{"move":"Body Slam","id":"bodyslam","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Will-O-Wisp","id":"willowisp","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Clear Smog","id":"clearsmog","pp":16,"maxpp":16,"target":"normal","disabled":false}]},{"moves":[{"move":"Perish Song","id":"perishsong","pp":8,"maxpp":8,"target":"all","disabled":false},{"move":"Sludge Wave","id":"sludgewave","pp":11,"maxpp":12,"target":"allAdjacent","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Corrosive Gas","id":"corrosivegas","pp":19,"maxpp":20,"target":"allAdjacent","disabled":false}],"canMegaEvo":true}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"115/177","active":true,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar, L50, M","condition":"109/167","active":true,"stats":{"atk":76,"def":80,"spa":200,"spd":95,"spe":132},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"cursedbody","item":"gengarite","pokeball":"pokeball","ability":"cursedbody","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"155/155","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, M","condition":"135/135","active":false,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false}]},"rqid":8}
+
+========================================================================
+  SEND  2026-09-12 06:23:31
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw|/choose move 2 1, move 1 mega
+
+========================================================================
+  RECV  2026-09-12 06:24:19
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|
+|t:|1789212259
+|detailschange|p1b: Gengar|Gengar-Mega, L50, M
+|-mega|p1b: Gengar|Gengar|Gengarite
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|1
+|-boost|p2b: Dragonite|spe|1
+|move|p1b: Gengar|Perish Song|p1b: Gengar
+|-start|p1a: Torkoal|perish3|[silent]
+|-start|p1b: Gengar|perish3|[silent]
+|-start|p2a: Primarina|perish3|[silent]
+|-start|p2b: Dragonite|perish3|[silent]
+|-fieldactivate|move: Perish Song
+|move|p2a: Primarina|Moonblast|p1a: Torkoal
+|-resisted|p1a: Torkoal|1
+|-damage|p1a: Torkoal|55/177
+|move|p1a: Torkoal|Body Slam|p2a: Primarina
+|-crit|p2a: Primarina
+|-damage|p2a: Primarina|4/100
+|
+|-weather|SunnyDay|[upkeep]
+|-damage|p2b: Dragonite|34/100 psn|[from] psn
+|-start|p2b: Dragonite|perish3
+|-start|p1b: Gengar|perish3
+|-start|p2a: Primarina|perish3
+|-start|p1a: Torkoal|perish3
+|upkeep
+|turn|4
+
+========================================================================
+  RECV  2026-09-12 06:24:19
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|request|{"active":[{"moves":[{"move":"Yawn","id":"yawn","pp":12,"maxpp":12,"target":"normal","disabled":false},{"move":"Body Slam","id":"bodyslam","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Will-O-Wisp","id":"willowisp","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Clear Smog","id":"clearsmog","pp":16,"maxpp":16,"target":"normal","disabled":false}]},{"moves":[{"move":"Perish Song","id":"perishsong","pp":7,"maxpp":8,"target":"all","disabled":false},{"move":"Sludge Wave","id":"sludgewave","pp":11,"maxpp":12,"target":"allAdjacent","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Corrosive Gas","id":"corrosivegas","pp":19,"maxpp":20,"target":"allAdjacent","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"55/177","active":true,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar-Mega, L50, M","condition":"109/167","active":true,"stats":{"atk":76,"def":100,"spa":244,"spd":115,"spe":152},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"shadowtag","item":"gengarite","pokeball":"pokeball","ability":"shadowtag","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"155/155","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, M","condition":"135/135","active":false,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false}]},"rqid":10}
+
+========================================================================
+  SEND  2026-09-12 06:24:19
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw|/choose move 1 -2, move 4
+
+========================================================================
+  RECV  2026-09-12 06:24:34
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|
+|t:|1789212274
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|1
+|-boost|p2b: Dragonite|spe|1
+|move|p1b: Gengar|Corrosive Gas|p2b: Dragonite|[spread] p1a,p2a,p2b
+|-fail|p1a: Torkoal|move: Corrosive Gas
+|-fail|p2a: Primarina|move: Corrosive Gas
+|-fail|p2b: Dragonite|move: Corrosive Gas
+|move|p2a: Primarina|Moonblast|p1b: Gengar
+|-resisted|p1b: Gengar|1
+|-damage|p1b: Gengar|62/167
+|move|p1a: Torkoal|Yawn|p1b: Gengar
+|-start|p1b: Gengar|move: Yawn|[of] p1a: Torkoal
+|
+|-weather|SunnyDay|[upkeep]
+|-damage|p2b: Dragonite|22/100 psn|[from] psn
+|-start|p2b: Dragonite|perish2
+|-start|p1b: Gengar|perish2
+|-start|p2a: Primarina|perish2
+|-start|p1a: Torkoal|perish2
+|upkeep
+|turn|5
+
+========================================================================
+  RECV  2026-09-12 06:24:34
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|request|{"active":[{"moves":[{"move":"Yawn","id":"yawn","pp":11,"maxpp":12,"target":"normal","disabled":false},{"move":"Body Slam","id":"bodyslam","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Will-O-Wisp","id":"willowisp","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Clear Smog","id":"clearsmog","pp":16,"maxpp":16,"target":"normal","disabled":false}]},{"moves":[{"move":"Perish Song","id":"perishsong","pp":7,"maxpp":8,"target":"all","disabled":false},{"move":"Sludge Wave","id":"sludgewave","pp":11,"maxpp":12,"target":"allAdjacent","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Corrosive Gas","id":"corrosivegas","pp":18,"maxpp":20,"target":"allAdjacent","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"55/177","active":true,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar-Mega, L50, M","condition":"62/167","active":true,"stats":{"atk":76,"def":100,"spa":244,"spd":115,"spe":152},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"shadowtag","item":"gengarite","pokeball":"pokeball","ability":"shadowtag","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"155/155","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, M","condition":"135/135","active":false,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false}]},"rqid":12}
+
+========================================================================
+  SEND  2026-09-12 06:24:34
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw|/choose move 3 2, move 1
+
+========================================================================
+  RECV  2026-09-12 06:24:38
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|
+|t:|1789212278
+|move|p2b: Dragonite|Dragon Dance|p2b: Dragonite
+|-boost|p2b: Dragonite|atk|1
+|-boost|p2b: Dragonite|spe|1
+|move|p1b: Gengar|Perish Song||[still]
+|-fail|p1b: Gengar
+|move|p2a: Primarina|Moonblast|p1a: Torkoal
+|-resisted|p1a: Torkoal|1
+|-damage|p1a: Torkoal|0 fnt
+|faint|p1a: Torkoal
+|
+|-weather|SunnyDay|[upkeep]
+|-damage|p2b: Dragonite|10/100 psn|[from] psn
+|-end|p1b: Gengar|move: Yawn|[silent]
+|-status|p1b: Gengar|slp
+|-start|p2b: Dragonite|perish1
+|-start|p1b: Gengar|perish1
+|-start|p2a: Primarina|perish1
+|upkeep
+
+========================================================================
+  RECV  2026-09-12 06:24:38
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|request|{"forceSwitch":[true,false],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"0 fnt","active":true,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar-Mega, L50, M","condition":"62/167 slp","active":true,"stats":{"atk":76,"def":100,"spa":244,"spd":115,"spe":152},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"shadowtag","item":"gengarite","pokeball":"pokeball","ability":"shadowtag","commanding":false,"reviving":false},{"ident":"p1: Ditto","details":"Ditto, L50","condition":"155/155","active":false,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["transform"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"imposter","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, M","condition":"135/135","active":false,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false}]},"noCancel":true,"rqid":14}
+
+========================================================================
+  SEND  2026-09-12 06:24:38
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw|/choose switch 3, pass
+
+========================================================================
+  RECV  2026-09-12 06:24:38
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|
+|t:|1789212278
+|switch|p1a: Ditto|Ditto, L50|155/155
+|-transform|p1a: Ditto|p2b: Dragonite|[from] ability: Imposter
+|turn|6
+
+========================================================================
+  RECV  2026-09-12 06:24:38
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|request|{"active":[{"moves":[{"move":"Roar","id":"roar","pp":5,"maxpp":5,"target":"normal","disabled":false},{"move":"Dragon Dance","id":"dragondance","pp":5,"maxpp":5,"target":"self","disabled":false},{"move":"Light Screen","id":"lightscreen","pp":5,"maxpp":5,"target":"allySide","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":5,"maxpp":5,"target":"normal","disabled":false}]},{"moves":[{"move":"Perish Song","id":"perishsong","pp":6,"maxpp":8,"target":"all","disabled":false},{"move":"Sludge Wave","id":"sludgewave","pp":11,"maxpp":12,"target":"allAdjacent","disabled":false},{"move":"Brick Break","id":"brickbreak","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Corrosive Gas","id":"corrosivegas","pp":18,"maxpp":20,"target":"allAdjacent","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Ditto","details":"Ditto, L50","condition":"155/155","active":true,"stats":{"atk":61,"def":68,"spa":68,"spd":68,"spe":74},"moves":["roar","dragondance","lightscreen","extremespeed"],"baseAbility":"imposter","item":"choicescarf","pokeball":"pokeball","ability":"multiscale","commanding":false,"reviving":false},{"ident":"p1: Gengar","details":"Gengar-Mega, L50, M","condition":"62/167 slp","active":true,"stats":{"atk":76,"def":100,"spa":244,"spd":115,"spe":152},"moves":["perishsong","sludgewave","brickbreak","corrosivegas"],"baseAbility":"shadowtag","item":"gengarite","pokeball":"pokeball","ability":"shadowtag","commanding":false,"reviving":false},{"ident":"p1: Torkoal","details":"Torkoal, L50, F","condition":"0 fnt","active":false,"stats":{"atk":137,"def":176,"spa":105,"spd":90,"spe":37},"moves":["yawn","bodyslam","willowisp","clearsmog"],"baseAbility":"drought","item":"","pokeball":"pokeball","ability":"drought","commanding":false,"reviving":false},{"ident":"p1: Aegislash","details":"Aegislash, L50, M","condition":"135/135","active":false,"stats":{"atk":102,"def":160,"spa":102,"spd":176,"spe":73},"moves":["substitute","brickbreak","closecombat","destinybond"],"baseAbility":"stancechange","item":"leftovers","pokeball":"pokeball","ability":"stancechange","commanding":false,"reviving":false}]},"rqid":16}
+
+========================================================================
+  SEND  2026-09-12 06:24:38
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw|/choose switch 4, move 2
+
+========================================================================
+  RECV  2026-09-12 06:40:04
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2679883633-836gt3fd1a4ng9a6gt0ay3s5hd3yr8kpw
+|l|☆popplioperu98
+
+========================================================================
+  RECV  2026-09-12 06:40:04
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679883634-w3syqfujbsx8k4wedhcv7kx8rm4uoghpw
+|l|☆popplioperu98
+
+========================================================================
+  RECV  2026-09-12 06:40:04
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2679884510-1afw0btion6xesd9ytkh0h90kmy5qo0pw
+|l|☆popplioperu98

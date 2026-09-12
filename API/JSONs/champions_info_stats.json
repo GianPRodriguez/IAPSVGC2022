@@ -7323,9 +7323,9 @@
     "tipo1": "Steel",
     "tipo2": "Ghost",
     "hp": 60,
-    "ataque": 140,
+    "ataque": 50,
     "defensa": 140,
-    "ataque_especial": 140,
+    "ataque_especial": 50,
     "defensa_especial": 140,
     "velocidad": 60
   },

@@ -13,6 +13,7 @@ import json
 from typing import Union, Dict, Any
 
 from teams.team_converter import normalize_name
+from showdown.stat_inference import TeamStatBeliefs, calibrate_from_known_team, sp_limits
 
 
 def _fmt_mapping(mapping) -> str:
@@ -27,6 +28,173 @@ def _fmt_mapping(mapping) -> str:
 
 def _fmt_stat_line(atk, df, spa, spd, spe) -> str:
     return f"Atk {atk} | Def {df} | SpA {spa} | SpD {spd} | Spe {spe}"
+
+
+def _fmt_boosts_short(boosts) -> str:
+    if not boosts:
+        return '-'
+    data = {k: v for k, v in dict(boosts).items() if v}
+    if not data:
+        return '-'
+    # atk+1 spa-1 (legible en una línea)
+    parts = []
+    for k, v in data.items():
+        short = {
+            'attack': 'atk', 'defense': 'def', 'special-attack': 'spa',
+            'special-defense': 'spd', 'speed': 'spe', 'accuracy': 'acc', 'evasion': 'eva',
+        }.get(str(k), str(k)[:3])
+        parts.append(f"{short}{v:+d}")
+    return ' '.join(parts)
+
+
+# Volátiles / flags que solo viven dentro del turno (o no aportan al snap de decisión).
+_REPORT_HIDDEN_VOLATILES = frozenset({
+    'protect', 'detect', 'spikyshield', 'banefulbunker', 'kingsshield',
+    'obstruct', 'silktrap', 'burningbulwark', 'maxguard',
+    'helpinghand', 'roost', 'focuspunch', 'beakblast', 'shelltrap',
+    'charge', 'destinybond', 'grudge', 'yawn', 'moveyawn',
+})
+
+
+def _fmt_status_short(pkmn) -> str:
+    bits = []
+    nvs = dict(getattr(pkmn, 'non_volatile_statuses', {}) or {})
+    for k, v in nvs.items():
+        if v:
+            bits.append(str(k))
+    if getattr(pkmn, 'is_drowsy', False):
+        bits.append('drowsy')
+    pc = int(getattr(pkmn, 'perish_count', 0) or 0)
+    if pc:
+        bits.append(f'perish{pc}')
+    # Destiny Bond sí puede cruzar |turn| hasta el próximo move: útil al agente.
+    if getattr(pkmn, 'is_destiny_bonded', False):
+        bits.append('destinybond')
+    if getattr(pkmn, 'is_charged', False):
+        bits.append('charge')
+    vs = dict(getattr(pkmn, 'volatile_statuses', {}) or {})
+    for k, v in vs.items():
+        if not v:
+            continue
+        key = str(k)
+        if key.startswith('perish'):
+            continue
+        if key in _REPORT_HIDDEN_VOLATILES:
+            continue
+        bits.append(key)
+    return ','.join(bits) if bits else '-'
+
+
+def _fmt_hp(pkmn) -> str:
+    try:
+        cur = int(float(str(pkmn.HPA_battle_actual).split()[0]))
+        mx = int(float(str(pkmn.HPB_battle_base).split()[0]))
+        if mx > 0:
+            return f"{cur}/{mx} ({100 * cur / mx:.0f}%)"
+        return f"{cur}/{mx}"
+    except Exception:
+        return f"{pkmn.HPA_battle_actual}/{pkmn.HPB_battle_base}"
+
+
+def _stat_num(pkmn, actual_attr: str, base_attr: str):
+    """Prefer actual (>0); else base; else None."""
+    try:
+        actual = int(getattr(pkmn, actual_attr, -1) or -1)
+    except (TypeError, ValueError):
+        actual = -1
+    if actual > 0:
+        return actual
+    try:
+        base = int(getattr(pkmn, base_attr, -1) or -1)
+    except (TypeError, ValueError):
+        base = -1
+    return base if base > 0 else None
+
+
+def _fmt_battle_stats_short(pkmn) -> str:
+    """
+    Stats de combate compactas (auditar Guard Split / etc.).
+    Muestra actual si existe; si no, base de especie (rival).
+    """
+    parts = []
+    for label, actual_a, base_a in (
+        ('Atk', 'ATK_battle_actual', 'ATK_battle_base'),
+        ('Def', 'DEF_battle_actual', 'DEF_battle_base'),
+        ('SpA', 'SPA_battle_actual', 'SPA_battle_base'),
+        ('SpD', 'SPD_battle_actual', 'SPD_battle_base'),
+        ('Spe', 'VEL_battle_actual', 'VEL_battle_base'),
+    ):
+        val = _stat_num(pkmn, actual_a, base_a)
+        parts.append(f'{label}={val if val is not None else "-"}')
+    split = ' SPLIT' if getattr(pkmn, 'guard_split_active', False) else ''
+    return ' '.join(parts) + split
+
+
+def _fmt_flags_short(pkmn, is_opponent: bool) -> str:
+    flags = []
+    if getattr(pkmn, 'is_fainted', False):
+        flags.append('FNT')
+    if getattr(pkmn, 'is_ditto', False) and str(getattr(pkmn, 'name', '')).lower() == 'ditto':
+        flags.append('DITTO')
+    if getattr(pkmn, 'is_zoroark', False) and not getattr(pkmn, 'illusion_disguise', None):
+        flags.append('ZORO')
+    if getattr(pkmn, 'is_mega_evo', False):
+        flags.append('MEGA')
+    if getattr(pkmn, 'can_mega_evo', False):
+        flags.append('canMega')
+    if is_opponent and getattr(pkmn, 'is_opponent_confirmed', False):
+        flags.append('OK')
+    return ' '.join(flags) if flags else ''
+
+
+def _fmt_pkmn_display_name(pkmn) -> str:
+    """
+    Nombres duales para depuración vs UI Showdown:
+      - Ditto transformado: ditto -> dragonite
+      - Illusion deducida (PS aún muestra disfraz): indeedee-f (ZORO/Illusion)
+      - Illusion tras |replace| de PS: zoroark (Illusion was indeedee-f)
+    """
+    name = getattr(pkmn, 'name', '?') or '?'
+    if getattr(pkmn, 'is_ditto', False) and str(name).lower() != 'ditto':
+        return f'ditto -> {name}'
+    disguise = getattr(pkmn, 'illusion_disguise', None)
+    if disguise and getattr(pkmn, 'is_zoroark', False):
+        d = str(disguise).lower()
+        if d and d != 'zoroark' and not d.startswith('zoroark'):
+            if getattr(pkmn, 'illusion_protocol_revealed', False):
+                return f'{name} (Illusion was {disguise})'
+            return f'{disguise} (ZORO/Illusion)'
+    return str(name)
+
+
+def _snap_kind(battle) -> str:
+    if getattr(battle, 'force_switch', False):
+        return 'FORCE'
+    if getattr(battle, 'wait', False):
+        return 'WAIT'
+    if getattr(battle, 'error', False):
+        return 'ERR'
+    return 'DECISION'
+
+
+def _append_report_file(text: str) -> None:
+    import os
+    os.makedirs('logs', exist_ok=True)
+    with open('logs/reporte.txt', 'a', encoding='utf-8') as f:
+        f.write(text if text.endswith('\n') else text + '\n')
+
+
+def _write_stdout(text: str) -> None:
+    import sys
+    try:
+        sys.stdout.write(text)
+        if not text.endswith('\n'):
+            sys.stdout.write('\n')
+        sys.stdout.flush()
+    except UnicodeEncodeError:
+        sys.stdout.buffer.write(text.encode('utf-8', errors='replace'))
+        sys.stdout.buffer.write(b'\n')
+        sys.stdout.buffer.flush()
 
 ############################################################################################################################################################
 # OK - CLASE BATTLE                                                                                                                                      ###
@@ -58,6 +226,19 @@ class Battle(ABC):
         self.error = False
         self.request_json = None
         self.rqid = None
+        # OTS en reporte solo una vez por partida individual
+        self._report_ots_dumped = False
+        self._report_game_started = False
+
+        ''' Estimacion de Stat Points del rival (se acumula durante todo el BO3) '''
+        self.stat_beliefs = TeamStatBeliefs()
+        # Orden de accion del turno en curso, para deducir velocidad
+        self.turn_actions = []
+        self.turn_speed_snapshot = None
+        # Golpe pendiente: |move| -> |-damage| para inferir Atk/Def/SpA/SpD
+        self.pending_damage_ctx = None
+        # Objetivo del próximo |-damage| marcado por |-crit| (None = sin crit pendiente).
+        self.pending_crit_target = None
 
         ''' Recompensas '''
         self.reward = 0
@@ -97,6 +278,10 @@ class Battle(ABC):
                 Pokemon(namePkmn, -1, True, objectPkmn, abilityPkmn, move1, move2, move3, move4, nature) # Dentro del Constructor se Autocompleta los datos restantes del PKMN Oponente
             )
 
+        # Los stats exactos del propio equipo revelan cuántos Stat Points admite
+        # de verdad el servidor; sin esto se podría descartar el valor real del rival.
+        calibrate_from_known_team(self.user.reserved or [])
+
 
 ############################################################################################################################################################
 # OK - Método Abstracto BOT TEAM PREVIEW                                                                                                                 ###
@@ -121,13 +306,19 @@ class Battle(ABC):
         """
         Limpia y reinicia el estado de la batalla para una nueva ronda (por ejemplo, en un BO3),
         reseteando al usuario, oponente, entorno, turnos y recompensas.
-        Mantiene intactos los Tag Globales.
+        Mantiene intactos los Tag Globales y los nombres de cuenta (BO3 / |player|).
         """
+        # Conservar identidades de cuenta entre partidas del BO3
+        user_account = getattr(self.user, 'account_name', None)
+        opp_account = getattr(self.opponent, 'account_name', None)
+
         # =====================================================================
         # 1. Reiniciar Usuario y Oponente
         # =====================================================================
         self.user = Battler()
         self.opponent = Battler()
+        self.user.account_name = user_account
+        self.opponent.account_name = opp_account
 
         # =====================================================================
         # 2. Reiniciar Características del Entorno
@@ -145,6 +336,16 @@ class Battle(ABC):
         self.error = False
         self.request_json = None
         self.rqid = None
+        self._report_ots_dumped = False
+        self._report_game_started = False
+
+        # Lo aprendido de los Stat Points del rival SI se conserva entre juegos
+        # del BO3: es el mismo equipo, igual que las notas de un jugador humano.
+        self.turn_actions = []
+        self.turn_speed_snapshot = None
+        self.pending_damage_ctx = None
+        # Objetivo del próximo |-damage| marcado por |-crit| (None = sin crit pendiente).
+        self.pending_crit_target = None
 
         # =====================================================================
         # 4. Reiniciar Recompensas
@@ -155,67 +356,118 @@ class Battle(ABC):
         # Nota: Los 'Tag Globales' (self.battleBO3_tag, self.battleBO3_count, 
         # self.botMode, self.battle_tag) NO se tocan y conservan sus valores.
 
+    def append_game_banner(self, kind: str, winner: str | None = None, to_console: bool = True) -> None:
+        """Separador entre partidas del BO3 (START al preview, END al |win|)."""
+        game_n = getattr(self, 'battleBO3_count', '?')
+        user_n = getattr(self.user, 'account_name', None) or '?'
+        opp_n = getattr(self.opponent, 'account_name', None) or '?'
+        lines = ['#' * 72]
+        if kind.upper() == 'START':
+            lines.append(f' BO3 GAME {game_n} START  |  {user_n} vs {opp_n}')
+        else:
+            win_s = winner or '?'
+            lines.append(f' BO3 GAME {game_n} END  |  win: {win_s}  |  {user_n} vs {opp_n}')
+        lines.append('#' * 72)
+        text = '\n'.join(lines) + '\n'
+        _append_report_file('\n' + text)
+        if to_console:
+            _write_stdout(text)
+
 ############################################################################################################################################################
-# OK - Impresión de TODA la Batalla                                                                                                                      ###       
+# OK - Impresión de TODA la Batalla (CMD = fuente principal turno a turno)                                                                               ###       
 ############################################################################################################################################################
-    def imprimir(self):
+    def imprimir(self, to_console: bool = True, accion=None):
         """
-        Guarda el estado de la batalla para pruebas:
-        - logs/latest_state.txt  → solo el estado actual (se sobrescribe; fácil de refrescar)
-        - logs/reporte.txt       → historial append con timestamp
-        Devuelve un resumen corto para consola.
+        Reporte de estado:
+        - Siempre a logs/latest_state.txt y logs/reporte.txt
+        - Por defecto también a CMD (revisión turno a turno)
+        - accion: se incluye dentro del bloque (CMD + archivo)
         """
         import os
+        import io
         from datetime import datetime
 
         os.makedirs('logs', exist_ok=True)
-        stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        tag = getattr(self, 'battle_tag', None) or getattr(self, 'battleBO3_tag', None) or '?'
-        summary = (
-            f"[{stamp}] turn={self.turn} rqid={self.rqid} "
-            f"{getattr(self.user, 'account_name', '?')} vs {getattr(self.opponent, 'account_name', '?')} "
-            f"| weather={self.weather}/{self.weatherTurn} force={self.force_switch} err={self.error}"
+        stamp = datetime.now().strftime('%H:%M:%S')
+        user_n = getattr(self.user, 'account_name', None) or '?'
+        opp_n = getattr(self.opponent, 'account_name', None) or '?'
+        kind = _snap_kind(self)
+
+        buf = io.StringIO()
+
+        def w(line: str = ''):
+            print(line, file=buf)
+
+        # Banner START en team preview (turno 0)
+        if int(getattr(self, 'turn', 0) or 0) == 0 and not getattr(self, '_report_game_started', False):
+            self._report_game_started = True
+            # Se escribe aparte para no duplicar en latest_state; lo hacemos aquí embebido
+            w('#' * 72)
+            w(f' BO3 GAME {getattr(self, "battleBO3_count", "?")} START  |  {user_n} vs {opp_n}')
+            w('#' * 72)
+
+        w('=' * 72)
+        w(
+            f' TURNO {self.turn} [{kind}]  |  rqid {self.rqid}  |  '
+            f'BO3 game {getattr(self, "battleBO3_count", "?")}  |  {stamp}'
         )
+        w(f' {user_n}  vs  {opp_n}')
+        w(
+            f' clima={self.weather or "-"}({self.weatherTurn})  '
+            f'campo={_fmt_mapping(self.terrain)}'
+        )
+        w('-' * 72)
+        w(f' YO [{self.user.id}]  side={_fmt_mapping(self.user.side_conditions)}')
+        self.user.imprimir_cmd(buf)
+        w('-' * 72)
+        w(
+            f' RIVAL [{self.opponent.id}]  side={_fmt_mapping(self.opponent.side_conditions)}  '
+            f'confirmados={self.opponent.opponentPkmnConfirmed}'
+        )
+        self.opponent.imprimir_cmd(buf)
 
-        def _write(f, header: bool):
-            if header:
-                print("=" * 72, file=f)
-                print(f"  SNAPSHOT  {stamp}", file=f)
-                print(f"  Tag: {tag}  |  BO3 game: {getattr(self, 'battleBO3_count', '?')}", file=f)
-                print("=" * 72, file=f)
-            else:
-                print("=" * 72, file=f)
-                print(f"  ESTADO ACTUAL  {stamp}", file=f)
-                print(f"  Tag: {tag}", file=f)
-                print("=" * 72, file=f)
+        # Estimación de Stat Points del rival (evolución turno a turno)
+        beliefs = getattr(self, 'stat_beliefs', None)
+        if beliefs is not None and beliefs.beliefs:
+            max_sp, budget = sp_limits()
+            w('-' * 72)
+            w(f' STAT POINTS ESTIMADOS (rival)  |  tope {max_sp}/stat, {budget} total:')
+            for species, belief in sorted(beliefs.beliefs.items()):
+                w(f'  {species}  nat={belief.nature or "-"}')
+                w(f'      est:  {belief.summary_line()}')
+                w(f'      conv: {belief.convergence_line()}')
 
-            print(f"Turno: {self.turn} | rqid: {self.rqid} | modo: {self.botMode}", file=f)
-            print(
-                f"Clima: {self.weather or '-'} ({self.weatherTurn}) | "
-                f"Terreno/campo: {_fmt_mapping(self.terrain)}",
-                file=f,
-            )
-            print(
-                f"Flags: force_switch={self.force_switch} active={self.active} "
-                f"wait={self.wait} error={self.error}",
-                file=f,
-            )
-            print(f"Reward/Score: {self.reward} / {self.score}", file=f)
+        # OTS solo una vez por partida (team preview / primer dump)
+        dump_ots = not getattr(self, '_report_ots_dumped', False)
+        if dump_ots and getattr(self.opponent, 'opponents', None):
+            w('-' * 72)
+            w(' OTS (plantilla showteam; una vez por partida):')
+            for i, pkmn in enumerate(self.opponent.opponents, start=1):
+                if pkmn is None:
+                    continue
+                moves = ','.join(m for m in (pkmn.moves or []) if m) or '-'
+                w(
+                    f'  {i}. {pkmn.name}  item={pkmn.objectPkmn or "-"}  '
+                    f'abi={pkmn.abilityPkmn or "-"}  moves={moves}'
+                )
+            self._report_ots_dumped = True
 
-            print("\n--- USUARIO ---", file=f)
-            self.user.imprimir(f)
-            print("\n--- OPONENTE ---", file=f)
-            self.opponent.imprimir(f)
-            print("=" * 72, file=f)
+        if accion is not None:
+            w('-' * 72)
+            w(f' ACCION -> {accion}')
+
+        w('=' * 72)
+
+        report = buf.getvalue()
 
         with open('logs/latest_state.txt', 'w', encoding='utf-8') as f:
-            _write(f, header=False)
+            f.write(report)
+        _append_report_file('\n' + report)
 
-        with open('logs/reporte.txt', 'a', encoding='utf-8') as f:
-            print(file=f)
-            _write(f, header=True)
+        if to_console:
+            _write_stdout(report)
 
-        return summary
+        return report.strip().splitlines()[0] if report else ''
 
 
 ############################################################################################################################################################
@@ -347,10 +599,27 @@ class Battler:
             stats1 = pokemon0["stats"]
             if not (self.active1.is_ditto and self.active1.name != "ditto"):
                 self.active1.ATK_battle_actual = int(stats1["atk"])
-                self.active1.DEF_battle_actual = int(stats1["def"])
                 self.active1.SPA_battle_actual = int(stats1["spa"])
-                self.active1.SPD_battle_actual = int(stats1["spd"])
                 self.active1.VEL_battle_actual = int(stats1["spe"])
+                # Guard Split altera Def/SpD en el sim; el request no lo refleja
+                if not getattr(self.active1, 'guard_split_active', False):
+                    self.active1.DEF_battle_actual = int(stats1["def"])
+                    self.active1.SPD_battle_actual = int(stats1["spd"])
+
+            # Item / ability / faint desde el request (autoridad del protocolo)
+            self.active1.objectPkmn = normalize_name(pokemon0.get("item", "") or "") or None
+            req_ability1 = normalize_name(pokemon0.get("ability", "") or "")
+            if req_ability1:
+                self.active1.abilityPkmn = req_ability1
+            if self.active1.HPA_battle_actual <= 0 or "fnt" in str(cond0).lower():
+                self.active1.is_fainted = True
+            # Showdown mantiene details=Ditto aunque esté transformado; solo
+            # forzamos identidad base al debilitarse.
+            if self.active1.is_ditto and self.active1.is_fainted:
+                self.active1.name = "ditto"
+                self.active1.is_zoroark = False
+                self.active1.abilityPkmn = "imposter"
+                self.active1.moves = ["transform", None, None, None]
 
             # =========================================================================
             # UPDATE POKÉMON ACTIVO 2 (Derecha - Índice 1 del JSON)
@@ -367,10 +636,23 @@ class Battler:
             stats2 = pokemon1["stats"]
             if not (self.active2.is_ditto and self.active2.name != "ditto"):
                 self.active2.ATK_battle_actual = int(stats2["atk"])
-                self.active2.DEF_battle_actual = int(stats2["def"])
                 self.active2.SPA_battle_actual = int(stats2["spa"])
-                self.active2.SPD_battle_actual = int(stats2["spd"])
                 self.active2.VEL_battle_actual = int(stats2["spe"])
+                if not getattr(self.active2, 'guard_split_active', False):
+                    self.active2.DEF_battle_actual = int(stats2["def"])
+                    self.active2.SPD_battle_actual = int(stats2["spd"])
+
+            self.active2.objectPkmn = normalize_name(pokemon1.get("item", "") or "") or None
+            req_ability2 = normalize_name(pokemon1.get("ability", "") or "")
+            if req_ability2:
+                self.active2.abilityPkmn = req_ability2
+            if self.active2.HPA_battle_actual <= 0 or "fnt" in str(cond1).lower():
+                self.active2.is_fainted = True
+            if self.active2.is_ditto and self.active2.is_fainted:
+                self.active2.name = "ditto"
+                self.active2.is_zoroark = False
+                self.active2.abilityPkmn = "imposter"
+                self.active2.moves = ["transform", None, None, None]
 
             # Asegurándonos de que 'active' tenga al menos 2 elementos en la lista
             request_active = JSONdict.get("active", [])
@@ -443,49 +725,60 @@ class Battler:
 
 
 ###############################################################################################################################################################
-# OK - Impresión de la clase Battler                                                                                                                        ###
+# OK - Impresión de la clase Battler (CMD denso + legacy archivo detallado)                                                                                ###
 ###############################################################################################################################################################
+    def imprimir_cmd(self, f) -> None:
+        """Bloque compacto para consola: activos + reserva en pocas líneas."""
+        is_opp = not self.isUser
+
+        def slot_block(label: str, pkmn):
+            if pkmn is None:
+                print(f'  {label}  (vacio)', file=f)
+                return
+            types = f"{pkmn.type1 or '?'}" + (f"/{pkmn.type2}" if pkmn.type2 else '')
+            flags = _fmt_flags_short(pkmn, is_opp)
+            flag_s = f'  [{flags}]' if flags else ''
+            print(
+                f'  {label}  {_fmt_pkmn_display_name(pkmn)} [{types}]  {_fmt_hp(pkmn)}{flag_s}',
+                file=f,
+            )
+            print(
+                f'       item={pkmn.objectPkmn or "-"}  abi={pkmn.abilityPkmn or "-"}  '
+                f'status={_fmt_status_short(pkmn)}  boosts={_fmt_boosts_short(pkmn.boosts)}',
+                file=f,
+            )
+            print(f'       stats: {_fmt_battle_stats_short(pkmn)}', file=f)
+            moves = [f'{m}({pp})' for m, pp in zip(pkmn.moves or [], pkmn.movesPP or []) if m]
+            print(f'       moves: {", ".join(moves) if moves else "-"}', file=f)
+
+        slot_block('A1', self.active1)
+        slot_block('A2', self.active2)
+
+        if self.reserved:
+            parts = []
+            for p in self.reserved:
+                if p is None:
+                    continue
+                tags = []
+                if getattr(p, 'is_fainted', False):
+                    tags.append('FNT')
+                if getattr(p, 'is_zoroark', False) and not getattr(p, 'illusion_disguise', None):
+                    tags.append('ZORO')
+                if getattr(p, 'is_ditto', False) and str(getattr(p, 'name', '')).lower() == 'ditto':
+                    tags.append('DITTO')
+                tag_s = f"[{','.join(tags)}]" if tags else ''
+                parts.append(f'{_fmt_pkmn_display_name(p)}{tag_s} {_fmt_hp(p)}')
+            print(f'  RSV  {" | ".join(parts) if parts else "(vacia)"}', file=f)
+        else:
+            print('  RSV  (vacia)', file=f)
+
     def imprimir(self, f):
+        """Formato detallado legacy (por si se llama fuera de imprimir_cmd)."""
         print(f"ID: {self.id} | Cuenta: {self.account_name}", file=f)
         if not self.isUser:
             print(f"Confirmados oponente: {self.opponentPkmnConfirmed}", file=f)
         print(f"Side conditions: {_fmt_mapping(self.side_conditions)}", file=f)
-
-        print("\n  [Activo 1]", file=f)
-        if self.active1 is not None:
-            self.active1.imprimir(f, not self.isUser)
-        else:
-            print("    (vacío)", file=f)
-
-        print("\n  [Activo 2]", file=f)
-        if self.active2 is not None:
-            self.active2.imprimir(f, not self.isUser)
-        else:
-            print("    (vacío)", file=f)
-
-        print("\n  [Reserva]", file=f)
-        if self.reserved:
-            for i, pkmn in enumerate(self.reserved, start=1):
-                print(f"  -- Reserva {i} --", file=f)
-                if pkmn is not None:
-                    pkmn.imprimir(f, not self.isUser)
-                else:
-                    print("    (vacío)", file=f)
-        else:
-            print("    (sin reservas)", file=f)
-
-        if not self.isUser:
-            lista_oponentes = getattr(self, 'opponents', [])
-            print("\n  [Lista preview oponentes]", file=f)
-            if lista_oponentes:
-                for i, pkmn in enumerate(lista_oponentes, start=1):
-                    print(f"  -- Preview {i} --", file=f)
-                    if pkmn is not None:
-                        pkmn.imprimir(f, not self.isUser)
-                    else:
-                        print("    (vacío)", file=f)
-            else:
-                print("    (vacía)", file=f)
+        self.imprimir_cmd(f)
 
 
 ############################################################################################################################################################
@@ -514,15 +807,31 @@ class Pokemon:
         self.is_mega_evo = False
         self.can_mega_evo = False
         self.is_opponent_confirmed = False
-        self.is_ditto = True if name == 'ditto' else False
-        self.is_zoroark = True if name == 'Zoroark' or name == 'zoroark-hisui' else False
+        self.is_ditto = True if str(name).lower() == 'ditto' else False
+        _name_l = str(name).lower()
+        self.is_zoroark = _name_l == 'zoroark' or _name_l.startswith('zoroark-')
+        # Especie disfraz vista en PS mientras Illusion no se revela / se acaba de deducir
+        self.illusion_disguise = None
+        # True solo tras |replace| real del protocolo (PS ya muestra Zoroark)
+        self.illusion_protocol_revealed = False
+        # Guard Split activo: no pisar Def/SpD con el |request| (PS no las refleja ahí)
+        self.guard_split_active = False
         self.is_fainted = False
         # Yawn: True desde |-start|move: Yawn hasta dormir / salir / |-end|Yawn.
         # Durante el turno de decisión previo al slp el mon sigue despierto y puede actuar.
         self.is_drowsy = False
         # Perish Song: 0 = sin efecto; 3/2/1 = contador visible de Showdown (| -start|perishN).
         self.perish_count = 0
-        
+        # Efectos efímeros (no se imprimen en el snap de decisión; se limpian a tiempo).
+        # Protect/Detect/…: solo el turno actual (| -singleturn| → clear en |turn|).
+        self.is_protected = False
+        # Helping Hand recibido: solo el turno actual.
+        self.is_helping_hand = False
+        # Destiny Bond: hasta el próximo |move| propio, faint o switch.
+        self.is_destiny_bonded = False
+        # Charge: hasta move Eléctrico / |-end| / switch.
+        self.is_charged = False
+
         # Tipos (Se asignan posteriormente)
         self.type1 = None
         self.type2 = None

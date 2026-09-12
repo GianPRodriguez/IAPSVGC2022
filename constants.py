@@ -340,6 +340,23 @@ TRANSFORM = 'transform'
 
 PROTECT_VOLATILE_STATUSES = [PROTECT, BANEFUL_BUNKER, SPIKY_SHIELD]
 
+# Protect-like (-singleturn) en Reg M-C / gen moderna
+PROTECT_SINGLETURN_IDS = frozenset({
+    PROTECT,
+    'detect',
+    BANEFUL_BUNKER,
+    SPIKY_SHIELD,
+    'kingsshield',
+    'obstruct',
+    'silktrap',
+    'burningbulwark',
+    'maxguard',
+})
+
+HELPING_HAND = 'helpinghand'
+DESTINY_BOND = 'destinybond'
+CHARGE_VOLATILE = 'charge'
+
 # non-volatile statuses
 SLEEP = "slp"
 BURN = "brn"
@@ -459,7 +476,7 @@ NATURE = 1.1
 DROWSY = 'moveyawn'
 FASTEST = 278
 
-standardName = {'zacian':'zacian-crowned','zacian-*':'zacian-crowned','thundurus':'thundurus-incarnate','landorus':'landorus-incarnate','tornadus':'tornadus-incarnate','indeedee-f':'indeedee-female','urshifu-*':'urshifu-single-strike','urshifu':'urshifu-single-strike','necrozma-dusk-mane':'necrozma-dusk','zamazenta':'zamazenta-crowned','zamazenta-*':'zamazenta-crowned','gastrodon-east':'gastrodon','mimikyu-busted':'mimikyu','xerneas-*':'xerneas'}
+standardName = {'zacian':'zacian-crowned','zacian-*':'zacian-crowned','thundurus':'thundurus-incarnate','landorus':'landorus-incarnate','tornadus':'tornadus-incarnate','indeedee-f':'indeedee-f','indeedee-female':'indeedee-f','urshifu-*':'urshifu-single-strike','urshifu':'urshifu-single-strike','necrozma-dusk-mane':'necrozma-dusk','zamazenta':'zamazenta-crowned','zamazenta-*':'zamazenta-crowned','gastrodon-east':'gastrodon','mimikyu-busted':'mimikyu','xerneas-*':'xerneas'}
 colorType = {'normal':'#A8A77A','fire':'#EE8130','water':'#6390F0','electric':'#F7D02C','grass':'#7AC74C','ice':'#96D9D6','fighting':'#C22E28','poison':'#A33EA1','ground':'#E2BF65','flying':'#A98FF3','psychic':'#F95587','bug':'#A6B91A','rock':'#B6A136','ghost':'#735797','dragon':'#6F35FC','dark':'#705746','steel':'#B7B7CE','fairy':'#D685AD'}
 maxMoves = {'maxstrike':'max-strike','maxknuckle':'max-knuckle','maxairstream':'max-airstream','maxooze':'max-ooze','maxquake':'max-quake','maxrockfall':'max-rockfall','maxflutterby':'max-flutterby','maxphantasm':'max-phantasm','maxsteelspike':'max-steelspike','maxflare':'max-flare','maxgeyser':'max-geyser','maxovergrowth':'max-overgrowth','maxlightning':'max-lightning','maxmindstorm':'max-mindstorm','maxhailstorm':'max-hailstorm','maxwyrmwind':'max-wyrmwind','maxdarkness':'max-darkness','maxstarfall':'max-starfall','maxguard':'max-guard','gmaxvinelash':'max-overgrowth','gmaxwildfire':'max-flare','gmaxcannonade':'max-geyser','gmaxbefuddle':'max-flutterby','gmaxvoltcrash':'max-lightning','gmaxgoldrush':'max-strike','gmaxchistrike':'max-knuckle','gmaxterror':'max-phantasm','gmaxfoamburst':'max-geyser','gmaxresonance':'max-hailstorm','gmaxcuddle':'max-strike','gmaxreplenish':'max-strike','gmaxmalodor':'max-ooze','gmaxmeltdown':'max-steelspike','gmaxdrumsolo':'max-overgrowth','gmaxfireball':'max-flare','gmaxhydrosnipe':'max-geyser','gmaxwindrage':'max-airstream','gmaxgravitas':'max-mindstorm','gmaxstonesurge':'max-geyser','gmaxvolcalith':'max-rockfall','gmaxtartness':'max-overgrowth','gmaxsweetness':'max-overgrowth','gmaxsandblast':'max-quake','gmaxstunshock':'max-lightning','gmaxcentiferno':'max-flare','gmaxsmite':'max-starfall','gmaxsnooze':'max-darkness','gmaxfinale':'max-starfall','gmaxsteelsurge':'max-steelspike','gmaxdepletion':'max-wyrmwind','gmaxoneblow':'max-darkness','gmaxrapidflow':'max-geyser'}
 

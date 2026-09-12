@@ -1,0 +1,3770 @@
+{
+ "nomove": {
+  "p": 0,
+  "c": "t"
+ },
+ "absorb": {
+  "p": 0,
+  "c": "s"
+ },
+ "acid": {
+  "p": 0,
+  "c": "s"
+ },
+ "amnesia": {
+  "p": 0,
+  "c": "t"
+ },
+ "aurorabeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "barrage": {
+  "p": 0,
+  "c": "p"
+ },
+ "bide": {
+  "p": 1,
+  "c": "p"
+ },
+ "bind": {
+  "p": 0,
+  "c": "p"
+ },
+ "bite": {
+  "p": 0,
+  "c": "p"
+ },
+ "blizzard": {
+  "p": 0,
+  "c": "s"
+ },
+ "bonemerang": {
+  "p": 0,
+  "c": "p"
+ },
+ "bubble": {
+  "p": 0,
+  "c": "s"
+ },
+ "bubblebeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "clamp": {
+  "p": 0,
+  "c": "p"
+ },
+ "cometpunch": {
+  "p": 0,
+  "c": "p"
+ },
+ "constrict": {
+  "p": 0,
+  "c": "p"
+ },
+ "conversion": {
+  "p": 0,
+  "c": "t"
+ },
+ "counter": {
+  "p": 0,
+  "c": "p"
+ },
+ "crabhammer": {
+  "p": 0,
+  "c": "p"
+ },
+ "defensecurl": {
+  "p": 0,
+  "c": "t"
+ },
+ "dig": {
+  "p": 0,
+  "c": "p"
+ },
+ "disable": {
+  "p": 0,
+  "c": "t"
+ },
+ "dizzypunch": {
+  "p": 0,
+  "c": "p"
+ },
+ "doubleedge": {
+  "p": 0,
+  "c": "p"
+ },
+ "doublekick": {
+  "p": 0,
+  "c": "p"
+ },
+ "doubleslap": {
+  "p": 0,
+  "c": "p"
+ },
+ "dragonrage": {
+  "p": 0,
+  "c": "s"
+ },
+ "dreameater": {
+  "p": 0,
+  "c": "s"
+ },
+ "earthquake": {
+  "p": 0,
+  "c": "p"
+ },
+ "explosion": {
+  "p": 0,
+  "c": "p"
+ },
+ "fireblast": {
+  "p": 0,
+  "c": "s"
+ },
+ "firespin": {
+  "p": 0,
+  "c": "s"
+ },
+ "fissure": {
+  "p": 0,
+  "c": "p"
+ },
+ "fly": {
+  "p": 0,
+  "c": "p"
+ },
+ "focusenergy": {
+  "p": 0,
+  "c": "t"
+ },
+ "furyattack": {
+  "p": 0,
+  "c": "p"
+ },
+ "furyswipes": {
+  "p": 0,
+  "c": "p"
+ },
+ "glare": {
+  "p": 0,
+  "c": "t"
+ },
+ "growth": {
+  "p": 0,
+  "c": "t"
+ },
+ "guillotine": {
+  "p": 0,
+  "c": "p"
+ },
+ "gust": {
+  "p": 0,
+  "c": "s"
+ },
+ "haze": {
+  "p": 0,
+  "c": "t"
+ },
+ "highjumpkick": {
+  "p": 0,
+  "c": "p"
+ },
+ "horndrill": {
+  "p": 0,
+  "c": "p"
+ },
+ "hyperbeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "jumpkick": {
+  "p": 0,
+  "c": "p"
+ },
+ "karatechop": {
+  "p": 0,
+  "c": "p"
+ },
+ "leechseed": {
+  "p": 0,
+  "c": "t"
+ },
+ "lightscreen": {
+  "p": 0,
+  "c": "t"
+ },
+ "metronome": {
+  "p": 0,
+  "c": "t"
+ },
+ "mimic": {
+  "p": 0,
+  "c": "t"
+ },
+ "minimize": {
+  "p": 0,
+  "c": "t"
+ },
+ "mirrormove": {
+  "p": 0,
+  "c": "t"
+ },
+ "mist": {
+  "p": 0,
+  "c": "t"
+ },
+ "nightshade": {
+  "p": 0,
+  "c": "s"
+ },
+ "petaldance": {
+  "p": 0,
+  "c": "s"
+ },
+ "pinmissile": {
+  "p": 0,
+  "c": "p"
+ },
+ "poisonsting": {
+  "p": 0,
+  "c": "p"
+ },
+ "psychic": {
+  "p": 0,
+  "c": "s"
+ },
+ "psywave": {
+  "p": 0,
+  "c": "s"
+ },
+ "rage": {
+  "p": 0,
+  "c": "p"
+ },
+ "razorleaf": {
+  "p": 0,
+  "c": "p"
+ },
+ "razorwind": {
+  "p": 0,
+  "c": "s"
+ },
+ "recover": {
+  "p": 0,
+  "c": "t"
+ },
+ "reflect": {
+  "p": 0,
+  "c": "t"
+ },
+ "rest": {
+  "p": 0,
+  "c": "t"
+ },
+ "roar": {
+  "p": 0,
+  "c": "t"
+ },
+ "rockslide": {
+  "p": 0,
+  "c": "p"
+ },
+ "rockthrow": {
+  "p": 0,
+  "c": "p"
+ },
+ "sandattack": {
+  "p": 0,
+  "c": "t"
+ },
+ "seismictoss": {
+  "p": 0,
+  "c": "p"
+ },
+ "selfdestruct": {
+  "p": 0,
+  "c": "p"
+ },
+ "skullbash": {
+  "p": 0,
+  "c": "p"
+ },
+ "slash": {
+  "p": 0,
+  "c": "p"
+ },
+ "sludge": {
+  "p": 0,
+  "c": "s"
+ },
+ "softboiled": {
+  "p": 0,
+  "c": "t"
+ },
+ "solarbeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "sonicboom": {
+  "p": 0,
+  "c": "s"
+ },
+ "spikecannon": {
+  "p": 0,
+  "c": "p"
+ },
+ "stomp": {
+  "p": 0,
+  "c": "p"
+ },
+ "struggle": {
+  "p": 0,
+  "c": "p"
+ },
+ "stunspore": {
+  "p": 0,
+  "c": "t"
+ },
+ "submission": {
+  "p": 0,
+  "c": "p"
+ },
+ "substitute": {
+  "p": 0,
+  "c": "t"
+ },
+ "superfang": {
+  "p": 0,
+  "c": "p"
+ },
+ "swift": {
+  "p": 0,
+  "c": "s"
+ },
+ "takedown": {
+  "p": 0,
+  "c": "p"
+ },
+ "thrash": {
+  "p": 0,
+  "c": "p"
+ },
+ "thunder": {
+  "p": 0,
+  "c": "s"
+ },
+ "thunderwave": {
+  "p": 0,
+  "c": "t"
+ },
+ "transform": {
+  "p": 0,
+  "c": "t"
+ },
+ "triattack": {
+  "p": 0,
+  "c": "s"
+ },
+ "twineedle": {
+  "p": 0,
+  "c": "p"
+ },
+ "whirlwind": {
+  "p": 0,
+  "c": "t"
+ },
+ "wingattack": {
+  "p": 0,
+  "c": "p"
+ },
+ "wrap": {
+  "p": 0,
+  "c": "p"
+ },
+ "growl": {
+  "p": 0,
+  "c": "t"
+ },
+ "leer": {
+  "p": 0,
+  "c": "t"
+ },
+ "lowkick": {
+  "p": 0,
+  "c": "p"
+ },
+ "poisongas": {
+  "p": 0,
+  "c": "t"
+ },
+ "poisonpowder": {
+  "p": 0,
+  "c": "t"
+ },
+ "skyattack": {
+  "p": 0,
+  "c": "p"
+ },
+ "stringshot": {
+  "p": 0,
+  "c": "t"
+ },
+ "surf": {
+  "p": 0,
+  "c": "s"
+ },
+ "tailwhip": {
+  "p": 0,
+  "c": "t"
+ },
+ "toxic": {
+  "p": 0,
+  "c": "t"
+ },
+ "flash": {
+  "p": 0,
+  "c": "t"
+ },
+ "hypnosis": {
+  "p": 0,
+  "c": "t"
+ },
+ "leechlife": {
+  "p": 0,
+  "c": "p"
+ },
+ "megadrain": {
+  "p": 0,
+  "c": "s"
+ },
+ "vinewhip": {
+  "p": 0,
+  "c": "p"
+ },
+ "waterfall": {
+  "p": 0,
+  "c": "p"
+ },
+ "tackle": {
+  "p": 0,
+  "c": "p"
+ },
+ "acidarmor": {
+  "p": 0,
+  "c": "t"
+ },
+ "barrier": {
+  "p": 0,
+  "c": "t"
+ },
+ "bodyslam": {
+  "p": 0,
+  "c": "p"
+ },
+ "flamethrower": {
+  "p": 0,
+  "c": "s"
+ },
+ "hydropump": {
+  "p": 0,
+  "c": "s"
+ },
+ "icebeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "lick": {
+  "p": 0,
+  "c": "p"
+ },
+ "screech": {
+  "p": 0,
+  "c": "t"
+ },
+ "sing": {
+  "p": 0,
+  "c": "t"
+ },
+ "sleeppowder": {
+  "p": 0,
+  "c": "t"
+ },
+ "smog": {
+  "p": 0,
+  "c": "s"
+ },
+ "spore": {
+  "p": 0,
+  "c": "t"
+ },
+ "supersonic": {
+  "p": 0,
+  "c": "t"
+ },
+ "swordsdance": {
+  "p": 0,
+  "c": "t"
+ },
+ "thunderbolt": {
+  "p": 0,
+  "c": "s"
+ },
+ "boneclub": {
+  "p": 0,
+  "c": "p"
+ },
+ "eggbomb": {
+  "p": 0,
+  "c": "p"
+ },
+ "hyperfang": {
+  "p": 0,
+  "c": "p"
+ },
+ "kinesis": {
+  "p": 0,
+  "c": "t"
+ },
+ "lovelykiss": {
+  "p": 0,
+  "c": "t"
+ },
+ "meditate": {
+  "p": 0,
+  "c": "t"
+ },
+ "rollingkick": {
+  "p": 0,
+  "c": "p"
+ },
+ "sharpen": {
+  "p": 0,
+  "c": "t"
+ },
+ "teleport": {
+  "p": 0,
+  "c": "t"
+ },
+ "agility": {
+  "p": 0,
+  "c": "t"
+ },
+ "confuseray": {
+  "p": 0,
+  "c": "t"
+ },
+ "confusion": {
+  "p": 0,
+  "c": "s"
+ },
+ "cut": {
+  "p": 0,
+  "c": "p"
+ },
+ "doubleteam": {
+  "p": 0,
+  "c": "t"
+ },
+ "drillpeck": {
+  "p": 0,
+  "c": "p"
+ },
+ "ember": {
+  "p": 0,
+  "c": "s"
+ },
+ "firepunch": {
+  "p": 0,
+  "c": "p"
+ },
+ "harden": {
+  "p": 0,
+  "c": "t"
+ },
+ "headbutt": {
+  "p": 0,
+  "c": "p"
+ },
+ "hornattack": {
+  "p": 0,
+  "c": "p"
+ },
+ "icepunch": {
+  "p": 0,
+  "c": "p"
+ },
+ "megakick": {
+  "p": 0,
+  "c": "p"
+ },
+ "megapunch": {
+  "p": 0,
+  "c": "p"
+ },
+ "paleowave": {
+  "p": 0,
+  "c": "s"
+ },
+ "payday": {
+  "p": 0,
+  "c": "p"
+ },
+ "peck": {
+  "p": 0,
+  "c": "p"
+ },
+ "polarflare": {
+  "p": 0,
+  "c": "s"
+ },
+ "pound": {
+  "p": 0,
+  "c": "p"
+ },
+ "psybeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "quickattack": {
+  "p": 1,
+  "c": "p"
+ },
+ "scratch": {
+  "p": 0,
+  "c": "p"
+ },
+ "shadowstrike": {
+  "p": 0,
+  "c": "p"
+ },
+ "slam": {
+  "p": 0,
+  "c": "p"
+ },
+ "smokescreen": {
+  "p": 0,
+  "c": "t"
+ },
+ "splash": {
+  "p": 0,
+  "c": "t"
+ },
+ "strength": {
+  "p": 0,
+  "c": "p"
+ },
+ "thunderpunch": {
+  "p": 0,
+  "c": "p"
+ },
+ "thundershock": {
+  "p": 0,
+  "c": "s"
+ },
+ "visegrip": {
+  "p": 0,
+  "c": "p"
+ },
+ "watergun": {
+  "p": 0,
+  "c": "s"
+ },
+ "withdraw": {
+  "p": 0,
+  "c": "t"
+ },
+ "aeroblast": {
+  "p": 0,
+  "c": "s"
+ },
+ "attract": {
+  "p": 0,
+  "c": "t"
+ },
+ "beatup": {
+  "p": 0,
+  "c": "p"
+ },
+ "bellydrum": {
+  "p": 0,
+  "c": "t"
+ },
+ "conversion2": {
+  "p": 0,
+  "c": "t"
+ },
+ "crosschop": {
+  "p": 0,
+  "c": "p"
+ },
+ "curse": {
+  "p": 0,
+  "c": "t"
+ },
+ "destinybond": {
+  "p": 0,
+  "c": "t"
+ },
+ "detect": {
+  "p": 4,
+  "c": "t"
+ },
+ "encore": {
+  "p": 0,
+  "c": "t"
+ },
+ "endure": {
+  "p": 4,
+  "c": "t"
+ },
+ "flail": {
+  "p": 0,
+  "c": "p"
+ },
+ "foresight": {
+  "p": 0,
+  "c": "t"
+ },
+ "futuresight": {
+  "p": 0,
+  "c": "s"
+ },
+ "healbell": {
+  "p": 0,
+  "c": "t"
+ },
+ "icywind": {
+  "p": 0,
+  "c": "s"
+ },
+ "lockon": {
+  "p": 0,
+  "c": "t"
+ },
+ "mindreader": {
+  "p": 0,
+  "c": "t"
+ },
+ "mirrorcoat": {
+  "p": 0,
+  "c": "s"
+ },
+ "moonlight": {
+  "p": 0,
+  "c": "t"
+ },
+ "morningsun": {
+  "p": 0,
+  "c": "t"
+ },
+ "nightmare": {
+  "p": 0,
+  "c": "t"
+ },
+ "outrage": {
+  "p": 0,
+  "c": "p"
+ },
+ "powdersnow": {
+  "p": 0,
+  "c": "s"
+ },
+ "present": {
+  "p": 0,
+  "c": "p"
+ },
+ "protect": {
+  "p": 4,
+  "c": "t"
+ },
+ "psychup": {
+  "p": 0,
+  "c": "t"
+ },
+ "pursuit": {
+  "p": 0,
+  "c": "p"
+ },
+ "raindance": {
+  "p": 0,
+  "c": "t"
+ },
+ "reversal": {
+  "p": 0,
+  "c": "p"
+ },
+ "safeguard": {
+  "p": 0,
+  "c": "t"
+ },
+ "sandstorm": {
+  "p": 0,
+  "c": "t"
+ },
+ "sketch": {
+  "p": 0,
+  "c": "t"
+ },
+ "sleeptalk": {
+  "p": 0,
+  "c": "t"
+ },
+ "spikes": {
+  "p": 0,
+  "c": "t"
+ },
+ "spite": {
+  "p": 0,
+  "c": "t"
+ },
+ "sunnyday": {
+  "p": 0,
+  "c": "t"
+ },
+ "swagger": {
+  "p": 0,
+  "c": "t"
+ },
+ "sweetscent": {
+  "p": 0,
+  "c": "t"
+ },
+ "synthesis": {
+  "p": 0,
+  "c": "t"
+ },
+ "thief": {
+  "p": 0,
+  "c": "p"
+ },
+ "triplekick": {
+  "p": 0,
+  "c": "p"
+ },
+ "twister": {
+  "p": 0,
+  "c": "s"
+ },
+ "ancientpower": {
+  "p": 0,
+  "c": "s"
+ },
+ "bonerush": {
+  "p": 0,
+  "c": "p"
+ },
+ "crunch": {
+  "p": 0,
+  "c": "p"
+ },
+ "feintattack": {
+  "p": 0,
+  "c": "p"
+ },
+ "gigadrain": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpower": {
+  "p": 0,
+  "c": "s"
+ },
+ "meanlook": {
+  "p": 0,
+  "c": "t"
+ },
+ "rapidspin": {
+  "p": 0,
+  "c": "p"
+ },
+ "rocksmash": {
+  "p": 0,
+  "c": "p"
+ },
+ "spiderweb": {
+  "p": 0,
+  "c": "t"
+ },
+ "whirlpool": {
+  "p": 0,
+  "c": "s"
+ },
+ "zapcannon": {
+  "p": 0,
+  "c": "s"
+ },
+ "cottonspore": {
+  "p": 0,
+  "c": "t"
+ },
+ "extremespeed": {
+  "p": 2,
+  "c": "p"
+ },
+ "furycutter": {
+  "p": 0,
+  "c": "p"
+ },
+ "magnitude": {
+  "p": 0,
+  "c": "p"
+ },
+ "milkdrink": {
+  "p": 0,
+  "c": "t"
+ },
+ "scaryface": {
+  "p": 0,
+  "c": "t"
+ },
+ "charm": {
+  "p": 0,
+  "c": "t"
+ },
+ "hiddenpowerbug": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerdark": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerdragon": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerelectric": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerfighting": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerfire": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerflying": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerghost": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowergrass": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerground": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerice": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerpoison": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerpsychic": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerrock": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowersteel": {
+  "p": 0,
+  "c": "s"
+ },
+ "hiddenpowerwater": {
+  "p": 0,
+  "c": "s"
+ },
+ "perishsong": {
+  "p": 0,
+  "c": "t"
+ },
+ "snore": {
+  "p": 0,
+  "c": "s"
+ },
+ "sweetkiss": {
+  "p": 0,
+  "c": "t"
+ },
+ "rollout": {
+  "p": 0,
+  "c": "p"
+ },
+ "frustration": {
+  "p": 0,
+  "c": "p"
+ },
+ "return": {
+  "p": 0,
+  "c": "p"
+ },
+ "sacredfire": {
+  "p": 0,
+  "c": "p"
+ },
+ "batonpass": {
+  "p": 0,
+  "c": "t"
+ },
+ "dragonbreath": {
+  "p": 0,
+  "c": "s"
+ },
+ "dynamicpunch": {
+  "p": 0,
+  "c": "p"
+ },
+ "falseswipe": {
+  "p": 0,
+  "c": "p"
+ },
+ "flamewheel": {
+  "p": 0,
+  "c": "p"
+ },
+ "irontail": {
+  "p": 0,
+  "c": "p"
+ },
+ "machpunch": {
+  "p": 1,
+  "c": "p"
+ },
+ "megahorn": {
+  "p": 0,
+  "c": "p"
+ },
+ "metalclaw": {
+  "p": 0,
+  "c": "p"
+ },
+ "mudslap": {
+  "p": 0,
+  "c": "s"
+ },
+ "octazooka": {
+  "p": 0,
+  "c": "s"
+ },
+ "painsplit": {
+  "p": 0,
+  "c": "t"
+ },
+ "shadowball": {
+  "p": 0,
+  "c": "s"
+ },
+ "sludgebomb": {
+  "p": 0,
+  "c": "s"
+ },
+ "spark": {
+  "p": 0,
+  "c": "p"
+ },
+ "steelwing": {
+  "p": 0,
+  "c": "p"
+ },
+ "vitalthrow": {
+  "p": 0,
+  "c": "p"
+ },
+ "armthrust": {
+  "p": 0,
+  "c": "p"
+ },
+ "assist": {
+  "p": 0,
+  "c": "t"
+ },
+ "astonish": {
+  "p": 0,
+  "c": "p"
+ },
+ "block": {
+  "p": 0,
+  "c": "t"
+ },
+ "bounce": {
+  "p": 0,
+  "c": "p"
+ },
+ "bulletseed": {
+  "p": 0,
+  "c": "p"
+ },
+ "camouflage": {
+  "p": 0,
+  "c": "t"
+ },
+ "charge": {
+  "p": 0,
+  "c": "t"
+ },
+ "covet": {
+  "p": 0,
+  "c": "p"
+ },
+ "dive": {
+  "p": 0,
+  "c": "p"
+ },
+ "doomdesire": {
+  "p": 0,
+  "c": "s"
+ },
+ "extrasensory": {
+  "p": 0,
+  "c": "s"
+ },
+ "fakeout": {
+  "p": 3,
+  "c": "p"
+ },
+ "followme": {
+  "p": 2,
+  "c": "t"
+ },
+ "hail": {
+  "p": 0,
+  "c": "t"
+ },
+ "iciclespear": {
+  "p": 0,
+  "c": "p"
+ },
+ "ingrain": {
+  "p": 0,
+  "c": "t"
+ },
+ "knockoff": {
+  "p": 0,
+  "c": "p"
+ },
+ "leafblade": {
+  "p": 0,
+  "c": "p"
+ },
+ "magiccoat": {
+  "p": 4,
+  "c": "t"
+ },
+ "memento": {
+  "p": 0,
+  "c": "t"
+ },
+ "naturepower": {
+  "p": 0,
+  "c": "t"
+ },
+ "needlearm": {
+  "p": 0,
+  "c": "p"
+ },
+ "odorsleuth": {
+  "p": 0,
+  "c": "t"
+ },
+ "overheat": {
+  "p": 0,
+  "c": "s"
+ },
+ "revenge": {
+  "p": 0,
+  "c": "p"
+ },
+ "rockblast": {
+  "p": 0,
+  "c": "p"
+ },
+ "roleplay": {
+  "p": 0,
+  "c": "t"
+ },
+ "sandtomb": {
+  "p": 0,
+  "c": "p"
+ },
+ "skillswap": {
+  "p": 0,
+  "c": "t"
+ },
+ "smellingsalts": {
+  "p": 0,
+  "c": "p"
+ },
+ "spitup": {
+  "p": 0,
+  "c": "s"
+ },
+ "stockpile": {
+  "p": 0,
+  "c": "t"
+ },
+ "swallow": {
+  "p": 0,
+  "c": "t"
+ },
+ "taunt": {
+  "p": 0,
+  "c": "t"
+ },
+ "teeterdance": {
+  "p": 0,
+  "c": "t"
+ },
+ "tickle": {
+  "p": 0,
+  "c": "t"
+ },
+ "trick": {
+  "p": 0,
+  "c": "t"
+ },
+ "uproar": {
+  "p": 0,
+  "c": "s"
+ },
+ "volttackle": {
+  "p": 0,
+  "c": "p"
+ },
+ "weatherball": {
+  "p": 0,
+  "c": "s"
+ },
+ "aromatherapy": {
+  "p": 0,
+  "c": "t"
+ },
+ "brickbreak": {
+  "p": 0,
+  "c": "p"
+ },
+ "endeavor": {
+  "p": 0,
+  "c": "p"
+ },
+ "focuspunch": {
+  "p": 0,
+  "c": "p"
+ },
+ "imprison": {
+  "p": 0,
+  "c": "t"
+ },
+ "mudsport": {
+  "p": 0,
+  "c": "t"
+ },
+ "recycle": {
+  "p": 0,
+  "c": "t"
+ },
+ "secretpower": {
+  "p": 0,
+  "c": "p"
+ },
+ "skyuppercut": {
+  "p": 0,
+  "c": "p"
+ },
+ "slackoff": {
+  "p": 0,
+  "c": "t"
+ },
+ "snatch": {
+  "p": 4,
+  "c": "t"
+ },
+ "tailglow": {
+  "p": 0,
+  "c": "t"
+ },
+ "torment": {
+  "p": 0,
+  "c": "t"
+ },
+ "watersport": {
+  "p": 0,
+  "c": "t"
+ },
+ "wish": {
+  "p": 0,
+  "c": "t"
+ },
+ "aircutter": {
+  "p": 0,
+  "c": "s"
+ },
+ "facade": {
+  "p": 0,
+  "c": "p"
+ },
+ "grasswhistle": {
+  "p": 0,
+  "c": "t"
+ },
+ "heatwave": {
+  "p": 0,
+  "c": "s"
+ },
+ "hypervoice": {
+  "p": 0,
+  "c": "s"
+ },
+ "metalsound": {
+  "p": 0,
+  "c": "t"
+ },
+ "meteormash": {
+  "p": 0,
+  "c": "p"
+ },
+ "muddywater": {
+  "p": 0,
+  "c": "s"
+ },
+ "poisonfang": {
+  "p": 0,
+  "c": "p"
+ },
+ "rocktomb": {
+  "p": 0,
+  "c": "p"
+ },
+ "willowisp": {
+  "p": 0,
+  "c": "t"
+ },
+ "iceball": {
+  "p": 0,
+  "c": "p"
+ },
+ "sheercold": {
+  "p": 0,
+  "c": "s"
+ },
+ "howl": {
+  "p": 0,
+  "c": "t"
+ },
+ "lusterpurge": {
+  "p": 0,
+  "c": "s"
+ },
+ "mistball": {
+  "p": 0,
+  "c": "s"
+ },
+ "psychoboost": {
+  "p": 0,
+  "c": "s"
+ },
+ "refresh": {
+  "p": 0,
+  "c": "t"
+ },
+ "signalbeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "silverwind": {
+  "p": 0,
+  "c": "s"
+ },
+ "aerialace": {
+  "p": 0,
+  "c": "p"
+ },
+ "blastburn": {
+  "p": 0,
+  "c": "s"
+ },
+ "blazekick": {
+  "p": 0,
+  "c": "p"
+ },
+ "bulkup": {
+  "p": 0,
+  "c": "t"
+ },
+ "calmmind": {
+  "p": 0,
+  "c": "t"
+ },
+ "cosmicpower": {
+  "p": 0,
+  "c": "t"
+ },
+ "crushclaw": {
+  "p": 0,
+  "c": "p"
+ },
+ "dragonclaw": {
+  "p": 0,
+  "c": "p"
+ },
+ "dragondance": {
+  "p": 0,
+  "c": "t"
+ },
+ "eruption": {
+  "p": 0,
+  "c": "s"
+ },
+ "faketears": {
+  "p": 0,
+  "c": "t"
+ },
+ "featherdance": {
+  "p": 0,
+  "c": "t"
+ },
+ "flatter": {
+  "p": 0,
+  "c": "t"
+ },
+ "frenzyplant": {
+  "p": 0,
+  "c": "s"
+ },
+ "grudge": {
+  "p": 0,
+  "c": "t"
+ },
+ "helpinghand": {
+  "p": 5,
+  "c": "t"
+ },
+ "hydrocannon": {
+  "p": 0,
+  "c": "s"
+ },
+ "irondefense": {
+  "p": 0,
+  "c": "t"
+ },
+ "magicalleaf": {
+  "p": 0,
+  "c": "s"
+ },
+ "mudshot": {
+  "p": 0,
+  "c": "s"
+ },
+ "poisontail": {
+  "p": 0,
+  "c": "p"
+ },
+ "shadowpunch": {
+  "p": 0,
+  "c": "p"
+ },
+ "shockwave": {
+  "p": 0,
+  "c": "s"
+ },
+ "superpower": {
+  "p": 0,
+  "c": "p"
+ },
+ "waterpulse": {
+  "p": 0,
+  "c": "s"
+ },
+ "waterspout": {
+  "p": 0,
+  "c": "s"
+ },
+ "yawn": {
+  "p": 0,
+  "c": "t"
+ },
+ "acupressure": {
+  "p": 0,
+  "c": "t"
+ },
+ "aquaring": {
+  "p": 0,
+  "c": "t"
+ },
+ "assurance": {
+  "p": 0,
+  "c": "p"
+ },
+ "avalanche": {
+  "p": 0,
+  "c": "p"
+ },
+ "bravebird": {
+  "p": 0,
+  "c": "p"
+ },
+ "bugbite": {
+  "p": 0,
+  "c": "p"
+ },
+ "chatter": {
+  "p": 0,
+  "c": "s"
+ },
+ "copycat": {
+  "p": 0,
+  "c": "t"
+ },
+ "crushgrip": {
+  "p": 0,
+  "c": "p"
+ },
+ "defog": {
+  "p": 0,
+  "c": "t"
+ },
+ "doublehit": {
+  "p": 0,
+  "c": "p"
+ },
+ "drainpunch": {
+  "p": 0,
+  "c": "p"
+ },
+ "embargo": {
+  "p": 0,
+  "c": "t"
+ },
+ "feint": {
+  "p": 2,
+  "c": "p"
+ },
+ "firefang": {
+  "p": 0,
+  "c": "p"
+ },
+ "flareblitz": {
+  "p": 0,
+  "c": "p"
+ },
+ "fling": {
+  "p": 0,
+  "c": "p"
+ },
+ "gravity": {
+  "p": 0,
+  "c": "t"
+ },
+ "headsmash": {
+  "p": 0,
+  "c": "p"
+ },
+ "healblock": {
+  "p": 0,
+  "c": "t"
+ },
+ "healingwish": {
+  "p": 0,
+  "c": "t"
+ },
+ "healorder": {
+  "p": 0,
+  "c": "t"
+ },
+ "lastresort": {
+  "p": 0,
+  "c": "p"
+ },
+ "luckychant": {
+  "p": 0,
+  "c": "t"
+ },
+ "lunardance": {
+  "p": 0,
+  "c": "t"
+ },
+ "magmastorm": {
+  "p": 0,
+  "c": "s"
+ },
+ "magnetrise": {
+  "p": 0,
+  "c": "t"
+ },
+ "mefirst": {
+  "p": 0,
+  "c": "t"
+ },
+ "metalburst": {
+  "p": 0,
+  "c": "p"
+ },
+ "miracleeye": {
+  "p": 0,
+  "c": "t"
+ },
+ "naturalgift": {
+  "p": 0,
+  "c": "p"
+ },
+ "payback": {
+  "p": 0,
+  "c": "p"
+ },
+ "pluck": {
+  "p": 0,
+  "c": "p"
+ },
+ "powertrick": {
+  "p": 0,
+  "c": "t"
+ },
+ "roost": {
+  "p": 0,
+  "c": "t"
+ },
+ "stealthrock": {
+  "p": 0,
+  "c": "t"
+ },
+ "suckerpunch": {
+  "p": 1,
+  "c": "p"
+ },
+ "switcheroo": {
+  "p": 0,
+  "c": "t"
+ },
+ "tailwind": {
+  "p": 0,
+  "c": "t"
+ },
+ "toxicspikes": {
+  "p": 0,
+  "c": "t"
+ },
+ "trickroom": {
+  "p": 0,
+  "c": "t"
+ },
+ "uturn": {
+  "p": 0,
+  "c": "p"
+ },
+ "wakeupslap": {
+  "p": 0,
+  "c": "p"
+ },
+ "woodhammer": {
+  "p": 0,
+  "c": "p"
+ },
+ "worryseed": {
+  "p": 0,
+  "c": "t"
+ },
+ "wringout": {
+  "p": 0,
+  "c": "s"
+ },
+ "airslash": {
+  "p": 0,
+  "c": "s"
+ },
+ "aurasphere": {
+  "p": 0,
+  "c": "s"
+ },
+ "bugbuzz": {
+  "p": 0,
+  "c": "s"
+ },
+ "dracometeor": {
+  "p": 0,
+  "c": "s"
+ },
+ "dragonpulse": {
+  "p": 0,
+  "c": "s"
+ },
+ "dragonrush": {
+  "p": 0,
+  "c": "p"
+ },
+ "energyball": {
+  "p": 0,
+  "c": "s"
+ },
+ "gunkshot": {
+  "p": 0,
+  "c": "p"
+ },
+ "gyroball": {
+  "p": 0,
+  "c": "p"
+ },
+ "leafstorm": {
+  "p": 0,
+  "c": "s"
+ },
+ "powergem": {
+  "p": 0,
+  "c": "s"
+ },
+ "psychoshift": {
+  "p": 0,
+  "c": "t"
+ },
+ "shadowforce": {
+  "p": 0,
+  "c": "p"
+ },
+ "darkvoid": {
+  "p": 0,
+  "c": "t"
+ },
+ "gastroacid": {
+  "p": 0,
+  "c": "t"
+ },
+ "captivate": {
+  "p": 0,
+  "c": "t"
+ },
+ "grassknot": {
+  "p": 0,
+  "c": "s"
+ },
+ "heartswap": {
+  "p": 0,
+  "c": "t"
+ },
+ "judgment": {
+  "p": 0,
+  "c": "s"
+ },
+ "magnetbomb": {
+  "p": 0,
+  "c": "p"
+ },
+ "mirrorshot": {
+  "p": 0,
+  "c": "s"
+ },
+ "mudbomb": {
+  "p": 0,
+  "c": "s"
+ },
+ "ominouswind": {
+  "p": 0,
+  "c": "s"
+ },
+ "punishment": {
+  "p": 0,
+  "c": "p"
+ },
+ "roaroftime": {
+  "p": 0,
+  "c": "s"
+ },
+ "rockclimb": {
+  "p": 0,
+  "c": "p"
+ },
+ "seedflare": {
+  "p": 0,
+  "c": "s"
+ },
+ "spacialrend": {
+  "p": 0,
+  "c": "s"
+ },
+ "trumpcard": {
+  "p": 0,
+  "c": "s"
+ },
+ "aquajet": {
+  "p": 1,
+  "c": "p"
+ },
+ "aquatail": {
+  "p": 0,
+  "c": "p"
+ },
+ "attackorder": {
+  "p": 0,
+  "c": "p"
+ },
+ "brine": {
+  "p": 0,
+  "c": "s"
+ },
+ "bulletpunch": {
+  "p": 1,
+  "c": "p"
+ },
+ "chargebeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "closecombat": {
+  "p": 0,
+  "c": "p"
+ },
+ "crosspoison": {
+  "p": 0,
+  "c": "p"
+ },
+ "darkpulse": {
+  "p": 0,
+  "c": "s"
+ },
+ "defendorder": {
+  "p": 0,
+  "c": "t"
+ },
+ "discharge": {
+  "p": 0,
+  "c": "s"
+ },
+ "earthpower": {
+  "p": 0,
+  "c": "s"
+ },
+ "flashcannon": {
+  "p": 0,
+  "c": "s"
+ },
+ "focusblast": {
+  "p": 0,
+  "c": "s"
+ },
+ "forcepalm": {
+  "p": 0,
+  "c": "p"
+ },
+ "gigaimpact": {
+  "p": 0,
+  "c": "p"
+ },
+ "guardswap": {
+  "p": 0,
+  "c": "t"
+ },
+ "hammerarm": {
+  "p": 0,
+  "c": "p"
+ },
+ "icefang": {
+  "p": 0,
+  "c": "p"
+ },
+ "iceshard": {
+  "p": 1,
+  "c": "p"
+ },
+ "ironhead": {
+  "p": 0,
+  "c": "p"
+ },
+ "lavaplume": {
+  "p": 0,
+  "c": "s"
+ },
+ "nastyplot": {
+  "p": 0,
+  "c": "t"
+ },
+ "nightslash": {
+  "p": 0,
+  "c": "p"
+ },
+ "poisonjab": {
+  "p": 0,
+  "c": "p"
+ },
+ "powerswap": {
+  "p": 0,
+  "c": "t"
+ },
+ "powerwhip": {
+  "p": 0,
+  "c": "p"
+ },
+ "psychocut": {
+  "p": 0,
+  "c": "p"
+ },
+ "rockpolish": {
+  "p": 0,
+  "c": "t"
+ },
+ "rockwrecker": {
+  "p": 0,
+  "c": "p"
+ },
+ "seedbomb": {
+  "p": 0,
+  "c": "p"
+ },
+ "shadowclaw": {
+  "p": 0,
+  "c": "p"
+ },
+ "shadowsneak": {
+  "p": 1,
+  "c": "p"
+ },
+ "stoneedge": {
+  "p": 0,
+  "c": "p"
+ },
+ "thunderfang": {
+  "p": 0,
+  "c": "p"
+ },
+ "vacuumwave": {
+  "p": 1,
+  "c": "s"
+ },
+ "xscissor": {
+  "p": 0,
+  "c": "p"
+ },
+ "zenheadbutt": {
+  "p": 0,
+  "c": "p"
+ },
+ "autotomize": {
+  "p": 0,
+  "c": "t"
+ },
+ "bestow": {
+  "p": 0,
+  "c": "t"
+ },
+ "echoedvoice": {
+  "p": 0,
+  "c": "s"
+ },
+ "electroball": {
+  "p": 0,
+  "c": "s"
+ },
+ "entrainment": {
+  "p": 0,
+  "c": "t"
+ },
+ "finalgambit": {
+  "p": 0,
+  "c": "s"
+ },
+ "firepledge": {
+  "p": 0,
+  "c": "s"
+ },
+ "frostbreath": {
+  "p": 0,
+  "c": "s"
+ },
+ "grasspledge": {
+  "p": 0,
+  "c": "s"
+ },
+ "healpulse": {
+  "p": 0,
+  "c": "t"
+ },
+ "heatcrash": {
+  "p": 0,
+  "c": "p"
+ },
+ "hex": {
+  "p": 0,
+  "c": "s"
+ },
+ "hornleech": {
+  "p": 0,
+  "c": "p"
+ },
+ "hurricane": {
+  "p": 0,
+  "c": "s"
+ },
+ "incinerate": {
+  "p": 0,
+  "c": "s"
+ },
+ "lowsweep": {
+  "p": 0,
+  "c": "p"
+ },
+ "magicroom": {
+  "p": 0,
+  "c": "t"
+ },
+ "quickguard": {
+  "p": 3,
+  "c": "t"
+ },
+ "ragepowder": {
+  "p": 2,
+  "c": "t"
+ },
+ "relicsong": {
+  "p": 0,
+  "c": "s"
+ },
+ "round": {
+  "p": 0,
+  "c": "s"
+ },
+ "sacredsword": {
+  "p": 0,
+  "c": "p"
+ },
+ "scald": {
+  "p": 0,
+  "c": "s"
+ },
+ "simplebeam": {
+  "p": 0,
+  "c": "t"
+ },
+ "skydrop": {
+  "p": 0,
+  "c": "p"
+ },
+ "snarl": {
+  "p": 0,
+  "c": "s"
+ },
+ "soak": {
+  "p": 0,
+  "c": "t"
+ },
+ "steamroller": {
+  "p": 0,
+  "c": "p"
+ },
+ "stormthrow": {
+  "p": 0,
+  "c": "p"
+ },
+ "strugglebug": {
+  "p": 0,
+  "c": "s"
+ },
+ "synchronoise": {
+  "p": 0,
+  "c": "s"
+ },
+ "technoblast": {
+  "p": 0,
+  "c": "s"
+ },
+ "telekinesis": {
+  "p": 0,
+  "c": "t"
+ },
+ "waterpledge": {
+  "p": 0,
+  "c": "s"
+ },
+ "wideguard": {
+  "p": 3,
+  "c": "t"
+ },
+ "wonderroom": {
+  "p": 0,
+  "c": "t"
+ },
+ "allyswitch": {
+  "p": 2,
+  "c": "t"
+ },
+ "flameburst": {
+  "p": 0,
+  "c": "s"
+ },
+ "heavyslam": {
+  "p": 0,
+  "c": "p"
+ },
+ "reflecttype": {
+  "p": 0,
+  "c": "t"
+ },
+ "voltswitch": {
+  "p": 0,
+  "c": "s"
+ },
+ "chipaway": {
+  "p": 0,
+  "c": "p"
+ },
+ "fierydance": {
+  "p": 0,
+  "c": "s"
+ },
+ "headcharge": {
+  "p": 0,
+  "c": "p"
+ },
+ "heartstamp": {
+  "p": 0,
+  "c": "p"
+ },
+ "quash": {
+  "p": 0,
+  "c": "t"
+ },
+ "searingshot": {
+  "p": 0,
+  "c": "s"
+ },
+ "acidspray": {
+  "p": 0,
+  "c": "s"
+ },
+ "acrobatics": {
+  "p": 0,
+  "c": "p"
+ },
+ "afteryou": {
+  "p": 0,
+  "c": "t"
+ },
+ "blueflare": {
+  "p": 0,
+  "c": "s"
+ },
+ "boltstrike": {
+  "p": 0,
+  "c": "p"
+ },
+ "bulldoze": {
+  "p": 0,
+  "c": "p"
+ },
+ "circlethrow": {
+  "p": 0,
+  "c": "p"
+ },
+ "clearsmog": {
+  "p": 0,
+  "c": "s"
+ },
+ "coil": {
+  "p": 0,
+  "c": "t"
+ },
+ "cottonguard": {
+  "p": 0,
+  "c": "t"
+ },
+ "dragontail": {
+  "p": 0,
+  "c": "p"
+ },
+ "drillrun": {
+  "p": 0,
+  "c": "p"
+ },
+ "dualchop": {
+  "p": 0,
+  "c": "p"
+ },
+ "electroweb": {
+  "p": 0,
+  "c": "s"
+ },
+ "flamecharge": {
+  "p": 0,
+  "c": "p"
+ },
+ "foulplay": {
+  "p": 0,
+  "c": "p"
+ },
+ "freezeshock": {
+  "p": 0,
+  "c": "p"
+ },
+ "fusionbolt": {
+  "p": 0,
+  "c": "p"
+ },
+ "fusionflare": {
+  "p": 0,
+  "c": "s"
+ },
+ "geargrind": {
+  "p": 0,
+  "c": "p"
+ },
+ "glaciate": {
+  "p": 0,
+  "c": "s"
+ },
+ "guardsplit": {
+  "p": 0,
+  "c": "t"
+ },
+ "honeclaws": {
+  "p": 0,
+  "c": "t"
+ },
+ "iceburn": {
+  "p": 0,
+  "c": "s"
+ },
+ "iciclecrash": {
+  "p": 0,
+  "c": "p"
+ },
+ "inferno": {
+  "p": 0,
+  "c": "s"
+ },
+ "leaftornado": {
+  "p": 0,
+  "c": "s"
+ },
+ "nightdaze": {
+  "p": 0,
+  "c": "s"
+ },
+ "powersplit": {
+  "p": 0,
+  "c": "t"
+ },
+ "psyshock": {
+  "p": 0,
+  "c": "s"
+ },
+ "psystrike": {
+  "p": 0,
+  "c": "s"
+ },
+ "quiverdance": {
+  "p": 0,
+  "c": "t"
+ },
+ "razorshell": {
+  "p": 0,
+  "c": "p"
+ },
+ "retaliate": {
+  "p": 0,
+  "c": "p"
+ },
+ "secretsword": {
+  "p": 0,
+  "c": "s"
+ },
+ "shellsmash": {
+  "p": 0,
+  "c": "t"
+ },
+ "shiftgear": {
+  "p": 0,
+  "c": "t"
+ },
+ "sludgewave": {
+  "p": 0,
+  "c": "s"
+ },
+ "smackdown": {
+  "p": 0,
+  "c": "p"
+ },
+ "storedpower": {
+  "p": 0,
+  "c": "s"
+ },
+ "tailslap": {
+  "p": 0,
+  "c": "p"
+ },
+ "vcreate": {
+  "p": 0,
+  "c": "p"
+ },
+ "venoshock": {
+  "p": 0,
+  "c": "s"
+ },
+ "wildcharge": {
+  "p": 0,
+  "c": "p"
+ },
+ "workup": {
+  "p": 0,
+  "c": "t"
+ },
+ "diamondstorm": {
+  "p": 0,
+  "c": "p"
+ },
+ "fellstinger": {
+  "p": 0,
+  "c": "p"
+ },
+ "flyingpress": {
+  "p": 0,
+  "c": "p"
+ },
+ "hyperspacefury": {
+  "p": 0,
+  "c": "p"
+ },
+ "hyperspacehole": {
+  "p": 0,
+  "c": "s"
+ },
+ "kingsshield": {
+  "p": 4,
+  "c": "t"
+ },
+ "mistyterrain": {
+  "p": 0,
+  "c": "t"
+ },
+ "mysticalfire": {
+  "p": 0,
+  "c": "s"
+ },
+ "paraboliccharge": {
+  "p": 0,
+  "c": "s"
+ },
+ "partingshot": {
+  "p": 0,
+  "c": "t"
+ },
+ "phantomforce": {
+  "p": 0,
+  "c": "p"
+ },
+ "powder": {
+  "p": 1,
+  "c": "t"
+ },
+ "spikyshield": {
+  "p": 4,
+  "c": "t"
+ },
+ "thousandarrows": {
+  "p": 0,
+  "c": "p"
+ },
+ "thousandwaves": {
+  "p": 0,
+  "c": "p"
+ },
+ "watershuriken": {
+  "p": 1,
+  "c": "s"
+ },
+ "dragonascent": {
+  "p": 0,
+  "c": "p"
+ },
+ "electricterrain": {
+  "p": 0,
+  "c": "t"
+ },
+ "geomancy": {
+  "p": 0,
+  "c": "t"
+ },
+ "grassyterrain": {
+  "p": 0,
+  "c": "t"
+ },
+ "iondeluge": {
+  "p": 1,
+  "c": "t"
+ },
+ "landswrath": {
+  "p": 0,
+  "c": "p"
+ },
+ "lightofruin": {
+  "p": 0,
+  "c": "s"
+ },
+ "oblivionwing": {
+  "p": 0,
+  "c": "s"
+ },
+ "originpulse": {
+  "p": 0,
+  "c": "s"
+ },
+ "precipiceblades": {
+  "p": 0,
+  "c": "p"
+ },
+ "rototiller": {
+  "p": 0,
+  "c": "t"
+ },
+ "steameruption": {
+  "p": 0,
+  "c": "s"
+ },
+ "aromaticmist": {
+  "p": 0,
+  "c": "t"
+ },
+ "babydolleyes": {
+  "p": 1,
+  "c": "t"
+ },
+ "belch": {
+  "p": 0,
+  "c": "s"
+ },
+ "boomburst": {
+  "p": 0,
+  "c": "s"
+ },
+ "celebrate": {
+  "p": 0,
+  "c": "t"
+ },
+ "confide": {
+  "p": 0,
+  "c": "t"
+ },
+ "craftyshield": {
+  "p": 3,
+  "c": "t"
+ },
+ "dazzlinggleam": {
+  "p": 0,
+  "c": "s"
+ },
+ "disarmingvoice": {
+  "p": 0,
+  "c": "s"
+ },
+ "drainingkiss": {
+  "p": 0,
+  "c": "s"
+ },
+ "eerieimpulse": {
+  "p": 0,
+  "c": "t"
+ },
+ "electrify": {
+  "p": 0,
+  "c": "t"
+ },
+ "fairylock": {
+  "p": 0,
+  "c": "t"
+ },
+ "fairywind": {
+  "p": 0,
+  "c": "s"
+ },
+ "flowershield": {
+  "p": 0,
+  "c": "t"
+ },
+ "forestscurse": {
+  "p": 0,
+  "c": "t"
+ },
+ "freezedry": {
+  "p": 0,
+  "c": "s"
+ },
+ "happyhour": {
+  "p": 0,
+  "c": "t"
+ },
+ "holdback": {
+  "p": 0,
+  "c": "p"
+ },
+ "holdhands": {
+  "p": 0,
+  "c": "t"
+ },
+ "infestation": {
+  "p": 0,
+  "c": "s"
+ },
+ "magneticflux": {
+  "p": 0,
+  "c": "t"
+ },
+ "matblock": {
+  "p": 0,
+  "c": "t"
+ },
+ "moonblast": {
+  "p": 0,
+  "c": "s"
+ },
+ "nobleroar": {
+  "p": 0,
+  "c": "t"
+ },
+ "nuzzle": {
+  "p": 0,
+  "c": "p"
+ },
+ "petalblizzard": {
+  "p": 0,
+  "c": "p"
+ },
+ "playnice": {
+  "p": 0,
+  "c": "t"
+ },
+ "playrough": {
+  "p": 0,
+  "c": "p"
+ },
+ "poweruppunch": {
+  "p": 0,
+  "c": "p"
+ },
+ "stickyweb": {
+  "p": 0,
+  "c": "t"
+ },
+ "topsyturvy": {
+  "p": 0,
+  "c": "t"
+ },
+ "trickortreat": {
+  "p": 0,
+  "c": "t"
+ },
+ "venomdrench": {
+  "p": 0,
+  "c": "t"
+ },
+ "10000000voltthunderbolt": {
+  "p": 0,
+  "c": "s"
+ },
+ "aciddownpour": {
+  "p": 0,
+  "c": "p"
+ },
+ "alloutpummeling": {
+  "p": 0,
+  "c": "p"
+ },
+ "banefulbunker": {
+  "p": 4,
+  "c": "t"
+ },
+ "beakblast": {
+  "p": 0,
+  "c": "p"
+ },
+ "blackholeeclipse": {
+  "p": 0,
+  "c": "p"
+ },
+ "bloomdoom": {
+  "p": 0,
+  "c": "p"
+ },
+ "breakneckblitz": {
+  "p": 0,
+  "c": "p"
+ },
+ "catastropika": {
+  "p": 0,
+  "c": "p"
+ },
+ "clangoroussoulblaze": {
+  "p": 0,
+  "c": "s"
+ },
+ "continentalcrush": {
+  "p": 0,
+  "c": "p"
+ },
+ "coreenforcer": {
+  "p": 0,
+  "c": "s"
+ },
+ "corkscrewcrash": {
+  "p": 0,
+  "c": "p"
+ },
+ "devastatingdrake": {
+  "p": 0,
+  "c": "p"
+ },
+ "doubleironbash": {
+  "p": 0,
+  "c": "p"
+ },
+ "dragonhammer": {
+  "p": 0,
+  "c": "p"
+ },
+ "extremeevoboost": {
+  "p": 0,
+  "c": "t"
+ },
+ "fleurcannon": {
+  "p": 0,
+  "c": "s"
+ },
+ "floralhealing": {
+  "p": 0,
+  "c": "t"
+ },
+ "genesissupernova": {
+  "p": 0,
+  "c": "s"
+ },
+ "gigavolthavoc": {
+  "p": 0,
+  "c": "p"
+ },
+ "guardianofalola": {
+  "p": 0,
+  "c": "s"
+ },
+ "hydrovortex": {
+  "p": 0,
+  "c": "p"
+ },
+ "icehammer": {
+  "p": 0,
+  "c": "p"
+ },
+ "infernooverdrive": {
+  "p": 0,
+  "c": "p"
+ },
+ "instruct": {
+  "p": 0,
+  "c": "t"
+ },
+ "letssnuggleforever": {
+  "p": 0,
+  "c": "p"
+ },
+ "lightthatburnsthesky": {
+  "p": 0,
+  "c": "s"
+ },
+ "maliciousmoonsault": {
+  "p": 0,
+  "c": "p"
+ },
+ "menacingmoonrazemaelstrom": {
+  "p": 0,
+  "c": "s"
+ },
+ "mindblown": {
+  "p": 0,
+  "c": "s"
+ },
+ "multiattack": {
+  "p": 0,
+  "c": "p"
+ },
+ "naturesmadness": {
+  "p": 0,
+  "c": "s"
+ },
+ "neverendingnightmare": {
+  "p": 0,
+  "c": "p"
+ },
+ "oceanicoperetta": {
+  "p": 0,
+  "c": "s"
+ },
+ "psychicterrain": {
+  "p": 0,
+  "c": "t"
+ },
+ "pulverizingpancake": {
+  "p": 0,
+  "c": "p"
+ },
+ "revelationdance": {
+  "p": 0,
+  "c": "s"
+ },
+ "savagespinout": {
+  "p": 0,
+  "c": "p"
+ },
+ "searingsunrazesmash": {
+  "p": 0,
+  "c": "p"
+ },
+ "shadowbone": {
+  "p": 0,
+  "c": "p"
+ },
+ "shatteredpsyche": {
+  "p": 0,
+  "c": "p"
+ },
+ "shoreup": {
+  "p": 0,
+  "c": "t"
+ },
+ "sinisterarrowraid": {
+  "p": 0,
+  "c": "p"
+ },
+ "solarblade": {
+  "p": 0,
+  "c": "p"
+ },
+ "soulstealing7starstrike": {
+  "p": 0,
+  "c": "p"
+ },
+ "splinteredstormshards": {
+  "p": 0,
+  "c": "p"
+ },
+ "spotlight": {
+  "p": 3,
+  "c": "t"
+ },
+ "stokedsparksurfer": {
+  "p": 0,
+  "c": "s"
+ },
+ "subzeroslammer": {
+  "p": 0,
+  "c": "p"
+ },
+ "supersonicskystrike": {
+  "p": 0,
+  "c": "p"
+ },
+ "tectonicrage": {
+  "p": 0,
+  "c": "p"
+ },
+ "throatchop": {
+  "p": 0,
+  "c": "p"
+ },
+ "toxicthread": {
+  "p": 0,
+  "c": "t"
+ },
+ "twinkletackle": {
+  "p": 0,
+  "c": "p"
+ },
+ "accelerock": {
+  "p": 1,
+  "c": "p"
+ },
+ "anchorshot": {
+  "p": 0,
+  "c": "p"
+ },
+ "auroraveil": {
+  "p": 0,
+  "c": "t"
+ },
+ "brutalswing": {
+  "p": 0,
+  "c": "p"
+ },
+ "burnup": {
+  "p": 0,
+  "c": "s"
+ },
+ "clangingscales": {
+  "p": 0,
+  "c": "s"
+ },
+ "darkestlariat": {
+  "p": 0,
+  "c": "p"
+ },
+ "firelash": {
+  "p": 0,
+  "c": "p"
+ },
+ "firstimpression": {
+  "p": 2,
+  "c": "p"
+ },
+ "gearup": {
+  "p": 0,
+  "c": "t"
+ },
+ "highhorsepower": {
+  "p": 0,
+  "c": "p"
+ },
+ "laserfocus": {
+  "p": 0,
+  "c": "t"
+ },
+ "leafage": {
+  "p": 0,
+  "c": "p"
+ },
+ "liquidation": {
+  "p": 0,
+  "c": "p"
+ },
+ "lunge": {
+  "p": 0,
+  "c": "p"
+ },
+ "moongeistbeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "photongeyser": {
+  "p": 0,
+  "c": "s"
+ },
+ "plasmafists": {
+  "p": 0,
+  "c": "p"
+ },
+ "pollenpuff": {
+  "p": 0,
+  "c": "s"
+ },
+ "powertrip": {
+  "p": 0,
+  "c": "p"
+ },
+ "prismaticlaser": {
+  "p": 0,
+  "c": "s"
+ },
+ "psychicfangs": {
+  "p": 0,
+  "c": "p"
+ },
+ "purify": {
+  "p": 0,
+  "c": "t"
+ },
+ "shelltrap": {
+  "p": 0,
+  "c": "s"
+ },
+ "smartstrike": {
+  "p": 0,
+  "c": "p"
+ },
+ "sparklingaria": {
+  "p": 0,
+  "c": "s"
+ },
+ "spectralthief": {
+  "p": 0,
+  "c": "p"
+ },
+ "speedswap": {
+  "p": 0,
+  "c": "t"
+ },
+ "spiritshackle": {
+  "p": 0,
+  "c": "p"
+ },
+ "stompingtantrum": {
+  "p": 0,
+  "c": "p"
+ },
+ "strengthsap": {
+  "p": 0,
+  "c": "t"
+ },
+ "sunsteelstrike": {
+  "p": 0,
+  "c": "p"
+ },
+ "tearfullook": {
+  "p": 0,
+  "c": "t"
+ },
+ "tropkick": {
+  "p": 0,
+  "c": "p"
+ },
+ "zingzap": {
+  "p": 0,
+  "c": "p"
+ },
+ "appleacid": {
+  "p": 0,
+  "c": "s"
+ },
+ "astralbarrage": {
+  "p": 0,
+  "c": "s"
+ },
+ "aurawheel": {
+  "p": 0,
+  "c": "p"
+ },
+ "behemothbash": {
+  "p": 0,
+  "c": "p"
+ },
+ "behemothblade": {
+  "p": 0,
+  "c": "p"
+ },
+ "bodypress": {
+  "p": 0,
+  "c": "p"
+ },
+ "boltbeak": {
+  "p": 0,
+  "c": "p"
+ },
+ "branchpoke": {
+  "p": 0,
+  "c": "p"
+ },
+ "breakingswipe": {
+  "p": 0,
+  "c": "p"
+ },
+ "burningjealousy": {
+  "p": 0,
+  "c": "s"
+ },
+ "clangoroussoul": {
+  "p": 0,
+  "c": "t"
+ },
+ "coaching": {
+  "p": 0,
+  "c": "t"
+ },
+ "corrosivegas": {
+  "p": 0,
+  "c": "t"
+ },
+ "courtchange": {
+  "p": 0,
+  "c": "t"
+ },
+ "decorate": {
+  "p": 0,
+  "c": "t"
+ },
+ "dragondarts": {
+  "p": 0,
+  "c": "p"
+ },
+ "dragonenergy": {
+  "p": 0,
+  "c": "s"
+ },
+ "drumbeating": {
+  "p": 0,
+  "c": "p"
+ },
+ "dualwingbeat": {
+  "p": 0,
+  "c": "p"
+ },
+ "dynamaxcannon": {
+  "p": 0,
+  "c": "s"
+ },
+ "eeriespell": {
+  "p": 0,
+  "c": "s"
+ },
+ "eternabeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "expandingforce": {
+  "p": 0,
+  "c": "s"
+ },
+ "falsesurrender": {
+  "p": 0,
+  "c": "p"
+ },
+ "fierywrath": {
+  "p": 0,
+  "c": "s"
+ },
+ "fishiousrend": {
+  "p": 0,
+  "c": "p"
+ },
+ "flipturn": {
+  "p": 0,
+  "c": "p"
+ },
+ "freezingglare": {
+  "p": 0,
+  "c": "s"
+ },
+ "glaciallance": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxbefuddle": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxcentiferno": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxcannonade": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxchistrike": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxcuddle": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxdepletion": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxdrumsolo": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxfireball": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxfinale": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxfoamburst": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxgoldrush": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxgravitas": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxhydrosnipe": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxmalodor": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxmeltdown": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxoneblow": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxrapidflow": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxreplenish": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxresonance": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxsandblast": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxsmite": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxsnooze": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxsteelsurge": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxstonesurge": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxstunshock": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxsweetness": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxtartness": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxterror": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxvinelash": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxvolcalith": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxvoltcrash": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxwildfire": {
+  "p": 0,
+  "c": "p"
+ },
+ "gmaxwindrage": {
+  "p": 0,
+  "c": "p"
+ },
+ "grassyglide": {
+  "p": 0,
+  "c": "p"
+ },
+ "gravapple": {
+  "p": 0,
+  "c": "p"
+ },
+ "jawlock": {
+  "p": 0,
+  "c": "p"
+ },
+ "junglehealing": {
+  "p": 0,
+  "c": "t"
+ },
+ "lashout": {
+  "p": 0,
+  "c": "p"
+ },
+ "lifedew": {
+  "p": 0,
+  "c": "t"
+ },
+ "magicpowder": {
+  "p": 0,
+  "c": "t"
+ },
+ "maxairstream": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxdarkness": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxflare": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxflutterby": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxgeyser": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxguard": {
+  "p": 4,
+  "c": "t"
+ },
+ "maxhailstorm": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxknuckle": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxlightning": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxmindstorm": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxooze": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxovergrowth": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxphantasm": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxquake": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxrockfall": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxstarfall": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxsteelspike": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxstrike": {
+  "p": 0,
+  "c": "p"
+ },
+ "maxwyrmwind": {
+  "p": 0,
+  "c": "p"
+ },
+ "meteorassault": {
+  "p": 0,
+  "c": "p"
+ },
+ "meteorbeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "mistyexplosion": {
+  "p": 0,
+  "c": "s"
+ },
+ "noretreat": {
+  "p": 0,
+  "c": "t"
+ },
+ "obstruct": {
+  "p": 4,
+  "c": "t"
+ },
+ "octolock": {
+  "p": 0,
+  "c": "t"
+ },
+ "overdrive": {
+  "p": 0,
+  "c": "s"
+ },
+ "poltergeist": {
+  "p": 0,
+  "c": "p"
+ },
+ "pyroball": {
+  "p": 0,
+  "c": "p"
+ },
+ "risingvoltage": {
+  "p": 0,
+  "c": "s"
+ },
+ "scaleshot": {
+  "p": 0,
+  "c": "p"
+ },
+ "shellsidearm": {
+  "p": 0,
+  "c": "s"
+ },
+ "snaptrap": {
+  "p": 0,
+  "c": "p"
+ },
+ "snipeshot": {
+  "p": 0,
+  "c": "s"
+ },
+ "scorchingsands": {
+  "p": 0,
+  "c": "s"
+ },
+ "skittersmack": {
+  "p": 0,
+  "c": "p"
+ },
+ "spiritbreak": {
+  "p": 0,
+  "c": "p"
+ },
+ "steelbeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "steelroller": {
+  "p": 0,
+  "c": "p"
+ },
+ "strangesteam": {
+  "p": 0,
+  "c": "s"
+ },
+ "surgingstrikes": {
+  "p": 0,
+  "c": "p"
+ },
+ "terrainpulse": {
+  "p": 0,
+  "c": "s"
+ },
+ "tripleaxel": {
+  "p": 0,
+  "c": "p"
+ },
+ "wickedblow": {
+  "p": 0,
+  "c": "p"
+ },
+ "stuffcheeks": {
+  "p": 0,
+  "c": "t"
+ },
+ "tarshot": {
+  "p": 0,
+  "c": "t"
+ },
+ "teatime": {
+  "p": 0,
+  "c": "t"
+ },
+ "thundercage": {
+  "p": 0,
+  "c": "s"
+ },
+ "thunderouskick": {
+  "p": 0,
+  "c": "p"
+ },
+ "aquacutter": {
+  "p": 0,
+  "c": "p"
+ },
+ "alluringvoice": {
+  "p": 0,
+  "c": "s"
+ },
+ "aquastep": {
+  "p": 0,
+  "c": "p"
+ },
+ "armorcannon": {
+  "p": 0,
+  "c": "s"
+ },
+ "axekick": {
+  "p": 0,
+  "c": "p"
+ },
+ "barbbarrage": {
+  "p": 0,
+  "c": "p"
+ },
+ "bitterblade": {
+  "p": 0,
+  "c": "p"
+ },
+ "bittermalice": {
+  "p": 0,
+  "c": "s"
+ },
+ "blazingtorque": {
+  "p": 0,
+  "c": "p"
+ },
+ "bleakwindstorm": {
+  "p": 0,
+  "c": "s"
+ },
+ "bloodmoon": {
+  "p": 0,
+  "c": "s"
+ },
+ "burningbulwark": {
+  "p": 4,
+  "c": "t"
+ },
+ "ceaselessedge": {
+  "p": 0,
+  "c": "p"
+ },
+ "chillingwater": {
+  "p": 0,
+  "c": "s"
+ },
+ "chillyreception": {
+  "p": 0,
+  "c": "t"
+ },
+ "chloroblast": {
+  "p": 0,
+  "c": "s"
+ },
+ "collisioncourse": {
+  "p": 0,
+  "c": "p"
+ },
+ "combattorque": {
+  "p": 0,
+  "c": "p"
+ },
+ "comeuppance": {
+  "p": 0,
+  "c": "p"
+ },
+ "doodle": {
+  "p": 0,
+  "c": "t"
+ },
+ "doubleshock": {
+  "p": 0,
+  "c": "p"
+ },
+ "direclaw": {
+  "p": 0,
+  "c": "p"
+ },
+ "dragoncheer": {
+  "p": 0,
+  "c": "t"
+ },
+ "electrodrift": {
+  "p": 0,
+  "c": "s"
+ },
+ "electroshot": {
+  "p": 0,
+  "c": "s"
+ },
+ "esperwing": {
+  "p": 0,
+  "c": "s"
+ },
+ "ficklebeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "filletaway": {
+  "p": 0,
+  "c": "t"
+ },
+ "flowertrick": {
+  "p": 0,
+  "c": "p"
+ },
+ "gigatonhammer": {
+  "p": 0,
+  "c": "p"
+ },
+ "glaiverush": {
+  "p": 0,
+  "c": "p"
+ },
+ "hardpress": {
+  "p": 0,
+  "c": "p"
+ },
+ "headlongrush": {
+  "p": 0,
+  "c": "p"
+ },
+ "hydrosteam": {
+  "p": 0,
+  "c": "s"
+ },
+ "hyperdrill": {
+  "p": 0,
+  "c": "p"
+ },
+ "icespinner": {
+  "p": 0,
+  "c": "p"
+ },
+ "infernalparade": {
+  "p": 0,
+  "c": "s"
+ },
+ "ivycudgel": {
+  "p": 0,
+  "c": "p"
+ },
+ "jetpunch": {
+  "p": 1,
+  "c": "p"
+ },
+ "kowtowcleave": {
+  "p": 0,
+  "c": "p"
+ },
+ "lastrespects": {
+  "p": 0,
+  "c": "p"
+ },
+ "luminacrash": {
+  "p": 0,
+  "c": "s"
+ },
+ "lunarblessing": {
+  "p": 0,
+  "c": "t"
+ },
+ "magicaltorque": {
+  "p": 0,
+  "c": "p"
+ },
+ "makeitrain": {
+  "p": 0,
+  "c": "s"
+ },
+ "malignantchain": {
+  "p": 0,
+  "c": "s"
+ },
+ "matchagotcha": {
+  "p": 0,
+  "c": "s"
+ },
+ "mightycleave": {
+  "p": 0,
+  "c": "p"
+ },
+ "mortalspin": {
+  "p": 0,
+  "c": "p"
+ },
+ "mountaingale": {
+  "p": 0,
+  "c": "p"
+ },
+ "mysticalpower": {
+  "p": 0,
+  "c": "s"
+ },
+ "noxioustorque": {
+  "p": 0,
+  "c": "p"
+ },
+ "orderup": {
+  "p": 0,
+  "c": "p"
+ },
+ "populationbomb": {
+  "p": 0,
+  "c": "p"
+ },
+ "pounce": {
+  "p": 0,
+  "c": "p"
+ },
+ "powershift": {
+  "p": 0,
+  "c": "t"
+ },
+ "psychicnoise": {
+  "p": 0,
+  "c": "s"
+ },
+ "psyblade": {
+  "p": 0,
+  "c": "p"
+ },
+ "psyshieldbash": {
+  "p": 0,
+  "c": "p"
+ },
+ "ragefist": {
+  "p": 0,
+  "c": "p"
+ },
+ "ragingbull": {
+  "p": 0,
+  "c": "p"
+ },
+ "ragingfury": {
+  "p": 0,
+  "c": "p"
+ },
+ "revivalblessing": {
+  "p": 0,
+  "c": "t"
+ },
+ "ruination": {
+  "p": 0,
+  "c": "s"
+ },
+ "saltcure": {
+  "p": 0,
+  "c": "p"
+ },
+ "sandsearstorm": {
+  "p": 0,
+  "c": "s"
+ },
+ "shedtail": {
+  "p": 0,
+  "c": "t"
+ },
+ "shelter": {
+  "p": 0,
+  "c": "t"
+ },
+ "silktrap": {
+  "p": 4,
+  "c": "t"
+ },
+ "snowscape": {
+  "p": 0,
+  "c": "t"
+ },
+ "spicyextract": {
+  "p": 0,
+  "c": "t"
+ },
+ "spinout": {
+  "p": 0,
+  "c": "p"
+ },
+ "springtidestorm": {
+  "p": 0,
+  "c": "s"
+ },
+ "stoneaxe": {
+  "p": 0,
+  "c": "p"
+ },
+ "supercellslam": {
+  "p": 0,
+  "c": "p"
+ },
+ "syrupbomb": {
+  "p": 0,
+  "c": "s"
+ },
+ "tachyoncutter": {
+  "p": 0,
+  "c": "s"
+ },
+ "takeheart": {
+  "p": 0,
+  "c": "t"
+ },
+ "temperflare": {
+  "p": 0,
+  "c": "p"
+ },
+ "terablast": {
+  "p": 0,
+  "c": "s"
+ },
+ "terastarstorm": {
+  "p": 0,
+  "c": "s"
+ },
+ "thunderclap": {
+  "p": 1,
+  "c": "s"
+ },
+ "tidyup": {
+  "p": 0,
+  "c": "t"
+ },
+ "torchsong": {
+  "p": 0,
+  "c": "s"
+ },
+ "trailblaze": {
+  "p": 0,
+  "c": "p"
+ },
+ "triplearrows": {
+  "p": 0,
+  "c": "p"
+ },
+ "tripledive": {
+  "p": 0,
+  "c": "p"
+ },
+ "twinbeam": {
+  "p": 0,
+  "c": "s"
+ },
+ "upperhand": {
+  "p": 3,
+  "c": "p"
+ },
+ "victorydance": {
+  "p": 0,
+  "c": "t"
+ },
+ "wavecrash": {
+  "p": 0,
+  "c": "p"
+ },
+ "wickedtorque": {
+  "p": 0,
+  "c": "p"
+ },
+ "wildboltstorm": {
+  "p": 0,
+  "c": "s"
+ },
+ "nihillight": {
+  "p": 0,
+  "c": "s"
+ }
+}

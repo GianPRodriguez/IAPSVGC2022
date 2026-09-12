@@ -20,6 +20,55 @@ from showdown.battle_modifier import update_battle_environment
 from showdown.websocket_client import PSWebsocketClient
 from showdown.battle import Battle
 from showdown.battle_bots.helpers import format_decision
+from showdown.showdown_log import mark_showdown_battle, clear_battle_debug_logs
+
+
+def _apply_player_lines(battle: Battle, message: str) -> None:
+    """Parsea |player|pN|nick|... en un mensaje multiparte (init / teampreview)."""
+    if not message or '|player|' not in message:
+        return
+    for line in message.split('\n'):
+        if '|player|' not in line:
+            continue
+        parts = line.split('|')
+        try:
+            idx = next(i for i, p in enumerate(parts) if p.strip() == 'player')
+        except StopIteration:
+            continue
+        if idx + 2 >= len(parts):
+            continue
+        player_id = parts[idx + 1].strip()
+        account = parts[idx + 2].strip()
+        if not account:
+            continue
+        user_id = getattr(battle.user, 'id', None)
+        opp_id = getattr(battle.opponent, 'id', None)
+        if user_id and player_id == user_id:
+            battle.user.account_name = account
+        elif opp_id and player_id == opp_id:
+            battle.opponent.account_name = account
+        elif not user_id and player_id.endswith('1'):
+            battle.user.account_name = account
+        elif not opp_id and player_id.endswith('2'):
+            battle.opponent.account_name = account
+
+
+def _parse_title_names(parts: list):
+    """Extrae nombres desde |title|A vs. B|... (formatos BO3 / Champions)."""
+    title_idx = next((i for i, p in enumerate(parts) if p.strip() == 'title'), None)
+    if title_idx is not None and title_idx + 1 < len(parts):
+        title = parts[title_idx + 1]
+        for sep in (' vs. ', ' vs ', ' VS. ', ' VS '):
+            if sep in title:
+                left, right = title.split(sep, 1)
+                return left.strip(), right.strip()
+
+    starred = parts[-1].replace('☆', '').strip() if parts else ''
+    if starred and len(parts) > 4:
+        other = parts[4].replace(starred, '').replace('vs.', '').replace('vs', '').strip()
+        return starred, other
+    return None, None
+
 
 ############################################################################################################################################################
 # Por Implementar - Entrada Red Neuronal                                                                                                                 ###
@@ -47,15 +96,6 @@ async def handle_finished_battleBO3(battle: Battle, msg: str, q: multiprocessing
                 break
 
     print(f"[INFO]     Ganador de la partida BO3: {winner}")
-
-    # Opcionalmente, registramos el resultado en el archivo de reporte si está activo
-    try:
-        import os
-        os.makedirs('logs', exist_ok=True)
-        with open('logs/reporte.txt', 'a', encoding='utf-8') as f:
-            print(f"\n[FIN DE PARTIDA BO3] Ganador: {winner} (Turno: {battle.turn})", file=f)
-    except Exception as e:
-        print(f"No se pudo escribir el resultado en logs/reporte.txt: {e}")
 
     q.put([-1, winner == battle.user.account_name, battle.user.account_name, battle.opponent.account_name])
     return winner
@@ -152,18 +192,16 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
         raise ValueError(f"Fallo en {filename} -> {func_name}() [Línea {lineno}]: {e}") from e
     
     # 3. Si el servidor solicita esperar (p. ej. el oponente está realizando U-Turn / cambio)
-    print("handle_active_battle_turn 2")
+    # Igual volcamos snap [WAIT] para paridad rqid vs logs_showdown.txt
     if battle.wait:
+        battle.imprimir(to_console=True, accion='(wait)')
         return
-    print("handle_active_battle_turn 3")
+
     # 4. Si el turno requiere una acción activa o un cambio forzado (forceSwitch)
     if battle.force_switch or battle.active:
         battle.error = False
         try:
-            print("TRY createBattleAction")
             battle_turn_action = await createBattleAction(battle, msg_request)
-            print("FIN createBattleAction")
-
         except Exception as e:
             # Obtener el marco (frame) exacto del código donde ocurrió la excepción interna
             tb = e.__traceback__
@@ -194,20 +232,16 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
 
             # Re-lanzamos la excepción encadenada para conservar la causa raíz original
             raise ValueError(f"Fallo en {filename} -> {func_name}() [Línea {lineno}]: {e}") from e
-        battle.imprimir()
-        print("[INFO]     Turno: {}".format(battle.turn))
-        print("[STATE]    {}".format(
-            f"turn={battle.turn} | "
-            f"{getattr(battle.user, 'account_name', '?')} vs {getattr(battle.opponent, 'account_name', '?')} | "
-            f"ver logs/latest_state.txt"
-        ))
+
+        # Reporte CMD (fuente principal turno a turno; ACCION dentro del bloque)
+        battle.imprimir(to_console=True, accion=battle_turn_action)
+
         await ps_websocket_client.send_message(battle.battle_tag, battle_turn_action)
-        print("[SEND]     Acción Turno: {}".format(battle_turn_action))
         # El contador de turno / clima / side conditions lo actualiza únicamente |turn|
         # del protocolo. No adelantar battle.turn aquí: si no, un force-switch mid-turn
         # muestra el turno siguiente con el clima aún sin decrementar.
         return
-    print("20xx")
+
     # 5. Si no es ni wait, ni active, ni forceSwitch, lanzamos una excepción específica
     raise ValueError(f"Se ha recibido un tipo de |request| inválido o desconocido: {msg_request}")
 
@@ -218,16 +252,12 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
 async def handle_action_error(ps_websocket_client: PSWebsocketClient, battle: Battle, error_message: str) -> None:
     # 1. Documentar y registrar exhaustivamente el fallo de la acción anterior
     print("\n" + "!" * 80)
-    print(f"[ERROR DE ACCIÓN DETECTADO EN SHOWDOWN]")
-    print(f"  > Mensaje del servidor: {error_message}")
-    print(f"  > Entorno Batalla: {battle.imprimir() or '(ver logs/latest_state.txt)'}")
-    print("!" * 80 + "\n")
+    print(f"[ERROR DE ACCION SHOWDOWN] {error_message}")
     battle.error = True
+    battle.imprimir(to_console=True)
+    print("!" * 80 + "\n")
 
     # 2. Reevaluar y recalcular una nueva acción utilizando la lógica del agente
-    print("[handle_action_error] Solicitando una nueva decisión de emergencia al agente...")
-
-    # 3. Se genera el INPUT de la Red Neuronal
     listNeuralNetworkInput = NeuralNetworkInput(battle)
     
     # 4. Invocamos la lógica de decisión del bot (similar a handle_active_battle_turn)
@@ -237,9 +267,8 @@ async def handle_action_error(ps_websocket_client: PSWebsocketClient, battle: Ba
     battle_turn_action = await format_decision(moveSwitch1, nMoveSwitch1, megaEvo1, toMove1, moveSwitch2, nMoveSwitch2, megaEvo2, toMove2)
 
     # 6. Enviar la nueva acción correctiva a través del WebSocket
-    print("[INFO]  Turno ERROR: {}".format(battle.turn))
+    battle.imprimir(to_console=True, accion=f'(retry error) {battle_turn_action}')
     await ps_websocket_client.send_message(battle.battle_tag, battle_turn_action)
-    print("[SEND]  Acción Turno ERROR: {}".format(battle_turn_action))
 
 
 ############################################################################################################################################################
@@ -255,6 +284,7 @@ async def handle_finished_battle(ps_websocket_client: PSWebsocketClient, battle:
     # GANADOR PARCIAL, PRONTO SE USARA PARA LA NUEVA GRAFICA
     #q.put([-1, winner == battle.opponent.account_name, battle.user.account_name, battle.opponent.account_name])  # Envío el ganador a la Interfaz e indico que ha finalizado la Batalla Individual
     print("[INFO]     Batalla Individual: {} - Ganador: {}".format(battle.battleBO3_count, winner))
+    battle.append_game_banner('END', winner=winner, to_console=True)
     battle.battleBO3_count = battle.battleBO3_count + 1
 
     await ps_websocket_client.send_message(battle.battle_tag, [config.battle_ending_message])  # Es opcional enviar un mensaje de despedida al oponente...
@@ -276,7 +306,7 @@ def battle_is_finished(battle_tag: str, msg: str) -> bool:
 ############################################################################################################################################################
 async def send_action_team_preview(ps_websocket_client: PSWebsocketClient, battle: Battle) -> None:
 
-    print("[INFO]     Acción Vista Previa del Equipo") # Se imprime en CMD la info de la Fase
+    print("[INFO]     Team Preview")
 
     # Se escoge los 4 Pokémon: action_team_preview = tupla (5, 2, 1, 4)
     action_team_preview = await battle.action_team_preview(battle)
@@ -285,12 +315,9 @@ async def send_action_team_preview(ps_websocket_client: PSWebsocketClient, battl
     # Se prepara el String que se va a enviar al WebSocket: mensaje = "/team 314256|2"
     mensaje = ["/team {}|{}".format(action_team_preview_str, battle.rqid)]
 
-    # Se imprime el Estado de la Batalla en el Team Preview
-    battle.imprimir()
+    battle.imprimir(to_console=True, accion=mensaje)
 
-    # Se envía la acción al WebSocket y regreso al método que llamó a esta función, que es start_team_preview_phase
     await ps_websocket_client.send_message(battle.battle_tag, mensaje)
-    print("[SEND]     Acción Vista Previa del Equipo: {}".format(mensaje))
 
 
 ############################################################################################################################################################
@@ -408,8 +435,9 @@ async def start_battle(ps_websocket_client: PSWebsocketClient, battle: Battle) -
 
         if not isinstance(team_preview_message, str) or not team_preview_message.strip():
             raise ValueError("Se recibió un mensaje vacío desde el WebSocket")
+        _apply_player_lines(battle, team_preview_message)
 
-    # Ahora toca los datos de mi equipo para la fase de vista previa del equipo
+    mark_showdown_battle(battle.battle_tag)
     while True:
         # Recibo un mensaje del WebSocket
         request_message = await ps_websocket_client.receive_message()
@@ -432,6 +460,10 @@ async def start_battle(ps_websocket_client: PSWebsocketClient, battle: Battle) -
             battle.opponent.id = opponent_id
             battle.request_json = user_json
             battle.user.id = user_id
+            # Reasignar cuentas con IDs ya conocidos (corrige p1/p2 provisional)
+            _apply_player_lines(battle, team_preview_message)
+            if user_json.get(constants.SIDE, {}).get('name'):
+                battle.user.account_name = user_json[constants.SIDE]['name']
             break
 
     opponent_team = get_opponent_team(team_preview_message, battle.opponent.id) # ["Swampert","Swampertite","Torrent",["WaveCrash", "Surf","BulkUp","FlipTurn"],"Brave"] x6
@@ -464,6 +496,12 @@ def _queue_battle_start_error(q: multiprocessing.Queue, error: Exception) -> Non
 
 
 async def start_battleBO3(ps_websocket_client: PSWebsocketClient, botMode: str) -> Battle:
+    # Nuevo BO3: vaciar logs del set anterior (no al finalizar, para poder revisarlos)
+    try:
+        clear_battle_debug_logs()
+    except Exception as e:
+        print(f"[WARN]     No se pudieron limpiar los logs al inicio del BO3: {e}")
+
     # Creo la Clase Batalla, que estará con vida durante el BO3, y que contiene toda la información de la Batalla, tanto del usuario como del oponente
     bot_name = (config.battle_bot or "random").strip().lower()
     try:
@@ -513,10 +551,14 @@ async def start_battleBO3(ps_websocket_client: PSWebsocketClient, botMode: str) 
             print("[TAG0]     {}".format(battle_tag))
             # Asigno el battle_tag de la Batalla BO3
             battle.battleBO3_tag = battle_tag
-            user_name = parts[-1].replace('☆', '').strip()  # user_name = "PopplioPeru98"
-            opponent_name = parts[4].replace(user_name, '').replace('vs.', '').strip()  # opponent_name = "Braindeadmeta"
-            battle.opponent.account_name = opponent_name
-            battle.user.account_name = user_name
+            mark_showdown_battle(battle_tag)
+            _apply_player_lines(battle, message)
+            user_name, opponent_name = _parse_title_names(parts)
+            # Solo rellenar huecos: |player| tiene prioridad sobre el título
+            if not battle.user.account_name and user_name:
+                battle.user.account_name = user_name
+            if not battle.opponent.account_name and opponent_name:
+                battle.opponent.account_name = opponent_name
             break
 
     # Retorna la Clase Batalla, que va a ser usada durante toda la Batalla BO3

@@ -7,6 +7,8 @@ import requests
 import websockets
 import asyncio
 
+from showdown.showdown_log import append_showdown_log
+
 class LoginError(Exception):
     pass
 
@@ -39,6 +41,7 @@ class PSWebsocketClient:
 
     async def receive_message(self):
         self.last_message = await self.websocket.recv()
+        append_showdown_log(self.last_message, direction='recv')
         return self.last_message
 
     async def receive_message2(self):
@@ -58,6 +61,7 @@ class PSWebsocketClient:
         except websockets.ConnectionClosed as exc:
             print(exc)
         self.last_message = message
+        append_showdown_log(message, direction='send')
 
     async def send_message2(self, room, message_list):
         time.sleep(1.2)

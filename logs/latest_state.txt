@@ -1,131 +1,26 @@
+########################################################################
+ BO3 GAME 1 START  |  agent vs rival
+########################################################################
 ========================================================================
-  ESTADO ACTUAL  2026-09-12 02:24:08
-  Tag: battle-gen9championsvgc2026regmcbo3-2679811749-0xta4r8fi14fgyk6q1buiavaqi237dapw
-========================================================================
-Turno: 19 | rqid: 65 | modo: CHALLENGE_USER
-Clima: snowscape (3) | Terreno/campo: -
-Flags: force_switch=False active=True wait=False error=False
-Reward/Score: 100.0 / 1000.0
-
---- USUARIO ---
-ID: p1 | Cuenta: Deep1ODDQN
-Side conditions: -
-
-  [Activo 1]
-    gengar-mega [Ghost/Poison]  HP 45/167 (27%)
-      item=gengarite | abi=shadowtag | nat=Modest
-      flags: PERISH1, MEGA
-      status=- | volatile=perish1:True, perishsong:True | boosts=-
-      stats: Atk 76 | Def 100 | SpA 244 | SpD 115 | Spe 152
-      moves: perishsong(7), sludgewave(10), brickbreak(14), corrosivegas(17)
-
-  [Activo 2]
-    zoroark [Dark]  HP 0/155 (0%)
-      item=- | abi=imposter | nat=modest
-      flags: FAINTED, DITTO, ZOROARK
-      status=- | volatile=- | boosts=-
-      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
-      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
-      moves: transform(12)
-
-  [Reserva]
-  -- Reserva 1 --
-    torkoal [Fire]  HP 0/177 (0%)
-      item=focussash | abi=drought | nat=Relaxed
-      flags: FAINTED
-      status=- | volatile=- | boosts=-
-      stats: Atk 137 | Def 176 | SpA 105 | SpD 90 | Spe 37
-      moves: yawn(11), bodyslam(15), willowisp(15), clearsmog(15)
-  -- Reserva 2 --
-    farigiraf [Normal/Psychic]  HP 0/222 (0%)
-      item=- | abi=armortail | nat=Bold
-      flags: FAINTED
-      status=- | volatile=- | boosts=-
-      stats: Atk 99 | Def 122 | SpA 130 | SpD 108 | Spe 80
-      moves: psychic(12), psychup(9), trickroom(5), trick(10)
-
---- OPONENTE ---
-ID: p2 | Cuenta: None
-Confirmados oponente: 6
-Side conditions: lightscreen:2
-
-  [Activo 1]
-    zoroark [Dark]  HP 16/100 (16%)
-      item=expertbelt | abi=illusion | nat=modest
-      flags: PERISH1, ZOROARK, CONFIRMED
-      status=- | volatile=perish1:True, perishsong:True | boosts=-
-      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
-      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
-      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
-
-  [Activo 2]
-    blastoise-mega [Water]  HP 65/100 (65%)
-      item=blastoisinite | abi=megalauncher | nat=quiet
-      flags: MEGA, CONFIRMED
-      status=- | volatile=- | boosts=-
-      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
-      base:  Atk 103 | Def 120 | SpA 135 | SpD 115 | Spe 78
-      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
-
-  [Reserva]
-  -- Reserva 1 --
-    dragonite [Dragon/Flying]  HP 0/100 (0%)
-      item=- | abi=multiscale | nat=calm
-      flags: FAINTED, CONFIRMED
-      status=- | volatile=- | boosts=-
-      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
-      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
-      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
-  -- Reserva 2 --
-    pawmot [Electric/Fighting]  HP 22/100 (22%)
-      item=- | abi=voltabsorb | nat=adamant
-      flags: CONFIRMED
-      status=- | volatile=- | boosts=-
-      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
-      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
-      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
-
-  [Lista preview oponentes]
-  -- Preview 1 --
-    zoroark [Dark]  HP 100/60 (167%)
-      item=expertbelt | abi=illusion | nat=modest
-      status=- | volatile=- | boosts=-
-      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
-      base:  Atk 105 | Def 60 | SpA 120 | SpD 60 | Spe 105
-      moves: CalmMind(-1), Toxic(-1), KnockOff(-1), Snarl(-1)
-  -- Preview 2 --
-    pawmot [Electric/Fighting]  HP 100/70 (143%)
-      item=mistyseed | abi=voltabsorb | nat=adamant
-      status=- | volatile=- | boosts=-
-      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
-      base:  Atk 115 | Def 70 | SpA 70 | SpD 60 | Spe 105
-      moves: RevivalBlessing(-1), CloseCombat(-1), Coaching(-1), VoltSwitch(-1)
-  -- Preview 3 --
-    blastoise [Water]  HP 100/79 (127%)
-      item=blastoisinite | abi=raindish | nat=quiet
-      status=- | volatile=- | boosts=-
-      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
-      base:  Atk 83 | Def 100 | SpA 85 | SpD 105 | Spe 78
-      moves: Haze(-1), FlipTurn(-1), Whirlpool(-1), MirrorCoat(-1)
-  -- Preview 4 --
-    dragonite [Dragon/Flying]  HP 100/91 (110%)
-      item=habanberry | abi=multiscale | nat=calm
-      status=- | volatile=- | boosts=-
-      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
-      base:  Atk 134 | Def 95 | SpA 100 | SpD 100 | Spe 80
-      moves: DragonDance(-1), LightScreen(-1), Roar(-1), Snowscape(-1)
-  -- Preview 5 --
-    indeedee-female [None]  HP 100/0
-      item=terrainextender | abi=psychicsurge | nat=modest
-      status=- | volatile=- | boosts=-
-      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
-      base:  Atk 0 | Def 0 | SpA 0 | SpD 0 | Spe 0
-      moves: SkillSwap(-1), GuardSplit(-1), GuardSwap(-1), Psyshock(-1)
-  -- Preview 6 --
-    maushold-four [Normal]  HP 100/74 (135%)
-      item=lifeorb | abi=technician | nat=adamant
-      status=- | volatile=- | boosts=-
-      stats: Atk -1 | Def -1 | SpA -1 | SpD -1 | Spe -1
-      base:  Atk 75 | Def 70 | SpA 65 | SpD 75 | Spe 111
-      moves: PopulationBomb(-1), Rest(-1), SuperFang(-1), Endure(-1)
+ TURNO 0 [DECISION]  |  rqid None  |  BO3 game 1  |  06:37:32
+ agent  vs  rival
+ clima=-(0)  campo=-
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  (vacio)
+  A2  (vacio)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=0
+  A1  dragonite [Dragon/Flying]  100/91 (110%)
+       item=-  abi=-  status=-  boosts=-
+       stats: Atk=134 Def=95 SpA=100 SpD=100 Spe=80
+       moves: -
+  A2  (vacio)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  dragonite  nat=adamant
+      est:  Atk=169-187 Def=115-131 SpA=108-122 SpD=120-136 Spe=100-116
+      conv: obs=0 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
 ========================================================================

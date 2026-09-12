@@ -1,0 +1,36 @@
+========================================================================
+INFERENCE SIM REPORT (pokemon-showdown + poke-env + MetaVGC Reg M-C)
+========================================================================
+Battles requested: 3
+Teams: SableyeVGC Kickoff Cup #1 vs Robin_VGC Rookidee Qualifier #1, Robin_VGC Rookidee Qualifier #1 vs Roid Blancaflor Mid-Week Smoke #1, Roid Blancaflor Mid-Week Smoke #1 vs SableyeVGC Kickoff Cup #1
+Soundness checks: 2802
+Soundness failures: 0
+Battle infra errors/timeouts: 0
+Belief observations (sum): 717
+Belief skips (sum): 192
+
+RESULT: PASS — true SP/final siempre dentro de candidatos/rango.
+
+------------------------------------------------------------------------
+EJEMPLO DE INFERENCIA EN EL TIEMPO: sneasler (stat=spd)
+True SP=0  True final=100
+
+  T 0 [switch ]  SP    0-32  final   100-116  cand=33  obs=0
+  T 1 [turn   ]  SP    0-32  final   100-116  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final   100-116  cand=33  obs=0
+  T 3 [turn   ]  SP    0-32  final   100-116  cand=33  obs=0
+  T 4 [turn   ]  SP    0-32  final   100-116  cand=33  obs=0
+  T 5 [turn   ]  SP    0-32  final   100-116  cand=33  obs=0
+  T 6 [turn   ]  SP    0-32  final   100-116  cand=33  obs=1
+  T 6 [-damage]  SP     0-4  final   100-102  cand=5  obs=2  << estrechó 33->5
+  T 7 [turn   ]  SP     0-4  final   100-102  cand=5  obs=2
+  T 8 [turn   ]  SP     0-4  final   100-102  cand=5  obs=3
+
+Estado final de sneasler:
+   hp: SP    0-32 | final   155-171 | cand=33 | true_sp=16 true_final=163
+  atk: SP   17-32 | final   174-182 | cand=16 | true_sp=20 true_final=176
+  def: SP    0-32 | final     80-96 | cand=33 | true_sp=0 true_final=80
+  spa: SP    0-32 | final     54-68 | cand=33 | true_sp=0 true_final=54
+  spd: SP     0-4 | final   100-102 | cand=5 | true_sp=0 true_final=100
+  spe: SP    0-32 | final   140-156 | cand=33 | true_sp=30 true_final=155
+========================================================================
