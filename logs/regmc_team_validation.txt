@@ -1,0 +1,7 @@
+=== Reg M-C team validation (Showdown TeamValidator) ===
+format: gen9championsvgc2026regmcbo3
+total: 200
+ok: 200
+invalid: 0
+
+All teams valid for format.

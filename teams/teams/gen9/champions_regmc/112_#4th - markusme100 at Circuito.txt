@@ -1,0 +1,59 @@
+Blastoise-Mega @ Blastoisinite
+Ability: Mega Launcher
+Level: 50
+EVs: 2 HP / 32 SpA / 32 Spe
+Modest Nature
+- Water Spout
+- Protect
+- Terrain Pulse
+- Shell Smash
+
+Kangaskhan-Mega @ Kangaskhanite
+Ability: Parental Bond
+Level: 50
+EVs: 32 HP / 32 Atk / 1 Def / 1 SpD
+Adamant Nature
+- Fake Out
+- Double-Edge
+- Ice Punch
+- Hammer Arm
+
+Farigiraf @ Sitrus Berry
+Ability: Armor Tail
+Level: 50
+EVs: 29 HP / 14 Def / 23 SpD
+Modest Nature
+- Trick Room
+- Thunderbolt
+- Expanding Force
+- Helping Hand
+
+Indeedee-F @ Psychic Seed
+Ability: Psychic Surge
+Level: 50
+EVs: 32 HP / 2 Atk / 32 Def
+Relaxed Nature
+- Terrain Pulse
+- Follow Me
+- Trick Room
+- Helping Hand
+
+Rillaboom @ Miracle Seed
+Ability: Grassy Surge
+Level: 50
+EVs: 32 HP / 5 Atk / 29 SpD
+Adamant Nature
+- Grassy Glide
+- Wood Hammer
+- U-turn
+- Fake Out
+
+Torkoal @ Charcoal
+Ability: Drought
+Level: 50
+EVs: 32 HP / 32 SpA / 2 SpD
+Quiet Nature
+- Eruption
+- Weather Ball
+- Heat Wave
+- Protect

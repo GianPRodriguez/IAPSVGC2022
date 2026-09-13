@@ -13,7 +13,13 @@ import json
 from typing import Union, Dict, Any
 
 from teams.team_converter import normalize_name
-from showdown.stat_inference import TeamStatBeliefs, calibrate_from_known_team, dex_base_stats, sp_limits
+from showdown.stat_inference import (
+    SP_BUDGET,
+    SP_MAX,
+    TeamStatBeliefs,
+    calibrate_from_known_team,
+    dex_base_stats,
+)
 
 
 def _fmt_mapping(mapping) -> str:
@@ -280,8 +286,8 @@ class Battle(ABC):
                 Pokemon(namePkmn, -1, True, objectPkmn, abilityPkmn, move1, move2, move3, move4, nature) # Dentro del Constructor se Autocompleta los datos restantes del PKMN Oponente
             )
 
-        # Los stats exactos del propio equipo revelan cuántos Stat Points admite
-        # de verdad el servidor; sin esto se podría descartar el valor real del rival.
+        # Champions-only: fija topes 32/66 (no ensancha aunque el equipo propio
+        # traiga stats ilegales / EV clásicos).
         calibrate_from_known_team(self.user.reserved or [])
 
 
@@ -429,24 +435,28 @@ class Battle(ABC):
         )
         self.opponent.imprimir_cmd(buf)
 
-        # Estimación de Stat Points del rival (evolución turno a turno)
+        # Estimación de Stat Points del rival (evolución turno a turno).
+        # El reporte siempre usa reglas Champions (32/66), aunque el cálculo
+        # interno tuviera candidatos más anchos por tests u otros callers.
         beliefs = getattr(self, 'stat_beliefs', None)
         if beliefs is not None and beliefs.beliefs:
-            max_sp, budget = sp_limits()
             w('-' * 72)
-            w(f' STAT POINTS ESTIMADOS (rival)  |  tope {max_sp}/stat, {budget} total:')
+            w(f' STAT POINTS ESTIMADOS (rival)  |  tope {SP_MAX}/stat, {SP_BUDGET} total:')
             for species, belief in sorted(beliefs.beliefs.items()):
                 forme = (getattr(belief, 'current_forme', None) or species).lower()
                 forme_tag = f'  forme={forme}' if forme != species else ''
                 w(f'  {species}  nat={belief.nature or "-"}{forme_tag}')
-                w(f'      SP:   {belief.sp_summary_line()}')
-                w(f'      est:  {belief.summary_line()}')
+                w(f'      SP:   {belief.sp_summary_line_for_report()}')
+                w(f'      est:  {belief.summary_line_for_report()}')
                 # Mega/Blade: mismos SP, otras bases → el final "base" (p.ej. Atk 92)
                 # no tiene por qué caer en el rango mega (Atk 110-139).
                 if forme != species:
                     dex = dex_base_stats(species)
                     if dex:
-                        w(f'      base: {belief.summary_line_with_bases(dex)}  (forma {species})')
+                        w(
+                            f'      base: {belief.summary_line_with_bases_for_report(dex)}'
+                            f'  (forma {species})'
+                        )
                 w(f'      conv: {belief.convergence_line()}')
 
         # OTS solo una vez por partida (team preview / primer dump)
@@ -890,7 +900,10 @@ class Pokemon:
 # OK - Actualización Otros Atributos POKEAPI                                                                                                             ###
 ############################################################################################################################################################
     def getStatsBattle(self, isOpponent) -> None:
-        type1, type2, HPB_battle_base, ATK_battle_base, DEF_battle_base, SPA_battle_base, SPD_battle_base, VEL_battle_base = getPkmnInfo(self.name)
+        info = getPkmnInfo(self.name)
+        if not info:
+            return
+        type1, type2, HPB_battle_base, ATK_battle_base, DEF_battle_base, SPA_battle_base, SPD_battle_base, VEL_battle_base = info
         if isOpponent:
             self.type1, self.type2, self.HPB_battle_base, self.ATK_battle_base, self.DEF_battle_base, self.SPA_battle_base, self.SPD_battle_base, self.VEL_battle_base = type1, type2, HPB_battle_base, ATK_battle_base, DEF_battle_base, SPA_battle_base, SPD_battle_base, VEL_battle_base
             self.HPA_battle_actual = 100

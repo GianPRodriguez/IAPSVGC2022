@@ -1,13 +1,11 @@
-"""Módulo B: heurística greedy max-damage (+ KO / Tera / switches forzados).
+"""Greedy-Solo core: max-damage por lado (+ KO / Tera / switches forzados).
 
-Micro-opts (misma decisión):
+Política factored (cada activo elige solo). Micro-opts:
   - Un solo batch de calc para ambos lados activos
-  - Payloads de atacante/defensor reutilizados dentro del turno
-  - Status no van al calc
-  - Tera solo se ofrece si convierte un hit en KO garantizado
-  - Mega por defecto si canMega (calc con stats mega del turno)
-  - Side/field flags (HH, Charge, pantallas, FG, Battery, Ruin, rooms…)
-  - alliesFainted → Last Respects / Supreme Overlord
+  - Status no van al calc (score 0)
+  - Tera solo si convierte un hit en KO garantizado
+  - Mega por defecto si canMega
+  - Side/field flags + alliesFainted
 """
 from __future__ import annotations
 
@@ -15,12 +13,12 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-from showdown.battle_bots.heuristic.calc_async import (
+from showdown.battle_bots.greedy_solo.calc_async import (
     calc_damage_batch,
     damage_pct,
     guaranteed_ko,
 )
-from showdown.battle_bots.heuristic.type_chart import matchup_vs_actives, pokemon_types
+from showdown.battle_bots.greedy_solo.type_chart import matchup_vs_actives, pokemon_types
 from showdown.stat_inference import _poke_payload, _terrain_for_calc, _weather_for_calc
 
 
@@ -88,6 +86,7 @@ class ScoredAction:
     mega: int = 0  # 0 none, 1 mega, 2 tera
     damage_pct: float = 0.0
     ko: bool = False
+    kind: str = 'move'  # 'move' | 'switch' (move_slot = bench slot si switch)
 
 
 def _stats_or_default(poke: CalcPoke) -> Dict[str, int]:
@@ -124,9 +123,15 @@ def apply_belief_stats(poke: CalcPoke, belief) -> CalcPoke:
         except Exception:
             narrow = len(cands) <= 8
         if narrow or champions_stat is None:
-            mid_sp = cands[len(cands) // 2]
             if champions_stat is not None:
-                stats[key] = champions_stat(base, mid_sp, nature, key)
+                use_sp = None
+                try:
+                    use_sp = belief.preferred_sp(key)
+                except Exception:
+                    use_sp = None
+                if use_sp is None or use_sp not in set(cands):
+                    use_sp = cands[len(cands) // 2]
+                stats[key] = champions_stat(base, int(use_sp), nature, key)
             else:
                 est = belief.point_estimate_stats()
                 if key in est:
@@ -222,10 +227,11 @@ def _resolve_mega_forme(species: str, item: Optional[str]) -> Optional[str]:
     item_id = _norm_abi(item)
     if not item_id.endswith('ite') or item_id == 'eviolite':
         return None
-    from API.PokemonData import getPkmnInfo
+    from API.PokemonData import champions_species_key
     for cand in (f'{key}-mega', f'{key}-mega-x', f'{key}-mega-y'):
-        if getPkmnInfo(cand):
-            return cand
+        resolved = champions_species_key(cand)
+        if resolved:
+            return resolved
     return None
 
 
@@ -638,7 +644,7 @@ def best_forced_switch_slot(
 @lru_cache(maxsize=512)
 def types_from_species(species: str) -> Tuple[Optional[str], ...]:
     from API.PokemonData import getPkmnInfo
-    from showdown.battle_bots.heuristic.species_names import resolve_species_name
+    from showdown.battle_bots.greedy_solo.species_names import resolve_species_name
     info = getPkmnInfo(resolve_species_name(species))
     if not info:
         return tuple()

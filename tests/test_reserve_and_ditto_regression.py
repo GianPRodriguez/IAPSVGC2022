@@ -1621,7 +1621,8 @@ def test_narrowing_is_ignored_when_it_would_empty_the_candidates():
     assert belief.skipped == 1
 
 
-def test_calibration_widens_limits_when_own_team_exceeds_champions_rules():
+def test_calibration_keeps_champions_limits_even_if_own_team_exceeds():
+    """Proyecto Champions-only: no ensanchar topes por stats ilegales propios."""
     si.reset_sp_limits()
     assert si.sp_limits() == (si.SP_MAX, si.SP_BUDGET)
 
@@ -1634,11 +1635,9 @@ def test_calibration_widens_limits_when_own_team_exceeds_champions_rules():
     mine.SPD_battle_actual = 108
     mine.VEL_battle_actual = 80
 
+    si.configure_sp_limits(63, 129)
     si.calibrate_from_known_team([mine])
-    max_sp, budget = si.sp_limits()
-    # El HP de 222 exige 53 puntos, muy por encima del tope de 32 de Champions
-    assert max_sp >= 53
-    assert budget > si.SP_BUDGET
+    assert si.sp_limits() == (si.SP_MAX, si.SP_BUDGET)
 
     si.reset_sp_limits()
 
@@ -1765,10 +1764,13 @@ def test_report_includes_the_stat_point_estimate():
         report = handle.read()
 
     assert 'STAT POINTS ESTIMADOS' in report
+    assert f'tope {si.SP_MAX}/stat, {si.SP_BUDGET} total' in report
     assert 'dragonite' in report
     assert 'SP:' in report
     assert 'est:' in report
     assert 'conv:' in report
+    assert '0-63' not in report
+    assert '0-32' in report
 
 
 def test_singleturn_protect_and_helping_hand_clear_on_turn():

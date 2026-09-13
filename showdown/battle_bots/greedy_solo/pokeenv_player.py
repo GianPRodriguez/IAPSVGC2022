@@ -16,9 +16,9 @@ from poke_env.player.battle_order import (
 )
 from poke_env.ps_client import LocalhostServerConfiguration
 
-from showdown.battle_bots.heuristic.calc_async import warm_damage_calc
-from showdown.battle_bots.heuristic.species_names import resolve_species_name
-from showdown.battle_bots.heuristic.greedy import (
+from showdown.battle_bots.greedy_solo.calc_async import warm_damage_calc
+from showdown.battle_bots.greedy_solo.species_names import resolve_species_name
+from showdown.battle_bots.greedy_solo.greedy import (
     CalcPoke,
     FieldContext,
     MoveOption,
@@ -28,7 +28,7 @@ from showdown.battle_bots.heuristic.greedy import (
     any_positive_damage,
     types_from_species,
 )
-from showdown.battle_bots.heuristic.team_preview import (
+from showdown.battle_bots.greedy_solo.team_preview import (
     best_team_preview_order,
     mon_from_species,
     order_to_team_string,

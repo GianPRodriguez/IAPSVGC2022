@@ -1,12 +1,21 @@
-"""GreedyDamagePlayer + espejo IAP Battle + contraste vs poke-env (PS local)."""
+"""Greedy poke-env players + espejo IAP Battle + contraste vs PS local.
+
+ValidatedGreedyPlayer      → base greedy_solo
+ValidatedGreedyJointPlayer → base greedy_joint
+
+Ambos comparten ValidatedBattleMixin (sync + soundness OTS).
+"""
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, Type
 
 from poke_env.battle import AbstractBattle, DoubleBattle
+from poke_env.player import Player
 from poke_env.ps_client import AccountConfiguration, LocalhostServerConfiguration
 
-from showdown.battle_bots.heuristic.pokeenv_player import GreedyDamagePlayer
+from showdown.battle_bots.expectimax_bayesian.pokeenv_player import ExpectimaxBayesianPlayer
+from showdown.battle_bots.greedy_joint.pokeenv_player import GreedyJointPlayer
+from showdown.battle_bots.greedy_solo.pokeenv_player import GreedyDamagePlayer
 from showdown.inference_sim.battle_state_check import (
     StateCheckReport,
     StateMismatch,
@@ -31,9 +40,19 @@ _INFER_ACTIONS = frozenset({
 })
 
 
-class ValidatedGreedyPlayer(GreedyDamagePlayer):
+def _is_ps_battle_room(room: str) -> bool:
+    """Solo salas battle-* (no game-bestof padre ni lobby)."""
+    tag = (room or '').lstrip('>').strip()
+    return tag.startswith('battle-')
+
+
+PLAYER_A_CHOICES = ('greedy_solo', 'greedy_joint', 'expectimax_bayesian')
+PLAYER_B_CHOICES = ('random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian')
+
+
+class ValidatedBattleMixin:
     """
-    Heurístico greedy + feed del protocolo a Battle IAP + contraste con poke-env.
+    Feed del protocolo a Battle IAP + contraste con poke-env.
     Opcionalmente valida soundness de Stat Points vs OTS (ground truth).
     """
 
@@ -59,6 +78,10 @@ class ValidatedGreedyPlayer(GreedyDamagePlayer):
         self._role_confirmed = False
         self._ready_to_check = False
         self._pe_battle: Optional[AbstractBattle] = None
+        # Compact BO3: [(turns, won), ...] de cada game de la serie en curso
+        self.series_games: List[tuple] = []
+        self._logged_game_tags: set = set()
+        self._last_turn_log = -1
         kwargs.setdefault('server_configuration', LocalhostServerConfiguration)
         kwargs.setdefault('accept_open_team_sheet', True)
         kwargs.setdefault('max_concurrent_battles', 1)
@@ -76,10 +99,13 @@ class ValidatedGreedyPlayer(GreedyDamagePlayer):
         self.iap_battle = None
         self._bootstrapped = False
         self.protocol_log = []
-        self._our_role = 'p1'
-        self._role_confirmed = False
+        # No forzar p1: en BO3/challenges el rol se conserva; pisarlo aplica
+        # |switch| al bando equivocado hasta el próximo |player|.
         self._ready_to_check = False
         self._pe_battle = None
+        self.series_games = []
+        self._logged_game_tags = set()
+        self._last_turn_log = -1
         self.update_team(to_showdown_export(user_team))
 
     def _preview_ordered_team(self) -> TeamMeta:
@@ -94,7 +120,6 @@ class ValidatedGreedyPlayer(GreedyDamagePlayer):
             idx = d - 1
             if 0 <= idx < len(mons):
                 picked.append(mons[idx])
-        # Completar con el resto para que reserved tenga el sheet completo
         for m in mons:
             if m not in picked:
                 picked.append(m)
@@ -108,6 +133,7 @@ class ValidatedGreedyPlayer(GreedyDamagePlayer):
         room = split_messages[0][0] if split_messages else ''
         pending_sync = False
         pending_infer = False
+        is_battle_room = _is_ps_battle_room(room)
 
         for parts in split_messages[1:]:
             if not parts:
@@ -115,7 +141,6 @@ class ValidatedGreedyPlayer(GreedyDamagePlayer):
             line = '|'.join(parts)
             if not line.startswith('|'):
                 line = '|' + line
-            # Cap protocolo en memoria (créditos / RAM en BO3 largos)
             if len(self.protocol_log) < 400:
                 self.protocol_log.append(line)
             elif len(self.protocol_log) == 400:
@@ -129,13 +154,20 @@ class ValidatedGreedyPlayer(GreedyDamagePlayer):
                     self._role_confirmed = True
                     self._sync_role_ids()
 
-            if len(parts) > 1 and parts[1] == 'start':
-                # Cada game de un BO3 reinicia el espejo IAP
+            action = parts[1].strip() if len(parts) > 1 else ''
+
+            # Nueva partida del BO3: reiniciar espejo IAP en |start| (no en cada
+            # |init| suelto: vaciar sin bootstrap deja el espejo a medias).
+            if is_battle_room and action == 'start':
                 self.iap_battle = None
                 self._ready_to_check = False
+                self._last_turn_log = -1
                 self._ensure_iap(room)
 
-            action = parts[1].strip() if len(parts) > 1 else ''
+            # No alimentar IAP con mensajes de la sala padre game-bestof*.
+            if not is_battle_room:
+                continue
+
             if self.iap_battle is not None:
                 try:
                     fed = feed_line(self.iap_battle, line)
@@ -157,6 +189,14 @@ class ValidatedGreedyPlayer(GreedyDamagePlayer):
                 key = fed or action
                 if key in _SYNC_ACTIONS:
                     pending_sync = True
+                    try:
+                        turn_n = int(getattr(self.iap_battle, 'turn', 0) or 0)
+                    except Exception:
+                        turn_n = 0
+                    if turn_n > 0 and turn_n != getattr(self, '_last_turn_log', -1):
+                        self._last_turn_log = turn_n
+                        g = len(getattr(self, 'series_games', []) or []) + 1
+                        print(f'  g{g}:t{turn_n}', flush=True)
                 if key in _INFER_ACTIONS:
                     pending_infer = True
 
@@ -167,13 +207,15 @@ class ValidatedGreedyPlayer(GreedyDamagePlayer):
                 self.protocol_log.append(f'# poke-env KeyError skipped: {exc!r}')
             return
         except Exception as exc:
-            # BO3: requests tras game-over / websocket ya cerrado
             name = type(exc).__name__
             msg = str(exc).lower()
             if name in ('ConnectionClosedOK', 'ConnectionClosedError', 'ConnectionClosed') or 'close' in msg:
                 return
             if len(self.protocol_log) < 420:
                 self.protocol_log.append(f'# poke-env handler skipped: {exc!r}')
+            return
+
+        if not is_battle_room:
             return
 
         self._sync_role_ids()
@@ -192,6 +234,33 @@ class ValidatedGreedyPlayer(GreedyDamagePlayer):
                 self._contrast(room, pe)
             if pending_infer and self.soundness_report is not None:
                 self._check_inference(room)
+
+        self._note_finished_game(room, pe)
+
+    def _note_finished_game(self, room: str, pe: Optional[AbstractBattle]) -> None:
+        """Registra gN:tT W/L al cerrar cada partida del BO3."""
+        if pe is None or not getattr(pe, 'finished', False):
+            return
+        tag = (getattr(pe, 'battle_tag', None) or room or '').lstrip('>').strip()
+        if not tag or tag in self._logged_game_tags:
+            return
+        # Solo batallas hijas; la sala padre es game-bestof*
+        if not tag.startswith('battle-'):
+            return
+        self._logged_game_tags.add(tag)
+        turns = int(getattr(pe, 'turn', 0) or 0)
+        won = bool(getattr(pe, 'won', False))
+        self.series_games.append((turns, won))
+        g = len(self.series_games)
+        print(f'  g{g}:t{turns}{"W" if won else "L"}', flush=True)
+
+    def series_games_compact(self) -> str:
+        if not self.series_games:
+            return '-'
+        parts = []
+        for i, (turns, won) in enumerate(self.series_games, start=1):
+            parts.append(f'g{i}:t{turns}{"W" if won else "L"}')
+        return ' '.join(parts)
 
     def _current_pe_battle(self, room: str) -> Optional[AbstractBattle]:
         battles = getattr(self, 'battles', None) or {}
@@ -213,6 +282,12 @@ class ValidatedGreedyPlayer(GreedyDamagePlayer):
         if self.iap_battle is not None:
             return
         reset_sp_limits()
+        # Preferir el rol que poke-env ya conoce en esta sala.
+        pe = self._current_pe_battle(room) or self._pe_battle
+        pe_role = getattr(pe, 'player_role', None) if pe is not None else None
+        if pe_role in ('p1', 'p2'):
+            self._our_role = pe_role
+            self._role_confirmed = True
         ordered = self._preview_ordered_team()
         self.iap_battle = bootstrap_battle(ordered, self.opp_team)
         self._sync_role_ids()
@@ -259,7 +334,6 @@ class ValidatedGreedyPlayer(GreedyDamagePlayer):
                 turn=turn_n,
                 event='turn',
             )
-            # Contar estrechamiento simple
             for sid, snap in snaps.items():
                 hist = self.soundness_report.timelines.get(sid) or []
                 if hist:
@@ -270,8 +344,71 @@ class ValidatedGreedyPlayer(GreedyDamagePlayer):
                         if prev_n and cur_n and cur_n < prev_n:
                             self.soundness_report.narrowing_events += 1
             record_timeline(self.soundness_report, snaps)
-            _ = before  # reserved for future delta metrics
+            _ = before
         except Exception as exc:
             self.soundness_report.battle_errors += 1
             if len(self.protocol_log) < 420:
                 self.protocol_log.append(f'# soundness error: {exc!r}')
+
+
+class ValidatedGreedyPlayer(ValidatedBattleMixin, GreedyDamagePlayer):
+    """Greedy-Solo + espejo IAP / sync / OTS."""
+
+
+class ValidatedGreedyJointPlayer(ValidatedBattleMixin, GreedyJointPlayer):
+    """Greedy-Joint + espejo IAP / sync / OTS."""
+
+
+class ValidatedExpectimaxBayesianPlayer(ValidatedBattleMixin, ExpectimaxBayesianPlayer):
+    """Expectimax-Bayesian + espejo IAP / sync / OTS."""
+
+
+def validated_player_class(kind: str) -> Type[Player]:
+    """Player A del robusto: siempre validated (sync + OTS)."""
+    key = str(kind or 'greedy_solo').strip().lower().replace('-', '_')
+    if key == 'greedy_solo':
+        return ValidatedGreedyPlayer
+    if key == 'greedy_joint':
+        return ValidatedGreedyJointPlayer
+    if key == 'expectimax_bayesian':
+        return ValidatedExpectimaxBayesianPlayer
+    raise ValueError(
+        f'player-a inválido: {kind!r}. Opciones: {", ".join(PLAYER_A_CHOICES)}'
+    )
+
+
+def opponent_player_class(kind: str) -> Type[Player]:
+    """Player B: sin wrapper validated (puede ser random o greedy)."""
+    from poke_env.player import RandomPlayer
+
+    key = str(kind or 'random').strip().lower().replace('-', '_')
+    if key == 'random':
+        return RandomPlayer
+    if key == 'greedy_solo':
+        return GreedyDamagePlayer
+    if key == 'greedy_joint':
+        return GreedyJointPlayer
+    if key == 'expectimax_bayesian':
+        return ExpectimaxBayesianPlayer
+    raise ValueError(
+        f'player-b inválido: {kind!r}. Opciones: {", ".join(PLAYER_B_CHOICES)}'
+    )
+
+
+def make_opponent_player(
+    kind: str,
+    *,
+    team: TeamMeta,
+    account_configuration: AccountConfiguration,
+    battle_format: str,
+) -> Player:
+    cls = opponent_player_class(kind)
+    return cls(
+        account_configuration=account_configuration,
+        battle_format=battle_format,
+        team=to_showdown_export(team),
+        server_configuration=LocalhostServerConfiguration,
+        accept_open_team_sheet=True,
+        max_concurrent_battles=1,
+        log_level=30,
+    )

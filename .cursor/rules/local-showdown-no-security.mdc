@@ -43,6 +43,16 @@ Espera `DONE ... state_mismatch=YES|NO ...` y lee `logs/battle_state_e2e_report.
 python -m showdown.inference_sim.run_robust_e2e --teams 100
 ```
 
+Opcional (matchup de agentes):
+
+```bat
+python -m showdown.inference_sim.run_robust_e2e --teams 100 --player-a greedy_solo --player-b greedy_joint
+python -m showdown.inference_sim.run_robust_e2e --teams 100 --player-a greedy_joint --player-b greedy_solo
+```
+
+`--player-a`: `greedy_solo` | `greedy_joint` | `expectimax_bayesian` (siempre validated: sync + OTS).
+`--player-b`: `random` | `greedy_solo` | `greedy_joint` | `expectimax_bayesian` (default `random`).
+
 Espera `DONE ... state_mismatch=... inference_ok=... NEED_FIX=... NEED_FLAGS_ADD=...` y lee `logs/robust_e2e_report.txt`. Solo el reporte final; no analices turnos.
 
 Tras el batch se escribe `logs/robust_e2e_fixplan.txt`:

@@ -301,6 +301,88 @@ def test_observe_damage_skips_when_intersection_empty():
         si.reset_sp_limits()
 
 
+def test_bilateral_upper_bound_excludes_high_atk_when_clean():
+    """Daño flojo + contexto limpio => se descarta Atk alto (min_roll > observado)."""
+    si.reset_sp_limits()
+    si.configure_sp_limits(63, 129)
+    beliefs = si.TeamStatBeliefs()
+    opp = build_pkmn('dragonite', is_opponent=True, hp=100)
+    opp.nature = 'adamant'
+    belief = beliefs.belief_for(opp)
+    belief.candidates['atk'] = set(range(0, 64))
+
+    def fake_batch(reqs):
+        out = []
+        for req in reqs:
+            atk = int(req['attacker']['stats']['atk'])
+            # Simula: Atk alto nunca baja de 80; Atk bajo hace ~20-30.
+            if atk >= 200:
+                out.append((80, 100))
+            else:
+                out.append((20, 30))
+        return out
+
+    set_damage_range_override(fake_batch)
+    try:
+        ctx = si.DamageContext()  # limpio
+        assert ctx.is_clean_for_upper_bound is True
+        beliefs.observe_damage(
+            opponent_pkmn=opp,
+            move_name='Extreme Speed',
+            category='p',
+            opponent_is_attacker=True,
+            observed_damage=25,
+            damage_is_percent=False,
+            known_stats={'hp': 155, 'atk': 78, 'def': 111, 'spa': 105, 'spd': 95, 'spe': 184},
+            known_species='whimsicott',
+            known_nature='timid',
+            ctx=ctx,
+            is_ko=False,
+        )
+        # Los SP que producen Atk final >= 200 deben salir.
+        for sp in list(belief.candidates['atk']):
+            final = si.champions_stat(belief.base_stats['atk'], sp, 'adamant', 'atk')
+            assert final < 200, f'SP={sp} final={final} debería haberse excluido'
+    finally:
+        set_damage_range_override(None)
+        si.reset_sp_limits()
+
+
+def test_bilateral_upper_bound_skipped_when_not_clean():
+    """Con Helping Hand / sash no se aplica cota superior."""
+    si.reset_sp_limits()
+    beliefs = si.TeamStatBeliefs()
+    opp = build_pkmn('dragonite', is_opponent=True, hp=100)
+    opp.nature = 'adamant'
+    belief = beliefs.belief_for(opp)
+    before = set(belief.candidates['atk'])
+
+    def fake_batch(reqs):
+        return [(80, 100) for _ in reqs]
+
+    set_damage_range_override(fake_batch)
+    try:
+        ctx = si.DamageContext(helping_hand=True)
+        assert ctx.is_clean_for_upper_bound is False
+        beliefs.observe_damage(
+            opponent_pkmn=opp,
+            move_name='Extreme Speed',
+            category='p',
+            opponent_is_attacker=True,
+            observed_damage=25,
+            damage_is_percent=False,
+            known_stats={'hp': 155, 'atk': 78, 'def': 111, 'spa': 105, 'spd': 95, 'spe': 184},
+            known_species='whimsicott',
+            known_nature='timid',
+            ctx=ctx,
+        )
+        # Sin cota superior: Atk altos siguen vivos (max_roll 100 >= 25).
+        assert max(belief.candidates['atk']) == max(before)
+    finally:
+        set_damage_range_override(None)
+        si.reset_sp_limits()
+
+
 def test_field_payload_aurora_veil_not_emulated_as_screens():
     ctx = si.DamageContext(aurora_veil=True, reflect=True, light_screen=True)
     field = si._field_payload(ctx, 'p')
@@ -586,4 +668,76 @@ def test_spread_without_tag_via_move_target():
     pending = battle.pending_damage_ctx
     assert pending is not None
     assert pending['is_spread'] is True
+    si.reset_sp_limits()
+
+
+def test_equivalent_hp_sp_not_dropped_when_coalescing():
+    """Toxapex Calm HP SP 31 y 32 → mismo final 141; no descartar el 32."""
+    si.reset_sp_limits()
+    assert si.champions_stat(50, 31, 'calm', 'hp') == si.champions_stat(50, 32, 'calm', 'hp')
+    beliefs = si.TeamStatBeliefs()
+    opp = build_pkmn('toxapex', is_opponent=True, hp=100)
+    opp.nature = 'calm'
+    belief = beliefs.belief_for(opp)
+    assert 31 in belief.candidates['hp'] and 32 in belief.candidates['hp']
+
+    ctx = si.DamageContext(
+        terrain='grassyterrain',
+        attacker_ability='aerilate',
+        attacker_ability_on=True,
+        defender_item='leftovers',
+        defender_ability='regenerator',
+        defender_hp_fraction=1.0,
+        attacker_types=['Dragon', 'Flying'],
+    )
+    beliefs.observe_damage(
+        opponent_pkmn=opp,
+        move_name='Double-Edge',
+        category='p',
+        opponent_is_attacker=False,
+        observed_damage=60,
+        damage_is_percent=True,
+        known_stats={'hp': 171, 'atk': 186, 'def': 150, 'spa': 155, 'spd': 99, 'spe': 185},
+        known_species='Salamence-Mega',
+        known_nature='naive',
+        ctx=ctx,
+        is_ko=False,
+    )
+    assert 32 in belief.candidates['hp'], belief.sp_summary_line()
+    assert 18 in belief.candidates['def'], belief.sp_summary_line()
+    si.reset_sp_limits()
+
+
+def test_grassy_wood_hammer_percent_keeps_true_toxapex_def():
+    """WH ~58% bajo Grassy no debe expulsar Def SP=18 (desync calc/PS)."""
+    si.reset_sp_limits()
+    beliefs = si.TeamStatBeliefs()
+    opp = build_pkmn('toxapex', is_opponent=True, hp=100)
+    opp.nature = 'calm'
+    belief = beliefs.belief_for(opp)
+
+    ctx = si.DamageContext(
+        terrain='grassyterrain',
+        attacker_item='sitrusberry',
+        attacker_ability='grassysurge',
+        defender_item='leftovers',
+        defender_ability='regenerator',
+        defender_hp_fraction=1.0,
+        attacker_types=['Grass', 'Dark'],
+    )
+    beliefs.observe_damage(
+        opponent_pkmn=opp,
+        move_name='Wood Hammer',
+        category='p',
+        opponent_is_attacker=False,
+        observed_damage=58,
+        damage_is_percent=True,
+        known_stats={'hp': 193, 'atk': 187, 'def': 115, 'spa': 72, 'spd': 100, 'spe': 113},
+        known_species='Rillaboom',
+        known_nature='adamant',
+        ctx=ctx,
+        is_ko=False,
+    )
+    assert 18 in belief.candidates['def'], belief.sp_summary_line()
+    assert 32 in belief.candidates['hp'], belief.sp_summary_line()
     si.reset_sp_limits()

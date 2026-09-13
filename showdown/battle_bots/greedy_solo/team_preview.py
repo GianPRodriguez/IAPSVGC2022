@@ -7,8 +7,8 @@ from typing import Iterable, List, Optional, Sequence, Tuple
 
 from API.PokemonData import getPkmnInfo
 
-from showdown.battle_bots.heuristic.species_names import resolve_species_name
-from showdown.battle_bots.heuristic.type_chart import (
+from showdown.battle_bots.greedy_solo.species_names import resolve_species_name
+from showdown.battle_bots.greedy_solo.type_chart import (
     defensive_resistance_score,
     offensive_coverage_score,
     pokemon_types,

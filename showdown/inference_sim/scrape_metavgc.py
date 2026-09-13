@@ -18,6 +18,8 @@ SPECIES_MAP = {
     'floette mega': 'Floette-Eternal',
     'basculegion male': 'Basculegion',
     'basculegion-male': 'Basculegion',
+    'basculegion-m': 'Basculegion',
+    'basculegionm': 'Basculegion',
     'basculegion female': 'Basculegion-F',
     'basculegion-female': 'Basculegion-F',
     'meowstic female': 'Meowstic-F',
@@ -54,6 +56,12 @@ def clean_species(name: str) -> str:
     key = re.sub(r'\s+', ' ', n).lower()
     if key in SPECIES_MAP:
         return SPECIES_MAP[key]
+    # compact key (Basculegion-M → basculegion-m / basculegionm)
+    compact = re.sub(r'[^a-z0-9]+', '', key)
+    dashed = key.replace(' ', '-')
+    for cand in (dashed, compact, key):
+        if cand in SPECIES_MAP:
+            return SPECIES_MAP[cand]
     return n
 
 
@@ -87,7 +95,8 @@ def extract_mons_from_html(html: str) -> List[dict]:
         nature = re.search(r'Nature:\s*([^|]+)', desc)
         moves_m = re.search(r'Moves:\s*(.+)$', desc)
         moves = [m.strip() for m in (moves_m.group(1).split(',') if moves_m else []) if m.strip()]
-        if not name or not item or len(moves) < 4:
+        # Algunas fichas MetaVGC listan <4 moves en el JSON-LD (p.ej. Archaludon).
+        if not name or not item or len(moves) < 1:
             continue
         mons.append({
             'species': name,
@@ -164,38 +173,88 @@ def is_reg_mc_slug(slug: str) -> bool:
     )
 
 
-def collect_and_parse(want: int = 20, crawl_cap: int = 80) -> List[dict]:
+def _safe_print(msg: str) -> None:
+    try:
+        print(msg, flush=True)
+    except UnicodeEncodeError:
+        print(msg.encode('ascii', 'replace').decode('ascii'), flush=True)
+
+
+def _load_existing() -> List[dict]:
+    if not OUT.is_file():
+        return []
+    try:
+        raw = json.loads(OUT.read_text(encoding='utf-8'))
+    except (json.JSONDecodeError, OSError):
+        return []
+    return raw if isinstance(raw, list) else []
+
+
+def _seed_urls() -> List[str]:
+    pokemon = [
+        'salamence-mega', 'floette-mega', 'rillaboom', 'sneasler', 'gholdengo',
+        'incineroar', 'raichu-mega-y', 'golisopod-mega', 'swampert-mega',
+        'kingambit', 'archaludon', 'farigiraf', 'whimsicott', 'basculegion-male',
+        'charizard-mega-y', 'gengar-mega', 'metagross-mega', 'lucario-mega',
+        'tyranitar-mega', 'pelipper', 'indeedee-female', 'ursaluna', 'sinistcha',
+        'arcanine-hisui', 'blaziken', 'meganium-mega', 'snorlax', 'grimmsnarl',
+        'amoonguss', 'porygon2', 'heatran', 'landorus-therian', 'flutter-mane',
+        'chien-pao', 'iron-hands', 'ogerpon-wellspring', 'urshifu-rapid-strike',
+    ]
     seeds = [
         f'{BASE}/teams/featured/regulation-mc',
         f'{BASE}/teams/finder?format=pokemonchampions-regc',
-        f'{BASE}/pokemon/salamence-mega',
-        f'{BASE}/pokemon/floette-mega',
-        f'{BASE}/pokemon/rillaboom',
-        f'{BASE}/pokemon/sneasler',
-        f'{BASE}/pokemon/gholdengo',
-        f'{BASE}/pokemon/incineroar',
-        f'{BASE}/pokemon/raichu-mega-y',
-        f'{BASE}/pokemon/golisopod-mega',
-        f'{BASE}/pokemon/swampert-mega',
-        f'{BASE}/pokemon/kingambit',
     ]
+    seeds.extend(f'{BASE}/pokemon/{slug}' for slug in pokemon)
+    featured_path = Path(__file__).resolve().parent / '_featured_urls.json'
+    if featured_path.is_file():
+        try:
+            paths = json.loads(featured_path.read_text(encoding='utf-8'))
+        except (json.JSONDecodeError, OSError):
+            paths = []
+        for path in paths:
+            if isinstance(path, str) and path.startswith('/teams/'):
+                seeds.append(BASE + path)
+    return seeds
+
+
+def collect_and_parse(
+    want: int = 20,
+    crawl_cap: int = 80,
+    *,
+    skip_slugs: Optional[Set[str]] = None,
+) -> List[dict]:
+    skip = set(skip_slugs or ())
+    seeds = _seed_urls()
     teams: List[dict] = []
     errors: List[tuple] = []
     seen: Set[str] = set()
     queue: List[str] = []
-    sigs: Set[tuple] = set()
+    sigs: Set[str] = set(skip)
+    # Featured list / featured page: aceptar aunque el slug no diga "reg-m-c".
+    trusted: Set[str] = set()
 
     for seed in seeds:
+        if '/teams/' in seed and '/featured/' not in seed and 'finder' not in seed:
+            slug = seed.rstrip('/').split('/')[-1]
+            if seed in seen or slug in skip:
+                continue
+            seen.add(seed)
+            trusted.add(seed)
+            queue.append(seed)
+            continue
         try:
             html = fetch(seed)
         except Exception as exc:
-            print('seed fail', seed, exc)
+            _safe_print(f'seed fail {seed} {exc}')
             continue
         for full in team_links_in(html):
             slug = full.rstrip('/').split('/')[-1]
-            if full in seen:
+            if full in seen or slug in skip:
                 continue
-            if not is_reg_mc_slug(slug) and 'featured' not in seed:
+            if '/teams/featured/' in seed:
+                trusted.add(full)
+            elif not is_reg_mc_slug(slug):
                 continue
             seen.add(full)
             queue.append(full)
@@ -204,16 +263,21 @@ def collect_and_parse(want: int = 20, crawl_cap: int = 80) -> List[dict]:
     while queue and len(teams) < want and visited < crawl_cap:
         url = queue.pop(0)
         visited += 1
+        slug = url.rstrip('/').split('/')[-1]
+        if slug in skip or slug in sigs:
+            continue
+        if url not in trusted and not is_reg_mc_slug(slug):
+            continue
         try:
             html = fetch(url)
         except Exception as exc:
             errors.append((url, repr(exc)))
             continue
         for full in team_links_in(html):
-            slug = full.rstrip('/').split('/')[-1]
-            if full in seen:
+            link_slug = full.rstrip('/').split('/')[-1]
+            if full in seen or link_slug in skip:
                 continue
-            if not is_reg_mc_slug(slug):
+            if not is_reg_mc_slug(link_slug):
                 continue
             seen.add(full)
             queue.append(full)
@@ -221,29 +285,60 @@ def collect_and_parse(want: int = 20, crawl_cap: int = 80) -> List[dict]:
         team = parse_team_page(url, html)
         if not team:
             errors.append((url, 'parse incomplete'))
-            print('SKIP incomplete', url.split('/')[-1][:60])
+            _safe_print(f'SKIP incomplete {slug[:60]}')
             time.sleep(0.12)
             continue
-        sig = team.get('slug') or team.get('source_url')
+        name_l = (team.get('name') or '').lower()
+        if any(bad in name_l for bad in ('reg m-b', 'reg-mb', 'regulation m-b', 'reg m-a')):
+            errors.append((url, 'wrong format'))
+            _safe_print(f'SKIP wrong format {slug[:50]}')
+            time.sleep(0.12)
+            continue
+        sig = team.get('slug') or team.get('source_url') or ''
         if sig in sigs:
-            print('SKIP duplicate url', team['name'][:50])
+            _safe_print(f'SKIP duplicate url {(team.get("name") or "")[:50]}')
             time.sleep(0.12)
             continue
         sigs.add(sig)
         teams.append(team)
-        print(f'OK [{len(teams)}/{want}] {team["name"]}')
+        _safe_print(f'OK [{len(teams)}/{want}] {team["name"]}')
         time.sleep(0.12)
 
-    print(f'visited={visited} queued_left={len(queue)} errors={len(errors)}')
+    _safe_print(f'visited={visited} queued_left={len(queue)} errors={len(errors)}')
     for u, e in errors[:12]:
-        print(' err', e, u.split('/')[-1][:50])
+        _safe_print(f' err {e} {u.split("/")[-1][:50]}')
     return teams
 
 
+def append_new_teams(want_new: int = 100, crawl_cap: int = 400) -> List[dict]:
+    """Descarga hasta want_new equipos nuevos y los fusiona en OUT."""
+    existing = _load_existing()
+    have = {t.get('slug') for t in existing if t.get('slug')}
+    _safe_print(f'existing={len(existing)} want_new={want_new}')
+    added = collect_and_parse(want_new, crawl_cap=crawl_cap, skip_slugs=have)
+    merged = existing + added
+    OUT.write_text(json.dumps(merged, indent=2, ensure_ascii=False), encoding='utf-8')
+    _safe_print(f'Done added={len(added)} total={len(merged)} -> {OUT}')
+    return added
+
+
 def main() -> None:
-    teams = collect_and_parse(20)
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Scrape MetaVGC Reg M-C teams')
+    parser.add_argument(
+        '--append', type=int, default=0,
+        help='Descargar N equipos nuevos y anexarlos al JSON existente',
+    )
+    parser.add_argument('--want', type=int, default=20, help='Reemplazo completo (sin --append)')
+    parser.add_argument('--crawl-cap', type=int, default=400)
+    args = parser.parse_args()
+    if args.append > 0:
+        append_new_teams(args.append, crawl_cap=args.crawl_cap)
+        return
+    teams = collect_and_parse(args.want, crawl_cap=args.crawl_cap)
     OUT.write_text(json.dumps(teams, indent=2, ensure_ascii=False), encoding='utf-8')
-    print(f'Wrote {len(teams)} teams -> {OUT}')
+    _safe_print(f'Wrote {len(teams)} teams -> {OUT}')
 
 
 if __name__ == '__main__':

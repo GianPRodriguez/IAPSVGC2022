@@ -1,0 +1,59 @@
+Volcarona @ Leftovers
+Ability: Flame Body
+Level: 50
+EVs: 32 HP / 26 Def / 8 SpD
+Bold Nature
+- Heat Wave
+- Bug Buzz
+- Quiver Dance
+- Protect
+
+Lucario @ Lucarionite
+Ability: Adaptability
+Level: 50
+EVs: 2 HP / 32 Atk / 32 Spe
+Jolly Nature
+- Close Combat
+- Meteor Mash
+- Bullet Punch
+- Protect
+
+Basculegion-M @ Choice Scarf
+Ability: Swift Swim
+Level: 50
+EVs: 2 HP / 32 Atk / 32 Spe
+Jolly Nature
+- Wave Crash
+- Last Respects
+- Flip Turn
+- Icy Wind
+
+Krookodile @ Focus Sash
+Ability: Intimidate
+Level: 50
+EVs: 32 HP / 32 Atk / 2 Def
+Adamant Nature
+- High Horsepower
+- Knock Off
+- Rock Slide
+- Protect
+
+Clefable @ Sitrus Berry
+Ability: Unaware
+Level: 50
+EVs: 32 HP / 2 Atk / 32 Def
+Bold Nature
+- Moonblast
+- Helping Hand
+- Follow Me
+- Protect
+
+Rotom-Mow @ Miracle Seed
+Ability: Levitate
+Level: 50
+EVs: 2 HP / 32 SpA / 32 Spe
+Timid Nature
+- Leaf Storm
+- Thunderbolt
+- Electroweb
+- Protect

@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from typing import List
 
-from showdown.inference_sim.team_factory import TeamMeta, active_teams, to_showdown_export
+from showdown.inference_sim.team_factory import TeamMeta, load_scraped_teams, to_showdown_export
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO_ROOT / 'teams' / 'teams' / 'gen9' / 'champions_regmc'
@@ -20,7 +20,14 @@ def _safe_filename(name: str) -> str:
 def export_teams(out_dir: Path | None = None, teams: List[TeamMeta] | None = None) -> Path:
     dest = out_dir or DEFAULT_OUT
     dest.mkdir(parents=True, exist_ok=True)
-    pool = teams if teams is not None else active_teams()
+    # Exporta el compendio completo (1:1 con JSON). El filtro Item Clause
+    # aplica solo en batallas vía active_teams().
+    pool = teams if teams is not None else load_scraped_teams()
+    # Limpia exports previos para que el índice coincida con el JSON.
+    for old in dest.glob('*.txt'):
+        if old.name.upper() == 'INDEX.TXT':
+            continue
+        old.unlink(missing_ok=True)
     for i, meta in enumerate(pool, start=1):
         fname = f'{i:02d}_{_safe_filename(meta.name)}.txt'
         path = dest / fname
@@ -34,4 +41,4 @@ def export_teams(out_dir: Path | None = None, teams: List[TeamMeta] | None = Non
 
 if __name__ == '__main__':
     out = export_teams()
-    print(f'Exported {len(active_teams())} teams -> {out}')
+    print(f'Exported {len(load_scraped_teams())} teams -> {out}')

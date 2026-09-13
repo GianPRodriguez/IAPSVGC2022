@@ -33,9 +33,14 @@ _INFER_TARGETS = [
     'showdown/inference_sim/feeder.py',
 ]
 _HEUR_TARGETS = [
-    'showdown/battle_bots/heuristic/greedy.py',
-    'showdown/battle_bots/heuristic/team_preview.py',
-    'showdown/battle_bots/heuristic/pokeenv_player.py',
+    'showdown/battle_bots/greedy_solo/greedy.py',
+    'showdown/battle_bots/greedy_solo/team_preview.py',
+    'showdown/battle_bots/greedy_solo/pokeenv_player.py',
+    'showdown/battle_bots/greedy_joint/joint.py',
+    'showdown/battle_bots/greedy_joint/main.py',
+    'showdown/battle_bots/expectimax_bayesian/expectimax.py',
+    'showdown/battle_bots/expectimax_bayesian/main.py',
+    'showdown/battle_bots/expectimax_bayesian/pokeenv_player.py',
     'showdown/tools/calc_core.js',
 ]
 
@@ -78,11 +83,21 @@ def build_fixplan(report_text: str) -> str:
     sync = _flag(report_text, 'state_mismatch') or '?'
     inf = _flag(report_text, 'inference_ok') or '?'
     flags_add = _flag(report_text, 'NEED_FLAGS_ADD') or '?'
-    wins = _flag(report_text, 'heuristic_wins') or '?'
-    losses = _flag(report_text, 'random_wins') or '?'
+    wins = (
+        _flag(report_text, 'player_a_wins')
+        or _flag(report_text, 'heuristic_wins')
+        or '?'
+    )
+    losses = (
+        _flag(report_text, 'player_b_wins')
+        or _flag(report_text, 'random_wins')
+        or '?'
+    )
     errors = _flag(report_text, 'errors') or '?'
     mm = _flag(report_text, 'state_mismatches') or '?'
     fails = _flag(report_text, 'soundness_failures') or '?'
+    pa = _flag(report_text, 'player_a') or 'greedy_solo'
+    pb = _flag(report_text, 'player_b') or 'random'
 
     lines = [
         '=== Robust E2E Fixplan (manual Cursor fix) ===',
@@ -90,6 +105,10 @@ def build_fixplan(report_text: str) -> str:
         f'NEED_FLAGS_ADD: {flags_add}',
         f'state_mismatch: {sync}',
         f'inference_ok: {inf}',
+        f'player_a: {pa}',
+        f'player_b: {pb}',
+        f'player_a_wins: {wins}',
+        f'player_b_wins: {losses}',
         f'heuristic_wins: {wins}',
         f'random_wins: {losses}',
         f'errors: {errors}',

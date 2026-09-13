@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -11,6 +12,50 @@ from showdown.stat_inference import STAT_KEYS, champions_stat
 from teams.team_converter import normalize_name
 
 # Fuente: https://metavgc.com/teams/featured/regulation-mc
+
+# Pastes / MetaVGC a veces usan -M; poke-env dex = basculegion (no basculegionm).
+_SPECIES_EXPORT_ALIASES = {
+    'basculegion-m': 'Basculegion',
+    'basculegion-male': 'Basculegion',
+    'basculegionm': 'Basculegion',
+    'basculegion-female': 'Basculegion-F',
+}
+
+# MetaVGC / pastes: nombre colloquial → id Showdown (p.ej. mysticfire ≠ mysticalfire).
+_MOVE_EXPORT_ALIASES = {
+    'mystic fire': 'Mystical Fire',
+    'mysticfire': 'Mystical Fire',
+}
+
+
+def canonicalize_species(species: str) -> str:
+    """Nombre de especie seguro para export Showdown / poke-env / Champions."""
+    raw = (species or '').strip()
+    if not raw:
+        return raw
+    low = raw.lower()
+    if low in _SPECIES_EXPORT_ALIASES:
+        return _SPECIES_EXPORT_ALIASES[low]
+    compact = ''.join(ch for ch in low if ch.isalnum())
+    for src, dst in _SPECIES_EXPORT_ALIASES.items():
+        if ''.join(ch for ch in src if ch.isalnum()) == compact:
+            return dst
+    return raw
+
+
+def canonicalize_move(move: str) -> str:
+    """Nombre de move seguro para |utm| / validación Showdown."""
+    raw = (move or '').strip()
+    if not raw:
+        return raw
+    low = raw.lower()
+    if low in _MOVE_EXPORT_ALIASES:
+        return _MOVE_EXPORT_ALIASES[low]
+    compact = ''.join(ch for ch in low if ch.isalnum())
+    for src, dst in _MOVE_EXPORT_ALIASES.items():
+        if ''.join(ch for ch in src if ch.isalnum()) == compact:
+            return dst
+    return raw
 
 
 @dataclass
@@ -31,10 +76,13 @@ class MonSet:
         from API.PokemonData import getPkmnInfo
 
         info = getPkmnInfo(self.species)
-        bases = {
-            'hp': info[2], 'atk': info[3], 'def': info[4],
-            'spa': info[5], 'spd': info[6], 'spe': info[7],
-        }
+        if not info:
+            bases = {k: 1 for k in STAT_KEYS}
+        else:
+            bases = {
+                'hp': info[2], 'atk': info[3], 'def': info[4],
+                'spa': info[5], 'spd': info[6], 'spe': info[7],
+            }
         return {
             k: champions_stat(int(bases[k] or 1), int(self.sp.get(k, 0)), self.nature, k)
             for k in STAT_KEYS
@@ -51,6 +99,9 @@ class TeamMeta:
     natures: Dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        for mon in self.mons:
+            mon.species = canonicalize_species(mon.species)
+            mon.moves = [canonicalize_move(m) for m in mon.moves]
         self.true_sp = {}
         self.true_final = {}
         self.natures = {}
@@ -67,7 +118,8 @@ def _sp(hp=0, atk=0, df=0, spa=0, spd=0, spe=0) -> Dict[str, int]:
 
 def _export_mon(mon: MonSet) -> str:
     # Sin línea Gender: (poke-env la malparsea). Basculegion base = macho.
-    lines = [f"{mon.species} @ {mon.item}"]
+    species = canonicalize_species(mon.species)
+    lines = [f"{species} @ {mon.item}"]
     lines.append(f"Ability: {mon.ability}")
     lines.append('Level: 50')
     if mon.tera:
@@ -82,7 +134,7 @@ def _export_mon(mon: MonSet) -> str:
         lines.append(f"EVs: {' / '.join(ev_parts)}")
     lines.append(f"{mon.nature} Nature")
     for move in mon.moves:
-        lines.append(f"- {move}")
+        lines.append(f"- {canonicalize_move(move)}")
     return '\n'.join(lines)
 
 
@@ -220,7 +272,7 @@ _JSON_PATH = Path(__file__).resolve().parent / 'metavgc_regmc_teams.json'
 def _mon_from_dict(d: dict) -> MonSet:
     sp = d.get('sp') or {}
     return MonSet(
-        species=d['species'],
+        species=canonicalize_species(d['species']),
         item=d['item'],
         ability=d.get('ability') or '',
         nature=d.get('nature') or 'Serious',
@@ -278,9 +330,7 @@ def active_teams() -> List[TeamMeta]:
     pool = scraped if len(scraped) >= 2 else list(METAVGC_TEAMS)
     ok: List[TeamMeta] = []
     for t in pool:
-        if team_passes_item_clause(t):
-            ok.append(t)
-        else:
+        if not team_passes_item_clause(t):
             dups = []
             counts: Dict[str, int] = {}
             for mon in t.mons:
@@ -293,9 +343,27 @@ def active_teams() -> List[TeamMeta]:
                 f'[team_factory] skip Item Clause: {t.name} '
                 f'(dup items: {", ".join(dups) or "?"})'
             )
+            continue
+        ok.append(t)
+
+    # Validación completa Reg M-C (learnsets, clauses, especies) vía Showdown.
+    # Opt-out: REGMC_SKIP_PS_VALIDATE=1
+    if os.environ.get('REGMC_SKIP_PS_VALIDATE', '').strip().lower() not in (
+        '1', 'true', 'yes',
+    ):
+        try:
+            from showdown.inference_sim.validate_regmc_teams import validate_team_metas
+            ps_ok, ps_bad = validate_team_metas(ok)
+            for t, problems in ps_bad:
+                tip = problems[0] if problems else 'invalid'
+                print(f'[team_factory] skip Reg M-C invalid: {t.name} ({tip})')
+            ok = ps_ok
+        except Exception as exc:
+            print(f'[team_factory] WARN Reg M-C validate skipped: {exc!r}')
+
     if len(ok) < 2:
         raise RuntimeError(
-            'Tras filtrar Item Clause quedan <2 equipos MetaVGC válidos'
+            'Tras filtrar Item Clause / Reg M-C quedan <2 equipos MetaVGC válidos'
         )
     return ok
 

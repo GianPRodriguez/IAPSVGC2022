@@ -1,0 +1,59 @@
+Rillaboom @ Miracle Seed
+Ability: Grassy Surge
+Level: 50
+EVs: 2 HP / 32 Atk / 32 Spe
+Careful Nature
+- High Horsepower
+- U-turn
+- Fake Out
+- Grassy Glide
+
+Incineroar @ Sitrus Berry
+Ability: Intimidate
+Level: 50
+EVs: 32 HP / 32 Atk / 2 Def
+Serious Nature
+- Darkest Lariat
+- Parting Shot
+- Fake Out
+- Flare Blitz
+
+Floette-Eternal @ Floettite
+Ability: Fairy Aura
+Level: 50
+EVs: 2 HP / 32 SpA / 32 Spe
+Timid Nature
+- Light of Ruin
+- Dazzling Gleam
+- Protect
+- Moonblast
+
+Kingambit @ Life Orb
+Ability: Defiant
+Level: 50
+EVs: 32 HP / 32 Atk / 2 Def
+Adamant Nature
+- Sucker Punch
+- Kowtow Cleave
+- Swords Dance
+- Protect
+
+Toxapex @ Leftovers
+Ability: Regenerator
+Level: 50
+EVs: 32 HP / 18 Def / 16 SpD
+Bold Nature
+- Infestation
+- Toxic
+- Baneful Bunker
+- Wide Guard
+
+Pawmot @ Focus Sash
+Ability: Volt Absorb
+Level: 50
+EVs: 2 HP / 32 Atk / 32 Spe
+Jolly Nature
+- Close Combat
+- Double Shock
+- Fake Out
+- Revival Blessing

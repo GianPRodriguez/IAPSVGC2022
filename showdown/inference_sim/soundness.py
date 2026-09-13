@@ -119,14 +119,22 @@ def _lookup_truth(opp_meta: TeamMeta, sid: str):
     true_final = opp_meta.true_final.get(sid)
     if true_sp and true_final:
         return true_sp, true_final
-    # Mega / forme: salamencemega → salamence, floettemega → floette
+    try:
+        from showdown.stat_inference import normalize_species
+        ns = normalize_species(sid)
+        if ns and ns in opp_meta.true_sp:
+            return opp_meta.true_sp[ns], opp_meta.true_final[ns]
+    except Exception:
+        ns = ''
+    # Mega / forme: salamencemega → salamence, floettemega → floette-eternal
     for key in (
         sid,
         sid.replace('-', ''),
         sid.split('-')[0],
         sid.replace('mega', '').replace('-', '') or sid,
+        ns,
     ):
-        if key in opp_meta.true_sp:
+        if key and key in opp_meta.true_sp:
             return opp_meta.true_sp[key], opp_meta.true_final[key]
     # quitar sufijo mega
     if sid.endswith('mega'):
@@ -135,9 +143,14 @@ def _lookup_truth(opp_meta: TeamMeta, sid: str):
             return opp_meta.true_sp[base], opp_meta.true_final[base]
     if 'mega' in sid:
         base = sid.replace('mega', '').replace('-', '')
-        # try original keys containing base
         for k in opp_meta.true_sp:
             if k.replace('-', '') == base or k == base:
+                return opp_meta.true_sp[k], opp_meta.true_final[k]
+    # Floette-Mega / floette ↔ Floette-Eternal (mismo mon OTS)
+    compact = sid.replace('-', '')
+    if 'floette' in compact:
+        for k in opp_meta.true_sp:
+            if 'floette' in k.replace('-', ''):
                 return opp_meta.true_sp[k], opp_meta.true_final[k]
     return None, None
 

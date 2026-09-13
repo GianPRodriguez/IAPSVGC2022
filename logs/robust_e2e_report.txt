@@ -1,34 +1,39 @@
 === Robust E2E Report (A/B pools + BO3 + sync + OTS inference) ===
-time_utc: 2026-09-12T20:11:27.509962+00:00
+time_utc: 2026-09-13T03:47:58.211302+00:00
 format: gen9championsvgc2026regmcbo3
 ps_up: True
-team_pool_available: 100
-teams_used: 100 (A=50 heuristic, B=50 random, disjoint)
-bo3_series: 50
+team_pool_available: 199
+teams_used: 4 (A=2 expectimax_bayesian, B=2 greedy_joint, disjoint)
+player_a: expectimax_bayesian
+player_b: greedy_joint
+bo3_series: 2
 seed: -
-elapsed_s: 42.0
-bo3_per_s: 1.189
+elapsed_s: 317.4
+bo3_per_s: 0.006
 
 --- results ---
-heuristic_wins: 50
+player_a_wins: 2
+player_b_wins: 0
+heuristic_wins: 2
 random_wins: 0
 errors: 0
+win_rate_player_a: 100.0%
 win_rate_heuristic: 100.0%
-verdict: YES - heuristic beat random overall
+verdict: YES - expectimax_bayesian beat greedy_joint overall
 
 --- sync (Battle vs PS local) ---
 state_mismatch: NO
-state_checks: 584
+state_checks: 29
 state_mismatches: 0
 feed_errors: 0
 
 --- inference (OTS ground truth) ---
 inference_ok: YES
-soundness_checks: 10104
+soundness_checks: 528
 soundness_failures: 0
-belief_observations: 4290
-belief_skips: 255
-narrowing_events: 56
+belief_observations: 130
+belief_skips: 8
+narrowing_events: 0
 battle_errors: 0
 
 --- inference flags (Battle storage / calc wiring) ---
@@ -37,28 +42,37 @@ flags_storage_ok: 16
 flags_missing_storage: 0
 flags_missing_wire: 0
 flags_gaps_high_med: 0
-flags_samples:
-- meta_abilities_relevant: Flash Fire→abilityOn
+- OK: storage + wiring de DamageContext presentes; sin gaps high/medium.
 
 --- improvements / notes for next runs ---
 - OK: sin desync ni exclusión de SP verdadero. Próxima corrida: subir --teams o cambiar seed tras reglas nuevas.
 
 
 ------------------------------------------------------------------------
-EJEMPLO DE INFERENCIA EN EL TIEMPO: baxcalibur-mega (stat=def)
-True SP=0  True final=137
+EJEMPLO DE INFERENCIA EN EL TIEMPO: lucario-mega (stat=spe)
+True SP=32  True final=162
 
-  T 3 [turn   ]  SP    0-32  final   137-153  cand=33  obs=3
-  T 1 [turn   ]  SP    0-32  final   137-153  cand=33  obs=2
-  T 2 [turn   ]  SP    0-32  final   137-153  cand=33  obs=2
-  T 4 [turn   ]  SP    0-10  final   137-142  cand=11  obs=3  << estrech? 33->11
+  T 2 [turn   ]  SP    0-32  final   145-162  cand=33  obs=0
+  T 3 [turn   ]  SP    0-32  final   145-162  cand=33  obs=0
+  T 4 [turn   ]  SP    0-32  final   145-162  cand=33  obs=1
+  T 5 [turn   ]  SP    0-32  final   145-162  cand=33  obs=3
+  T 2 [turn   ]  SP    0-32  final   145-162  cand=33  obs=0
+  T 3 [turn   ]  SP    0-32  final   145-162  cand=33  obs=1
+  T 4 [turn   ]  SP    0-32  final   145-162  cand=33  obs=3
+  T 5 [turn   ]  SP    0-32  final   145-162  cand=33  obs=4
+  T 2 [turn   ]  SP    0-32  final   145-162  cand=33  obs=0
+  T 3 [turn   ]  SP    0-32  final   145-162  cand=33  obs=0
+  T 4 [turn   ]  SP    0-32  final   145-162  cand=33  obs=1
+  T 5 [turn   ]  SP    0-32  final   145-162  cand=33  obs=3
+  T 6 [turn   ]  SP    0-32  final   145-162  cand=33  obs=5
+  T 7 [turn   ]  SP    0-32  final   145-162  cand=33  obs=6
 
-Estado final de baxcalibur-mega:
-   hp: SP    0-32 | final   190-206 | cand=33 | true_sp=2 true_final=191
-  atk: SP    0-32 | final   214-232 | cand=33 | true_sp=32 true_final=232
-  def: SP    0-10 | final   137-142 | cand=11 | true_sp=0 true_final=137
-  spa: SP    0-32 | final   112-126 | cand=33 | true_sp=0 true_final=112
-  spd: SP    0-32 | final   121-137 | cand=33 | true_sp=0 true_final=121
-  spe: SP    0-32 | final   107-123 | cand=33 | true_sp=32 true_final=123
+Estado final de lucario-mega:
+   hp: SP    0-32 | final   145-161 | cand=33 | true_sp=2 true_final=146
+  atk: SP    0-32 | final   165-181 | cand=33 | true_sp=32 true_final=181
+  def: SP    0-32 | final   108-124 | cand=33 | true_sp=0 true_final=108
+  spa: SP    0-32 | final   144-158 | cand=33 | true_sp=0 true_final=144
+  spd: SP    0-32 | final    90-106 | cand=33 | true_sp=0 true_final=90
+  spe: SP    0-32 | final   145-162 | cand=33 | true_sp=32 true_final=162
 
-Player A = ValidatedGreedyPlayer | Player B = RandomPlayer
+Player A = validated(expectimax_bayesian) | Player B = greedy_joint

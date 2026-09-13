@@ -1,0 +1,59 @@
+Archaludon @ Leftovers
+Ability: Stamina
+Level: 50
+EVs: 32 HP / 1 Def / 2 SpA / 20 SpD / 11 Spe
+Timid Nature
+- Electro Shot
+- Protect
+- Flash Cannon
+- Dragon Pulse
+
+Basculegion @ Choice Scarf
+Ability: Adaptability
+Level: 50
+EVs: 2 HP / 32 Atk / 32 Spe
+Jolly Nature
+- Last Respects
+- Wave Crash
+- Pain Split
+- Facade
+
+Pelipper @ Focus Sash
+Ability: Drizzle
+Level: 50
+EVs: 31 HP / 1 Def / 5 SpA / 18 SpD / 11 Spe
+Modest Nature
+- Hurricane
+- Tailwind
+- Weather Ball
+- Wide Guard
+
+Golisopod @ Golisopite
+Ability: Tough Claws
+Level: 50
+EVs: 32 HP / 32 Atk / 2 Def
+Brave Nature
+- First Impression
+- Snarl
+- Waterfall
+- Shadow Claw
+
+Incineroar @ Rocky Helmet
+Ability: Intimidate
+Level: 50
+EVs: 32 HP / 32 Atk / 2 Def
+Adamant Nature
+- Flare Blitz
+- Throat Chop
+- Fake Out
+- Parting Shot
+
+Salamence @ Salamencite
+Ability: Aerilate
+Level: 50
+EVs: 2 HP / 32 Atk / 32 Spe
+Adamant Nature
+- Double-Edge
+- Protect
+- Dragon Dance
+- Roost

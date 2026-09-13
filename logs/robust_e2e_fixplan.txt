@@ -3,7 +3,11 @@ NEED_FIX=NO
 NEED_FLAGS_ADD: NO
 state_mismatch: NO
 inference_ok: YES
-heuristic_wins: 50
+player_a: expectimax_bayesian
+player_b: greedy_joint
+player_a_wins: 2
+player_b_wins: 0
+heuristic_wins: 2
 random_wins: 0
 errors: 0
 state_mismatches: 0

@@ -1,13 +1,16 @@
 """E2E robusto: pools A/B disjuntos + BO3 + sync Battle + soundness OTS.
 
-Entrada: N equipos (par). Ej. 100 → pool A (50) heurístico, pool B (50) random,
+Entrada: N equipos (par). Ej. 100 → pool A (50) player-a, pool B (50) player-b,
 sin equipos en común → 50 series BO3.
 
-Por turno: contraste IAP Battle vs poke-env (PS local) + validación de inferencia
-SP contra OTS ground-truth.
+Por turno (en player-a validated): contraste IAP Battle vs poke-env (PS local)
++ validación de inferencia SP contra OTS ground-truth.
 
 Uso (mínimo crédito Cursor):
   python -m showdown.inference_sim.run_robust_e2e --teams 100
+  python -m showdown.inference_sim.run_robust_e2e --teams 100 \\
+      --player-a greedy_solo --player-b greedy_joint
+      --player-a expectimax_bayesian --player-b greedy_joint
 
 Espera DONE ... y lee logs/robust_e2e_report.txt. No analices turnos.
 """
@@ -24,8 +27,7 @@ from collections import Counter
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-from poke_env.player import RandomPlayer
-from poke_env.ps_client import AccountConfiguration, LocalhostServerConfiguration
+from poke_env.ps_client import AccountConfiguration
 
 from showdown.inference_sim.battle_state_check import StateCheckReport
 from showdown.inference_sim.export_metavgc_teams import export_teams
@@ -44,7 +46,12 @@ from showdown.inference_sim.team_factory import (
     disjoint_ab_pairings,
     to_showdown_export,
 )
-from showdown.inference_sim.validated_greedy_player import ValidatedGreedyPlayer
+from showdown.inference_sim.validated_greedy_player import (
+    PLAYER_A_CHOICES,
+    PLAYER_B_CHOICES,
+    make_opponent_player,
+    validated_player_class,
+)
 from showdown.inference_sim.robust_fixplan import FIXPLAN_PATH, write_fixplan
 
 REPORT_PATH = REPO_ROOT / 'logs' / 'robust_e2e_report.txt'
@@ -67,6 +74,138 @@ def _ascii(s: str) -> str:
 def _write_progress(payload: Dict[str, Any]) -> None:
     PROGRESS_PATH.parent.mkdir(parents=True, exist_ok=True)
     PROGRESS_PATH.write_text(json.dumps(payload, indent=2), encoding='utf-8')
+
+
+def _series_won(*, game_wins: int, games_done: int) -> bool:
+    """Victoria de la serie BO3 = mayoría de partidas (no bastar ganar una)."""
+    if games_done <= 0:
+        return False
+    return game_wins > (games_done - game_wins)
+
+
+def _compact_series_line(
+    *,
+    done: int,
+    total: int,
+    status: str,
+    games: str,
+    wins: int,
+    losses: int,
+    errors: int,
+    sync: str,
+    inf: str,
+) -> str:
+    return (
+        f'[{done}/{total}] {status} {games} | '
+        f'W={wins} L={losses} E={errors} sync={sync} inf={inf}'
+    )
+
+
+class _TeamRejectWatch(logging.Handler):
+    """Detecta |popup| de team reject / move inválido para fallar rápido."""
+
+    def __init__(self, event: asyncio.Event, bucket: Dict[str, str]):
+        super().__init__(level=logging.WARNING)
+        self._event = event
+        self._bucket = bucket
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            msg = record.getMessage()
+        except Exception:
+            return
+        low = msg.lower()
+        if (
+            'team was rejected' in low
+            or 'is an invalid move' in low
+            or 'is an illegal move' in low
+            or "can't learn" in low
+        ):
+            self._bucket['msg'] = msg.replace('\n', ' ')[:240]
+            self._event.set()
+
+
+async def _cancel_challenges(*players) -> None:
+    for pl in players:
+        try:
+            # PS moderno: cancelar challenge saliendo / sin /cancel legacy.
+            await pl.ps_client.send_message('/reject all')
+        except Exception:
+            pass
+        try:
+            await pl.ps_client.send_message('/leave')
+        except Exception:
+            pass
+
+
+async def _run_one_series(
+    player_a_pl,
+    player_b_pl,
+    *,
+    timeout_s: float,
+) -> Tuple[str, str]:
+    """Ejecuta 1 challenge BO3. Devuelve (outcome, error_detail).
+
+    outcome: 'ok' | 'reject' | 'timeout' | 'error'
+    """
+    reject_event = asyncio.Event()
+    reject_bucket: Dict[str, str] = {}
+    watch = _TeamRejectWatch(reject_event, reject_bucket)
+    loggers = [
+        logging.getLogger(getattr(player_a_pl, 'username', '') or ''),
+        logging.getLogger(getattr(player_b_pl, 'username', '') or ''),
+        logging.getLogger('poke-env'),
+        logging.getLogger('poke_env'),
+    ]
+    for lg in loggers:
+        if lg.name:
+            lg.addHandler(watch)
+    battle_task = asyncio.create_task(
+        player_a_pl.battle_against(player_b_pl, n_battles=1)
+    )
+    reject_task = asyncio.create_task(reject_event.wait())
+    try:
+        done_set, _pending = await asyncio.wait(
+            {battle_task, reject_task},
+            timeout=timeout_s,
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        if reject_task in done_set and reject_event.is_set():
+            battle_task.cancel()
+            try:
+                await battle_task
+            except (asyncio.CancelledError, Exception):
+                pass
+            await _cancel_challenges(player_a_pl, player_b_pl)
+            return 'reject', reject_bucket.get('msg') or 'team_rejected'
+        if battle_task in done_set:
+            exc = battle_task.exception()
+            if exc is not None:
+                await _cancel_challenges(player_a_pl, player_b_pl)
+                return 'error', repr(exc)
+            return 'ok', ''
+        # timeout
+        battle_task.cancel()
+        reject_task.cancel()
+        try:
+            await battle_task
+        except (asyncio.CancelledError, Exception):
+            pass
+        await _cancel_challenges(player_a_pl, player_b_pl)
+        return 'timeout', f'TimeoutError({timeout_s}s)'
+    finally:
+        if not reject_task.done():
+            reject_task.cancel()
+            try:
+                await reject_task
+            except (asyncio.CancelledError, Exception):
+                pass
+        for lg in loggers:
+            if lg.name:
+                try:
+                    lg.removeHandler(watch)
+                except Exception:
+                    pass
 
 
 def _improvements(
@@ -142,16 +281,18 @@ def _build_report(
     details: List[dict],
     include_details: bool,
     flags: Optional[FlagAuditResult] = None,
+    player_a: str = 'greedy_solo',
+    player_b: str = 'random',
 ) -> str:
     decided = wins + losses
     wr = (100.0 * wins / decided) if decided else 0.0
     bps = (wins + losses + errors) / elapsed_s if elapsed_s > 0 else 0.0
     if wins > losses:
-        verdict = 'YES - heuristic beat random overall'
+        verdict = f'YES - {player_a} beat {player_b} overall'
     elif wins == losses and decided:
         verdict = 'TIE'
     else:
-        verdict = 'NO - random edged out / incomplete'
+        verdict = f'NO - {player_b} edged out / incomplete'
 
     lines = [
         '=== Robust E2E Report (A/B pools + BO3 + sync + OTS inference) ===',
@@ -159,16 +300,21 @@ def _build_report(
         f'format: {format_id}',
         f'ps_up: {is_ps_up()}',
         f'team_pool_available: {pool_n}',
-        f'teams_used: {n_teams} (A={n_bo3} heuristic, B={n_bo3} random, disjoint)',
+        f'teams_used: {n_teams} (A={n_bo3} {player_a}, B={n_bo3} {player_b}, disjoint)',
+        f'player_a: {player_a}',
+        f'player_b: {player_b}',
         f'bo3_series: {n_bo3}',
         f'seed: {seed if seed is not None else "-"}',
         f'elapsed_s: {elapsed_s:.1f}',
         f'bo3_per_s: {bps:.3f}',
         '',
         '--- results ---',
+        f'player_a_wins: {wins}',
+        f'player_b_wins: {losses}',
         f'heuristic_wins: {wins}',
         f'random_wins: {losses}',
         f'errors: {errors}',
+        f'win_rate_player_a: {wr:.1f}%',
         f'win_rate_heuristic: {wr:.1f}%',
         f'verdict: {verdict}',
         '',
@@ -214,7 +360,6 @@ def _build_report(
                 f'n_cand={len(fail.candidates)})'
             )
 
-    # Timeline breve (1 ejemplo) — útil sin volcar todo
     try:
         tl = format_timeline_example(sound)
         if tl and not (len(tl) == 1 and 'Sin timeline' in tl[0]):
@@ -227,20 +372,21 @@ def _build_report(
         lines.append('')
         lines.append('--- bo3 series ---')
         for i, row in enumerate(details, start=1):
-            status = 'ERROR' if row['error'] else ('WIN' if row['heuristic_won'] else 'LOSS')
+            status = 'ERROR' if row['error'] else ('WIN' if row['player_a_won'] else 'LOSS')
             tags = []
             if row.get('state_mismatch'):
                 tags.append('SYNC')
             if row.get('inference_fail'):
                 tags.append('INF')
             tag_s = '/'.join(tags) if tags else 'ok'
+            games = row.get('games') or ''
             lines.append(
-                f'{i}. [{status}|{tag_s}] {_ascii(row["pair"])}'
+                f'{i}. [{status}|{tag_s}] {games} {_ascii(row["pair"])}'
                 + (f' | {row["error"]}' if row['error'] else '')
             )
 
     lines.append('')
-    lines.append('Player A = ValidatedGreedyPlayer | Player B = RandomPlayer')
+    lines.append(f'Player A = validated({player_a}) | Player B = {player_b}')
     return '\n'.join(lines) + '\n'
 
 
@@ -265,6 +411,8 @@ async def run_batch(
     include_details: bool,
     export: bool,
     quiet: bool,
+    player_a: str = 'greedy_solo',
+    player_b: str = 'random',
 ) -> str:
     if n_teams % 2 != 0 or n_teams < 2:
         raise ValueError('--teams debe ser un entero par >= 2')
@@ -283,7 +431,6 @@ async def run_batch(
     n_bo3 = len(pairs)
     state = StateCheckReport()
     sound = SoundnessReport()
-    # Auditoría estática una vez (pool abilities = señal barata de gaps relevantes)
     used_metas: List[TeamMeta] = []
     for a, b in pairs:
         used_metas.extend([a, b])
@@ -292,23 +439,33 @@ async def run_batch(
     )
 
     stamp = int(time.time()) % 100000
-    heur_team0, rnd_team0 = pairs[0]
-    heur = ValidatedGreedyPlayer(
-        user_team=heur_team0,
-        opp_team=rnd_team0,
+    team_a0, team_b0 = pairs[0]
+    a_cls = validated_player_class(player_a)
+    a_nick = {
+        'greedy_solo': 'SoloRobust',
+        'greedy_joint': 'JointRobust',
+        'expectimax_bayesian': 'ExpBayRobust',
+    }.get(player_a, 'ARobust')
+    b_nick = {
+        'random': 'RndRobust',
+        'greedy_solo': 'SoloOpp',
+        'greedy_joint': 'JointOpp',
+        'expectimax_bayesian': 'ExpBayOpp',
+    }.get(player_b, 'BOpp')
+
+    player_a_pl = a_cls(
+        user_team=team_a0,
+        opp_team=team_b0,
         state_report=state,
         soundness_report=sound,
-        account_configuration=AccountConfiguration(f'HeurRobust{stamp}', None),
+        account_configuration=AccountConfiguration(f'{a_nick}{stamp}', None),
         battle_format=format_id,
     )
-    rnd = RandomPlayer(
-        account_configuration=AccountConfiguration(f'RndRobust{stamp}', None),
+    player_b_pl = make_opponent_player(
+        player_b,
+        team=team_b0,
+        account_configuration=AccountConfiguration(f'{b_nick}{stamp}', None),
         battle_format=format_id,
-        team=to_showdown_export(rnd_team0),
-        server_configuration=LocalhostServerConfiguration,
-        accept_open_team_sheet=True,
-        max_concurrent_battles=1,
-        log_level=30,
     )
 
     wins = 0
@@ -317,51 +474,70 @@ async def run_batch(
     details: List[dict] = []
     t0 = time.perf_counter()
 
-    if not quiet:
-        print(
-            f'BATCH robust teams={n_teams} bo3={n_bo3} format={format_id} seed={seed}',
-            flush=True,
-        )
+    # Cabecera siempre (aunque quiet): el log compacto por serie va a consola.
+    print(
+        f'BATCH robust teams={n_teams} bo3={n_bo3} '
+        f'A={player_a} B={player_b} format={format_id} seed={seed}',
+        flush=True,
+    )
 
     try:
-        for i, (heur_team, rnd_team) in enumerate(pairs):
-            pair_label = f'{heur_team.name} vs {rnd_team.name}'
+        for i, (team_a, team_b) in enumerate(pairs):
+            pair_label = f'{team_a.name} vs {team_b.name}'
             row = {
                 'pair': pair_label,
-                'heuristic_won': False,
+                'player_a_won': False,
                 'error': '',
                 'state_mismatch': False,
                 'inference_fail': False,
+                'games': '',
             }
 
-            heur.reset_for_next_battle(heur_team, rnd_team)
-            rnd.update_team(to_showdown_export(rnd_team))
+            player_a_pl.reset_for_next_battle(team_a, team_b)
+            player_b_pl.update_team(to_showdown_export(team_b))
 
-            wins_before = heur.n_won_battles
-            finished_before = heur.n_finished_battles
+            wins_before = player_a_pl.n_won_battles
+            finished_before = player_a_pl.n_finished_battles
             mm_before = state._total_mismatches
             feed_before = state.feed_errors
             fail_before = sound.failure_count
 
-            try:
-                await asyncio.wait_for(
-                    heur.battle_against(rnd, n_battles=1),
-                    timeout=timeout_s,
+            outcome, err_detail = await _run_one_series(
+                player_a_pl, player_b_pl, timeout_s=timeout_s,
+            )
+
+            games_done = player_a_pl.n_finished_battles - finished_before
+            game_wins = player_a_pl.n_won_battles - wins_before
+            games_compact = (
+                player_a_pl.series_games_compact()
+                if hasattr(player_a_pl, 'series_games_compact')
+                else '-'
+            )
+            row['games'] = games_compact
+
+            if outcome == 'ok' and games_done > 0:
+                row['player_a_won'] = _series_won(
+                    game_wins=game_wins, games_done=games_done,
                 )
-                if heur.n_finished_battles > finished_before:
-                    row['heuristic_won'] = heur.n_won_battles > wins_before
-                    if row['heuristic_won']:
-                        wins += 1
-                    else:
-                        losses += 1
+                if row['player_a_won']:
+                    wins += 1
+                    status = 'WIN'
                 else:
-                    errors += 1
-                    sound.battle_errors += 1
-                    row['error'] = 'no_finished_bo3'
-            except Exception as exc:
+                    losses += 1
+                    status = 'LOSS'
+            else:
                 errors += 1
                 sound.battle_errors += 1
-                row['error'] = repr(exc)
+                if outcome == 'ok':
+                    row['error'] = 'no_finished_bo3'
+                else:
+                    row['error'] = err_detail or outcome
+                status = 'ERR'
+                try:
+                    player_a_pl.reset_battles()
+                    player_b_pl.reset_battles()
+                except Exception:
+                    pass
 
             row['state_mismatch'] = (
                 state._total_mismatches > mm_before or state.feed_errors > feed_before
@@ -373,8 +549,8 @@ async def run_batch(
 
             if (i + 1) % 10 == 0:
                 try:
-                    heur.reset_battles()
-                    rnd.reset_battles()
+                    player_a_pl.reset_battles()
+                    player_b_pl.reset_battles()
                 except Exception:
                     pass
 
@@ -383,6 +559,8 @@ async def run_batch(
             _write_progress({
                 'done': done,
                 'total': n_bo3,
+                'player_a': player_a,
+                'player_b': player_b,
                 'wins': wins,
                 'losses': losses,
                 'errors': errors,
@@ -391,20 +569,33 @@ async def run_batch(
                 'soundness_failures': sound.failure_count,
                 'elapsed_s': round(elapsed, 2),
                 'last_pair': _ascii(pair_label),
+                'last_status': status,
+                'last_games': games_compact,
+                'last_error': row['error'],
             })
 
-            if not quiet and (done % max(1, progress_every) == 0 or done == n_bo3):
-                print(
-                    f'  [{done}/{n_bo3}] W={wins} L={losses} E={errors} '
-                    f'sync={state.flag_line()} inf={"OK" if sound.ok else "FAIL"} '
-                    f't={elapsed:.0f}s',
-                    flush=True,
+            # Log compacto por cada serie BO3 (siempre visible en consola).
+            print(
+                _compact_series_line(
+                    done=done,
+                    total=n_bo3,
+                    status=status,
+                    games=games_compact,
+                    wins=wins,
+                    losses=losses,
+                    errors=errors,
+                    sync=state.flag_line(),
+                    inf='OK' if sound.ok else 'FAIL',
                 )
+                + (f' | {row["error"][:80]}' if row['error'] else '')
+                + f' | {_ascii(pair_label)[:70]}',
+                flush=True,
+            )
 
             if delay_s > 0 and i + 1 < n_bo3:
                 await asyncio.sleep(delay_s)
     finally:
-        await _stop_players(heur, rnd)
+        await _stop_players(player_a_pl, player_b_pl)
 
     elapsed = time.perf_counter() - t0
     report = _build_report(
@@ -422,6 +613,8 @@ async def run_batch(
         details=details,
         include_details=include_details,
         flags=flag_audit,
+        player_a=player_a,
+        player_b=player_b,
     )
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text(report, encoding='utf-8')
@@ -431,7 +624,8 @@ async def run_batch(
     wr = (100.0 * wins / decided) if decided else 0.0
     need = 'YES' if 'NEED_FIX=YES' in fixplan.read_text(encoding='utf-8') else 'NO'
     print(
-        f'DONE teams={n_teams} bo3={n_bo3} W={wins} L={losses} E={errors} '
+        f'DONE teams={n_teams} bo3={n_bo3} A={player_a} B={player_b} '
+        f'W={wins} L={losses} E={errors} '
         f'WR={wr:.1f}% state_mismatch={state.flag_line()} '
         f'inference_ok={"YES" if sound.ok else "NO"} '
         f'inf_fail={sound.failure_count} NEED_FIX={need} '
@@ -450,7 +644,19 @@ def main(argv: Optional[List[str]] = None) -> int:
         '--teams',
         type=int,
         default=100,
-        help='N equipos (par). Genera N/2 series BO3 (A=heuristic, B=random)',
+        help='N equipos (par). Genera N/2 series BO3 (pools A/B disjuntos)',
+    )
+    parser.add_argument(
+        '--player-a',
+        choices=list(PLAYER_A_CHOICES),
+        default='greedy_solo',
+        help='Agente validated (sync+OTS). Default: greedy_solo',
+    )
+    parser.add_argument(
+        '--player-b',
+        choices=list(PLAYER_B_CHOICES),
+        default='random',
+        help='Oponente. Default: random',
     )
     parser.add_argument('--format', default=DEFAULT_FORMAT)
     parser.add_argument('--start-ps', action='store_true')
@@ -479,7 +685,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     if not quiet:
         print(
             f'PS up: {is_ps_up()} | format={args.format} | '
-            f'teams={args.teams} bo3={args.teams // 2}'
+            f'teams={args.teams} bo3={args.teams // 2} '
+            f'A={args.player_a} B={args.player_b}'
         )
 
     asyncio.run(
@@ -495,6 +702,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             include_details=args.details,
             export=args.export,
             quiet=quiet,
+            player_a=args.player_a,
+            player_b=args.player_b,
         )
     )
 

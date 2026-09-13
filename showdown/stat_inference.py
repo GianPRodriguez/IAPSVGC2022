@@ -12,6 +12,10 @@ Modelo:
   compatibles con todo lo observado. El conjunto arranca completo y SOLO se
   estrecha, nunca se ensancha, de modo que la convergencia es monotona.
 
+  Para decision (greedy) se puede elegir un SP puntual dentro del conjunto
+  vivo usando un prior suave del compendio MetaVGC (OTS scrapeados). Ese
+  prior NUNCA poda candidatos; solo desempat a.
+
 Regla de oro: ante cualquier duda NO se estrecha. Una poda incorrecta es
 irreversible y envenena el resto de la partida, mientras que una observacion
 descartada solo cuesta un turno.
@@ -46,8 +50,8 @@ LEVEL = 50
 SP_HARD_MAX = 63
 SP_HARD_BUDGET = 6 * SP_HARD_MAX
 
-# Limites vigentes. Arrancan en los de Champions y se ensanchan solo si la
-# evidencia los contradice (ver calibrate_from_known_team).
+# Limites vigentes de inferencia. Este proyecto es Champions-only: se mantienen
+# en SP_MAX/SP_BUDGET. calibrate_from_known_team ya no los ensancha.
 _limits = {'max': SP_MAX, 'budget': SP_BUDGET}
 
 
@@ -62,6 +66,16 @@ def configure_sp_limits(max_per_stat: int, budget: int) -> None:
 
 def reset_sp_limits() -> None:
     configure_sp_limits(SP_MAX, SP_BUDGET)
+
+
+def forme_bases_unresolved(pkmn) -> bool:
+    """True si ya megaevolucionó pero |detailschange| aún no trajo la forme (bases)."""
+    if pkmn is None or not getattr(pkmn, 'is_mega_evo', False):
+        return False
+    compact = ''.join(
+        ch for ch in (getattr(pkmn, 'name', '') or '').lower() if ch.isalnum()
+    )
+    return 'mega' not in compact
 
 STAT_KEYS = ('hp', 'atk', 'def', 'spa', 'spd', 'spe')
 
@@ -167,23 +181,77 @@ class StatBelief:
         """True cuando ya solo queda un valor final posible."""
         return len(self.stat_values(stat)) == 1
 
+    def preferred_sp(self, stat: str) -> Optional[int]:
+        """
+        SP puntual para decisión entre candidatos aún vivos.
+        Prior meta (OTS MetaVGC) si hay hits; si no, mediana del set.
+        Nunca altera self.candidates.
+        """
+        sps = sorted(self.candidates.get(stat) or [])
+        if not sps:
+            return None
+        if len(sps) == 1:
+            return sps[0]
+        try:
+            from showdown.meta_sp_prior import preferred_sp_map
+
+            picked = preferred_sp_map(
+                species=self.species,
+                nature=self.nature,
+                candidates=self.candidates,
+            )
+            if stat in picked and picked[stat] in self.candidates.get(stat, set()):
+                return int(picked[stat])
+        except Exception:
+            pass
+        return sps[len(sps) // 2]
+
     def point_estimate_stats(self) -> Dict[str, int]:
         """
-        Stats finales puntuales para decisión (greedy): SP mediano del
-        conjunto candidato actual → champions_stat.
+        Stats finales puntuales para decisión (greedy): SP preferido del
+        conjunto candidato actual (prior meta + mediana fallback) → champions_stat.
         """
         out: Dict[str, int] = {}
+        pref: Dict[str, int] = {}
+        try:
+            from showdown.meta_sp_prior import preferred_sp_map
+
+            pref = preferred_sp_map(
+                species=self.species,
+                nature=self.nature,
+                candidates=self.candidates,
+            )
+        except Exception:
+            pref = {}
         for stat in STAT_KEYS:
             sps = sorted(self.candidates.get(stat) or [])
             base = int(self.base_stats.get(stat) or 0)
             if not sps or base <= 0:
                 continue
-            mid_sp = sps[len(sps) // 2]
-            out[stat] = champions_stat(base, mid_sp, self.nature, stat)
+            use_sp = pref.get(stat)
+            if use_sp is None or use_sp not in self.candidates.get(stat, set()):
+                use_sp = sps[len(sps) // 2]
+            out[stat] = champions_stat(base, int(use_sp), self.nature, stat)
         return out
 
     def sp_range(self, stat: str) -> Optional[Tuple[int, int]]:
         sps = self.candidates.get(stat)
+        if not sps:
+            return None
+        return min(sps), max(sps)
+
+    def _candidates_champions_report(self) -> Dict[str, Set[int]]:
+        """Vista de candidatos recortada a reglas Champions (solo reportes)."""
+        return {
+            stat: {
+                sp for sp in (self.candidates.get(stat) or set())
+                if SP_MIN <= sp <= SP_MAX
+            }
+            for stat in STAT_KEYS
+        }
+
+    def sp_range_for_report(self, stat: str) -> Optional[Tuple[int, int]]:
+        sps = self._candidates_champions_report().get(stat)
         if not sps:
             return None
         return min(sps), max(sps)
@@ -262,8 +330,27 @@ class StatBelief:
         """Rango final con las bases actuales (mega/blade si aplica)."""
         return self.summary_line_with_bases(self.base_stats)
 
+    def summary_line_for_report(self) -> str:
+        """Como summary_line, pero solo con SP legales Champions (reporte)."""
+        return self.summary_line_with_bases_for_report(self.base_stats)
+
+    def summary_line_with_bases_for_report(self, bases: Dict[str, int]) -> str:
+        saved = self.candidates
+        try:
+            self.candidates = self._candidates_champions_report()
+            return self.summary_line_with_bases(bases)
+        finally:
+            self.candidates = saved
+
     def sp_summary_line(self) -> str:
         """Rangos de Stat Points candidatos (invariantes a la forma)."""
+        return self._format_sp_ranges(self.sp_range)
+
+    def sp_summary_line_for_report(self) -> str:
+        """SP para reporte: siempre acotados a 0..SP_MAX Champions."""
+        return self._format_sp_ranges(self.sp_range_for_report)
+
+    def _format_sp_ranges(self, range_fn) -> str:
         parts = []
         for stat, label in (
             ('hp', 'HP'),
@@ -273,7 +360,7 @@ class StatBelief:
             ('spd', 'SpD'),
             ('spe', 'Spe'),
         ):
-            rng = self.sp_range(stat)
+            rng = range_fn(stat)
             if rng is None:
                 parts.append(f'{label}=?')
             elif rng[0] == rng[1]:
@@ -453,6 +540,17 @@ _UNCERTAIN_DAMAGE_ABILITIES = {
 }
 
 
+# Items/abilities que invalidan la cota superior (el golpe "flojo" no implica
+# Atk bajo: sash/sturdy/disguise cortan el daño, HH/crit lo inflan de forma
+# fácil de desincronizar).
+_UPPER_BOUND_BLOCK_DEF_ITEMS = {
+    'focussash',
+}
+_UPPER_BOUND_BLOCK_DEF_ABILITIES = {
+    'sturdy', 'disguise', 'iceface', 'multiscale', 'shadowshield',
+}
+
+
 class DamageContext:
     """Modificadores afirmables en el momento del golpe."""
 
@@ -548,6 +646,33 @@ class DamageContext:
             or self.defender_ability in _UNCERTAIN_DAMAGE_ABILITIES
         )
 
+    @property
+    def is_clean_for_upper_bound(self) -> bool:
+        """
+        Contexto lo bastante limpio para también excluir Atk/SpA altos (o
+        Def/SpD bajos) cuando el daño observado es menor que el min_roll.
+        """
+        if self.is_uncertain or self.is_crit:
+            return False
+        if self.helping_hand:
+            return False
+        # Spread: splits/redondeos más frágiles vs PS.
+        if self.is_spread:
+            return False
+        def_item = (self.defender_item or '').strip().lower().replace(' ', '').replace('-', '')
+        if def_item in _UPPER_BOUND_BLOCK_DEF_ITEMS:
+            return False
+        if self.defender_ability in _UPPER_BOUND_BLOCK_DEF_ABILITIES:
+            return False
+        # Multiscale-like a full HP aunque la ability no esté en la lista.
+        if (
+            self.defender_hp_fraction is not None
+            and self.defender_hp_fraction >= 0.999
+            and self.defender_ability in ('multiscale', 'shadowshield')
+        ):
+            return False
+        return True
+
 
 def _display_item(item: Optional[str]) -> Optional[str]:
     if not item:
@@ -633,7 +758,7 @@ def _poke_payload(
         'species': species,
         'nature': (nature or 'Serious').capitalize() if nature else 'Serious',
         'item': _display_item(item),
-        'ability': _display_ability(ability),
+        'ability': _display_ability(sanitize_ability_for_forme(species, ability)),
         'status': status or '',
         'boosts': {
             'atk': int((boosts or {}).get('atk', 0) or 0),
@@ -722,40 +847,60 @@ def _field_payload(ctx: DamageContext, category: str) -> Dict:
 
 
 # Desync tipico calc Champions vs PS: pantallas+terreno, redondeo de % HP,
-# shells de especies ausentes en el dex. Preferimos no podar el verdadero.
-_ABS_DAMAGE_TOLERANCE = 8
-_PERCENT_DAMAGE_TOLERANCE = 6
-# Margen en Spe efectiva: Tailwind 80→160 vs Spe 163, empates, mega mid-turn.
-_SPEED_COMPARE_MARGIN = 6
+# shells de especies ausentes en el dex (STAB), Aerilate, etc.
+# Preferimos no podar el verdadero: tolerancia holgada en %.
+_ABS_DAMAGE_TOLERANCE = 18
+_PERCENT_DAMAGE_TOLERANCE = 22
+# Cota superior bilateral en %: margen extra (calc a menudo sobreestima
+# terreno/STAB respecto a PS; un min_roll apenas por encima expulsaba Def reales).
+_PERCENT_BILATERAL_EXTRA = 8
+# Margen en Spe efectiva: Tailwind 80→160 vs Spe 163, empates, mega mid-turn,
+# Sticky Web / redondeos. Preferir no expulsar el Spe verdadero.
+_SPEED_COMPARE_MARGIN = 12
 
 
 def _rolls_match_absolute(
-    min_roll: int, max_roll: int, observed: int, *, is_ko: bool = False
+    min_roll: int, max_roll: int, observed: int, *, is_ko: bool = False,
+    bilateral: bool = False,
 ) -> bool:
     """
-    Cota unilateral (soundness): el SP es viable si el calc PUEDE alcanzar el
-    dano observado. No excluimos Atk/SpA altos (ni Def/SpD bajos) porque el calc
-    sobreestime el golpe — esa fue la fuente de falsos negativos e2e.
+    Cota inferior (siempre): el SP es viable si el calc PUEDE alcanzar el dano
+    observado (max_roll >= observed).
+
+    Cota superior (solo bilateral + no KO): si incluso el roll minimo supera el
+    observado, el SP es demasiado alto (Atk/SpA) o la Def/SpD demasiado baja.
     """
     if observed <= 0:
         return False
     tol = _ABS_DAMAGE_TOLERANCE
-    # Capaz de hacer al menos el dano visto (KO/overkill incluido).
-    return max_roll >= max(1, observed - tol)
+    if max_roll < max(1, observed - tol):
+        return False
+    if bilateral and not is_ko:
+        # min_roll no puede quedar por encima del golpe visto.
+        if min_roll > observed + tol:
+            return False
+    return True
 
 
 def _rolls_match_percent(
-    min_roll: int, max_roll: int, max_hp: int, delta_pct: int, *, is_ko: bool = False
+    min_roll: int, max_roll: int, max_hp: int, delta_pct: int, *, is_ko: bool = False,
+    bilateral: bool = False,
 ) -> bool:
-    """
-    Igual que absolute pero en franja de % HP del rival: solo cota inferior de
-    dano (max_roll debe alcanzar el delta observado).
-    """
+    """Igual que absolute, en franja de % HP del rival."""
     if max_hp <= 0 or delta_pct <= 0:
         return False
     tol = _PERCENT_DAMAGE_TOLERANCE
     low = max(1, (delta_pct - tol) * max_hp // 100)
-    return max_roll >= low
+    if max_roll < low:
+        return False
+    if bilateral and not is_ko:
+        bi_tol = tol + _PERCENT_BILATERAL_EXTRA
+        high = min(max_hp, (delta_pct + bi_tol) * max_hp // 100)
+        if high < 1:
+            high = 1
+        if min_roll > high:
+            return False
+    return True
 
 
 # --------------------------------------------------------------------------- #
@@ -774,51 +919,14 @@ def solve_sp(base: int, nature: Optional[str], stat: str, observed: int) -> Set[
 
 def calibrate_from_known_team(pokemons: Iterable) -> None:
     """
-    Ajusta los topes de Stat Points usando el propio equipo, del que Showdown
-    manda los stats exactos en el |request|.
+    Hook de arranque de batalla. Este proyecto es Champions-only: los topes de
+    inferencia del rival se quedan en SP_MAX/SP_BUDGET aunque el equipo propio
+    traiga stats ilegales (EV clasicos, etc.). No ensancha.
 
-    Si el reparto propio necesita mas puntos de los que permite Champions es que
-    el servidor no esta aplicando esas reglas, y mantener el tope bajo haria
-    descartar el valor verdadero del rival. En ese caso se ensancha: preferimos
-    converger mas despacio antes que converger a un numero equivocado.
-
-    Ojo: en el lado propio los atributos *_battle_base NO guardan la base de
-    especie (solo el rival los usa asi), de modo que las bases se leen siempre
-    del pokedex y los stats reales de los *_battle_actual.
+    Se conserva la firma/API (feeder, showteam) para no romper callers.
     """
-    needed_max = 0
-    needed_budget = 0
-
-    for pkmn in pokemons or []:
-        if pkmn is None:
-            continue
-        nature = getattr(pkmn, 'nature', None)
-        name = getattr(pkmn, 'name', '')
-        per_pokemon = 0
-        for stat, actual_attr in ACTUAL_ATTRS.items():
-            try:
-                observed = int(getattr(pkmn, actual_attr, -1) or -1)
-            except (TypeError, ValueError):
-                continue
-            base = _base_from_pokedex(name, stat)
-            candidates = solve_sp(base, nature, stat, observed)
-            if not candidates:
-                continue
-            # El minimo del par de SP equivalentes basta para acotar el reparto.
-            low = min(candidates)
-            needed_max = max(needed_max, low)
-            per_pokemon += low
-        needed_budget = max(needed_budget, per_pokemon)
-
-    max_sp, budget = sp_limits()
-    if needed_max > max_sp or needed_budget > budget:
-        configure_sp_limits(max(max_sp, needed_max), max(budget, needed_budget))
-        new_max, new_budget = sp_limits()
-        print(
-            f'[STAT-INF] El equipo propio necesita hasta {needed_max} SP en un stat '
-            f'y {needed_budget} en total: topes ensanchados a {new_max}/{new_budget} '
-            f'(Champions seria {SP_MAX}/{SP_BUDGET}).'
-        )
+    reset_sp_limits()
+    _ = pokemons  # API estable; ya no se usa para recalibrar topes.
 
 
 ACTUAL_ATTRS = {
@@ -866,6 +974,12 @@ def dex_base_stats(name: str) -> Dict[str, int]:
 
 _FORME_SUFFIXES = ('-mega-x', '-mega-y', '-mega', '-blade', '-shield', '-gmax')
 
+# Formes que comparten SP con una clave OTS distinta del strip -mega.
+# Floette-Mega strip→floette, pero el sheet MetaVGC/OTS es floette-eternal.
+_SPECIES_BELIEF_ALIASES = {
+    'floette': 'floette-eternal',
+}
+
 
 def normalize_species(name: Optional[str]) -> str:
     """
@@ -876,8 +990,31 @@ def normalize_species(name: Optional[str]) -> str:
     key = (name or '').strip().lower().replace(' ', '-')
     for suffix in _FORME_SUFFIXES:
         if key.endswith(suffix):
-            return key[: -len(suffix)]
-    return key
+            key = key[: -len(suffix)]
+            break
+    return _SPECIES_BELIEF_ALIASES.get(key, key)
+
+
+def sanitize_ability_for_forme(
+    species: Optional[str], ability: Optional[str]
+) -> Optional[str]:
+    """
+    Corrige habilidades de paste OTS/MetaVGC que solo aplican tras megaevolucionar.
+
+    MetaVGC lista Fairy Aura en Floette-Eternal; en combate esa ability solo
+    existe en Floette-Mega. Usarla con bases Eternal infla el calc y el bilateral
+    excluye el SpA verdadero (p.ej. SP=32 Modest).
+    """
+    if not ability:
+        return ability
+    sp = (species or '').strip().lower().replace(' ', '-').replace('_', '-')
+    abi = (
+        str(ability).strip().lower()
+        .replace(' ', '').replace('-', '').replace('_', '')
+    )
+    if abi == 'fairyaura' and 'floette' in sp and 'mega' not in sp:
+        return 'flowerveil'
+    return ability
 
 
 class TeamStatBeliefs:
@@ -929,18 +1066,27 @@ class TeamStatBeliefs:
             if value > 0:
                 base_stats[stat] = value
 
-        # Rival: HPB_battle_base guarda el denominador del protocolo (casi siempre
-        # 100 = HP%), NO la base de especie. Sin esto, la creencia de HP usa
-        # base=100 y excluye el SP verdadero.
+        # Rival: HPB_battle_base es HP% (100), y ATK/SPA_battle_base pueden
+        # quedarse en la forme pre-mega si |switch| no recreó el objeto.
+        # Las bases del dex de la forme actual (mega/eternal) son la autoridad.
         if getattr(pkmn, 'is_opponent', False):
             try:
                 from API.PokemonData import getPkmnInfo
                 info = getPkmnInfo(getattr(pkmn, 'name', '') or species)
-                species_hp = int(info[2] or 0) if info else 0
             except Exception:
-                species_hp = 0
-            if species_hp > 0:
-                base_stats['hp'] = species_hp
+                info = None
+            if info:
+                dex_bases = {
+                    'hp': int(info[2] or 0),
+                    'atk': int(info[3] or 0),
+                    'def': int(info[4] or 0),
+                    'spa': int(info[5] or 0),
+                    'spd': int(info[6] or 0),
+                    'spe': int(info[7] or 0),
+                }
+                for stat, value in dex_bases.items():
+                    if value > 0:
+                        base_stats[stat] = value
 
         if 'spe' not in base_stats:
             return None  # sin bases fiables no se puede inferir nada
@@ -974,6 +1120,9 @@ class TeamStatBeliefs:
         Devuelve True si el conjunto de candidatos se estrecho.
         """
         if opponent_ctx.is_uncertain or user_ctx.is_uncertain or user_speed <= 0:
+            return False
+        # Bases pre-mega + Spe post-mega (o al revés) expulsan el SP verdadero.
+        if forme_bases_unresolved(opponent_pkmn):
             return False
 
         belief = self.belief_for(opponent_pkmn)
@@ -1050,6 +1199,8 @@ class TeamStatBeliefs:
         if category not in ('p', 's') or observed_damage <= 0:
             return False
         if ctx.is_uncertain:
+            return False
+        if forme_bases_unresolved(opponent_pkmn):
             return False
 
         belief = self.belief_for(opponent_pkmn)
@@ -1147,15 +1298,18 @@ class TeamStatBeliefs:
             and 'hp' in belief.base_stats
         )
         hp_sp_list: list
+        # Varios SP pueden mapear al mismo HP final (p.ej. Toxapex 31 y 32 → 141).
+        # Al coalescer por final hay que reasignar TODOS los SP equivalentes si el
+        # grupo encaja; si no, se pierde el SP verdadero (p.ej. 32).
+        final_hp_to_sps: Dict[int, Set[int]] = {}
         if infer_hp:
-            # Un representante SP por HP final unico (barato y completo).
-            by_final_hp: Dict[int, int] = {}
-            for hp_sp in sorted(belief.candidates['hp']):
+            for hp_sp in belief.candidates['hp']:
                 fh = champions_stat(
                     belief.base_stats['hp'], hp_sp, belief.nature, 'hp'
                 )
-                by_final_hp.setdefault(fh, hp_sp)
-            hp_sp_list = list(by_final_hp.values())
+                final_hp_to_sps.setdefault(fh, set()).add(hp_sp)
+            # Un representante (el menor) por HP final para el batch de calc.
+            hp_sp_list = [min(sps) for sps in final_hp_to_sps.values()]
         elif damage_is_percent and 'hp' in belief.base_stats:
             hp_sps = sorted(belief.candidates['hp'])
             mid = hp_sps[len(hp_sps) // 2]
@@ -1174,7 +1328,10 @@ class TeamStatBeliefs:
                 bucket = groups.setdefault(key, {'unknown': set(), 'hp': set()})
                 bucket['unknown'].add(sp)
                 if hp_sp is not None:
-                    bucket['hp'].add(hp_sp)
+                    # Todos los SP con el mismo HP final, no solo el representante.
+                    bucket['hp'].update(
+                        final_hp_to_sps.get(opp_stats['hp']) or {hp_sp}
+                    )
                 if key in group_payloads:
                     continue
                 if opponent_is_attacker:
@@ -1269,6 +1426,13 @@ class TeamStatBeliefs:
         allowed_u: Set[int] = set()
         allowed_hp: Set[int] = set()
         any_calc = False
+        # Cota superior solo en contexto limpio, sin KO, y cuando el rival
+        # DEFIENDE (atacar con SpA/Atk subestimado expulsaba SP bajos reales).
+        bilateral = (
+            bool(ctx.is_clean_for_upper_bound)
+            and not is_ko
+            and not opponent_is_attacker
+        )
         for key, rolls in zip(keys_ordered, rolls_list):
             if rolls is None:
                 continue
@@ -1276,15 +1440,25 @@ class TeamStatBeliefs:
             min_roll, max_roll = rolls
             hp_val = group_payloads[key]['_hp']
             if damage_is_percent:
-                ok = _rolls_match_percent(
-                    min_roll, max_roll, hp_val, observed_damage, is_ko=is_ko
+                ok_u = _rolls_match_percent(
+                    min_roll, max_roll, hp_val, observed_damage,
+                    is_ko=is_ko, bilateral=bilateral,
                 )
+                # HP: solo cota inferior. La bilateral sobre % expulsaba HP reales
+                # (p.ej. Delphox SP=11) cuando el calc subestima un poco el golpe.
+                ok_hp = _rolls_match_percent(
+                    min_roll, max_roll, hp_val, observed_damage,
+                    is_ko=is_ko, bilateral=False,
+                ) if infer_hp else False
             else:
-                ok = _rolls_match_absolute(
-                    min_roll, max_roll, observed_damage, is_ko=is_ko
+                ok_u = _rolls_match_absolute(
+                    min_roll, max_roll, observed_damage,
+                    is_ko=is_ko, bilateral=bilateral,
                 )
-            if ok:
+                ok_hp = False
+            if ok_u:
                 allowed_u.update(groups[key]['unknown'])
+            if infer_hp and ok_hp:
                 allowed_hp.update(groups[key]['hp'])
 
         if not any_calc:

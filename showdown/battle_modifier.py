@@ -116,6 +116,46 @@ def _base_species_name(name: str) -> str:
     return normalized
 
 
+def _party_species_key(name: str) -> str:
+    """Clave de party para |switch|/|drag|: Mega/Blade colapsan; Floette-Eternal ≡ Floette-Mega."""
+    base = _base_species_name(name)
+    compact = base.replace('-', '').replace('_', '')
+    if compact.startswith('floette'):
+        return 'floette'
+    return base
+
+
+def _same_party_species(left: str, right: str) -> bool:
+    a, b = _party_species_key(left), _party_species_key(right)
+    return bool(a and b and a == b)
+
+
+def _apply_switch_identity(pkmn, namePkmn: str) -> None:
+    """Aplica el nombre/forme del log al mon que entra (Mega vs base, Eternal, etc.)."""
+    if pkmn is None or not namePkmn:
+        return
+    pkmn.name = namePkmn
+    key = _canonical_species_name(namePkmn)
+    if 'mega' in key.replace('-', ''):
+        pkmn.is_mega_evo = True
+        mega_ability = _mega_forme_ability(namePkmn)
+        if mega_ability:
+            pkmn.abilityPkmn = mega_ability
+        try:
+            from API.PokemonData import getPkmnInfo
+            info = getPkmnInfo(namePkmn)
+            if info:
+                pkmn.ATK_battle_base = int(info[3] or 0)
+                pkmn.DEF_battle_base = int(info[4] or 0)
+                pkmn.SPA_battle_base = int(info[5] or 0)
+                pkmn.SPD_battle_base = int(info[6] or 0)
+                pkmn.VEL_battle_base = int(info[7] or 0)
+        except Exception:
+            pass
+    else:
+        pkmn.is_mega_evo = False
+
+
 def _active_status_keys(status_dict) -> set:
     status_dict = status_dict or {}
     return {k for k, v in status_dict.items() if v}
@@ -123,7 +163,18 @@ def _active_status_keys(status_dict) -> set:
 
 def _mega_forme_ability(forme_name: str) -> str:
     key = _canonical_species_name(forme_name)
-    return MEGA_FORME_ABILITIES.get(key, '')
+    hit = MEGA_FORME_ABILITIES.get(key, '')
+    if hit:
+        return hit
+    # Showdown: floette-eternal-mega → Champions floette-mega
+    try:
+        from API.PokemonData import champions_species_key
+        resolved = champions_species_key(key)
+        if resolved and resolved != key:
+            return MEGA_FORME_ABILITIES.get(resolved, '')
+    except Exception:
+        pass
+    return ''
 
 
 def _count_side_fainted(side) -> int:
@@ -473,8 +524,10 @@ def _clear_ephemeral_turn_flags(pkmn: Pokemon) -> None:
     if had_roost:
         try:
             from API.PokemonData import getPkmnInfo
-            t1, t2, *_rest = getPkmnInfo(pkmn.name)
-            pkmn.type1, pkmn.type2 = t1, t2
+            info = getPkmnInfo(pkmn.name)
+            if info:
+                t1, t2, *_rest = info
+                pkmn.type1, pkmn.type2 = t1, t2
         except Exception:
             pass
 
@@ -1061,7 +1114,7 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
         # 1. PASO A: Buscamos PRIMERO si el Pokémon que entra YA ESTÁ en la reserva (reserved)
         found_in_reserved_idx = -1
         for contador, pkmn in enumerate(side.reserved):
-            if pkmn is not None and _canonical_species_name(namePkmn) == _canonical_species_name(getattr(pkmn, 'name', '')):
+            if pkmn is not None and _same_party_species(namePkmn, getattr(pkmn, 'name', '')):
                 found_in_reserved_idx = contador
                 break
 
@@ -1072,7 +1125,8 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
             
             pkmn_from_reserved = side.reserved[found_in_reserved_idx]
             new_active = deepcopy(pkmn_from_reserved)
-            
+            _apply_switch_identity(new_active, namePkmn)
+
             # AUTORIDAD DEL LOG: HP / faint / status del mensaje de switch
             _apply_switch_condition(new_active, hpa_val, hpb_val, new_non_volatile)
 
@@ -1096,13 +1150,13 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
         # 2. PASO B: Si NO estaba en la reserva, lo buscamos en 'opponents' (Team Preview)
         else:
             for pkmn in side.opponents:
-                if pkmn is not None and _canonical_species_name(namePkmn) == _canonical_species_name(getattr(pkmn, 'name', '')):
+                if pkmn is not None and _same_party_species(namePkmn, getattr(pkmn, 'name', '')):
                     pkmnAux = deepcopy(current_active)
                     pkmnAux = _revert_special_pokemon(pkmnAux, side)
                     
                     new_active = deepcopy(pkmn)
-                    new_active.name = namePkmn
-                    
+                    _apply_switch_identity(new_active, namePkmn)
+
                     # AUTORIDAD DEL LOG: HP / faint / status del mensaje de switch
                     _apply_switch_condition(new_active, hpa_val, hpb_val, new_non_volatile)
 
@@ -1141,6 +1195,18 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                     _resolve_duplicate_illusion_reserves(side)
                     break
 
+        slot_now = side.active1 if is_active1 else side.active2
+        if not _same_party_species(namePkmn, getattr(slot_now, 'name', '') or ''):
+            other = side.active2 if is_active1 else side.active1
+            if other is not None and _same_party_species(namePkmn, getattr(other, 'name', '')):
+                if is_active1:
+                    side.active1, side.active2 = other, slot_now
+                else:
+                    side.active2, side.active1 = other, slot_now
+                incoming = side.active1 if is_active1 else side.active2
+                _apply_switch_identity(incoming, namePkmn)
+                _apply_switch_condition(incoming, hpa_val, hpb_val, new_non_volatile)
+
         _resolve_duplicate_illusion_reserves(side)
 
     # =========================================================================
@@ -1148,12 +1214,12 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
     # =========================================================================
     else:
         for contador, pkmn in enumerate(side.reserved):
-            if pkmn is not None and _canonical_species_name(namePkmn) == _canonical_species_name(getattr(pkmn, 'name', '')):
+            if pkmn is not None and _same_party_species(namePkmn, getattr(pkmn, 'name', '')):
                 aux = deepcopy(side.active1 if is_active1 else side.active2)
                 aux = _revert_special_pokemon(aux, side)
                 
                 new_active = deepcopy(pkmn)
-                new_active.name = namePkmn
+                _apply_switch_identity(new_active, namePkmn)
                 # Switch propio: el request suele traer HP exacto en el mismo frame;
                 # si el log trae condición, aplicarla; si no, asegurar no-fainted al entrar.
                 if len(split_msg) > 4:
@@ -1175,6 +1241,22 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                 # Intercambio en Reservados
                 side.reserved[contador] = deepcopy(aux)
                 break
+        else:
+            # El entrante ya está en el otro slot (a/b cruzados).
+            slot_now = side.active1 if is_active1 else side.active2
+            other = side.active2 if is_active1 else side.active1
+            if other is not None and _same_party_species(namePkmn, getattr(other, 'name', '')):
+                if is_active1:
+                    side.active1, side.active2 = other, slot_now
+                else:
+                    side.active2, side.active1 = other, slot_now
+                incoming = side.active1 if is_active1 else side.active2
+                _apply_switch_identity(incoming, namePkmn)
+                if len(split_msg) > 4:
+                    hpa_u, hpb_u, nvs_u = _parse_hp_and_status_from_switch(split_msg[4].strip())
+                    _apply_switch_condition(incoming, hpa_u, hpb_u, nvs_u)
+                else:
+                    incoming.is_fainted = False
 
         # Limpieza de nulos en reservados del usuario
         side.reserved = [p for p in side.reserved if p is not None]
@@ -2485,14 +2567,26 @@ def turn(battle: Battle, split_msg: list) -> Battle:
     battle.pending_crit_target = None
     battle.pending_damage_sash = False
 
-    # Decremento de duraciones globales del campo de batalla
-    if new_turn > 1 and battle.weatherTurn > 1:
+    # Decremento de duraciones globales del campo de batalla.
+    # Antes: weatherTurn/terrain se quedaban en 1 para siempre (nunca llegaban a 0).
+    if new_turn > 1 and battle.weatherTurn > 0:
         battle.weatherTurn -= 1
+        if battle.weatherTurn <= 0:
+            battle.weather = 'none'
+            battle.weatherTurn = 0
 
-    # Decremento de turnos para cada terreno activo en el diccionario
+    # Decremento de turnos para cada terreno / room activo
     for terr, turns in list(battle.terrain.items()):
-        if turns > 1:
-            battle.terrain[terr] -= 1
+        left = int(turns or 0)
+        if left <= 0:
+            battle.terrain.pop(terr, None)
+            continue
+        if new_turn > 1:
+            left -= 1
+            if left <= 0:
+                battle.terrain.pop(terr, None)
+            else:
+                battle.terrain[terr] = left
 
     # Decremento de condiciones de bando (Side Conditions) y limpieza de estados
     for side in (battle.user, battle.opponent):
@@ -2613,13 +2707,31 @@ def _speed_context_for(battle: Battle, side, pkmn) -> SpeedContext:
     statuses = getattr(pkmn, 'non_volatile_statuses', None) or {}
     boosts = getattr(pkmn, 'boosts', None) or {}
     side_conditions = getattr(side, 'side_conditions', None) or {}
+    spe_boost = int(
+        boosts.get(constants.SPEED, 0)
+        or boosts.get('spe', 0)
+        or boosts.get('speed', 0)
+        or 0
+    )
     return SpeedContext(
-        boost=int(boosts.get(constants.SPEED, 0) or 0),
+        boost=spe_boost,
         item=getattr(pkmn, 'objectPkmn', None),
         ability=getattr(pkmn, 'abilityPkmn', None),
         paralyzed=bool(statuses.get('par')),
         tailwind=int(side_conditions.get('tailwind', 0) or 0) > 0,
     )
+
+
+def _speed_obs_unreliable(battle: Battle, side, pkmn, ctx: SpeedContext) -> bool:
+    """True si no conviene estrechar Spe (hazards / boosts desincronizados)."""
+    if ctx.is_uncertain:
+        return True
+    side_conditions = getattr(side, 'side_conditions', None) or {}
+    sticky = int(side_conditions.get('stickyweb', 0) or 0) > 0
+    # Webs activas pero Spe>=0: probablemente no registramos el -1 de Sticky Web.
+    if sticky and int(ctx.boost or 0) >= 0:
+        return True
+    return False
 
 
 def _record_action_for_speed(battle: Battle, split_msg: list) -> None:
@@ -2705,6 +2817,12 @@ def _record_action_for_speed(battle: Battle, split_msg: list) -> None:
         except (TypeError, ValueError):
             user_stat_speed = -1
         if user_stat_speed <= 0:
+            continue
+
+        if (
+            _speed_obs_unreliable(battle, battle.opponent, opponent_action['pkmn'], opponent_action['ctx'])
+            or _speed_obs_unreliable(battle, battle.user, user_action['pkmn'], user_action['ctx'])
+        ):
             continue
 
         battle.stat_beliefs.observe_speed_order(

@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from poke_env.player import RandomPlayer
 from poke_env.ps_client import AccountConfiguration, LocalhostServerConfiguration
 
-from showdown.battle_bots.heuristic.pokeenv_player import GreedyDamagePlayer
+from showdown.battle_bots.greedy_solo.pokeenv_player import GreedyDamagePlayer
 from showdown.inference_sim.export_metavgc_teams import export_teams
 from showdown.inference_sim.paths import BATTLE_FORMAT, REPO_ROOT
 from showdown.inference_sim.ps_server import ensure_ps, is_ps_up, ps_start_hint

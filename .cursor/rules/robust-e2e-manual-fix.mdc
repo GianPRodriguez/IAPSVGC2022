@@ -12,6 +12,9 @@ El usuario ejecuta solo (sin agente):
 python -m showdown.inference_sim.run_robust_e2e --teams 100
 ```
 
+Matchup opcional: `--player-a greedy_solo|greedy_joint|expectimax_bayesian` (validated) y
+`--player-b random|greedy_solo|greedy_joint|expectimax_bayesian` (default `random`).
+
 Al terminar mira `NEED_FIX=` en la línea `DONE` o:
 
 ```bat
@@ -25,7 +28,7 @@ python -m showdown.inference_sim.robust_fixplan
 ## Cuando el usuario pide corregir
 1. Leer **solo** `logs/robust_e2e_fixplan.txt` (targets + samples). No releer logs de batalla ni protocolo.
 2. Parchear el mínimo en `TARGETS` del fixplan (sync → `battle_modifier`/`battle`; inferencia → `stat_inference`; runtime → heuristic).
-3. Smoke barato: `python -m showdown.inference_sim.run_robust_e2e --teams 4`
+3. Smoke barato: `python -m showdown.inference_sim.run_robust_e2e --teams 4` (mismos `--player-a`/`--player-b` que el batch si aplica).
 4. Confirmar `NEED_FIX=NO` en el nuevo `DONE` / fixplan.
 5. **No** lanzar `--teams 100` salvo petición explícita.
 

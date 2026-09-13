@@ -22,10 +22,12 @@ class HarnessBattle(Battle):
 
 
 def _build_mon(mon: MonSet, *, is_opponent: bool) -> Pokemon:
+    from showdown.stat_inference import sanitize_ability_for_forme
+
     moves = list(mon.moves) + [None, None, None, None]
     name = normalize_name(mon.species)
     item = normalize_name(mon.item)
-    ability = normalize_name(mon.ability)
+    ability = normalize_name(sanitize_ability_for_forme(name, mon.ability) or mon.ability)
     nature = normalize_name(mon.nature)
     # Opponent preview: HP base=-1 → getStatsBattle pone bases de especie y HP% = 100.
     hp_arg = -1 if is_opponent else mon.finals()['hp']

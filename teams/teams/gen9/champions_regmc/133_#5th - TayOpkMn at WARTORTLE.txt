@@ -1,0 +1,59 @@
+Blastoise @ Blastoisinite
+Ability: Mega Launcher
+Level: 50
+EVs: 2 HP / 32 SpA / 32 Spe
+Modest Nature
+- Water Spout
+- Shell Smash
+- Dark Pulse
+- Protect
+
+Salamence @ Salamencite
+Ability: Aerilate
+Level: 50
+EVs: 2 HP / 32 SpA / 32 Spe
+Timid Nature
+- Hyper Voice
+- Hyper Beam
+- Tailwind
+- Protect
+
+Weavile @ Focus Sash
+Ability: Pickpocket
+Level: 50
+EVs: 2 HP / 32 Atk / 32 Spe
+Jolly Nature
+- Ice Spinner
+- Knock Off
+- Fake Out
+- Upper Hand
+
+Sinistcha @ Colbur Berry
+Ability: Hospitality
+Level: 50
+EVs: 32 HP / 2 Atk / 32 Def
+Bold Nature
+- Matcha Gotcha
+- Trick Room
+- Imprison
+- Rage Powder
+
+Pelipper @ Sitrus Berry
+Ability: Drizzle
+Level: 50
+EVs: 31 HP / 1 Def / 5 SpA / 18 SpD / 11 Spe
+Modest Nature
+- Hurricane
+- Weather Ball
+- Tailwind
+- Protect
+
+Scizor @ Life Orb
+Ability: Technician
+Level: 50
+EVs: 30 HP / 32 Atk / 3 SpD / 1 Spe
+Adamant Nature
+- Swords Dance
+- Close Combat
+- Bullet Punch
+- Protect

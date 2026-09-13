@@ -1,0 +1,59 @@
+Blastoise @ Blastoisinite
+Ability: Mega Launcher
+Level: 50
+EVs: 2 HP / 32 SpA / 32 Spe
+Modest Nature
+- Water Spout
+- Dark Pulse
+- Muddy Water
+- Protect
+
+Tinkaton @ Metal Coat
+Ability: Mold Breaker
+Level: 50
+EVs: 32 HP / 9 Atk / 22 Def / 3 Spe
+Jolly Nature
+- Gigaton Hammer
+- Play Rough
+- Fake Out
+- Protect
+
+Volcarona @ Charcoal
+Ability: Flame Body
+Level: 50
+EVs: 32 HP / 26 Def / 8 SpD
+Bold Nature
+- Heat Wave
+- Giga Drain
+- Rage Powder
+- Protect
+
+Meowscarada @ Focus Sash
+Ability: Protean
+Level: 50
+EVs: 25 HP / 27 Atk / 7 SpD / 7 Spe
+Adamant Nature
+- Flower Trick
+- Knock Off
+- Sucker Punch
+- Protect
+
+Lucario @ Lucarionite
+Ability: Adaptability
+Level: 50
+EVs: 2 HP / 32 Atk / 32 Spe
+Jolly Nature
+- Close Combat
+- Meteor Mash
+- Bullet Punch
+- Protect
+
+Heliolisk @ Choice Scarf
+Ability: Dry Skin
+Level: 50
+EVs: 2 HP / 32 SpA / 32 Spe
+Timid Nature
+- Thunderbolt
+- Hyper Voice
+- Volt Switch
+- Electroweb

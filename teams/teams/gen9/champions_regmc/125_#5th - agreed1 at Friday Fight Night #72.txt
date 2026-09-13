@@ -1,0 +1,59 @@
+Lucario @ Lucarionite Z
+Ability: inner focus
+Level: 50
+EVs: 10 HP / 32 SpA / 24 Spe
+Modest Nature
+- Flash Cannon
+- Aura Sphere
+- Terrain Pulse
+- Detect
+
+Indeedee-F @ Colbur Berry
+Ability: Psychic Surge
+Level: 50
+EVs: 32 HP / 2 Atk / 32 Def
+Bold Nature
+- Trick Room
+- Dazzling Gleam
+- Follow Me
+- Protect
+
+Rillaboom @ Occa Berry
+Ability: Grassy Surge
+Level: 50
+EVs: 32 HP / 5 Atk / 29 SpD
+Adamant Nature
+- Fake Out
+- Grassy Glide
+- Wood Hammer
+- U-turn
+
+Basculegion @ Choice Scarf
+Ability: Adaptability
+Level: 50
+EVs: 13 HP / 32 Atk / 4 Def / 3 SpD / 14 Spe
+Adamant Nature
+- Aqua Jet
+- Wave Crash
+- Last Respects
+- Flip Turn
+
+Incineroar @ Sitrus Berry
+Ability: Intimidate
+Level: 50
+EVs: 32 HP / 2 Atk / 32 SpD
+Careful Nature
+- Fake Out
+- Parting Shot
+- Flare Blitz
+- Close Combat
+
+Salamence-Mega @ Salamencite
+Ability: Aerilate
+Level: 50
+EVs: 2 HP / 32 SpA / 32 Spe
+Timid Nature
+- Tailwind
+- Hyper Voice
+- Draco Meteor
+- Protect
