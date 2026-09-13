@@ -119,6 +119,21 @@ def type_effectiveness(attack_type: Optional[str], defend_types: Sequence[Option
     return mult
 
 
+def fake_out_can_affect(attacker_ability: Optional[str], defender) -> bool:
+    """
+    Fake Out es Normal: no afecta a Ghost salvo Scrappy / Mind's Eye.
+    `defender` es CalcPoke-like (types, tera_type, is_terastallized).
+    """
+    abi = str(attacker_ability or '').strip().lower().replace(' ', '').replace('-', '')
+    if abi in ('scrappy', 'mindseye'):
+        return True
+    if bool(getattr(defender, 'is_terastallized', False)) and getattr(defender, 'tera_type', None):
+        defs: Sequence[Optional[str]] = (getattr(defender, 'tera_type'),)
+    else:
+        defs = tuple(getattr(defender, 'types', None) or ())
+    return type_effectiveness('Normal', defs) > 0.0
+
+
 def offensive_coverage_score(
     attacker_types: Iterable[Optional[str]],
     defender_type_sets: Iterable[Sequence[Optional[str]]],

@@ -78,6 +78,9 @@ class ValidatedBattleMixin:
         self._role_confirmed = False
         self._ready_to_check = False
         self._pe_battle: Optional[AbstractBattle] = None
+        # Lineas del game actual (para replay si el rol p1/p2 se corrige tarde).
+        self._game_lines: List[str] = []
+        self._pending_lines: List[str] = []
         # Compact BO3: [(turns, won), ...] de cada game de la serie en curso
         self.series_games: List[tuple] = []
         self._logged_game_tags: set = set()
@@ -103,6 +106,8 @@ class ValidatedBattleMixin:
         # |switch| al bando equivocado hasta el próximo |player|.
         self._ready_to_check = False
         self._pe_battle = None
+        self._game_lines = []
+        self._pending_lines = []
         self.series_games = []
         self._logged_game_tags = set()
         self._last_turn_log = -1
@@ -149,10 +154,21 @@ class ValidatedBattleMixin:
             if len(parts) > 2 and parts[1] == 'player':
                 pid = parts[2].strip()
                 nick = parts[3].strip() if len(parts) > 3 else ''
-                if nick and nick == self.username:
+                if nick and nick == self.username and pid in ('p1', 'p2'):
+                    old_role = self._our_role
                     self._our_role = pid
                     self._role_confirmed = True
-                    self._sync_role_ids()
+                    if (
+                        self.iap_battle is not None
+                        and old_role != pid
+                        and self._game_lines
+                    ):
+                        self._rebuild_iap_from_game_lines(room)
+                    elif self.iap_battle is None and self._pending_lines:
+                        # |start| llegó antes que |player|: crear espejo y vaciar buffer.
+                        self._ensure_iap(room)
+                    else:
+                        self._sync_role_ids()
 
             action = parts[1].strip() if len(parts) > 1 else ''
 
@@ -162,43 +178,54 @@ class ValidatedBattleMixin:
                 self.iap_battle = None
                 self._ready_to_check = False
                 self._last_turn_log = -1
+                self._game_lines = []
+                self._pending_lines = []
                 self._ensure_iap(room)
 
             # No alimentar IAP con mensajes de la sala padre game-bestof*.
             if not is_battle_room:
                 continue
 
-            if self.iap_battle is not None:
-                try:
-                    fed = feed_line(self.iap_battle, line)
-                except Exception as exc:
-                    self.state_report.feed_errors += 1
-                    self.state_report.add(
-                        StateMismatch(
-                            battle_tag=room,
-                            turn=int(getattr(self.iap_battle, 'turn', 0) or 0),
-                            field='feed',
-                            expected='ok',
-                            got=repr(exc),
-                            detail=line[:160],
-                        )
+            if self.iap_battle is None:
+                self._ensure_iap(room)
+            if self.iap_battle is None:
+                # Sin rol p1/p2 aún: bufferizar para no aplicar |switch| al bando malo.
+                if action not in ('player', 'start'):
+                    self._pending_lines.append(line)
+                continue
+
+            try:
+                fed = feed_line(self.iap_battle, line)
+                if not line.startswith('#'):
+                    self._game_lines.append(line)
+            except Exception as exc:
+                self.state_report.feed_errors += 1
+                self.state_report.add(
+                    StateMismatch(
+                        battle_tag=room,
+                        turn=int(getattr(self.iap_battle, 'turn', 0) or 0),
+                        field='feed',
+                        expected='ok',
+                        got=repr(exc),
+                        detail=line[:160],
                     )
-                    fed = None
-                if action == 'switch' or fed == 'switch':
-                    self._ready_to_check = True
-                key = fed or action
-                if key in _SYNC_ACTIONS:
-                    pending_sync = True
-                    try:
-                        turn_n = int(getattr(self.iap_battle, 'turn', 0) or 0)
-                    except Exception:
-                        turn_n = 0
-                    if turn_n > 0 and turn_n != getattr(self, '_last_turn_log', -1):
-                        self._last_turn_log = turn_n
-                        g = len(getattr(self, 'series_games', []) or []) + 1
-                        print(f'  g{g}:t{turn_n}', flush=True)
-                if key in _INFER_ACTIONS:
-                    pending_infer = True
+                )
+                fed = None
+            if action == 'switch' or fed == 'switch':
+                self._ready_to_check = True
+            key = fed or action
+            if key in _SYNC_ACTIONS:
+                pending_sync = True
+                try:
+                    turn_n = int(getattr(self.iap_battle, 'turn', 0) or 0)
+                except Exception:
+                    turn_n = 0
+                if turn_n > 0 and turn_n != getattr(self, '_last_turn_log', -1):
+                    self._last_turn_log = turn_n
+                    g = len(getattr(self, 'series_games', []) or []) + 1
+                    print(f'  g{g}:t{turn_n}', flush=True)
+            if key in _INFER_ACTIONS:
+                pending_infer = True
 
         try:
             await super()._handle_battle_message(split_messages)
@@ -218,11 +245,20 @@ class ValidatedBattleMixin:
         if not is_battle_room:
             return
 
-        self._sync_role_ids()
-
         pe = self._current_pe_battle(room)
         if pe is not None:
             self._pe_battle = pe
+            pe_role = getattr(pe, 'player_role', None)
+            if pe_role in ('p1', 'p2') and pe_role != self._our_role:
+                self._our_role = pe_role
+                self._role_confirmed = True
+                if self._game_lines or self._pending_lines:
+                    self._rebuild_iap_from_game_lines(room)
+                else:
+                    self._ensure_iap(room)
+                    self._flush_pending_lines()
+
+        self._sync_role_ids()
 
         if (
             self._ready_to_check
@@ -281,13 +317,14 @@ class ValidatedBattleMixin:
     def _ensure_iap(self, room: str) -> None:
         if self.iap_battle is not None:
             return
-        reset_sp_limits()
-        # Preferir el rol que poke-env ya conoce en esta sala.
         pe = self._current_pe_battle(room) or self._pe_battle
         pe_role = getattr(pe, 'player_role', None) if pe is not None else None
         if pe_role in ('p1', 'p2'):
             self._our_role = pe_role
             self._role_confirmed = True
+        if not self._role_confirmed or self._our_role not in ('p1', 'p2'):
+            return
+        reset_sp_limits()
         ordered = self._preview_ordered_team()
         self.iap_battle = bootstrap_battle(ordered, self.opp_team)
         self._sync_role_ids()
@@ -296,6 +333,50 @@ class ValidatedBattleMixin:
             self.protocol_log.append(
                 f'# iap bootstrap room={room} role={self._our_role} '
                 f'preview={getattr(self, "last_preview_order", "")}'
+            )
+        self._flush_pending_lines()
+
+    def _flush_pending_lines(self) -> None:
+        if self.iap_battle is None or not self._pending_lines:
+            return
+        pending = list(self._pending_lines)
+        self._pending_lines = []
+        for line in pending:
+            try:
+                feed_line(self.iap_battle, line)
+                if not line.startswith('#'):
+                    self._game_lines.append(line)
+            except Exception as exc:
+                self.state_report.feed_errors += 1
+                if len(self.protocol_log) < 420:
+                    self.protocol_log.append(f'# pending feed error: {exc!r}')
+
+    def _rebuild_iap_from_game_lines(self, room: str) -> None:
+        """Reconstruye el espejo IAP con el rol correcto y re-aplica el game."""
+        lines = [ln for ln in self._game_lines if not ln.startswith('#')]
+        pending = list(self._pending_lines)
+        self.iap_battle = None
+        self._bootstrapped = False
+        self._game_lines = []
+        self._pending_lines = []
+        self._ready_to_check = False
+        self._ensure_iap(room)
+        if self.iap_battle is None:
+            self._pending_lines = lines + pending
+            return
+        for line in lines + pending:
+            try:
+                fed = feed_line(self.iap_battle, line)
+                self._game_lines.append(line)
+                if fed == 'switch' or '|switch|' in line or line.startswith('|switch|'):
+                    self._ready_to_check = True
+            except Exception as exc:
+                self.state_report.feed_errors += 1
+                if len(self.protocol_log) < 420:
+                    self.protocol_log.append(f'# replay feed error: {exc!r}')
+        if len(self.protocol_log) < 420:
+            self.protocol_log.append(
+                f'# iap rebuild room={room} role={self._our_role} lines={len(self._game_lines)}'
             )
 
     def _sync_role_ids(self) -> None:

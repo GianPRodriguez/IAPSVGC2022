@@ -161,30 +161,31 @@ def _align_by_species(pe_list, iap_list):
     aligned = [None, None]
     for i, pe_mon in enumerate(pe):
         pe_sp = _species_pe(pe_mon)
+        pe_alive = pe_mon is not None and not getattr(pe_mon, 'fainted', False)
         match_j = None
         for j, iap_mon in enumerate(iap):
             if j in used:
                 continue
-            if pe_sp and _same_species(pe_sp, _species_iap(iap_mon)):
+            if not pe_sp or not _same_species(pe_sp, _species_iap(iap_mon)):
+                continue
+            # No emparejar un vivo de PE con un KO de IAP (falso foe2.fainted).
+            if pe_alive and iap_mon is not None and getattr(iap_mon, 'is_fainted', False):
+                continue
+            match_j = j
+            break
+        if match_j is None:
+            for j, iap_mon in enumerate(iap):
+                if j in used:
+                    continue
+                if pe_alive and iap_mon is not None and getattr(iap_mon, 'is_fainted', False):
+                    continue
                 match_j = j
                 break
         if match_j is None:
-            for j, iap_mon in enumerate(iap):
-                if j not in used:
-                    # Preferir no-fainted iap si pe está vivo
-                    if pe_mon is not None and not getattr(pe_mon, 'fainted', False):
-                        if iap_mon is not None and getattr(iap_mon, 'is_fainted', False):
-                            continue
-                    match_j = j
-                    break
-        if match_j is None:
-            for j in range(2):
-                if j not in used:
-                    match_j = j
-                    break
-        if match_j is not None:
-            used.add(match_j)
-            aligned[i] = iap[match_j]
+            # Sin candidato vivo: dejar None (mejor que reportar KO fantasma).
+            continue
+        used.add(match_j)
+        aligned[i] = iap[match_j]
     return pe, aligned
 
 

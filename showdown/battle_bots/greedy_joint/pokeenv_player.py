@@ -138,6 +138,9 @@ def _poke_to_calc(mon: Pokemon) -> CalcPoke:
         has_substitute='SUBSTITUTE' in effects,
         is_redirecting=bool(effects & {'FOLLOWME', 'RAGEPOWDER', 'SPOTLIGHT'}),
         allies_fainted=0,
+        is_two_turn_charging=bool(getattr(mon, 'preparing', False)),
+        must_recharge=bool(getattr(mon, 'must_recharge', False))
+        or ('MUSTRECHARGE' in effects),
     )
 
 

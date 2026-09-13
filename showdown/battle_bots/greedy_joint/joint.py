@@ -33,6 +33,7 @@ _HELPING_HAND_BONUS = 20.0
 _SPEED_CONTROL_BONUS = 12.0
 _STATUS_BASE = 4.0
 _FOCUS_SPLIT_BONUS = 8.0
+_CHARGE_BASE = 2.0
 
 _REDIRECT_BASE = 8.0
 _REDIRECT_WITH_ATTACK = 40.0
@@ -44,8 +45,36 @@ def _norm_move(name: str) -> str:
     return str(name or '').strip().lower().replace(' ', '').replace('-', '')
 
 
-def _utility_kind(move: MoveOption) -> str:
+def _norm_move(name: str) -> str:
+    return str(name or '').strip().lower().replace(' ', '').replace('-', '')
+
+
+def fake_out_can_affect(
+    attacker: Optional[CalcPoke],
+    defender: CalcPoke,
+) -> bool:
+    """Fake Out (Normal) no afecta a Ghost salvo Scrappy / Mind's Eye."""
+    from showdown.battle_bots.greedy_solo.type_chart import fake_out_can_affect as _fo
+
+    abi = attacker.ability if attacker is not None else None
+    return _fo(abi, defender)
+
+
+def _utility_kind(
+    move: MoveOption,
+    *,
+    weather: Optional[str] = None,
+    item: Optional[str] = None,
+    already_charging: bool = False,
+) -> str:
+    from showdown.battle_bots.move_mechanics import resolve_charge
+
     mid = _norm_move(move.name)
+    res = resolve_charge(
+        mid, weather=weather, item=item, already_charging=already_charging,
+    )
+    if res.is_charge_move and not res.fires_this_turn:
+        return 'charge'
     if mid in (
         'protect', 'detect', 'spikyshield', 'banefulbunker', 'silktrap',
         'burningbulwark', 'obstruct',
@@ -74,6 +103,8 @@ class JointAtom:
     ko_tids: Set[int] = field(default_factory=set)
     utility: str = 'damage'
     move_name: str = ''
+    # Power Herb consume + recharge lock (restado en _score_pair).
+    timing_penalty: float = 0.0
 
     @property
     def total_damage_pct(self) -> float:
@@ -91,15 +122,77 @@ def _atoms_from_side(
     foes: Sequence[Tuple[int, CalcPoke]],
     *,
     can_mega: bool,
+    attacker: Optional[CalcPoke] = None,
+    weather: Optional[str] = None,
+    terrain: Optional[str] = None,
+    gravity: bool = False,
 ) -> List[JointAtom]:
+    from showdown.battle_bots.move_mechanics import (
+        gate_damage_range,
+        power_herb_cost,
+        priority_move_fails,
+        recharge_lock_penalty,
+        resolve_charge,
+        resolve_recharge,
+    )
+
     atoms: List[JointAtom] = []
     base_ko: Dict[Tuple[int, int], bool] = {}
+    item = attacker.item if attacker is not None else None
+    already = bool(attacker.is_two_turn_charging) if attacker is not None else False
+    recharging = bool(attacker.must_recharge) if attacker is not None else False
+    charge_slots: Set[int] = set()
+    foe_mons = [f for _, f in foes]
+
+    def _penalty(move_name: str, *, ko: bool, firing: bool) -> float:
+        if not firing:
+            return 0.0
+        res = resolve_charge(
+            move_name, weather=weather, item=item, already_charging=already,
+        )
+        rech = resolve_recharge(move_name)
+        return power_herb_cost(res) + recharge_lock_penalty(rech, ko=ko)
+
+    def _prio_fails(move_name: str, foe: CalcPoke) -> bool:
+        return priority_move_fails(
+            move_name,
+            attacker=attacker,
+            defender=foe,
+            defender_side=foe_mons,
+            terrain=terrain,
+            gravity=gravity,
+        )
+
     for (_side, move, tid, foe, special), rng in zip(meta, ranges):
+        is_fakeout = _norm_move(move.name) == 'fakeout'
+        if is_fakeout and not fake_out_can_affect(attacker, foe):
+            continue
+        if _prio_fails(move.name, foe):
+            # Extreme Speed / Fake Out / etc. fallan (Psychic Terrain o Armor Tail…).
+            continue
+        res = resolve_charge(
+            move.name, weather=weather, item=item, already_charging=already,
+        )
+        gated = gate_damage_range(
+            rng, move.name, weather=weather, item=item,
+            already_charging=already, must_recharge=recharging,
+        )
         max_hp = int((_stats_or_default(foe).get('hp') or 1))
         cur_hp = int(foe.cur_hp if foe.cur_hp is not None else max_hp)
-        pct = damage_pct(rng, max_hp)
-        ko = guaranteed_ko(rng, cur_hp) and not foe.has_substitute
-        max_r = int(rng[1]) if rng else 0
+        if recharging or (res.is_charge_move and not res.fires_this_turn):
+            pct = 0.0
+            ko = False
+            max_r = 0
+            utility = 'charge' if (res.is_charge_move and not res.fires_this_turn and not recharging) else 'status'
+            if utility == 'charge':
+                charge_slots.add(move.slot)
+            pen = 0.0
+        else:
+            pct = damage_pct(gated, max_hp)
+            ko = guaranteed_ko(gated, cur_hp) and not foe.has_substitute
+            max_r = int(gated[1]) if gated else 0
+            utility = 'damage'
+            pen = _penalty(move.name, ko=ko, firing=True)
         key = (move.slot, tid)
         if special == 0:
             base_ko[key] = ko
@@ -107,11 +200,12 @@ def _atoms_from_side(
                 move_slot=move.slot,
                 target=tid,
                 mega=1 if can_mega else 0,
-                damage_pct={tid: pct},
-                max_roll={tid: max_r},
+                damage_pct={tid: pct} if pct else {},
+                max_roll={tid: max_r} if max_r else {},
                 ko_tids={tid} if ko else set(),
-                utility='damage',
+                utility=utility,
                 move_name=move.name,
+                timing_penalty=pen,
             ))
         elif special == 2 and ko and not base_ko.get(key, False):
             atoms.append(JointAtom(
@@ -123,23 +217,52 @@ def _atoms_from_side(
                 ko_tids={tid},
                 utility='damage',
                 move_name=move.name,
+                timing_penalty=_penalty(move.name, ko=True, firing=True),
             ))
 
+    hittable_fakeout = [
+        tid for tid, foe in foes
+        if fake_out_can_affect(attacker, foe) and not _prio_fails('fakeout', foe)
+    ]
+
     for move in moves:
-        kind = _utility_kind(move)
+        kind = _utility_kind(
+            move, weather=weather, item=item, already_charging=already,
+        )
         if kind == 'damage':
             continue
+        if kind == 'charge' and move.slot in charge_slots:
+            continue
+        if kind == 'fakeout' and not hittable_fakeout:
+            continue
+        if recharging:
+            kind = 'status'
+        res = resolve_charge(
+            move.name, weather=weather, item=item, already_charging=already,
+        )
+        pen = power_herb_cost(res) if res.fires_this_turn else 0.0
+        target = hittable_fakeout[0] if kind == 'fakeout' else 0
         atoms.append(JointAtom(
             move_slot=move.slot,
-            target=0,
+            target=target,
             mega=1 if can_mega else 0,
             damage_pct={},
             max_roll={},
             ko_tids=set(),
             utility=kind,
             move_name=move.name,
+            timing_penalty=pen,
         ))
     return atoms
+
+
+def _charge_utility(atom: JointAtom) -> float:
+    from showdown.battle_bots.move_mechanics import charge_boost_score, resolve_charge
+
+    if atom.utility != 'charge':
+        return 0.0
+    res = resolve_charge(atom.move_name)
+    return _CHARGE_BASE + charge_boost_score(res)
 
 
 def _redirect_synergy(
@@ -198,6 +321,7 @@ def _score_pair(
 
     has_damage = (left.total_damage_pct + right.total_damage_pct) > 0
     score += _utility_score(left, right, foes=foes, has_damage=has_damage)
+    score -= float(left.timing_penalty) + float(right.timing_penalty)
     return score
 
 
@@ -215,11 +339,14 @@ def _utility_score(
         elif atom.utility == 'redirect':
             s += _REDIRECT_BASE if not has_damage else 0.0
         elif atom.utility == 'fakeout':
+            # Átomos 'fakeout' solo se crean si hay target no inmune (ver _atoms_from_side).
             s += _FAKE_OUT_BONUS
         elif atom.utility == 'helpinghand':
             s += _HELPING_HAND_BONUS if has_damage else _STATUS_BASE
         elif atom.utility == 'speed':
             s += _SPEED_CONTROL_BONUS
+        elif atom.utility == 'charge':
+            s += _charge_utility(atom)
         elif atom.utility == 'status':
             s += _STATUS_BASE
 
@@ -262,6 +389,7 @@ def _strip_mega(atom: JointAtom) -> JointAtom:
         ko_tids=set(atom.ko_tids),
         utility=atom.utility,
         move_name=atom.move_name,
+        timing_penalty=atom.timing_penalty,
     )
 
 
@@ -313,11 +441,19 @@ async def best_joint_double_action(
     right_ranges = [rng for m, rng in zip(meta, ranges) if m[0] == 'R']
 
     left_atoms = (
-        _atoms_from_side(left_moves, left_meta, left_ranges, foes, can_mega=can_mega_left)
+        _atoms_from_side(
+            left_moves, left_meta, left_ranges, foes,
+            can_mega=can_mega_left, attacker=left_atk,
+            weather=ctx.weather, terrain=ctx.terrain, gravity=ctx.gravity,
+        )
         if left_atk and left_moves else []
     )
     right_atoms = (
-        _atoms_from_side(right_moves, right_meta, right_ranges, foes, can_mega=can_mega_right)
+        _atoms_from_side(
+            right_moves, right_meta, right_ranges, foes,
+            can_mega=can_mega_right, attacker=right_atk,
+            weather=ctx.weather, terrain=ctx.terrain, gravity=ctx.gravity,
+        )
         if right_atk and right_moves else []
     )
 

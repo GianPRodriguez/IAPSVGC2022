@@ -23,6 +23,10 @@ from showdown.battle_bots.greedy_solo.team_preview import (
     mon_from_details,
     mon_from_species,
 )
+from showdown.battle_bots.move_mechanics import (
+    is_must_recharge_from_volatiles,
+    is_two_turn_charging_from_volatiles,
+)
 
 
 def _count_iap_fainted(side) -> int:
@@ -88,6 +92,9 @@ def _iap_to_calc(pkmn, battle=None) -> CalcPoke:
         has_substitute=bool(volatiles.get('substitute')),
         is_redirecting=bool(getattr(pkmn, 'is_redirecting', False)),
         allies_fainted=allies_fainted,
+        is_two_turn_charging=is_two_turn_charging_from_volatiles(volatiles),
+        must_recharge=bool(getattr(pkmn, 'must_recharge', False))
+        or is_must_recharge_from_volatiles(volatiles),
     )
     if battle is not None and getattr(pkmn, 'is_opponent', False):
         beliefs = getattr(battle, 'stat_beliefs', None)

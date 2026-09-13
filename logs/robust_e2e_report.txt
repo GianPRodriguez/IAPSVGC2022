@@ -1,44 +1,44 @@
 === Robust E2E Report (A/B pools + BO3 + sync + OTS inference) ===
-time_utc: 2026-09-13T03:47:58.211302+00:00
+time_utc: 2026-09-13T06:45:43.548090+00:00
 format: gen9championsvgc2026regmcbo3
 ps_up: True
-team_pool_available: 199
+team_pool_available: 200
 teams_used: 4 (A=2 expectimax_bayesian, B=2 greedy_joint, disjoint)
 player_a: expectimax_bayesian
 player_b: greedy_joint
 bo3_series: 2
 seed: -
-elapsed_s: 317.4
-bo3_per_s: 0.006
+elapsed_s: 22.5
+bo3_per_s: 0.089
 
 --- results ---
-player_a_wins: 2
-player_b_wins: 0
-heuristic_wins: 2
-random_wins: 0
+player_a_wins: 1
+player_b_wins: 1
+heuristic_wins: 1
+random_wins: 1
 errors: 0
-win_rate_player_a: 100.0%
-win_rate_heuristic: 100.0%
-verdict: YES - expectimax_bayesian beat greedy_joint overall
+win_rate_player_a: 50.0%
+win_rate_heuristic: 50.0%
+verdict: TIE
 
 --- sync (Battle vs PS local) ---
 state_mismatch: NO
-state_checks: 29
+state_checks: 23
 state_mismatches: 0
 feed_errors: 0
 
 --- inference (OTS ground truth) ---
 inference_ok: YES
-soundness_checks: 528
+soundness_checks: 420
 soundness_failures: 0
-belief_observations: 130
-belief_skips: 8
-narrowing_events: 0
+belief_observations: 159
+belief_skips: 22
+narrowing_events: 1
 battle_errors: 0
 
 --- inference flags (Battle storage / calc wiring) ---
 NEED_FLAGS_ADD: NO
-flags_storage_ok: 16
+flags_storage_ok: 17
 flags_missing_storage: 0
 flags_missing_wire: 0
 flags_gaps_high_med: 0
@@ -49,30 +49,21 @@ flags_gaps_high_med: 0
 
 
 ------------------------------------------------------------------------
-EJEMPLO DE INFERENCIA EN EL TIEMPO: lucario-mega (stat=spe)
-True SP=32  True final=162
+EJEMPLO DE INFERENCIA EN EL TIEMPO: rillaboom (stat=spd)
+True SP=29  True final=105
 
-  T 2 [turn   ]  SP    0-32  final   145-162  cand=33  obs=0
-  T 3 [turn   ]  SP    0-32  final   145-162  cand=33  obs=0
-  T 4 [turn   ]  SP    0-32  final   145-162  cand=33  obs=1
-  T 5 [turn   ]  SP    0-32  final   145-162  cand=33  obs=3
-  T 2 [turn   ]  SP    0-32  final   145-162  cand=33  obs=0
-  T 3 [turn   ]  SP    0-32  final   145-162  cand=33  obs=1
-  T 4 [turn   ]  SP    0-32  final   145-162  cand=33  obs=3
-  T 5 [turn   ]  SP    0-32  final   145-162  cand=33  obs=4
-  T 2 [turn   ]  SP    0-32  final   145-162  cand=33  obs=0
-  T 3 [turn   ]  SP    0-32  final   145-162  cand=33  obs=0
-  T 4 [turn   ]  SP    0-32  final   145-162  cand=33  obs=1
-  T 5 [turn   ]  SP    0-32  final   145-162  cand=33  obs=3
-  T 6 [turn   ]  SP    0-32  final   145-162  cand=33  obs=5
-  T 7 [turn   ]  SP    0-32  final   145-162  cand=33  obs=6
+  T 4 [turn   ]  SP    0-32  final    90-106  cand=33  obs=0
+  T 5 [turn   ]  SP    0-32  final    90-106  cand=33  obs=3
+  T 6 [turn   ]  SP    0-32  final    90-106  cand=33  obs=1
+  T 7 [turn   ]  SP    0-32  final    90-106  cand=33  obs=1
+  T 8 [turn   ]  SP    9-32  final    95-106  cand=24  obs=4  << estrech? 33->24
 
-Estado final de lucario-mega:
-   hp: SP    0-32 | final   145-161 | cand=33 | true_sp=2 true_final=146
-  atk: SP    0-32 | final   165-181 | cand=33 | true_sp=32 true_final=181
-  def: SP    0-32 | final   108-124 | cand=33 | true_sp=0 true_final=108
-  spa: SP    0-32 | final   144-158 | cand=33 | true_sp=0 true_final=144
-  spd: SP    0-32 | final    90-106 | cand=33 | true_sp=0 true_final=90
-  spe: SP    0-32 | final   145-162 | cand=33 | true_sp=32 true_final=162
+Estado final de rillaboom:
+   hp: SP    0-32 | final   175-191 | cand=33 | true_sp=32 true_final=191
+  atk: SP    0-32 | final   159-177 | cand=33 | true_sp=5 true_final=162
+  def: SP    0-32 | final   110-126 | cand=33 | true_sp=0 true_final=110
+  spa: SP    0-32 | final     72-86 | cand=33 | true_sp=0 true_final=72
+  spd: SP    9-32 | final    95-106 | cand=24 | true_sp=29 true_final=105
+  spe: SP    0-32 | final   105-121 | cand=33 | true_sp=0 true_final=105
 
 Player A = validated(expectimax_bayesian) | Player B = greedy_joint

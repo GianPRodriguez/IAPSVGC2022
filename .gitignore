@@ -48,3 +48,6 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
+# Damage-calc disk cache (regenerable; shared WAL across processes)
+logs/calc_cache.sqlite*

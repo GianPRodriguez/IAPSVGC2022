@@ -5,10 +5,10 @@ state_mismatch: NO
 inference_ok: YES
 player_a: expectimax_bayesian
 player_b: greedy_joint
-player_a_wins: 2
-player_b_wins: 0
-heuristic_wins: 2
-random_wins: 0
+player_a_wins: 1
+player_b_wins: 1
+heuristic_wins: 1
+random_wins: 1
 errors: 0
 state_mismatches: 0
 soundness_failures: 0

@@ -31,8 +31,11 @@ def move_prio(
     *,
     ability: Optional[str] = None,
     terrain: Optional[str] = None,
+    blocked: bool = False,
 ) -> int:
     """Prioridad numérica; desconocido → 0 (no descartamos el duelo Spe)."""
+    if blocked:
+        return 0
     raw = move_priority(name, ability, terrain)
     return int(raw) if raw is not None else 0
 

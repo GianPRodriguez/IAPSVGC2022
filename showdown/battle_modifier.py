@@ -539,9 +539,11 @@ def _clear_all_field_temp_flags(pkmn: Pokemon, *, entering: bool = False) -> Non
     _clear_ephemeral_turn_flags(pkmn)
     pkmn.is_destiny_bonded = False
     pkmn.is_charged = False
+    pkmn.must_recharge = False
     if isinstance(getattr(pkmn, 'volatile_statuses', None), (dict, defaultdict)):
         pkmn.volatile_statuses.pop('destinybond', None)
         pkmn.volatile_statuses.pop('charge', None)
+        pkmn.volatile_statuses.pop('mustrecharge', None)
     if entering:
         pkmn.ability_on = False
         pkmn.just_switched = True
@@ -588,6 +590,18 @@ def _set_destiny_bonded(pkmn: Pokemon, value: bool) -> None:
         pkmn.volatile_statuses['destinybond'] = True
     else:
         pkmn.volatile_statuses.pop('destinybond', None)
+
+
+def _set_must_recharge(pkmn: Pokemon, value: bool) -> None:
+    if pkmn is None:
+        return
+    pkmn.must_recharge = bool(value)
+    if not isinstance(getattr(pkmn, 'volatile_statuses', None), (dict, defaultdict)):
+        pkmn.volatile_statuses = defaultdict(lambda: 0)
+    if value:
+        pkmn.volatile_statuses['mustrecharge'] = True
+    else:
+        pkmn.volatile_statuses.pop('mustrecharge', None)
 
 
 def _set_charged(pkmn: Pokemon, value: bool) -> None:
@@ -1001,8 +1015,26 @@ def _revert_special_pokemon(pkmn_leaving: Pokemon, side) -> Pokemon:
 ############################################################################################################################################################
 def is_opponent(battle: Battle,  split_msg: list) -> bool:
     # split_msg = ["","switch","p1a: Incineroar","Incineroar, L50, M","190/202"]
-    # split_msg[2] = "p1a: Incineroar"
-    return not split_msg[2].startswith(battle.user.id)
+    # split_msg[2] = "p1a: Incineroar"  |  sidestart: "p1: Nick"
+    ident = (split_msg[2] if len(split_msg) > 2 else '').strip()
+    slot = ident.split(':')[0].strip().lower()
+    uid = (getattr(getattr(battle, 'user', None), 'id', None) or 'p1')
+    uid = str(uid).strip().lower() or 'p1'
+    # p1 / p1a / p1b → nuestro bando si user.id == p1
+    return not slot.startswith(uid)
+
+
+def _side_from_slot(battle: Battle, slot: str):
+    """Resuelve p1/p1a/p1b vs p2/p2b al Side user u opponent."""
+    slot_key = (slot or '').split(':')[0].strip().lower()
+    uid = str(getattr(getattr(battle, 'user', None), 'id', None) or 'p1').strip().lower() or 'p1'
+    return battle.user if slot_key.startswith(uid) else battle.opponent
+
+
+def _is_opponent_slot(battle: Battle, slot: str) -> bool:
+    slot_key = (slot or '').split(':')[0].strip().lower()
+    uid = str(getattr(getattr(battle, 'user', None), 'id', None) or 'p1').strip().lower() or 'p1'
+    return not slot_key.startswith(uid)
 
 
 ############################################################################################################################################################
@@ -1112,11 +1144,20 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
             return battle
 
         # 1. PASO A: Buscamos PRIMERO si el Pokémon que entra YA ESTÁ en la reserva (reserved)
+        # Preferir copia no-KO si hay varias de la misma especie.
         found_in_reserved_idx = -1
+        fainted_reserved_idx = -1
         for contador, pkmn in enumerate(side.reserved):
-            if pkmn is not None and _same_party_species(namePkmn, getattr(pkmn, 'name', '')):
-                found_in_reserved_idx = contador
-                break
+            if pkmn is None or not _same_party_species(namePkmn, getattr(pkmn, 'name', '')):
+                continue
+            if getattr(pkmn, 'is_fainted', False) or int(getattr(pkmn, 'HPA_battle_actual', 1) or 0) <= 0:
+                if fainted_reserved_idx < 0:
+                    fainted_reserved_idx = contador
+                continue
+            found_in_reserved_idx = contador
+            break
+        if found_in_reserved_idx < 0:
+            found_in_reserved_idx = fainted_reserved_idx
 
         # Si ya estaba en la reserva, hacemos un intercambio directo (Swap)
         if found_in_reserved_idx != -1:
@@ -1207,40 +1248,121 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                 _apply_switch_identity(incoming, namePkmn)
                 _apply_switch_condition(incoming, hpa_val, hpb_val, new_non_volatile)
 
+        # Autoridad del |switch|: si el slot sigue KO pero el log trae HP>0, revivir
+        # in-place (evita foe2.fainted fantasma tras fallos de matching).
+        slot_now = side.active1 if is_active1 else side.active2
+        if (
+            slot_now is not None
+            and hpa_val > 0
+            and (
+                getattr(slot_now, 'is_fainted', False)
+                or int(getattr(slot_now, 'HPA_battle_actual', 0) or 0) <= 0
+                or not _same_party_species(namePkmn, getattr(slot_now, 'name', '') or '')
+            )
+        ):
+            if _same_party_species(namePkmn, getattr(slot_now, 'name', '') or ''):
+                _apply_switch_identity(slot_now, namePkmn)
+                _apply_switch_condition(slot_now, hpa_val, hpb_val, new_non_volatile)
+                slot_now.volatile_statuses = defaultdict(lambda: 0)
+                slot_now.boosts = defaultdict(lambda: 0)
+                slot_now.is_drowsy = False
+                _clear_all_field_temp_flags(slot_now, entering=True)
+            else:
+                # Último recurso: clonar desde preview OTS o fabricar shell.
+                donor = None
+                for pkmn in list(getattr(side, 'opponents', []) or []) + list(
+                    getattr(side, 'reserved', []) or []
+                ):
+                    if pkmn is not None and _same_party_species(
+                        namePkmn, getattr(pkmn, 'name', '')
+                    ):
+                        donor = pkmn
+                        break
+                if donor is not None:
+                    outgoing = deepcopy(slot_now)
+                    outgoing = _revert_special_pokemon(outgoing, side)
+                    new_active = deepcopy(donor)
+                    _apply_switch_identity(new_active, namePkmn)
+                    _apply_switch_condition(new_active, hpa_val, hpb_val, new_non_volatile)
+                    new_active.volatile_statuses = defaultdict(lambda: 0)
+                    new_active.boosts = defaultdict(lambda: 0)
+                    new_active.is_drowsy = False
+                    _clear_all_field_temp_flags(new_active, entering=True)
+                    new_active.perish_count = 0
+                    if is_active1:
+                        side.active1 = new_active
+                    else:
+                        side.active2 = new_active
+                    if outgoing is not None:
+                        side.reserved.append(deepcopy(outgoing))
+
         _resolve_duplicate_illusion_reserves(side)
 
     # =========================================================================
     # CASO 2: CAMBIO REALIZADO POR EL USUARIO
     # =========================================================================
     else:
+        hp_status_raw_u = split_msg[4].strip() if len(split_msg) > 4 else ""
+        hpa_u, hpb_u, nvs_u = (
+            _parse_hp_and_status_from_switch(hp_status_raw_u)
+            if hp_status_raw_u
+            else (-1, -1, None)
+        )
+
+        found_user_idx = -1
+        fainted_user_idx = -1
         for contador, pkmn in enumerate(side.reserved):
-            if pkmn is not None and _same_party_species(namePkmn, getattr(pkmn, 'name', '')):
-                aux = deepcopy(side.active1 if is_active1 else side.active2)
-                aux = _revert_special_pokemon(aux, side)
-                
-                new_active = deepcopy(pkmn)
-                _apply_switch_identity(new_active, namePkmn)
-                # Switch propio: el request suele traer HP exacto en el mismo frame;
-                # si el log trae condición, aplicarla; si no, asegurar no-fainted al entrar.
-                if len(split_msg) > 4:
-                    hpa_u, hpb_u, nvs_u = _parse_hp_and_status_from_switch(split_msg[4].strip())
-                    _apply_switch_condition(new_active, hpa_u, hpb_u, nvs_u)
-                else:
-                    new_active.is_fainted = False
-                new_active.volatile_statuses = defaultdict(lambda: 0)
-                new_active.boosts = defaultdict(lambda: 0)
-                new_active.is_drowsy = False
-                _clear_all_field_temp_flags(new_active, entering=True)
-                new_active.perish_count = 0
+            if pkmn is None or not _same_party_species(namePkmn, getattr(pkmn, 'name', '')):
+                continue
+            if getattr(pkmn, 'is_fainted', False) or int(getattr(pkmn, 'HPA_battle_actual', 1) or 0) <= 0:
+                if fainted_user_idx < 0:
+                    fainted_user_idx = contador
+                continue
+            found_user_idx = contador
+            break
+        if found_user_idx < 0:
+            found_user_idx = fainted_user_idx
 
-                if is_active1:
-                    side.active1 = new_active
-                else:
-                    side.active2 = new_active
+        slot_target = side.active1 if is_active1 else side.active2
+        if (
+            found_user_idx < 0
+            and slot_target is not None
+            and _same_party_species(namePkmn, getattr(slot_target, 'name', ''))
+        ):
+            _apply_switch_identity(slot_target, namePkmn)
+            if hpa_u >= 0:
+                _apply_switch_condition(slot_target, hpa_u, hpb_u, nvs_u)
+            else:
+                slot_target.is_fainted = False
+            slot_target.volatile_statuses = defaultdict(lambda: 0)
+            slot_target.boosts = defaultdict(lambda: 0)
+            slot_target.is_drowsy = False
+            _clear_all_field_temp_flags(slot_target, entering=True)
+            slot_target.perish_count = 0
+            return battle
 
-                # Intercambio en Reservados
-                side.reserved[contador] = deepcopy(aux)
-                break
+        if found_user_idx >= 0:
+            aux = deepcopy(side.active1 if is_active1 else side.active2)
+            aux = _revert_special_pokemon(aux, side)
+
+            new_active = deepcopy(side.reserved[found_user_idx])
+            _apply_switch_identity(new_active, namePkmn)
+            if hpa_u >= 0:
+                _apply_switch_condition(new_active, hpa_u, hpb_u, nvs_u)
+            else:
+                new_active.is_fainted = False
+            new_active.volatile_statuses = defaultdict(lambda: 0)
+            new_active.boosts = defaultdict(lambda: 0)
+            new_active.is_drowsy = False
+            _clear_all_field_temp_flags(new_active, entering=True)
+            new_active.perish_count = 0
+
+            if is_active1:
+                side.active1 = new_active
+            else:
+                side.active2 = new_active
+
+            side.reserved[found_user_idx] = deepcopy(aux)
         else:
             # El entrante ya está en el otro slot (a/b cruzados).
             slot_now = side.active1 if is_active1 else side.active2
@@ -1252,11 +1374,62 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                     side.active2, side.active1 = other, slot_now
                 incoming = side.active1 if is_active1 else side.active2
                 _apply_switch_identity(incoming, namePkmn)
-                if len(split_msg) > 4:
-                    hpa_u, hpb_u, nvs_u = _parse_hp_and_status_from_switch(split_msg[4].strip())
+                if hpa_u >= 0:
                     _apply_switch_condition(incoming, hpa_u, hpb_u, nvs_u)
                 else:
                     incoming.is_fainted = False
+
+        # Autoridad del |switch| propio: especie/HP del log mandan sobre el slot.
+        slot_now = side.active1 if is_active1 else side.active2
+        if (
+            slot_now is None
+            or not _same_party_species(namePkmn, getattr(slot_now, 'name', '') or '')
+            or (
+                hpa_u > 0
+                and (
+                    getattr(slot_now, 'is_fainted', False)
+                    or int(getattr(slot_now, 'HPA_battle_actual', 0) or 0) <= 0
+                )
+            )
+        ):
+            donor = None
+            donor_idx = -1
+            for idx, pkmn in enumerate(list(getattr(side, 'reserved', []) or [])):
+                if pkmn is not None and _same_party_species(
+                    namePkmn, getattr(pkmn, 'name', '')
+                ):
+                    donor = pkmn
+                    donor_idx = idx
+                    break
+            if donor is not None:
+                outgoing = deepcopy(slot_now) if slot_now is not None else None
+                if outgoing is not None:
+                    outgoing = _revert_special_pokemon(outgoing, side)
+                new_active = deepcopy(donor)
+                _apply_switch_identity(new_active, namePkmn)
+                if hpa_u >= 0:
+                    _apply_switch_condition(new_active, hpa_u, hpb_u, nvs_u)
+                else:
+                    new_active.is_fainted = False
+                new_active.volatile_statuses = defaultdict(lambda: 0)
+                new_active.boosts = defaultdict(lambda: 0)
+                new_active.is_drowsy = False
+                _clear_all_field_temp_flags(new_active, entering=True)
+                new_active.perish_count = 0
+                if is_active1:
+                    side.active1 = new_active
+                else:
+                    side.active2 = new_active
+                if donor_idx >= 0:
+                    side.reserved[donor_idx] = (
+                        deepcopy(outgoing) if outgoing is not None else None
+                    )
+            elif slot_now is not None and _same_party_species(
+                namePkmn, getattr(slot_now, 'name', '') or ''
+            ):
+                _apply_switch_identity(slot_now, namePkmn)
+                if hpa_u >= 0:
+                    _apply_switch_condition(slot_now, hpa_u, hpb_u, nvs_u)
 
         # Limpieza de nulos en reservados del usuario
         side.reserved = [p for p in side.reserved if p is not None]
@@ -1801,7 +1974,7 @@ def _resolve_active_from_ident(battle: Battle, ident: str):
     slot = ident.split(':')[0].strip()
     if not slot:
         return None
-    side = battle.user if slot.startswith(battle.user.id) else battle.opponent
+    side = _side_from_slot(battle, slot)
     return side.active1 if slot.endswith('a') else side.active2
 
 
@@ -1857,12 +2030,22 @@ def weather(battle: Battle, split_msg: list) -> Battle:
 
     raw_weather = split_msg[2].split(':')[-1].strip()
     weather_name = normalize_name(raw_weather)
+    is_upkeep = any(part.strip().lower() == "[upkeep]" for part in split_msg[3:])
+
+    if weather_name in ("none", "null"):
+        battle.weather = 'none'
+        battle.weatherTurn = 0
+        return battle
+
+    # Upkeep tardío tras |-weather|none no debe resucitar el clima (sticky rain/sun).
+    if is_upkeep:
+        if battle.weatherTurn <= 0 or (battle.weather or 'none') in ('none', 'null', ''):
+            return battle
+        battle.weather = weather_name
+        return battle
 
     battle.weather = weather_name
-    if weather_name in ("none", "null"):
-        battle.weatherTurn = 0
-    elif not any(part.strip().lower() == "[upkeep]" for part in split_msg[3:]):
-        battle.weatherTurn = _weather_duration_turns(battle, weather_name, split_msg)
+    battle.weatherTurn = _weather_duration_turns(battle, weather_name, split_msg)
     return battle
 
 
@@ -2159,7 +2342,7 @@ def transform(battle: Battle, split_msg: list) -> Battle:
 
     # 2. Identificamos al Pokémon que está siendo copiado (target)
     target_slot_full = split_msg[3].split(':')[0].strip() # Ej: "p2a" o "p1b"
-    target_is_opponent = not target_slot_full.startswith(battle.user.id)
+    target_is_opponent = _is_opponent_slot(battle, target_slot_full)
     target_side = battle.opponent if target_is_opponent else battle.user
     target_is_active1 = target_slot_full.endswith('a')
     target_pkmn = target_side.active1 if target_is_active1 else target_side.active2
@@ -2382,7 +2565,7 @@ def copyboost(battle: Battle, split_msg: list) -> Battle:
     # 2. Identificamos al Pokémon del cual SE COPIAN los boosts (fuente: split_msg[3])
     # Nota: El target puede ser del propio bando o del oponente, por lo que evaluamos su ID de jugador
     target_slot_full = split_msg[3].split(':')[0].strip()  # Ej: "p1b" o "p2a"
-    target_is_opponent = not target_slot_full.startswith(battle.user.id)
+    target_is_opponent = _is_opponent_slot(battle, target_slot_full)
     target_side = battle.opponent if target_is_opponent else battle.user
     target_slot = target_slot_full.endswith('a')
     target_pkmn = target_side.active1 if target_slot else target_side.active2
@@ -2567,26 +2750,25 @@ def turn(battle: Battle, split_msg: list) -> Battle:
     battle.pending_crit_target = None
     battle.pending_damage_sash = False
 
-    # Decremento de duraciones globales del campo de batalla.
-    # Antes: weatherTurn/terrain se quedaban en 1 para siempre (nunca llegaban a 0).
-    if new_turn > 1 and battle.weatherTurn > 0:
+    # Decremento de duraciones (para AI). NO borrar clima/terreno aquí:
+    # poke-env / PS limpian con |-weather|none y |-fieldend|; expirar en |turn|
+    # un tick antes deja fields vacíos mientras PE aún los tiene (y al revés
+    # con upkeep sticky). Mantener al menos 1 hasta el fin de protocolo.
+    if new_turn > 1 and battle.weatherTurn > 1:
         battle.weatherTurn -= 1
-        if battle.weatherTurn <= 0:
-            battle.weather = 'none'
-            battle.weatherTurn = 0
 
-    # Decremento de turnos para cada terreno / room activo
     for terr, turns in list(battle.terrain.items()):
         left = int(turns or 0)
         if left <= 0:
             battle.terrain.pop(terr, None)
             continue
         if new_turn > 1:
-            left -= 1
-            if left <= 0:
+            if left > 1:
+                battle.terrain[terr] = left - 1
+            elif left == 1:
+                # PS / poke-env limpian al expirar; quedarse en 1 deja psychicterrain
+                # fantasma cuando PE ya no tiene fields (robust e2e t8).
                 battle.terrain.pop(terr, None)
-            else:
-                battle.terrain[terr] = left
 
     # Decremento de condiciones de bando (Side Conditions) y limpieza de estados
     for side in (battle.user, battle.opponent):
@@ -2596,10 +2778,10 @@ def turn(battle: Battle, split_msg: list) -> Battle:
             side.side_conditions = defaultdict(lambda: 0)
 
         for condition in ('tailwind', 'reflect', 'lightscreen', 'auroraveil'):
-            if side.side_conditions.get(condition, 0) > 0:
-                side.side_conditions[condition] -= 1
-                if side.side_conditions[condition] == 0:
-                    del side.side_conditions[condition]
+            left = int(side.side_conditions.get(condition, 0) or 0)
+            # Igual que clima/terreno: no borrar en 0; |-sideend| es la autoridad.
+            if left > 1:
+                side.side_conditions[condition] = left - 1
 
         # Yawn / is_drowsy: NO se limpia aquí. Debe sobrevivir al |turn| del turno
         # de decisión y solo caer con |-status|slp, |-end|Yawn, switch o faint.
@@ -2760,7 +2942,7 @@ def _record_action_for_speed(battle: Battle, split_msg: list) -> None:
     slot_str = split_msg[2].split(':')[0].strip()
     if not slot_str:
         return
-    from_opponent = not slot_str.startswith(battle.user.id)
+    from_opponent = _is_opponent_slot(battle, slot_str)
     side = battle.opponent if from_opponent else battle.user
     pkmn = side.active1 if slot_str.endswith('a') else side.active2
     if pkmn is None:
@@ -3034,7 +3216,7 @@ def _set_pending_damage_from_move(battle: Battle, split_msg: list) -> None:
     atk_slot = split_msg[2].split(':')[0].strip()
     if not atk_slot:
         return
-    atk_opp = not atk_slot.startswith(battle.user.id)
+    atk_opp = _is_opponent_slot(battle, atk_slot)
     atk_side = battle.opponent if atk_opp else battle.user
     attacker = atk_side.active1 if atk_slot.endswith('a') else atk_side.active2
     if attacker is None:
@@ -3246,6 +3428,10 @@ def observe_move(battle: Battle, split_msg: list) -> Battle:
     ):
         _set_charged(actor, False)
 
+    # mustrecharge cae al actuar (turno de recarga o cualquier move).
+    if actor is not None and not still and getattr(actor, 'must_recharge', False):
+        _set_must_recharge(actor, False)
+
     # Solo oponente: el agente no usa Illusion de forma opaca en nuestro estado
     if not is_opponent(battle, split_msg):
         return battle
@@ -3294,6 +3480,16 @@ def observe_move(battle: Battle, split_msg: list) -> Battle:
     )
 
 
+def must_recharge(battle: Battle, split_msg: list) -> Battle:
+    # |-mustrecharge|p1a: Archaludon
+    if len(split_msg) < 3:
+        return battle
+    pkmn = _resolve_active_from_ident(battle, split_msg[2].strip())
+    if pkmn is not None:
+        _set_must_recharge(pkmn, True)
+    return battle
+
+
 ############################################################################################################################################################
 ### OK - Lookup para cada una de las funciones de actualización de entorno                                                                               ###
 ############################################################################################################################################################
@@ -3337,6 +3533,7 @@ BATTLE_MODIFIERS_LOOKUP = {
     '-copyboost': copyboost,
     '-swapboost': swapboost,
     '-activate': activate,
+    '-mustrecharge': must_recharge,
     'turn': turn
 }
 

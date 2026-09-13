@@ -50,6 +50,10 @@ class CalcPoke:
     has_substitute: bool = False
     is_redirecting: bool = False
     allies_fainted: int = 0
+    # Ya en turno 2 de un move con flags.charge (twoturnmove / preparing).
+    is_two_turn_charging: bool = False
+    # Obligado a recargar este turno (Hyper Beam, etc.).
+    must_recharge: bool = False
 
 
 @dataclass
@@ -282,6 +286,8 @@ def apply_pending_mega(poke: CalcPoke) -> CalcPoke:
         has_substitute=poke.has_substitute,
         is_redirecting=poke.is_redirecting,
         allies_fainted=poke.allies_fainted,
+        is_two_turn_charging=poke.is_two_turn_charging,
+        must_recharge=poke.must_recharge,
     )
 
 
@@ -458,20 +464,71 @@ def _actions_from_ranges(
     ranges: Sequence[Optional[Tuple[int, int]]],
     *,
     can_mega: bool,
+    attacker: Optional[CalcPoke] = None,
+    weather: Optional[str] = None,
+    terrain: Optional[str] = None,
+    gravity: bool = False,
+    foes_for_priority: Optional[Sequence[CalcPoke]] = None,
 ) -> List[ScoredAction]:
     """Convierte ranges→ScoredAction. Tera solo si convierte en KO (base no KO)."""
+    from showdown.battle_bots.move_mechanics import (
+        charge_boost_score,
+        gate_damage_range,
+        power_herb_cost,
+        priority_move_fails,
+        recharge_lock_penalty,
+        resolve_charge,
+        resolve_recharge,
+    )
+
     base_ko: Dict[Tuple[int, int], bool] = {}
     staged: List[Tuple[ScoredAction, int]] = []  # action, special
+    item = attacker.item if attacker is not None else None
+    already = bool(attacker.is_two_turn_charging) if attacker is not None else False
+    recharging = bool(attacker.must_recharge) if attacker is not None else False
+    side_foes = list(foes_for_priority or [])
 
     for (_side, move, tid, foe, special), rng in zip(meta, ranges):
+        if str(move.name or '').strip().lower().replace(' ', '').replace('-', '') == 'fakeout':
+            from showdown.battle_bots.greedy_solo.type_chart import fake_out_can_affect
+            abi = attacker.ability if attacker is not None else None
+            if not fake_out_can_affect(abi, foe):
+                continue
+        if priority_move_fails(
+            move.name,
+            attacker=attacker,
+            defender=foe,
+            defender_side=side_foes or [foe],
+            terrain=terrain,
+            gravity=gravity,
+        ):
+            continue
+        res = resolve_charge(
+            move.name, weather=weather, item=item, already_charging=already,
+        )
+        rech = resolve_recharge(move.name, currently_recharging=recharging)
+        gated = gate_damage_range(
+            rng, move.name, weather=weather, item=item,
+            already_charging=already, must_recharge=recharging,
+        )
         max_hp = int((_stats_or_default(foe).get('hp') or 1))
         cur_hp = int(foe.cur_hp if foe.cur_hp is not None else max_hp)
-        pct = damage_pct(rng, max_hp)
-        ko = guaranteed_ko(rng, cur_hp)
-        # Substitute: el golpe rompe/daña el sub, no KO al mon detrás.
-        if foe.has_substitute:
+        if recharging or (res.is_charge_move and not res.fires_this_turn):
+            pct = 0.0
             ko = False
-        score = pct + (KO_BONUS if ko else 0.0)
+            score = 0.0 if recharging else charge_boost_score(res)
+        else:
+            pct = damage_pct(gated, max_hp)
+            ko = guaranteed_ko(gated, cur_hp)
+            # Substitute: el golpe rompe/daña el sub, no KO al mon detrás.
+            if foe.has_substitute:
+                ko = False
+            score = pct + (KO_BONUS if ko else 0.0)
+            if res.is_charge_move and res.fires_this_turn:
+                # Weather/Herb: el boost de carga ocurre el mismo turno.
+                score += charge_boost_score(res)
+            score -= power_herb_cost(res)
+            score -= recharge_lock_penalty(rech, ko=ko)
         key = (move.slot, tid)
         if special == 0:
             base_ko[key] = ko
@@ -504,8 +561,17 @@ def _actions_from_ranges(
 
     for move in moves:
         if not _is_damaging(move):
+            res = resolve_charge(
+                move.name, weather=weather, item=item, already_charging=already,
+            )
+            if recharging:
+                score = 0.0
+            elif res.is_charge_move and not res.fires_this_turn:
+                score = charge_boost_score(res)
+            else:
+                score = -power_herb_cost(res)
             actions.append(ScoredAction(
-                score=0.0, move_slot=move.slot, target=0,
+                score=score, move_slot=move.slot, target=0,
                 mega=1 if can_mega else 0, damage_pct=0.0, ko=False,
             ))
     return actions
@@ -531,7 +597,12 @@ async def score_single_hits(
         field_ctx=ctx, can_tera=can_tera, tera_type=tera_type,
     )
     ranges = await calc_damage_batch(requests)
-    return _actions_from_ranges(moves, meta, ranges, can_mega=can_mega)
+    foe_mons = [f for _, f in foes]
+    return _actions_from_ranges(
+        moves, meta, ranges, can_mega=can_mega, attacker=attacker,
+        weather=ctx.weather, terrain=ctx.terrain, gravity=ctx.gravity,
+        foes_for_priority=foe_mons,
+    )
 
 
 async def best_double_action(
@@ -588,9 +659,13 @@ async def best_double_action(
 
     left_actions = _actions_from_ranges(
         left_moves, left_meta, left_ranges, can_mega=can_mega_left,
+        attacker=left_atk, weather=ctx.weather, terrain=ctx.terrain,
+        gravity=ctx.gravity, foes_for_priority=[f for _, f in foes],
     ) if left_atk and left_moves else []
     right_actions = _actions_from_ranges(
         right_moves, right_meta, right_ranges, can_mega=can_mega_right,
+        attacker=right_atk, weather=ctx.weather, terrain=ctx.terrain,
+        gravity=ctx.gravity, foes_for_priority=[f for _, f in foes],
     ) if right_atk and right_moves else []
 
     if not left_actions and not right_actions:

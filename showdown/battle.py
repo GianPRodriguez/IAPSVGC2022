@@ -59,6 +59,7 @@ _REPORT_HIDDEN_VOLATILES = frozenset({
     'obstruct', 'silktrap', 'burningbulwark', 'maxguard',
     'helpinghand', 'roost', 'focuspunch', 'beakblast', 'shelltrap',
     'charge', 'destinybond', 'grudge', 'yawn', 'moveyawn',
+    'mustrecharge',
 })
 
 
@@ -78,6 +79,8 @@ def _fmt_status_short(pkmn) -> str:
         bits.append('destinybond')
     if getattr(pkmn, 'is_charged', False):
         bits.append('charge')
+    if getattr(pkmn, 'must_recharge', False):
+        bits.append('mustrecharge')
     vs = dict(getattr(pkmn, 'volatile_statuses', {}) or {})
     for k, v in vs.items():
         if not v:
@@ -853,6 +856,8 @@ class Pokemon:
         self.is_destiny_bonded = False
         # Charge: hasta move Eléctrico / |-end| / switch.
         self.is_charged = False
+        # Must recharge (Hyper Beam…): hasta el próximo |move| propio o switch.
+        self.must_recharge = False
         # Follow Me / Rage Powder / Spotlight: redirige ataques single-target.
         self.is_redirecting = False
         # abilityOn del calc (@smogon): Flash Fire absorbed, Slow Start activo, etc.

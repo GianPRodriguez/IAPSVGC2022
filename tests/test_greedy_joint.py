@@ -67,6 +67,61 @@ def test_joint_import_battlebot():
     assert BattleBot.__module__.endswith('greedy_joint.main')
 
 
+def test_fakeout_no_bonus_vs_ghost_only_field():
+    """Sin Scrappy, Fake Out no recibe +25 si ambos foes son Ghost."""
+    from showdown.battle_bots.greedy_joint.joint import (
+        _FAKE_OUT_BONUS,
+        _atoms_from_side,
+        _utility_score,
+        fake_out_can_affect,
+        JointAtom,
+    )
+    from showdown.battle_bots.greedy_solo.type_chart import fake_out_can_affect as fo_types
+
+    ghost = CalcPoke(species='Gengar', types=('Ghost', 'Poison'), cur_hp=100,
+                     stats={'hp': 100, 'atk': 100, 'def': 100, 'spa': 100, 'spd': 100, 'spe': 100})
+    normal = CalcPoke(species='Incineroar', types=('Fire', 'Dark'), cur_hp=100,
+                      stats={'hp': 100, 'atk': 100, 'def': 100, 'spa': 100, 'spd': 100, 'spe': 100})
+    atk = CalcPoke(species='Incineroar', types=('Fire', 'Dark'), ability='Intimidate',
+                   just_switched=True, cur_hp=100,
+                   stats={'hp': 100, 'atk': 100, 'def': 100, 'spa': 100, 'spd': 100, 'spe': 100})
+    scrappy = CalcPoke(species='Kangaskhan', types=('Normal',), ability='Scrappy',
+                       just_switched=True, cur_hp=100,
+                       stats={'hp': 100, 'atk': 100, 'def': 100, 'spa': 100, 'spd': 100, 'spe': 100})
+
+    assert not fo_types(None, ghost)
+    assert fo_types(None, normal)
+    assert fo_types('Scrappy', ghost)
+    assert not fake_out_can_affect(atk, ghost)
+    assert fake_out_can_affect(scrappy, ghost)
+
+    move = MoveOption(1, 'Fake Out', 'normal', 'Physical')
+    foes_ghost = [(1, ghost), (2, ghost)]
+    meta = [('L', move, 1, ghost, 0), ('L', move, 2, ghost, 0)]
+    atoms = _atoms_from_side(
+        [move], meta, [(40, 50), (40, 50)], foes_ghost,
+        can_mega=False, attacker=atk, weather=None,
+    )
+    assert all(a.utility != 'fakeout' for a in atoms)
+    assert not any(_norm_is_fakeout(a) for a in atoms)
+
+    foes_mixed = [(1, ghost), (2, normal)]
+    meta2 = [('L', move, 1, ghost, 0), ('L', move, 2, normal, 0)]
+    atoms2 = _atoms_from_side(
+        [move], meta2, [(0, 0), (40, 50)], foes_mixed,
+        can_mega=False, attacker=atk, weather=None,
+    )
+    assert any(a.utility == 'fakeout' for a in atoms2)
+    fo = next(a for a in atoms2 if a.utility == 'fakeout')
+    assert fo.target == 2  # el no-Ghost
+    u = _utility_score(fo, JointAtom(0, 0, utility='status'), foes=foes_mixed, has_damage=False)
+    assert u >= _FAKE_OUT_BONUS
+
+
+def _norm_is_fakeout(a) -> bool:
+    return str(getattr(a, 'move_name', '')).lower().replace(' ', '') == 'fakeout' and a.utility == 'fakeout'
+
+
 def test_redirect_plus_ko_beats_double_attack_focus():
     """Follow Me + partner KO should outscore both attacking the same weak foe."""
     from showdown.battle_bots.greedy_joint import joint as J

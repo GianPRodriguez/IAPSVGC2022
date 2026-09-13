@@ -70,9 +70,10 @@ def bootstrap_battle(user_team: TeamMeta, opp_team: TeamMeta) -> HarnessBattle:
 
     # Preview OTS
     battle.opponent.opponents = list(opp_mons)
-    battle.user.reserved = list(user_mons)
-    # Leads por defecto: primeros dos (teampreview real los sobrescribe vía switch)
-    battle.user.active1 = user_mons[0]
+    # Solo banquillo en reserved: si también están los leads, |switch| puede
+    # matchear la misma referencia que active1/2 y dejar el espejo desfasado.
+    battle.user.reserved = list(user_mons[2:])
+    battle.user.active1 = user_mons[0] if user_mons else None
     battle.user.active2 = user_mons[1] if len(user_mons) > 1 else None
     battle.opponent.active1 = None
     battle.opponent.active2 = None

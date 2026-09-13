@@ -28,6 +28,7 @@ _REQUIRED_STORAGE: Tuple[Tuple[str, type, str], ...] = (
     ('boosts', Pokemon, 'boosts'),
     ('is_helping_hand', Pokemon, 'is_helping_hand'),
     ('is_charged', Pokemon, 'is_charged'),
+    ('must_recharge', Pokemon, 'must_recharge'),
     ('is_protected', Pokemon, 'is_protected'),
     ('volatile_statuses', Pokemon, 'volatile_statuses'),
     ('abilityPkmn', Pokemon, 'abilityPkmn'),

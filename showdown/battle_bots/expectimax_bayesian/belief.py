@@ -285,6 +285,8 @@ def profile_to_calc(
         has_substitute=base.has_substitute,
         is_redirecting=base.is_redirecting,
         allies_fainted=base.allies_fainted,
+        is_two_turn_charging=base.is_two_turn_charging,
+        must_recharge=base.must_recharge,
     )
 
 

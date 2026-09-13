@@ -67,9 +67,9 @@ from showdown.battle_bots.expectimax_bayesian.utility import (
 
 @dataclass
 class ExpectimaxConfig:
-    deadline_ms: float = 300.0
+    deadline_ms: float = 700.0
     phase1_budget_ms: float = 50.0
-    phase2_end_ms: float = 280.0
+    phase2_end_ms: float = 680.0
     k_profiles: int = 5
     max_worlds: int = 16
     max_our_pairs: int = 36
@@ -223,10 +223,25 @@ def _candidate_pairs(
 def _hit_map_from_batch(
     meta: Sequence[Tuple[str, MoveOption, int, CalcPoke, int]],
     ranges: Sequence[Optional[Tuple[int, int]]],
+    *,
+    attackers: Optional[Dict[str, Optional[CalcPoke]]] = None,
+    weather: Optional[str] = None,
 ) -> Dict[Tuple[str, int, int, int], Optional[Tuple[int, int]]]:
+    from showdown.battle_bots.move_mechanics import gate_damage_range
+
     out: Dict[Tuple[str, int, int, int], Optional[Tuple[int, int]]] = {}
+    atk_map = attackers or {}
     for (side, move, tid, _foe, special), rng in zip(meta, ranges):
-        out[(side, move.slot, tid, special)] = rng
+        atk = atk_map.get(side)
+        gated = gate_damage_range(
+            rng,
+            move.name,
+            weather=weather,
+            item=atk.item if atk is not None else None,
+            already_charging=bool(atk.is_two_turn_charging) if atk is not None else False,
+            must_recharge=bool(atk.must_recharge) if atk is not None else False,
+        )
+        out[(side, move.slot, tid, special)] = gated
     return out
 
 
@@ -405,19 +420,40 @@ def _apply_speed_race(
     terrain: Optional[str],
 ) -> Tuple[float, float]:
     """Escala offense/threat según quién actúa primero (Spe + prioridad)."""
+    from showdown.battle_bots.move_mechanics import priority_move_fails
+
     tr = bool(pos.our_trick_room or pos.opp_trick_room)
     our_tw = bool(pos.our_tailwind)
     opp_tw = bool(pos.opp_tailwind)
+    foe_mons = [f for _, f in world_foes]
 
     spe_l = poke_effective_spe(left_atk, tailwind=our_tw) if left_atk else 0
     spe_r = poke_effective_spe(right_atk, tailwind=our_tw) if right_atk else 0
-    prio_l = move_prio(left.move_name, ability=left_atk.ability if left_atk else None, terrain=terrain) if left.utility != 'switch' else 0
-    prio_r = move_prio(right.move_name, ability=right_atk.ability if right_atk else None, terrain=terrain) if right.utility != 'switch' else 0
-    # Fake Out only if just_switched
-    if _norm_move(left.move_name) == 'fakeout' and left_atk and not left_atk.just_switched:
-        prio_l = 0
-    if _norm_move(right.move_name) == 'fakeout' and right_atk and not right_atk.just_switched:
-        prio_r = 0
+
+    def _our_prio(atom: JointAtom, atk: Optional[CalcPoke]) -> int:
+        if atom.utility == 'switch' or atk is None:
+            return 0
+        if _norm_move(atom.move_name) == 'fakeout' and not atk.just_switched:
+            return 0
+        defender = None
+        for tid, foe in world_foes:
+            if tid == atom.target:
+                defender = foe
+                break
+        if defender is None and world_foes:
+            defender = world_foes[0][1]
+        if priority_move_fails(
+            atom.move_name,
+            attacker=atk,
+            defender=defender,
+            defender_side=foe_mons,
+            terrain=terrain,
+        ):
+            return 0
+        return move_prio(atom.move_name, ability=atk.ability, terrain=terrain)
+
+    prio_l = _our_prio(left, left_atk)
+    prio_r = _our_prio(right, right_atk)
 
     threat_scale = 1.0
     for i, (tid, foe) in enumerate(world_foes):
@@ -527,11 +563,21 @@ async def _build_atoms(
     left_ranges = [rng for m, rng in zip(meta, ranges) if m[0] == 'L']
     right_ranges = [rng for m, rng in zip(meta, ranges) if m[0] == 'R']
     left_atoms = (
-        _atoms_from_side(left_moves, left_meta, left_ranges, foes, can_mega=can_mega_left)
+        _atoms_from_side(
+            left_moves, left_meta, left_ranges, foes,
+            can_mega=can_mega_left, attacker=left_atk,
+            weather=field_ctx.weather, terrain=field_ctx.terrain,
+            gravity=field_ctx.gravity,
+        )
         if left_atk and left_moves else []
     )
     right_atoms = (
-        _atoms_from_side(right_moves, right_meta, right_ranges, foes, can_mega=can_mega_right)
+        _atoms_from_side(
+            right_moves, right_meta, right_ranges, foes,
+            can_mega=can_mega_right, attacker=right_atk,
+            weather=field_ctx.weather, terrain=field_ctx.terrain,
+            gravity=field_ctx.gravity,
+        )
         if right_atk and right_moves else []
     )
     return left_atoms, right_atoms
@@ -740,10 +786,42 @@ async def best_expectimax_bayesian_action(
                 meta.errors.append(f'calc_opp:{exc!r}')
                 opp_ranges = [None] * len(opp_reqs)
 
-            hit_map = _hit_map_from_batch(meta_hits, our_ranges)
+            hit_map = _hit_map_from_batch(
+                meta_hits,
+                our_ranges,
+                attackers={'L': left_atk, 'R': right_atk},
+                weather=ctx.weather,
+            )
             opp_hit_map: Dict[Tuple[str, str, str], Optional[Tuple[int, int]]] = {}
+            from showdown.battle_bots.move_mechanics import gate_damage_range, priority_move_fails
+            foe_by_tag = {
+                'F1': world_foes[0][1] if len(world_foes) > 0 else None,
+                'F2': world_foes[1][1] if len(world_foes) > 1 else None,
+            }
+            our_by_def = {'OL': left_atk, 'OR': right_atk}
+            our_side = [p for p in (left_atk, right_atk) if p is not None]
             for key, rng in zip(opp_meta, opp_ranges):
-                opp_hit_map[key] = rng
+                tag, move_id, def_tag = key
+                foe = foe_by_tag.get(tag)
+                our = our_by_def.get(def_tag)
+                gated = gate_damage_range(
+                    rng,
+                    move_id,
+                    weather=ctx.weather,
+                    item=foe.item if foe is not None else None,
+                    already_charging=bool(foe.is_two_turn_charging) if foe is not None else False,
+                    must_recharge=bool(foe.must_recharge) if foe is not None else False,
+                )
+                if gated is not None and priority_move_fails(
+                    move_id,
+                    attacker=foe,
+                    defender=our,
+                    defender_side=our_side,
+                    terrain=ctx.terrain,
+                    gravity=ctx.gravity,
+                ):
+                    gated = None
+                opp_hit_map[key] = gated
 
             foe_types = [tuple(f.types or ()) for _, f in world_foes]
 

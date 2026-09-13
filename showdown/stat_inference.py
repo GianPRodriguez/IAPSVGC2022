@@ -849,14 +849,14 @@ def _field_payload(ctx: DamageContext, category: str) -> Dict:
 # Desync tipico calc Champions vs PS: pantallas+terreno, redondeo de % HP,
 # shells de especies ausentes en el dex (STAB), Aerilate, etc.
 # Preferimos no podar el verdadero: tolerancia holgada en %.
-_ABS_DAMAGE_TOLERANCE = 18
-_PERCENT_DAMAGE_TOLERANCE = 22
+_ABS_DAMAGE_TOLERANCE = 22
+_PERCENT_DAMAGE_TOLERANCE = 26
 # Cota superior bilateral en %: margen extra (calc a menudo sobreestima
 # terreno/STAB respecto a PS; un min_roll apenas por encima expulsaba Def reales).
-_PERCENT_BILATERAL_EXTRA = 8
+_PERCENT_BILATERAL_EXTRA = 10
 # Margen en Spe efectiva: Tailwind 80→160 vs Spe 163, empates, mega mid-turn,
-# Sticky Web / redondeos. Preferir no expulsar el Spe verdadero.
-_SPEED_COMPARE_MARGIN = 12
+# Sticky Web / redondeos / desync menor de slots. Preferir no expulsar Spe real.
+_SPEED_COMPARE_MARGIN = 24
 
 
 def _rolls_match_absolute(
@@ -1098,7 +1098,17 @@ class TeamStatBeliefs:
             belief.current_forme = forme
             self.beliefs[species] = belief
         else:
-            # Cambio de forma (Mega, Blade/Shield): mismas SP, bases distintas.
+            # Mega/Blade: mismas SP, bases distintas. Cotas hechas con bases viejas
+            # (p.ej. Spe 80→100) expulsan el SP verdadero; reabrir esos stats.
+            max_sp, _ = sp_limits()
+            for stat, new_base in base_stats.items():
+                try:
+                    old_base = int(belief.base_stats.get(stat) or 0)
+                    nb = int(new_base or 0)
+                except (TypeError, ValueError):
+                    continue
+                if old_base > 0 and nb > 0 and old_base != nb:
+                    belief.candidates[stat] = set(range(SP_MIN, max_sp + 1))
             belief.base_stats.update(base_stats)
             belief.current_forme = forme
         return belief
@@ -1156,6 +1166,17 @@ class TeamStatBeliefs:
                 )
             if ok:
                 allowed.add(sp)
+
+        # Frontera SP=0 / SP=1: un punto de stat final (p.ej. Incineroar Adamant 80 vs 81)
+        # no debe expulsar el SP=0 real por desync menor de Vel efectiva vs |move|.
+        if (
+            SP_MIN in belief.candidates['spe']
+            and SP_MIN not in allowed
+            and allowed
+            and min(allowed) == SP_MIN + 1
+            and len(allowed) >= len(belief.candidates['spe']) - 1
+        ):
+            allowed.add(SP_MIN)
 
         belief.observations += 1
         changed = belief.narrow('spe', allowed)
