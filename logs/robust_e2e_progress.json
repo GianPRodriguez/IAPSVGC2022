@@ -1,17 +1,23 @@
 {
-  "done": 29,
-  "total": 100,
+  "done": 2,
+  "total": 2,
+  "series_done": 4,
+  "series_total": 4,
   "player_a": "expectimax_bayesian",
   "player_b": "greedy_joint",
-  "wins": 11,
-  "losses": 18,
+  "workers": 2,
+  "ports": [
+    8000,
+    8001
+  ],
+  "wins": 3,
+  "losses": 1,
   "errors": 0,
-  "state_mismatch": "YES",
-  "inference_ok": "NO",
-  "soundness_failures": 9,
-  "elapsed_s": 477.15,
-  "last_pair": "#6th - LucasVBC at Intimidators Champions vs #10th - Gabohno at Meeklosh's Fight",
-  "last_status": "LOSS",
-  "last_games": "g1:t12L g2:t10L",
-  "last_error": ""
+  "elapsed_s": 60.82,
+  "last_pair": "#5th - joyfulwizardVGC at vs #1st - DoubleBad17 at Intimidators",
+  "last_status": "PAIR_A",
+  "last_games": "g1:t11W g2:t7W|g1:t14L g2:t8W g3:t9W",
+  "last_error": "",
+  "worker": 1,
+  "port": 8001
 }

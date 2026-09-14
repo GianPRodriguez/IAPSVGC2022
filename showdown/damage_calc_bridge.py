@@ -38,6 +38,9 @@ _DISK_CACHE = Path(os.environ.get(
 _CACHE_MAX = int(os.environ.get('DAMAGE_CALC_LRU', '8192'))
 _DEFAULT_HOST = os.environ.get('DAMAGE_CALC_HOST', '127.0.0.1')
 _DEFAULT_PORT = int(os.environ.get('DAMAGE_CALC_PORT', '8765'))
+# Misses hacia Node se parten en trozos (menos JSON gigante / timeouts 30s).
+_BATCH_CHUNK = max(1, int(os.environ.get('DAMAGE_CALC_BATCH_CHUNK', '32')))
+
 
 # Mock: callable(request) -> (min,max)|None  OR  callable(list[request]) -> list
 _damage_range_override = None
@@ -65,7 +68,16 @@ def damage_range(request: Dict[str, Any]) -> Optional[Tuple[int, int]]:
 
 def damage_ranges_batch(
     requests: Sequence[Dict[str, Any]],
+    *,
+    chunk_size: Optional[int] = None,
+    deadline_monotonic: Optional[float] = None,
 ) -> List[Optional[Tuple[int, int]]]:
+    """
+    Calcula rangos de daño. Los misses a Node se envían en chunks.
+
+    deadline_monotonic: si se pasa (time.perf_counter()), entre chunks se para
+    y los requests pendientes quedan None.
+    """
     if not requests:
         return []
     if _damage_range_override is not None:
@@ -77,7 +89,11 @@ def damage_ranges_batch(
         except Exception:
             pass
         return [_damage_range_override(req) for req in requests]
-    return DamageCalcBridge.instance().damage_ranges_batch(list(requests))
+    return DamageCalcBridge.instance().damage_ranges_batch(
+        list(requests),
+        chunk_size=chunk_size,
+        deadline_monotonic=deadline_monotonic,
+    )
 
 
 class _DiskCache:
@@ -356,8 +372,52 @@ class DamageCalcBridge:
                 return None
         return None
 
+    def _fill_miss_chunk(
+        self,
+        *,
+        out: List[Optional[Tuple[int, int]]],
+        miss_idx: List[int],
+        miss_reqs: List[Dict[str, Any]],
+        miss_keys: List[str],
+    ) -> None:
+        """Resuelve un trozo de misses (un round-trip batch o fallback 1-a-1)."""
+        if not miss_reqs:
+            return
+        data = self._send_recv({'cmd': 'batch', 'items': miss_reqs})
+        if not data or not data.get('ok') or not isinstance(data.get('results'), list):
+            for j, req in enumerate(miss_reqs):
+                one = self._send_recv(req)
+                if one and one.get('ok'):
+                    try:
+                        val = (int(one['min']), int(one['max']))
+                    except (KeyError, TypeError, ValueError):
+                        continue
+                    out[miss_idx[j]] = val
+                    self._remember(miss_keys[j], val)
+            return
+
+        disk_writes = []
+        for j, res in enumerate(data['results']):
+            if j >= len(miss_idx):
+                break
+            if not res or not res.get('ok'):
+                continue
+            try:
+                val = (int(res['min']), int(res['max']))
+            except (KeyError, TypeError, ValueError):
+                continue
+            idx = miss_idx[j]
+            out[idx] = val
+            self._remember(miss_keys[j], val)
+            disk_writes.append((miss_keys[j], val))
+        self._disk.put_many(disk_writes)
+
     def damage_ranges_batch(
-        self, requests: List[Dict[str, Any]]
+        self,
+        requests: List[Dict[str, Any]],
+        *,
+        chunk_size: Optional[int] = None,
+        deadline_monotonic: Optional[float] = None,
     ) -> List[Optional[Tuple[int, int]]]:
         n = len(requests)
         out: List[Optional[Tuple[int, int]]] = [None] * n
@@ -391,34 +451,21 @@ class DamageCalcBridge:
             if not self._ensure_transport():
                 return out
 
-            data = self._send_recv({'cmd': 'batch', 'items': miss_reqs})
-            if not data or not data.get('ok') or not isinstance(data.get('results'), list):
-                # Fallback: uno a uno (por si el server es viejo)
-                for j, req in enumerate(miss_reqs):
-                    one = self._send_recv(req)
-                    if one and one.get('ok'):
-                        try:
-                            val = (int(one['min']), int(one['max']))
-                        except (KeyError, TypeError, ValueError):
-                            continue
-                        out[miss_idx[j]] = val
-                        self._remember(miss_keys[j], val)
-                return out
-
-            disk_writes = []
-            for j, res in enumerate(data['results']):
-                if j >= len(miss_idx):
+            cs = int(chunk_size) if chunk_size is not None else _BATCH_CHUNK
+            cs = max(1, cs)
+            total_miss = len(miss_reqs)
+            for start in range(0, total_miss, cs):
+                if (
+                    deadline_monotonic is not None
+                    and time.perf_counter() >= float(deadline_monotonic)
+                ):
                     break
-                if not res or not res.get('ok'):
-                    continue
-                try:
-                    val = (int(res['min']), int(res['max']))
-                except (KeyError, TypeError, ValueError):
-                    continue
-                idx = miss_idx[j]
-                out[idx] = val
-                self._remember(miss_keys[j], val)
-                disk_writes.append((miss_keys[j], val))
-            self._disk.put_many(disk_writes)
+                end = min(start + cs, total_miss)
+                self._fill_miss_chunk(
+                    out=out,
+                    miss_idx=miss_idx[start:end],
+                    miss_reqs=miss_reqs[start:end],
+                    miss_keys=miss_keys[start:end],
+                )
 
         return out

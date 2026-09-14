@@ -21,6 +21,7 @@ from showdown.battle_bots.greedy_solo.greedy import (
     FieldContext,
     MoveOption,
     ScoredAction,
+    _collect_ally_hit_requests,
     _collect_side_requests,
     _is_damaging,
     _stats_or_default,
@@ -39,10 +40,6 @@ _REDIRECT_BASE = 8.0
 _REDIRECT_WITH_ATTACK = 40.0
 _REDIRECT_WITH_KO = 70.0
 _HIGH_DAMAGE_PCT = 45.0
-
-
-def _norm_move(name: str) -> str:
-    return str(name or '').strip().lower().replace(' ', '').replace('-', '')
 
 
 def _norm_move(name: str) -> str:
@@ -77,7 +74,7 @@ def _utility_kind(
         return 'charge'
     if mid in (
         'protect', 'detect', 'spikyshield', 'banefulbunker', 'silktrap',
-        'burningbulwark', 'obstruct',
+        'burningbulwark', 'obstruct', 'kingsshield',
     ):
         return 'protect'
     if mid in ('followme', 'ragepowder', 'spotlight'):
@@ -105,6 +102,13 @@ class JointAtom:
     move_name: str = ''
     # Power Herb consume + recharge lock (restado en _score_pair).
     timing_penalty: float = 0.0
+    # E[status/secundarios] ya escalado por accuracy.
+    effect_bonus: float = 0.0
+    # Friendly fire (allAdjacent / all): daño potencial al compañero.
+    hits_ally: bool = False
+    ally_damage_pct: float = 0.0
+    ally_max_roll: int = 0
+    ally_ko: bool = False
 
     @property
     def total_damage_pct(self) -> float:
@@ -126,9 +130,17 @@ def _atoms_from_side(
     weather: Optional[str] = None,
     terrain: Optional[str] = None,
     gravity: bool = False,
+    ally: Optional[CalcPoke] = None,
+    ally_hit_by_slot: Optional[Dict[int, Optional[Tuple[int, int]]]] = None,
 ) -> List[JointAtom]:
     from showdown.battle_bots.move_mechanics import (
+        accuracy_scale_damage,
+        accuracy_tiebreak,
+        expected_move_effect_score,
         gate_damage_range,
+        hits_ally,
+        move_accuracy,
+        parse_move_effects,
         power_herb_cost,
         priority_move_fails,
         recharge_lock_penalty,
@@ -143,6 +155,7 @@ def _atoms_from_side(
     recharging = bool(attacker.must_recharge) if attacker is not None else False
     charge_slots: Set[int] = set()
     foe_mons = [f for _, f in foes]
+    ally_hits = ally_hit_by_slot or {}
 
     def _penalty(move_name: str, *, ko: bool, firing: bool) -> float:
         if not firing:
@@ -163,6 +176,26 @@ def _atoms_from_side(
             gravity=gravity,
         )
 
+    def _ally_ff(move: MoveOption) -> Tuple[bool, float, int, bool]:
+        """hits_ally, damage_pct, max_roll, guaranteed_ko vs partner."""
+        does = hits_ally(move.target_type, move_name=move.name)
+        if not does or ally is None:
+            return does, 0.0, 0, False
+        rng = ally_hits.get(int(move.slot))
+        gated = gate_damage_range(
+            rng, move.name, weather=weather, item=item,
+            already_charging=already, must_recharge=recharging,
+        )
+        if gated is None:
+            return True, 0.0, 0, False
+        max_hp = int((_stats_or_default(ally).get('hp') or 1))
+        cur_hp = int(ally.cur_hp if ally.cur_hp is not None else max_hp)
+        raw_pct = damage_pct(gated, max_hp)
+        # Guardamos raw; accuracy se aplica en la pena del par.
+        max_r = int(gated[1] if gated else 0)
+        ko = bool(guaranteed_ko(gated, cur_hp) and not ally.has_substitute)
+        return True, float(raw_pct), max_r, ko
+
     for (_side, move, tid, foe, special), rng in zip(meta, ranges):
         is_fakeout = _norm_move(move.name) == 'fakeout'
         if is_fakeout and not fake_out_can_affect(attacker, foe):
@@ -179,6 +212,10 @@ def _atoms_from_side(
         )
         max_hp = int((_stats_or_default(foe).get('hp') or 1))
         cur_hp = int(foe.cur_hp if foe.cur_hp is not None else max_hp)
+        eff = expected_move_effect_score(
+            move.name, attacker=attacker, defender=foe, terrain=terrain,
+        )
+        ff_hit, ff_pct, ff_roll, ff_ko = _ally_ff(move)
         if recharging or (res.is_charge_move and not res.fires_this_turn):
             pct = 0.0
             ko = False
@@ -187,12 +224,20 @@ def _atoms_from_side(
             if utility == 'charge':
                 charge_slots.add(move.slot)
             pen = 0.0
+            effect_b = 0.0
+            ff_hit, ff_pct, ff_roll, ff_ko = False, 0.0, 0, False
         else:
-            pct = damage_pct(gated, max_hp)
-            ko = guaranteed_ko(gated, cur_hp) and not foe.has_substitute
-            max_r = int(gated[1]) if gated else 0
+            raw_pct = damage_pct(gated, max_hp)
+            pct = accuracy_scale_damage(raw_pct, move.name)
+            # KO duro solo con acc≈100%; si no, E[KO]=KO_BONUS*acc vía effect_bonus.
+            raw_ko = guaranteed_ko(gated, cur_hp) and not foe.has_substitute
+            acc = move_accuracy(move.name)
+            ko = bool(raw_ko and acc >= 0.99)
+            soft_ko = float(KO_BONUS) * acc if (raw_ko and not ko) else 0.0
+            max_r = int(round((gated[1] if gated else 0) * acc))
             utility = 'damage'
-            pen = _penalty(move.name, ko=ko, firing=True)
+            pen = _penalty(move.name, ko=raw_ko, firing=True)
+            effect_b = float(eff.score) + soft_ko + accuracy_tiebreak(move.name)
         key = (move.slot, tid)
         if special == 0:
             base_ko[key] = ko
@@ -206,6 +251,11 @@ def _atoms_from_side(
                 utility=utility,
                 move_name=move.name,
                 timing_penalty=pen,
+                effect_bonus=effect_b,
+                hits_ally=ff_hit,
+                ally_damage_pct=ff_pct,
+                ally_max_roll=ff_roll,
+                ally_ko=ff_ko,
             ))
         elif special == 2 and ko and not base_ko.get(key, False):
             atoms.append(JointAtom(
@@ -218,6 +268,11 @@ def _atoms_from_side(
                 utility='damage',
                 move_name=move.name,
                 timing_penalty=_penalty(move.name, ko=True, firing=True),
+                effect_bonus=effect_b,
+                hits_ally=ff_hit,
+                ally_damage_pct=ff_pct,
+                ally_max_roll=ff_roll,
+                ally_ko=ff_ko,
             ))
 
     hittable_fakeout = [
@@ -241,6 +296,55 @@ def _atoms_from_side(
             move.name, weather=weather, item=item, already_charging=already,
         )
         pen = power_herb_cost(res) if res.fires_this_turn else 0.0
+
+        if kind == 'status':
+            # Un átomo por foe vulnerable (Sleep Powder al Grass → score 0, se omite).
+            added = False
+            for tid, foe in foes:
+                if foe.is_protected:
+                    continue
+                sc = expected_move_effect_score(
+                    move.name, attacker=attacker, defender=foe, terrain=terrain,
+                ).score
+                if sc <= 0.0:
+                    continue
+                atoms.append(JointAtom(
+                    move_slot=move.slot,
+                    target=tid,
+                    mega=1 if can_mega else 0,
+                    damage_pct={},
+                    max_roll={},
+                    ko_tids=set(),
+                    utility='status',
+                    move_name=move.name,
+                    timing_penalty=pen,
+                    effect_bonus=sc + accuracy_tiebreak(move.name),
+                ))
+                added = True
+            if not added:
+                # Setup / heal / pivot / campo sin target foe, o score 0 en foes.
+                feats = parse_move_effects(move.name)
+                sc_self = expected_move_effect_score(
+                    move.name, attacker=attacker, defender=None, terrain=terrain,
+                ).score
+                if sc_self <= _STATUS_BASE * 0.5 and not (
+                    feats.self_boosts or feats.heal_frac or feats.self_switch
+                    or feats.weather or feats.terrain or feats.side_condition
+                    or feats.volatile_status or feats.hp_cost_frac
+                    or feats.foe_boosts
+                ):
+                    sc_self = _STATUS_BASE * move_accuracy(move.name)
+                atoms.append(JointAtom(
+                    move_slot=move.slot,
+                    target=0,
+                    mega=1 if can_mega else 0,
+                    utility='status',
+                    move_name=move.name,
+                    timing_penalty=pen,
+                    effect_bonus=sc_self + accuracy_tiebreak(move.name),
+                ))
+            continue
+
         target = hittable_fakeout[0] if kind == 'fakeout' else 0
         atoms.append(JointAtom(
             move_slot=move.slot,
@@ -290,7 +394,13 @@ def _score_pair(
     left: JointAtom,
     right: JointAtom,
     foes: Sequence[Tuple[int, CalcPoke]],
+    *,
+    left_poke: Optional[CalcPoke] = None,
+    right_poke: Optional[CalcPoke] = None,
+    include_friendly_fire: bool = True,
 ) -> float:
+    from showdown.battle_bots.move_mechanics import friendly_fire_pair_penalty
+
     if not foes:
         return _utility_score(left, right, foes=foes, has_damage=False)
 
@@ -321,7 +431,12 @@ def _score_pair(
 
     has_damage = (left.total_damage_pct + right.total_damage_pct) > 0
     score += _utility_score(left, right, foes=foes, has_damage=has_damage)
+    score += float(left.effect_bonus) + float(right.effect_bonus)
     score -= float(left.timing_penalty) + float(right.timing_penalty)
+    if include_friendly_fire:
+        score -= friendly_fire_pair_penalty(
+            left, right, left_poke, right_poke,
+        )
     return score
 
 
@@ -348,7 +463,9 @@ def _utility_score(
         elif atom.utility == 'charge':
             s += _charge_utility(atom)
         elif atom.utility == 'status':
-            s += _STATUS_BASE
+            # effect_bonus ya trae E[status]*acc; fallback mínimo si vino vacío.
+            if atom.effect_bonus <= 0:
+                s += _STATUS_BASE
 
     if left.utility == 'protect' and right.total_damage_pct > 0:
         s += 6.0
@@ -390,6 +507,11 @@ def _strip_mega(atom: JointAtom) -> JointAtom:
         utility=atom.utility,
         move_name=atom.move_name,
         timing_penalty=atom.timing_penalty,
+        effect_bonus=atom.effect_bonus,
+        hits_ally=atom.hits_ally,
+        ally_damage_pct=atom.ally_damage_pct,
+        ally_max_roll=atom.ally_max_roll,
+        ally_ko=atom.ally_ko,
     )
 
 
@@ -417,6 +539,7 @@ async def best_joint_double_action(
 
     requests: List[dict] = []
     meta: List[Tuple[str, MoveOption, int, CalcPoke, int]] = []
+    ally_meta: List[Tuple[str, int]] = []
 
     if left_atk and left_moves:
         r, m = _collect_side_requests(
@@ -432,19 +555,44 @@ async def best_joint_double_action(
         )
         requests.extend(r)
         meta.extend(m)
+    # Ally-hit calcs al final para que ranges[:len(meta)] = foes.
+    if left_atk and left_moves:
+        ar, am = _collect_ally_hit_requests(
+            'L', left_atk, right_atk, left_moves, field_ctx=ctx,
+        )
+        requests.extend(ar)
+        ally_meta.extend(am)
+    if right_atk and right_moves:
+        ar, am = _collect_ally_hit_requests(
+            'R', right_atk, left_atk, right_moves, field_ctx=ctx,
+        )
+        requests.extend(ar)
+        ally_meta.extend(am)
 
     ranges = await calc_damage_batch(requests) if requests else []
 
+    foe_count = len(meta)
+    foe_ranges = ranges[:foe_count]
+    ally_ranges = ranges[foe_count:]
+    ally_hit_l: Dict[int, Optional[Tuple[int, int]]] = {}
+    ally_hit_r: Dict[int, Optional[Tuple[int, int]]] = {}
+    for (side, slot), rng in zip(ally_meta, ally_ranges):
+        if side == 'L':
+            ally_hit_l[int(slot)] = rng
+        else:
+            ally_hit_r[int(slot)] = rng
+
     left_meta = [m for m in meta if m[0] == 'L']
     right_meta = [m for m in meta if m[0] == 'R']
-    left_ranges = [rng for m, rng in zip(meta, ranges) if m[0] == 'L']
-    right_ranges = [rng for m, rng in zip(meta, ranges) if m[0] == 'R']
+    left_ranges = [rng for m, rng in zip(meta, foe_ranges) if m[0] == 'L']
+    right_ranges = [rng for m, rng in zip(meta, foe_ranges) if m[0] == 'R']
 
     left_atoms = (
         _atoms_from_side(
             left_moves, left_meta, left_ranges, foes,
             can_mega=can_mega_left, attacker=left_atk,
             weather=ctx.weather, terrain=ctx.terrain, gravity=ctx.gravity,
+            ally=right_atk, ally_hit_by_slot=ally_hit_l,
         )
         if left_atk and left_moves else []
     )
@@ -453,6 +601,7 @@ async def best_joint_double_action(
             right_moves, right_meta, right_ranges, foes,
             can_mega=can_mega_right, attacker=right_atk,
             weather=ctx.weather, terrain=ctx.terrain, gravity=ctx.gravity,
+            ally=left_atk, ally_hit_by_slot=ally_hit_r,
         )
         if right_atk and right_moves else []
     )
@@ -486,7 +635,10 @@ async def best_joint_double_action(
                     pair_r = _strip_mega(a2)
                 else:
                     pair_l = _strip_mega(a1)
-            s = _score_pair(pair_l, pair_r, foes)
+            s = _score_pair(
+                pair_l, pair_r, foes,
+                left_poke=left_atk, right_poke=right_atk,
+            )
             if s > best_score:
                 best_score = s
                 best_pair = (pair_l, pair_r)

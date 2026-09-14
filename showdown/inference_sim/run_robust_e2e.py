@@ -1,31 +1,48 @@
-"""E2E robusto: pools A/B disjuntos + BO3 + sync Battle + soundness OTS.
+"""E2E robusto: pools A/B disjuntos + BO3 cruzado + sync Battle + soundness OTS.
 
-Entrada: N equipos (par). Ej. 100 → pool A (50) player-a, pool B (50) player-b,
-sin equipos en común → 50 series BO3.
+Entrada: N equipos (par). Ej. 100 → pool A (50) / pool B (50) disjuntos → 50
+matchups. Cada matchup juega dos series BO3 (equipos cruzados A↔B):
+  - A gana ambas → +1 pair_a
+  - B gana ambas → +1 pair_b
+  - 1-1 → +1 pair_draw
+  - error/sync/inf en cualquiera → matchup invalidado (fallos separados)
 
-Por turno (en player-a validated): contraste IAP Battle vs poke-env (PS local)
-+ validación de inferencia SP contra OTS ground-truth.
+Reporta WR batalla crudo (info), WR de pares (el que importa) e IC bootstrap 95%.
 
-Uso (mínimo crédito Cursor):
+Uso:
   python -m showdown.inference_sim.run_robust_e2e --teams 100
   python -m showdown.inference_sim.run_robust_e2e --teams 100 \\
-      --player-a greedy_solo --player-b greedy_joint
       --player-a expectimax_bayesian --player-b greedy_joint
+  python -m showdown.inference_sim.run_robust_e2e --teams 100 --workers 2 --start-ps
 
-Espera DONE ... y lee logs/robust_e2e_report.txt. No analices turnos.
+Workers (default 2): un proceso PS por puerto (8000,8001 o PS_PORTS=...).
+El servidor NO se reinicia por cada BO3; solo con --start-ps / --restart-ps.
+
+Formato DONE (multilínea)::
+
+  DONE teams=N A=... B=...
+  bo3=N: W=... L=... E=... WR_raw=...%
+  matchups=N: pair_A=... pair_B=... draw=... invalid=...
+  sync_ok=YES|NO fail_sync=...
+  inf_ok=YES|NO fail_matchup_inf=... fail_bo3_inf=...
+  NEED_FIX=YES|NO NEED_FLAGS_ADD=YES|NO elapsed_s=...
 """
 from __future__ import annotations
+
+# Red de seguridad OTS/BO3 (IndexError en |showteam| → no congelar el batch).
+import showdown.inference_sim.pokeenv_showteam_patch  # noqa: F401
 
 import argparse
 import asyncio
 import json
 import logging
 import os
+import random
 import sys
 import time
 from collections import Counter
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from poke_env.ps_client import AccountConfiguration
 
@@ -37,8 +54,14 @@ from showdown.inference_sim.inference_flag_audit import (
     collect_pool_abilities,
     format_audit_section,
 )
-from showdown.inference_sim.paths import REPO_ROOT
-from showdown.inference_sim.ps_server import ensure_ps, is_ps_up, ps_start_hint
+from showdown.inference_sim.chat_quiet import set_chat_quiet
+from showdown.inference_sim.paths import REPO_ROOT, server_configuration_for_port
+from showdown.inference_sim.ps_server import (
+    ensure_ps_ports,
+    is_ps_up,
+    parse_ps_ports,
+    ps_start_hint,
+)
 from showdown.inference_sim.soundness import SoundnessReport, format_timeline_example
 from showdown.inference_sim.team_factory import (
     TeamMeta,
@@ -81,6 +104,86 @@ def _series_won(*, game_wins: int, games_done: int) -> bool:
     if games_done <= 0:
         return False
     return game_wins > (games_done - game_wins)
+
+
+def _bootstrap_ci(
+    outcomes: Sequence[int],
+    *,
+    n_boot: int = 2000,
+    alpha: float = 0.05,
+    seed: int = 0,
+) -> Tuple[float, float, float]:
+    """outcomes +1 (A barre), -1 (B barre), 0 (split) → mean y IC 95%."""
+    vals = [int(x) for x in outcomes]
+    if not vals:
+        return 0.0, 0.0, 0.0
+    mean = sum(vals) / float(len(vals))
+    rng = random.Random(seed)
+    n = len(vals)
+    means: List[float] = []
+    for _ in range(max(100, int(n_boot))):
+        s = 0.0
+        for _i in range(n):
+            s += vals[rng.randrange(n)]
+        means.append(s / float(n))
+    means.sort()
+    lo_i = int(len(means) * (alpha / 2.0))
+    hi_i = int(len(means) * (1.0 - alpha / 2.0))
+    hi_i = min(len(means) - 1, max(lo_i, hi_i))
+    return mean, means[lo_i], means[hi_i]
+
+
+def _pair_wr_ci(
+    pair_a: int,
+    pair_b: int,
+    *,
+    n_boot: int = 2000,
+    alpha: float = 0.05,
+    seed: int = 1,
+) -> Tuple[Optional[float], Optional[float], Optional[float]]:
+    """WR de A en pares decisivos + IC bootstrap 95%."""
+    decisive = int(pair_a) + int(pair_b)
+    if decisive <= 0:
+        return None, None, None
+    trials = [1] * int(pair_a) + [0] * int(pair_b)
+    rng = random.Random(seed)
+    n = len(trials)
+    wr = sum(trials) / float(n)
+    boots: List[float] = []
+    for _ in range(max(100, int(n_boot))):
+        s = 0
+        for _i in range(n):
+            s += trials[rng.randrange(n)]
+        boots.append(s / float(n))
+    boots.sort()
+    lo_i = int(len(boots) * (alpha / 2.0))
+    hi_i = int(len(boots) * (1.0 - alpha / 2.0))
+    hi_i = min(len(boots) - 1, max(lo_i, hi_i))
+    return wr, boots[lo_i], boots[hi_i]
+
+
+def _classify_series_fail(
+    *,
+    outcome: str,
+    err_detail: str,
+    state_mismatch: bool,
+    inference_fail: bool,
+) -> List[str]:
+    """Tipos de fallo que invalidan un matchup cruzado (pueden ser varios)."""
+    kinds: List[str] = []
+    if outcome == 'timeout' or 'TimeoutError' in (err_detail or ''):
+        kinds.append('timeout')
+    elif outcome == 'reject':
+        kinds.append('reject')
+    elif outcome != 'ok':
+        kinds.append('runtime')
+    elif err_detail:
+        kinds.append('runtime')
+    if state_mismatch:
+        kinds.append('sync')
+    if inference_fail:
+        kinds.append('inference')
+    return kinds
 
 
 def _compact_series_line(
@@ -126,6 +229,8 @@ class _TeamRejectWatch(logging.Handler):
 
 
 async def _cancel_challenges(*players) -> None:
+    from showdown.inference_sim.bo3_runtime import reset_bo3_runtime_state_many
+
     for pl in players:
         try:
             # PS moderno: cancelar challenge saliendo / sin /cancel legacy.
@@ -136,6 +241,8 @@ async def _cancel_challenges(*players) -> None:
             await pl.ps_client.send_message('/leave')
         except Exception:
             pass
+    # Siempre drenar cola BO3 tras cancel/timeout (evita cascada 600s).
+    reset_bo3_runtime_state_many(list(players))
 
 
 async def _run_one_series(
@@ -147,7 +254,13 @@ async def _run_one_series(
     """Ejecuta 1 challenge BO3. Devuelve (outcome, error_detail).
 
     outcome: 'ok' | 'reject' | 'timeout' | 'error'
+
+    Si el BO3 ya está decidido en series_games pero battle_against no retorna
+    (cola bestof contaminada / |win| padre perdido), fuerza 'ok' tras un grace
+    corto en lugar de esperar todo --timeout.
     """
+    from showdown.inference_sim.bo3_runtime import bo3_series_decided
+
     reject_event = asyncio.Event()
     reject_bucket: Dict[str, str] = {}
     watch = _TeamRejectWatch(reject_event, reject_bucket)
@@ -164,26 +277,60 @@ async def _run_one_series(
         player_a_pl.battle_against(player_b_pl, n_battles=1)
     )
     reject_task = asyncio.create_task(reject_event.wait())
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + float(timeout_s)
+    last_games = 0
+    last_progress = loop.time()
+    decided_since: Optional[float] = None
     try:
-        done_set, _pending = await asyncio.wait(
-            {battle_task, reject_task},
-            timeout=timeout_s,
-            return_when=asyncio.FIRST_COMPLETED,
-        )
-        if reject_task in done_set and reject_event.is_set():
-            battle_task.cancel()
-            try:
-                await battle_task
-            except (asyncio.CancelledError, Exception):
-                pass
-            await _cancel_challenges(player_a_pl, player_b_pl)
-            return 'reject', reject_bucket.get('msg') or 'team_rejected'
-        if battle_task in done_set:
-            exc = battle_task.exception()
-            if exc is not None:
+        while True:
+            remaining = deadline - loop.time()
+            if remaining <= 0:
+                break
+            slice_s = min(15.0, remaining)
+            done_set, _pending = await asyncio.wait(
+                {battle_task, reject_task},
+                timeout=slice_s,
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            if reject_task in done_set and reject_event.is_set():
+                battle_task.cancel()
+                try:
+                    await battle_task
+                except (asyncio.CancelledError, Exception):
+                    pass
                 await _cancel_challenges(player_a_pl, player_b_pl)
-                return 'error', repr(exc)
-            return 'ok', ''
+                return 'reject', reject_bucket.get('msg') or 'team_rejected'
+            if battle_task in done_set:
+                exc = battle_task.exception()
+                if exc is not None:
+                    await _cancel_challenges(player_a_pl, player_b_pl)
+                    return 'error', repr(exc)
+                return 'ok', ''
+
+            games = list(getattr(player_a_pl, 'series_games', None) or [])
+            n_games = len(games)
+            if n_games > last_games:
+                last_games = n_games
+                last_progress = loop.time()
+            if bo3_series_decided(games):
+                if decided_since is None:
+                    decided_since = loop.time()
+                # BO3 cerrado en hijas pero join() del padre colgado.
+                if (loop.time() - decided_since) >= 25.0:
+                    battle_task.cancel()
+                    try:
+                        await battle_task
+                    except (asyncio.CancelledError, Exception):
+                        pass
+                    await _cancel_challenges(player_a_pl, player_b_pl)
+                    return 'ok', 'forced_ok_after_bo3_hang'
+            else:
+                decided_since = None
+                # Mid-series stall (p.ej. confirmready / handler muerto).
+                if n_games >= 1 and (loop.time() - last_progress) >= 180.0:
+                    break
+
         # timeout
         battle_task.cancel()
         reject_task.cancel()
@@ -269,11 +416,18 @@ def _build_report(
     *,
     n_teams: int,
     n_bo3: int,
+    n_matchups: int,
     format_id: str,
     pool_n: int,
     wins: int,
     losses: int,
     errors: int,
+    pair_a: int,
+    pair_b: int,
+    pair_draw: int,
+    pair_invalid: int,
+    fail_kinds: Counter,
+    pair_outcomes: List[int],
     elapsed_s: float,
     seed: Optional[int],
     state: StateCheckReport,
@@ -285,46 +439,100 @@ def _build_report(
     player_b: str = 'random',
 ) -> str:
     decided = wins + losses
-    wr = (100.0 * wins / decided) if decided else 0.0
-    bps = (wins + losses + errors) / elapsed_s if elapsed_s > 0 else 0.0
-    if wins > losses:
-        verdict = f'YES - {player_a} beat {player_b} overall'
-    elif wins == losses and decided:
-        verdict = 'TIE'
+    wr_raw = (100.0 * wins / decided) if decided else 0.0
+    pair_dec = pair_a + pair_b
+    wr_pair = (100.0 * pair_a / pair_dec) if pair_dec else 0.0
+    wr_ci, wr_lo, wr_hi = _pair_wr_ci(pair_a, pair_b)
+    score_mean, score_lo, score_hi = _bootstrap_ci(pair_outcomes)
+    series_total = wins + losses + errors
+    bps = series_total / elapsed_s if elapsed_s > 0 else 0.0
+    if pair_dec and wr_ci is not None and wr_lo is not None and wr_hi is not None:
+        if wr_lo > 0.5:
+            verdict = f'YES - {player_a} beats {player_b} on paired WR (IC>50%)'
+        elif wr_hi < 0.5:
+            verdict = f'NO - {player_b} beats {player_a} on paired WR (IC<50%)'
+        else:
+            verdict = 'UNCLEAR - paired WR IC includes 50%'
+    elif pair_a > pair_b:
+        verdict = f'LEAN {player_a} (few decisive pairs)'
+    elif pair_b > pair_a:
+        verdict = f'LEAN {player_b} (few decisive pairs)'
     else:
-        verdict = f'NO - {player_b} edged out / incomplete'
+        verdict = 'TIE / incomplete'
+
+    def _pct(x: Optional[float]) -> str:
+        return f'{100.0 * x:.1f}%' if x is not None else '-'
 
     lines = [
-        '=== Robust E2E Report (A/B pools + BO3 + sync + OTS inference) ===',
+        '=== Robust E2E Report (A/B pools + crossed BO3 + sync + OTS) ===',
         f'time_utc: {datetime.now(timezone.utc).isoformat()}',
         f'format: {format_id}',
         f'ps_up: {is_ps_up()}',
         f'team_pool_available: {pool_n}',
-        f'teams_used: {n_teams} (A={n_bo3} {player_a}, B={n_bo3} {player_b}, disjoint)',
+        f'teams_used: {n_teams} (A={n_matchups} {player_a}, B={n_matchups} {player_b}, disjoint)',
         f'player_a: {player_a}',
         f'player_b: {player_b}',
+        f'matchups: {n_matchups} (each = 2 crossed BO3)',
         f'bo3_series: {n_bo3}',
         f'seed: {seed if seed is not None else "-"}',
         f'elapsed_s: {elapsed_s:.1f}',
         f'bo3_per_s: {bps:.3f}',
         '',
-        '--- results ---',
+    ]
+    try:
+        from showdown.battle_bots.expectimax_bayesian.config_history import (
+            format_config_block,
+            uses_expectimax,
+        )
+        if uses_expectimax(player_a, player_b):
+            lines.append(format_config_block())
+            lines.append('')
+    except Exception:
+        pass
+    lines += [
+        '--- results (battle/series raw, informative) ---',
+        f'player_a_series_wins: {wins}',
+        f'player_b_series_wins: {losses}',
         f'player_a_wins: {wins}',
         f'player_b_wins: {losses}',
         f'heuristic_wins: {wins}',
         f'random_wins: {losses}',
+        f'series_errors: {errors}',
         f'errors: {errors}',
-        f'win_rate_player_a: {wr:.1f}%',
-        f'win_rate_heuristic: {wr:.1f}%',
+        f'win_rate_battle_raw: {wr_raw:.1f}%',
+        f'win_rate_player_a: {wr_raw:.1f}%',
+        f'win_rate_heuristic: {wr_raw:.1f}%',
+        '',
+        '--- results (paired crossed matchups — primary) ---',
+        f'pair_a_sweeps: {pair_a}',
+        f'pair_b_sweeps: {pair_b}',
+        f'pair_draws: {pair_draw}',
+        f'pair_invalid: {pair_invalid}',
+        f'win_rate_pairs: {wr_pair:.1f}%',
+        f'pair_wr_ci95: [{_pct(wr_lo)}, {_pct(wr_hi)}]',
+        f'pair_score_mean: {score_mean:+.3f}',
+        f'pair_score_ci95: [{score_lo:+.3f}, {score_hi:+.3f}]',
         f'verdict: {verdict}',
         '',
+        '--- failure kinds (invalidating matchups; series may count multiple) ---',
+        f'fail_timeout: {int(fail_kinds.get("timeout", 0))}',
+        f'fail_runtime: {int(fail_kinds.get("runtime", 0))}',
+        f'fail_reject: {int(fail_kinds.get("reject", 0))}',
+        f'fail_sync: {int(fail_kinds.get("sync", 0))}',
+        f'fail_matchup_inf: {int(fail_kinds.get("inference", 0))}',
+        f'fail_bo3_inf: {int(sound.failure_count)}',
+        # aliases (compat parsers / fixplan antiguo)
+        f'fail_inference: {int(fail_kinds.get("inference", 0))}',
+        '',
         '--- sync (Battle vs PS local) ---',
+        f'sync_ok: {"YES" if state.ok else "NO"}',
         f'state_mismatch: {state.flag_line()}',
         f'state_checks: {state.checks}',
         f'state_mismatches: {state._total_mismatches}',
         f'feed_errors: {state.feed_errors}',
         '',
         '--- inference (OTS ground truth) ---',
+        f'inf_ok: {"YES" if sound.ok else "NO"}',
         f'inference_ok: {"YES" if sound.ok else "NO"}',
         f'soundness_checks: {sound.checks}',
         f'soundness_failures: {sound.failure_count}',
@@ -398,6 +606,39 @@ async def _stop_players(*players) -> None:
             pass
 
 
+def _merge_state_reports(dst: StateCheckReport, src: StateCheckReport) -> None:
+    dst.checks += src.checks
+    dst.feed_errors += src.feed_errors
+    dst.battle_errors += src.battle_errors
+    dst._total_mismatches += src._total_mismatches
+    room = dst._cap - len(dst.mismatches)
+    if room > 0:
+        dst.mismatches.extend(src.mismatches[:room])
+
+
+def _merge_sound_reports(dst: SoundnessReport, src: SoundnessReport) -> None:
+    dst.checks += src.checks
+    dst.observations += src.observations
+    dst.skipped += src.skipped
+    dst.narrowing_events += src.narrowing_events
+    dst.battle_errors += src.battle_errors
+    dst._total_failures += src._total_failures
+    room = dst._failure_cap - len(dst.failures)
+    if room > 0:
+        dst.failures.extend(src.failures[:room])
+    for sid, hist in (src.timelines or {}).items():
+        dst.timelines.setdefault(sid, []).extend(hist)
+
+
+def _split_round_robin(items: List[Any], n: int) -> List[List[Any]]:
+    """Reparte ítems en n buckets intercalados (carga similar)."""
+    n = max(1, int(n))
+    buckets: List[List[Any]] = [[] for _ in range(n)]
+    for i, item in enumerate(items):
+        buckets[i % n].append(item)
+    return buckets
+
+
 async def run_batch(
     n_teams: int,
     *,
@@ -413,14 +654,23 @@ async def run_batch(
     quiet: bool,
     player_a: str = 'greedy_solo',
     player_b: str = 'random',
+    workers: int = 2,
 ) -> str:
     if n_teams % 2 != 0 or n_teams < 2:
         raise ValueError('--teams debe ser un entero par >= 2')
 
-    if not ensure_ps(start=start_ps or restart_ps, restart=restart_ps):
+    set_chat_quiet(quiet)
+    workers = max(1, int(workers))
+    ports = parse_ps_ports(workers=workers)
+    if len(ports) < workers:
+        workers = len(ports)
+    ports = ports[:workers]
+
+    if not ensure_ps_ports(ports, start=start_ps or restart_ps, restart=restart_ps):
+        hints = ', '.join(ps_start_hint(p) for p in ports)
         raise RuntimeError(
-            'Pokémon Showdown no responde en localhost:8000. '
-            f'Arranca: {ps_start_hint()}  o usa --start-ps / --restart-ps'
+            f'Pokémon Showdown no responde en puertos {ports}. '
+            f'Arranca: {hints}  o usa --start-ps / --restart-ps'
         )
 
     if export:
@@ -428,7 +678,8 @@ async def run_batch(
 
     pool = active_teams()
     pairs: List[Tuple[TeamMeta, TeamMeta]] = disjoint_ab_pairings(n_teams, seed=seed)
-    n_bo3 = len(pairs)
+    n_matchups = len(pairs)
+    n_bo3 = n_matchups * 2
     state = StateCheckReport()
     sound = SoundnessReport()
     used_metas: List[TeamMeta] = []
@@ -439,82 +690,96 @@ async def run_batch(
     )
 
     stamp = int(time.time()) % 100000
-    team_a0, team_b0 = pairs[0]
     a_cls = validated_player_class(player_a)
     a_nick = {
-        'greedy_solo': 'SoloRobust',
-        'greedy_joint': 'JointRobust',
-        'expectimax_bayesian': 'ExpBayRobust',
-    }.get(player_a, 'ARobust')
+        'greedy_solo': 'SoloR',
+        'greedy_joint': 'JointR',
+        'expectimax_bayesian': 'ExpBay',
+    }.get(player_a, 'AR')
     b_nick = {
-        'random': 'RndRobust',
-        'greedy_solo': 'SoloOpp',
-        'greedy_joint': 'JointOpp',
-        'expectimax_bayesian': 'ExpBayOpp',
-    }.get(player_b, 'BOpp')
-
-    player_a_pl = a_cls(
-        user_team=team_a0,
-        opp_team=team_b0,
-        state_report=state,
-        soundness_report=sound,
-        account_configuration=AccountConfiguration(f'{a_nick}{stamp}', None),
-        battle_format=format_id,
-    )
-    player_b_pl = make_opponent_player(
-        player_b,
-        team=team_b0,
-        account_configuration=AccountConfiguration(f'{b_nick}{stamp}', None),
-        battle_format=format_id,
-    )
+        'random': 'RndR',
+        'greedy_solo': 'SoloO',
+        'greedy_joint': 'JointO',
+        'expectimax_bayesian': 'ExpBayO',
+    }.get(player_b, 'BR')
 
     wins = 0
     losses = 0
     errors = 0
+    pair_a_sweeps = 0
+    pair_b_sweeps = 0
+    pair_draws = 0
+    pair_invalid = 0
+    fail_kinds: Counter = Counter()
+    pair_outcomes: List[int] = []
     details: List[dict] = []
     t0 = time.perf_counter()
+    series_i = 0
+    matchups_done = 0
+    print_lock = asyncio.Lock()
+    progress_lock = asyncio.Lock()
 
-    # Cabecera siempre (aunque quiet): el log compacto por serie va a consola.
     print(
-        f'BATCH robust teams={n_teams} bo3={n_bo3} '
-        f'A={player_a} B={player_b} format={format_id} seed={seed}',
+        f'BATCH robust teams={n_teams} matchups={n_matchups} bo3={n_bo3} '
+        f'(crossed) A={player_a} B={player_b} format={format_id} seed={seed} '
+        f'workers={workers} ports={ports} quiet={int(quiet)}',
         flush=True,
     )
 
-    try:
-        for i, (team_a, team_b) in enumerate(pairs):
-            pair_label = f'{team_a.name} vs {team_b.name}'
-            row = {
-                'pair': pair_label,
-                'player_a_won': False,
-                'error': '',
-                'state_mismatch': False,
-                'inference_fail': False,
-                'games': '',
-            }
+    async def _one_crossed_series(
+        player_a_pl,
+        player_b_pl,
+        local_state: StateCheckReport,
+        local_sound: SoundnessReport,
+        ta: TeamMeta,
+        tb: TeamMeta,
+        *,
+        label: str,
+    ) -> dict:
+        nonlocal wins, losses, errors, series_i
+        row = {
+            'pair': label,
+            'player_a_won': False,
+            'error': '',
+            'state_mismatch': False,
+            'inference_fail': False,
+            'games': '',
+            'outcome': 'ok',
+        }
+        player_a_pl.reset_for_next_battle(ta, tb)
+        player_b_pl.update_team(to_showdown_export(tb))
+        # Ambos lados pueden tener cola BO3 sucia tras un timeout previo.
+        try:
+            from showdown.inference_sim.bo3_runtime import reset_bo3_runtime_state
+            reset_bo3_runtime_state(player_b_pl)
+            if hasattr(player_b_pl, 'series_games'):
+                player_b_pl.series_games = []
+            if hasattr(player_b_pl, '_logged_game_tags'):
+                player_b_pl._logged_game_tags = set()
+        except Exception:
+            pass
 
-            player_a_pl.reset_for_next_battle(team_a, team_b)
-            player_b_pl.update_team(to_showdown_export(team_b))
+        wins_before = player_a_pl.n_won_battles
+        finished_before = player_a_pl.n_finished_battles
+        mm_before = local_state._total_mismatches
+        feed_before = local_state.feed_errors
+        fail_before = local_sound.failure_count
 
-            wins_before = player_a_pl.n_won_battles
-            finished_before = player_a_pl.n_finished_battles
-            mm_before = state._total_mismatches
-            feed_before = state.feed_errors
-            fail_before = sound.failure_count
+        outcome, err_detail = await _run_one_series(
+            player_a_pl, player_b_pl, timeout_s=timeout_s,
+        )
+        row['outcome'] = outcome
 
-            outcome, err_detail = await _run_one_series(
-                player_a_pl, player_b_pl, timeout_s=timeout_s,
-            )
+        games_done = player_a_pl.n_finished_battles - finished_before
+        game_wins = player_a_pl.n_won_battles - wins_before
+        games_compact = (
+            player_a_pl.series_games_compact()
+            if hasattr(player_a_pl, 'series_games_compact')
+            else '-'
+        )
+        row['games'] = games_compact
 
-            games_done = player_a_pl.n_finished_battles - finished_before
-            game_wins = player_a_pl.n_won_battles - wins_before
-            games_compact = (
-                player_a_pl.series_games_compact()
-                if hasattr(player_a_pl, 'series_games_compact')
-                else '-'
-            )
-            row['games'] = games_compact
-
+        async with print_lock:
             if outcome == 'ok' and games_done > 0:
                 row['player_a_won'] = _series_won(
                     game_wins=game_wins, games_done=games_done,
@@ -527,7 +792,7 @@ async def run_batch(
                     status = 'LOSS'
             else:
                 errors += 1
-                sound.battle_errors += 1
+                local_sound.battle_errors += 1
                 if outcome == 'ok':
                     row['error'] = 'no_finished_bo3'
                 else:
@@ -540,72 +805,205 @@ async def run_batch(
                     pass
 
             row['state_mismatch'] = (
-                state._total_mismatches > mm_before or state.feed_errors > feed_before
+                local_state._total_mismatches > mm_before
+                or local_state.feed_errors > feed_before
             )
-            row['inference_fail'] = sound.failure_count > fail_before
-
+            row['inference_fail'] = local_sound.failure_count > fail_before
+            series_i += 1
+            done_now = series_i
+            w, l, e = wins, losses, errors
             if include_details or row['error'] or row['state_mismatch'] or row['inference_fail']:
                 details.append(row)
 
-            if (i + 1) % 10 == 0:
-                try:
-                    player_a_pl.reset_battles()
-                    player_b_pl.reset_battles()
-                except Exception:
-                    pass
-
-            done = i + 1
-            elapsed = time.perf_counter() - t0
-            _write_progress({
-                'done': done,
-                'total': n_bo3,
-                'player_a': player_a,
-                'player_b': player_b,
-                'wins': wins,
-                'losses': losses,
-                'errors': errors,
-                'state_mismatch': state.flag_line(),
-                'inference_ok': 'YES' if sound.ok else 'NO',
-                'soundness_failures': sound.failure_count,
-                'elapsed_s': round(elapsed, 2),
-                'last_pair': _ascii(pair_label),
-                'last_status': status,
-                'last_games': games_compact,
-                'last_error': row['error'],
-            })
-
-            # Log compacto por cada serie BO3 (siempre visible en consola).
-            print(
-                _compact_series_line(
-                    done=done,
-                    total=n_bo3,
-                    status=status,
-                    games=games_compact,
-                    wins=wins,
-                    losses=losses,
-                    errors=errors,
-                    sync=state.flag_line(),
-                    inf='OK' if sound.ok else 'FAIL',
-                )
-                + (f' | {row["error"][:80]}' if row['error'] else '')
-                + f' | {_ascii(pair_label)[:70]}',
-                flush=True,
+        print(
+            _compact_series_line(
+                done=done_now,
+                total=n_bo3,
+                status=status,
+                games=games_compact,
+                wins=w,
+                losses=l,
+                errors=e,
+                sync='OK' if not row['state_mismatch'] else 'FAIL',
+                inf='OK' if not row['inference_fail'] else 'FAIL',
             )
+            + (f' | {row["error"][:80]}' if row['error'] else '')
+            + f' | {_ascii(label)[:70]}',
+            flush=True,
+        )
+        return row
 
-            if delay_s > 0 and i + 1 < n_bo3:
-                await asyncio.sleep(delay_s)
-    finally:
-        await _stop_players(player_a_pl, player_b_pl)
+    async def _worker(
+        worker_id: int,
+        port: int,
+        matchup_pairs: List[Tuple[TeamMeta, TeamMeta]],
+    ):
+        nonlocal matchups_done
+        local_state = StateCheckReport()
+        local_sound = SoundnessReport()
+        local_fail_kinds: Counter = Counter()
+        local_pair_outcomes: List[int] = []
+        tallies = {
+            'pair_a': 0,
+            'pair_b': 0,
+            'pair_draw': 0,
+            'pair_invalid': 0,
+        }
+        if not matchup_pairs:
+            return local_state, local_sound, local_fail_kinds, local_pair_outcomes, tallies
+
+        cfg = server_configuration_for_port(port)
+        team_a0, team_b0 = matchup_pairs[0]
+        player_a_pl = a_cls(
+            user_team=team_a0,
+            opp_team=team_b0,
+            state_report=local_state,
+            soundness_report=local_sound,
+            account_configuration=AccountConfiguration(
+                f'{a_nick}{stamp % 10000}w{worker_id}'[:18], None
+            ),
+            battle_format=format_id,
+            server_configuration=cfg,
+        )
+        player_b_pl = make_opponent_player(
+            player_b,
+            team=team_b0,
+            account_configuration=AccountConfiguration(
+                f'{b_nick}{stamp % 10000}w{worker_id}'[:18], None
+            ),
+            battle_format=format_id,
+            server_configuration=cfg,
+        )
+
+        try:
+            for i, (team_a, team_b) in enumerate(matchup_pairs):
+                base_label = f'{team_a.name} vs {team_b.name}'
+                fwd = await _one_crossed_series(
+                    player_a_pl,
+                    player_b_pl,
+                    local_state,
+                    local_sound,
+                    team_a,
+                    team_b,
+                    label=f'{base_label} [A→B]',
+                )
+                if delay_s > 0:
+                    await asyncio.sleep(delay_s)
+                rev = await _one_crossed_series(
+                    player_a_pl,
+                    player_b_pl,
+                    local_state,
+                    local_sound,
+                    team_b,
+                    team_a,
+                    label=f'{base_label} [A←B]',
+                )
+
+                fail_fwd = _classify_series_fail(
+                    outcome=fwd.get('outcome') or 'ok',
+                    err_detail=fwd.get('error') or '',
+                    state_mismatch=bool(fwd.get('state_mismatch')),
+                    inference_fail=bool(fwd.get('inference_fail')),
+                )
+                fail_rev = _classify_series_fail(
+                    outcome=rev.get('outcome') or 'ok',
+                    err_detail=rev.get('error') or '',
+                    state_mismatch=bool(rev.get('state_mismatch')),
+                    inference_fail=bool(rev.get('inference_fail')),
+                )
+                fails = fail_fwd + fail_rev
+                if fails:
+                    tallies['pair_invalid'] += 1
+                    for k in fails:
+                        local_fail_kinds[k] += 1
+                    pair_status = 'INVALID'
+                else:
+                    a_win_fwd = bool(fwd.get('player_a_won'))
+                    a_win_rev = bool(rev.get('player_a_won'))
+                    if a_win_fwd and a_win_rev:
+                        tallies['pair_a'] += 1
+                        local_pair_outcomes.append(1)
+                        pair_status = 'PAIR_A'
+                    elif (not a_win_fwd) and (not a_win_rev):
+                        tallies['pair_b'] += 1
+                        local_pair_outcomes.append(-1)
+                        pair_status = 'PAIR_B'
+                    else:
+                        tallies['pair_draw'] += 1
+                        local_pair_outcomes.append(0)
+                        pair_status = 'PAIR_DRAW'
+
+                if (i + 1) % max(1, progress_every) == 0:
+                    try:
+                        player_a_pl.reset_battles()
+                        player_b_pl.reset_battles()
+                    except Exception:
+                        pass
+
+                async with progress_lock:
+                    matchups_done += 1
+                    done_m = matchups_done
+                    elapsed = time.perf_counter() - t0
+                    _write_progress({
+                        'done': done_m,
+                        'total': n_matchups,
+                        'series_done': series_i,
+                        'series_total': n_bo3,
+                        'player_a': player_a,
+                        'player_b': player_b,
+                        'workers': workers,
+                        'ports': ports,
+                        'wins': wins,
+                        'losses': losses,
+                        'errors': errors,
+                        'elapsed_s': round(elapsed, 2),
+                        'last_pair': _ascii(base_label),
+                        'last_status': pair_status,
+                        'last_games': f'{fwd.get("games")}|{rev.get("games")}',
+                        'last_error': fwd.get('error') or rev.get('error') or '',
+                        'worker': worker_id,
+                        'port': port,
+                    })
+
+                if delay_s > 0 and i + 1 < len(matchup_pairs):
+                    await asyncio.sleep(delay_s)
+        finally:
+            await _stop_players(player_a_pl, player_b_pl)
+
+        return local_state, local_sound, local_fail_kinds, local_pair_outcomes, tallies
+
+    chunks = _split_round_robin(pairs, workers)
+    worker_results = await asyncio.gather(*[
+        _worker(i, ports[i], chunks[i])
+        for i in range(workers)
+    ])
+
+    for local_state, local_sound, local_fk, local_po, tallies in worker_results:
+        _merge_state_reports(state, local_state)
+        _merge_sound_reports(sound, local_sound)
+        fail_kinds.update(local_fk)
+        pair_outcomes.extend(local_po)
+        pair_a_sweeps += tallies['pair_a']
+        pair_b_sweeps += tallies['pair_b']
+        pair_draws += tallies['pair_draw']
+        pair_invalid += tallies['pair_invalid']
 
     elapsed = time.perf_counter() - t0
     report = _build_report(
         n_teams=n_teams,
         n_bo3=n_bo3,
+        n_matchups=n_matchups,
         format_id=format_id,
         pool_n=len(pool),
         wins=wins,
         losses=losses,
         errors=errors,
+        pair_a=pair_a_sweeps,
+        pair_b=pair_b_sweeps,
+        pair_draw=pair_draws,
+        pair_invalid=pair_invalid,
+        fail_kinds=fail_kinds,
+        pair_outcomes=pair_outcomes,
         elapsed_s=elapsed,
         seed=seed,
         state=state,
@@ -621,30 +1019,56 @@ async def run_batch(
     fixplan = write_fixplan(report)
 
     decided = wins + losses
-    wr = (100.0 * wins / decided) if decided else 0.0
+    wr_raw = (100.0 * wins / decided) if decided else 0.0
     need = 'YES' if 'NEED_FIX=YES' in fixplan.read_text(encoding='utf-8') else 'NO'
+    sync_ok = 'YES' if state.ok else 'NO'
+    inf_ok = 'YES' if sound.ok else 'NO'
+    try:
+        from showdown.battle_bots.expectimax_bayesian.config_history import (
+            record_e2e_run,
+        )
+        record_e2e_run(
+            player_a=player_a,
+            player_b=player_b,
+            teams=n_teams,
+            wins=wins,
+            losses=losses,
+            wr_raw=wr_raw,
+            pair_a=pair_a_sweeps,
+            pair_b=pair_b_sweeps,
+            pair_draw=pair_draws,
+            need_fix=need,
+            sync_ok=sync_ok,
+            inf_ok=inf_ok,
+        )
+    except Exception:
+        pass
     print(
-        f'DONE teams={n_teams} bo3={n_bo3} A={player_a} B={player_b} '
-        f'W={wins} L={losses} E={errors} '
-        f'WR={wr:.1f}% state_mismatch={state.flag_line()} '
-        f'inference_ok={"YES" if sound.ok else "NO"} '
-        f'inf_fail={sound.failure_count} NEED_FIX={need} '
-        f'NEED_FLAGS_ADD={flag_audit.flag_line()} '
-        f'elapsed_s={elapsed:.1f} report={REPORT_PATH} fixplan={FIXPLAN_PATH}',
+        f'DONE teams={n_teams} A={player_a} B={player_b}\n'
+        f'bo3={n_bo3}: W={wins} L={losses} E={errors} WR_raw={wr_raw:.1f}%\n'
+        f'matchups={n_matchups}: pair_A={pair_a_sweeps} pair_B={pair_b_sweeps} '
+        f'draw={pair_draws} invalid={pair_invalid}\n'
+        f'sync_ok={sync_ok} fail_sync={fail_kinds.get("sync", 0)}\n'
+        f'inf_ok={inf_ok} fail_matchup_inf={fail_kinds.get("inference", 0)} '
+        f'fail_bo3_inf={sound.failure_count}\n'
+        f'NEED_FIX={need} NEED_FLAGS_ADD={flag_audit.flag_line()} '
+        f'elapsed_s={elapsed:.1f} workers={workers} ports={ports}',
         flush=True,
     )
     return report
 
-
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(
-        description='Robust E2E: disjoint A/B pools, BO3, Battle sync + OTS inference'
+        description=(
+            'Robust E2E: disjoint A/B pools, crossed BO3 pairs, '
+            'Battle sync + OTS inference'
+        )
     )
     parser.add_argument(
         '--teams',
         type=int,
         default=100,
-        help='N equipos (par). Genera N/2 series BO3 (pools A/B disjuntos)',
+        help='N equipos (par). Genera N/2 matchups × 2 BO3 cruzados',
     )
     parser.add_argument(
         '--player-a',
@@ -666,14 +1090,20 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument(
         '--timeout',
         type=float,
-        default=600.0,
-        help='Timeout por serie BO3 (s)',
+        default=180.0,
+        help='Timeout por serie BO3 (s). Default 180; sube si expectimax es lento.',
     )
     parser.add_argument('--progress-every', type=int, default=5)
     parser.add_argument('--details', action='store_true')
     parser.add_argument('--export', action='store_true')
     parser.add_argument('--export-only', action='store_true')
     parser.add_argument('--verbose', action='store_true')
+    parser.add_argument(
+        '--workers',
+        type=int,
+        default=2,
+        help='Workers paralelos (default 2). Puertos: PS_PORTS o PS_PORT..+N-1',
+    )
     args = parser.parse_args(argv)
 
     if args.export_only:
@@ -682,11 +1112,14 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 0
 
     quiet = not args.verbose
+    ports = parse_ps_ports(workers=max(1, args.workers))
     if not quiet:
         print(
-            f'PS up: {is_ps_up()} | format={args.format} | '
-            f'teams={args.teams} bo3={args.teams // 2} '
-            f'A={args.player_a} B={args.player_b}'
+            f'PS ports={ports} up={[is_ps_up(port=p) for p in ports]} | '
+            f'format={args.format} | '
+            f'teams={args.teams} matchups={args.teams // 2} '
+            f'bo3={args.teams} (crossed) '
+            f'A={args.player_a} B={args.player_b} workers={args.workers}'
         )
 
     asyncio.run(
@@ -704,11 +1137,20 @@ def main(argv: Optional[List[str]] = None) -> int:
             quiet=quiet,
             player_a=args.player_a,
             player_b=args.player_b,
+            workers=args.workers,
         )
     )
 
     text = REPORT_PATH.read_text(encoding='utf-8') if REPORT_PATH.exists() else ''
-    if 'state_mismatch: YES' in text or 'inference_ok: NO' in text:
+    sync_bad = (
+        'sync_ok: NO' in text
+        or 'state_mismatch: YES' in text
+    )
+    inf_bad = (
+        'inf_ok: NO' in text
+        or 'inference_ok: NO' in text
+    )
+    if sync_bad or inf_bad:
         return 1
     return 0
 

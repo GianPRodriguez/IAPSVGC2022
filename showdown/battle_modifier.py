@@ -12,6 +12,7 @@ from showdown.battle import Pokemon
 from showdown.battle import Battle
 from showdown.mega_abilities import MEGA_FORME_ABILITIES
 from showdown.stat_inference import SpeedContext, move_priority, move_category, DamageContext
+from showdown.inference_sim.chat_quiet import chat_print
 
 
 
@@ -154,6 +155,154 @@ def _apply_switch_identity(pkmn, namePkmn: str) -> None:
             pass
     else:
         pkmn.is_mega_evo = False
+
+
+def _fabricate_switch_shell(
+    namePkmn: str,
+    *,
+    is_opponent: bool,
+    hpa_val: int,
+    hpb_val: int,
+    new_non_volatile,
+) -> Pokemon:
+    """Último recurso si |switch| no encuentra donor en reserved/OTS."""
+    hp_arg = hpb_val if hpb_val > 0 else (100 if is_opponent else 0)
+    shell = Pokemon(namePkmn, hp_arg, is_opponent, None, None, None, None, None, None, None)
+    _apply_switch_identity(shell, namePkmn)
+    if hpa_val >= 0:
+        _apply_switch_condition(shell, hpa_val, hpb_val, new_non_volatile)
+    shell.volatile_statuses = defaultdict(lambda: 0)
+    shell.boosts = defaultdict(lambda: 0)
+    shell.is_drowsy = False
+    _clear_all_field_temp_flags(shell, entering=True)
+    shell.perish_count = 0
+    if is_opponent:
+        shell.is_opponent_confirmed = True
+    return shell
+
+
+# Claves largas (constants.*) que aún pueden existir junto a atk/def/… cortas.
+_BOOST_LONG_ALIASES = {
+    'atk': (constants.ATTACK, 'attack'),
+    'def': (constants.DEFENSE, 'defense'),
+    'spa': (constants.SPECIAL_ATTACK, 'special-attack', 'spatk'),
+    'spd': (constants.SPECIAL_DEFENSE, 'special-defense', 'spdef'),
+    'spe': (constants.SPEED, 'speed'),
+}
+
+
+def _boost_get(pkmn, short_key: str) -> int:
+    """Lee un stage preferiendo clave corta; cae a alias largos."""
+    boosts = getattr(pkmn, 'boosts', None) or {}
+    short = (short_key or '').strip().lower()
+    try:
+        v = int(boosts.get(short, 0) or 0)
+    except Exception:
+        v = 0
+    if v:
+        return v
+    for alt in _BOOST_LONG_ALIASES.get(short, ()):
+        try:
+            av = int(boosts.get(alt, 0) or 0)
+        except Exception:
+            av = 0
+        if av:
+            return av
+    return 0
+
+
+def _boost_set(pkmn, short_key: str, value: int) -> None:
+    """Escribe solo clave corta y limpia alias largos (evita doble conteo en contrast)."""
+    short = _protocol_boost_key(short_key)
+    lo = -1 * constants.MAX_BOOSTS
+    hi = constants.MAX_BOOSTS
+    value = max(lo, min(hi, int(value)))
+    pkmn.boosts[short] = value
+    for alt in _BOOST_LONG_ALIASES.get(short, ()):
+        if alt in pkmn.boosts and alt != short:
+            pkmn.boosts[alt] = 0
+
+
+def _boost_abs_score(boosts) -> int:
+    """Suma |stage| por clave corta (no doble-contar def+defense)."""
+    if not boosts:
+        return 0
+    seen = {}
+    for k, v in dict(boosts).items():
+        try:
+            iv = int(v or 0)
+        except Exception:
+            continue
+        if not iv:
+            continue
+        short = _protocol_boost_key(str(k))
+        prev = seen.get(short, 0)
+        if abs(iv) >= abs(prev):
+            seen[short] = iv
+    return sum(abs(v) for v in seen.values())
+
+
+def _merge_boost_dicts(left, right):
+    """Une dos mapas de boosts; por stat gana el de mayor |stage| (no pisar Intimidate)."""
+    out = defaultdict(lambda: 0)
+    for src in (left, right):
+        if not src:
+            continue
+        for k, v in dict(src).items():
+            try:
+                iv = int(v or 0)
+            except Exception:
+                continue
+            if not iv:
+                continue
+            short = _protocol_boost_key(str(k))
+            prev = int(out.get(short, 0) or 0)
+            if abs(iv) >= abs(prev):
+                out[short] = iv
+    return out
+
+
+def _richest_boosts_and_volatiles(user, want: str, prefer=None):
+    """Fusiona boosts/volatiles de todas las copias de la especie en el party.
+
+    Antes se elegía un solo mapa por |stage| total: una copia con def/spd y otra
+    con atk (Intimidate) perdía el atk en |request| (pe atk-1 | iap sin atk).
+    """
+    cands = []
+    if prefer is not None:
+        cands.append(prefer)
+    for p in (
+        getattr(user, 'active1', None),
+        getattr(user, 'active2', None),
+        *(getattr(user, 'reserved', None) or []),
+    ):
+        if p is None or p is prefer:
+            continue
+        if _same_party_species(want, getattr(p, 'name', '') or ''):
+            cands.append(p)
+    merged_b = None
+    best_v, best_vs = None, -1
+    for p in cands:
+        merged_b = _merge_boost_dicts(merged_b, getattr(p, 'boosts', None))
+        vol = getattr(p, 'volatile_statuses', None)
+        score = len(dict(vol or {}))
+        if score > best_vs:
+            best_vs = score
+            best_v = deepcopy(vol)
+    return merged_b, best_v
+
+
+def _apply_kept_combat_state(mon, keep_boosts, keep_volatile) -> None:
+    """Aplica keep sin degradar boosts ya presentes en el mon (merge por |stage|)."""
+    if mon is None:
+        return
+    if keep_boosts is not None:
+        mon.boosts = _merge_boost_dicts(getattr(mon, 'boosts', None), keep_boosts)
+    if keep_volatile is not None:
+        # Volatiles: preferir el set keep si el mon quedó vacío tras deepcopy de donor.
+        cur = getattr(mon, 'volatile_statuses', None) or {}
+        if not any(cur.values() if hasattr(cur, 'values') else []):
+            mon.volatile_statuses = keep_volatile
 
 
 def _active_status_keys(status_dict) -> set:
@@ -1070,7 +1219,90 @@ def request(battle: Battle, split_msg: list) -> Battle:
     # Se almacena el JSON siempre (incl. wait) para depuración / paridad con Showdown
     battle.request_json = battle_json
 
+    # En el harness e2e / espejo IAP el |request| es la autoridad del bando propio
+    # (rol p1/p2, especie/HP/orden a-b). Sin esto, un |switch| fallido o un rol
+    # invertido deja our*/foe* desfasados respecto a poke-env.
+    side = battle_json.get('side') or {}
+    side_id = str(side.get('id') or '').strip().lower()
+    if side_id in ('p1', 'p2'):
+        prev_uid = str(getattr(battle.user, 'id', '') or '').strip().lower()
+        if prev_uid in ('p1', 'p2') and prev_uid != side_id:
+            # Switches/unboost se aplicaron al bando malo (user.id erróneo).
+            # Marcar flip y corregir ids; el harness debe rebuild desde el log.
+            # No updatePkmnUser aquí: el estado de lados está sucio (shells).
+            battle.user, battle.opponent = battle.opponent, battle.user
+            battle.user.id = side_id
+            battle.opponent.id = 'p2' if side_id == 'p1' else 'p1'
+            battle._request_side_flipped = True
+            return battle
+        battle.user.id = side_id
+        battle.opponent.id = 'p2' if side_id == 'p1' else 'p1'
+    if side.get('pokemon'):
+        try:
+            battle.user.updatePkmnUser(battle_json, False, None)
+        except Exception as exc:
+            chat_print(f'[request] updatePkmnUser error: {exc!r}', flush=True)
+        # Autoridad final del JSON: especie/HP de los dos primeros (activos).
+        try:
+            _force_user_actives_from_request(battle, side.get('pokemon') or [])
+        except Exception as exc:
+            chat_print(f'[request] force actives error: {exc!r}', flush=True)
+
     return battle
+
+
+def _force_user_actives_from_request(battle: Battle, pokemon_list: list) -> None:
+    """Asegura active1/2 alineados con side.pokemon[0/1] del |request|."""
+    if not pokemon_list:
+        return
+    user = battle.user
+    for idx, attr in enumerate(('active1', 'active2')):
+        if idx >= len(pokemon_list):
+            break
+        pdata = pokemon_list[idx] or {}
+        raw = str(pdata.get('details') or '').partition(',')[0].strip()
+        if not raw:
+            continue
+        want = constants.standardName.get(raw.lower().replace(' ', '-'), raw.lower())
+        mon = getattr(user, attr, None)
+        # Preferir boosts del slot actual; si hay que traer donor, el más rico
+        # del party (evita pizarra vacía de reserved que pisaba -unboost reales).
+        keep_boosts, keep_volatile = _richest_boosts_and_volatiles(user, want, prefer=mon)
+        if mon is None or not _same_party_species(want, getattr(mon, 'name', '') or ''):
+            donor = None
+            for p in (user.active1, user.active2, *(user.reserved or [])):
+                if p is not None and _same_party_species(want, getattr(p, 'name', '') or ''):
+                    if p is mon:
+                        continue
+                    donor = p
+                    break
+            if donor is not None:
+                rich_b, rich_v = _richest_boosts_and_volatiles(user, want, prefer=donor)
+                if rich_b is not None:
+                    keep_boosts = rich_b
+                if rich_v is not None:
+                    keep_volatile = rich_v
+                mon = deepcopy(donor)
+            else:
+                mon = _fabricate_switch_shell(
+                    want,
+                    is_opponent=False,
+                    hpa_val=-1,
+                    hpb_val=-1,
+                    new_non_volatile={},
+                )
+            setattr(user, attr, mon)
+        _apply_switch_identity(mon, want)
+        _apply_kept_combat_state(mon, keep_boosts, keep_volatile)
+        cond = str(pdata.get('condition') or '')
+        hpa, hpb, nvs = _parse_hp_and_status_from_switch(cond)
+        if hpa >= 0:
+            _apply_switch_condition(mon, hpa, hpb, nvs)
+        item = normalize_name(pdata.get('item', '') or '')
+        mon.objectPkmn = item or None
+        abil = normalize_name(pdata.get('ability', '') or '')
+        if abil:
+            mon.abilityPkmn = abil
 
 
 ############################################################################################################################################################
@@ -1094,6 +1326,7 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
 
     slot_str = split_msg[2].split(':')[0].strip()  # Ej: "p1a" o "p2b"
     is_active1 = slot_str.endswith('a')
+    _slot_before = side.active1 if is_active1 else side.active2
 
     # =========================================================================
     # CASO 1: CAMBIO REALIZADO POR EL OPONENTE
@@ -1137,10 +1370,11 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                 side.reserved.pop(illusion_idx)
 
             _resolve_duplicate_illusion_reserves(side)
-            print(
+            chat_print(
                 f"El oponente ha cambiado de Pokémon a {new_active.name} "
                 f"(Illusion deducida) ({new_active.HPA_battle_actual}/{new_active.HPB_battle_base}) : {slot_str}"
             )
+            _apply_switch_in_field_abilities(battle, new_active)
             return battle
 
         # 1. PASO A: Buscamos PRIMERO si el Pokémon que entra YA ESTÁ en la reserva (reserved)
@@ -1186,7 +1420,7 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
             if pkmnAux is not None:
                 side.reserved[found_in_reserved_idx] = deepcopy(pkmnAux)
             _resolve_duplicate_illusion_reserves(side)
-            print(f"El oponente ha cambiado de Pokémon a {new_active.name} ({new_active.HPA_battle_actual}/{new_active.HPB_battle_base}) : {slot_str}")
+            chat_print(f"El oponente ha cambiado de Pokémon a {new_active.name} ({new_active.HPA_battle_actual}/{new_active.HPB_battle_base}) : {slot_str}")
 
         # 2. PASO B: Si NO estaba en la reserva, lo buscamos en 'opponents' (Team Preview)
         else:
@@ -1222,7 +1456,7 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                     else:
                         side.active2 = new_active
 
-                    print(f"El oponente ha revelado a {new_active.name} ({new_active.HPA_battle_actual}/{new_active.HPB_battle_base}) : {slot_str}")
+                    chat_print(f"El oponente ha revelado a {new_active.name} ({new_active.HPA_battle_actual}/{new_active.HPB_battle_base}) : {slot_str}")
 
                     # El Pokémon saliente recién pasa a 'reserved' al dejar el campo
                     if pkmnAux is not None:
@@ -1248,27 +1482,38 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                 _apply_switch_identity(incoming, namePkmn)
                 _apply_switch_condition(incoming, hpa_val, hpb_val, new_non_volatile)
 
-        # Autoridad del |switch|: si el slot sigue KO pero el log trae HP>0, revivir
-        # in-place (evita foe2.fainted fantasma tras fallos de matching).
+        # Autoridad del |switch| rival: especie + HP del log mandan sobre el slot
+        # (también con hpa=0 / mismatch sin KO previo).
         slot_now = side.active1 if is_active1 else side.active2
-        if (
-            slot_now is not None
-            and hpa_val > 0
-            and (
-                getattr(slot_now, 'is_fainted', False)
-                or int(getattr(slot_now, 'HPA_battle_actual', 0) or 0) <= 0
-                or not _same_party_species(namePkmn, getattr(slot_now, 'name', '') or '')
+        slot_name = getattr(slot_now, 'name', '') if slot_now is not None else ''
+        need_force = (
+            slot_now is None
+            or not _same_party_species(namePkmn, slot_name or '')
+            or (
+                hpa_val > 0
+                and (
+                    getattr(slot_now, 'is_fainted', False)
+                    or int(getattr(slot_now, 'HPA_battle_actual', 0) or 0) <= 0
+                )
             )
-        ):
-            if _same_party_species(namePkmn, getattr(slot_now, 'name', '') or ''):
+        )
+        if need_force:
+            if slot_now is not None and _same_party_species(namePkmn, slot_name or ''):
+                # Misma especie ya en slot: solo resync HP/identité. Limpiar boosts
+                # únicamente si venía debilitado (revive real).
+                was_down = (
+                    getattr(slot_now, 'is_fainted', False)
+                    or int(getattr(slot_now, 'HPA_battle_actual', 1) or 0) <= 0
+                )
                 _apply_switch_identity(slot_now, namePkmn)
-                _apply_switch_condition(slot_now, hpa_val, hpb_val, new_non_volatile)
-                slot_now.volatile_statuses = defaultdict(lambda: 0)
-                slot_now.boosts = defaultdict(lambda: 0)
-                slot_now.is_drowsy = False
-                _clear_all_field_temp_flags(slot_now, entering=True)
+                if hpa_val >= 0:
+                    _apply_switch_condition(slot_now, hpa_val, hpb_val, new_non_volatile)
+                if was_down and hpa_val > 0:
+                    slot_now.volatile_statuses = defaultdict(lambda: 0)
+                    slot_now.boosts = defaultdict(lambda: 0)
+                    slot_now.is_drowsy = False
+                    _clear_all_field_temp_flags(slot_now, entering=True)
             else:
-                # Último recurso: clonar desde preview OTS o fabricar shell.
                 donor = None
                 for pkmn in list(getattr(side, 'opponents', []) or []) + list(
                     getattr(side, 'reserved', []) or []
@@ -1278,23 +1523,37 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                     ):
                         donor = pkmn
                         break
-                if donor is not None:
-                    outgoing = deepcopy(slot_now)
+                outgoing = deepcopy(slot_now) if slot_now is not None else None
+                if outgoing is not None:
                     outgoing = _revert_special_pokemon(outgoing, side)
+                if donor is not None:
                     new_active = deepcopy(donor)
                     _apply_switch_identity(new_active, namePkmn)
-                    _apply_switch_condition(new_active, hpa_val, hpb_val, new_non_volatile)
+                    if hpa_val >= 0:
+                        _apply_switch_condition(new_active, hpa_val, hpb_val, new_non_volatile)
                     new_active.volatile_statuses = defaultdict(lambda: 0)
                     new_active.boosts = defaultdict(lambda: 0)
                     new_active.is_drowsy = False
                     _clear_all_field_temp_flags(new_active, entering=True)
                     new_active.perish_count = 0
-                    if is_active1:
-                        side.active1 = new_active
-                    else:
-                        side.active2 = new_active
-                    if outgoing is not None:
-                        side.reserved.append(deepcopy(outgoing))
+                    if not getattr(new_active, 'is_opponent_confirmed', False):
+                        side.opponentPkmnConfirmed += 1
+                        new_active.is_opponent_confirmed = True
+                else:
+                    # Último recurso: fabricar shell (evita foe*.species/hp fantasma).
+                    new_active = _fabricate_switch_shell(
+                        namePkmn,
+                        is_opponent=True,
+                        hpa_val=hpa_val,
+                        hpb_val=hpb_val,
+                        new_non_volatile=new_non_volatile,
+                    )
+                if is_active1:
+                    side.active1 = new_active
+                else:
+                    side.active2 = new_active
+                if outgoing is not None:
+                    side.reserved.append(deepcopy(outgoing))
 
         _resolve_duplicate_illusion_reserves(side)
 
@@ -1329,16 +1588,13 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
             and slot_target is not None
             and _same_party_species(namePkmn, getattr(slot_target, 'name', ''))
         ):
+            # Ya está en este slot (p.ej. |switch| redundante tras request/rebuild).
+            # Solo alinear HP/identité; NO limpiar boosts (borraría Intimidate etc.).
             _apply_switch_identity(slot_target, namePkmn)
             if hpa_u >= 0:
                 _apply_switch_condition(slot_target, hpa_u, hpb_u, nvs_u)
             else:
                 slot_target.is_fainted = False
-            slot_target.volatile_statuses = defaultdict(lambda: 0)
-            slot_target.boosts = defaultdict(lambda: 0)
-            slot_target.is_drowsy = False
-            _clear_all_field_temp_flags(slot_target, entering=True)
-            slot_target.perish_count = 0
             return battle
 
         if found_user_idx >= 0:
@@ -1430,10 +1686,32 @@ def switch_or_drag(battle: Battle, split_msg: list) -> Battle:
                 _apply_switch_identity(slot_now, namePkmn)
                 if hpa_u >= 0:
                     _apply_switch_condition(slot_now, hpa_u, hpb_u, nvs_u)
+            else:
+                # Último recurso propio: fabricar shell (evita our*.species desync).
+                outgoing = deepcopy(slot_now) if slot_now is not None else None
+                if outgoing is not None:
+                    outgoing = _revert_special_pokemon(outgoing, side)
+                new_active = _fabricate_switch_shell(
+                    namePkmn,
+                    is_opponent=False,
+                    hpa_val=hpa_u,
+                    hpb_val=hpb_u,
+                    new_non_volatile=nvs_u or {},
+                )
+                if is_active1:
+                    side.active1 = new_active
+                else:
+                    side.active2 = new_active
+                if outgoing is not None:
+                    side.reserved.append(deepcopy(outgoing))
 
         # Limpieza de nulos en reservados del usuario
         side.reserved = [p for p in side.reserved if p is not None]
 
+    entered = side.active1 if is_active1 else side.active2
+    # Solo entrante real (nuevo objeto / cambio de especie), no |switch| redundante.
+    if entered is not None and entered is not _slot_before:
+        _apply_switch_in_field_abilities(battle, entered)
     return battle
 
 
@@ -1558,7 +1836,7 @@ def heal_or_damage(battle: Battle, split_msg: list) -> Battle:
             pkmn.is_fainted = False
             pkmn.volatile_statuses = defaultdict(lambda: 0)
             pkmn.boosts = defaultdict(lambda: 0)
-            print(
+            chat_print(
                 f"[REVIVAL BLESSING] {pkmn.name} revive con "
                 f"{pkmn.HPA_battle_actual}/{pkmn.HPB_battle_base}"
             )
@@ -1586,19 +1864,32 @@ def swap(battle: Battle, split_msg: list) -> Battle:
 ############################################################################################################################################################
 # OK - Aumento de estadísticas                                                                                                                           ###
 ############################################################################################################################################################
+def _protocol_boost_key(raw_stat: str) -> str:
+    """Clave corta de boost (atk/def/…) — misma que bots / poke-env."""
+    key = (raw_stat or '').strip().lower()
+    if key in ('atk', 'def', 'spa', 'spd', 'spe', 'accuracy', 'evasion'):
+        return key
+    mapped = constants.STAT_ABBREVIATION_LOOKUPS.get(key, key)
+    return {
+        constants.ATTACK: 'atk',
+        constants.DEFENSE: 'def',
+        constants.SPECIAL_ATTACK: 'spa',
+        constants.SPECIAL_DEFENSE: 'spd',
+        constants.SPEED: 'spe',
+        constants.ACCURACY: 'accuracy',
+        constants.EVASION: 'evasion',
+    }.get(mapped, key)
+
+
 def boost(battle: Battle, split_msg: list) -> Battle:
     # |-boost|p2b: Celesteela|spe|1
-    raw_stat = split_msg[3].strip()
-    stat = constants.STAT_ABBREVIATION_LOOKUPS.get(raw_stat, raw_stat)
+    if len(split_msg) < 5:
+        return battle
+    stat = _protocol_boost_key(split_msg[3].strip())
     amount = int(split_msg[4].strip())
-
-    side = battle.opponent if is_opponent(battle, split_msg) else battle.user
-    slot_str = split_msg[2].split(':')[0].strip()
-    pkmn = side.active1 if slot_str.endswith('a') else side.active2
-
+    pkmn = _resolve_active_from_ident(battle, split_msg[2].strip())
     if pkmn:
-        pkmn.boosts[stat] = min(pkmn.boosts[stat] + amount, constants.MAX_BOOSTS)
-
+        _boost_set(pkmn, stat, _boost_get(pkmn, stat) + amount)
     return battle
 
 
@@ -1607,17 +1898,13 @@ def boost(battle: Battle, split_msg: list) -> Battle:
 ############################################################################################################################################################
 def unboost(battle: Battle, split_msg: list) -> Battle:
     # |-unboost|p2a: Whimsicott|spe|1
-    raw_stat = split_msg[3].strip()
-    stat = constants.STAT_ABBREVIATION_LOOKUPS.get(raw_stat, raw_stat)
+    if len(split_msg) < 5:
+        return battle
+    stat = _protocol_boost_key(split_msg[3].strip())
     amount = int(split_msg[4].strip())
-
-    side = battle.opponent if is_opponent(battle, split_msg) else battle.user
-    slot_str = split_msg[2].split(':')[0].strip()
-    pkmn = side.active1 if slot_str.endswith('a') else side.active2
-
+    pkmn = _resolve_active_from_ident(battle, split_msg[2].strip())
     if pkmn:
-        pkmn.boosts[stat] = max(pkmn.boosts[stat] - amount, -1 * constants.MAX_BOOSTS)
-
+        _boost_set(pkmn, stat, _boost_get(pkmn, stat) - amount)
     return battle
 
 
@@ -1912,7 +2199,7 @@ def replace_illusion(battle: Battle, split_msg: list, *, protocol_reveal: bool =
     if opponent_turn and disguise:
         battle.stat_beliefs.forget(disguise)
 
-    print(f"[ILLUSION REVEALED] {real_name} se ha revelado en {slot_str} con HP: {current_hpa}")
+    chat_print(f"[ILLUSION REVEALED] {real_name} se ha revelado en {slot_str} con HP: {current_hpa}")
 
     return battle
 
@@ -1968,14 +2255,45 @@ def _normalized_held_item(pkmn) -> str:
 
 
 def _resolve_active_from_ident(battle: Battle, ident: str):
-    """Resuelve 'p1a: Torkoal' / 'p2b' al Pokémon activo correspondiente."""
+    """Resuelve 'p1a: Torkoal' / 'p2b' al Pokémon activo correspondiente.
+
+    1) Slot a/b del bando indicado si la especie coincide (o no hay nick).
+    2) Si el slot tiene otra especie (a/b cruzados vs PE), buscar por nombre
+       solo en el MISMO bando.
+    3) Nunca buscar en el otro bando: en mirror match eso aplicaba Intimidate
+       al clon rival → tras align-by-species, pe our*.atk-1 | iap=-.
+
+    Fallback: mon del slot si existe (mejor que None para daño al asiento).
+    """
     if not ident:
         return None
-    slot = ident.split(':')[0].strip()
-    if not slot:
+    head = ident.split(':')[0].strip().lower()
+    if not head:
         return None
-    side = _side_from_slot(battle, slot)
-    return side.active1 if slot.endswith('a') else side.active2
+    name_part = ''
+    if ':' in ident:
+        name_part = ident.split(':', 1)[1].strip()
+    want = ''
+    if name_part:
+        want = constants.standardName.get(
+            name_part.lower().replace(' ', '-'),
+            name_part.lower().replace(' ', '-'),
+        )
+    side = _side_from_slot(battle, head)
+    mon = side.active1 if head.endswith('a') else side.active2
+    if mon is not None:
+        if not want or _same_party_species(want, getattr(mon, 'name', '') or ''):
+            return mon
+    if not want:
+        return mon
+    # Solo el mismo bando — no `other` (mirror match / Intimidate).
+    for attr in ('active1', 'active2'):
+        cand = getattr(side, attr, None)
+        if cand is not None and _same_party_species(
+            want, getattr(cand, 'name', '') or ''
+        ):
+            return cand
+    return mon
 
 
 def _extract_of_ident(split_msg: list) -> str:
@@ -2022,6 +2340,8 @@ def _weather_duration_turns(battle: Battle, weather_name: str, split_msg: list) 
 
 
 def weather(battle: Battle, split_msg: list) -> Battle:
+    # AUTORIDAD DE CAMPO (clima): solo este handler (| -weather |).
+    # No inferir desde -ability / abilityPkmn / switch-in (fantasmas vs Air Lock).
     # |-weather|SunnyDay|[from] ability: Drought|[of] p1a: Torkoal
     # |-weather|RainDance|[from] move: Rain Dance|[of] p2b: Pelipper
     # |-weather|Sandstorm
@@ -2035,15 +2355,27 @@ def weather(battle: Battle, split_msg: list) -> Battle:
     if weather_name in ("none", "null"):
         battle.weather = 'none'
         battle.weatherTurn = 0
+        battle._weather_ended = True
         return battle
 
-    # Upkeep tardío tras |-weather|none no debe resucitar el clima (sticky rain/sun).
+    # Upkeep: el clima sigue. Tras |-weather|none no resucitar; si nunca
+    # recibimos el set inicial (iap=- con pe=sunnyday), el upkeep SÍ debe
+    # reinstalar el nombre.
     if is_upkeep:
-        if battle.weatherTurn <= 0 or (battle.weather or 'none') in ('none', 'null', ''):
+        if weather_name in ('none', 'null', ''):
             return battle
+        cur = str(getattr(battle, 'weather', '') or '').strip().lower()
+        if getattr(battle, '_weather_ended', False):
+            # Vacío tras |none| espurio / set perdido: confiar en upkeep nombrado.
+            if cur not in ('', 'none', 'null'):
+                return battle
+            battle._weather_ended = False
         battle.weather = weather_name
+        if int(getattr(battle, 'weatherTurn', 0) or 0) <= 0:
+            battle.weatherTurn = 1
         return battle
 
+    battle._weather_ended = False
     battle.weather = weather_name
     battle.weatherTurn = _weather_duration_turns(battle, weather_name, split_msg)
     return battle
@@ -2054,24 +2386,111 @@ def weather(battle: Battle, split_msg: list) -> Battle:
 _EXCLUSIVE_TERRAINS = frozenset({
     'electricterrain', 'grassyterrain', 'mistyterrain', 'psychicterrain',
 })
+# Rooms/Gravity: preferir |-fieldend|; los terrenos exclusivos sí expiran en |turn|.
+_ROOM_FIELDS = frozenset({
+    'trickroom', 'wonderroom', 'magicroom', 'gravity',
+})
 
 
 ############################################################################################################################################################
 # OK - Inicio de Terreno / Room (Trick/Wonder). Terrenos exclusivos se reemplazan.                                                                       ###
 ############################################################################################################################################################
-def fieldstart(battle: Battle, split_msg: list) -> Battle:
-    # |-fieldstart|move: Wonder Room|[of] p1b: Starmie
-    # |-fieldstart|move: Electric Terrain
-    # |-fieldstart|move: Trick Room|[of] p2b: Farigiraf
-    # PS a veces no manda -fieldend del terreno anterior antes del nuevo.
+def _parse_field_condition_name(raw: str) -> str:
+    """Normaliza 'move: Psychic Terrain' / basura pegada tras [from]."""
+    text = (raw or '').strip()
+    if '|' in text:
+        text = text.split('|', 1)[0].strip()
+    if '[' in text:
+        text = text.split('[', 1)[0].strip()
+    low = text.lower()
+    if low.startswith('move:') or low.startswith('ability:'):
+        text = text.split(':', 1)[1].strip()
+    return normalize_name(text)
 
-    raw_field = split_msg[2].split(':')[-1].strip()
-    field_name = normalize_name(raw_field)
+
+def _ensure_terrain_from_surge(battle: Battle, ability_or_effect: str) -> None:
+    """Aplica terreno solo desde reveal/activate de Surge (no desde abilityPkmn OTS).
+
+    PS casi siempre manda también |-fieldstart|; este fallback cubre feeds donde
+    falta esa línea. No usar en switch-in por OTS (Neutralizing Gas / orden).
+    Clima sigue siendo solo |-weather|.
+    """
+    text = (ability_or_effect or '').strip()
+    if '[' in text:
+        text = text.split('[', 1)[0].strip()
+    low = text.lower()
+    if low.startswith('move:') or low.startswith('ability:'):
+        text = text.split(':', 1)[1].strip()
+    key = normalize_name(text)
+    mapping = (
+        ('psychicsurge', 'psychicterrain'),
+        ('grassysurge', 'grassyterrain'),
+        ('electricsurge', 'electricterrain'),
+        ('mistysurge', 'mistyterrain'),
+    )
+    field_name = None
+    for needle, terrain_id in mapping:
+        if needle in key:
+            field_name = terrain_id
+            break
+    if not field_name:
+        return
     if field_name in _EXCLUSIVE_TERRAINS:
         for other in _EXCLUSIVE_TERRAINS:
             if other != field_name:
                 battle.terrain.pop(other, None)
-    battle.terrain[field_name] = 5
+    if int(battle.terrain.get(field_name, 0) or 0) <= 0:
+        battle.terrain[field_name] = 5
+
+
+def _ensure_weather_from_ability(battle: Battle, ability_or_effect: str) -> None:
+    """No-op: clima solo por |-weather|.
+
+    Inferir desde -ability/-activate/abilityPkmn crea pe=-|iap=snowscape cuando
+    PS no activa (Air Lock / Cloud Nine / orden). El upkeep de |-weather| ya
+    reinstala si se perdió el set inicial.
+    """
+    return
+
+
+def _apply_switch_in_field_abilities(battle: Battle, mon) -> None:
+    """No-op: no inferir weather/terrain en switch por abilityPkmn (OTS).
+
+    Autoridad de campo: |-weather| y |-fieldstart| únicamente.
+    """
+    return
+
+
+def _resync_field_from_active_abilities(battle: Battle) -> None:
+    """No-op (compat): no resincronizar campo desde abilities activas."""
+    return
+
+
+def fieldstart(battle: Battle, split_msg: list) -> Battle:
+    # AUTORIDAD DE CAMPO (terreno/rooms): solo este handler (| -fieldstart |).
+    # |-fieldstart|move: Wonder Room|[of] p1b: Starmie
+    # |-fieldstart|move: Electric Terrain
+    # |-fieldstart|move: Trick Room|[of] p2b: Farigiraf
+    # PS a veces no manda -fieldend del terreno anterior antes del nuevo.
+    if len(split_msg) < 3:
+        return battle
+
+    field_name = _parse_field_condition_name(split_msg[2])
+    if not field_name:
+        return battle
+    if field_name in _EXCLUSIVE_TERRAINS:
+        for other in _EXCLUSIVE_TERRAINS:
+            if other != field_name:
+                battle.terrain.pop(other, None)
+    duration = 5
+    for part in split_msg[3:]:
+        if str(part).startswith('[duration]'):
+            try:
+                duration = int(str(part).split(']', 1)[1].strip() or '5')
+            except (ValueError, IndexError):
+                duration = 5
+            break
+    battle.terrain[field_name] = duration
 
     return battle
 
@@ -2081,10 +2500,12 @@ def fieldstart(battle: Battle, split_msg: list) -> Battle:
 ############################################################################################################################################################
 def fieldend(battle: Battle, split_msg: list) -> Battle:
     # |-fieldend|move: Trick Room
+    if len(split_msg) < 3:
+        return battle
 
-    raw_field = split_msg[2].split(':')[-1].strip()
-    field_name = normalize_name(raw_field)
-    battle.terrain.pop(field_name, None)
+    field_name = _parse_field_condition_name(split_msg[2])
+    if field_name:
+        battle.terrain.pop(field_name, None)
 
     return battle
 
@@ -2220,13 +2641,14 @@ def set_opponent_ability_from_ability_tag(battle: Battle, split_msg: list) -> Ba
     ability_name = split_msg[3].strip()
 
     # Identificamos el bando (oponente o usuario) y el slot activo
-    side = battle.opponent if is_opponent(battle, split_msg) else battle.user
-    slot_str = split_msg[2].split(':')[0].strip()
-    pkmn = side.active1 if slot_str.endswith('a') else side.active2
+    pkmn = _resolve_active_from_ident(battle, split_msg[2].strip())
 
     if pkmn and hasattr(pkmn, 'abilityPkmn'):
         # Asignamos la habilidad revelada/actualizada al Pokémon
         pkmn.abilityPkmn = normalize_name(ability_name)
+    # Terreno: Surge en -ability (fallback si falta |-fieldstart|).
+    # Clima: nunca aquí (solo |-weather|).
+    _ensure_terrain_from_surge(battle, ability_name)
 
     return battle
 
@@ -2602,13 +3024,13 @@ def swapboost(battle: Battle, split_msg: list) -> Battle:
         abbr = token.strip().lower()
         if not abbr:
             continue
-        key = constants.STAT_ABBREVIATION_LOOKUPS.get(abbr, abbr)
-        src_val = int(source.boosts.get(key, 0) or 0)
-        tgt_val = int(target.boosts.get(key, 0) or 0)
-        source.boosts[key] = tgt_val
-        target.boosts[key] = src_val
+        key = _protocol_boost_key(abbr)
+        src_val = _boost_get(source, key)
+        tgt_val = _boost_get(target, key)
+        _boost_set(source, key, tgt_val)
+        _boost_set(target, key, src_val)
 
-    print(
+    chat_print(
         f"[SWAPBOOST] {getattr(source, 'name', '?')} <-> {getattr(target, 'name', '?')} "
         f"stats={raw_stats}"
     )
@@ -2691,11 +3113,15 @@ def activate(battle: Battle, split_msg: list) -> Battle:
             new_ability_pkmn2 = normalize_name(split_msg[5].strip())
             pkmn1.abilityPkmn = new_ability_pkmn1
             pkmn2.abilityPkmn = new_ability_pkmn2
-            print(
+            chat_print(
                 f"[SKILL SWAP] {pkmn1.name} ahora tiene {new_ability_pkmn1} | "
                 f"{pkmn2.name} ahora tiene {new_ability_pkmn2}"
             )
         return battle
+
+    # Terrain Surge: fallback si -activate/-ability llega sin |-fieldstart|.
+    if 'surge' in trigger_effect:
+        _ensure_terrain_from_surge(battle, trigger_effect)
 
     # Flash Fire / Electromorphosis: |-activate|pXa: Mon|ability: Flash Fire
     if 'flash fire' in trigger_effect or 'electromorphosis' in trigger_effect:
@@ -2710,7 +3136,7 @@ def activate(battle: Battle, split_msg: list) -> Battle:
         of_part = _extract_of_ident(split_msg)
         target = _resolve_active_from_ident(battle, of_part) if of_part else None
         if _apply_guard_split(source, target):
-            print(
+            chat_print(
                 f"[GUARD SPLIT] {getattr(source, 'name', '?')} <-> {getattr(target, 'name', '?')} "
                 f"DEF={getattr(source, 'DEF_battle_actual', '?')} "
                 f"SPD={getattr(source, 'SPD_battle_actual', '?')}"
@@ -2760,15 +3186,15 @@ def turn(battle: Battle, split_msg: list) -> Battle:
     for terr, turns in list(battle.terrain.items()):
         left = int(turns or 0)
         if left <= 0:
-            battle.terrain.pop(terr, None)
+            # No borrar: 0/negativo se limpia solo en |-fieldend|. Si pop aquí,
+            # IAP queda vacío un turno antes que PE (grassy/psychic → fields×2).
             continue
-        if new_turn > 1:
-            if left > 1:
-                battle.terrain[terr] = left - 1
-            elif left == 1:
-                # PS / poke-env limpian al expirar; quedarse en 1 deja psychicterrain
-                # fantasma cuando PE ya no tiene fields (robust e2e t8).
-                battle.terrain.pop(terr, None)
+        if new_turn <= 1:
+            continue
+        # Solo decrementar contadores para AI. Autoridad de presencia = |-fieldend|
+        # (igual rooms y terrenos exclusivos); no pasar a 0 ni pop en |turn|.
+        if left > 1:
+            battle.terrain[terr] = left - 1
 
     # Decremento de condiciones de bando (Side Conditions) y limpieza de estados
     for side in (battle.user, battle.opponent):
@@ -2779,8 +3205,12 @@ def turn(battle: Battle, split_msg: list) -> Battle:
 
         for condition in ('tailwind', 'reflect', 'lightscreen', 'auroraveil'):
             left = int(side.side_conditions.get(condition, 0) or 0)
-            # Igual que clima/terreno: no borrar en 0; |-sideend| es la autoridad.
-            if left > 1:
+            # Expirar en 1: sin |-sideend| pe limpia y queda opp_side fantasma.
+            if left <= 0:
+                side.side_conditions.pop(condition, None)
+            elif new_turn > 1 and left <= 1:
+                side.side_conditions.pop(condition, None)
+            elif new_turn > 1 and left > 1:
                 side.side_conditions[condition] = left - 1
 
         # Yawn / is_drowsy: NO se limpia aquí. Debe sobrevivir al |turn| del turno
@@ -3053,8 +3483,19 @@ def _major_status_id(pkmn) -> str:
 
 def _boost_val(pkmn, const_key: str) -> int:
     boosts = getattr(pkmn, 'boosts', None) or {}
+    short = {
+        constants.ATTACK: 'atk',
+        constants.DEFENSE: 'def',
+        constants.SPECIAL_ATTACK: 'spa',
+        constants.SPECIAL_DEFENSE: 'spd',
+        constants.SPEED: 'spe',
+    }.get(const_key, const_key)
     try:
-        return int(boosts.get(const_key, 0) or 0)
+        return int(
+            boosts.get(short, 0)
+            or boosts.get(const_key, 0)
+            or 0
+        )
     except (TypeError, ValueError):
         return 0
 
@@ -3468,7 +3909,7 @@ def observe_move(battle: Battle, split_msg: list) -> Battle:
         return battle
 
     # Move ilegal para la especie OTS → debe ser Illusion (Champions con showteam)
-    print(
+    chat_print(
         f"[ILLUSION DEDUCED BY MOVE] {getattr(pkmn, 'name', '?')} uso '{move_id}' "
         f"(no esta en OTS {sorted(known_moves)}) -> Zoroark"
     )

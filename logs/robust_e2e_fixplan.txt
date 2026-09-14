@@ -1,13 +1,15 @@
 === Robust E2E Fixplan (manual Cursor fix) ===
 NEED_FIX=NO
 NEED_FLAGS_ADD: NO
-state_mismatch: NO
-inference_ok: YES
+sync_ok: YES
+inf_ok: YES
+fail_matchup_inf: 0
+fail_bo3_inf: 0
 player_a: expectimax_bayesian
 player_b: greedy_joint
-player_a_wins: 1
+player_a_wins: 3
 player_b_wins: 1
-heuristic_wins: 1
+heuristic_wins: 3
 random_wins: 1
 errors: 0
 state_mismatches: 0

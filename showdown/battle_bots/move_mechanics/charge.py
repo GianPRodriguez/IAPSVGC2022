@@ -14,7 +14,16 @@ from typing import Dict, Mapping, Optional, Tuple
 
 
 def norm_id(raw: Optional[str]) -> str:
-    return str(raw or '').strip().lower().replace(' ', '').replace('-', '').replace('_', '')
+    return (
+        str(raw or '')
+        .strip()
+        .lower()
+        .replace(' ', '')
+        .replace('-', '')
+        .replace('_', '')
+        .replace("'", '')
+        .replace('.', '')
+    )
 
 
 # Moves con flags.charge en dex PS (gen actual / Champions).

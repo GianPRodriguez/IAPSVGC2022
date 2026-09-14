@@ -34,6 +34,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 import constants
 from showdown.damage_calc_bridge import damage_ranges_batch
+from showdown.inference_sim.chat_quiet import chat_print
 
 # --------------------------------------------------------------------------- #
 # Reglas de Champions
@@ -476,7 +477,7 @@ def _move_meta() -> Dict[str, Dict[str, object]]:
             with _MOVE_META_PATH.open(encoding='utf-8') as handle:
                 _MOVE_META = json.load(handle)
         except Exception as error:  # datos ausentes: se degrada sin romper
-            print(f'[STAT-INF] No se pudo leer champions_move_meta.json: {error}')
+            chat_print(f'[STAT-INF] No se pudo leer champions_move_meta.json: {error}')
             _MOVE_META = {}
     return _MOVE_META
 
@@ -849,11 +850,11 @@ def _field_payload(ctx: DamageContext, category: str) -> Dict:
 # Desync tipico calc Champions vs PS: pantallas+terreno, redondeo de % HP,
 # shells de especies ausentes en el dex (STAB), Aerilate, etc.
 # Preferimos no podar el verdadero: tolerancia holgada en %.
-_ABS_DAMAGE_TOLERANCE = 22
-_PERCENT_DAMAGE_TOLERANCE = 26
+_ABS_DAMAGE_TOLERANCE = 28
+_PERCENT_DAMAGE_TOLERANCE = 32
 # Cota superior bilateral en %: margen extra (calc a menudo sobreestima
 # terreno/STAB respecto a PS; un min_roll apenas por encima expulsaba Def reales).
-_PERCENT_BILATERAL_EXTRA = 10
+_PERCENT_BILATERAL_EXTRA = 12
 # Margen en Spe efectiva: Tailwind 80→160 vs Spe 163, empates, mega mid-turn,
 # Sticky Web / redondeos / desync menor de slots. Preferir no expulsar Spe real.
 _SPEED_COMPARE_MARGIN = 24
@@ -1045,7 +1046,7 @@ class TeamStatBeliefs:
         key = normalize_species(species)
         if key in self.beliefs:
             del self.beliefs[key]
-            print(f'[STAT-INF] Creencias de {key} descartadas (Illusion)')
+            chat_print(f'[STAT-INF] Creencias de {key} descartadas (Illusion)')
 
     # -- acceso ----------------------------------------------------------- #
 
@@ -1178,11 +1179,60 @@ class TeamStatBeliefs:
         ):
             allowed.add(SP_MIN)
 
+        max_sp, _ = sp_limits()
+        # Frontera SP máx (p.ej. Gholdengo Spe 32): no expulsar por 1 punto de Spe.
+        if (
+            max_sp in belief.candidates['spe']
+            and max_sp not in allowed
+            and allowed
+            and max(allowed) == max_sp - 1
+            and len(allowed) >= len(belief.candidates['spe']) - 1
+        ):
+            allowed.add(max_sp)
+
+        # Meseta Champions: SP 30→150 y 31/32→151 (Garchomp +Spe). Si la poda
+        # cortó solo el techo, reincorporar SP con final en [top, top+1].
+        prev_spe = set(belief.candidates['spe'])
+        if allowed and base_spe:
+            top_sp = max(allowed)
+            try:
+                top_final = champions_stat(
+                    int(base_spe), int(top_sp), belief.nature, 'spe',
+                )
+            except Exception:
+                top_final = None
+            if top_final is not None:
+                for sp in list(prev_spe):
+                    if sp in allowed:
+                        continue
+                    try:
+                        fin = champions_stat(
+                            int(base_spe), int(sp), belief.nature, 'spe',
+                        )
+                    except Exception:
+                        continue
+                    if top_final <= fin <= top_final + 1:
+                        allowed.add(sp)
+
+        dropped_spe = prev_spe - allowed
+        # Poda agresiva que salta a un bloque alto (o descarta un tramo bajo amplio):
+        # típico desync Spe efectiva / Tailwind / slot. Preferir no estrechar.
+        if (
+            dropped_spe
+            and allowed
+            and (
+                (min(allowed) > min(prev_spe) + 8 and len(allowed) <= 14 and len(dropped_spe) >= 8)
+                or (max_sp in dropped_spe and len(dropped_spe) >= 6 and len(allowed) <= 16)
+            )
+        ):
+            belief.skipped += 1
+            return False
+
         belief.observations += 1
         changed = belief.narrow('spe', allowed)
         if changed:
             rng = belief.stat_range('spe')
-            print(
+            chat_print(
                 f'[STAT-INF] {belief.species} Spe -> {rng[0]}-{rng[1]} '
                 f'({len(belief.candidates["spe"])} SP posibles)'
             )
@@ -1490,10 +1540,47 @@ class TeamStatBeliefs:
             belief.skipped += 1
             return False
 
+        prev_u = set(belief.candidates[unknown_stat])
+        # Frontera baja SP=0..2: redondeo calc vs PS (Maushold Def 90/91→92)
+        # expulsaba el verdadero SP=0 con un salto corto; la guarda de +1 no basta.
+        if SP_MIN in prev_u and allowed_u and SP_MIN not in allowed_u:
+            gap = int(min(allowed_u)) - SP_MIN
+            if 1 <= gap <= 3 and len(allowed_u) >= len(prev_u) - gap - 1:
+                allowed_u.update(range(SP_MIN, int(min(allowed_u))))
+
+        # Poda que salta a un bloque alto descartando un tramo bajo amplio:
+        # suele ser calc subestimado (weather/boosts/item/crit). Mejor no estrechar.
+        # Antes len(allowed)<=12 dejaba pasar cortes 0..14→15..32 con 18 cands
+        # (Sylveon SpA true_sp=10 excluido; finales 151-160 = banda Modest alta).
+        dropped = prev_u - allowed_u
+        if (
+            dropped
+            and allowed_u
+            and min(allowed_u) > min(prev_u) + 5
+            and len(dropped) >= 5
+        ):
+            belief.skipped += 1
+            return False
+
         belief.observations += 1
         changed = belief.narrow(unknown_stat, allowed_u)
         if infer_hp and allowed_hp:
-            changed = belief.narrow('hp', allowed_hp) or changed
+            prev_hp = set(belief.candidates.get('hp') or set())
+            dropped_hp = prev_hp - allowed_hp
+            # Corte del techo HP (Farigiraf true_sp=29 → rango 195-199 = SP0-8):
+            # calc % subestimado no debe expulsar SP altos.
+            hp_aggressive = (
+                bool(dropped_hp)
+                and bool(allowed_hp)
+                and bool(prev_hp)
+                and max(prev_hp) in dropped_hp
+                and max(allowed_hp) + 8 <= max(prev_hp)
+                and len(dropped_hp) >= 6
+            )
+            if hp_aggressive:
+                belief.skipped += 1
+            else:
+                changed = belief.narrow('hp', allowed_hp) or changed
         if changed:
             rng = belief.stat_range(unknown_stat)
             label = {'atk': 'Atk', 'def': 'Def', 'spa': 'SpA', 'spd': 'SpD'}[unknown_stat]
@@ -1505,7 +1592,7 @@ class TeamStatBeliefs:
                         f' | HP {hp_rng[0]}-{hp_rng[1]} '
                         f'({len(belief.candidates["hp"])} SP)'
                     )
-            print(
+            chat_print(
                 f'[STAT-INF] {belief.species} {label} -> {rng[0]}-{rng[1]} '
                 f'({len(belief.candidates[unknown_stat])} SP posibles){extra}'
             )

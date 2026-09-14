@@ -70,13 +70,15 @@ def bootstrap_battle(user_team: TeamMeta, opp_team: TeamMeta) -> HarnessBattle:
 
     # Preview OTS
     battle.opponent.opponents = list(opp_mons)
-    # Solo banquillo en reserved: si también están los leads, |switch| puede
-    # matchear la misma referencia que active1/2 y dejar el espejo desfasado.
-    battle.user.reserved = list(user_mons[2:])
-    battle.user.active1 = user_mons[0] if user_mons else None
-    battle.user.active2 = user_mons[1] if len(user_mons) > 1 else None
+    # No pre-cargar leads en active: el orden de preview puede diferir del
+    # |switch| real y deja our*/foe* con especies fantasma hasta un rebuild.
+    # Todos en reserved; el primer |switch|/|drag| los saca con autoridad del log.
+    battle.user.reserved = list(user_mons)
+    battle.user.active1 = None
+    battle.user.active2 = None
     battle.opponent.active1 = None
     battle.opponent.active2 = None
+    battle.opponent.reserved = []
 
     calibrate_from_known_team(user_mons)
     # Prefirmar creencias del rival con naturaleza OTS

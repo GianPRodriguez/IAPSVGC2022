@@ -51,14 +51,21 @@ def _flag(report: str, key: str) -> Optional[str]:
 
 
 def parse_need_fix(report_text: str) -> bool:
-    sync = (_flag(report_text, 'state_mismatch') or '').upper()
-    inf = (_flag(report_text, 'inference_ok') or '').upper()
+    # Preferir sync_ok / inf_ok (polaridad = *_ok); fallback a nombres viejos.
+    sync_ok = (_flag(report_text, 'sync_ok') or '').upper()
+    inf_ok = (_flag(report_text, 'inf_ok') or '').upper()
+    if not sync_ok:
+        # state_mismatch=YES ⇒ sync malo
+        mm = (_flag(report_text, 'state_mismatch') or '').upper()
+        sync_ok = 'NO' if mm == 'YES' else ('YES' if mm == 'NO' else '')
+    if not inf_ok:
+        inf_ok = (_flag(report_text, 'inference_ok') or '').upper()
     errors = _flag(report_text, 'errors') or '0'
     try:
         err_n = int(errors.split()[0])
     except Exception:
         err_n = 0
-    return sync == 'YES' or inf == 'NO' or err_n > 0
+    return sync_ok == 'NO' or inf_ok == 'NO' or err_n > 0
 
 
 def _section_lines(report: str, header: str, limit: int = 25) -> List[str]:
@@ -80,8 +87,15 @@ def _section_lines(report: str, header: str, limit: int = 25) -> List[str]:
 
 def build_fixplan(report_text: str) -> str:
     need = parse_need_fix(report_text)
-    sync = _flag(report_text, 'state_mismatch') or '?'
-    inf = _flag(report_text, 'inference_ok') or '?'
+    sync_ok = (_flag(report_text, 'sync_ok') or '').upper()
+    if not sync_ok:
+        mm = (_flag(report_text, 'state_mismatch') or '').upper()
+        sync_ok = 'NO' if mm == 'YES' else ('YES' if mm == 'NO' else '?')
+    inf_ok = (
+        _flag(report_text, 'inf_ok')
+        or _flag(report_text, 'inference_ok')
+        or '?'
+    )
     flags_add = _flag(report_text, 'NEED_FLAGS_ADD') or '?'
     wins = (
         _flag(report_text, 'player_a_wins')
@@ -95,7 +109,16 @@ def build_fixplan(report_text: str) -> str:
     )
     errors = _flag(report_text, 'errors') or '?'
     mm = _flag(report_text, 'state_mismatches') or '?'
-    fails = _flag(report_text, 'soundness_failures') or '?'
+    fails = (
+        _flag(report_text, 'fail_bo3_inf')
+        or _flag(report_text, 'soundness_failures')
+        or '?'
+    )
+    fail_matchup_inf = (
+        _flag(report_text, 'fail_matchup_inf')
+        or _flag(report_text, 'fail_inference')
+        or '?'
+    )
     pa = _flag(report_text, 'player_a') or 'greedy_solo'
     pb = _flag(report_text, 'player_b') or 'random'
 
@@ -103,8 +126,10 @@ def build_fixplan(report_text: str) -> str:
         '=== Robust E2E Fixplan (manual Cursor fix) ===',
         f'NEED_FIX={"YES" if need else "NO"}',
         f'NEED_FLAGS_ADD: {flags_add}',
-        f'state_mismatch: {sync}',
-        f'inference_ok: {inf}',
+        f'sync_ok: {sync_ok}',
+        f'inf_ok: {inf_ok}',
+        f'fail_matchup_inf: {fail_matchup_inf}',
+        f'fail_bo3_inf: {fails}',
         f'player_a: {pa}',
         f'player_b: {pb}',
         f'player_a_wins: {wins}',
@@ -153,10 +178,10 @@ def build_fixplan(report_text: str) -> str:
     lines.append('')
 
     targets: List[str] = []
-    if sync == 'YES':
+    if str(sync_ok).upper() == 'NO':
         lines.append('KIND: sync (Battle vs PS local)')
         targets.extend(_SYNC_TARGETS)
-    if inf == 'NO':
+    if str(inf_ok).upper() == 'NO':
         lines.append('KIND: inference (OTS / Stat Points)')
         targets.extend(_INFER_TARGETS)
     try:

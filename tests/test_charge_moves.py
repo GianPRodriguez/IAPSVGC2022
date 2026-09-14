@@ -244,8 +244,9 @@ def test_actions_penalize_hyper_beam_and_gate_must_recharge():
         [hb, tb], meta, ranges, can_mega=False, attacker=atk, weather=None,
     )
     by_slot = {a.move_slot: a for a in actions}
-    assert by_slot[1].damage_pct == by_slot[2].damage_pct
-    assert by_slot[1].score < by_slot[2].score  # Hyper Beam paga lock
+    # Hyper Beam 90% acc vs Thunderbolt 100%: daño esperado menor + lock.
+    assert by_slot[1].damage_pct < by_slot[2].damage_pct
+    assert by_slot[1].score < by_slot[2].score  # Hyper Beam paga lock + acc
 
     atk.must_recharge = True
     locked_actions = _actions_from_ranges(

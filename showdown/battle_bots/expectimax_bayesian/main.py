@@ -25,9 +25,11 @@ from showdown.battle_bots.expectimax_bayesian.expectimax import (
 from showdown.battle_bots.expectimax_bayesian.belief import extract_known_moves
 from showdown.battle_bots.expectimax_bayesian.utility import FieldPositionBonus
 from showdown.battle_bots.greedy_solo.team_preview import (
-    best_team_preview_order,
     mon_from_details,
     mon_from_species,
+)
+from showdown.battle_bots.expectimax_bayesian.team_preview import (
+    best_expectimax_preview_order,
 )
 from showdown.battle_bots.move_mechanics import (
     is_must_recharge_from_volatiles,
@@ -82,6 +84,7 @@ def _position_from_iap(battle: Battle, *, can_tera_l: bool, can_tera_r: bool,
         tera_available_right=can_tera_r,
         mega_available_left=can_mega_l,
         mega_available_right=can_mega_r,
+        turn=int(getattr(battle, 'turn', 0) or 0),
     )
 
 
@@ -154,6 +157,21 @@ class BattleBot(Battle):
         self.last_preview_order: Tuple[int, ...] = (1, 2, 3, 4)
         self.last_expectimax_meta = None
         self.expectimax_config = ExpectimaxConfig()
+        self.opp_ots_sheet = {}
+
+    def set_opp_ots_sheet(self, sheet) -> None:
+        self.opp_ots_sheet = dict(sheet or {})
+
+    def _refresh_ots_from_battle(self, battle: Battle) -> None:
+        """Construye hoja OTS pública desde opponents IAP (item/moves/nature; sin SP)."""
+        from showdown.battle_bots.expectimax_bayesian.ots import ots_from_iap_pokemon
+        sheet = {}
+        for opp in getattr(battle.opponent, 'opponents', None) or []:
+            ots = ots_from_iap_pokemon(opp)
+            if ots is not None and ots.species_id:
+                sheet[ots.species_id] = ots
+        if sheet:
+            self.opp_ots_sheet = sheet
 
     def _choose_switch_slot(self, battle: Battle) -> int:
         reserved = []
@@ -208,7 +226,7 @@ class BattleBot(Battle):
         for i, opp in enumerate(getattr(battle.opponent, 'opponents', []) or [], start=1):
             foes.append(mon_from_species(i, getattr(opp, 'name', f'foe{i}')))
 
-        scored = best_team_preview_order(our, foes)
+        scored = best_expectimax_preview_order(our, foes)
         order = scored.order
         self.last_preview_order = order
 
@@ -313,6 +331,7 @@ class BattleBot(Battle):
             can_tera_l = bool(a1.get('canTerastallize', False) or a1.get('canTera', False))
             can_tera_r = bool(a2.get('canTerastallize', False) or a2.get('canTera', False))
 
+            self._refresh_ots_from_battle(battle)
             best_l, best_r, _, emeta = await best_expectimax_bayesian_action(
                 _iap_to_calc(left, battle) if left else None,
                 _iap_to_calc(right, battle) if right else None,
@@ -335,6 +354,7 @@ class BattleBot(Battle):
                 config=self.expectimax_config,
                 foe_known_moves=foe_known,
                 reserves=reserves,
+                ots_sheet=self.opp_ots_sheet,
             )
             self.last_expectimax_meta = emeta
 

@@ -7,6 +7,7 @@ import constants
 from abc import ABC
 from abc import abstractmethod
 from collections import defaultdict
+from copy import deepcopy
 from API.PokemonData import getPkmnInfo
 
 import json
@@ -563,13 +564,73 @@ class Battler:
             request_pokemon = JSONdict["side"].get("pokemon", [])[:4]
             current_pokemon = [self.active1, self.active2, *self.reserved]
             ordered_pokemon = []
+            # Conservar boosts/volatiles por identidad de objeto (el request no
+            # los trae). Fallback por especie: el dict con mayor |stage| sumado
+            # (evita que un shell vacío / reserved pise un active ya unboosted).
+            _carry_boosts_by_id = {}
+            _carry_volatile_by_id = {}
+            _carry_boosts_by_species = {}
+            _carry_volatile_by_species = {}
+            _carry_score_by_species = {}
+
+            def _party_key(name: str) -> str:
+                raw = (name or '').lower().replace(' ', '-')
+                raw = constants.standardName.get(raw, raw)
+                compact = raw.replace('-', '').replace('_', '')
+                for suf in (
+                    'megax', 'megay', 'mega', 'eternal', 'blade', 'shield',
+                    'busted', 'disguised', 'crowned',
+                ):
+                    if compact.endswith(suf) and len(compact) > len(suf) + 2:
+                        compact = compact[: -len(suf)]
+                        break
+                if compact.startswith('floette'):
+                    return 'floette'
+                return compact
+
+            def _boost_score(boosts) -> int:
+                if not boosts:
+                    return 0
+                seen = {}
+                for k, v in dict(boosts).items():
+                    try:
+                        iv = int(v or 0)
+                    except Exception:
+                        continue
+                    if not iv:
+                        continue
+                    sk = str(k).strip().lower().replace('_', '').replace('-', '')
+                    aliases = {
+                        'attack': 'atk', 'defense': 'def',
+                        'specialattack': 'spa', 'spatk': 'spa',
+                        'specialdefense': 'spd', 'spdef': 'spd',
+                        'speed': 'spe',
+                    }
+                    short = aliases.get(sk, sk if sk in (
+                        'atk', 'def', 'spa', 'spd', 'spe', 'accuracy', 'evasion',
+                    ) else sk)
+                    prev = seen.get(short, 0)
+                    if abs(iv) >= abs(prev):
+                        seen[short] = iv
+                return sum(abs(v) for v in seen.values())
+
+            for p in current_pokemon:
+                if p is None:
+                    continue
+                _carry_boosts_by_id[id(p)] = deepcopy(getattr(p, 'boosts', None))
+                _carry_volatile_by_id[id(p)] = deepcopy(getattr(p, 'volatile_statuses', None))
+                compact = _party_key(getattr(p, 'name', '') or '')
+                score = _boost_score(getattr(p, 'boosts', None))
+                if score >= _carry_score_by_species.get(compact, -1):
+                    _carry_score_by_species[compact] = score
+                    _carry_boosts_by_species[compact] = deepcopy(getattr(p, 'boosts', None))
+                    _carry_volatile_by_species[compact] = deepcopy(
+                        getattr(p, 'volatile_statuses', None)
+                    )
 
             def request_pokemon_name(pkmn_data):
+                """Forme completa del request (autoridad de especie en slot)."""
                 raw_name = pkmn_data["details"].partition(",")[0].lower().replace(" ", "-")
-                if "-mega" in raw_name:
-                    raw_name = raw_name.partition("-mega")[0]
-                if raw_name in ("aegislash-blade", "aegislash-shield"):
-                    raw_name = "aegislash"
                 return constants.standardName.get(raw_name, raw_name)
 
             def create_pokemon(pkmn_data, name):
@@ -589,25 +650,79 @@ class Battler:
 
             for pkmn_data in request_pokemon:
                 target_name = request_pokemon_name(pkmn_data)
+                target_key = _party_key(target_name)
                 found_pkmn = next(
                     (
                         pkmn for pkmn in current_pokemon
                         if pkmn is not None and pkmn not in ordered_pokemon
                         and (
-                            request_pokemon_name({"details": pkmn.name}) == target_name
-                            or (pkmn.is_ditto and target_name == "ditto")
+                            _party_key(getattr(pkmn, 'name', '')) == target_key
+                            or (pkmn.is_ditto and target_key == 'ditto')
                         )
                     ),
                     None,
                 )
                 if found_pkmn is None:
                     found_pkmn = create_pokemon(pkmn_data, target_name)
+                else:
+                    # Alinear forme del request (Mega-Y vs base, etc.).
+                    found_pkmn.name = target_name
+                    if 'mega' in target_name.replace('-', ''):
+                        found_pkmn.is_mega_evo = True
                 if found_pkmn is not None:
                     ordered_pokemon.append(found_pkmn)
 
             if len(ordered_pokemon) >= 2:
                 self.active1, self.active2 = ordered_pokemon[:2]
                 self.reserved = ordered_pokemon[2:4]
+                for mon in ordered_pokemon:
+                    if mon is None:
+                        continue
+                    key = _party_key(getattr(mon, 'name', '') or '')
+                    # Merge: no reemplazar un dict rico (p.ej. Intimidate) por uno
+                    # vacío/parcial del carry al reordenar el |request|.
+                    # Importante: un carry-by-id vacío NO debe bloquear el carry por
+                    # especie (pasa tras rol p1/p2 invertido o shells fabricados).
+                    candidates = []
+                    if id(mon) in _carry_boosts_by_id:
+                        candidates.append(_carry_boosts_by_id[id(mon)])
+                    if key in _carry_boosts_by_species:
+                        candidates.append(_carry_boosts_by_species[key])
+                    # Fusionar todos los carries (no quedarse con el de mayor
+                    # score): id vacío + especie con Intimidate debe conservar atk.
+                    merged = defaultdict(lambda: 0)
+                    for src in (getattr(mon, 'boosts', None), *candidates):
+                        if not src:
+                            continue
+                        for bk, bv in dict(src).items():
+                            try:
+                                iv = int(bv or 0)
+                            except Exception:
+                                continue
+                            if not iv:
+                                continue
+                            sk = str(bk).strip().lower().replace('_', '').replace('-', '')
+                            aliases = {
+                                'attack': 'atk', 'defense': 'def',
+                                'specialattack': 'spa', 'spatk': 'spa',
+                                'specialdefense': 'spd', 'spdef': 'spd',
+                                'speed': 'spe',
+                            }
+                            short = aliases.get(sk, sk if sk in (
+                                'atk', 'def', 'spa', 'spd', 'spe', 'accuracy', 'evasion',
+                            ) else sk)
+                            prev = int(merged.get(short, 0) or 0)
+                            if abs(iv) >= abs(prev):
+                                merged[short] = iv
+                    if any(merged.values()):
+                        mon.boosts = merged
+                    vol_id = _carry_volatile_by_id.get(id(mon))
+                    vol_sp = _carry_volatile_by_species.get(key)
+                    pick_v = vol_id if vol_id is not None else vol_sp
+                    if pick_v is not None:
+                        cur_v = getattr(mon, 'volatile_statuses', None) or {}
+                        if not any(dict(cur_v).values()):
+                            mon.volatile_statuses = deepcopy(pick_v)
 
             # =========================================================================
             # UPDATE POKÉMON ACTIVO 1 (Izquierda - Índice 0 del JSON)

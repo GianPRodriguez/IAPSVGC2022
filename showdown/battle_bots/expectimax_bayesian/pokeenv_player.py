@@ -26,10 +26,17 @@ from showdown.battle_bots.greedy_joint.pokeenv_player import (
     _weather_str,
 )
 from showdown.battle_bots.greedy_solo.greedy import apply_belief_stats, types_from_species
+from showdown.battle_bots.greedy_solo.team_preview import (
+    mon_from_species,
+    order_to_team_string,
+)
 from showdown.battle_bots.expectimax_bayesian.expectimax import (
     ExpectimaxConfig,
     ReserveOption,
     best_expectimax_bayesian_action,
+)
+from showdown.battle_bots.expectimax_bayesian.team_preview import (
+    best_expectimax_preview_order,
 )
 from showdown.battle_bots.expectimax_bayesian.utility import FieldPositionBonus
 
@@ -55,6 +62,7 @@ def _position_from_pe(
         tera_available_right=can_tera_r,
         mega_available_left=can_mega_l,
         mega_available_right=can_mega_r,
+        turn=int(getattr(battle, 'turn', 0) or 0),
     )
 
 
@@ -81,13 +89,41 @@ def _pe_known_moves(mon: Pokemon) -> Tuple[str, ...]:
 class ExpectimaxBayesianPlayer(GreedyJointPlayer):
     """
     Expectimax bayesiano 1-ply (anytime):
-      Phase1 Greedy-Joint → Phase2 belief+OTS moves+Spe order+switches → select.
+      Phase1 Greedy-Joint → Phase2 belief/meta mundos + Spe + switches → select.
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.expectimax_config = ExpectimaxConfig()
         self.last_expectimax_meta = None
+        # species_id → OpponentPublicOTS (Champions OTS sin SP)
+        self.opp_ots_sheet = {}
+
+    def set_opp_ots_sheet(self, sheet) -> None:
+        """Instala hoja pública del rival (nunca incluir true_sp)."""
+        self.opp_ots_sheet = dict(sheet or {})
+
+    def teampreview(self, battle) -> str:
+        from poke_env.battle import AbstractBattle, DoubleBattle
+
+        assert isinstance(battle, DoubleBattle)
+        our: List = []
+        for i, mon in enumerate(battle.teampreview_team or list(battle.team.values()), start=1):
+            our.append(mon_from_species(i, _species_name(mon)))
+
+        foe_src = battle.teampreview_opponent_team or list(battle.opponent_team.values())
+        foes = [mon_from_species(i, _species_name(m)) for i, m in enumerate(foe_src, start=1)]
+
+        scored = best_expectimax_preview_order(our, foes)
+        order = scored.order
+        selected = set(order)
+        for i, mon in enumerate(battle.teampreview_team or [], start=1):
+            try:
+                mon._selected_in_teampreview = i in selected  # type: ignore[attr-defined]
+            except Exception:
+                pass
+        self.last_preview_order = order_to_team_string(order)
+        return f'/team {self.last_preview_order}'
 
     async def _choose_move_async(self, battle: DoubleBattle) -> BattleOrder:
         if any(battle.force_switch):
@@ -215,6 +251,7 @@ class ExpectimaxBayesianPlayer(GreedyJointPlayer):
             config=self.expectimax_config,
             foe_known_moves=foe_known,
             reserves=reserves,
+            ots_sheet=getattr(self, 'opp_ots_sheet', None) or {},
         )
         self.last_decision_score = total
         self.last_expectimax_meta = emeta

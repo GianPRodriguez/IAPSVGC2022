@@ -53,7 +53,9 @@ python -m showdown.inference_sim.run_robust_e2e --teams 100 --player-a greedy_jo
 `--player-a`: `greedy_solo` | `greedy_joint` | `expectimax_bayesian` (siempre validated: sync + OTS).
 `--player-b`: `random` | `greedy_solo` | `greedy_joint` | `expectimax_bayesian` (default `random`).
 
-Espera `DONE ... state_mismatch=... inference_ok=... NEED_FIX=... NEED_FLAGS_ADD=...` y lee `logs/robust_e2e_report.txt`. Solo el reporte final; no analices turnos.
+Espera el bloque `DONE` multilínea (`sync_ok` / `inf_ok` / `fail_matchup_inf` /
+`fail_bo3_inf` / `NEED_FIX` / `NEED_FLAGS_ADD`) y lee `logs/robust_e2e_report.txt`.
+Solo el reporte final; no analices turnos.
 
 Tras el batch se escribe `logs/robust_e2e_fixplan.txt`:
 - `NEED_FIX=NO` → no gastes créditos Cursor.

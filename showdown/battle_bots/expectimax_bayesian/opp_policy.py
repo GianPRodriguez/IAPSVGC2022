@@ -6,9 +6,9 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 from showdown.battle_bots.greedy_solo.greedy import MoveOption
 
-# Pesos Gemini (renormalizados si falta alguna clase)
-W_GREEDY = 0.70
-W_CONTROL = 0.20
+# Pesos π_opp: greedy dominante pero con masa de control (no hiperagresivo puro).
+W_GREEDY = 0.75
+W_CONTROL = 0.15
 W_UNIFORM = 0.10
 
 _CONTROL_MOVES = frozenset({

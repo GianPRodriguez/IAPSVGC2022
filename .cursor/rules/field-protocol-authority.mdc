@@ -1,0 +1,20 @@
+---
+description: Campo weather/terrain/boosts por protocolo+slot (anti-péndulo sync)
+globs: showdown/battle_modifier.py,showdown/battle.py,showdown/inference_sim/**/*.py,tests/test_field_protocol_authority.py,tests/test_intimidate_slot_authority.py
+---
+
+# Field authority: protocol only
+
+Clima y terreno del `Battle` IAP **no** se infieren desde `-ability`, `-activate` ni `abilityPkmn` en switch.
+
+| Campo | Autoridad |
+|-------|-----------|
+| Weather | solo `|-weather|` en `battle_modifier` (nunca soft-ensure clima) |
+| Terrain | `|-fieldstart|` + fallback Surge en `-ability`/`-activate` (nunca OTS switch-in) |
+| Boosts | slot si especie ok; si a/b cruzados, **mismo bando** por nombre; **nunca** el otro bando |
+| Harness E2E | `mirror_pe_field_and_boosts_into_iap` ancla weather/fields/boosts a poke-env tras cada batch (anti-péndulo sync) |
+
+- No reabrir soft-ensure de **clima**.
+- No soft-aplicar Intimidate en `-ability`.
+- No buscar boosts en el bando rival (mirror match).
+- Regresión: `tests/test_field_protocol_authority.py`, `tests/test_intimidate_slot_authority.py`.

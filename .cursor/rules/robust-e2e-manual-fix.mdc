@@ -15,7 +15,7 @@ python -m showdown.inference_sim.run_robust_e2e --teams 100
 Matchup opcional: `--player-a greedy_solo|greedy_joint|expectimax_bayesian` (validated) y
 `--player-b random|greedy_solo|greedy_joint|expectimax_bayesian` (default `random`).
 
-Al terminar mira `NEED_FIX=` en la línea `DONE` o:
+Al terminar mira `NEED_FIX=` en el bloque `DONE` (multilínea: `sync_ok` / `inf_ok`) o:
 
 ```bat
 python -m showdown.inference_sim.robust_fixplan

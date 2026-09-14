@@ -458,6 +458,41 @@ def _collect_side_requests(
     return requests, meta
 
 
+def _collect_ally_hit_requests(
+    side: str,
+    attacker: CalcPoke,
+    ally: Optional[CalcPoke],
+    moves: Sequence[MoveOption],
+    *,
+    field_ctx: FieldContext,
+) -> Tuple[List[Dict[str, Any]], List[Tuple[str, int]]]:
+    """Calc attacker→ally para moves allAdjacent/all. meta: (side, move_slot)."""
+    from showdown.battle_bots.move_mechanics import hits_ally
+
+    requests: List[Dict[str, Any]] = []
+    meta: List[Tuple[str, int]] = []
+    if ally is None:
+        return requests, meta
+    atk_base = _mon_payload(attacker, ally=None, foe=ally)
+    for move in moves:
+        if not _is_damaging(move):
+            continue
+        if not hits_ally(move.target_type, move_name=move.name):
+            continue
+        def_payload = _mon_payload(ally, ally=None, foe=attacker)
+        field = _field_payload(
+            field_ctx, attacker, None, ally, None, is_spread=True,
+        )
+        requests.append({
+            'attacker': atk_base,
+            'defender': def_payload,
+            'move': move.name,
+            'field': field,
+        })
+        meta.append((side, int(move.slot)))
+    return requests, meta
+
+
 def _actions_from_ranges(
     moves: Sequence[MoveOption],
     meta: Sequence[Tuple[str, MoveOption, int, CalcPoke, int]],
@@ -469,10 +504,15 @@ def _actions_from_ranges(
     terrain: Optional[str] = None,
     gravity: bool = False,
     foes_for_priority: Optional[Sequence[CalcPoke]] = None,
+    foes: Optional[Sequence[Tuple[int, CalcPoke]]] = None,
 ) -> List[ScoredAction]:
     """Convierte ranges→ScoredAction. Tera solo si convierte en KO (base no KO)."""
     from showdown.battle_bots.move_mechanics import (
+        accuracy_scale_damage,
+        accuracy_scale_ko_bonus,
+        accuracy_tiebreak,
         charge_boost_score,
+        expected_effect_score,
         gate_damage_range,
         power_herb_cost,
         priority_move_fails,
@@ -518,12 +558,18 @@ def _actions_from_ranges(
             ko = False
             score = 0.0 if recharging else charge_boost_score(res)
         else:
-            pct = damage_pct(gated, max_hp)
-            ko = guaranteed_ko(gated, cur_hp)
+            raw_pct = damage_pct(gated, max_hp)
+            pct = accuracy_scale_damage(raw_pct, move.name)
+            raw_ko = guaranteed_ko(gated, cur_hp)
             # Substitute: el golpe rompe/daña el sub, no KO al mon detrás.
             if foe.has_substitute:
-                ko = False
-            score = pct + (KO_BONUS if ko else 0.0)
+                raw_ko = False
+            ko = raw_ko
+            score = pct + (accuracy_scale_ko_bonus(KO_BONUS, move.name) if raw_ko else 0.0)
+            score += expected_effect_score(
+                move.name, attacker=attacker, defender=foe, terrain=terrain,
+            ).score
+            score += accuracy_tiebreak(move.name)
             if res.is_charge_move and res.fires_this_turn:
                 # Weather/Herb: el boost de carga ocurre el mismo turno.
                 score += charge_boost_score(res)
@@ -565,13 +611,38 @@ def _actions_from_ranges(
                 move.name, weather=weather, item=item, already_charging=already,
             )
             if recharging:
-                score = 0.0
-            elif res.is_charge_move and not res.fires_this_turn:
-                score = charge_boost_score(res)
-            else:
-                score = -power_herb_cost(res)
+                actions.append(ScoredAction(
+                    score=0.0, move_slot=move.slot, target=0,
+                    mega=1 if can_mega else 0, damage_pct=0.0, ko=False,
+                ))
+                continue
+            if res.is_charge_move and not res.fires_this_turn:
+                actions.append(ScoredAction(
+                    score=charge_boost_score(res), move_slot=move.slot, target=0,
+                    mega=1 if can_mega else 0, damage_pct=0.0, ko=False,
+                ))
+                continue
+            # Status puro: mejor objetivo entre foes del meta (o `foes`).
+            foe_by_tid: Dict[int, Any] = {}
+            for _s, _m, ft, foe, _sp in meta:
+                foe_by_tid[int(ft)] = foe
+            if not foe_by_tid and foes:
+                for ft, foe in foes:
+                    foe_by_tid[int(ft)] = foe
+            if not foe_by_tid and side_foes:
+                for i, foe in enumerate(side_foes, start=1):
+                    foe_by_tid[i] = foe
+            best_tid, best_sc = 0, 0.0
+            for ft, foe in foe_by_tid.items():
+                sc = expected_effect_score(
+                    move.name, attacker=attacker, defender=foe, terrain=terrain,
+                ).score
+                if sc > best_sc:
+                    best_sc = sc
+                    best_tid = int(ft)
+            score = best_sc - power_herb_cost(res) + accuracy_tiebreak(move.name)
             actions.append(ScoredAction(
-                score=score, move_slot=move.slot, target=0,
+                score=score, move_slot=move.slot, target=best_tid,
                 mega=1 if can_mega else 0, damage_pct=0.0, ko=False,
             ))
     return actions
@@ -601,7 +672,7 @@ async def score_single_hits(
     return _actions_from_ranges(
         moves, meta, ranges, can_mega=can_mega, attacker=attacker,
         weather=ctx.weather, terrain=ctx.terrain, gravity=ctx.gravity,
-        foes_for_priority=foe_mons,
+        foes_for_priority=foe_mons, foes=foes,
     )
 
 
@@ -660,12 +731,12 @@ async def best_double_action(
     left_actions = _actions_from_ranges(
         left_moves, left_meta, left_ranges, can_mega=can_mega_left,
         attacker=left_atk, weather=ctx.weather, terrain=ctx.terrain,
-        gravity=ctx.gravity, foes_for_priority=[f for _, f in foes],
+        gravity=ctx.gravity, foes_for_priority=[f for _, f in foes], foes=foes,
     ) if left_atk and left_moves else []
     right_actions = _actions_from_ranges(
         right_moves, right_meta, right_ranges, can_mega=can_mega_right,
         attacker=right_atk, weather=ctx.weather, terrain=ctx.terrain,
-        gravity=ctx.gravity, foes_for_priority=[f for _, f in foes],
+        gravity=ctx.gravity, foes_for_priority=[f for _, f in foes], foes=foes,
     ) if right_atk and right_moves else []
 
     if not left_actions and not right_actions:

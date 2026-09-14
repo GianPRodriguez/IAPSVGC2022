@@ -692,17 +692,16 @@ def test_guard_split_averages_def_spd():
 
 def test_swapboost_guard_swap_exchanges_def_spd_boosts():
     from showdown.battle_modifier import swapboost
-    import constants
 
     battle = TestBattle()
     battle.user.id = 'p1'
     battle.opponent.id = 'p2'
     user = build_pkmn('torkoal', is_opponent=False, hp=177)
     opp = build_pkmn('indeedee-f', is_opponent=True, hp=100)
-    user.boosts[constants.DEFENSE] = 2
-    user.boosts[constants.SPECIAL_DEFENSE] = -1
-    opp.boosts[constants.DEFENSE] = 0
-    opp.boosts[constants.SPECIAL_DEFENSE] = 3
+    user.boosts['def'] = 2
+    user.boosts['spd'] = -1
+    opp.boosts['def'] = 0
+    opp.boosts['spd'] = 3
     battle.user.active2 = user
     battle.opponent.active1 = opp
 
@@ -718,10 +717,10 @@ def test_swapboost_guard_swap_exchanges_def_spd_boosts():
         ],
     )
 
-    assert user.boosts[constants.DEFENSE] == 0
-    assert user.boosts[constants.SPECIAL_DEFENSE] == 3
-    assert opp.boosts[constants.DEFENSE] == 2
-    assert opp.boosts[constants.SPECIAL_DEFENSE] == -1
+    assert user.boosts['def'] == 0
+    assert user.boosts['spd'] == 3
+    assert opp.boosts['def'] == 2
+    assert opp.boosts['spd'] == -1
 
 
 def test_replace_illusion_increments_confirmed_counter_once():
@@ -1074,11 +1073,109 @@ def test_boost_and_unboost_clamp_stat_stages():
 
     boost(battle, ['', '-boost', 'p2a: Dragonite', 'atk', '1'])
     boost(battle, ['', '-boost', 'p2a: Dragonite', 'spe', '1'])
-    assert battle.opponent.active1.boosts[constants.ATTACK] == 1
-    assert battle.opponent.active1.boosts[constants.SPEED] == 1
+    assert battle.opponent.active1.boosts['atk'] == 1
+    assert battle.opponent.active1.boosts['spe'] == 1
 
     unboost(battle, ['', '-unboost', 'p2b: Whimsicott', 'spe', '2'])
-    assert battle.opponent.active2.boosts[constants.SPEED] == -2
+    assert battle.opponent.active2.boosts['spe'] == -2
+
+
+def test_request_side_flip_keeps_intimidate_and_surge():
+    """Rol user.id invertido: -unboost/-ability van al lado malo; |request| debe recuperarlos."""
+    import json
+
+    battle = TestBattle()
+    battle.user.id = 'p1'
+    battle.opponent.id = 'p2'
+    battle.user.reserved = [
+        build_pkmn('incineroar', is_opponent=False, hp=200),
+        build_pkmn('rillaboom', is_opponent=False, hp=200),
+        build_pkmn('fluttermane', is_opponent=False, hp=200),
+        build_pkmn('chienpao', is_opponent=False, hp=200),
+    ]
+    battle.user.active1 = None
+    battle.user.active2 = None
+    battle.opponent.active1 = None
+    battle.opponent.active2 = None
+    battle.opponent.reserved = []
+    battle.opponent.opponents = [
+        build_pkmn('landorus-therian', is_opponent=True, hp=100),
+        build_pkmn('amoonguss', is_opponent=True, hp=100),
+    ]
+
+    switch_or_drag(battle, ['', 'switch', 'p2a: Incineroar', 'Incineroar, L50, M', '200/200'])
+    switch_or_drag(battle, ['', 'switch', 'p2b: Rillaboom', 'Rillaboom, L50, M', '200/200'])
+    switch_or_drag(battle, ['', 'switch', 'p1a: Landorus', 'Landorus-Therian, L50, M', '100/100'])
+    set_opponent_ability_from_ability_tag(battle, ['', '-ability', 'p1a: Landorus', 'Intimidate'])
+    unboost(battle, ['', '-unboost', 'p2a: Incineroar', 'atk', '1'])
+    unboost(battle, ['', '-unboost', 'p2b: Rillaboom', 'atk', '1'])
+    set_opponent_ability_from_ability_tag(battle, ['', '-ability', 'p2b: Rillaboom', 'Grassy Surge'])
+    fieldstart(battle, ['', '-fieldstart', 'move: Grassy Terrain'])
+    assert battle.terrain.get('grassyterrain', 0) > 0
+
+    payload = {
+        'rqid': 1,
+        'active': [{}, {}],
+        'side': {
+            'id': 'p2',
+            'name': 'agent',
+            'pokemon': [
+                {
+                    'ident': 'p2: Incineroar',
+                    'details': 'Incineroar, L50, M',
+                    'condition': '200/200',
+                    'active': True,
+                    'stats': {'atk': 100, 'def': 100, 'spa': 100, 'spd': 100, 'spe': 100},
+                    'moves': ['flareblitz'],
+                    'baseAbility': 'intimidate',
+                    'item': '',
+                    'pokeball': 'pokeball',
+                    'ability': 'intimidate',
+                },
+                {
+                    'ident': 'p2: Rillaboom',
+                    'details': 'Rillaboom, L50, M',
+                    'condition': '200/200',
+                    'active': True,
+                    'stats': {'atk': 100, 'def': 100, 'spa': 100, 'spd': 100, 'spe': 100},
+                    'moves': ['grassyglide'],
+                    'baseAbility': 'grassysurge',
+                    'item': '',
+                    'pokeball': 'pokeball',
+                    'ability': 'grassysurge',
+                },
+                {
+                    'ident': 'p2: Flutter Mane',
+                    'details': 'Flutter Mane, L50',
+                    'condition': '200/200',
+                    'active': False,
+                    'stats': {'atk': 100, 'def': 100, 'spa': 100, 'spd': 100, 'spe': 100},
+                    'moves': ['moonblast'],
+                    'baseAbility': 'protosynthesis',
+                    'item': '',
+                    'pokeball': 'pokeball',
+                    'ability': 'protosynthesis',
+                },
+                {
+                    'ident': 'p2: Chien-Pao',
+                    'details': 'Chien-Pao, L50',
+                    'condition': '200/200',
+                    'active': False,
+                    'stats': {'atk': 100, 'def': 100, 'spa': 100, 'spd': 100, 'spe': 100},
+                    'moves': ['iciclecrash'],
+                    'baseAbility': 'swordofruin',
+                    'item': '',
+                    'pokeball': 'pokeball',
+                    'ability': 'swordofruin',
+                },
+            ],
+        },
+    }
+    request(battle, ['', 'request', json.dumps(payload)])
+    assert battle.user.id == 'p2'
+    assert battle.user.active1.boosts.get('atk') == -1
+    assert battle.user.active2.boosts.get('atk') == -1
+    assert battle.terrain.get('grassyterrain', 0) > 0
 
 
 def test_end_volatile_clears_substitute():

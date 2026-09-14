@@ -113,6 +113,64 @@ def _iap_weather(battle) -> str:
     return _canon(w)
 
 
+_MIRROR_FIELD_KEYS = frozenset({
+    'electricterrain', 'grassyterrain', 'mistyterrain', 'psychicterrain',
+    'trickroom', 'wonderroom', 'magicroom', 'gravity',
+})
+
+
+def mirror_pe_field_and_boosts_into_iap(iap_battle, pe_battle) -> None:
+    """Ancla weather / fields / boosts del espejo IAP a poke-env (harness).
+
+    Evita el péndulo soft-ensure↔protocol-only en sync E2E. Solo para players
+    validados con PE; ladder sin PE sigue el protocolo en battle_modifier.
+    """
+    from collections import defaultdict
+
+    if iap_battle is None or pe_battle is None:
+        return
+
+    pe_w = _pe_weather(pe_battle)
+    if pe_w:
+        iap_battle.weather = pe_w
+        if int(getattr(iap_battle, 'weatherTurn', 0) or 0) <= 0:
+            iap_battle.weatherTurn = 5
+        iap_battle._weather_ended = False
+    else:
+        iap_battle.weather = 'none'
+        iap_battle.weatherTurn = 0
+        iap_battle._weather_ended = True
+
+    pe_f = _pe_fields(pe_battle)
+    terrain = getattr(iap_battle, 'terrain', None)
+    if isinstance(terrain, dict):
+        for key in list(terrain.keys()):
+            ck = _canon(key)
+            if ck in _MIRROR_FIELD_KEYS and ck not in pe_f:
+                terrain.pop(key, None)
+        for fname in pe_f:
+            if fname in _MIRROR_FIELD_KEYS and int(terrain.get(fname, 0) or 0) <= 0:
+                terrain[fname] = 5
+
+    pe_ours, pe_foes = _actives_pe(pe_battle)
+    iap_ours, iap_foes = _actives_iap(iap_battle)
+    pe_ours, iap_ours = _align_by_species(pe_ours, iap_ours)
+    pe_foes, iap_foes = _align_by_species(pe_foes, iap_foes)
+    for pe_m, iap_m in (*zip(pe_ours, iap_ours), *zip(pe_foes, iap_foes)):
+        if pe_m is None or iap_m is None:
+            continue
+        if not _same_species(_species_pe(pe_m), _species_iap(iap_m)):
+            continue
+        pe_b = _boosts_map(pe_m)
+        merged = defaultdict(lambda: 0)
+        for k, v in pe_b.items():
+            try:
+                merged[str(k)] = int(v)
+            except Exception:
+                continue
+        iap_m.boosts = merged
+
+
 def _species_pe(mon) -> str:
     if mon is None:
         return ''
@@ -231,7 +289,12 @@ def _boosts_map(mon) -> Dict[str, int]:
         if not iv:
             continue
         key = _BOOST_ALIAS.get(_canon(k), _canon(k))
-        if key:
+        if not key:
+            continue
+        # Si coexisten clave corta y larga, quedarse con la de mayor |stage|
+        # (evita subcontar) pero NUNCA sumar (doble conteo defense+def).
+        prev = out.get(key)
+        if prev is None or abs(iv) > abs(prev):
             out[key] = iv
     return out
 

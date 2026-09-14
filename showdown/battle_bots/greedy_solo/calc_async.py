@@ -26,13 +26,29 @@ def warm_damage_calc() -> bool:
 
 async def calc_damage_batch(
     requests: Sequence[Dict[str, Any]],
+    *,
+    chunk_size: Optional[int] = None,
+    deadline_monotonic: Optional[float] = None,
 ) -> List[Optional[Tuple[int, int]]]:
-    """Evalúa un lote de cálculos de daño sin bloquear el event loop."""
+    """
+    Evalúa un lote de cálculos de daño sin bloquear el event loop.
+
+    Los misses a Node van en chunks (default DAMAGE_CALC_BATCH_CHUNK=32).
+    Si deadline_monotonic (perf_counter) se excede entre chunks, el resto queda None.
+    """
     if not requests:
         return []
     if not _WARMED:
         await asyncio.to_thread(warm_damage_calc)
-    return await asyncio.to_thread(damage_ranges_batch, list(requests))
+
+    def _run():
+        return damage_ranges_batch(
+            list(requests),
+            chunk_size=chunk_size,
+            deadline_monotonic=deadline_monotonic,
+        )
+
+    return await asyncio.to_thread(_run)
 
 
 async def calc_damage_one(request: Dict[str, Any]) -> Optional[Tuple[int, int]]:

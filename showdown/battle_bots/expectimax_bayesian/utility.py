@@ -17,6 +17,33 @@ class FieldPositionBonus:
     tera_available_right: bool = False
     mega_available_left: bool = False
     mega_available_right: bool = False
+    turn: int = 0
+
+
+def switch_positioning_value(
+    *,
+    active_matchup: float,
+    bench_matchup: float,
+    turn: int = 0,
+) -> float:
+    """
+    Valor de reposicionar (mal lead / mal asiento), independiente de P(KO).
+
+    matchup alto = mejor tipado vs actives rivales.
+    """
+    improvement = float(bench_matchup) - float(active_matchup)
+    s = max(0.0, improvement) * 55.0
+    # Activo claramente mal tipado: empujar pivot aunque el calc no vea KO.
+    if float(active_matchup) < 0.0 and improvement > 0.15:
+        s += 45.0
+    elif float(active_matchup) < 0.5 and improvement > 0.35:
+        s += 28.0
+    # Post team-preview: humanos reposicionan pronto; 1-ply solo no lo captura.
+    if int(turn or 0) <= 2 and improvement > 0.2:
+        s += 35.0
+    elif int(turn or 0) <= 4 and improvement > 0.4:
+        s += 18.0
+    return s
 
 
 @dataclass
@@ -97,5 +124,5 @@ def switch_preservation_value(
     preserve = pk * float(loss_weight) + pk * float(save_weight) * 0.25
     soft_cap_bonus = max(0.0, float(chip_soft_cap) - chip) * 2.5
     chip_pen = (chip / 100.0) * float(soft_ko_bonus) * 0.35
-    matchup_term = float(matchup) * 14.0
+    matchup_term = float(matchup) * 18.0
     return preserve + soft_cap_bonus + matchup_term - chip_pen

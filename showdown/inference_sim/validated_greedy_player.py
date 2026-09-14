@@ -7,6 +7,7 @@ Ambos comparten ValidatedBattleMixin (sync + soundness OTS).
 """
 from __future__ import annotations
 
+from collections import Counter
 from typing import List, Optional, Type
 
 from poke_env.battle import AbstractBattle, DoubleBattle
@@ -22,6 +23,7 @@ from showdown.inference_sim.battle_state_check import (
     contrast_battle,
     record_contrasts,
 )
+from showdown.inference_sim.chat_quiet import chat_print
 from showdown.inference_sim.feeder import bootstrap_battle, feed_line
 from showdown.inference_sim.paths import BATTLE_FORMAT
 from showdown.inference_sim.soundness import (
@@ -81,6 +83,10 @@ class ValidatedBattleMixin:
         # Lineas del game actual (para replay si el rol p1/p2 se corrige tarde).
         self._game_lines: List[str] = []
         self._pending_lines: List[str] = []
+        # Líneas ya aplicadas vía flush de pending; evita doble feed del re-envío
+        # del cliente. Counter (no set): dos |-unboost| idénticos (2× Intimidate)
+        # deben poder aplicarse tras el flush sin que el 2º live se pierda.
+        self._recently_flushed: Counter = Counter()
         # Compact BO3: [(turns, won), ...] de cada game de la serie en curso
         self.series_games: List[tuple] = []
         self._logged_game_tags: set = set()
@@ -95,10 +101,23 @@ class ValidatedBattleMixin:
             team=to_showdown_export(user_team),
             **kwargs,
         )
+        # Champions OTS público → expectimax (sin SP). No-op si el player no lo soporta.
+        try:
+            from showdown.battle_bots.expectimax_bayesian.ots import ots_sheet_from_team_meta
+            if hasattr(self, 'set_opp_ots_sheet'):
+                self.set_opp_ots_sheet(ots_sheet_from_team_meta(opp_team))
+        except Exception:
+            pass
 
     def reset_for_next_battle(self, user_team: TeamMeta, opp_team: TeamMeta) -> None:
         self.user_team = user_team
         self.opp_team = opp_team
+        try:
+            from showdown.battle_bots.expectimax_bayesian.ots import ots_sheet_from_team_meta
+            if hasattr(self, 'set_opp_ots_sheet'):
+                self.set_opp_ots_sheet(ots_sheet_from_team_meta(opp_team))
+        except Exception:
+            pass
         self.iap_battle = None
         self._bootstrapped = False
         self.protocol_log = []
@@ -106,12 +125,21 @@ class ValidatedBattleMixin:
         # |switch| al bando equivocado hasta el próximo |player|.
         self._ready_to_check = False
         self._pe_battle = None
+        self._pe_battle_tag = ''
         self._game_lines = []
         self._pending_lines = []
+        self._recently_flushed = Counter()
         self.series_games = []
         self._logged_game_tags = set()
         self._last_turn_log = -1
         self.update_team(to_showdown_export(user_team))
+        # Crítico: drenar cola BO3 de poke-env (si un timeout anterior no vio |win|,
+        # battle_against se cuelga en join() aunque el BO3 nuevo termine 3-0).
+        try:
+            from showdown.inference_sim.bo3_runtime import reset_bo3_runtime_state
+            reset_bo3_runtime_state(self)
+        except Exception:
+            pass
 
     def _preview_ordered_team(self) -> TeamMeta:
         """Reordena el TeamMeta según last_preview_order (leads = primeros 2)."""
@@ -139,6 +167,24 @@ class ValidatedBattleMixin:
         pending_sync = False
         pending_infer = False
         is_battle_room = _is_ps_battle_room(room)
+
+        # Antes de alimentar: si poke-env ya cambió de battle-*, resetear espejo.
+        if is_battle_room:
+            pe_early = self._current_pe_battle(room)
+            if pe_early is not None:
+                pe_tag = (
+                    getattr(pe_early, 'battle_tag', None) or room or ''
+                ).lstrip('>').strip()
+                if pe_tag and pe_tag != getattr(self, '_pe_battle_tag', ''):
+                    prev = getattr(self, '_pe_battle_tag', '')
+                    self._pe_battle_tag = pe_tag
+                    if prev:
+                        self.iap_battle = None
+                        self._game_lines = []
+                        self._pending_lines = []
+                        self._recently_flushed = Counter()
+                        self._ready_to_check = False
+                        self._last_turn_log = -1
 
         for parts in split_messages[1:]:
             if not parts:
@@ -180,7 +226,15 @@ class ValidatedBattleMixin:
                 self._last_turn_log = -1
                 self._game_lines = []
                 self._pending_lines = []
+                self._recently_flushed = Counter()
+                self._pe_battle_tag = (room or '').lstrip('>').strip()
                 self._ensure_iap(room)
+
+            # Contador de flush solo cubre el re-envío inmediato post-bootstrap.
+            # Si sobra (línea idéntica no reenviada), envenena turnos futuros
+            # (mismo |-unboost|…|spa|1| cada turno → pe spa siempre -1 vs iap).
+            if is_battle_room and action in ('turn', 'request') and self._recently_flushed:
+                self._recently_flushed = Counter()
 
             # No alimentar IAP con mensajes de la sala padre game-bestof*.
             if not is_battle_room:
@@ -194,6 +248,15 @@ class ValidatedBattleMixin:
                     self._pending_lines.append(line)
                 continue
 
+            prev_iap_uid = ''
+            if self.iap_battle is not None:
+                prev_iap_uid = str(
+                    getattr(getattr(self.iap_battle, 'user', None), 'id', '') or ''
+                ).strip().lower()
+            # Pending del bootstrap ya se aplicó en _flush_pending_lines; esas
+            # líneas no vuelven por el socket (eran batches previos). No usar
+            # Counter de skip: leftovers envenenaban |-unboost|/|-fieldstart|
+            # idénticos en turnos posteriores.
             try:
                 fed = feed_line(self.iap_battle, line)
                 if not line.startswith('#'):
@@ -211,6 +274,32 @@ class ValidatedBattleMixin:
                     )
                 )
                 fed = None
+            # |request| trae side.id: si el rol p1/p2 estaba mal (o el espejo
+            # acababa de flippear bandos), reconstruir desde el log.
+            if (fed == 'request' or action == 'request') and self.iap_battle is not None:
+                req_role = str(getattr(self.iap_battle.user, 'id', '') or '').strip().lower()
+                flipped = bool(getattr(self.iap_battle, '_request_side_flipped', False))
+                if flipped:
+                    try:
+                        delattr(self.iap_battle, '_request_side_flipped')
+                    except Exception:
+                        self.iap_battle._request_side_flipped = False
+                need_rebuild = False
+                if req_role in ('p1', 'p2'):
+                    if req_role != self._our_role:
+                        need_rebuild = True
+                    elif (
+                        prev_iap_uid in ('p1', 'p2')
+                        and prev_iap_uid != req_role
+                    ):
+                        need_rebuild = True
+                    elif flipped:
+                        need_rebuild = True
+                    if need_rebuild:
+                        self._our_role = req_role
+                        self._role_confirmed = True
+                        if self._game_lines:
+                            self._rebuild_iap_from_game_lines(room)
             if action == 'switch' or fed == 'switch':
                 self._ready_to_check = True
             key = fed or action
@@ -223,7 +312,7 @@ class ValidatedBattleMixin:
                 if turn_n > 0 and turn_n != getattr(self, '_last_turn_log', -1):
                     self._last_turn_log = turn_n
                     g = len(getattr(self, 'series_games', []) or []) + 1
-                    print(f'  g{g}:t{turn_n}', flush=True)
+                    chat_print(f'  g{g}:t{turn_n}')
             if key in _INFER_ACTIONS:
                 pending_infer = True
 
@@ -248,6 +337,20 @@ class ValidatedBattleMixin:
         pe = self._current_pe_battle(room)
         if pe is not None:
             self._pe_battle = pe
+            pe_tag = (getattr(pe, 'battle_tag', None) or room or '').lstrip('>').strip()
+            # Nueva hija battle-* del BO3: no reutilizar espejo del juego anterior
+            # (síntoma: pe.turn=6 iap.turn=1 + fields/species fantasma).
+            if pe_tag and pe_tag != getattr(self, '_pe_battle_tag', ''):
+                prev = getattr(self, '_pe_battle_tag', '')
+                self._pe_battle_tag = pe_tag
+                if prev and self.iap_battle is not None:
+                    self.iap_battle = None
+                    self._game_lines = []
+                    self._pending_lines = []
+                    self._recently_flushed = Counter()
+                    self._ready_to_check = False
+                    self._last_turn_log = -1
+                    self._ensure_iap(room)
             pe_role = getattr(pe, 'player_role', None)
             if pe_role in ('p1', 'p2') and pe_role != self._our_role:
                 self._our_role = pe_role
@@ -259,6 +362,16 @@ class ValidatedBattleMixin:
                     self._flush_pending_lines()
 
         self._sync_role_ids()
+
+        # Ancla campo/boosts a PE (anti-péndulo sync E2E). Tras rebuild/feed.
+        if self.iap_battle is not None and pe is not None:
+            try:
+                from showdown.inference_sim.battle_state_check import (
+                    mirror_pe_field_and_boosts_into_iap,
+                )
+                mirror_pe_field_and_boosts_into_iap(self.iap_battle, pe)
+            except Exception:
+                pass
 
         if (
             self._ready_to_check
@@ -288,7 +401,7 @@ class ValidatedBattleMixin:
         won = bool(getattr(pe, 'won', False))
         self.series_games.append((turns, won))
         g = len(self.series_games)
-        print(f'  g{g}:t{turns}{"W" if won else "L"}', flush=True)
+        chat_print(f'  g{g}:t{turns}{"W" if won else "L"}')
 
     def series_games_compact(self) -> str:
         if not self.series_games:
@@ -341,6 +454,7 @@ class ValidatedBattleMixin:
             return
         pending = list(self._pending_lines)
         self._pending_lines = []
+        self._recently_flushed = Counter()
         for line in pending:
             try:
                 feed_line(self.iap_battle, line)
@@ -359,6 +473,7 @@ class ValidatedBattleMixin:
         self._bootstrapped = False
         self._game_lines = []
         self._pending_lines = []
+        self._recently_flushed = Counter()
         self._ready_to_check = False
         self._ensure_iap(room)
         if self.iap_battle is None:
@@ -389,12 +504,80 @@ class ValidatedBattleMixin:
         if not isinstance(pe_battle, DoubleBattle):
             return
         try:
+            pe_turn = int(getattr(pe_battle, 'turn', 0) or 0)
+            iap_turn = int(getattr(self.iap_battle, 'turn', 0) or 0) if self.iap_battle else 0
+            # Espejo de otra partida / rebuild a medias: rehacer desde el log.
+            if (
+                pe_turn >= 2
+                and iap_turn >= 1
+                and abs(pe_turn - iap_turn) > 1
+                and self._game_lines
+            ):
+                self._rebuild_iap_from_game_lines(room)
+                self._sync_role_ids()
+            elif self._severe_species_desync(pe_battle) and self._game_lines:
+                self._rebuild_iap_from_game_lines(room)
+                self._sync_role_ids()
+            try:
+                from showdown.inference_sim.battle_state_check import (
+                    mirror_pe_field_and_boosts_into_iap,
+                )
+                mirror_pe_field_and_boosts_into_iap(self.iap_battle, pe_battle)
+            except Exception:
+                pass
             found = contrast_battle(self.iap_battle, pe_battle, battle_tag=room)
             record_contrasts(self.state_report, found)
         except Exception as exc:
             self.state_report.feed_errors += 1
             if len(self.protocol_log) < 420:
                 self.protocol_log.append(f'# contrast error: {exc!r}')
+
+    def _severe_species_desync(self, pe_battle: AbstractBattle) -> bool:
+        """True si our/foe vivos no coinciden en especies (no solo sets disjuntos)."""
+        if self.iap_battle is None:
+            return False
+        try:
+            from showdown.inference_sim.battle_state_check import (
+                _actives_iap,
+                _actives_pe,
+                _canon,
+                _species_iap,
+                _species_pe,
+            )
+
+            def _alive_sets(pe_mons, iap_mons):
+                pe_set = {
+                    _canon(_species_pe(m))
+                    for m in pe_mons
+                    if m is not None and not getattr(m, 'fainted', False) and _species_pe(m)
+                }
+                iap_set = {
+                    _canon(_species_iap(m))
+                    for m in iap_mons
+                    if m is not None
+                    and not getattr(m, 'is_fainted', False)
+                    and _species_iap(m)
+                }
+                return pe_set, iap_set
+
+            pe_ours, pe_foes = _actives_pe(pe_battle)
+            iap_ours, iap_foes = _actives_iap(self.iap_battle)
+            for pe_set, iap_set in (
+                _alive_sets(pe_ours, iap_ours),
+                _alive_sets(pe_foes, iap_foes),
+            ):
+                if not pe_set or not iap_set:
+                    continue
+                # Cualquier especie de PE ausente en IAP (o al revés) = desync.
+                if pe_set != iap_set:
+                    return True
+            return False
+        except Exception:
+            return False
+
+    def _severe_our_species_desync(self, pe_battle: AbstractBattle) -> bool:
+        """Compat: alias de desync our-side."""
+        return self._severe_species_desync(pe_battle)
 
     def _check_inference(self, room: str) -> None:
         if self.soundness_report is None or self.iap_battle is None:
@@ -482,13 +665,14 @@ def make_opponent_player(
     team: TeamMeta,
     account_configuration: AccountConfiguration,
     battle_format: str,
+    server_configuration=LocalhostServerConfiguration,
 ) -> Player:
     cls = opponent_player_class(kind)
     return cls(
         account_configuration=account_configuration,
         battle_format=battle_format,
         team=to_showdown_export(team),
-        server_configuration=LocalhostServerConfiguration,
+        server_configuration=server_configuration,
         accept_open_team_sheet=True,
         max_concurrent_battles=1,
         log_level=30,

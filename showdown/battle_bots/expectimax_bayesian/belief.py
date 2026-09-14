@@ -151,14 +151,39 @@ def sample_belief_node(
     revealed_moves: Optional[Sequence[str]] = None,
     k: int = 6,
     base_stats: Optional[Dict[str, int]] = None,
+    ots: Optional['OpponentPublicOTS'] = None,
 ) -> BeliefNode:
     """
-    Construye BeliefNode con hasta k perfiles MetaVGC compatibles con
-    `candidates` (StatBelief). Fallback sintético si no hay hits.
+    Construye BeliefNode con hasta k perfiles.
+
+    Con OTS Champions (sin SP): item/ability/nature/moves quedan fijos del OTS;
+    MetaVGC solo aporta vectores de SP compatibles con `candidates`.
+
+    Sin OTS completo: comportamiento previo (filtra meta por lo conocido).
     """
+    from showdown.battle_bots.expectimax_bayesian.ots import OpponentPublicOTS
+
     sid = _norm(species)
+    # Clavar campos visibles del OTS (nunca SP).
+    if ots is not None:
+        if ots.nature:
+            nature = ots.nature
+        if ots.item:
+            known_item = ots.item
+        if ots.ability:
+            known_ability = ots.ability
+        if ots.moves:
+            revealed_moves = list(ots.moves)
+
     nid = _norm(nature) or None
     revealed = list(revealed_moves or [])
+    ots_locked = bool(
+        ots is not None
+        and known_item
+        and known_ability
+        and nid
+        and revealed
+    )
     _load_meta()
     cands = candidates or {key: set(range(0, 33)) for key in STAT_KEYS}
 
@@ -169,21 +194,32 @@ def sample_belief_node(
             continue
         mon_nat = _norm(mon.get('nature')) or 'serious'
         if nid and mon_nat != nid:
-            continue
-        if known_item and _norm(mon.get('item')) and _norm(mon.get('item')) != _norm(known_item):
-            continue
-        if known_ability and _norm(mon.get('ability')) and _norm(mon.get('ability')) != _norm(known_ability):
-            continue
+            # Con OTS la nature es fija; sin OTS filtramos. Si meta no tiene
+            # esa nature, aún podemos reutilizar el vector SP más abajo.
+            if not ots_locked:
+                continue
+            else:
+                # Reusar SP de otro nature meta si encaja en candidatos.
+                pass
+        if not ots_locked:
+            if known_item and _norm(mon.get('item')) and _norm(mon.get('item')) != _norm(known_item):
+                continue
+            if known_ability and _norm(mon.get('ability')) and _norm(mon.get('ability')) != _norm(known_ability):
+                continue
         moves = tuple(mon.get('moves') or ())
-        if not _contains_revealed(moves, revealed):
-            # Prior bajo si no contiene moves revelados (no descartar del todo)
-            mass = float(count) * 0.15
-        else:
+        if ots_locked:
+            moves = tuple(revealed)
+            mon_nat = nid or mon_nat
             mass = float(count)
+        else:
+            if not _contains_revealed(moves, revealed):
+                mass = float(count) * 0.15
+            else:
+                mass = float(count)
         sp_t = tuple(int(sp.get(key, 0) or 0) for key in STAT_KEYS)
         scored.append(OpponentProfile(
             species=sid,
-            nature=mon_nat,
+            nature=mon_nat if not ots_locked else (nid or mon_nat),
             sp=sp_t,  # type: ignore[arg-type]
             item=(known_item or mon.get('item')),
             ability=(known_ability or mon.get('ability')),
@@ -192,20 +228,34 @@ def sample_belief_node(
         ))
 
     scored.sort(key=lambda p: (-p.prior_mass, p.nature, p.sp))
-    # Dedup by (nature, sp, item)
+    # Con OTS: dedup solo por SP (item/moves/nature ya fijos).
     uniq: List[OpponentProfile] = []
     seen: Set[Tuple] = set()
     for p in scored:
-        key = (p.nature, p.sp, _norm(p.item), tuple(sorted(_norm(m) for m in p.moves)))
+        if ots_locked:
+            key = tuple(p.sp)
+        else:
+            key = (p.nature, p.sp, _norm(p.item), tuple(sorted(_norm(m) for m in p.moves)))
         if key in seen:
             continue
         seen.add(key)
+        if ots_locked:
+            # Reescribir siempre con OTS público (por si el row meta traía otro item).
+            p = OpponentProfile(
+                species=sid,
+                nature=nid or p.nature,
+                sp=p.sp,
+                item=known_item,
+                ability=known_ability,
+                moves=tuple(revealed),
+                prior_mass=p.prior_mass,
+            )
         uniq.append(p)
         if len(uniq) >= max(1, int(k)):
             break
 
     if not uniq:
-        # Fallback: point-estimate SP via meta prior / mediana
+        # Fallback: point-estimate SP via meta prior / mediana — OTS fijo si hay.
         try:
             from showdown.meta_sp_prior import preferred_sp_map
             picked = preferred_sp_map(
@@ -220,17 +270,45 @@ def sample_belief_node(
                 if cands.get(key)
             }
         sp_t = tuple(int(picked.get(key, 0) or 0) for key in STAT_KEYS)
-        uniq = [OpponentProfile(
-            species=sid,
-            nature=nid or 'serious',
-            sp=sp_t,  # type: ignore[arg-type]
-            item=known_item,
-            ability=known_ability,
-            moves=tuple(revealed),
-            prior_mass=1.0,
-        )]
+        # Diversificar SP dentro de candidatos (min/mediana/max por stat) si OTS locked
+        if ots_locked and k > 1:
+            alts: List[Tuple[int, ...]] = [sp_t]
+            for key in STAT_KEYS:
+                sps = sorted(cands.get(key) or [0])
+                if len(sps) < 2:
+                    continue
+                for q in (0, len(sps) // 2, len(sps) - 1):
+                    vec = list(sp_t)
+                    vec[STAT_KEYS.index(key)] = int(sps[q])
+                    alts.append(tuple(vec))
+            seen_sp: Set[Tuple] = set()
+            for vec in alts:
+                if vec in seen_sp:
+                    continue
+                seen_sp.add(vec)
+                uniq.append(OpponentProfile(
+                    species=sid,
+                    nature=nid or 'serious',
+                    sp=vec,  # type: ignore[arg-type]
+                    item=known_item,
+                    ability=known_ability,
+                    moves=tuple(revealed),
+                    prior_mass=1.0,
+                ))
+                if len(uniq) >= max(1, int(k)):
+                    break
+        if not uniq:
+            uniq = [OpponentProfile(
+                species=sid,
+                nature=nid or 'serious',
+                sp=sp_t,  # type: ignore[arg-type]
+                item=known_item,
+                ability=known_ability,
+                moves=tuple(revealed),
+                prior_mass=1.0,
+            )]
 
-    return BeliefNode(species=sid, profiles=uniq)
+    return BeliefNode(species=sid, profiles=uniq[: max(1, int(k))])
 
 
 def profile_to_calc(
@@ -327,8 +405,11 @@ def belief_nodes_for_foes(
     beliefs=None,
     k: int = 6,
     foe_known_moves: Optional[Dict[int, Sequence[str]]] = None,
+    ots_sheet: Optional[Dict[str, 'OpponentPublicOTS']] = None,
 ) -> Dict[int, BeliefNode]:
-    """BeliefNode por target id de rival activo."""
+    """BeliefNode por target id de rival activo. OTS público clava item/moves/nature."""
+    from showdown.battle_bots.expectimax_bayesian.ots import lookup_ots
+
     known_map = foe_known_moves or {}
     out: Dict[int, BeliefNode] = {}
     for tid, foe in foes:
@@ -358,16 +439,20 @@ def belief_nodes_for_foes(
             nature = getattr(belief, 'nature', None) or nature
             base_stats = getattr(belief, 'base_stats', None)
 
+        ots = lookup_ots(ots_sheet, foe.species)
         revealed = tuple(known_map.get(tid) or ())
+        if ots is not None and ots.moves:
+            revealed = tuple(ots.moves)
         out[tid] = sample_belief_node(
             species=foe.species,
-            nature=nature,
+            nature=(ots.nature if ots and ots.nature else nature),
             candidates=candidates,
-            known_item=foe.item,
-            known_ability=foe.ability,
+            known_item=(ots.item if ots and ots.item else foe.item),
+            known_ability=(ots.ability if ots and ots.ability else foe.ability),
             revealed_moves=revealed,
             k=k,
             base_stats=base_stats,
+            ots=ots,
         )
     return out
 

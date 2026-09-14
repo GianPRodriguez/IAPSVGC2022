@@ -27,6 +27,7 @@ from showdown.battle_bots.greedy_solo.greedy import (
     FieldContext,
     MoveOption,
     ScoredAction,
+    _collect_ally_hit_requests,
     _collect_side_requests,
     _stats_or_default,
     apply_pending_mega,
@@ -38,6 +39,7 @@ from showdown.battle_bots.expectimax_bayesian.belief import (
     profile_to_calc,
     resolve_opp_move_names,
 )
+from showdown.battle_bots.expectimax_bayesian.residual import project_residual_into_v
 from showdown.battle_bots.expectimax_bayesian.chance import (
     SOFT_KO_BONUS,
     combined_expected_damage,
@@ -61,6 +63,7 @@ from showdown.battle_bots.expectimax_bayesian.utility import (
     FieldPositionBonus,
     JointActionUtility,
     field_control_bonus,
+    switch_positioning_value,
     switch_preservation_value,
 )
 
@@ -75,11 +78,32 @@ class ExpectimaxConfig:
     max_our_pairs: int = 36
     soft_ko_bonus: float = SOFT_KO_BONUS
     enable_voluntary_switch: bool = True
-    max_switch_hybrids: int = 8
-    loss_weight: float = 1000.0
-    save_weight: float = 220.0
+    max_switch_hybrids: int = 12
+    loss_weight: float = 650.0
+    save_weight: float = 140.0
     chip_soft_cap: float = 30.0
-    switch_min_stay_p_ko: float = 0.25
+    # Umbral de amenaza para frenos de pivot frívolo.
+    switch_min_stay_p_ko: float = 0.50
+    # Penalizar doble foco sobre un rival ya KO en papel.
+    overkill_waste_weight: float = 140.0
+    # Bonus si un lado ya KO y el otro pivota.
+    ko_free_switch_bonus: float = 55.0
+    # Castigo 2-ply barato: amenaza al entrante tras switch.
+    entry_punish_weight: float = 1.15
+    # Peso de la amenaza rival en V: offense - threat_weight * threat + …
+    threat_weight: float = 0.55
+    # Peso de HP relativo residual en V.
+    hp_rel_weight: float = 0.15
+    # Peso de sinergia de par en V.
+    syn_weight: float = 0.55
+    # Mon condenado (P(KO) alto): descontar chip que no KO-ea.
+    condemned_chip_discount: float = 0.70
+    # Mon condenado: amplificar efectos que sobreviven (status/secundarios).
+    condemned_lasting_boost: float = 1.35
+    # Peso del alivio de amenaza por status proyectado a S'.
+    threat_relief_weight: float = 1.0
+    # Habilidades de entrada al switch (Intimidate, clima, Screen Cleaner…).
+    entry_ability_weight: float = 1.0
 
 
 @dataclass
@@ -139,6 +163,8 @@ def _candidate_pairs(
     switch_left: Sequence[JointAtom] = (),
     switch_right: Sequence[JointAtom] = (),
     max_switch_hybrids: int = 8,
+    left_poke: Optional[CalcPoke] = None,
+    right_poke: Optional[CalcPoke] = None,
 ) -> List[Tuple[JointAtom, JointAtom]]:
     move_left = [a for a in left_atoms if a.utility != 'switch']
     move_right = [a for a in right_atoms if a.utility != 'switch']
@@ -156,7 +182,10 @@ def _candidate_pairs(
                         pr = _strip_mega(a2)
                     else:
                         pl = _strip_mega(a1)
-                s = _score_pair(pl, pr, foes)
+                s = _score_pair(
+                    pl, pr, foes,
+                    left_poke=left_poke, right_poke=right_poke,
+                )
                 scored.append((s, pl, pr))
     elif move_left:
         for a1 in move_left:
@@ -404,6 +433,111 @@ def _bench_incoming_pct(
     return max(0.0, 35.0 - float(mu) * 12.0)
 
 
+def _solo_p_ko_on_target(
+    side: str,
+    atom: JointAtom,
+    tid: int,
+    foe: CalcPoke,
+    hit_map: Dict[Tuple[str, int, int, int], Optional[Tuple[int, int]]],
+) -> float:
+    if atom.utility == 'switch' or tid <= 0:
+        return 0.0
+    rng = _atom_ranges_on_foe(side, atom, tid, hit_map)
+    if rng is None:
+        return 0.0
+    max_hp = int((_stats_or_default(foe).get('hp') or 1))
+    cur_hp = int(foe.cur_hp if foe.cur_hp is not None else max_hp)
+    return float(p_ko(rng, cur_hp))
+
+
+def _overkill_and_free_switch(
+    left: JointAtom,
+    right: JointAtom,
+    foes: Sequence[Tuple[int, CalcPoke]],
+    hit_map: Dict[Tuple[str, int, int, int], Optional[Tuple[int, int]]],
+    *,
+    overkill_waste_weight: float,
+    ko_free_switch_bonus: float,
+) -> Tuple[float, float]:
+    """
+    Returns (overkill_penalty, free_switch_bonus).
+
+    - Si ambos atacan el mismo foe y uno solo ya tiene P(KO) alto → desperdicio.
+    - Si un lado ataca con P(KO) alto y el otro switch → bonus de reposicionar.
+    """
+    foe_by_tid = {int(tid): foe for tid, foe in foes}
+    pk_l = 0.0
+    pk_r = 0.0
+    if left.utility != 'switch' and int(left.target) in foe_by_tid:
+        pk_l = _solo_p_ko_on_target('L', left, int(left.target), foe_by_tid[int(left.target)], hit_map)
+    if right.utility != 'switch' and int(right.target) in foe_by_tid:
+        pk_r = _solo_p_ko_on_target('R', right, int(right.target), foe_by_tid[int(right.target)], hit_map)
+
+    overkill = 0.0
+    if (
+        left.utility != 'switch'
+        and right.utility != 'switch'
+        and int(left.target) > 0
+        and int(left.target) == int(right.target)
+    ):
+        strong = max(pk_l, pk_r)
+        weak = min(pk_l, pk_r)
+        if strong >= 0.55 and weak >= 0.08:
+            overkill = float(overkill_waste_weight) * strong
+
+    free_sw = 0.0
+    if left.utility == 'switch' and right.utility != 'switch' and pk_r >= 0.55:
+        free_sw = float(ko_free_switch_bonus) * pk_r
+    elif right.utility == 'switch' and left.utility != 'switch' and pk_l >= 0.55:
+        free_sw = float(ko_free_switch_bonus) * pk_l
+    return overkill, free_sw
+
+
+def _entry_punish_score(
+    reserve: ReserveOption,
+    *,
+    opp_dists: Dict[str, List[Tuple[OppAction, float]]],
+    opp_hit_map: Dict[Tuple[str, str, str], Optional[Tuple[int, int]]],
+    foes: Sequence[Tuple[int, CalcPoke]],
+    soft_ko_bonus: float,
+    entry_punish_weight: float,
+) -> float:
+    """
+    2-ply barato: ¿el rival castiga al entrante este turno?
+    Usa la política π_opp ya calculada + tipado si no hay calc de banca.
+    """
+    max_hp = int((_stats_or_default(reserve.poke).get('hp') or 1))
+    cur_hp = int(reserve.poke.cur_hp if reserve.poke.cur_hp is not None else max_hp)
+    threat = 0.0
+    for side_key in ('OL', 'OR'):
+        dist = opp_dists.get(side_key) or []
+        for action, p_b in dist:
+            if is_control_move(action.move_name):
+                continue
+            best_rng = None
+            mid = _norm_move(action.move_name)
+            for atk_tag in ('F1', 'F2'):
+                rng = opp_hit_map.get((atk_tag, mid, side_key))
+                if rng is not None:
+                    best_rng = rng
+                    break
+            if best_rng is None:
+                continue
+            # Proxy: daño vs activo ≈ vs bench (bulk distinto → 0.9)
+            e_pct = 100.0 * expected_damage(best_rng) / float(max_hp) if max_hp else 0.0
+            pk = p_ko(best_rng, cur_hp)
+            threat += float(p_b) * (
+                min(e_pct * 0.9, 100.0 * cur_hp / max(max_hp, 1))
+                + pk * soft_ko_bonus * 0.9
+            )
+    if threat <= 1e-9:
+        # Sin calc: tipado del entrante vs foes
+        foe_types = [tuple(f.types or ()) for _, f in foes]
+        mu = matchup_vs_actives(reserve.types or reserve.poke.types, foe_types or [tuple()])
+        threat = max(0.0, 40.0 - float(mu) * 14.0)
+    return float(entry_punish_weight) * threat
+
+
 def _apply_speed_race(
     *,
     offense: float,
@@ -534,11 +668,13 @@ async def _build_atoms(
     can_tera_right: bool,
     tera_left: Optional[str],
     tera_right: Optional[str],
+    deadline_monotonic: Optional[float] = None,
 ) -> Tuple[List[JointAtom], List[JointAtom]]:
     left_atk = apply_pending_mega(left_attacker) if (left_attacker and can_mega_left) else left_attacker
     right_atk = apply_pending_mega(right_attacker) if (right_attacker and can_mega_right) else right_attacker
     requests: List[dict] = []
     meta: List[Tuple[str, MoveOption, int, CalcPoke, int]] = []
+    ally_meta: List[Tuple[str, int]] = []
     if left_atk and left_moves:
         r, m = _collect_side_requests(
             'L', left_atk, right_atk, foes, left_moves,
@@ -553,21 +689,47 @@ async def _build_atoms(
         )
         requests.extend(r)
         meta.extend(m)
+    if left_atk and left_moves:
+        ar, am = _collect_ally_hit_requests(
+            'L', left_atk, right_atk, left_moves, field_ctx=field_ctx,
+        )
+        requests.extend(ar)
+        ally_meta.extend(am)
+    if right_atk and right_moves:
+        ar, am = _collect_ally_hit_requests(
+            'R', right_atk, left_atk, right_moves, field_ctx=field_ctx,
+        )
+        requests.extend(ar)
+        ally_meta.extend(am)
     try:
-        ranges = await calc_damage_batch(requests) if requests else []
+        ranges = await calc_damage_batch(
+            requests, deadline_monotonic=deadline_monotonic,
+        ) if requests else []
     except Exception:
         ranges = [None] * len(requests)
 
+    foe_count = len(meta)
+    foe_ranges = ranges[:foe_count]
+    ally_ranges = ranges[foe_count:]
+    ally_hit_l: Dict[int, Optional[Tuple[int, int]]] = {}
+    ally_hit_r: Dict[int, Optional[Tuple[int, int]]] = {}
+    for (side, slot), rng in zip(ally_meta, ally_ranges):
+        if side == 'L':
+            ally_hit_l[int(slot)] = rng
+        else:
+            ally_hit_r[int(slot)] = rng
+
     left_meta = [m for m in meta if m[0] == 'L']
     right_meta = [m for m in meta if m[0] == 'R']
-    left_ranges = [rng for m, rng in zip(meta, ranges) if m[0] == 'L']
-    right_ranges = [rng for m, rng in zip(meta, ranges) if m[0] == 'R']
+    left_ranges = [rng for m, rng in zip(meta, foe_ranges) if m[0] == 'L']
+    right_ranges = [rng for m, rng in zip(meta, foe_ranges) if m[0] == 'R']
     left_atoms = (
         _atoms_from_side(
             left_moves, left_meta, left_ranges, foes,
             can_mega=can_mega_left, attacker=left_atk,
             weather=field_ctx.weather, terrain=field_ctx.terrain,
             gravity=field_ctx.gravity,
+            ally=right_atk, ally_hit_by_slot=ally_hit_l,
         )
         if left_atk and left_moves else []
     )
@@ -577,6 +739,7 @@ async def _build_atoms(
             can_mega=can_mega_right, attacker=right_atk,
             weather=field_ctx.weather, terrain=field_ctx.terrain,
             gravity=field_ctx.gravity,
+            ally=left_atk, ally_hit_by_slot=ally_hit_r,
         )
         if right_atk and right_moves else []
     )
@@ -604,8 +767,12 @@ async def best_expectimax_bayesian_action(
     config: Optional[ExpectimaxConfig] = None,
     foe_known_moves: Optional[Dict[int, Sequence[str]]] = None,
     reserves: Optional[Sequence[ReserveOption]] = None,
+    ots_sheet: Optional[Dict[str, object]] = None,
 ) -> Tuple[Optional[ScoredAction], Optional[ScoredAction], float, ExpectimaxMeta]:
-    """Anytime Bayesian expectimax 1-ply; nunca falla sin acción (fallback joint)."""
+    """Anytime Bayesian expectimax 1-ply; nunca falla sin acción (fallback joint).
+
+    ots_sheet: species_id → OpponentPublicOTS (sin SP). Clava item/ability/moves/nature.
+    """
     cfg = config or ExpectimaxConfig()
     pos = position or FieldPositionBonus(
         tera_available_left=can_tera_left,
@@ -617,6 +784,7 @@ async def best_expectimax_bayesian_action(
     meta = ExpectimaxMeta()
     t0 = time.perf_counter()
     known_moves = foe_known_moves or {}
+    calc_deadline = t0 + (float(cfg.phase2_end_ms) / 1000.0)
 
     # --- Phase 1: deterministic joint fallback ---
     try:
@@ -650,6 +818,7 @@ async def best_expectimax_bayesian_action(
             can_mega_left=can_mega_left, can_mega_right=can_mega_right,
             can_tera_left=can_tera_left, can_tera_right=can_tera_right,
             tera_left=tera_left, tera_right=tera_right,
+            deadline_monotonic=calc_deadline,
         )
 
         switch_left: List[JointAtom] = []
@@ -663,12 +832,17 @@ async def best_expectimax_bayesian_action(
                 if right_attacker is not None:
                     switch_right.append(sw)
 
+        left_atk = apply_pending_mega(left_attacker) if (left_attacker and can_mega_left) else left_attacker
+        right_atk = apply_pending_mega(right_attacker) if (right_attacker and can_mega_right) else right_attacker
+
         pairs = _candidate_pairs(
             left_atoms, right_atoms, foes,
             max_pairs=cfg.max_our_pairs,
             switch_left=switch_left,
             switch_right=switch_right,
             max_switch_hybrids=cfg.max_switch_hybrids if cfg.enable_voluntary_switch else 0,
+            left_poke=left_atk,
+            right_poke=right_atk,
         )
         if not pairs:
             meta.elapsed_ms = _elapsed_ms(t0)
@@ -676,6 +850,7 @@ async def best_expectimax_bayesian_action(
 
         nodes = belief_nodes_for_foes(
             foes, beliefs=beliefs, k=cfg.k_profiles, foe_known_moves=known_moves,
+            ots_sheet=ots_sheet,  # type: ignore[arg-type]
         )
         foe_order = [tid for tid, _ in foes]
         worlds = iter_worlds(nodes, foe_order, max_worlds=cfg.max_worlds)
@@ -694,8 +869,6 @@ async def best_expectimax_bayesian_action(
                 right_move=pr.move_name,
             )
 
-        left_atk = apply_pending_mega(left_attacker) if (left_attacker and can_mega_left) else left_attacker
-        right_atk = apply_pending_mega(right_attacker) if (right_attacker and can_mega_right) else right_attacker
         reserve_by_slot = {int(r.slot): r for r in reserve_list}
 
         for world_profiles, p_world in worlds:
@@ -776,12 +949,16 @@ async def best_expectimax_bayesian_action(
                             opp_meta.append((tag, _norm_move(m.name), def_tag))
 
             try:
-                our_ranges = await calc_damage_batch(reqs) if reqs else []
+                our_ranges = await calc_damage_batch(
+                    reqs, deadline_monotonic=calc_deadline,
+                ) if reqs else []
             except Exception as exc:
                 meta.errors.append(f'calc_our:{exc!r}')
                 our_ranges = [None] * len(reqs)
             try:
-                opp_ranges = await calc_damage_batch(opp_reqs) if opp_reqs else []
+                opp_ranges = await calc_damage_batch(
+                    opp_reqs, deadline_monotonic=calc_deadline,
+                ) if opp_reqs else []
             except Exception as exc:
                 meta.errors.append(f'calc_opp:{exc!r}')
                 opp_ranges = [None] * len(opp_reqs)
@@ -837,6 +1014,20 @@ async def best_expectimax_bayesian_action(
                     soft_ko_bonus=cfg.soft_ko_bonus,
                 )
 
+                # Friendly fire (EQ/Surf/…): threat propio + P(KO) al partner.
+                from showdown.battle_bots.move_mechanics import (
+                    friendly_fire_expectimax_adjust,
+                )
+                threat, p_ko_side = friendly_fire_expectimax_adjust(
+                    threat=threat,
+                    p_ko_side=p_ko_side,
+                    left=pl,
+                    right=pr,
+                    left_poke=left_atk,
+                    right_poke=right_atk,
+                    soft_ko_bonus=cfg.soft_ko_bonus,
+                )
+
                 # B: orden de turno
                 offense, threat = _apply_speed_race(
                     offense=offense,
@@ -853,8 +1044,27 @@ async def best_expectimax_bayesian_action(
                     terrain=terrain or ctx.terrain,
                 )
 
-                # C: switches voluntarios
+                # Proyección residual: status → ↓threat; condenado → chip↓ lasting↑
+                offense, threat, lasting_extra = project_residual_into_v(
+                    offense=offense,
+                    threat=threat,
+                    share=share,
+                    left=pl,
+                    right=pr,
+                    left_atk=left_atk,
+                    right_atk=right_atk,
+                    foes=world_foes,
+                    p_ko_side=p_ko_side,
+                    p_ko_foe=p_ko_foe,
+                    terrain=terrain or ctx.terrain,
+                    chip_discount=cfg.condemned_chip_discount,
+                    lasting_boost=cfg.condemned_lasting_boost,
+                    threat_relief_weight=cfg.threat_relief_weight,
+                )
+
+                # C: switches voluntarios (preservación KO + reposicionamiento)
                 switch_v = 0.0
+                turn_n = int(getattr(pos, 'turn', 0) or 0) if pos is not None else 0
                 for atom, side_key in ((pl, 'OL'), (pr, 'OR')):
                     if atom.utility != 'switch':
                         continue
@@ -862,35 +1072,91 @@ async def best_expectimax_bayesian_action(
                     if res is None:
                         continue
                     stay_pk = float(p_ko_side.get(side_key, 0.0))
+                    active_types = ()
+                    if side_key == 'OL' and left_atk is not None:
+                        active_types = tuple(left_atk.types or ())
+                    elif side_key == 'OR' and right_atk is not None:
+                        active_types = tuple(right_atk.types or ())
+                    mu_active = matchup_vs_actives(
+                        active_types or (tuple(),), foe_types or [tuple()],
+                    )
                     # Si no hay amenaza calc (dists vacíos), estimar por tipado del activo
-                    if stay_pk < 1e-9 and side_key == 'OL' and left_atk is not None:
-                        mu = matchup_vs_actives(left_atk.types, foe_types or [tuple()])
-                        stay_pk = max(0.0, min(0.9, 0.15 - mu * 0.08))
-                    if stay_pk < 1e-9 and side_key == 'OR' and right_atk is not None:
-                        mu = matchup_vs_actives(right_atk.types, foe_types or [tuple()])
-                        stay_pk = max(0.0, min(0.9, 0.15 - mu * 0.08))
-                    if stay_pk < cfg.switch_min_stay_p_ko and stay_pk < 0.15:
-                        # Matchup horrible también justifica mirar switch
-                        mu_b = matchup_vs_actives(res.types or res.poke.types, foe_types or [tuple()])
-                        if mu_b < 0.5 and stay_pk < 0.1:
-                            switch_v -= 40.0  # switch frívolo
-                            continue
+                    if stay_pk < 1e-9:
+                        stay_pk = max(0.0, min(0.9, 0.20 - float(mu_active) * 0.10))
+                    mu_bench = matchup_vs_actives(
+                        res.types or res.poke.types, foe_types or [tuple()],
+                    )
+                    improvement = float(mu_bench) - float(mu_active)
+                    # Frívolo solo si no mejora el asiento y no hay amenaza real.
+                    if (
+                        stay_pk < cfg.switch_min_stay_p_ko
+                        and improvement < 0.2
+                        and stay_pk < 0.12
+                    ):
+                        switch_v -= 22.0
+                        continue
                     chip = _bench_incoming_pct(res, world_foes, opp_hit_map, all_opp_move_names)
-                    mu = matchup_vs_actives(res.types or res.poke.types, foe_types or [tuple()])
                     switch_v += switch_preservation_value(
                         stay_p_ko=max(stay_pk, cfg.switch_min_stay_p_ko * 0.5),
                         bench_incoming_pct=chip,
-                        matchup=mu,
+                        matchup=mu_bench,
                         loss_weight=cfg.loss_weight,
                         save_weight=cfg.save_weight,
                         chip_soft_cap=cfg.chip_soft_cap,
                         soft_ko_bonus=cfg.soft_ko_bonus,
                     )
+                    switch_v += switch_positioning_value(
+                        active_matchup=mu_active,
+                        bench_matchup=mu_bench,
+                        turn=turn_n,
+                    )
+                    # Habilidades al entrar (Intimidate, Surges, Screen Cleaner…).
+                    from showdown.battle_bots.move_mechanics import (
+                        entry_ability_switch_value,
+                    )
+                    other_atom = pr if side_key == 'OL' else pl
+                    stay_ally = (
+                        right_atk if side_key == 'OL' else left_atk
+                    )
+                    if other_atom.utility == 'switch':
+                        stay_ally = None
+                    switch_v += entry_ability_switch_value(
+                        res.poke,
+                        [f for _, f in world_foes],
+                        ally=stay_ally,
+                        weather=ctx.weather,
+                        terrain=ctx.terrain or terrain,
+                        opp_reflect=bool(ctx.reflect),
+                        opp_light_screen=bool(ctx.light_screen),
+                        opp_aurora_veil=bool(ctx.aurora_veil),
+                        weight=cfg.entry_ability_weight,
+                    )
+                    # 2-ply barato: ¿el rival castiga al entrante?
+                    switch_v -= _entry_punish_score(
+                        res,
+                        opp_dists=opp_dists,
+                        opp_hit_map=opp_hit_map,
+                        foes=world_foes,
+                        soft_ko_bonus=cfg.soft_ko_bonus,
+                        entry_punish_weight=cfg.entry_punish_weight,
+                    )
+
+                overkill_pen, free_sw = _overkill_and_free_switch(
+                    pl, pr, world_foes, hit_map,
+                    overkill_waste_weight=cfg.overkill_waste_weight,
+                    ko_free_switch_bonus=cfg.ko_free_switch_bonus,
+                )
+                switch_v += free_sw
 
                 syn = 0.0
                 if pl.utility != 'switch' and pr.utility != 'switch':
                     try:
-                        syn = _score_pair(pl, pr, world_foes) - (
+                        # Sin FF aquí: ya entra en threat vía friendly_fire_expectimax_adjust.
+                        syn = _score_pair(
+                            pl, pr, world_foes,
+                            left_poke=left_atk, right_poke=right_atk,
+                            include_friendly_fire=False,
+                        ) - (
                             pl.total_damage_pct + pr.total_damage_pct
                         )
                         if syn > cfg.soft_ko_bonus:
@@ -904,8 +1170,14 @@ async def best_expectimax_bayesian_action(
 
                 our_hp = max(0.0, 100.0 - min(threat / max(cfg.soft_ko_bonus / 100.0, 1.0), 100.0))
                 v = (
-                    offense - 0.85 * threat + 0.15 * (our_hp - foe_hp)
-                    + 0.35 * syn + field_b + switch_v
+                    offense
+                    - float(cfg.threat_weight) * threat
+                    + float(cfg.hp_rel_weight) * (our_hp - foe_hp)
+                    + float(cfg.syn_weight) * syn
+                    + lasting_extra
+                    + field_b
+                    + switch_v
+                    - overkill_pen
                 )
 
                 utilities[_pair_key(pl, pr)].add(v, weight=p_world)

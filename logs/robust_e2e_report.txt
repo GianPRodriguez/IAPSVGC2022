@@ -1,39 +1,90 @@
-=== Robust E2E Report (A/B pools + BO3 + sync + OTS inference) ===
-time_utc: 2026-09-13T06:45:43.548090+00:00
+=== Robust E2E Report (A/B pools + crossed BO3 + sync + OTS) ===
+time_utc: 2026-09-14T07:27:58.601389+00:00
 format: gen9championsvgc2026regmcbo3
 ps_up: True
 team_pool_available: 200
 teams_used: 4 (A=2 expectimax_bayesian, B=2 greedy_joint, disjoint)
 player_a: expectimax_bayesian
 player_b: greedy_joint
-bo3_series: 2
+matchups: 2 (each = 2 crossed BO3)
+bo3_series: 4
 seed: -
-elapsed_s: 22.5
-bo3_per_s: 0.089
+elapsed_s: 60.9
+bo3_per_s: 0.066
 
---- results ---
-player_a_wins: 1
+--- expectimax_config ---
+deadline_ms: 700.0
+phase1_budget_ms: 50.0
+phase2_end_ms: 680.0
+k_profiles: 5
+max_worlds: 16
+max_our_pairs: 36
+soft_ko_bonus: 1000.0
+enable_voluntary_switch: True
+max_switch_hybrids: 12
+loss_weight: 650.0
+save_weight: 140.0
+chip_soft_cap: 30.0
+switch_min_stay_p_ko: 0.5
+overkill_waste_weight: 140.0
+ko_free_switch_bonus: 55.0
+entry_punish_weight: 1.15
+threat_weight: 0.55
+hp_rel_weight: 0.15
+syn_weight: 0.55
+condemned_chip_discount: 0.7
+condemned_lasting_boost: 1.35
+threat_relief_weight: 1.0
+entry_ability_weight: 1.0
+
+--- results (battle/series raw, informative) ---
+player_a_series_wins: 3
+player_b_series_wins: 1
+player_a_wins: 3
 player_b_wins: 1
-heuristic_wins: 1
+heuristic_wins: 3
 random_wins: 1
+series_errors: 0
 errors: 0
-win_rate_player_a: 50.0%
-win_rate_heuristic: 50.0%
-verdict: TIE
+win_rate_battle_raw: 75.0%
+win_rate_player_a: 75.0%
+win_rate_heuristic: 75.0%
+
+--- results (paired crossed matchups — primary) ---
+pair_a_sweeps: 1
+pair_b_sweeps: 0
+pair_draws: 1
+pair_invalid: 0
+win_rate_pairs: 100.0%
+pair_wr_ci95: [100.0%, 100.0%]
+pair_score_mean: +0.500
+pair_score_ci95: [+0.000, +1.000]
+verdict: YES - expectimax_bayesian beats greedy_joint on paired WR (IC>50%)
+
+--- failure kinds (invalidating matchups; series may count multiple) ---
+fail_timeout: 0
+fail_runtime: 0
+fail_reject: 0
+fail_sync: 0
+fail_matchup_inf: 0
+fail_bo3_inf: 0
+fail_inference: 0
 
 --- sync (Battle vs PS local) ---
+sync_ok: YES
 state_mismatch: NO
-state_checks: 23
+state_checks: 79
 state_mismatches: 0
 feed_errors: 0
 
 --- inference (OTS ground truth) ---
+inf_ok: YES
 inference_ok: YES
-soundness_checks: 420
+soundness_checks: 1296
 soundness_failures: 0
-belief_observations: 159
-belief_skips: 22
-narrowing_events: 1
+belief_observations: 862
+belief_skips: 18
+narrowing_events: 0
 battle_errors: 0
 
 --- inference flags (Battle storage / calc wiring) ---
@@ -49,21 +100,42 @@ flags_gaps_high_med: 0
 
 
 ------------------------------------------------------------------------
-EJEMPLO DE INFERENCIA EN EL TIEMPO: rillaboom (stat=spd)
-True SP=29  True final=105
+EJEMPLO DE INFERENCIA EN EL TIEMPO: incineroar (stat=spe)
+True SP=0  True final=80
 
-  T 4 [turn   ]  SP    0-32  final    90-106  cand=33  obs=0
-  T 5 [turn   ]  SP    0-32  final    90-106  cand=33  obs=3
-  T 6 [turn   ]  SP    0-32  final    90-106  cand=33  obs=1
-  T 7 [turn   ]  SP    0-32  final    90-106  cand=33  obs=1
-  T 8 [turn   ]  SP    9-32  final    95-106  cand=24  obs=4  << estrech? 33->24
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=1
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=1
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=1
+  T 3 [turn   ]  SP    0-32  final     80-96  cand=33  obs=4
+  T 4 [turn   ]  SP    0-32  final     80-96  cand=33  obs=7
+  T 5 [turn   ]  SP    0-32  final     80-96  cand=33  obs=10
+  T 6 [turn   ]  SP    0-32  final     80-96  cand=33  obs=13
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=1
+  T 3 [turn   ]  SP    0-32  final     80-96  cand=33  obs=4
+  T 4 [turn   ]  SP    0-32  final     80-96  cand=33  obs=7
+  T 5 [turn   ]  SP    0-32  final     80-96  cand=33  obs=12
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=1
+  T 3 [turn   ]  SP    0-32  final     80-96  cand=33  obs=1
+  T 8 [turn   ]  SP    0-32  final     80-96  cand=33  obs=5
+  T 9 [turn   ]  SP    0-32  final     80-96  cand=33  obs=5
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=1
+  T 3 [turn   ]  SP    0-32  final     80-96  cand=33  obs=2
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=1
+  T 3 [turn   ]  SP    0-32  final     80-96  cand=33  obs=2
 
-Estado final de rillaboom:
-   hp: SP    0-32 | final   175-191 | cand=33 | true_sp=32 true_final=191
-  atk: SP    0-32 | final   159-177 | cand=33 | true_sp=5 true_final=162
+Estado final de incineroar:
+   hp: SP    0-32 | final   170-186 | cand=33 | true_sp=32 true_final=186
+  atk: SP    0-32 | final   135-151 | cand=33 | true_sp=2 true_final=136
   def: SP    0-32 | final   110-126 | cand=33 | true_sp=0 true_final=110
-  spa: SP    0-32 | final     72-86 | cand=33 | true_sp=0 true_final=72
-  spd: SP    9-32 | final    95-106 | cand=24 | true_sp=29 true_final=105
-  spe: SP    0-32 | final   105-121 | cand=33 | true_sp=0 true_final=105
+  spa: SP    0-32 | final    90-104 | cand=33 | true_sp=0 true_final=90
+  spd: SP    0-32 | final   121-138 | cand=33 | true_sp=32 true_final=138
+  spe: SP    0-32 | final     80-96 | cand=33 | true_sp=0 true_final=80
 
 Player A = validated(expectimax_bayesian) | Player B = greedy_joint
