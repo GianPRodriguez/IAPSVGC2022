@@ -1,0 +1,17 @@
+---
+description: Anti-hang BO3 / TimeoutError(600s) en robust e2e
+globs: showdown/inference_sim/run_robust_e2e.py,showdown/inference_sim/bo3_runtime.py,showdown/inference_sim/validated_greedy_player.py,showdown/inference_sim/pokeenv_showteam_patch.py
+---
+
+# BO3 hang → TimeoutError(600s)
+
+Síntoma típico: `g1:… g2:… g3:… | TimeoutError(600s)` con sync OK — la serie ya terminó en batallas hijas pero `battle_against` no sale de `_battle_count_queue.join()`.
+
+Causa: tras un timeout/cancel **sin** `|win|` en la sala `game-bestof*`, queda un item en `_battle_count_queue` sin `task_done`. La siguiente serie se contamina.
+
+## Obligatorio
+- Llamar `reset_bo3_runtime_state` / `drain_battle_count_queue` en `reset_for_next_battle` y tras cancel/timeout (`_cancel_challenges`).
+- No tragar excepciones en salas `>game*` (ver `pokeenv_showteam_patch`).
+- Harness: si `bo3_series_decided(series_games)` y `battle_against` no retorna ~25s → `forced_ok_after_bo3_hang`.
+
+Regresión: `tests/test_bo3_runtime.py`.
