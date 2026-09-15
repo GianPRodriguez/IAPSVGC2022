@@ -1,8 +1,8 @@
 {
-  "done": 2,
-  "total": 2,
-  "series_done": 4,
-  "series_total": 4,
+  "done": 5,
+  "total": 5,
+  "series_done": 10,
+  "series_total": 10,
   "player_a": "expectimax_bayesian",
   "player_b": "greedy_joint",
   "workers": 2,
@@ -10,14 +10,14 @@
     8000,
     8001
   ],
-  "wins": 3,
-  "losses": 1,
+  "wins": 5,
+  "losses": 5,
   "errors": 0,
-  "elapsed_s": 60.82,
-  "last_pair": "#5th - joyfulwizardVGC at vs #1st - DoubleBad17 at Intimidators",
-  "last_status": "PAIR_A",
-  "last_games": "g1:t11W g2:t7W|g1:t14L g2:t8W g3:t9W",
+  "elapsed_s": 72.16,
+  "last_pair": "#4th - Contrapple at Off Meta Fight vs #4th - Jaylek at BPL MC KICKOFF",
+  "last_status": "PAIR_DRAW",
+  "last_games": "g1:t6W c2=+1.10 g2:t4W c2=+1.10|g1:t13L c2=-0.60 g2:t7L c2=-0.57",
   "last_error": "",
-  "worker": 1,
-  "port": 8001
+  "worker": 0,
+  "port": 8000
 }

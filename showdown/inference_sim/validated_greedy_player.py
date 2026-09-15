@@ -89,6 +89,9 @@ class ValidatedBattleMixin:
         self._recently_flushed: Counter = Counter()
         # Compact BO3: [(turns, won), ...] de cada game de la serie en curso
         self.series_games: List[tuple] = []
+        self.series_rewards: List = []
+        self.all_rewards: List = []
+        self._reward_acc = None
         self._logged_game_tags: set = set()
         self._last_turn_log = -1
         kwargs.setdefault('server_configuration', LocalhostServerConfiguration)
@@ -130,6 +133,8 @@ class ValidatedBattleMixin:
         self._pending_lines = []
         self._recently_flushed = Counter()
         self.series_games = []
+        self.series_rewards = []
+        self._reward_acc = None
         self._logged_game_tags = set()
         self._last_turn_log = -1
         self.update_team(to_showdown_export(user_team))
@@ -343,6 +348,7 @@ class ValidatedBattleMixin:
             if pe_tag and pe_tag != getattr(self, '_pe_battle_tag', ''):
                 prev = getattr(self, '_pe_battle_tag', '')
                 self._pe_battle_tag = pe_tag
+                self._reset_reward_acc(pe_tag)
                 if prev and self.iap_battle is not None:
                     self.iap_battle = None
                     self._game_lines = []
@@ -384,7 +390,25 @@ class ValidatedBattleMixin:
             if pending_infer and self.soundness_report is not None:
                 self._check_inference(room)
 
+        if pe is not None:
+            self._observe_reward(pe)
         self._note_finished_game(room, pe)
+
+    def _reset_reward_acc(self, tag: str = '') -> None:
+        from showdown.inference_sim.reward_telemetry import BattleRewardAccumulator
+
+        self._reward_acc = BattleRewardAccumulator()
+        self._reward_acc.reset(tag=tag)
+
+    def _observe_reward(self, pe: AbstractBattle) -> None:
+        try:
+            if self._reward_acc is None:
+                tag = str(getattr(pe, 'battle_tag', '') or '')
+                self._reset_reward_acc(tag)
+            assert self._reward_acc is not None
+            self._reward_acc.observe(pe)
+        except Exception:
+            pass
 
     def _note_finished_game(self, room: str, pe: Optional[AbstractBattle]) -> None:
         """Registra gN:tT W/L al cerrar cada partida del BO3."""
@@ -400,15 +424,35 @@ class ValidatedBattleMixin:
         turns = int(getattr(pe, 'turn', 0) or 0)
         won = bool(getattr(pe, 'won', False))
         self.series_games.append((turns, won))
+        try:
+            if self._reward_acc is None:
+                self._reset_reward_acc(tag)
+            assert self._reward_acc is not None
+            summary = self._reward_acc.finalize(pe)
+            if not hasattr(self, 'series_rewards') or self.series_rewards is None:
+                self.series_rewards = []
+            self.series_rewards.append(summary)
+            # Batch-wide list (survives reset_for_next_battle series clear)
+            if not hasattr(self, 'all_rewards') or self.all_rewards is None:
+                self.all_rewards = []
+            self.all_rewards.append(summary)
+        except Exception:
+            pass
+        self._reward_acc = None
         g = len(self.series_games)
         chat_print(f'  g{g}:t{turns}{"W" if won else "L"}')
 
     def series_games_compact(self) -> str:
         if not self.series_games:
             return '-'
+        rewards = list(getattr(self, 'series_rewards', None) or [])
         parts = []
         for i, (turns, won) in enumerate(self.series_games, start=1):
-            parts.append(f'g{i}:t{turns}{"W" if won else "L"}')
+            base = f'g{i}:t{turns}{"W" if won else "L"}'
+            if i - 1 < len(rewards):
+                r = rewards[i - 1]
+                base += f' c2={r.c2_return:+.2f}'
+            parts.append(base)
         return ' '.join(parts)
 
     def _current_pe_battle(self, room: str) -> Optional[AbstractBattle]:

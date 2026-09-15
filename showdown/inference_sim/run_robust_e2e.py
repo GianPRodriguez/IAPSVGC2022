@@ -327,8 +327,16 @@ async def _run_one_series(
                     return 'ok', 'forced_ok_after_bo3_hang'
             else:
                 decided_since = None
-                # Mid-series stall (p.ej. confirmready / handler muerto).
-                if n_games >= 1 and (loop.time() - last_progress) >= 180.0:
+                # Mid-series stall: escala con --timeout (expectimax puede
+                # tardar >180s entre games sin estar muerto).
+                stall_s = max(120.0, min(float(timeout_s) * 0.6, float(timeout_s) - 30.0))
+                if n_games >= 1 and (loop.time() - last_progress) >= stall_s:
+                    break
+                # Sin ningún game tras gran parte del budget → reto/preview colgado.
+                if (
+                    n_games == 0
+                    and (loop.time() - last_progress) >= max(90.0, float(timeout_s) * 0.5)
+                ):
                     break
 
         # timeout
@@ -339,6 +347,10 @@ async def _run_one_series(
         except (asyncio.CancelledError, Exception):
             pass
         await _cancel_challenges(player_a_pl, player_b_pl)
+        # Si ya hubo progreso decisivo en series_games, no marcar timeout duro.
+        games = list(getattr(player_a_pl, 'series_games', None) or [])
+        if bo3_series_decided(games):
+            return 'ok', 'forced_ok_on_timeout_after_bo3_decided'
         return 'timeout', f'TimeoutError({timeout_s}s)'
     finally:
         if not reject_task.done():
@@ -437,6 +449,8 @@ def _build_report(
     flags: Optional[FlagAuditResult] = None,
     player_a: str = 'greedy_solo',
     player_b: str = 'random',
+    reward_rows: Optional[List] = None,
+    reward_analysis_lines: Optional[List[str]] = None,
 ) -> str:
     decided = wins + losses
     wr_raw = (100.0 * wins / decided) if decided else 0.0
@@ -514,6 +528,25 @@ def _build_report(
         f'pair_score_ci95: [{score_lo:+.3f}, {score_hi:+.3f}]',
         f'verdict: {verdict}',
         '',
+    ]
+    try:
+        from showdown.inference_sim.reward_telemetry import format_reward_report_section
+
+        lines.extend(
+            format_reward_report_section(
+                reward_rows or [],
+                player_a=player_a,
+            )
+        )
+        lines.append('')
+    except Exception:
+        lines.extend([
+            '--- reward telemetry (player_a perspective, Spec v1.1) ---',
+            'reward_games: 0',
+            'reward_error: unavailable',
+            '',
+        ])
+    lines += [
         '--- failure kinds (invalidating matchups; series may count multiple) ---',
         f'fail_timeout: {int(fail_kinds.get("timeout", 0))}',
         f'fail_runtime: {int(fail_kinds.get("runtime", 0))}',
@@ -592,6 +625,10 @@ def _build_report(
                 f'{i}. [{status}|{tag_s}] {games} {_ascii(row["pair"])}'
                 + (f' | {row["error"]}' if row['error'] else '')
             )
+
+    if reward_analysis_lines:
+        lines.append('')
+        lines.extend(reward_analysis_lines)
 
     lines.append('')
     lines.append(f'Player A = validated({player_a}) | Player B = {player_b}')
@@ -722,7 +759,7 @@ async def run_batch(
     print(
         f'BATCH robust teams={n_teams} matchups={n_matchups} bo3={n_bo3} '
         f'(crossed) A={player_a} B={player_b} format={format_id} seed={seed} '
-        f'workers={workers} ports={ports} quiet={int(quiet)}',
+        f'workers={workers} ports={ports} timeout_s={timeout_s} quiet={int(quiet)}',
         flush=True,
     )
 
@@ -778,6 +815,7 @@ async def run_batch(
             else '-'
         )
         row['games'] = games_compact
+        row['rewards'] = list(getattr(player_a_pl, 'series_rewards', None) or [])
 
         async with print_lock:
             if outcome == 'ok' and games_done > 0:
@@ -850,7 +888,14 @@ async def run_batch(
             'pair_invalid': 0,
         }
         if not matchup_pairs:
-            return local_state, local_sound, local_fail_kinds, local_pair_outcomes, tallies
+            return (
+                local_state,
+                local_sound,
+                local_fail_kinds,
+                local_pair_outcomes,
+                tallies,
+                [],
+            )
 
         cfg = server_configuration_for_port(port)
         team_a0, team_b0 = matchup_pairs[0]
@@ -970,7 +1015,15 @@ async def run_batch(
         finally:
             await _stop_players(player_a_pl, player_b_pl)
 
-        return local_state, local_sound, local_fail_kinds, local_pair_outcomes, tallies
+        reward_rows = list(getattr(player_a_pl, 'all_rewards', None) or [])
+        return (
+            local_state,
+            local_sound,
+            local_fail_kinds,
+            local_pair_outcomes,
+            tallies,
+            reward_rows,
+        )
 
     chunks = _split_round_robin(pairs, workers)
     worker_results = await asyncio.gather(*[
@@ -978,7 +1031,8 @@ async def run_batch(
         for i in range(workers)
     ])
 
-    for local_state, local_sound, local_fk, local_po, tallies in worker_results:
+    all_reward_rows: List = []
+    for local_state, local_sound, local_fk, local_po, tallies, reward_rows in worker_results:
         _merge_state_reports(state, local_state)
         _merge_sound_reports(sound, local_sound)
         fail_kinds.update(local_fk)
@@ -987,8 +1041,38 @@ async def run_batch(
         pair_b_sweeps += tallies['pair_b']
         pair_draws += tallies['pair_draw']
         pair_invalid += tallies['pair_invalid']
+        all_reward_rows.extend(reward_rows or [])
 
     elapsed = time.perf_counter() - t0
+    analysis_lines: List[str] = []
+    try:
+        from showdown.inference_sim.reward_telemetry import (
+            build_reward_run_record,
+            format_reward_analysis,
+            load_reward_history,
+            write_reward_analysis,
+        )
+
+        rec = build_reward_run_record(
+            player_a=player_a,
+            player_b=player_b,
+            teams=n_teams,
+            seed=seed,
+            wins=wins,
+            losses=losses,
+            errors=errors,
+            reward_rows=all_reward_rows,
+            elapsed_s=elapsed,
+        )
+        hist_before = load_reward_history(matchup=str(rec.get('matchup') or ''), limit=40)
+        write_reward_analysis(rec, history_before=hist_before)
+        analysis_lines = format_reward_analysis(rec, history=hist_before + [rec])
+    except Exception as exc:
+        analysis_lines = [
+            '--- reward analysis (auto) ---',
+            f'reward_analysis_error: {exc!r}',
+        ]
+
     report = _build_report(
         n_teams=n_teams,
         n_bo3=n_bo3,
@@ -1013,6 +1097,8 @@ async def run_batch(
         flags=flag_audit,
         player_a=player_a,
         player_b=player_b,
+        reward_rows=all_reward_rows,
+        reward_analysis_lines=analysis_lines,
     )
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text(report, encoding='utf-8')
@@ -1052,7 +1138,8 @@ async def run_batch(
         f'inf_ok={inf_ok} fail_matchup_inf={fail_kinds.get("inference", 0)} '
         f'fail_bo3_inf={sound.failure_count}\n'
         f'NEED_FIX={need} NEED_FLAGS_ADD={flag_audit.flag_line()} '
-        f'elapsed_s={elapsed:.1f} workers={workers} ports={ports}',
+        f'elapsed_s={elapsed:.1f} workers={workers} ports={ports}\n'
+        f'reward_analysis={REPORT_PATH.parent / "robust_e2e_reward_analysis.txt"}',
         flush=True,
     )
     return report
@@ -1090,8 +1177,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument(
         '--timeout',
         type=float,
-        default=180.0,
-        help='Timeout por serie BO3 (s). Default 180; sube si expectimax es lento.',
+        default=None,
+        help=(
+            'Timeout por serie BO3 (s). Default: 180; '
+            '420 si player-a o player-b es expectimax_bayesian.'
+        ),
     )
     parser.add_argument('--progress-every', type=int, default=5)
     parser.add_argument('--details', action='store_true')
@@ -1113,13 +1203,21 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     quiet = not args.verbose
     ports = parse_ps_ports(workers=max(1, args.workers))
+    uses_expectimax = (
+        'expectimax' in str(args.player_a).lower()
+        or 'expectimax' in str(args.player_b).lower()
+    )
+    timeout_s = float(args.timeout) if args.timeout is not None else (
+        420.0 if uses_expectimax else 180.0
+    )
     if not quiet:
         print(
             f'PS ports={ports} up={[is_ps_up(port=p) for p in ports]} | '
             f'format={args.format} | '
             f'teams={args.teams} matchups={args.teams // 2} '
             f'bo3={args.teams} (crossed) '
-            f'A={args.player_a} B={args.player_b} workers={args.workers}'
+            f'A={args.player_a} B={args.player_b} workers={args.workers} '
+            f'timeout_s={timeout_s}'
         )
 
     asyncio.run(
@@ -1130,7 +1228,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             restart_ps=args.restart_ps,
             seed=args.seed,
             delay_s=args.delay,
-            timeout_s=args.timeout,
+            timeout_s=timeout_s,
             progress_every=args.progress_every,
             include_details=args.details,
             export=args.export,
