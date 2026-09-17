@@ -1,0 +1,46 @@
+﻿{
+  "real_calc": {
+    "greedy_joint": {
+      "incineroar": "Flare Blitz",
+      "incin_target": 2,
+      "rillaboom": "Wood Hammer",
+      "score": 1121.295816993464,
+      "left": "move slot=2->foe2 mega=0",
+      "right": "move slot=2->foe1 mega=0",
+      "phase": "joint",
+      "diverged": false
+    },
+    "expectimax_bayesian": {
+      "incineroar": "Flare Blitz",
+      "incin_target": 2,
+      "rillaboom": "Wood Hammer",
+      "score": 1121.295816993464,
+      "left": "move slot=2->foe2 mega=0",
+      "right": "move slot=2->foe1 mega=0",
+      "phase": "phase1+timeout",
+      "diverged": false
+    }
+  },
+  "override": {
+    "greedy_joint": {
+      "incineroar": "Flare Blitz",
+      "incin_target": 1,
+      "rillaboom": "Wood Hammer",
+      "score": 1088.22,
+      "left": "move slot=2->foe1 mega=0",
+      "right": "move slot=2->foe1 mega=0",
+      "phase": "joint",
+      "diverged": false
+    },
+    "expectimax_bayesian": {
+      "incineroar": "Heat Wave",
+      "incin_target": 2,
+      "rillaboom": "Heat Wave",
+      "score": 780.5555555555555,
+      "left": "move slot=3->foe2 mega=0",
+      "right": "move slot=1->foe2 mega=0",
+      "phase": "phase2",
+      "diverged": true
+    }
+  }
+}

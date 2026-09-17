@@ -229,10 +229,18 @@ def _resolve_mega_forme(species: str, item: Optional[str]) -> Optional[str]:
     if not key or 'mega' in key:
         return None
     item_id = _norm_abi(item)
-    if not item_id.endswith('ite') or item_id == 'eviolite':
+    # Charizardite Y → charizarditey (no endsWith 'ite'); eviolite excluido.
+    if not item_id or item_id == 'eviolite' or 'ite' not in item_id:
         return None
     from API.PokemonData import champions_species_key
-    for cand in (f'{key}-mega', f'{key}-mega-x', f'{key}-mega-y'):
+    # Preferir X/Y si el item lo indica.
+    if item_id.endswith('x') or item_id.endswith('itex'):
+        cands = (f'{key}-mega-x', f'{key}-mega', f'{key}-mega-y')
+    elif item_id.endswith('y') or item_id.endswith('itey'):
+        cands = (f'{key}-mega-y', f'{key}-mega', f'{key}-mega-x')
+    else:
+        cands = (f'{key}-mega', f'{key}-mega-x', f'{key}-mega-y')
+    for cand in cands:
         resolved = champions_species_key(cand)
         if resolved:
             return resolved

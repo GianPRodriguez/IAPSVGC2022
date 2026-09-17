@@ -56,11 +56,17 @@ BASELINE_PRE_TUNING: Dict[str, Any] = {
     'condemned_lasting_boost': 1.35,
     'threat_relief_weight': 1.0,
     'entry_ability_weight': 1.0,
+    'opp_policy_greedy_weight': 0.75,
+    'opp_policy_control_weight': 0.15,
+    'opp_policy_use_real_damage': False,
 }
 
 
 def config_to_dict(cfg: Optional[ExpectimaxConfig] = None) -> Dict[str, Any]:
-    return asdict(cfg or ExpectimaxConfig())
+    if cfg is None:
+        from showdown.battle_bots.expectimax_bayesian.expectimax import load_expectimax_config
+        cfg = load_expectimax_config()
+    return asdict(cfg)
 
 
 def config_diff(

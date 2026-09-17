@@ -7,6 +7,7 @@ Ambos comparten ValidatedBattleMixin (sync + soundness OTS).
 """
 from __future__ import annotations
 
+import asyncio
 from collections import Counter
 from typing import List, Optional, Type
 
@@ -136,6 +137,7 @@ class ValidatedBattleMixin:
         self.series_rewards = []
         self._reward_acc = None
         self._logged_game_tags = set()
+        self._orphan_forfeit_tags = set()
         self._last_turn_log = -1
         self.update_team(to_showdown_export(user_team))
         # Crítico: drenar cola BO3 de poke-env (si un timeout anterior no vio |win|,
@@ -145,6 +147,37 @@ class ValidatedBattleMixin:
             reset_bo3_runtime_state(self)
         except Exception:
             pass
+
+    def choose_move(self, battle: AbstractBattle):
+        """Si el BO3 ya está decidido, forfeit de games huérfanos (evita g4/g5)."""
+        try:
+            from showdown.inference_sim.bo3_runtime import bo3_series_decided
+            from poke_env.player.battle_order import (
+                DefaultBattleOrder,
+                DoubleBattleOrder,
+            )
+
+            games = list(getattr(self, 'series_games', None) or [])
+            if bo3_series_decided(games):
+                tag = (getattr(battle, 'battle_tag', None) or '').lstrip('>')
+                sent = getattr(self, '_orphan_forfeit_tags', None)
+                if sent is None:
+                    sent = set()
+                    self._orphan_forfeit_tags = sent
+                if tag and tag not in sent:
+                    sent.add(tag)
+                    try:
+                        loop = asyncio.get_running_loop()
+                        # PS exige /forfeit en la room, no en consola.
+                        loop.create_task(
+                            self.ps_client.send_message('/forfeit', room=tag)
+                        )
+                    except Exception:
+                        pass
+                return DoubleBattleOrder(DefaultBattleOrder(), DefaultBattleOrder())
+        except Exception:
+            pass
+        return super().choose_move(battle)  # type: ignore[misc]
 
     def _preview_ordered_team(self) -> TeamMeta:
         """Reordena el TeamMeta según last_preview_order (leads = primeros 2)."""
@@ -268,6 +301,10 @@ class ValidatedBattleMixin:
                     self._game_lines.append(line)
             except Exception as exc:
                 self.state_report.feed_errors += 1
+                # Conservar la línea para rebuild aunque el handler falle
+                # (p.ej. |-fieldstart| Grassy Terrain).
+                if not line.startswith('#'):
+                    self._game_lines.append(line)
                 self.state_report.add(
                     StateMismatch(
                         battle_tag=room,
@@ -420,6 +457,13 @@ class ValidatedBattleMixin:
         # Solo batallas hijas; la sala padre es game-bestof*
         if not tag.startswith('battle-'):
             return
+        # BO3 ya decidido: no registrar g4/g5 fantasma ni rewards extra.
+        try:
+            from showdown.inference_sim.bo3_runtime import bo3_series_decided
+            if bo3_series_decided(list(getattr(self, 'series_games', None) or [])):
+                return
+        except Exception:
+            pass
         self._logged_game_tags.add(tag)
         turns = int(getattr(pe, 'turn', 0) or 0)
         won = bool(getattr(pe, 'won', False))
@@ -436,6 +480,12 @@ class ValidatedBattleMixin:
             if not hasattr(self, 'all_rewards') or self.all_rewards is None:
                 self.all_rewards = []
             self.all_rewards.append(summary)
+        except Exception:
+            pass
+        try:
+            flush = getattr(self, 'flush_battle_outcome', None)
+            if callable(flush):
+                flush(won)
         except Exception:
             pass
         self._reward_acc = None

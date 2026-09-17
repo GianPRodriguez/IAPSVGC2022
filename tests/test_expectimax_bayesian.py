@@ -62,6 +62,82 @@ def test_opp_policy_sums_to_one():
     assert abs(total - 1.0) < 1e-6
 
 
+def test_opp_policy_prefers_higher_damage_when_weighted():
+    """π_opp post-calc: más masa en el move con más daño (vs uniforme legacy)."""
+    moves = [
+        MoveOption(1, 'Hurricane', 'normal', 'Special'),
+        MoveOption(2, 'Protect', 'self', 'Status'),
+        MoveOption(3, 'Ice Beam', 'normal', 'Special'),
+    ]
+    dist = opp_policy_distribution(
+        moves,
+        damage_by_slot={1: 100.0, 2: 0.0, 3: 10.0},
+        w_greedy=0.82,
+        w_control=0.12,
+        w_uniform=0.06,
+    )
+    by_name = {a.move_name.lower().replace(' ', ''): p for a, p in dist}
+    assert by_name.get('hurricane', 0) > by_name.get('icebeam', 0)
+
+
+def test_opp_policy_targeted_splits_mass_and_switch():
+    """Targets ∝ daño; switch resta masa; OL+OR no suman >1 en ataques."""
+    from collections import defaultdict
+
+    from showdown.battle_bots.expectimax_bayesian.opp_policy import opp_policy_targeted
+
+    moves = [
+        MoveOption(1, 'Hurricane', 'normal', 'Special'),
+        MoveOption(2, 'Protect', 'self', 'Status'),
+        MoveOption(3, 'Ice Beam', 'normal', 'Special'),
+    ]
+    dist = opp_policy_targeted(
+        moves,
+        damage_by_slot_target={
+            1: {1: 100.0, 2: 10.0},
+            2: {1: 0.0, 2: 0.0},
+            3: {1: 5.0, 2: 80.0},
+        },
+        available_targets=(1, 2),
+        w_greedy=0.75,
+        w_control=0.12,
+        w_uniform=0.03,
+        w_switch=0.10,
+    )
+    ol = dist['OL']
+    or_ = dist['OR']
+    assert ol and or_
+    p_ol = sum(p for _, p in ol)
+    p_or = sum(p for _, p in or_)
+    # Ataques no cubren toda la masa (control+switch restan)
+    assert p_ol + p_or < 0.95
+    ol_by: dict = defaultdict(float)
+    or_by: dict = defaultdict(float)
+    for a, p in ol:
+        ol_by[a.move_name.lower().replace(' ', '')] += p
+    for a, p in or_:
+        or_by[a.move_name.lower().replace(' ', '')] += p
+    assert ol_by.get('hurricane', 0) > ol_by.get('icebeam', 0)
+    assert or_by.get('icebeam', 0) > or_by.get('hurricane', 0)
+
+
+def test_phase2_gate_helpers_match_scored_to_atom():
+    from showdown.battle_bots.expectimax_bayesian.expectimax import (
+        _scored_matches_atom,
+    )
+    from showdown.battle_bots.greedy_joint.joint import JointAtom
+    from showdown.battle_bots.greedy_solo.greedy import ScoredAction
+
+    atom = JointAtom(move_slot=2, target=1, mega=0, utility='damage', move_name='EQ')
+    scored = ScoredAction(score=1.0, move_slot=2, target=1, mega=0)
+    assert _scored_matches_atom(scored, atom)
+    assert not _scored_matches_atom(ScoredAction(score=1.0, move_slot=3, target=1), atom)
+    sw = JointAtom(move_slot=3, target=0, mega=0, utility='switch', move_name='Switch 3')
+    assert _scored_matches_atom(
+        ScoredAction(score=0.0, move_slot=3, target=0, kind='switch'), sw,
+    )
+
+
 def test_belief_node_normalized():
     node = sample_belief_node(
         species='Pelipper',

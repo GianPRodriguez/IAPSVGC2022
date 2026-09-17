@@ -5,12 +5,12 @@ sync_ok: YES
 inf_ok: YES
 fail_matchup_inf: 0
 fail_bo3_inf: 0
-player_a: expectimax_bayesian
+player_a: greedy_solo
 player_b: greedy_joint
-player_a_wins: 5
-player_b_wins: 5
-heuristic_wins: 5
-random_wins: 5
+player_a_wins: 29
+player_b_wins: 21
+heuristic_wins: 29
+random_wins: 21
 errors: 0
 state_mismatches: 0
 soundness_failures: 0

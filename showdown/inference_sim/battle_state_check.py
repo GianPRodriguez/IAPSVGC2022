@@ -118,9 +118,75 @@ _MIRROR_FIELD_KEYS = frozenset({
     'trickroom', 'wonderroom', 'magicroom', 'gravity',
 })
 
+# Side conditions contrastadas en E2E (hazards + screens + TW).
+_MIRROR_SIDE_KEYS = frozenset({
+    'tailwind', 'reflect', 'lightscreen', 'auroraveil',
+    'stealthrock', 'spikes', 'toxicspikes', 'stickyweb',
+    'safeguard', 'mist', 'luckychant',
+    'quickguard', 'wideguard', 'craftyshield', 'matblock',
+})
+
+_STACKABLE_SIDE = {
+    'spikes': 3,
+    'toxicspikes': 2,
+}
+
+
+def _pe_side_condition_map(battle, *, opponent: bool) -> Dict[str, int]:
+    """Mapa canon→valor desde poke-env (layers o turn de inicio)."""
+    sc = getattr(battle, 'opponent_side_conditions' if opponent else 'side_conditions', None) or {}
+    out: Dict[str, int] = {}
+    for k, v in dict(sc).items():
+        ck = _canon(k)
+        if not ck or ck == 'unknown':
+            continue
+        try:
+            out[ck] = int(v) if v is not None else 1
+        except Exception:
+            out[ck] = 1
+    return out
+
+
+def _mirror_side_conditions_into_iap(iap_battle, pe_battle) -> None:
+    """Ancla side_conditions IAP a PE (hazards/TW/screens) para sync E2E."""
+    from collections import defaultdict
+
+    for opponent in (False, True):
+        side = getattr(iap_battle, 'opponent' if opponent else 'user', None)
+        if side is None:
+            continue
+        if not isinstance(getattr(side, 'side_conditions', None), dict):
+            side.side_conditions = defaultdict(lambda: 0)
+
+        pe_map = _pe_side_condition_map(pe_battle, opponent=opponent)
+        iap_sc = side.side_conditions
+
+        # Quitar del IAP lo que PE ya no tiene (solo keys conocidas).
+        for key in list(iap_sc.keys()):
+            ck = _canon(key)
+            if ck in _MIRROR_SIDE_KEYS and ck not in pe_map:
+                iap_sc.pop(key, None)
+
+        # Asegurar presencia PE → IAP (valor positivo; layers si aplica).
+        for ck, pe_val in pe_map.items():
+            if not ck or ck == 'unknown' or ck not in _MIRROR_SIDE_KEYS:
+                continue
+            cur = int(iap_sc.get(ck, 0) or 0)
+            if ck in _STACKABLE_SIDE:
+                iap_sc[ck] = max(1, min(int(_STACKABLE_SIDE[ck]), int(pe_val) if pe_val else 1))
+                continue
+            # Timed: refrescar si falta (fixplan: pe=['tailwind'] | iap=-).
+            if cur <= 0:
+                if ck == 'tailwind':
+                    iap_sc[ck] = 4
+                elif ck in ('reflect', 'lightscreen', 'auroraveil'):
+                    iap_sc[ck] = 5
+                else:
+                    iap_sc[ck] = max(1, int(pe_val) if pe_val else 1)
+
 
 def mirror_pe_field_and_boosts_into_iap(iap_battle, pe_battle) -> None:
-    """Ancla weather / fields / boosts del espejo IAP a poke-env (harness).
+    """Ancla weather / fields / side_conditions / boosts del espejo IAP a poke-env.
 
     Evita el péndulo soft-ensure↔protocol-only en sync E2E. Solo para players
     validados con PE; ladder sin PE sigue el protocolo en battle_modifier.
@@ -143,14 +209,33 @@ def mirror_pe_field_and_boosts_into_iap(iap_battle, pe_battle) -> None:
 
     pe_f = _pe_fields(pe_battle)
     terrain = getattr(iap_battle, 'terrain', None)
-    if isinstance(terrain, dict):
-        for key in list(terrain.keys()):
-            ck = _canon(key)
-            if ck in _MIRROR_FIELD_KEYS and ck not in pe_f:
-                terrain.pop(key, None)
-        for fname in pe_f:
-            if fname in _MIRROR_FIELD_KEYS and int(terrain.get(fname, 0) or 0) <= 0:
-                terrain[fname] = 5
+    if not isinstance(terrain, dict):
+        iap_battle.terrain = defaultdict(lambda: 0)
+        terrain = iap_battle.terrain
+    # Quitar del IAP lo que PE ya no tiene (solo keys de mirror).
+    for key in list(terrain.keys()):
+        ck = _canon(key)
+        if ck in _MIRROR_FIELD_KEYS and ck not in pe_f:
+            terrain.pop(key, None)
+    # PE → IAP: forzar presencia (fixplan: pe=['grassyterrain'] | iap=-).
+    exclusive = (
+        'electricterrain', 'grassyterrain', 'mistyterrain', 'psychicterrain',
+    )
+    pe_exclusive = next((f for f in exclusive if f in pe_f), None)
+    if pe_exclusive:
+        for other in exclusive:
+            if other != pe_exclusive:
+                terrain.pop(other, None)
+        terrain[pe_exclusive] = max(1, int(terrain.get(pe_exclusive, 0) or 0) or 5)
+    for fname in pe_f:
+        if fname not in _MIRROR_FIELD_KEYS:
+            continue
+        if fname in exclusive:
+            continue  # ya anclado arriba
+        # Rooms/gravity: forzar presencia (fixplan: pe=['trickroom'] | iap=-).
+        terrain[fname] = max(1, int(terrain.get(fname, 0) or 0) or 5)
+
+    _mirror_side_conditions_into_iap(iap_battle, pe_battle)
 
     pe_ours, pe_foes = _actives_pe(pe_battle)
     iap_ours, iap_foes = _actives_iap(iap_battle)

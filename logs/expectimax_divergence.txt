@@ -1,0 +1,36 @@
+--- expectimax divergence (phase1 vs phase2) ---
+div_n_choose=19888
+div_phase1_only=5 div_phase2=19883 div_diverged=12618 div_gated=0 div_timeout=11
+div_rate_all=63.4% div_rate_phase2=63.5% gate_rate=0.0%
+div_mean_delta_u=-149.78 (phase2_u - phase1_u | diverged only)
+--- joint/chosen vs greedy_solo ---
+solo_cmp=19888 neq=18097 neq_rate=91.0%
+solo_neq_turns W=2299 L=15798
+wr_with_solo_neq=51.6% (n=93) wr_eq_solo=0.0% (n=0)
+solo_neq_samples (first 8):
+  1. Δu=+1077.6 chosen=(('move', 2, 2, 0, ''), ('move', 2, 2, 0, '')) solo=(('move', 2, 2, 0, ''), ('move', 2, 1, 0, ''))
+  2. Δu=+780.2 chosen=(('move', 3, 2, 0, ''), ('move', 4, 2, 0, '')) solo=(('move', 3, 2, 0, ''), ('move', 3, 1, 0, ''))
+  3. Δu=-859.3 chosen=(('move', 1, 2, 0, ''), ('move', 3, 2, 0, '')) solo=(('move', 1, 2, 0, ''), ('move', 4, 2, 0, ''))
+  4. Δu=+891.9 chosen=(('move', 1, 1, 0, ''), ('move', 3, 1, 0, '')) solo=(('move', 1, 1, 0, ''), ('move', 3, 2, 0, ''))
+  5. Δu=-80.6 chosen=(('move', 4, 2, 0, ''), ('move', 2, 1, 1, '')) solo=(('move', 4, 2, 0, ''), ('move', 1, 1, 1, ''))
+  6. Δu=+780.2 chosen=(('move', 3, 2, 0, ''), ('move', 4, 2, 0, '')) solo=(('move', 3, 2, 0, ''), ('move', 3, 1, 0, ''))
+  7. Δu=+156.6 chosen=(('move', 1, 2, 0, ''), ('move', 3, 2, 0, '')) solo=(('move', 1, 1, 0, ''), ('move', 4, 2, 0, ''))
+  8. Δu=+915.2 chosen=(('move', 1, 1, 0, ''), ('move', 3, 1, 0, '')) solo=(('move', 1, 1, 0, ''), ('move', 3, 2, 0, ''))
+--- outcome calibration (V vs W/L) ---
+out_games=93 wr=51.6%
+out_wr_with_diverge=51.6% (n=93) out_wr_no_diverge=0.0% (n=0)
+out_div_turns W=440 L=12178
+out_mean_delta_v_div_W=+353.18 out_mean_delta_v_div_L=+231.64
+div_samples (first 40):
+  1. Δu=+154.7 p1=(('move', 1, 1, 0, ''), ('move', 4, 2, 0, '')) → p2=(('move', 1, 2, 0, ''), ('move', 3, 2, 0, '')) ms=136.9
+  2. Δu=-86.8 p1=(('move', 1, 1, 0, ''), ('move', 4, 1, 0, '')) → p2=(('move', 1, 1, 0, ''), ('move', 3, 1, 0, '')) ms=95.7
+  3. Δu=+156.6 p1=(('move', 1, 1, 0, ''), ('move', 4, 2, 0, '')) → p2=(('move', 1, 2, 0, ''), ('move', 3, 2, 0, '')) ms=140.5
+  4. Δu=-63.6 p1=(('move', 1, 1, 0, ''), ('move', 4, 1, 0, '')) → p2=(('move', 1, 1, 0, ''), ('move', 3, 1, 0, '')) ms=128.9
+  5. Δu=+5.1 p1=(('move', 1, 1, 0, ''), ('move', 3, 2, 0, '')) → p2=(('move', 1, 1, 0, ''), ('move', 1, 1, 0, '')) ms=135.1
+  6. Δu=+229.2 p1=(('move', 2, 2, 0, ''), ('move', 2, 2, 0, '')) → p2=(('move', 1, 2, 0, ''), ('move', 2, 2, 0, '')) ms=402.0
+  7. Δu=+1912.2 p1=(('move', 3, 1, 0, ''), ('move', 3, 2, 0, '')) → p2=(('move', 2, 1, 0, ''), ('move', 4, 1, 0, '')) ms=324.8
+  8. Δu=+448.0 p1=(('move', 2, 2, 0, ''), ('move', 2, 1, 0, '')) → p2=(('move', 2, 2, 0, ''), ('move', 3, 1, 0, '')) ms=328.7
+  9. Δu=-882.7 p1=(('move', 1, 1, 0, ''), ('move', 4, 2, 0, '')) → p2=(('move', 1, 2, 0, ''), ('move', 3, 1, 0, '')) ms=319.2
+  10. Δu=+952.2 p1=(None, ('move', 3, 2, 0, '')) → p2=(('move', 0, 1, 0, ''), ('move', 1, 2, 0, '')) ms=71.2
+  11. Δu=+11.2 p1=(('move', 1, 1, 0, ''), ('move', 3, 2, 0, '')) → p2=(('move', 1, 1, 0, ''), ('move', 3, 1, 0, '')) ms=68.9
+  12. Δu=+163.5 p1=(('move', 2, 2, 0, ''), ('move', 2, 2, 0, '')) → p2=(('move', 1, 2, 0, ''), ('move', 2, 2, 0, '')) ms=163.7

@@ -3,14 +3,14 @@
  BO3 GAME 1 START  |  Deep1ODDQN vs Deep1ODDQN
 ########################################################################
 ========================================================================
- TURNO 0 [DECISION]  |  rqid 3  |  BO3 game 1  |  17:52:51
+ TURNO 0 [DECISION]  |  rqid 3  |  BO3 game 1  |  00:57:33
  Deep1ODDQN  vs  Deep1ODDQN
  clima=-(0)  campo=-
 ------------------------------------------------------------------------
  YO [p2]  side=-
   A1  (vacio)
   A2  (vacio)
-  RSV  salamence 171/171 (100%) | rillaboom 193/193 (100%) | sneasler 171/171 (100%) | arcanine-hisui 172/172 (100%) | kingambit 207/207 (100%) | basculegion 199/199 (100%)
+  RSV  metagross 175/175 (100%) | garchomp 185/185 (100%) | volcarona 172/172 (100%) | sneasler 157/157 (100%) | rillaboom 207/207 (100%) | incineroar 202/202 (100%)
 ------------------------------------------------------------------------
  RIVAL [p1]  side=-  confirmados=0
   A1  (vacio)
@@ -18,693 +18,291 @@
   RSV  (vacia)
 ------------------------------------------------------------------------
  OTS (plantilla showteam; una vez por partida):
-  1. charizard  item=charizarditey  abi=solarpower  moves=HeatWave,AncientPower,Protect,WeatherBall
-  2. floette-eternal  item=floettite  abi=flowerveil  moves=DazzlingGleam,Moonblast,Protect,CalmMind
-  3. sinistcha  item=kasibberry  abi=hospitality  moves=MatchaGotcha,RagePowder,TrickRoom,Protect
-  4. garchomp  item=choicescarf  abi=roughskin  moves=DragonClaw,Earthquake,RockSlide,StompingTantrum
-  5. incineroar  item=sitrusberry  abi=intimidate  moves=PartingShot,FakeOut,ThroatChop,FlareBlitz
-  6. venusaur  item=focussash  abi=chlorophyll  moves=SludgeBomb,LeafStorm,SleepPowder,Protect
+  1. archaludon  item=leftovers  abi=stamina  moves=Protect,Snarl,ElectroShot,DragonPulse
+  2. pelipper  item=lifeorb  abi=drizzle  moves=Protect,Tailwind,Hurricane,WeatherBall
+  3. golisopod  item=golisopite  abi=emergencyexit  moves=FirstImpression,LeechLife,CloseCombat,IronHead
+  4. basculegion  item=choicescarf  abi=adaptability  moves=FlipTurn,AquaJet,WaveCrash,LastRespects
+  5. rillaboom  item=miracleseed  abi=grassysurge  moves=FakeOut,GrassyGlide,WoodHammer,HighHorsepower
+  6. farigiraf  item=sitrusberry  abi=armortail  moves=Protect,TrickRoom,Thunderbolt,Psychic
 ------------------------------------------------------------------------
- ACCION -> ['/team 1346|3']
+ ACCION -> ['/team 4612|3']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=+0.0000
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+------------------------------------------------------------------------
+ TEAM PREVIEW: ver bloque ranking en CMD (4 de 6 + why)
 ========================================================================
 
 ========================================================================
- TURNO 1 [DECISION]  |  rqid 5  |  BO3 game 1  |  17:53:09
+ TURNO 1 [DECISION]  |  rqid 5  |  BO3 game 1  |  00:57:50
  Deep1ODDQN  vs  Deep1ODDQN
- clima=-(0)  campo=-
+ clima=raindance(5)  campo=-
 ------------------------------------------------------------------------
  YO [p2]  side=-
-  A1  salamence [Dragon/Flying]  171/171 (100%)  [canMega]
-       item=salamencite  abi=moxie  status=-  boosts=-
-       stats: Atk=176 Def=100 SpA=145 SpD=90 Spe=163
-       moves: hypervoice(12), doubleedge(16), tailwind(16), protect(8)
-  A2  sneasler [Fighting/Poison]  171/171 (100%)
-       item=grassyseed  abi=unburden  status=-  boosts=-
-       stats: Atk=187 Def=80 SpA=54 SpD=100 Spe=170
-       moves: direclaw(16), closecombat(8), fakeout(12), protect(8)
-  RSV  arcanine-hisui 172/172 (100%) | basculegion 199/199 (100%)
+  A1  sneasler [Fighting/Poison]  157/157 (100%)
+       item=whiteherb  abi=unburden  status=-  boosts=-
+       stats: Atk=200 Def=80 SpA=54 SpD=100 Spe=172
+       moves: closecombat(8), direclaw(16), coaching(12), fakeout(12)
+  A2  incineroar [Fire/Dark]  202/202 (100%)
+       item=sitrusberry  abi=intimidate  status=-  boosts=-
+       stats: Atk=137 Def=110 SpA=90 SpD=156 Spe=80
+       moves: flareblitz(16), throatchop(16), partingshot(20), fakeout(12)
+  RSV  metagross 175/175 (100%) | garchomp 185/185 (100%)
 ------------------------------------------------------------------------
  RIVAL [p1]  side=-  confirmados=2
-  A1  charizard [Fire/Flying]  100/100 (100%)  [OK]
-       item=charizarditey  abi=solarpower  status=-  boosts=-
-       stats: Atk=84 Def=78 SpA=109 SpD=85 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  venusaur [Grass/Poison]  100/100 (100%)  [OK]
-       item=focussash  abi=chlorophyll  status=-  boosts=-
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
+  A1  basculegion [Water/Ghost]  100/100 (100%)  [OK]
+       item=choicescarf  abi=adaptability  status=-  boosts=atk-1
+       stats: Atk=112 Def=65 SpA=80 SpD=75 Spe=78
+       moves: FlipTurn(-1), AquaJet(-1), WaveCrash(-1), LastRespects(-1)
+  A2  pelipper [Water/Flying]  100/100 (100%)  [OK]
+       item=lifeorb  abi=drizzle  status=-  boosts=atk-1
+       stats: Atk=50 Def=100 SpA=95 SpD=70 Spe=65
+       moves: Protect(-1), Tailwind(-1), Hurricane(-1), WeatherBall(-1)
   RSV  (vacia)
 ------------------------------------------------------------------------
  STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest
+  basculegion  nat=jolly
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136
-      conv: obs=0 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=0 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 2 mega 2, move 1 1']
-========================================================================
-
-========================================================================
- TURNO 2 [DECISION]  |  rqid 7  |  BO3 game 1  |  17:53:10
- Deep1ODDQN  vs  Deep1ODDQN
- clima=sunnyday(4)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  salamence-mega [Dragon/Flying]  34/171 (20%)  [MEGA]
-       item=salamencite  abi=aerilate  status=-  boosts=-
-       stats: Atk=186 Def=150 SpA=155 SpD=99 Spe=185
-       moves: hypervoice(12), doubleedge(15), tailwind(16), protect(8)
-  A2  sneasler [Fighting/Poison]  42/171 (25%)
-       item=grassyseed  abi=unburden  status=-  boosts=-
-       stats: Atk=187 Def=80 SpA=54 SpD=100 Spe=170
-       moves: direclaw(15), closecombat(8), fakeout(12), protect(8)
-  RSV  arcanine-hisui 172/172 (100%) | basculegion 199/199 (100%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=3
-  A1  charizard-mega-y [Fire/Flying]  52/100 (52%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  garchomp [Dragon/Ground]  21/100 (21%)  [OK]
-       item=choicescarf  abi=roughskin  status=-  boosts=-
-       stats: Atk=130 Def=95 SpA=80 SpD=85 Spe=102
-       moves: DragonClaw(-1), Earthquake(-1), RockSlide(-1), StompingTantrum(-1)
-  RSV  venusaur 100/100 (100%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
+      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
       conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
+  pelipper  nat=modest
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=0 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 2 1, move 2 2']
-========================================================================
-
-========================================================================
- TURNO 2 [FORCE]  |  rqid 9  |  BO3 game 1  |  17:53:34
- Deep1ODDQN  vs  Deep1ODDQN
- clima=sunnyday(4)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  salamence-mega [Dragon/Flying]  0/171 (0%)  [FNT MEGA]
-       item=salamencite  abi=aerilate  status=-  boosts=-
-       stats: Atk=186 Def=150 SpA=155 SpD=99 Spe=185
-       moves: hypervoice(12), doubleedge(15), tailwind(16), protect(8)
-  A2  sneasler [Fighting/Poison]  0/171 (0%)  [FNT]
-       item=grassyseed  abi=unburden  status=-  boosts=-
-       stats: Atk=187 Def=80 SpA=54 SpD=100 Spe=170
-       moves: direclaw(15), closecombat(8), fakeout(12), protect(8)
-  RSV  arcanine-hisui 172/172 (100%) | basculegion 199/199 (100%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=3
-  A1  charizard-mega-y [Fire/Flying]  52/100 (52%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  garchomp [Dragon/Ground]  0/100 (0%)  [FNT OK]
-       item=choicescarf  abi=roughskin  status=-  boosts=-
-       stats: Atk=130 Def=95 SpA=80 SpD=85 Spe=102
-       moves: DragonClaw(-1), Earthquake(-1), RockSlide(-1), StompingTantrum(-1)
-  RSV  venusaur 100/100 (100%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=0 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose switch 3, switch 4']
-========================================================================
-
-========================================================================
- TURNO 3 [DECISION]  |  rqid 11  |  BO3 game 1  |  17:53:38
- Deep1ODDQN  vs  Deep1ODDQN
- clima=sunnyday(3)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
-       item=focussash  abi=rockhead  status=-  boosts=-
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(8), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  199/199 (100%)
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(12), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=3
-  A1  charizard-mega-y [Fire/Flying]  52/100 (52%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  venusaur [Grass/Poison]  100/100 (100%)  [OK]
-       item=focussash  abi=chlorophyll  status=-  boosts=-
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  garchomp[FNT] 0/100 (0%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=0 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
+      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
+      conv: obs=0 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
 ------------------------------------------------------------------------
  ACCION -> ['/choose move 2 1, move 2 1']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=+0.0000
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+------------------------------------------------------------------------
+ EXPECTIMAX: ver bloque Top-K en CMD (decision + why)
+  phase=phase2  diverged=YES  gated=NO  K=7 pairs=49/49  ms=692
 ========================================================================
 
 ========================================================================
- TURNO 4 [DECISION]  |  rqid 13  |  BO3 game 1  |  17:53:49
+ TURNO 1 [FORCE]  |  rqid 7  |  BO3 game 1  |  00:57:54
  Deep1ODDQN  vs  Deep1ODDQN
- clima=sunnyday(2)  campo=-
+ clima=raindance(5)  campo=-
 ------------------------------------------------------------------------
  YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
-       item=focussash  abi=rockhead  status=-  boosts=-
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(7), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  199/199 (100%)
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(11), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
+  A1  sneasler [Fighting/Poison]  0/157 (0%)  [FNT]
+       item=whiteherb  abi=unburden  status=-  boosts=-
+       stats: Atk=200 Def=80 SpA=54 SpD=100 Spe=172
+       moves: closecombat(8), direclaw(16), coaching(12), fakeout(12)
+  A2  incineroar [Fire/Dark]  62/202 (31%)
+       item=-  abi=intimidate  status=-  boosts=-
+       stats: Atk=137 Def=110 SpA=90 SpD=156 Spe=80
+       moves: flareblitz(16), throatchop(16), partingshot(20), fakeout(12)
+  RSV  metagross 175/175 (100%) | garchomp 185/185 (100%)
+------------------------------------------------------------------------
+ RIVAL [p1]  side=-  confirmados=2
+  A1  basculegion [Water/Ghost]  0/100 (0%)  [FNT OK]
+       item=choicescarf  abi=adaptability  status=-  boosts=-
+       stats: Atk=112 Def=65 SpA=80 SpD=75 Spe=78
+       moves: FlipTurn(-1), AquaJet(-1), WaveCrash(-1), LastRespects(-1)
+  A2  pelipper [Water/Flying]  90/100 (90%)  [OK]
+       item=lifeorb  abi=drizzle  status=-  boosts=atk-1
+       stats: Atk=50 Def=100 SpA=95 SpD=70 Spe=65
+       moves: Protect(-1), Tailwind(-1), Hurricane(-1), WeatherBall(-1)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  basculegion  nat=jolly
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
+      conv: obs=3 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  pelipper  nat=modest
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
+      conv: obs=2 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
+------------------------------------------------------------------------
+ ACCION -> ['/choose switch 3, pass']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0550  c2_episode=+0.0550
+  c1_turn=+0  c1_episode=+0
+  ui_delta=6  ui_total=6
+------------------------------------------------------------------------
+ EXPECTIMAX: ver bloque Top-K en CMD (decision + why)
+  phase=phase2  diverged=YES  gated=NO  K=7 pairs=49/49  ms=692
+========================================================================
+
+========================================================================
+ TURNO 2 [DECISION]  |  rqid 9  |  BO3 game 1  |  00:58:10
+ Deep1ODDQN  vs  Deep1ODDQN
+ clima=raindance(4)  campo=-
+------------------------------------------------------------------------
+ YO [p2]  side=-
+  A1  metagross [Steel/Psychic]  175/175 (100%)  [canMega]
+       item=metagrossite  abi=lightmetal  status=-  boosts=-
+       stats: Atk=177 Def=158 SpA=103 SpD=110 Spe=122
+       moves: ironhead(16), psychicfangs(12), stompingtantrum(12), protect(8)
+  A2  incineroar [Fire/Dark]  62/202 (31%)
+       item=-  abi=intimidate  status=-  boosts=-
+       stats: Atk=137 Def=110 SpA=90 SpD=156 Spe=80
+       moves: flareblitz(16), throatchop(15), partingshot(20), fakeout(12)
+  RSV  sneasler[FNT] 0/157 (0%) | garchomp 185/185 (100%)
 ------------------------------------------------------------------------
  RIVAL [p1]  side=-  confirmados=3
-  A1  charizard-mega-y [Fire/Flying]  52/100 (52%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  venusaur [Grass/Poison]  100/100 (100%)  [OK]
-       item=focussash  abi=chlorophyll  status=-  boosts=-
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  garchomp[FNT] 0/100 (0%)
+  A1  archaludon [Steel/Dragon]  100/100 (100%)  [OK]
+       item=leftovers  abi=stamina  status=-  boosts=-
+       stats: Atk=105 Def=130 SpA=125 SpD=65 Spe=85
+       moves: Protect(-1), Snarl(-1), ElectroShot(-1), DragonPulse(-1)
+  A2  pelipper [Water/Flying]  90/100 (90%)  [OK]
+       item=lifeorb  abi=drizzle  status=-  boosts=atk-1
+       stats: Atk=50 Def=100 SpA=95 SpD=70 Spe=65
+       moves: Protect(-1), Tailwind(-1), Hurricane(-1), WeatherBall(-1)
+  RSV  basculegion[FNT] 0/100 (0%)
 ------------------------------------------------------------------------
  STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
+  archaludon  nat=calm
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
+      est:  HP=165-181 Atk=112-126 Def=150-166 SpA=145-161 SpD=93-111 Spe=105-121
+      conv: obs=0 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
+  basculegion  nat=jolly
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=0 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 2 1, move 2 1']
-========================================================================
-
-========================================================================
- TURNO 5 [DECISION]  |  rqid 15  |  BO3 game 1  |  17:54:04
- Deep1ODDQN  vs  Deep1ODDQN
- clima=sunnyday(1)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
-       item=focussash  abi=rockhead  status=slp  boosts=atk-1
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(7), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  199/199 (100%)
-       item=mysticwater  abi=adaptability  status=-  boosts=atk-1
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(10), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=4
-  A1  incineroar [Fire/Dark]  70/100 (70%)  [OK]
-       item=sitrusberry  abi=intimidate  status=-  boosts=-
-       stats: Atk=115 Def=90 SpA=80 SpD=90 Spe=60
-       moves: PartingShot(-1), FakeOut(-1), ThroatChop(-1), FlareBlitz(-1)
-  A2  venusaur [Grass/Poison]  100/100 (100%)  [OK]
-       item=focussash  abi=chlorophyll  status=-  boosts=-
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  garchomp[FNT] 0/100 (0%) | charizard-mega-y 52/100 (52%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=1 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=0 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 1 2, move 1 1']
-========================================================================
-
-========================================================================
- TURNO 5 [WAIT]  |  rqid 17  |  BO3 game 1  |  17:54:17
- Deep1ODDQN  vs  Deep1ODDQN
- clima=sunnyday(1)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
-       item=focussash  abi=rockhead  status=slp  boosts=atk-2 spa-1
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(7), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  0/199 (0%)  [FNT]
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(10), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=4
-  A1  incineroar [Fire/Dark]  70/100 (70%)  [OK]
-       item=sitrusberry  abi=intimidate  status=-  boosts=-
-       stats: Atk=115 Def=90 SpA=80 SpD=90 Spe=60
-       moves: PartingShot(-1), FakeOut(-1), ThroatChop(-1), FlareBlitz(-1)
-  A2  venusaur [Grass/Poison]  100/100 (100%)  [OK]
-       item=focussash  abi=chlorophyll  status=-  boosts=spa-2
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  garchomp[FNT] 0/100 (0%) | charizard-mega-y 52/100 (52%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=1 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=1 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> (wait)
-========================================================================
-
-========================================================================
- TURNO 6 [DECISION]  |  rqid 19  |  BO3 game 1  |  17:54:27
- Deep1ODDQN  vs  Deep1ODDQN
- clima=none(0)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
-       item=focussash  abi=rockhead  status=slp  boosts=atk-2 spa-1
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(7), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  0/199 (0%)  [FNT]
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(10), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=4
-  A1  charizard-mega-y [Fire/Flying]  52/100 (52%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  venusaur [Grass/Poison]  100/100 (100%)  [OK]
-       item=focussash  abi=chlorophyll  status=-  boosts=spa-2
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  garchomp[FNT] 0/100 (0%) | incineroar 70/100 (70%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=1 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=1 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 2 1, pass']
-========================================================================
-
-========================================================================
- TURNO 7 [DECISION]  |  rqid 21  |  BO3 game 1  |  17:54:38
- Deep1ODDQN  vs  Deep1ODDQN
- clima=none(0)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
-       item=focussash  abi=rockhead  status=-  boosts=atk-3 spa-1
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(6), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  0/199 (0%)  [FNT]
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(10), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=4
-  A1  charizard-mega-y [Fire/Flying]  52/100 (52%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  incineroar [Fire/Dark]  70/100 (70%)  [OK]
-       item=sitrusberry  abi=intimidate  status=-  boosts=-
-       stats: Atk=115 Def=90 SpA=80 SpD=90 Spe=60
-       moves: PartingShot(-1), FakeOut(-1), ThroatChop(-1), FlareBlitz(-1)
-  RSV  garchomp[FNT] 0/100 (0%) | venusaur 100/100 (100%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=1 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=1 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 2 1, pass']
-========================================================================
-
-========================================================================
- TURNO 8 [DECISION]  |  rqid 23  |  BO3 game 1  |  17:54:45
- Deep1ODDQN  vs  Deep1ODDQN
- clima=none(0)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  52/172 (30%)
-       item=focussash  abi=rockhead  status=-  boosts=atk-3 spa-1
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(6), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  0/199 (0%)  [FNT]
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(10), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=4
-  A1  charizard-mega-y [Fire/Flying]  52/100 (52%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  incineroar [Fire/Dark]  70/100 (70%)  [OK]
-       item=sitrusberry  abi=intimidate  status=-  boosts=-
-       stats: Atk=115 Def=90 SpA=80 SpD=90 Spe=60
-       moves: PartingShot(-1), FakeOut(-1), ThroatChop(-1), FlareBlitz(-1)
-  RSV  garchomp[FNT] 0/100 (0%) | venusaur 100/100 (100%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=3 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=1 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 2 1, pass']
-========================================================================
-
-========================================================================
- TURNO 8 [WAIT]  |  rqid 25  |  BO3 game 1  |  17:54:55
- Deep1ODDQN  vs  Deep1ODDQN
- clima=none(0)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  52/172 (30%)
-       item=focussash  abi=rockhead  status=-  boosts=atk-4 spa-2
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(6), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  0/199 (0%)  [FNT]
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(10), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=4
-  A1  charizard-mega-y [Fire/Flying]  52/100 (52%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  incineroar [Fire/Dark]  70/100 (70%)  [OK]
-       item=sitrusberry  abi=intimidate  status=-  boosts=-
-       stats: Atk=115 Def=90 SpA=80 SpD=90 Spe=60
-       moves: PartingShot(-1), FakeOut(-1), ThroatChop(-1), FlareBlitz(-1)
-  RSV  garchomp[FNT] 0/100 (0%) | venusaur 100/100 (100%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=3 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
+      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
       conv: obs=3 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
+  pelipper  nat=modest
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=1 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
+      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
+      conv: obs=2 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
 ------------------------------------------------------------------------
- ACCION -> (wait)
+ ACCION -> ['/choose move 2 mega 2, move 2 2']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=-0.2000  c2_episode=-0.1450
+  c1_turn=+0  c1_episode=+0
+  ui_delta=-20  ui_total=-20
+------------------------------------------------------------------------
+ EXPECTIMAX: ver bloque Top-K en CMD (decision + why)
+  phase=phase2  diverged=NO  gated=NO  K=7 pairs=42/49  ms=268
 ========================================================================
 
 ========================================================================
- TURNO 9 [DECISION]  |  rqid 27  |  BO3 game 1  |  17:55:06
+ TURNO 2 [FORCE]  |  rqid 11  |  BO3 game 1  |  00:58:20
  Deep1ODDQN  vs  Deep1ODDQN
- clima=none(0)  campo=-
+ clima=raindance(4)  campo=-
 ------------------------------------------------------------------------
  YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  52/172 (30%)
-       item=focussash  abi=rockhead  status=-  boosts=atk-4 spa-2
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(5), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  0/199 (0%)  [FNT]
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(10), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
+  A1  metagross-mega [Steel/Psychic]  36/175 (21%)  [MEGA]
+       item=metagrossite  abi=toughclaws  status=-  boosts=-
+       stats: Atk=188 Def=178 SpA=112 SpD=130 Spe=162
+       moves: ironhead(16), psychicfangs(12), stompingtantrum(12), protect(8)
+  A2  incineroar [Fire/Dark]  0/202 (0%)  [FNT]
+       item=-  abi=intimidate  status=-  boosts=-
+       stats: Atk=137 Def=110 SpA=90 SpD=156 Spe=80
+       moves: flareblitz(16), throatchop(15), partingshot(20), fakeout(12)
+  RSV  sneasler[FNT] 0/157 (0%) | garchomp 185/185 (100%)
 ------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=4
-  A1  charizard-mega-y [Fire/Flying]  52/100 (52%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  venusaur [Grass/Poison]  100/100 (100%)  [OK]
-       item=focussash  abi=chlorophyll  status=-  boosts=-
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  garchomp[FNT] 0/100 (0%) | incineroar 70/100 (70%)
+ RIVAL [p1]  side=-  confirmados=3
+  A1  archaludon [Steel/Dragon]  100/100 (100%)  [OK]
+       item=leftovers  abi=stamina  status=-  boosts=spa+1
+       stats: Atk=105 Def=130 SpA=125 SpD=65 Spe=85
+       moves: Protect(-1), Snarl(-1), ElectroShot(-1), DragonPulse(-1)
+  A2  pelipper [Water/Flying]  16/100 (16%)  [OK]
+       item=lifeorb  abi=drizzle  status=-  boosts=atk-1
+       stats: Atk=50 Def=100 SpA=95 SpD=70 Spe=65
+       moves: Protect(-1), Tailwind(-1), Hurricane(-1), WeatherBall(-1)
+  RSV  basculegion[FNT] 0/100 (0%)
 ------------------------------------------------------------------------
  STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
+  archaludon  nat=calm
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=3 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
+      est:  HP=165-181 Atk=112-126 Def=150-166 SpA=145-161 SpD=93-111 Spe=105-121
+      conv: obs=0 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
+  basculegion  nat=jolly
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
+      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
       conv: obs=3 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
+  pelipper  nat=modest
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=1 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
+      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
+      conv: obs=3 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
 ------------------------------------------------------------------------
- ACCION -> ['/choose move 2 1, pass']
+ ACCION -> ['/choose pass, switch 4']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=-0.1130  c2_episode=-0.2580
+  c1_turn=+0  c1_episode=+0
+  ui_delta=-11  ui_total=-11
+------------------------------------------------------------------------
+ EXPECTIMAX: ver bloque Top-K en CMD (decision + why)
+  phase=phase2  diverged=NO  gated=NO  K=7 pairs=42/49  ms=268
 ========================================================================
 
 ========================================================================
- TURNO 10 [DECISION]  |  rqid 29  |  BO3 game 1  |  17:55:09
+ TURNO 3 [DECISION]  |  rqid 13  |  BO3 game 1  |  00:58:21
  Deep1ODDQN  vs  Deep1ODDQN
- clima=none(0)  campo=-
+ clima=raindance(3)  campo=-
 ------------------------------------------------------------------------
  YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  52/172 (30%)
-       item=focussash  abi=rockhead  status=-  boosts=atk-5 spa-2
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(4), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  0/199 (0%)  [FNT]
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(10), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
+  A1  metagross-mega [Steel/Psychic]  36/175 (21%)  [MEGA]
+       item=metagrossite  abi=toughclaws  status=-  boosts=-
+       stats: Atk=188 Def=178 SpA=112 SpD=130 Spe=162
+       moves: ironhead(16), psychicfangs(11), stompingtantrum(12), protect(8)
+  A2  garchomp [Dragon/Ground]  185/185 (100%)
+       item=garchompitez  abi=roughskin  status=-  boosts=-
+       stats: Atk=163 Def=115 SpA=110 SpD=105 Spe=154
+       moves: dracometeor(8), powergem(20), flamethrower(16), protect(8)
+  RSV  sneasler[FNT] 0/157 (0%) | incineroar[FNT] 0/202 (0%)
 ------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=4
-  A1  incineroar [Fire/Dark]  58/100 (58%)  [OK]
-       item=-  abi=intimidate  status=-  boosts=-
-       stats: Atk=115 Def=90 SpA=80 SpD=90 Spe=60
-       moves: PartingShot(-1), FakeOut(-1), ThroatChop(-1), FlareBlitz(-1)
-  A2  venusaur [Grass/Poison]  100/100 (100%)  [OK]
-       item=focussash  abi=chlorophyll  status=-  boosts=-
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  garchomp[FNT] 0/100 (0%) | charizard-mega-y 52/100 (52%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=3 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=4 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=1 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 2 1, pass']
-========================================================================
-
-========================================================================
- TURNO 11 [DECISION]  |  rqid 31  |  BO3 game 1  |  17:55:21
- Deep1ODDQN  vs  Deep1ODDQN
- clima=none(0)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  3/172 (2%)
-       item=focussash  abi=rockhead  status=-  boosts=atk-5 spa-2
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(4), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  0/199 (0%)  [FNT]
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(10), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=4
-  A1  incineroar [Fire/Dark]  58/100 (58%)  [OK]
-       item=-  abi=intimidate  status=-  boosts=-
-       stats: Atk=115 Def=90 SpA=80 SpD=90 Spe=60
-       moves: PartingShot(-1), FakeOut(-1), ThroatChop(-1), FlareBlitz(-1)
-  A2  venusaur [Grass/Poison]  100/100 (100%)  [OK]
-       item=focussash  abi=chlorophyll  status=-  boosts=-
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  garchomp[FNT] 0/100 (0%) | charizard-mega-y 52/100 (52%)
+ RIVAL [p1]  side=-  confirmados=3
+  A1  archaludon [Steel/Dragon]  100/100 (100%)  [OK]
+       item=leftovers  abi=stamina  status=-  boosts=spa+1
+       stats: Atk=105 Def=130 SpA=125 SpD=65 Spe=85
+       moves: Protect(-1), Snarl(-1), ElectroShot(-1), DragonPulse(-1)
+  A2  pelipper [Water/Flying]  16/100 (16%)  [OK]
+       item=lifeorb  abi=drizzle  status=-  boosts=atk-1
+       stats: Atk=50 Def=100 SpA=95 SpD=70 Spe=65
+       moves: Protect(-1), Tailwind(-1), Hurricane(-1), WeatherBall(-1)
+  RSV  basculegion[FNT] 0/100 (0%)
 ------------------------------------------------------------------------
  STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
+  archaludon  nat=calm
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=3 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
+      est:  HP=165-181 Atk=112-126 Def=150-166 SpA=145-161 SpD=93-111 Spe=105-121
+      conv: obs=0 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
+  basculegion  nat=jolly
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
+      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
+      conv: obs=3 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  pelipper  nat=modest
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=5 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
+      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
+      conv: obs=3 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
 ------------------------------------------------------------------------
- ACCION -> ['/choose move 2 1, pass']
+ ACCION -> ['/choose move 3 2, move 1 2']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=-0.2580
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+------------------------------------------------------------------------
+ EXPECTIMAX: ver bloque Top-K en CMD (decision + why)
+  phase=phase2  diverged=YES  gated=NO  K=7 pairs=49/49  ms=342
 ========================================================================
 
 ########################################################################
- BO3 GAME 1 END  |  win: VelascoAlvarado  |  Deep1ODDQN vs Deep1ODDQN
+ BO3 GAME 1 END  |  win: popplioperu98  |  Deep1ODDQN vs Deep1ODDQN
 ########################################################################
 
 ########################################################################
  BO3 GAME 2 START  |  Deep1ODDQN vs Deep1ODDQN
 ########################################################################
 ========================================================================
- TURNO 0 [DECISION]  |  rqid 3  |  BO3 game 2  |  17:55:53
+ TURNO 0 [DECISION]  |  rqid 3  |  BO3 game 2  |  00:59:11
  Deep1ODDQN  vs  Deep1ODDQN
  clima=-(0)  campo=-
 ------------------------------------------------------------------------
  YO [p2]  side=-
   A1  (vacio)
   A2  (vacio)
-  RSV  salamence 171/171 (100%) | rillaboom 193/193 (100%) | sneasler 171/171 (100%) | arcanine-hisui 172/172 (100%) | kingambit 207/207 (100%) | basculegion 199/199 (100%)
+  RSV  metagross 175/175 (100%) | garchomp 185/185 (100%) | volcarona 172/172 (100%) | sneasler 157/157 (100%) | rillaboom 207/207 (100%) | incineroar 202/202 (100%)
 ------------------------------------------------------------------------
  RIVAL [p1]  side=-  confirmados=0
   A1  (vacio)
@@ -712,328 +310,33 @@
   RSV  (vacia)
 ------------------------------------------------------------------------
  STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
+  archaludon  nat=calm
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=3 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
+      est:  HP=165-181 Atk=112-126 Def=150-166 SpA=145-161 SpD=93-111 Spe=105-121
+      conv: obs=0 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
+  basculegion  nat=jolly
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
+      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
+      conv: obs=3 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  pelipper  nat=modest
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=5 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
+      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
+      conv: obs=3 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
 ------------------------------------------------------------------------
  OTS (plantilla showteam; una vez por partida):
-  1. charizard  item=charizarditey  abi=solarpower  moves=HeatWave,AncientPower,Protect,WeatherBall
-  2. floette-eternal  item=floettite  abi=flowerveil  moves=DazzlingGleam,Moonblast,Protect,CalmMind
-  3. sinistcha  item=kasibberry  abi=hospitality  moves=MatchaGotcha,RagePowder,TrickRoom,Protect
-  4. garchomp  item=choicescarf  abi=roughskin  moves=DragonClaw,Earthquake,RockSlide,StompingTantrum
-  5. incineroar  item=sitrusberry  abi=intimidate  moves=PartingShot,FakeOut,ThroatChop,FlareBlitz
-  6. venusaur  item=focussash  abi=chlorophyll  moves=SludgeBomb,LeafStorm,SleepPowder,Protect
+  1. archaludon  item=leftovers  abi=stamina  moves=Protect,Snarl,ElectroShot,DragonPulse
+  2. pelipper  item=lifeorb  abi=drizzle  moves=Protect,Tailwind,Hurricane,WeatherBall
+  3. golisopod  item=golisopite  abi=emergencyexit  moves=FirstImpression,LeechLife,CloseCombat,IronHead
+  4. basculegion  item=choicescarf  abi=adaptability  moves=FlipTurn,AquaJet,WaveCrash,LastRespects
+  5. rillaboom  item=miracleseed  abi=grassysurge  moves=FakeOut,GrassyGlide,WoodHammer,HighHorsepower
+  6. farigiraf  item=sitrusberry  abi=armortail  moves=Protect,TrickRoom,Thunderbolt,Psychic
 ------------------------------------------------------------------------
- ACCION -> ['/team 1346|3']
+ ACCION -> ['/team 4612|3']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=+0.0000
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+------------------------------------------------------------------------
+ TEAM PREVIEW: ver bloque ranking en CMD (4 de 6 + why)
 ========================================================================
-
-========================================================================
- TURNO 1 [DECISION]  |  rqid 5  |  BO3 game 2  |  17:56:01
- Deep1ODDQN  vs  Deep1ODDQN
- clima=-(0)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  salamence [Dragon/Flying]  171/171 (100%)  [canMega]
-       item=salamencite  abi=moxie  status=-  boosts=-
-       stats: Atk=176 Def=100 SpA=145 SpD=90 Spe=163
-       moves: hypervoice(12), doubleedge(16), tailwind(16), protect(8)
-  A2  sneasler [Fighting/Poison]  171/171 (100%)
-       item=grassyseed  abi=unburden  status=-  boosts=-
-       stats: Atk=187 Def=80 SpA=54 SpD=100 Spe=170
-       moves: direclaw(16), closecombat(8), fakeout(12), protect(8)
-  RSV  arcanine-hisui 172/172 (100%) | basculegion 199/199 (100%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=2
-  A1  charizard [Fire/Flying]  100/100 (100%)  [OK]
-       item=charizarditey  abi=solarpower  status=-  boosts=-
-       stats: Atk=84 Def=78 SpA=109 SpD=85 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  venusaur [Grass/Poison]  100/100 (100%)  [OK]
-       item=focussash  abi=chlorophyll  status=-  boosts=-
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  (vacia)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136
-      conv: obs=3 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=5 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 2 mega 2, move 1 1']
-========================================================================
-
-========================================================================
- TURNO 2 [DECISION]  |  rqid 7  |  BO3 game 2  |  17:56:18
- Deep1ODDQN  vs  Deep1ODDQN
- clima=sunnyday(4)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  salamence-mega [Dragon/Flying]  101/171 (59%)  [MEGA]
-       item=salamencite  abi=aerilate  status=slp  boosts=-
-       stats: Atk=186 Def=150 SpA=155 SpD=99 Spe=185
-       moves: hypervoice(12), doubleedge(16), tailwind(16), protect(8)
-  A2  sneasler [Fighting/Poison]  35/171 (20%)
-       item=grassyseed  abi=unburden  status=-  boosts=-
-       stats: Atk=187 Def=80 SpA=54 SpD=100 Spe=170
-       moves: direclaw(15), closecombat(8), fakeout(12), protect(8)
-  RSV  arcanine-hisui 172/172 (100%) | basculegion 199/199 (100%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=2
-  A1  charizard-mega-y [Fire/Flying]  51/100 (51%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  venusaur [Grass/Poison]  100/100 (100%)  [OK]
-       item=focussash  abi=chlorophyll  status=-  boosts=-
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  (vacia)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=5 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=5 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 2 2, move 1 1']
-========================================================================
-
-========================================================================
- TURNO 2 [FORCE]  |  rqid 9  |  BO3 game 2  |  17:56:35
- Deep1ODDQN  vs  Deep1ODDQN
- clima=sunnyday(4)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  salamence-mega [Dragon/Flying]  0/171 (0%)  [FNT MEGA]
-       item=salamencite  abi=aerilate  status=-  boosts=-
-       stats: Atk=186 Def=150 SpA=155 SpD=99 Spe=185
-       moves: hypervoice(12), doubleedge(16), tailwind(16), protect(8)
-  A2  sneasler [Fighting/Poison]  0/171 (0%)  [FNT]
-       item=grassyseed  abi=unburden  status=-  boosts=-
-       stats: Atk=187 Def=80 SpA=54 SpD=100 Spe=170
-       moves: direclaw(15), closecombat(8), fakeout(12), protect(8)
-  RSV  arcanine-hisui 172/172 (100%) | basculegion 199/199 (100%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=2
-  A1  charizard-mega-y [Fire/Flying]  51/100 (51%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  venusaur [Grass/Poison]  1/100 (1%)  [OK]
-       item=-  abi=chlorophyll  status=-  boosts=-
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  (vacia)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=7 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=5 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose switch 3, switch 4']
-========================================================================
-
-========================================================================
- TURNO 3 [DECISION]  |  rqid 11  |  BO3 game 2  |  17:56:36
- Deep1ODDQN  vs  Deep1ODDQN
- clima=sunnyday(3)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
-       item=focussash  abi=rockhead  status=-  boosts=-
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(8), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  199/199 (100%)
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(12), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=2
-  A1  charizard-mega-y [Fire/Flying]  51/100 (51%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  venusaur [Grass/Poison]  1/100 (1%)  [OK]
-       item=-  abi=chlorophyll  status=-  boosts=-
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  (vacia)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=7 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=5 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=2 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 2 1, move 2 2']
-========================================================================
-
-========================================================================
- TURNO 3 [WAIT]  |  rqid 13  |  BO3 game 2  |  17:57:43
- Deep1ODDQN  vs  Deep1ODDQN
- clima=sunnyday(3)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  97/172 (56%)
-       item=focussash  abi=rockhead  status=-  boosts=-
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(8), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  133/199 (67%)
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(12), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=2
-  A1  charizard-mega-y [Fire/Flying]  51/100 (51%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  venusaur [Grass/Poison]  0/100 (0%)  [FNT OK]
-       item=-  abi=chlorophyll  status=-  boosts=-
-       stats: Atk=82 Def=83 SpA=100 SpD=100 Spe=80
-       moves: SludgeBomb(-1), LeafStorm(-1), SleepPowder(-1), Protect(-1)
-  RSV  (vacia)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=11 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=5 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=4 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> (wait)
-========================================================================
-
-========================================================================
- TURNO 4 [DECISION]  |  rqid 15  |  BO3 game 2  |  17:57:54
- Deep1ODDQN  vs  Deep1ODDQN
- clima=sunnyday(2)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  97/172 (56%)
-       item=focussash  abi=rockhead  status=-  boosts=-
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(7), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  133/199 (67%)
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(11), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=3
-  A1  charizard-mega-y [Fire/Flying]  51/100 (51%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  garchomp [Dragon/Ground]  100/100 (100%)  [OK]
-       item=choicescarf  abi=roughskin  status=-  boosts=-
-       stats: Atk=130 Def=95 SpA=80 SpD=85 Spe=102
-       moves: DragonClaw(-1), Earthquake(-1), RockSlide(-1), StompingTantrum(-1)
-  RSV  venusaur[FNT] 0/100 (0%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=11 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=5 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=4 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 2 1, move 2 1']
-========================================================================
-
-########################################################################
- BO3 GAME 2 END  |  win: VelascoAlvarado  |  Deep1ODDQN vs Deep1ODDQN
-########################################################################

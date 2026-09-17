@@ -87,8 +87,39 @@ def bootstrap_battle(user_team: TeamMeta, opp_team: TeamMeta) -> HarnessBattle:
     return battle
 
 
+def _soft_fieldish(battle: Battle, action: str, parts: list) -> None:
+    """Último recurso si el handler de campo/clima/bando falla."""
+    from collections import defaultdict
+    from showdown.battle_modifier import _parse_field_condition_name
+
+    if not isinstance(getattr(battle, 'terrain', None), dict):
+        battle.terrain = defaultdict(lambda: 0)
+    if action == '-fieldstart' and len(parts) >= 3:
+        name = _parse_field_condition_name(parts[2])
+        if name:
+            battle.terrain[name] = max(1, int(battle.terrain.get(name, 0) or 0) or 5)
+    elif action == '-fieldend' and len(parts) >= 3:
+        name = _parse_field_condition_name(parts[2])
+        if name:
+            battle.terrain.pop(name, None)
+    elif action == '-weather' and len(parts) >= 3:
+        raw = (parts[2] or '').strip().lower()
+        if raw in ('none', 'null', ''):
+            battle.weather = 'none'
+            battle.weatherTurn = 0
+        else:
+            from teams.team_converter import normalize_name
+            battle.weather = normalize_name(parts[2])
+            if int(getattr(battle, 'weatherTurn', 0) or 0) <= 0:
+                battle.weatherTurn = 5
+
+
 def feed_line(battle: Battle, line: str) -> Optional[str]:
-    """Procesa una línea PS. Devuelve la action si se manejó."""
+    """Procesa una línea PS. Devuelve la action si se manejó.
+
+    Handlers de protocolo no deben tumbar el espejo: se aíslan excepciones y
+    las acciones de campo se recuperan en soft-path (fixplan feed_errors).
+    """
     line = line.strip()
     if not line or line.startswith('>'):
         return None
@@ -101,7 +132,19 @@ def feed_line(battle: Battle, line: str) -> Optional[str]:
     fn = BATTLE_MODIFIERS_LOOKUP.get(action)
     if fn is None:
         return None
-    fn(battle, parts)
+    try:
+        fn(battle, parts)
+    except Exception:
+        if action in (
+            '-fieldstart', '-fieldend', '-weather',
+            '-sidestart', '-sideend', 'turn',
+        ):
+            try:
+                fn(battle, parts)
+            except Exception:
+                _soft_fieldish(battle, action, parts)
+        # Nunca tumbar el espejo: contrast/mirror anclan campos críticos.
+        # (fixplan: N feed_errors → sync_ok=NO aunque mismatches reales=0)
     return action
 
 

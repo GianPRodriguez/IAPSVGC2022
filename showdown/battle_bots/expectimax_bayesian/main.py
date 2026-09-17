@@ -21,6 +21,7 @@ from showdown.battle_bots.expectimax_bayesian.expectimax import (
     ExpectimaxConfig,
     ReserveOption,
     best_expectimax_bayesian_action,
+    load_expectimax_config,
 )
 from showdown.battle_bots.expectimax_bayesian.belief import extract_known_moves
 from showdown.battle_bots.expectimax_bayesian.utility import FieldPositionBonus
@@ -29,7 +30,7 @@ from showdown.battle_bots.greedy_solo.team_preview import (
     mon_from_species,
 )
 from showdown.battle_bots.expectimax_bayesian.team_preview import (
-    best_expectimax_preview_order,
+    best_expectimax_preview_with_meta,
 )
 from showdown.battle_bots.move_mechanics import (
     is_must_recharge_from_volatiles,
@@ -156,7 +157,8 @@ class BattleBot(Battle):
         super().__init__(*args, **kwargs)
         self.last_preview_order: Tuple[int, ...] = (1, 2, 3, 4)
         self.last_expectimax_meta = None
-        self.expectimax_config = ExpectimaxConfig()
+        self.last_preview_meta = None
+        self.expectimax_config = load_expectimax_config()
         self.opp_ots_sheet = {}
 
     def set_opp_ots_sheet(self, sheet) -> None:
@@ -226,9 +228,10 @@ class BattleBot(Battle):
         for i, opp in enumerate(getattr(battle.opponent, 'opponents', []) or [], start=1):
             foes.append(mon_from_species(i, getattr(opp, 'name', f'foe{i}')))
 
-        scored = best_expectimax_preview_order(our, foes)
+        scored, pmeta = best_expectimax_preview_with_meta(our, foes)
         order = scored.order
         self.last_preview_order = order
+        self.last_preview_meta = pmeta
 
         names = []
         for idx in order:

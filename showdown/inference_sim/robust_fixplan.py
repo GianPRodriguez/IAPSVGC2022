@@ -41,6 +41,8 @@ _HEUR_TARGETS = [
     'showdown/battle_bots/expectimax_bayesian/expectimax.py',
     'showdown/battle_bots/expectimax_bayesian/main.py',
     'showdown/battle_bots/expectimax_bayesian/pokeenv_player.py',
+    'showdown/inference_sim/run_robust_e2e.py',
+    'showdown/inference_sim/bo3_runtime.py',
     'showdown/tools/calc_core.js',
 ]
 
@@ -220,6 +222,12 @@ def build_fixplan(report_text: str) -> str:
         lines.append('')
         lines.append('INFERENCE_SAMPLES:')
         lines.extend(inf_samples[:12])
+
+    runtime_samples = _section_lines(report_text, '--- runtime error samples (capped) ---', 12)
+    if runtime_samples:
+        lines.append('')
+        lines.append('RUNTIME_SAMPLES:')
+        lines.extend(runtime_samples[:10])
 
     lines.append('')
     lines.append(f'Source report: {REPORT_PATH}')

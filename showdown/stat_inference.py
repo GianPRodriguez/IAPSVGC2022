@@ -1216,13 +1216,27 @@ class TeamStatBeliefs:
 
         dropped_spe = prev_spe - allowed
         # Poda agresiva que salta a un bloque alto (o descarta un tramo bajo amplio):
-        # típico desync Spe efectiva / Tailwind / slot. Preferir no estrechar.
+        # típico desync Spe efectiva / Tailwind / slot / nature. Preferir no estrechar.
+        # Volcarona Spe true_sp=0 → min(allowed)=7 con 26 cands (gap 7): el umbral
+        # antiguo (+8 y len(allowed)<=14) no disparaba.
+        # Lucario Spe true_sp=32 → allowed SP0..18 (19 cands): len(allowed)<=16 fallaba.
         if (
             dropped_spe
             and allowed
             and (
-                (min(allowed) > min(prev_spe) + 8 and len(allowed) <= 14 and len(dropped_spe) >= 8)
-                or (max_sp in dropped_spe and len(dropped_spe) >= 6 and len(allowed) <= 16)
+                (
+                    SP_MIN in dropped_spe
+                    and min(allowed) >= SP_MIN + 3
+                    and len(dropped_spe) >= 3
+                )
+                or (
+                    min(allowed) > min(prev_spe) + 5
+                    and len(dropped_spe) >= 5
+                )
+                or (
+                    max_sp in dropped_spe
+                    and len(dropped_spe) >= 5
+                )
             )
         ):
             belief.skipped += 1
@@ -1541,11 +1555,11 @@ class TeamStatBeliefs:
             return False
 
         prev_u = set(belief.candidates[unknown_stat])
-        # Frontera baja SP=0..2: redondeo calc vs PS (Maushold Def 90/91→92)
-        # expulsaba el verdadero SP=0 con un salto corto; la guarda de +1 no basta.
+        # Frontera baja SP=0..N: redondeo calc vs PS (Maushold Def; Sylveon Def
+        # true_sp=0 → banda 88-101 expulsaba SP0 con gap 5 y 28 cands).
         if SP_MIN in prev_u and allowed_u and SP_MIN not in allowed_u:
             gap = int(min(allowed_u)) - SP_MIN
-            if 1 <= gap <= 3 and len(allowed_u) >= len(prev_u) - gap - 1:
+            if 1 <= gap <= 5 and len(allowed_u) >= len(prev_u) - gap - 1:
                 allowed_u.update(range(SP_MIN, int(min(allowed_u))))
 
         # Poda que salta a un bloque alto descartando un tramo bajo amplio:
@@ -1556,7 +1570,7 @@ class TeamStatBeliefs:
         if (
             dropped
             and allowed_u
-            and min(allowed_u) > min(prev_u) + 5
+            and min(allowed_u) >= min(prev_u) + 5
             and len(dropped) >= 5
         ):
             belief.skipped += 1
@@ -1577,7 +1591,17 @@ class TeamStatBeliefs:
                 and max(allowed_hp) + 8 <= max(prev_hp)
                 and len(dropped_hp) >= 6
             )
-            if hp_aggressive:
+            # Techo fino SP_MAX..-2 (Golisopod-mega HP 166 vs banda 150-165):
+            # redondeo % / request no debe expulsar SP32.
+            hp_ceiling_chop = (
+                bool(dropped_hp)
+                and bool(allowed_hp)
+                and bool(prev_hp)
+                and SP_MAX in dropped_hp
+                and max(allowed_hp) >= SP_MAX - 2
+                and len(dropped_hp) <= 3
+            )
+            if hp_aggressive or hp_ceiling_chop:
                 belief.skipped += 1
             else:
                 changed = belief.narrow('hp', allowed_hp) or changed

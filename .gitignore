@@ -51,3 +51,6 @@ docs/_build/
 
 # Damage-calc disk cache (regenerable; shared WAL across processes)
 logs/calc_cache.sqlite*
+# Expectimax tune overlay (ephemeral; defaults live in ExpectimaxConfig)
+showdown/battle_bots/expectimax_bayesian/ACTIVE_OVERRIDES.json
+

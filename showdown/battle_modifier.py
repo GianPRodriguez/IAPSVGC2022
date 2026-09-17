@@ -2518,19 +2518,37 @@ def sidestart(battle: Battle, split_msg: list) -> Battle:
     # |-sidestart|p2: Opponent|move: Light Screen
     # |-sidestart|p1: Agent|move: Reflect
     # |-sidestart|p2: Opponent|move: Aurora Veil
+    # |-sidestart|p2: Opp|move: Toxic Spikes
+    # |-sidestart|p2: Opp|Toxic Spikes
     raw_condition = next(
         (
             part.split(':', 1)[1].strip()
             for part in split_msg[3:]
             if ':' in part and part.split(':', 1)[0].strip().lower() in ('move', 'ability')
         ),
-        split_msg[-1].strip() if len(split_msg) > 3 else '',
+        split_msg[3].strip() if len(split_msg) > 3 else '',
     )
+    # Defensa: si el fallback trae "move: X" entero, no normalizar a "movex".
+    low = raw_condition.lower()
+    if low.startswith('move:'):
+        raw_condition = raw_condition.split(':', 1)[1].strip()
+    elif low.startswith('ability:'):
+        raw_condition = raw_condition.split(':', 1)[1].strip()
     condition = normalize_name(raw_condition)
+    if not condition:
+        return battle
 
     side = battle.opponent if is_opponent(battle, split_msg) else battle.user
     # Gen 8+: Tailwind = 4. Reflect / Light Screen / Aurora Veil = 5, o 8 con Light Clay
     # en un activo del bando (quien lanza el move está en campo).
+    if condition in ('spikes', 'toxicspikes'):
+        cap = 3 if condition == 'spikes' else 2
+        prev = int(side.side_conditions.get(condition, 0) or 0)
+        side.side_conditions[condition] = min(cap, prev + 1)
+        return battle
+    if condition in ('stealthrock', 'stickyweb'):
+        side.side_conditions[condition] = 1
+        return battle
     if condition == 'tailwind':
         duration = 4
     elif condition in _SCREEN_SIDE_CONDITIONS:
@@ -2547,8 +2565,15 @@ def sidestart(battle: Battle, split_msg: list) -> Battle:
 def sideend(battle: Battle, split_msg: list) -> Battle:
     # |-sideend|p2: PopplioPeru98|move: Tailwind
     # |-sideend|p2: popplioperu98|move: Light Screen
-    raw_condition = split_msg[3].split(':')[-1].strip()
+    # |-sideend|p2: Opp|move: Toxic Spikes
+    raw = split_msg[3].strip() if len(split_msg) > 3 else ''
+    if ':' in raw and raw.split(':', 1)[0].strip().lower() in ('move', 'ability'):
+        raw_condition = raw.split(':', 1)[1].strip()
+    else:
+        raw_condition = raw.split(':')[-1].strip() if raw else ''
     condition = normalize_name(raw_condition)
+    if not condition:
+        return battle
 
     side = battle.opponent if is_opponent(battle, split_msg) else battle.user
     side.side_conditions.pop(condition, None)

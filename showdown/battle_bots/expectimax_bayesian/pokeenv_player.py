@@ -1,9 +1,10 @@
 """ExpectimaxBayesianPlayer: poke-env con expectimax bayesiano anytime."""
 from __future__ import annotations
 
+import asyncio
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from poke_env.battle import DoubleBattle, Move, Pokemon
+from poke_env.battle import AbstractBattle, DoubleBattle, Move, Pokemon
 from poke_env.player.battle_order import (
     BattleOrder,
     DefaultBattleOrder,
@@ -34,9 +35,10 @@ from showdown.battle_bots.expectimax_bayesian.expectimax import (
     ExpectimaxConfig,
     ReserveOption,
     best_expectimax_bayesian_action,
+    load_expectimax_config,
 )
 from showdown.battle_bots.expectimax_bayesian.team_preview import (
-    best_expectimax_preview_order,
+    best_expectimax_preview_with_meta,
 )
 from showdown.battle_bots.expectimax_bayesian.utility import FieldPositionBonus
 
@@ -94,14 +96,50 @@ class ExpectimaxBayesianPlayer(GreedyJointPlayer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.expectimax_config = ExpectimaxConfig()
+        self.expectimax_config = load_expectimax_config()
         self.last_expectimax_meta = None
+        self.last_preview_meta = None
         # species_id → OpponentPublicOTS (Champions OTS sin SP)
         self.opp_ots_sheet = {}
+        # Outcome calibration: metas del game en curso.
+        self._game_decision_log: List[dict] = []
 
     def set_opp_ots_sheet(self, sheet) -> None:
         """Instala hoja pública del rival (nunca incluir true_sp)."""
         self.opp_ots_sheet = dict(sheet or {})
+
+    def reset_game_decision_log(self) -> None:
+        self._game_decision_log = []
+
+    def note_expectimax_decision(self, emeta) -> None:
+        """Acumula un choose para calibración V↔outcome al fin del game."""
+        if emeta is None:
+            return
+        try:
+            p1v = float(getattr(emeta, 'phase1_v', 0.0) or 0.0)
+            p2v = float(getattr(emeta, 'phase2_v', 0.0) or 0.0)
+            self._game_decision_log.append({
+                'phase': str(getattr(emeta, 'phase', '') or ''),
+                'diverged': bool(getattr(emeta, 'diverged', False)),
+                'neq_solo': bool(getattr(emeta, 'neq_solo', False)),
+                'gated': bool(getattr(emeta, 'phase2_gated', False)),
+                'delta_v': p2v - p1v,
+                'phase1_v': p1v,
+                'phase2_v': p2v,
+            })
+        except Exception:
+            pass
+
+    def flush_battle_outcome(self, won: bool) -> None:
+        """Cierra el game: escribe outcome + limpia log."""
+        try:
+            from showdown.battle_bots.expectimax_bayesian.divergence import (
+                record_battle_outcome,
+            )
+            record_battle_outcome(bool(won), list(self._game_decision_log))
+        except Exception:
+            pass
+        self._game_decision_log = []
 
     def teampreview(self, battle) -> str:
         from poke_env.battle import AbstractBattle, DoubleBattle
@@ -114,8 +152,9 @@ class ExpectimaxBayesianPlayer(GreedyJointPlayer):
         foe_src = battle.teampreview_opponent_team or list(battle.opponent_team.values())
         foes = [mon_from_species(i, _species_name(m)) for i, m in enumerate(foe_src, start=1)]
 
-        scored = best_expectimax_preview_order(our, foes)
+        scored, pmeta = best_expectimax_preview_with_meta(our, foes)
         order = scored.order
+        self.last_preview_meta = pmeta
         selected = set(order)
         for i, mon in enumerate(battle.teampreview_team or [], start=1):
             try:
@@ -124,6 +163,22 @@ class ExpectimaxBayesianPlayer(GreedyJointPlayer):
                 pass
         self.last_preview_order = order_to_team_string(order)
         return f'/team {self.last_preview_order}'
+
+    def choose_move(self, battle: AbstractBattle):
+        assert isinstance(battle, DoubleBattle)
+        return self._choose_move_guarded(battle)
+
+    async def _choose_move_guarded(self, battle: DoubleBattle) -> BattleOrder:
+        """Wall-clock duro: un turno lento no debe tumbar el BO3 (fail_timeout)."""
+        cfg = getattr(self, 'expectimax_config', None) or load_expectimax_config()
+        budget_s = max(2.5, float(cfg.deadline_ms) / 1000.0 + 2.0)
+        try:
+            return await asyncio.wait_for(
+                self._choose_move_async(battle),
+                timeout=budget_s,
+            )
+        except Exception:
+            return DefaultBattleOrder()
 
     async def _choose_move_async(self, battle: DoubleBattle) -> BattleOrder:
         if any(battle.force_switch):
@@ -255,6 +310,7 @@ class ExpectimaxBayesianPlayer(GreedyJointPlayer):
         )
         self.last_decision_score = total
         self.last_expectimax_meta = emeta
+        self.note_expectimax_decision(emeta)
 
         def to_order(
             mon: Optional[Pokemon],

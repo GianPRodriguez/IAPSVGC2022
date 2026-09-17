@@ -77,6 +77,19 @@ from showdown.battle_bots.move_mechanics.move_effects import (
     parse_move_effects,
     protect_move_ids,
 )
+from showdown.battle_bots.move_mechanics.vgc_utility import (
+    FAKE_OUT_BASE,
+    KNOCK_OFF_ITEM_BONUS,
+    best_fake_out_target,
+    fake_out_deny_bonus,
+    fake_out_deny_from_threat,
+    is_knock_off_removable,
+    is_mega_stone,
+    knock_off_item_bonus,
+    pair_vgc_utility_extra,
+    project_foe_active_forme,
+    weather_from_projected_foes,
+)
 
 __all__ = [
     'ALLY_DAMAGE_WEIGHT',
@@ -139,4 +152,15 @@ __all__ = [
     'resolve_recharge',
     'side_has_priority_block_ability',
     'status_can_affect',
+    'FAKE_OUT_BASE',
+    'KNOCK_OFF_ITEM_BONUS',
+    'best_fake_out_target',
+    'fake_out_deny_bonus',
+    'fake_out_deny_from_threat',
+    'is_knock_off_removable',
+    'is_mega_stone',
+    'knock_off_item_bonus',
+    'pair_vgc_utility_extra',
+    'project_foe_active_forme',
+    'weather_from_projected_foes',
 ]

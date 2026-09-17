@@ -1,48 +1,49 @@
+########################################################################
+ BO3 GAME 2 START  |  Deep1ODDQN vs Deep1ODDQN
+########################################################################
 ========================================================================
- TURNO 4 [DECISION]  |  rqid 15  |  BO3 game 2  |  17:57:54
+ TURNO 0 [DECISION]  |  rqid 3  |  BO3 game 2  |  00:59:11
  Deep1ODDQN  vs  Deep1ODDQN
- clima=sunnyday(2)  campo=-
+ clima=-(0)  campo=-
 ------------------------------------------------------------------------
  YO [p2]  side=-
-  A1  arcanine-hisui [Fire/Rock]  97/172 (56%)
-       item=focussash  abi=rockhead  status=-  boosts=-
-       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
-       moves: flareblitz(16), headsmash(7), extremespeed(8), protect(8)
-  A2  basculegion [Water/Ghost]  133/199 (67%)
-       item=mysticwater  abi=adaptability  status=-  boosts=-
-       stats: Atk=170 Def=98 SpA=90 SpD=95 Spe=124
-       moves: wavecrash(12), lastrespects(11), aquajet(20), protect(8)
-  RSV  salamence-mega[FNT] 0/171 (0%) | sneasler[FNT] 0/171 (0%)
+  A1  (vacio)
+  A2  (vacio)
+  RSV  metagross 175/175 (100%) | garchomp 185/185 (100%) | volcarona 172/172 (100%) | sneasler 157/157 (100%) | rillaboom 207/207 (100%) | incineroar 202/202 (100%)
 ------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=3
-  A1  charizard-mega-y [Fire/Flying]  51/100 (51%)  [MEGA OK]
-       item=charizarditey  abi=drought  status=-  boosts=-
-       stats: Atk=104 Def=78 SpA=159 SpD=115 Spe=100
-       moves: HeatWave(-1), AncientPower(-1), Protect(-1), WeatherBall(-1)
-  A2  garchomp [Dragon/Ground]  100/100 (100%)  [OK]
-       item=choicescarf  abi=roughskin  status=-  boosts=-
-       stats: Atk=130 Def=95 SpA=80 SpD=85 Spe=102
-       moves: DragonClaw(-1), Earthquake(-1), RockSlide(-1), StompingTantrum(-1)
-  RSV  venusaur[FNT] 0/100 (0%)
+ RIVAL [p1]  side=-  confirmados=0
+  A1  (vacio)
+  A2  (vacio)
+  RSV  (vacia)
 ------------------------------------------------------------------------
  STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  charizard  nat=modest  forme=charizard-mega-y
+  archaludon  nat=calm
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=153-169 Atk=111-126 Def=98-114 SpA=196-214 SpD=135-151 Spe=120-136
-      base: HP=153-169 Atk=93-108 Def=98-114 SpA=141-159 SpD=105-121 Spe=120-136  (forma charizard)
-      conv: obs=11 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
-  garchomp  nat=adamant
+      est:  HP=165-181 Atk=112-126 Def=150-166 SpA=145-161 SpD=93-111 Spe=105-121
+      conv: obs=0 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
+  basculegion  nat=jolly
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=183-199 Atk=165-182 Def=115-131 SpA=90-104 SpD=105-121 Spe=122-138
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  incineroar  nat=careful
+      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
+      conv: obs=3 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  pelipper  nat=modest
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=135-151 Def=110-126 SpA=90-104 SpD=121-138 Spe=80-96
-      conv: obs=5 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  venusaur  nat=timid
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=155-171 Atk=91-106 Def=103-119 SpA=120-136 SpD=120-136 Spe=110-127
-      conv: obs=4 HP=17 Atk=16 Def=17 SpA=17 SpD=17 Spe=17
+      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
+      conv: obs=3 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
 ------------------------------------------------------------------------
- ACCION -> ['/choose move 2 1, move 2 1']
+ OTS (plantilla showteam; una vez por partida):
+  1. archaludon  item=leftovers  abi=stamina  moves=Protect,Snarl,ElectroShot,DragonPulse
+  2. pelipper  item=lifeorb  abi=drizzle  moves=Protect,Tailwind,Hurricane,WeatherBall
+  3. golisopod  item=golisopite  abi=emergencyexit  moves=FirstImpression,LeechLife,CloseCombat,IronHead
+  4. basculegion  item=choicescarf  abi=adaptability  moves=FlipTurn,AquaJet,WaveCrash,LastRespects
+  5. rillaboom  item=miracleseed  abi=grassysurge  moves=FakeOut,GrassyGlide,WoodHammer,HighHorsepower
+  6. farigiraf  item=sitrusberry  abi=armortail  moves=Protect,TrickRoom,Thunderbolt,Psychic
+------------------------------------------------------------------------
+ ACCION -> ['/team 4612|3']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=+0.0000
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+------------------------------------------------------------------------
+ TEAM PREVIEW: ver bloque ranking en CMD (4 de 6 + why)
 ========================================================================

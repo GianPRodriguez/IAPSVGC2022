@@ -12,7 +12,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from showdown.inference_sim.paths import REPO_ROOT
 from showdown.rl.snapshot import TeamMaterial
@@ -34,6 +34,131 @@ def _pad_team_material(
         faint_count=int(mat.faint_count),
         hp_pct_total=float(mat.hp_pct_total) + 100.0 * missing,
     )
+
+
+def _iap_mon_hp_pct(pkmn) -> Optional[float]:
+    """HP% [0,100] from IAP Pokemon, or None if unknown."""
+    if pkmn is None:
+        return None
+    if bool(getattr(pkmn, 'is_fainted', False)):
+        return 0.0
+    try:
+        cur = float(str(getattr(pkmn, 'HPA_battle_actual', '')).split()[0])
+        mx = float(str(getattr(pkmn, 'HPB_battle_base', '')).split()[0])
+    except Exception:
+        return None
+    if mx <= 0:
+        return None
+    return max(0.0, min(100.0, 100.0 * cur / mx))
+
+
+def material_from_iap_side(battler, *, party_size: int = 4) -> TeamMaterial:
+    """TeamMaterial from IAP Battler (user actives+bench or opp actives+revealed)."""
+    slots: List[Any] = []
+    if bool(getattr(battler, 'isUser', False)):
+        for m in (getattr(battler, 'active1', None), getattr(battler, 'active2', None)):
+            if m is not None:
+                slots.append(m)
+        for m in list(getattr(battler, 'reserved', None) or []):
+            if m is not None:
+                slots.append(m)
+    else:
+        for m in (getattr(battler, 'active1', None), getattr(battler, 'active2', None)):
+            if m is not None:
+                slots.append(m)
+        for m in list(getattr(battler, 'opponents', None) or []):
+            if m is None or m in slots:
+                continue
+            if _iap_mon_hp_pct(m) is not None or bool(getattr(m, 'is_fainted', False)):
+                slots.append(m)
+
+    faint = 0
+    hp = 0.0
+    n_known = 0
+    for m in slots[: int(party_size)]:
+        pct = _iap_mon_hp_pct(m)
+        if pct is None:
+            continue
+        n_known += 1
+        if pct <= 0.0 or bool(getattr(m, 'is_fainted', False)):
+            faint += 1
+        else:
+            hp += float(pct)
+    return _pad_team_material(
+        TeamMaterial(faint_count=faint, hp_pct_total=hp),
+        n_known=n_known,
+        party_size=int(party_size),
+    )
+
+
+def observe_iap_spec_reward(battle) -> Tuple[float, float]:
+    """Update Spec C2 (and C1) returns on an IAP Battle; return (c2_delta, c2_return).
+
+    Call once per |request| after environment update. First call only baselines.
+    Stores last_c2_reward / last_c1_reward / spec_c2_return / spec_c1_return on battle.
+    """
+    from showdown.rl.reward import RewardCandidate, compute_reward
+
+    if battle is None:
+        return 0.0, 0.0
+    cur_our = material_from_iap_side(getattr(battle, 'user', None))
+    cur_foe = material_from_iap_side(getattr(battle, 'opponent', None))
+    prev_our = getattr(battle, '_spec_prev_our', None)
+    prev_foe = getattr(battle, '_spec_prev_foe', None)
+    if prev_our is None or prev_foe is None:
+        battle._spec_prev_our = cur_our
+        battle._spec_prev_foe = cur_foe
+        battle.last_c2_reward = 0.0
+        battle.last_c1_reward = 0.0
+        if not hasattr(battle, 'spec_c2_return') or battle.spec_c2_return is None:
+            battle.spec_c2_return = 0.0
+        if not hasattr(battle, 'spec_c1_return') or battle.spec_c1_return is None:
+            battle.spec_c1_return = 0.0
+        return 0.0, float(battle.spec_c2_return)
+
+    finished = False
+    won: Optional[bool] = None
+    tied = False
+    # Online IAP rarely sets finished mid-report; terminal handled if present.
+    if bool(getattr(battle, 'finished', False)):
+        finished = True
+        won_raw = getattr(battle, 'won', None)
+        if won_raw is True:
+            won = True
+        elif won_raw is False:
+            won = False
+        else:
+            tied = True
+
+    r1 = compute_reward(
+        candidate=RewardCandidate.SPARSE,
+        prev_our=prev_our,
+        prev_foe=prev_foe,
+        cur_our=cur_our,
+        cur_foe=cur_foe,
+        finished=finished,
+        won=won,
+        tied=tied,
+    )
+    r2 = compute_reward(
+        candidate=RewardCandidate.DENSE,
+        prev_our=prev_our,
+        prev_foe=prev_foe,
+        cur_our=cur_our,
+        cur_foe=cur_foe,
+        finished=finished,
+        won=won,
+        tied=tied,
+    )
+    c2 = float(r2.reward)
+    c1 = float(r1.reward)
+    battle.spec_c2_return = float(getattr(battle, 'spec_c2_return', 0.0) or 0.0) + c2
+    battle.spec_c1_return = float(getattr(battle, 'spec_c1_return', 0.0) or 0.0) + c1
+    battle.last_c2_reward = c2
+    battle.last_c1_reward = c1
+    battle._spec_prev_our = cur_our
+    battle._spec_prev_foe = cur_foe
+    return c2, float(battle.spec_c2_return)
 
 
 @dataclass

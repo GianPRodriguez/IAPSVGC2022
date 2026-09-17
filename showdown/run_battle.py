@@ -190,7 +190,14 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
 
         # Re-lanzamos la excepción encadenada
         raise ValueError(f"Fallo en {filename} -> {func_name}() [Línea {lineno}]: {e}") from e
-    
+
+    # Spec C2: delta de material tras el update (antes de decidir / dump).
+    try:
+        from showdown.inference_sim.reward_telemetry import observe_iap_spec_reward
+        observe_iap_spec_reward(battle)
+    except Exception:
+        pass
+
     # 3. Si el servidor solicita esperar (p. ej. el oponente está realizando U-Turn / cambio)
     # Igual volcamos snap [WAIT] para paridad rqid vs logs_showdown.txt
     if battle.wait:

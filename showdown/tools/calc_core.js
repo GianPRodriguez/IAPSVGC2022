@@ -151,9 +151,10 @@ function buildPokemon(spec) {
   };
   // Megastones: @smogon/calc intenta megaevolucionar y falla si la especie no
   // está bien en el dex Champions. Ya aplicamos stats/forma finales.
+  // charizarditey / salamencite / … (no solo endsWith 'ite').
   if (pokeOpts.item) {
     const itemId = String(pokeOpts.item).toLowerCase().replace(/[^a-z0-9]+/g, '');
-    if (itemId.endsWith('ite') && itemId !== 'eviolite') {
+    if (itemId !== 'eviolite' && itemId.includes('ite')) {
       pokeOpts.item = undefined;
     }
   }

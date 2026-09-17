@@ -255,6 +255,13 @@ class Battle(ABC):
         ''' Recompensas '''
         self.reward = 0
         self.score = 0
+        # Spec v1.1 (Candidate 2 dense) — online reporte.txt
+        self.spec_c2_return = 0.0
+        self.spec_c1_return = 0.0
+        self.last_c2_reward = 0.0
+        self.last_c1_reward = 0.0
+        self._spec_prev_our = None
+        self._spec_prev_foe = None
 
 
 ############################################################################################################################################################
@@ -365,6 +372,14 @@ class Battle(ABC):
         # =====================================================================
         self.reward = 0
         self.score = 0
+        self.spec_c2_return = 0.0
+        self.spec_c1_return = 0.0
+        self.last_c2_reward = 0.0
+        self.last_c1_reward = 0.0
+        self._spec_prev_our = None
+        self._spec_prev_foe = None
+        self.last_expectimax_meta = None
+        self.last_preview_meta = None
 
         # Nota: Los 'Tag Globales' (self.battleBO3_tag, self.battleBO3_count, 
         # self.botMode, self.battle_tag) NO se tocan y conservan sus valores.
@@ -482,6 +497,38 @@ class Battle(ABC):
             w('-' * 72)
             w(f' ACCION -> {accion}')
 
+        # Spec Candidate 2: reward del turno + retorno acumulado (archivo + CMD).
+        if (
+            hasattr(self, 'last_c2_reward')
+            or hasattr(self, 'spec_c2_return')
+            or hasattr(self, 'lastReward')
+        ):
+            w('-' * 72)
+            c2_t = float(getattr(self, 'last_c2_reward', 0.0) or 0.0)
+            c2_ep = float(getattr(self, 'spec_c2_return', 0.0) or 0.0)
+            c1_t = float(getattr(self, 'last_c1_reward', 0.0) or 0.0)
+            c1_ep = float(getattr(self, 'spec_c1_return', 0.0) or 0.0)
+            legacy_d = float(getattr(self, 'lastReward', 0.0) or 0.0)
+            legacy_r = float(getattr(self, 'reward', 0.0) or 0.0)
+            w(' REWARD (Spec v1.1 Candidate 2 dense / turno):')
+            w(f'  c2_turn={c2_t:+.4f}  c2_episode={c2_ep:+.4f}')
+            w(f'  c1_turn={c1_t:+.0f}  c1_episode={c1_ep:+.0f}')
+            w(f'  ui_delta={legacy_d:.0f}  ui_total={legacy_r:.0f}')
+
+        # Expectimax Top-K / preview: resumen corto en archivo; detalle solo CMD.
+        emeta = getattr(self, 'last_expectimax_meta', None)
+        pmeta = getattr(self, 'last_preview_meta', None)
+        if emeta is not None:
+            w('-' * 72)
+            w(' EXPECTIMAX: ver bloque Top-K en CMD (decision + why)')
+            summary = str(getattr(emeta, 'decision_summary', '') or '').strip()
+            if summary:
+                first = summary.splitlines()[0]
+                w(f'  {first}')
+        if pmeta is not None and int(getattr(self, 'turn', 0) or 0) == 0:
+            w('-' * 72)
+            w(' TEAM PREVIEW: ver bloque ranking en CMD (4 de 6 + why)')
+
         w('=' * 72)
 
         report = buf.getvalue()
@@ -492,6 +539,50 @@ class Battle(ABC):
 
         if to_console:
             _write_stdout(report)
+            # Solo CMD: ranking K opciones + por qué se eligió esa combinación.
+            if emeta is not None:
+                cmd = []
+                cmd.append('-' * 72)
+                cmd.append(' EXPECTIMAX DECISION (CMD) — Top-K pares por V bayesiana')
+                summary = str(getattr(emeta, 'decision_summary', '') or '').strip()
+                if summary:
+                    for line in summary.splitlines():
+                        cmd.append(f'  {line}')
+                lines = list(getattr(emeta, 'topk_lines', None) or [])
+                if lines:
+                    cmd.append('  ranked ( > = elegido ):')
+                    for line in lines:
+                        cmd.append(f'  {line}')
+                else:
+                    cmd.append('  ranked: (sin candidatos phase2; floor phase1)')
+                why = str(getattr(emeta, 'decision_why', '') or '').strip()
+                if why:
+                    cmd.append('  por qué:')
+                    for line in why.splitlines():
+                        cmd.append(f'    {line}')
+                cmd.append('=' * 72)
+                _write_stdout('\n'.join(cmd) + '\n')
+            if pmeta is not None and int(getattr(self, 'turn', 0) or 0) == 0:
+                cmd = []
+                cmd.append('-' * 72)
+                cmd.append(' TEAM PREVIEW DECISION (CMD) — 4 de 6 + lead')
+                cmd.append(
+                    f'  scored={getattr(pmeta, "n_scored", 0)}  '
+                    f'C(6,4)={getattr(pmeta, "n_combos_4", 0)}  '
+                    f'lead_orders_total={getattr(pmeta, "n_lead_orders", 0)}'
+                )
+                lines = list(getattr(pmeta, 'ranked_lines', None) or [])
+                if lines:
+                    cmd.append('  ranked ( > = elegido ):')
+                    for line in lines:
+                        cmd.append(f'  {line}')
+                why_lines = list(getattr(pmeta, 'why_lines', None) or [])
+                if why_lines:
+                    cmd.append('  por qué:')
+                    for line in why_lines:
+                        cmd.append(f'    {line}')
+                cmd.append('=' * 72)
+                _write_stdout('\n'.join(cmd) + '\n')
 
         return report.strip().splitlines()[0] if report else ''
 
@@ -500,8 +591,12 @@ class Battle(ABC):
 # PENDIENTE - Cálculos de las Recompensas                                                                                                                ###
 ############################################################################################################################################################
     def calculateRewards(self):
-        self.lastReward = 100.00
-        self.reward = 1000.00
+        """UI rewards: prefer Spec C2 delta/return when available."""
+        c2_t = float(getattr(self, 'last_c2_reward', 0.0) or 0.0)
+        c2_ep = float(getattr(self, 'spec_c2_return', 0.0) or 0.0)
+        # Escala suave a la UI legacy (enteros ~centenas).
+        self.lastReward = c2_t * 100.0
+        self.reward = c2_ep * 100.0
         return self.lastReward, self.reward
 
 

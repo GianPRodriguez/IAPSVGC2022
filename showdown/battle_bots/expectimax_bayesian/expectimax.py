@@ -1,17 +1,15 @@
-"""Expectimax bayesiano 1-ply anytime (fallback Greedy-Joint).
+"""Expectimax bayesiano 1-ply anytime (filtro Greedy-Joint Top-K × Top-K).
 
-U(a) ≈ Σ_j P(θ_j) Σ_b π_opp(b|θ_j) E_rolls[V(S'|a,b,θ_j)]
-
-Mejoras:
-  A) Moves OTS/revelados → π_opp / belief
-  B) Orden de turno Spe + prioridad en V
-  C) Switches voluntarios con utilidad continua (no V→0)
+Arquitectura A: phase1=joint; phase2 solo sobre Top-K×Top-K.
+Arquitectura C: daño = EV (expected_damage), sin ramificar rolls.
 """
 from __future__ import annotations
 
+import json
 import time
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Sequence, Tuple
+from dataclasses import asdict, dataclass, field, fields
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from showdown.battle_bots.greedy_joint.joint import (
     JointAtom,
@@ -31,6 +29,7 @@ from showdown.battle_bots.greedy_solo.greedy import (
     _collect_side_requests,
     _stats_or_default,
     apply_pending_mega,
+    best_double_action,
 )
 from showdown.battle_bots.greedy_solo.type_chart import matchup_vs_actives
 from showdown.battle_bots.expectimax_bayesian.belief import (
@@ -47,11 +46,18 @@ from showdown.battle_bots.expectimax_bayesian.chance import (
     expected_damage,
     p_ko,
 )
+from showdown.battle_bots.expectimax_bayesian.divergence import (
+    pair_sig,
+    record_choose,
+    record_solo_compare,
+)
 from showdown.battle_bots.expectimax_bayesian.opp_policy import (
     OppAction,
     is_control_move,
+    is_switch_action,
     move_options_from_names,
     opp_policy_distribution,
+    opp_policy_targeted,
 )
 from showdown.battle_bots.expectimax_bayesian.speed_order import (
     acts_before,
@@ -68,42 +74,157 @@ from showdown.battle_bots.expectimax_bayesian.utility import (
 )
 
 
+# Cobertura Top-K sin inyección FO (rank = daño greedy). Activo = 75%.
+# 100% queda mapeado para activar después vía apply_search_coverage('100').
+SEARCH_COVERAGE_PRESETS: Dict[str, Dict[str, float]] = {
+    '50': {
+        'topk_per_side': 5,
+        'max_our_pairs': 25,
+        'deadline_ms': 1000.0,
+        'phase1_budget_ms': 50.0,
+        'phase2_end_ms': 950.0,
+    },
+    '75': {
+        'topk_per_side': 7,
+        'max_our_pairs': 49,
+        'deadline_ms': 1600.0,
+        'phase1_budget_ms': 80.0,
+        'phase2_end_ms': 1520.0,
+    },
+    '100': {
+        'topk_per_side': 10,
+        'max_our_pairs': 100,
+        'deadline_ms': 3000.0,
+        'phase1_budget_ms': 100.0,
+        'phase2_end_ms': 2900.0,
+    },
+}
+ACTIVE_SEARCH_COVERAGE = '75'
+
+# Overlay opcional para tune autónomo (no toca defaults del dataclass).
+# Escrito por `python -m showdown.inference_sim.run_expectimax_tune`.
+ACTIVE_OVERRIDES_PATH = Path(__file__).resolve().parent / 'ACTIVE_OVERRIDES.json'
+
+
+def apply_search_coverage(
+    cfg: 'ExpectimaxConfig',
+    level: Optional[str] = None,
+) -> 'ExpectimaxConfig':
+    """Aplica preset de cobertura Top-K (mutates + returns cfg)."""
+    key = str(level or ACTIVE_SEARCH_COVERAGE)
+    preset = SEARCH_COVERAGE_PRESETS.get(key)
+    if not preset:
+        raise KeyError(f'unknown search coverage {key!r}; use {sorted(SEARCH_COVERAGE_PRESETS)}')
+    for name, val in preset.items():
+        setattr(cfg, name, type(getattr(cfg, name))(val))
+    return cfg
+
+
+def read_active_overrides() -> Dict[str, Any]:
+    if not ACTIVE_OVERRIDES_PATH.is_file():
+        return {}
+    try:
+        raw = json.loads(ACTIVE_OVERRIDES_PATH.read_text(encoding='utf-8'))
+    except Exception:
+        return {}
+    return dict(raw) if isinstance(raw, dict) else {}
+
+
+def write_active_overrides(overrides: Dict[str, Any]) -> Path:
+    """Persiste overlay; claves desconocidas se ignoran al cargar."""
+    clean = {str(k): v for k, v in (overrides or {}).items()}
+    ACTIVE_OVERRIDES_PATH.write_text(
+        json.dumps(clean, indent=2, ensure_ascii=False, sort_keys=True) + '\n',
+        encoding='utf-8',
+    )
+    return ACTIVE_OVERRIDES_PATH
+
+
+def clear_active_overrides() -> None:
+    if ACTIVE_OVERRIDES_PATH.is_file():
+        ACTIVE_OVERRIDES_PATH.unlink()
+
+
+def load_expectimax_config(**kwargs: Any) -> 'ExpectimaxConfig':
+    """ExpectimaxConfig efectivo = defaults + ACTIVE_OVERRIDES.json + kwargs."""
+    known = {f.name for f in fields(ExpectimaxConfig)}
+    base = asdict(ExpectimaxConfig())
+    file_ov = {k: v for k, v in read_active_overrides().items() if k in known}
+    merged = {**base, **file_ov, **{k: v for k, v in kwargs.items() if k in known}}
+    # Coerce types from JSON (bool/int/float/str).
+    typed: Dict[str, Any] = {}
+    for f in fields(ExpectimaxConfig):
+        val = merged[f.name]
+        default = getattr(ExpectimaxConfig(), f.name)
+        if isinstance(default, bool):
+            typed[f.name] = bool(val) if not isinstance(val, str) else val.strip().lower() in (
+                '1', 'true', 'yes', 'on',
+            )
+        elif isinstance(default, int) and not isinstance(default, bool):
+            typed[f.name] = int(val)
+        elif isinstance(default, float):
+            typed[f.name] = float(val)
+        else:
+            typed[f.name] = val
+    return ExpectimaxConfig(**typed)
+
+
 @dataclass
 class ExpectimaxConfig:
-    deadline_ms: float = 700.0
-    phase1_budget_ms: float = 50.0
-    phase2_end_ms: float = 680.0
-    k_profiles: int = 5
-    max_worlds: int = 16
-    max_our_pairs: int = 36
+    # Cobertura 75%: K=7, pairs=49, ~1.6s (sin inyección FO). Ver SEARCH_COVERAGE_PRESETS.
+    deadline_ms: float = 1600.0
+    phase1_budget_ms: float = 80.0
+    phase2_end_ms: float = 1520.0
+    k_profiles: int = 2
+    max_worlds: int = 4
+    # Top-K por daño greedy → K×K; FO entra si rank≤K (75% ≈ K=7).
+    topk_per_side: int = 7
+    max_our_pairs: int = 49
     soft_ko_bonus: float = SOFT_KO_BONUS
-    enable_voluntary_switch: bool = True
-    max_switch_hybrids: int = 12
+    # Cuevas: off (A/B seed10 teams40: volOn scale=0.25 empeoró pair 50%→33%).
+    enable_voluntary_switch: bool = False
+    max_switch_hybrids: int = 0
+    enable_niche_pairs: bool = False
     loss_weight: float = 650.0
-    save_weight: float = 140.0
+    save_weight: float = 0.0
     chip_soft_cap: float = 30.0
-    # Umbral de amenaza para frenos de pivot frívolo.
     switch_min_stay_p_ko: float = 0.50
-    # Penalizar doble foco sobre un rival ya KO en papel.
     overkill_waste_weight: float = 140.0
-    # Bonus si un lado ya KO y el otro pivota.
     ko_free_switch_bonus: float = 55.0
-    # Castigo 2-ply barato: amenaza al entrante tras switch.
     entry_punish_weight: float = 1.15
-    # Peso de la amenaza rival en V: offense - threat_weight * threat + …
-    threat_weight: float = 0.55
-    # Peso de HP relativo residual en V.
+    threat_weight: float = 0.0
     hp_rel_weight: float = 0.15
-    # Peso de sinergia de par en V.
-    syn_weight: float = 0.55
-    # Mon condenado (P(KO) alto): descontar chip que no KO-ea.
-    condemned_chip_discount: float = 0.70
-    # Mon condenado: amplificar efectos que sobreviven (status/secundarios).
+    syn_weight: float = 0.0
+    condemned_chip_discount: float = 0.80
     condemned_lasting_boost: float = 1.35
-    # Peso del alivio de amenaza por status proyectado a S'.
     threat_relief_weight: float = 1.0
-    # Habilidades de entrada al switch (Intimidate, clima, Screen Cleaner…).
     entry_ability_weight: float = 1.0
+    opp_policy_greedy_weight: float = 1.0
+    opp_policy_control_weight: float = 0.0
+    opp_policy_switch_weight: float = 0.0
+    opp_policy_use_real_damage: bool = True
+    opp_policy_split_targets: bool = False
+    opp_policy_mirror_solo: bool = False
+    # V anclada a offense (EV de daño = chance abstraction C).
+    v_solo_isomorphic: bool = True
+    phase2_retarget_only: bool = False
+    # Phase1 = greedy_joint (referencia); phase2 elige entre Top-K×Top-K.
+    phase1_use_joint: bool = True
+    use_topk_abstraction: bool = True
+    phase2_gate_enabled: bool = True
+    # 'beat': exigir V_bayes >= V_p1 + margin (ancla a joint; div~0).
+    # 'indifference': aceptar si V_bayes >= V_p1 - eps (diverge sin exigir mejora).
+    # 'off': phase2 argmax libre (gate_enabled puede quedar True y se ignora).
+    phase2_gate_mode: str = 'indifference'
+    phase2_gate_margin: float = 80.0
+    phase2_indifference_eps: float = 40.0
+    # 0 = off. Antes 320 cortaba Fake Out con deny≈soft_KO (delta~700+).
+    # La seguridad queda en indifference (no aceptar V << phase1).
+    phase2_max_delta_v: float = 0.0
+    enable_phase2: bool = True
+    # False = cualquier par Top-K puede ganar (objetivo: jugar distinto a greedy).
+    phase2_surgical_only: bool = False
+    switch_v_scale: float = 0.65
 
 
 @dataclass
@@ -115,6 +236,22 @@ class ExpectimaxMeta:
     phase: str = 'fallback'
     utility: float = 0.0
     errors: List[str] = field(default_factory=list)
+    # Diagnostic: phase2 eligió distinto a phase1/joint.
+    diverged: bool = False
+    phase1_utility: float = 0.0
+    phase2_utility: float = 0.0
+    phase2_gated: bool = False  # True si phase2 se rechazó por el gate
+    phase1_v: float = 0.0  # V bayesiana del par phase1 (mismo espacio que phase2)
+    phase2_v: float = 0.0
+    # Diagnostic: chosen ≠ greedy_solo factored
+    neq_solo: bool = False
+    solo_utility: float = 0.0
+    # Reporte online (logs/reporte.txt): Top-K candidatos + resumen.
+    topk_lines: List[str] = field(default_factory=list)
+    decision_summary: str = ''
+    decision_why: str = ''
+    topk_k: int = 0
+    max_pairs: int = 0
 
 
 @dataclass(frozen=True)
@@ -144,6 +281,196 @@ def _pair_key(l: JointAtom, r: JointAtom) -> Tuple:
     return (_atom_key(l), _atom_key(r))
 
 
+def _atom_label(a: Optional[JointAtom]) -> str:
+    if a is None:
+        return '—'
+    if a.utility == 'switch':
+        return f'switch{int(a.move_slot)}'
+    name = str(a.move_name or f'slot{a.move_slot}').strip() or f'slot{a.move_slot}'
+    name = name.replace(' ', '')
+    mega = {1: '+M', 2: '+T'}.get(int(a.mega or 0), '')
+    tgt = f'>{int(a.target)}' if int(a.target or 0) else ''
+    return f'{name}{mega}{tgt}'
+
+
+def _scored_label(a: Optional[ScoredAction]) -> str:
+    if a is None:
+        return '—'
+    kind = str(getattr(a, 'kind', 'move') or 'move')
+    if kind == 'switch':
+        return f'sw{int(a.move_slot)}'
+    return f'slot{int(a.move_slot)}>t{int(getattr(a, "target", 0) or 0)}'
+
+
+def _fill_decision_report(
+    meta: ExpectimaxMeta,
+    *,
+    pairs: Sequence[Tuple[JointAtom, JointAtom]],
+    utilities: Dict,
+    best_key,
+    phase1_l: Optional[ScoredAction],
+    phase1_r: Optional[ScoredAction],
+    best_l: Optional[ScoredAction],
+    best_r: Optional[ScoredAction],
+    cfg: ExpectimaxConfig,
+) -> None:
+    """Rellena topk_lines + decision_summary para logs/reporte.txt."""
+    meta.topk_k = int(cfg.topk_per_side or 0)
+    meta.max_pairs = int(cfg.max_our_pairs or 0)
+    key_to_pair = {_pair_key(pl, pr): (pl, pr) for pl, pr in pairs}
+    ranked = sorted(
+        ((k, ju) for k, ju in utilities.items() if getattr(ju, 'samples', 0) > 0),
+        key=lambda kv: -float(kv[1].mean),
+    )
+    lines: List[str] = []
+    for i, (key, ju) in enumerate(ranked[: max(1, int(cfg.max_our_pairs or 12))], 1):
+        pl, pr = key_to_pair.get(key, (None, None))
+        mark = '>' if key == best_key else ' '
+        lines.append(
+            f'{mark}{i:2d}. V={float(ju.mean):8.1f}  '
+            f'L={_atom_label(pl)}  R={_atom_label(pr)}'
+        )
+    meta.topk_lines = lines
+    if best_key is not None and best_key in key_to_pair:
+        bl, br = key_to_pair[best_key]
+        chosen = f'{_atom_label(bl)} | {_atom_label(br)}'
+    else:
+        chosen = f'{_scored_label(best_l)} | {_scored_label(best_r)}'
+    p1 = f'{_scored_label(phase1_l)} | {_scored_label(phase1_r)}'
+    # Mejorar phase1 si hay match en utilities/pairs
+    for pl, pr in pairs:
+        if _scored_matches_atom(phase1_l, pl) and _scored_matches_atom(phase1_r, pr):
+            p1 = f'{_atom_label(pl)} | {_atom_label(pr)}'
+            break
+    gate = 'YES' if meta.phase2_gated else 'NO'
+    div = 'YES' if meta.diverged else 'NO'
+    meta.decision_summary = (
+        f'phase={meta.phase}  diverged={div}  gated={gate}  '
+        f'K={meta.topk_k} pairs={meta.pairs_scored}/{meta.max_pairs}  '
+        f'ms={meta.elapsed_ms:.0f}\n'
+        f'  phase1 (joint): {p1}  V={meta.phase1_v:.1f}\n'
+        f'  chosen:         {chosen}  V={meta.utility:.1f}  '
+        f'(phase2_best V={meta.phase2_v:.1f})'
+    )
+
+    # Por qué esa combinación: margen vs runner-up + gate/phase1.
+    why: List[str] = []
+    why.append(
+        f'criterio: argmax V bayesiana 1-ply sobre Top-K×Top-K '
+        f'(K={meta.topk_k}, max_pairs={meta.max_pairs})'
+    )
+    if ranked:
+        top_v = float(ranked[0][1].mean)
+        if len(ranked) >= 2:
+            second_v = float(ranked[1][1].mean)
+            margin = top_v - second_v
+            pl2, pr2 = key_to_pair.get(ranked[1][0], (None, None))
+            why.append(
+                f'mejor V={top_v:.1f}  vs 2º {_atom_label(pl2)}|{_atom_label(pr2)} '
+                f'V={second_v:.1f}  (margen={margin:+.1f})'
+            )
+        else:
+            why.append(f'unico par con samples; V={top_v:.1f}')
+    if meta.phase2_gated:
+        why.append(
+            f'gate rechazó phase2_best (V={meta.phase2_v:.1f}); '
+            f'se conserva phase1 joint ({p1})'
+        )
+    elif meta.diverged:
+        why.append(
+            f'divergió de phase1 ({p1} V={meta.phase1_v:.1f}) → '
+            f'chosen ({chosen} V={meta.utility:.1f})'
+        )
+    elif meta.used_fallback or str(meta.phase).startswith('phase1'):
+        why.append(f'sin refine phase2 útil; floor phase1/joint ({chosen})')
+    else:
+        why.append(f'phase2 confirmó/eligió ({chosen}); phase={meta.phase}')
+    if meta.errors:
+        why.append(f'notas: {"; ".join(meta.errors[:3])}')
+    meta.decision_why = '\n'.join(why)
+
+
+def _scored_matches_atom(scored: Optional[ScoredAction], atom: JointAtom) -> bool:
+    """¿ScoredAction de phase1 corresponde a este JointAtom de phase2?"""
+    if scored is None:
+        # Sin acción en ese lado (faint/pass): no exigimos match estricto.
+        return True
+    kind = str(getattr(scored, 'kind', 'move') or 'move')
+    if kind == 'switch' or atom.utility == 'switch':
+        return kind == 'switch' and atom.utility == 'switch' and int(scored.move_slot) == int(atom.move_slot)
+    return (
+        atom.utility != 'switch'
+        and int(scored.move_slot) == int(atom.move_slot)
+        and int(getattr(scored, 'target', 0) or 0) == int(atom.target or 0)
+        and int(getattr(scored, 'mega', 0) or 0) == int(atom.mega or 0)
+    )
+
+
+def _phase1_bayes_v(
+    utilities: Dict[Tuple, JointActionUtility],
+    pairs: Sequence[Tuple[JointAtom, JointAtom]],
+    phase1_l: Optional[ScoredAction],
+    phase1_r: Optional[ScoredAction],
+) -> Optional[float]:
+    """V bayesiana del par phase1 en el mismo espacio que el best de phase2."""
+    for pl, pr in pairs:
+        if not (_scored_matches_atom(phase1_l, pl) and _scored_matches_atom(phase1_r, pr)):
+            continue
+        ju = utilities.get(_pair_key(pl, pr))
+        if ju is not None and ju.samples > 0:
+            return float(ju.mean)
+    # Match flojo: solo slot+mega (target a veces difiere entre joint/atoms).
+    for pl, pr in pairs:
+        ok_l = phase1_l is None or (
+            int(phase1_l.move_slot) == int(pl.move_slot)
+            and int(getattr(phase1_l, 'mega', 0) or 0) == int(pl.mega or 0)
+            and (
+                (getattr(phase1_l, 'kind', 'move') == 'switch') == (pl.utility == 'switch')
+            )
+        )
+        ok_r = phase1_r is None or (
+            int(phase1_r.move_slot) == int(pr.move_slot)
+            and int(getattr(phase1_r, 'mega', 0) or 0) == int(pr.mega or 0)
+            and (
+                (getattr(phase1_r, 'kind', 'move') == 'switch') == (pr.utility == 'switch')
+            )
+        )
+        if not (ok_l and ok_r):
+            continue
+        ju = utilities.get(_pair_key(pl, pr))
+        if ju is not None and ju.samples > 0:
+            return float(ju.mean)
+    return None
+
+
+def _is_protect_move(name: str) -> bool:
+    return _norm_move(name) in (
+        'protect', 'detect', 'spikyshield', 'banefulbunker', 'silktrap',
+        'burningbulwark', 'obstruct',
+    )
+
+
+def _is_niche_atom(atom: JointAtom) -> bool:
+    """Cuevas ortogonales a greedy daño: Protect / pivot / speed / priority."""
+    if atom.utility in ('switch', 'protect'):
+        return True
+    if _is_protect_move(atom.move_name):
+        return True
+    if _speed_control(atom.move_name):
+        return True
+    try:
+        if int(move_prio(atom.move_name) or 0) > 0:
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def _is_surgical_pair(pl: JointAtom, pr: JointAtom) -> bool:
+    """Diverge phase2 solo en cuevas teacher (Protect / switch / speed / prio)."""
+    return _is_niche_atom(pl) or _is_niche_atom(pr)
+
+
 def _switch_atom(slot: int) -> JointAtom:
     return JointAtom(
         move_slot=int(slot),
@@ -152,6 +479,29 @@ def _switch_atom(slot: int) -> JointAtom:
         utility='switch',
         move_name=f'Switch {slot}',
     )
+
+
+def _retarget_pairs_only(
+    pairs: Sequence[Tuple[JointAtom, JointAtom]],
+    phase1_l: Optional[ScoredAction],
+    phase1_r: Optional[ScoredAction],
+) -> List[Tuple[JointAtom, JointAtom]]:
+    """Hipótesis C: conservar move slots de phase1; solo variar targets."""
+    out: List[Tuple[JointAtom, JointAtom]] = []
+    for pl, pr in pairs:
+        if pl.utility == 'switch' or pr.utility == 'switch':
+            continue
+        ok_l = phase1_l is None or (
+            int(pl.move_slot) == int(phase1_l.move_slot)
+            and int(pl.mega or 0) == int(getattr(phase1_l, 'mega', 0) or 0)
+        )
+        ok_r = phase1_r is None or (
+            int(pr.move_slot) == int(phase1_r.move_slot)
+            and int(pr.mega or 0) == int(getattr(phase1_r, 'mega', 0) or 0)
+        )
+        if ok_l and ok_r:
+            out.append((pl, pr))
+    return out
 
 
 def _candidate_pairs(
@@ -165,14 +515,102 @@ def _candidate_pairs(
     max_switch_hybrids: int = 8,
     left_poke: Optional[CalcPoke] = None,
     right_poke: Optional[CalcPoke] = None,
+    topk_per_side: int = 0,
+    enable_niche_pairs: bool = True,
 ) -> List[Tuple[JointAtom, JointAtom]]:
+    """Arquitectura A: si topk_per_side>0, solo Top-K × Top-K (no todo el producto)."""
     move_left = [a for a in left_atoms if a.utility != 'switch']
     move_right = [a for a in right_atoms if a.utility != 'switch']
 
     if not move_left and not move_right and not switch_left and not switch_right:
         return []
 
-    scored: List[Tuple[float, JointAtom, JointAtom]] = []
+    k = int(topk_per_side or 0)
+    if k > 0 and move_left and move_right:
+        # Top-K por lado: daño + utilidad estructurada (Fake Out deny, Knock Off item).
+        def _rank_key(a: JointAtom) -> float:
+            return float(a.total_damage_pct) + float(getattr(a, 'effect_bonus', 0.0) or 0.0)
+
+        left_ranked = sorted(move_left, key=_rank_key, reverse=True)[:k]
+        right_ranked = sorted(move_right, key=_rank_key, reverse=True)[:k]
+        scored: List[Tuple[float, JointAtom, JointAtom]] = []
+        for a1 in left_ranked:
+            for a2 in right_ranked:
+                pl, pr = a1, a2
+                if a1.mega and a2.mega:
+                    if a1.total_damage_pct >= a2.total_damage_pct:
+                        pr = _strip_mega(a2)
+                    else:
+                        pl = _strip_mega(a1)
+                s = _score_pair(
+                    pl, pr, foes,
+                    left_poke=left_poke, right_poke=right_poke,
+                )
+                scored.append((s, pl, pr))
+        # Sin inyección FO: entra solo si rank≤K (cobertura via topk_per_side).
+        # Cuevas: Protect/speed/prio no entran al Top-K por daño → inyectar
+        # híbridos niche×top (presupuesto acotado anti-timeout).
+        if enable_niche_pairs:
+            niches_l = [a for a in move_left if _is_niche_atom(a)][:4]
+            niches_r = [a for a in move_right if _is_niche_atom(a)][:4]
+            for nl in niches_l:
+                for a2 in right_ranked[:2]:
+                    s = _score_pair(
+                        nl, a2, foes,
+                        left_poke=left_poke, right_poke=right_poke,
+                    )
+                    scored.append((s, nl, a2))
+            for nr in niches_r:
+                for a1 in left_ranked[:2]:
+                    s = _score_pair(
+                        a1, nr, foes,
+                        left_poke=left_poke, right_poke=right_poke,
+                    )
+                    scored.append((s, a1, nr))
+        scored.sort(key=lambda x: -x[0])
+        out: List[Tuple[JointAtom, JointAtom]] = []
+        seen = set()
+        for _, pl, pr in scored:
+            key = _pair_key(pl, pr)
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append((pl, pr))
+            if len(out) >= max(1, int(max_pairs)):
+                break
+        # Switches: híbridos acotados
+        hybrids = 0
+        pad = JointAtom(0, 0, utility='status')
+        top_r = list(right_ranked[:2]) or [pad]
+        top_l = list(left_ranked[:2]) or [pad]
+        for sw in switch_left:
+            for atk in top_r:
+                key = _pair_key(sw, atk)
+                if key in seen:
+                    continue
+                seen.add(key)
+                out.append((sw, atk))
+                hybrids += 1
+                if hybrids >= max_switch_hybrids or len(out) >= max(1, int(max_pairs)):
+                    break
+            if hybrids >= max_switch_hybrids or len(out) >= max(1, int(max_pairs)):
+                break
+        if hybrids < max_switch_hybrids and len(out) < max(1, int(max_pairs)):
+            for sw in switch_right:
+                for atk in top_l:
+                    key = _pair_key(atk, sw)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    out.append((atk, sw))
+                    hybrids += 1
+                    if hybrids >= max_switch_hybrids or len(out) >= max(1, int(max_pairs)):
+                        break
+                if hybrids >= max_switch_hybrids or len(out) >= max(1, int(max_pairs)):
+                    break
+        return out[: max(1, int(max_pairs))]
+
+    scored = []
     if move_left and move_right:
         for a1 in move_left:
             for a2 in move_right:
@@ -196,7 +634,7 @@ def _candidate_pairs(
 
     scored.sort(key=lambda x: -x[0])
     budget = max(1, int(max_pairs) - int(max_switch_hybrids))
-    out: List[Tuple[JointAtom, JointAtom]] = []
+    out = []
     seen = set()
     for _, pl, pr in scored:
         key = _pair_key(pl, pr)
@@ -382,6 +820,8 @@ def _opp_threat_detail(
         side_pk = 0.0
         side_pct = 0.0
         for action, p_b in dist:
+            if is_control_move(action.move_name) or is_switch_action(action):
+                continue
             best_rng = None
             for atk_tag in ('F1', 'F2'):
                 rng = opp_hit_map.get((atk_tag, _norm_move(action.move_name), side_key))
@@ -390,6 +830,11 @@ def _opp_threat_detail(
                     break
             if best_rng is None:
                 continue
+            # Respetar target si la política lo fijó (1=OL, 2=OR).
+            if int(action.target) in (1, 2):
+                want = 1 if side_key == 'OL' else 2
+                if int(action.target) != want:
+                    continue
             e_pct = 100.0 * expected_damage(best_rng) / float(max_hp) if max_hp else 0.0
             pk = p_ko(best_rng, cur_hp)
             contrib = float(p_b) * (min(e_pct, 100.0 * cur_hp / max(max_hp, 1)) + pk * soft_ko_bonus)
@@ -400,6 +845,274 @@ def _opp_threat_detail(
         p_ko_side[side_key] = min(1.0, side_pk)
         pct_side[side_key] = side_pct
     return threat, p_ko_side, pct_side
+
+
+def _threat_by_foe_tid(
+    world_foes: Sequence[Tuple[int, CalcPoke]],
+    our_left: Optional[CalcPoke],
+    our_right: Optional[CalcPoke],
+    left_atom: JointAtom,
+    right_atom: JointAtom,
+    opp_hit_map: Dict[Tuple[str, str, str], Optional[Tuple[int, int]]],
+    opp_dists: Dict[str, List[Tuple[OppAction, float]]],
+    *,
+    soft_ko_bonus: float,
+) -> Dict[int, float]:
+    """Amenaza atribuible a cada foe (F1→tid0, F2→tid1) bajo π_opp actual."""
+    out: Dict[int, float] = {}
+    tag_for_tid = {
+        int(tid): ('F1' if i == 0 else 'F2')
+        for i, (tid, _) in enumerate(world_foes)
+    }
+    sides = [
+        ('OL', our_left, left_atom),
+        ('OR', our_right, right_atom),
+    ]
+    for tid, foe_tag in tag_for_tid.items():
+        threat_f = 0.0
+        for side_key, our, our_atom in sides:
+            if our is None:
+                continue
+            if our_atom.utility in ('switch', 'protect') or our.is_protected:
+                continue
+            max_hp = int((_stats_or_default(our).get('hp') or 1))
+            cur_hp = int(our.cur_hp if our.cur_hp is not None else max_hp)
+            for action, p_b in (opp_dists.get(side_key) or []):
+                if is_control_move(action.move_name) or is_switch_action(action):
+                    continue
+                if int(action.target) in (1, 2):
+                    want = 1 if side_key == 'OL' else 2
+                    if int(action.target) != want:
+                        continue
+                rng = opp_hit_map.get((foe_tag, _norm_move(action.move_name), side_key))
+                if rng is None:
+                    continue
+                e_pct = 100.0 * expected_damage(rng) / float(max_hp) if max_hp else 0.0
+                pk = p_ko(rng, cur_hp)
+                threat_f += float(p_b) * (
+                    min(e_pct, 100.0 * cur_hp / max(max_hp, 1)) + pk * soft_ko_bonus
+                )
+        out[int(tid)] = float(threat_f)
+    return out
+
+
+def _fakeout_fails_by_tid(
+    attacker: Optional[CalcPoke],
+    world_foes: Sequence[Tuple[int, CalcPoke]],
+    *,
+    terrain: Optional[str],
+    gravity: bool = False,
+) -> Dict[int, bool]:
+    """True si Fake Out fallaría vs ese foe (Psychic Terrain / Armor Tail / Ghost…)."""
+    from showdown.battle_bots.move_mechanics import priority_move_fails
+    from showdown.battle_bots.greedy_joint.joint import fake_out_can_affect
+
+    foe_mons = [f for _, f in world_foes]
+    out: Dict[int, bool] = {}
+    for tid, foe in world_foes:
+        fails = False
+        if not fake_out_can_affect(attacker, foe):
+            fails = True
+        elif priority_move_fails(
+            'Fake Out',
+            attacker=attacker,
+            defender=foe,
+            defender_side=foe_mons,
+            terrain=terrain,
+            gravity=gravity,
+        ):
+            fails = True
+        out[int(tid)] = fails
+    return out
+
+
+def _direct_foe_threat(
+    foe: CalcPoke,
+    our_left: Optional[CalcPoke],
+    our_right: Optional[CalcPoke],
+    left_atom: JointAtom,
+    right_atom: JointAtom,
+    move_names: Sequence[str],
+    *,
+    weather: Optional[str],
+    terrain: Optional[str],
+    soft_ko_bonus: float,
+) -> float:
+    """Amenaza del foe con calc síncrono (sin deadline) — para Fake Out deny fiable."""
+    from showdown.damage_calc_bridge import damage_ranges_batch
+    from showdown.battle_bots.greedy_solo.greedy import _collect_side_requests
+
+    if not move_names:
+        return 0.0
+    ctx = FieldContext(weather=weather, terrain=terrain)
+    moves = move_options_from_names(list(move_names)[:4])
+    threat = 0.0
+    sides = [
+        ('OL', our_left, left_atom, 1),
+        ('OR', our_right, right_atom, 2),
+    ]
+    for _sk, our, our_atom, tid in sides:
+        if our is None:
+            continue
+        if our_atom.utility in ('switch', 'protect') or our.is_protected:
+            continue
+        reqs: List[dict] = []
+        for m in moves:
+            if is_control_move(m.name):
+                continue
+            r, _ = _collect_side_requests(
+                'F', foe, None, [(tid, our)], [m],
+                field_ctx=ctx, can_tera=False, tera_type=None,
+            )
+            reqs.extend(r)
+        if not reqs:
+            continue
+        try:
+            ranges = damage_ranges_batch(reqs)
+        except Exception:
+            continue
+        max_hp = int((_stats_or_default(our).get('hp') or 1))
+        cur_hp = int(our.cur_hp if our.cur_hp is not None else max_hp)
+        best = 0.0
+        for rng in ranges:
+            if rng is None:
+                continue
+            e_pct = 100.0 * expected_damage(rng) / float(max_hp) if max_hp else 0.0
+            pk = p_ko(rng, cur_hp)
+            best = max(
+                best,
+                min(e_pct, 100.0 * cur_hp / max(max_hp, 1)) + pk * soft_ko_bonus,
+            )
+        threat += best
+    return float(threat)
+
+
+def _opp_dists_greedy_mirror(
+    opp_moves_by_tag: Dict[str, List[MoveOption]],
+    opp_hit_map: Dict[Tuple[str, str, str], Optional[Tuple[int, int]]],
+    *,
+    left_atk: Optional[CalcPoke],
+    right_atk: Optional[CalcPoke],
+) -> Dict[str, List[Tuple[OppAction, float]]]:
+    """π_opp Dirac: cada foe elige argmax daño (espejo greedy_solo factored)."""
+    out: Dict[str, List[Tuple[OppAction, float]]] = {'OL': [], 'OR': []}
+    available: List[Tuple[int, str]] = []
+    if left_atk is not None:
+        available.append((1, 'OL'))
+    if right_atk is not None:
+        available.append((2, 'OR'))
+    if not available:
+        return out
+
+    for tag in ('F1', 'F2'):
+        moves = opp_moves_by_tag.get(tag) or []
+        best_score = -1.0
+        best_action: Optional[OppAction] = None
+        best_side: Optional[str] = None
+        for m in moves:
+            if is_control_move(m.name):
+                continue
+            mid = _norm_move(m.name)
+            for tgt, side in available:
+                rng = opp_hit_map.get((tag, mid, side))
+                if rng is None:
+                    continue
+                sc = float(expected_damage(rng))
+                if sc > best_score:
+                    best_score = sc
+                    best_action = OppAction(m.name, int(tgt), 'greedy')
+                    best_side = side
+        if best_action is not None and best_side is not None:
+            out[best_side].append((best_action, 1.0))
+    return out
+
+
+def _rebuild_opp_dists_from_hits(
+    opp_moves: Sequence[MoveOption],
+    opp_hit_map: Dict[Tuple[str, str, str], Optional[Tuple[int, int]]],
+    *,
+    left_atk: Optional[CalcPoke],
+    right_atk: Optional[CalcPoke],
+    w_greedy: float,
+    w_control: float,
+    use_real_damage: bool,
+    w_switch: float = 0.10,
+    split_targets: bool = True,
+) -> Dict[str, List[Tuple[OppAction, float]]]:
+    """π_opp por lado con daño real post-calc.
+
+    Con split_targets=True: masa greedy ∝ daño por (move, target); sin doble
+    conteo OL+OR. w_switch reserva masa de pivot rival (0 dmg).
+    """
+    out: Dict[str, List[Tuple[OppAction, float]]] = {'OL': [], 'OR': []}
+    if not opp_moves:
+        return out
+
+    available: List[int] = []
+    if left_atk is not None:
+        available.append(1)
+    if right_atk is not None:
+        available.append(2)
+    if not available:
+        return out
+
+    # daño por slot → {target: dmg}
+    dmg_st: Dict[int, Dict[int, float]] = {}
+    for m in opp_moves:
+        per: Dict[int, float] = {t: 0.0 for t in available}
+        if is_control_move(m.name):
+            dmg_st[m.slot] = per
+            continue
+        mid = _norm_move(m.name)
+        for t, def_tag in ((1, 'OL'), (2, 'OR')):
+            if t not in available:
+                continue
+            if not use_real_damage:
+                per[t] = 1.0
+                continue
+            best = 0.0
+            for atk_tag in ('F1', 'F2'):
+                rng = opp_hit_map.get((atk_tag, mid, def_tag))
+                if rng is None:
+                    continue
+                best = max(best, float(expected_damage(rng)))
+            per[t] = best if best > 0.0 else 0.0
+        # Si ningún target tiene calc, fallback 1.0 uniforme (legacy agresivo)
+        if use_real_damage and all(v <= 0.0 for v in per.values()):
+            for t in available:
+                per[t] = 1.0
+        dmg_st[m.slot] = per
+
+    w_uniform = max(
+        0.0,
+        1.0 - float(w_greedy) - float(w_control) - float(w_switch),
+    )
+
+    if split_targets:
+        return opp_policy_targeted(
+            opp_moves,
+            damage_by_slot_target=dmg_st,
+            available_targets=available,
+            w_greedy=float(w_greedy),
+            w_control=float(w_control),
+            w_uniform=w_uniform,
+            w_switch=float(w_switch),
+        )
+
+    # Legacy: dist independiente por lado (puede sobrecontar amenaza).
+    for def_tag, our, tgt in (('OL', left_atk, 1), ('OR', right_atk, 2)):
+        if our is None:
+            continue
+        dmg_slots = {m.slot: float((dmg_st.get(m.slot) or {}).get(tgt, 0.0)) for m in opp_moves}
+        out[def_tag] = opp_policy_distribution(
+            opp_moves,
+            damage_by_slot=dmg_slots,
+            default_target=tgt,
+            w_greedy=w_greedy,
+            w_control=w_control,
+            w_uniform=max(0.0, 1.0 - float(w_greedy) - float(w_control)),
+        )
+    return out
 
 
 def _bench_incoming_pct(
@@ -512,7 +1225,7 @@ def _entry_punish_score(
     for side_key in ('OL', 'OR'):
         dist = opp_dists.get(side_key) or []
         for action, p_b in dist:
-            if is_control_move(action.move_name):
+            if is_control_move(action.move_name) or is_switch_action(action):
                 continue
             best_rng = None
             mid = _norm_move(action.move_name)
@@ -786,28 +1499,86 @@ async def best_expectimax_bayesian_action(
     known_moves = foe_known_moves or {}
     calc_deadline = t0 + (float(cfg.phase2_end_ms) / 1000.0)
 
-    # --- Phase 1: deterministic joint fallback ---
+    # --- Phase 1: greedy floor (joint por defecto = filtro A) ---
     try:
-        fb_l, fb_r, fb_score = await best_joint_double_action(
-            left_attacker, right_attacker, left_moves, right_moves, foes,
-            weather=weather, terrain=terrain,
-            can_mega_left=can_mega_left, can_mega_right=can_mega_right,
-            can_tera_left=can_tera_left, can_tera_right=can_tera_right,
-            tera_left=tera_left, tera_right=tera_right,
-            field_ctx=ctx,
-        )
+        if bool(cfg.phase1_use_joint):
+            fb_l, fb_r, fb_score = await best_joint_double_action(
+                left_attacker, right_attacker, left_moves, right_moves, foes,
+                weather=weather, terrain=terrain,
+                can_mega_left=can_mega_left, can_mega_right=can_mega_right,
+                can_tera_left=can_tera_left, can_tera_right=can_tera_right,
+                tera_left=tera_left, tera_right=tera_right,
+                field_ctx=ctx,
+            )
+        else:
+            fb_l, fb_r, fb_score = await best_double_action(
+                left_attacker, right_attacker, left_moves, right_moves, foes,
+                weather=weather, terrain=terrain,
+                can_mega_left=can_mega_left, can_mega_right=can_mega_right,
+                can_tera_left=can_tera_left, can_tera_right=can_tera_right,
+                tera_left=tera_left, tera_right=tera_right,
+                field_ctx=ctx,
+            )
     except Exception as exc:
         meta.errors.append(f'phase1:{exc!r}')
         meta.elapsed_ms = _elapsed_ms(t0)
         return None, None, 0.0, meta
 
     best_l, best_r, best_u = fb_l, fb_r, float(fb_score)
+    phase1_l, phase1_r = fb_l, fb_r
+    phase1_u = float(fb_score)
     meta.utility = best_u
     meta.phase = 'phase1'
     meta.used_fallback = True
+    meta.phase1_utility = phase1_u
+    meta.phase2_utility = phase1_u
+    pairs: List[Tuple[JointAtom, JointAtom]] = []
+    utilities: Dict[Tuple, JointActionUtility] = {}
+    best_key = None
+    # Diagnostic vs solo: un calc extra solo si queda presupuesto.
+    solo_l, solo_r, solo_u = fb_l, fb_r, float(fb_score)
+    meta.solo_utility = solo_u
+    if bool(cfg.phase1_use_joint) and _elapsed_ms(t0) < float(cfg.phase1_budget_ms):
+        try:
+            solo_l, solo_r, solo_u = await best_double_action(
+                left_attacker, right_attacker, left_moves, right_moves, foes,
+                weather=weather, terrain=terrain,
+                can_mega_left=can_mega_left, can_mega_right=can_mega_right,
+                can_tera_left=can_tera_left, can_tera_right=can_tera_right,
+                tera_left=tera_left, tera_right=tera_right,
+                field_ctx=ctx,
+            )
+            meta.solo_utility = float(solo_u)
+        except Exception:
+            pass
+
+    def _finalize_decision() -> None:
+        meta.elapsed_ms = _elapsed_ms(t0)
+        if meta.elapsed_ms >= cfg.deadline_ms and '+timeout' not in str(meta.phase):
+            meta.phase = meta.phase + '+timeout'
+        _log_divergence(meta, phase1_l, phase1_r, best_l, best_r, solo_l, solo_r)
+        try:
+            _fill_decision_report(
+                meta,
+                pairs=pairs,
+                utilities=utilities,
+                best_key=best_key,
+                phase1_l=phase1_l,
+                phase1_r=phase1_r,
+                best_l=best_l,
+                best_r=best_r,
+                cfg=cfg,
+            )
+        except Exception as exc:
+            meta.errors.append(f'decision_report:{exc!r}')
+
+    if not cfg.enable_phase2:
+        meta.phase = 'phase1+ablation'
+        _finalize_decision()
+        return best_l, best_r, best_u, meta
 
     if _elapsed_ms(t0) >= cfg.phase2_end_ms:
-        meta.elapsed_ms = _elapsed_ms(t0)
+        _finalize_decision()
         return best_l, best_r, best_u, meta
 
     # --- Phase 2: Bayesian refinement ---
@@ -843,9 +1614,15 @@ async def best_expectimax_bayesian_action(
             max_switch_hybrids=cfg.max_switch_hybrids if cfg.enable_voluntary_switch else 0,
             left_poke=left_atk,
             right_poke=right_atk,
+            topk_per_side=(
+                int(cfg.topk_per_side) if bool(cfg.use_topk_abstraction) else 0
+            ),
+            enable_niche_pairs=bool(getattr(cfg, 'enable_niche_pairs', True)),
         )
+        if bool(cfg.phase2_retarget_only):
+            pairs = _retarget_pairs_only(pairs, phase1_l, phase1_r)
         if not pairs:
-            meta.elapsed_ms = _elapsed_ms(t0)
+            _finalize_decision()
             return best_l, best_r, best_u, meta
 
         nodes = belief_nodes_for_foes(
@@ -856,7 +1633,8 @@ async def best_expectimax_bayesian_action(
         worlds = iter_worlds(nodes, foe_order, max_worlds=cfg.max_worlds)
         meta.worlds = len(worlds)
 
-        utilities: Dict[Tuple, JointActionUtility] = {}
+        # Rellenar el dict outer (no rebind) para que _finalize_decision lo vea.
+        utilities.clear()
         for pl, pr in pairs:
             utilities[_pair_key(pl, pr)] = JointActionUtility(
                 left_slot=pl.move_slot,
@@ -894,26 +1672,49 @@ async def best_expectimax_bayesian_action(
                 except Exception:
                     world_foes.append((tid, foe))
 
+            # Proyectar mega rival (stats/ability) + clima de Drought/etc. este turno.
+            from showdown.battle_bots.move_mechanics.vgc_utility import (
+                project_foe_active_forme,
+                weather_from_projected_foes,
+            )
+            world_foes = [
+                (tid, project_foe_active_forme(foe)) for tid, foe in world_foes
+            ]
+            world_weather = weather_from_projected_foes(
+                [f for _, f in world_foes],
+                current_weather=ctx.weather,
+            )
+            world_ctx = ctx
+            if world_weather and world_weather != ctx.weather:
+                try:
+                    from dataclasses import replace as _dc_replace
+                    world_ctx = _dc_replace(ctx, weather=world_weather)
+                except Exception:
+                    world_ctx = FieldContext(weather=world_weather, terrain=ctx.terrain)
+
             reqs: List[dict] = []
             meta_hits: List[Tuple[str, MoveOption, int, CalcPoke, int]] = []
             if left_atk and left_moves:
                 r, m = _collect_side_requests(
                     'L', left_atk, right_atk, world_foes, left_moves,
-                    field_ctx=ctx, can_tera=can_tera_left, tera_type=tera_left,
+                    field_ctx=world_ctx, can_tera=can_tera_left, tera_type=tera_left,
                 )
                 reqs.extend(r)
                 meta_hits.extend(m)
             if right_atk and right_moves:
                 r, m = _collect_side_requests(
                     'R', right_atk, left_atk, world_foes, right_moves,
-                    field_ctx=ctx, can_tera=can_tera_right, tera_type=tera_right,
+                    field_ctx=world_ctx, can_tera=can_tera_right, tera_type=tera_right,
                 )
                 reqs.extend(r)
                 meta_hits.extend(m)
 
             opp_reqs: List[dict] = []
             opp_meta: List[Tuple[str, str, str]] = []
-            opp_dists: Dict[str, List[Tuple[OppAction, float]]] = {'OL': [], 'OR': []}
+            # Moves de TODOS los foes (antes π_opp solo veía el primero).
+            opp_moves_all: List[MoveOption] = []
+            opp_moves_by_tag: Dict[str, List[MoveOption]] = {}
+            seen_opp_slots: Set[Tuple[str, int]] = set()
             all_opp_move_names: List[str] = []
 
             for i, (tid, foe) in enumerate(world_foes):
@@ -924,25 +1725,22 @@ async def best_expectimax_bayesian_action(
                     continue
                 all_opp_move_names.extend(move_names)
                 opp_moves = move_options_from_names(move_names)
-                dmg_slots = {
-                    m.slot: (0.0 if is_control_move(m.name) else 1.0)
-                    for m in opp_moves
-                }
+                opp_moves_by_tag[tag] = list(opp_moves)
+                for m in opp_moves:
+                    key = (_norm_move(m.name), int(m.slot))
+                    if key in seen_opp_slots:
+                        continue
+                    seen_opp_slots.add(key)
+                    opp_moves_all.append(m)
                 for def_tag, our in (('OL', left_atk), ('OR', right_atk)):
                     if our is None:
                         continue
-                    if not opp_dists[def_tag]:
-                        opp_dists[def_tag] = opp_policy_distribution(
-                            opp_moves,
-                            damage_by_slot=dmg_slots,
-                            default_target=1 if def_tag == 'OL' else 2,
-                        )
                     for m in opp_moves:
                         if is_control_move(m.name):
                             continue
                         r, _mta = _collect_side_requests(
                             tag, foe, None, [(1 if def_tag == 'OL' else 2, our)], [m],
-                            field_ctx=ctx, can_tera=False, tera_type=None,
+                            field_ctx=world_ctx, can_tera=False, tera_type=None,
                         )
                         for _req in r:
                             opp_reqs.append(_req)
@@ -967,7 +1765,7 @@ async def best_expectimax_bayesian_action(
                 meta_hits,
                 our_ranges,
                 attackers={'L': left_atk, 'R': right_atk},
-                weather=ctx.weather,
+                weather=world_ctx.weather,
             )
             opp_hit_map: Dict[Tuple[str, str, str], Optional[Tuple[int, int]]] = {}
             from showdown.battle_bots.move_mechanics import gate_damage_range, priority_move_fails
@@ -984,7 +1782,7 @@ async def best_expectimax_bayesian_action(
                 gated = gate_damage_range(
                     rng,
                     move_id,
-                    weather=ctx.weather,
+                    weather=world_ctx.weather,
                     item=foe.item if foe is not None else None,
                     already_charging=bool(foe.is_two_turn_charging) if foe is not None else False,
                     must_recharge=bool(foe.must_recharge) if foe is not None else False,
@@ -999,6 +1797,27 @@ async def best_expectimax_bayesian_action(
                 ):
                     gated = None
                 opp_hit_map[key] = gated
+
+            # Estructura: π_opp tras calc (espejo solo o mezcla legacy).
+            if bool(cfg.opp_policy_mirror_solo):
+                opp_dists = _opp_dists_greedy_mirror(
+                    opp_moves_by_tag,
+                    opp_hit_map,
+                    left_atk=left_atk,
+                    right_atk=right_atk,
+                )
+            else:
+                opp_dists = _rebuild_opp_dists_from_hits(
+                    opp_moves_all,
+                    opp_hit_map,
+                    left_atk=left_atk,
+                    right_atk=right_atk,
+                    w_greedy=float(cfg.opp_policy_greedy_weight),
+                    w_control=float(cfg.opp_policy_control_weight),
+                    use_real_damage=bool(cfg.opp_policy_use_real_damage),
+                    w_switch=float(cfg.opp_policy_switch_weight),
+                    split_targets=bool(cfg.opp_policy_split_targets),
+                )
 
             foe_types = [tuple(f.types or ()) for _, f in world_foes]
 
@@ -1147,6 +1966,7 @@ async def best_expectimax_bayesian_action(
                     ko_free_switch_bonus=cfg.ko_free_switch_bonus,
                 )
                 switch_v += free_sw
+                switch_v *= float(cfg.switch_v_scale)
 
                 syn = 0.0
                 if pl.utility != 'switch' and pr.utility != 'switch':
@@ -1169,16 +1989,87 @@ async def best_expectimax_bayesian_action(
                 field_b = field_control_bonus(pos, used_speed_control=used_sc, used_tera=used_tera)
 
                 our_hp = max(0.0, 100.0 - min(threat / max(cfg.soft_ko_bonus / 100.0, 1.0), 100.0))
-                v = (
-                    offense
-                    - float(cfg.threat_weight) * threat
-                    + float(cfg.hp_rel_weight) * (our_hp - foe_hp)
-                    + float(cfg.syn_weight) * syn
-                    + lasting_extra
-                    + field_b
-                    + switch_v
-                    - overkill_pen
+                from showdown.battle_bots.move_mechanics.vgc_utility import (
+                    pair_vgc_utility_extra,
                 )
+                threat_by_tid = _threat_by_foe_tid(
+                    world_foes, left_atk, right_atk, pl, pr,
+                    opp_hit_map, opp_dists,
+                    soft_ko_bonus=cfg.soft_ko_bonus,
+                )
+                # Si el batch opp cortó por deadline (Heat Wave→OR=None), recalc
+                # amenaza directa para targets de Fake Out del par.
+                for atom in (pl, pr):
+                    if atom is None:
+                        continue
+                    if not (
+                        _norm_move(atom.move_name) == 'fakeout'
+                        or atom.utility == 'fakeout'
+                    ):
+                        continue
+                    tid = int(atom.target or 0)
+                    if tid <= 0 or threat_by_tid.get(tid, 0.0) >= 0.45 * float(cfg.soft_ko_bonus):
+                        continue
+                    foe = next((f for t, f in world_foes if int(t) == tid), None)
+                    if foe is None:
+                        continue
+                    moves = list(known_moves.get(tid) or ())
+                    if not moves:
+                        continue
+                    direct = _direct_foe_threat(
+                        foe, left_atk, right_atk, pl, pr, moves,
+                        weather=world_ctx.weather,
+                        terrain=terrain or ctx.terrain,
+                        soft_ko_bonus=cfg.soft_ko_bonus,
+                    )
+                    if direct > threat_by_tid.get(tid, 0.0):
+                        threat_by_tid[tid] = direct
+                fo_fails_l = _fakeout_fails_by_tid(
+                    left_atk, world_foes,
+                    terrain=terrain or ctx.terrain,
+                    gravity=bool(getattr(ctx, 'gravity', False)),
+                )
+                fo_fails_r = _fakeout_fails_by_tid(
+                    right_atk, world_foes,
+                    terrain=terrain or ctx.terrain,
+                    gravity=bool(getattr(ctx, 'gravity', False)),
+                )
+                # Fails si CUALQUIER atacante del par con FO fallaría vs ese tid.
+                fo_fails = {
+                    tid: bool(fo_fails_l.get(tid) and fo_fails_r.get(tid))
+                    for tid in set(fo_fails_l) | set(fo_fails_r)
+                }
+                # Si solo un lado tiene Fake Out, usar fails de ese atacante.
+                for atom, fails_map in ((pl, fo_fails_l), (pr, fo_fails_r)):
+                    if atom is None:
+                        continue
+                    if _norm_move(atom.move_name) == 'fakeout' or atom.utility == 'fakeout':
+                        tid = int(atom.target or 0)
+                        if tid:
+                            fo_fails[tid] = bool(fails_map.get(tid, False))
+                vgc_u = pair_vgc_utility_extra(
+                    pl, pr,
+                    left_atk=left_atk,
+                    right_atk=right_atk,
+                    foes=world_foes,
+                    threat_by_tid=threat_by_tid,
+                    fakeout_fails_by_tid=fo_fails,
+                )
+                if bool(cfg.v_solo_isomorphic):
+                    # Offense + utilidad VGC (Fake Out deny=amenaza / Knock Off item).
+                    v = float(offense) + float(vgc_u)
+                else:
+                    v = (
+                        offense
+                        - float(cfg.threat_weight) * threat
+                        + float(cfg.hp_rel_weight) * (our_hp - foe_hp)
+                        + float(cfg.syn_weight) * syn
+                        + lasting_extra
+                        + field_b
+                        + switch_v
+                        - overkill_pen
+                        + float(vgc_u)
+                    )
 
                 utilities[_pair_key(pl, pr)].add(v, weight=p_world)
 
@@ -1195,20 +2086,124 @@ async def best_expectimax_bayesian_action(
                 best_key = key
 
         if best_key is not None and best_mean > float('-inf'):
+            p1_v = _phase1_bayes_v(utilities, pairs, phase1_l, phase1_r)
+            best_pl = best_pr = None
             for pl, pr in pairs:
                 if _pair_key(pl, pr) == best_key:
-                    best_l = _scored_from_atom(pl, best_mean, foes)
-                    best_r = _scored_from_atom(pr, best_mean, foes)
-                    best_u = best_mean
-                    meta.used_fallback = False
-                    meta.phase = 'phase2'
-                    meta.utility = best_u
+                    best_pl, best_pr = pl, pr
                     break
+
+            accept_p2 = best_pl is not None
+            if accept_p2 and cfg.phase2_surgical_only and best_pl is not None:
+                # Misma acción que phase1 → ok; diverge solo en nicho quirúrgico
+                # o retarget (mismos slots, distinto target) si phase2_retarget_only.
+                same_as_p1 = (
+                    _scored_matches_atom(phase1_l, best_pl)
+                    and _scored_matches_atom(phase1_r, best_pr)
+                )
+                same_slots = (
+                    (phase1_l is None or int(phase1_l.move_slot) == int(best_pl.move_slot))
+                    and (phase1_r is None or int(phase1_r.move_slot) == int(best_pr.move_slot))
+                    and best_pl.utility != 'switch'
+                    and best_pr.utility != 'switch'
+                )
+                if not same_as_p1:
+                    allow = False
+                    if bool(cfg.phase2_retarget_only) and same_slots:
+                        allow = True
+                    elif _is_surgical_pair(best_pl, best_pr):
+                        allow = True
+                    if not allow:
+                        accept_p2 = False
+                        meta.phase2_gated = True
+
+            gate_mode = str(getattr(cfg, 'phase2_gate_mode', 'beat') or 'beat').lower()
+            if accept_p2 and cfg.phase2_gate_enabled and gate_mode != 'off':
+                meta.phase1_v = float(p1_v) if p1_v is not None else 0.0
+                meta.phase2_v = float(best_mean)
+                if p1_v is None:
+                    # Sin V de phase1 en el set: no anclar; Top-K Bayes puede diverger.
+                    if gate_mode == 'beat':
+                        accept_p2 = False
+                        meta.phase2_gated = True
+                else:
+                    delta = float(best_mean) - float(p1_v)
+                    max_dv = float(cfg.phase2_max_delta_v)
+                    if max_dv > 0.0 and delta > max_dv:
+                        accept_p2 = False
+                        meta.phase2_gated = True
+                    elif gate_mode == 'indifference':
+                        eps = float(getattr(cfg, 'phase2_indifference_eps', 40.0) or 0.0)
+                        if float(best_mean) < float(p1_v) - eps:
+                            accept_p2 = False
+                            meta.phase2_gated = True
+                    else:
+                        # beat: exigir mejora mínima vs phase1.
+                        if delta < float(cfg.phase2_gate_margin):
+                            accept_p2 = False
+                            meta.phase2_gated = True
+            elif accept_p2:
+                meta.phase1_v = float(p1_v) if p1_v is not None else 0.0
+                meta.phase2_v = float(best_mean)
+
+            if accept_p2 and best_pl is not None and best_pr is not None:
+                best_l = _scored_from_atom(best_pl, best_mean, foes)
+                best_r = _scored_from_atom(best_pr, best_mean, foes)
+                best_u = best_mean
+                meta.used_fallback = False
+                meta.phase = 'phase2'
+                meta.utility = best_u
+                meta.phase2_utility = best_u
+            else:
+                # Conserva phase1/joint; anota V de phase2 rechazada.
+                meta.phase = 'phase1+gated'
+                meta.phase2_utility = float(best_mean)
+                meta.used_fallback = True
 
     except Exception as exc:
         meta.errors.append(f'phase2:{exc!r}')
 
-    meta.elapsed_ms = _elapsed_ms(t0)
-    if meta.elapsed_ms >= cfg.deadline_ms:
-        meta.phase = meta.phase + '+timeout'
+    _finalize_decision()
     return best_l, best_r, best_u, meta
+
+
+def _log_divergence(
+    meta: ExpectimaxMeta,
+    phase1_l: Optional[ScoredAction],
+    phase1_r: Optional[ScoredAction],
+    best_l: Optional[ScoredAction],
+    best_r: Optional[ScoredAction],
+    solo_l: Optional[ScoredAction] = None,
+    solo_r: Optional[ScoredAction] = None,
+) -> None:
+    p1 = pair_sig(phase1_l, phase1_r)
+    p2 = pair_sig(best_l, best_r)
+    diverged = (not meta.used_fallback) and p1 != p2
+    meta.diverged = diverged
+    try:
+        record_choose(
+            phase=meta.phase,
+            used_fallback=bool(meta.used_fallback),
+            diverged=diverged,
+            phase1_u=float(meta.phase1_utility),
+            phase2_u=float(meta.phase2_utility),
+            phase1_sig=p1,
+            phase2_sig=p2,
+            elapsed_ms=float(meta.elapsed_ms),
+            gated=bool(meta.phase2_gated),
+        )
+    except Exception:
+        pass
+    try:
+        solo_sig = pair_sig(solo_l, solo_r)
+        chosen_sig = p2
+        neq = chosen_sig != solo_sig
+        meta.neq_solo = neq
+        record_solo_compare(
+            chosen_sig=chosen_sig,
+            solo_sig=solo_sig,
+            joint_u=float(meta.utility),
+            solo_u=float(meta.solo_utility),
+        )
+    except Exception:
+        pass

@@ -1,0 +1,20 @@
+=== Robust E2E Fixplan (manual Cursor fix) ===
+NEED_FIX=NO
+NEED_FLAGS_ADD: NO
+sync_ok: YES
+inf_ok: YES
+fail_matchup_inf: 0
+fail_bo3_inf: 0
+player_a: expectimax_bayesian
+player_b: greedy_joint
+player_a_wins: 19
+player_b_wins: 20
+heuristic_wins: 19
+random_wins: 20
+errors: 0
+state_mismatches: 0
+soundness_failures: 0
+
+STATUS: clean (sync/inference/errors)
+ACTION: no tocar código por NEED_FIX; no abrir agente Cursor.
+Source report: C:\Users\poppl\OneDrive\Documentos\GitHub\IAPSVGC2022\logs\robust_e2e_report.txt

@@ -1,0 +1,24 @@
+--- reward analysis (auto; compare across expectimax param runs) ---
+analysis_matchup: greedy_solo vs greedy_joint
+analysis_teams: 50 seed=None
+analysis_series: W=29 L=21 E=0 WR_raw=58.0%
+analysis_games: 114
+analysis_c2_mean: +0.3452
+analysis_c2_mean_wins: +1.2172
+analysis_c2_mean_losses: -0.7708
+analysis_c2_per_turn: +0.0844
+analysis_c1_mean: +0.1228
+
+vs_prev_c2_mean: n/a (first run)
+vs_prev_c2_wins: n/a (first run)
+vs_prev_c2_losses: n/a (first run)
+vs_prev_c2_per_turn: n/a (first run)
+vs_prev_wr_raw: n/a (first run)
+trend: BASELINE (no prior run for this matchup)
+
+history_file: C:\Users\poppl\OneDrive\Documentos\GitHub\IAPSVGC2022\logs\robust_e2e_reward_history.jsonl
+analysis_file: C:\Users\poppl\OneDrive\Documentos\GitHub\IAPSVGC2022\logs\robust_e2e_reward_analysis.txt
+history_same_matchup (last 8):
+  1. 2026-09-17T08:09:45 teams=50 c2=+0.345 wr=58.0%  ← current
+
+tip: after changing expectimax params, re-run the same --teams/--player-* and read trend / vs_prev_* (no Cursor needed).

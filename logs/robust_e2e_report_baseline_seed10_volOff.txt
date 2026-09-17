@@ -1,0 +1,329 @@
+=== Robust E2E Report (A/B pools + crossed BO3 + sync + OTS) ===
+time_utc: 2026-09-17T07:02:34.463900+00:00
+format: gen9championsvgc2026regmcbo3
+ps_up: True
+team_pool_available: 200
+teams_used: 40 (A=20 expectimax_bayesian, B=20 greedy_joint, disjoint)
+player_a: expectimax_bayesian
+player_b: greedy_joint
+matchups: 20 (each = 2 crossed BO3)
+bo3_series: 40
+seed: 10
+elapsed_s: 1899.2
+bo3_per_s: 0.021
+
+--- expectimax_config ---
+deadline_ms: 1600.0
+phase1_budget_ms: 80.0
+phase2_end_ms: 1520.0
+k_profiles: 2
+max_worlds: 4
+topk_per_side: 7
+max_our_pairs: 49
+soft_ko_bonus: 1000.0
+enable_voluntary_switch: False
+max_switch_hybrids: 0
+enable_niche_pairs: False
+loss_weight: 650.0
+save_weight: 0.0
+chip_soft_cap: 30.0
+switch_min_stay_p_ko: 0.5
+overkill_waste_weight: 140.0
+ko_free_switch_bonus: 55.0
+entry_punish_weight: 1.15
+threat_weight: 0.0
+hp_rel_weight: 0.15
+syn_weight: 0.0
+condemned_chip_discount: 0.8
+condemned_lasting_boost: 1.35
+threat_relief_weight: 1.0
+entry_ability_weight: 1.0
+opp_policy_greedy_weight: 1.0
+opp_policy_control_weight: 0.0
+opp_policy_switch_weight: 0.0
+opp_policy_use_real_damage: True
+opp_policy_split_targets: False
+opp_policy_mirror_solo: False
+v_solo_isomorphic: True
+phase2_retarget_only: False
+phase1_use_joint: True
+use_topk_abstraction: True
+phase2_gate_enabled: True
+phase2_gate_mode: 'indifference'
+phase2_gate_margin: 80.0
+phase2_indifference_eps: 40.0
+phase2_max_delta_v: 0.0
+enable_phase2: True
+phase2_surgical_only: False
+switch_v_scale: 0.65
+
+--- results (battle/series raw, informative) ---
+player_a_series_wins: 19
+player_b_series_wins: 20
+player_a_wins: 19
+player_b_wins: 20
+heuristic_wins: 19
+random_wins: 20
+series_errors: 0
+errors: 0
+win_rate_battle_raw: 48.7%
+win_rate_player_a: 48.7%
+win_rate_heuristic: 48.7%
+
+--- results (paired crossed matchups — primary) ---
+pair_a_sweeps: 5
+pair_b_sweeps: 5
+pair_draws: 9
+pair_invalid: 1
+win_rate_pairs: 50.0%
+pair_wr_ci95: [20.0%, 80.0%]
+pair_score_mean: +0.000
+pair_score_ci95: [-0.316, +0.316]
+verdict: UNCLEAR - paired WR IC includes 50%
+
+--- reward telemetry (player_a perspective, Spec v1.1) ---
+reward_perspective: expectimax_bayesian
+reward_note: informative only (not a NEED_FIX gate)
+reward_c1: sparse terminal {-1,0,+1}
+reward_c2: dense clipped episode return (Candidate 2)
+reward_games: 100
+reward_c2_mean: +0.2006
+reward_c2_mean_wins: +1.0795
+reward_c2_mean_losses: -0.8735
+reward_c2_per_turn_mean: +0.0382
+reward_c1_mean: +0.0800
+
+--- reward per game (capped) ---
+1. g1:t6W c2=+1.100 c1=+1
+2. g2:t5L c2=-0.886 c1=-1
+3. g3:t6L c2=-0.869 c1=-1
+4. g4:t7W c2=+1.100 c1=+1
+5. g5:t7W c2=+1.100 c1=+1
+6. g6:t4W c2=+0.994 c1=+1
+7. g7:t5W c2=+0.965 c1=+1
+8. g8:t4W c2=+0.964 c1=+1
+9. g9:t4W c2=+1.250 c1=+1
+10. g10:t7L c2=-0.703 c1=-1
+11. g11:t4W c2=+1.250 c1=+1
+12. g12:t4W c2=+1.250 c1=+1
+13. g13:t5W c2=+1.100 c1=+1
+14. g14:t9L c2=-1.000 c1=-1
+15. g15:t5W c2=-1.024 c1=-1
+16. g16:t5W c2=+0.963 c1=+1
+17. g17:t4W c2=+0.969 c1=+1
+18. g18:t7W c2=+0.962 c1=+1
+19. g19:t7L c2=-1.014 c1=-1
+20. g20:t5L c2=-0.892 c1=-1
+21. g21:t6L c2=-0.726 c1=-1
+22. g22:t4W c2=+1.100 c1=+1
+23. g23:t4L c2=-0.996 c1=-1
+24. g24:t5L c2=-1.000 c1=-1
+25. g25:t5W c2=+0.978 c1=+1
+26. g26:t6W c2=+1.000 c1=+1
+27. g27:t6L c2=-1.000 c1=-1
+28. g28:t6W c2=+0.973 c1=+1
+29. g29:t4L c2=-1.000 c1=-1
+30. g30:t4L c2=-1.000 c1=-1
+31. g31:t5W c2=+0.952 c1=+1
+32. g32:t6W c2=+1.000 c1=+1
+33. g33:t4L c2=-1.000 c1=-1
+34. g34:t9W c2=+0.991 c1=+1
+35. g35:t8W c2=+1.400 c1=+1
+36. g36:t8L c2=-1.000 c1=-1
+37. g37:t6L c2=-1.000 c1=-1
+38. g38:t5W c2=+0.975 c1=+1
+39. g39:t5W c2=+0.964 c1=+1
+40. g40:t4L c2=-0.985 c1=-1
+41. g41:t4L c2=-1.000 c1=-1
+42. g42:t6W c2=+0.951 c1=+1
+43. g43:t5L c2=-1.000 c1=-1
+44. g44:t4L c2=-0.900 c1=-1
+45. g45:t4W c2=+0.968 c1=+1
+46. g46:t7W c2=+0.850 c1=+1
+47. g47:t6L c2=-0.686 c1=-1
+48. g48:t4L c2=-0.721 c1=-1
+49. g49:t5W c2=+1.250 c1=+1
+50. g50:t5L c2=-0.870 c1=-1
+51. g51:t7L c2=-0.860 c1=-1
+52. g52:t5L c2=-0.719 c1=-1
+53. g53:t5L c2=-0.719 c1=-1
+54. g54:t5W c2=+1.100 c1=+1
+55. g55:t5W c2=+1.100 c1=+1
+56. g56:t11W c2=+1.250 c1=+1
+57. g57:t6W c2=+1.250 c1=+1
+58. g58:t8L c2=-0.600 c1=-1
+59. g59:t8L c2=-0.600 c1=-1
+60. g60:t4W c2=+1.250 c1=+1
+61. g61:t4W c2=+1.250 c1=+1
+62. g62:t5L c2=-0.853 c1=-1
+63. g63:t5L c2=-0.857 c1=-1
+64. g64:t5W c2=+1.250 c1=+1
+65. g65:t4W c2=+1.250 c1=+1
+66. g66:t5L c2=-0.886 c1=-1
+67. g67:t5L c2=-0.884 c1=-1
+68. g68:t4L c2=-1.075 c1=-1
+69. g69:t3L c2=-1.000 c1=-1
+70. g70:t8L c2=-0.727 c1=-1
+71. g71:t6W c2=+0.850 c1=+1
+72. g72:t5W c2=+1.250 c1=+1
+73. g73:t4W c2=+1.400 c1=+1
+74. g74:t5W c2=+1.250 c1=+1
+75. g75:t7L c2=-0.703 c1=-1
+76. g76:t6L c2=-0.672 c1=-1
+77. g77:t4L c2=-0.852 c1=-1
+78. g78:t5W c2=+1.100 c1=+1
+79. g79:t5W c2=+1.100 c1=+1
+80. g80:t4L c2=-0.861 c1=-1
+... (20 more games omitted)
+
+--- failure kinds (invalidating matchups; series may count multiple) ---
+fail_timeout: 0
+fail_runtime: 1
+fail_reject: 0
+fail_sync: 0
+fail_matchup_inf: 0
+fail_bo3_inf: 0
+fail_inference: 0
+
+--- sync (Battle vs PS local) ---
+sync_ok: YES
+state_mismatch: NO
+state_checks: 532
+state_mismatches: 0
+feed_errors: 0
+
+--- inference (OTS ground truth) ---
+inf_ok: YES
+inference_ok: YES
+soundness_checks: 7662
+soundness_failures: 0
+belief_observations: 3893
+belief_skips: 106
+narrowing_events: 0
+battle_errors: 0
+
+--- inference flags (Battle storage / calc wiring) ---
+NEED_FLAGS_ADD: NO
+flags_storage_ok: 17
+flags_missing_storage: 0
+flags_missing_wire: 0
+flags_gaps_high_med: 0
+- OK: storage + wiring de DamageContext presentes; sin gaps high/medium.
+
+--- improvements / notes for next runs ---
+- OK: sin desync ni exclusión de SP verdadero. Próxima corrida: subir --teams o cambiar seed tras reglas nuevas.
+
+
+------------------------------------------------------------------------
+EJEMPLO DE INFERENCIA EN EL TIEMPO: incineroar (stat=spe)
+True SP=0  True final=80
+
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=3
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=1
+  T 3 [turn   ]  SP    0-32  final     80-96  cand=33  obs=4
+  T 4 [turn   ]  SP    0-32  final     80-96  cand=33  obs=9
+  T 3 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 3 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=4
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 4 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 5 [turn   ]  SP    0-32  final     80-96  cand=33  obs=3
+  T 4 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 5 [turn   ]  SP    0-32  final     80-96  cand=33  obs=5
+  T 4 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 5 [turn   ]  SP    0-32  final     80-96  cand=33  obs=5
+  T 1 [turn   ]  SP    0-32  final     72-86  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     72-86  cand=33  obs=1
+  T 3 [turn   ]  SP    0-32  final     72-86  cand=33  obs=4
+  T 1 [turn   ]  SP    0-32  final     72-86  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     72-86  cand=33  obs=1
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=2
+  T 1 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=2
+  T 3 [turn   ]  SP    0-32  final     80-96  cand=33  obs=3
+  T 2 [turn   ]  SP    0-32  final     80-96  cand=33  obs=0
+  T 3 [turn   ]  SP    0-32  final     80-96  cand=33  obs=1
+  T 4 [turn   ]  SP    0-32  final     80-96  cand=33  obs=4
+  T 5 [turn   ]  SP    0-32  final     80-96  cand=33  obs=5
+  T 6 [turn   ]  SP    0-32  final     80-96  cand=33  obs=5
+  T 7 [turn   ]  SP    0-32  final     80-96  cand=33  obs=5
+
+--- runtime error samples (capped) ---
+1. g1:t4L c2=-1.00 | short_bo3 | #2nd - reTakeshi at Devils Den vs #22nd - DARKTUGA at Intimidators [A?B]
+
+--- reward analysis (auto; compare across expectimax param runs) ---
+analysis_matchup: expectimax_bayesian vs greedy_joint
+analysis_teams: 40 seed=10
+analysis_series: W=19 L=20 E=0 WR_raw=48.7%
+analysis_games: 100
+analysis_c2_mean: +0.2006
+analysis_c2_mean_wins: +1.0795
+analysis_c2_mean_losses: -0.8735
+analysis_c2_per_turn: +0.0382
+analysis_c1_mean: +0.0800
+
+vs_prev_c2_mean: +0.0128
+vs_prev_c2_wins: -0.0631
+vs_prev_c2_losses: -0.0343
+vs_prev_c2_per_turn: -0.0111
+vs_prev_wr_raw: -1.7900
+trend: FLAT vs previous (NOTE: teams 200→40; prefer same --teams)
+
+history_file: C:\Users\poppl\OneDrive\Documentos\GitHub\IAPSVGC2022\logs\robust_e2e_reward_history.jsonl
+analysis_file: C:\Users\poppl\OneDrive\Documentos\GitHub\IAPSVGC2022\logs\robust_e2e_reward_analysis.txt
+history_same_matchup (last 8):
+  1. 2026-09-15T22:13:19 teams=100 c2=+0.182 c2W=+1.26 c2L=-0.81 wr=46.5%
+  2. 2026-09-16T04:51:32 teams=100 c2=+0.129 c2W=+1.17 c2L=-0.89 wr=47.0%
+  3. 2026-09-16T04:53:57 teams=4 c2=+0.559 c2W=+1.22 c2L=-0.76 wr=75.0%
+  4. 2026-09-16T05:33:58 teams=100 c2=+0.032 c2W=+1.07 c2L=-0.89 wr=35.4%
+  5. 2026-09-16T06:00:23 teams=40 c2=+0.301 c2W=+1.20 c2L=-0.84 wr=55.0%
+  6. 2026-09-16T06:40:04 teams=100 c2=+0.179 c2W=+1.11 c2L=-0.87 wr=52.1%
+  7. 2026-09-16T15:18:05 teams=200 c2=+0.188 c2W=+1.14 c2L=-0.84 wr=50.5%
+  8. 2026-09-17T07:02:34 teams=40 c2=+0.201 c2W=+1.08 c2L=-0.87 wr=48.7% ← current
+
+tip: after changing expectimax params, re-run the same --teams/--player-* and read trend / vs_prev_* (no Cursor needed).
+
+--- expectimax divergence (phase1 vs phase2) ---
+div_n_choose=16922
+div_phase1_only=6 div_phase2=16916 div_diverged=10856 div_gated=0 div_timeout=11
+div_rate_all=64.2% div_rate_phase2=64.2% gate_rate=0.0%
+div_mean_delta_u=-569.92 (phase2_u - phase1_u | diverged only)
+--- joint/chosen vs greedy_solo ---
+solo_cmp=16922 neq=15620 neq_rate=92.3%
+solo_neq_turns W=6266 L=9354
+wr_with_solo_neq=55.0% (n=100) wr_eq_solo=0.0% (n=0)
+solo_neq_samples (first 8):
+  1. Δu=+149.6 chosen=(('move', 1, 2, 0, ''), ('move', 3, 2, 0, '')) solo=(('move', 1, 1, 0, ''), ('move', 4, 2, 0, ''))
+  2. Δu=+1077.6 chosen=(('move', 2, 2, 0, ''), ('move', 2, 2, 0, '')) solo=(('move', 2, 2, 0, ''), ('move', 2, 1, 0, ''))
+  3. Δu=+956.9 chosen=(('move', 1, 1, 0, ''), ('move', 3, 1, 0, '')) solo=(('move', 1, 1, 0, ''), ('move', 3, 2, 0, ''))
+  4. Δu=-74.8 chosen=(('move', 4, 2, 0, ''), ('move', 2, 1, 1, '')) solo=(('move', 4, 2, 0, ''), ('move', 1, 1, 1, ''))
+  5. Δu=+780.2 chosen=(('move', 3, 2, 0, ''), ('move', 4, 2, 0, '')) solo=(('move', 3, 2, 0, ''), ('move', 3, 1, 0, ''))
+  6. Δu=-864.4 chosen=(('move', 1, 2, 0, ''), ('move', 3, 2, 0, '')) solo=(('move', 1, 2, 0, ''), ('move', 4, 2, 0, ''))
+  7. Δu=+981.1 chosen=(('move', 1, 1, 0, ''), ('move', 3, 1, 0, '')) solo=(('move', 1, 1, 0, ''), ('move', 3, 2, 0, ''))
+  8. Δu=-81.7 chosen=(('move', 4, 2, 0, ''), ('move', 2, 1, 1, '')) solo=(('move', 4, 2, 0, ''), ('move', 1, 1, 1, ''))
+--- outcome calibration (V vs W/L) ---
+out_games=100 wr=55.0%
+out_wr_with_diverge=55.0% (n=100) out_wr_no_diverge=0.0% (n=0)
+out_div_turns W=1749 L=9107
+out_mean_delta_v_div_W=+119.86 out_mean_delta_v_div_L=+331.85
+div_samples (first 40):
+  1. Δu=+149.6 p1=(('move', 1, 1, 0, ''), ('move', 4, 2, 0, '')) → p2=(('move', 1, 2, 0, ''), ('move', 3, 2, 0, '')) ms=238.3
+  2. Δu=-21.9 p1=(('move', 1, 1, 0, ''), ('move', 4, 1, 0, '')) → p2=(('move', 1, 1, 0, ''), ('move', 3, 1, 0, '')) ms=152.4
+  3. Δu=+152.8 p1=(('move', 1, 1, 0, ''), ('move', 4, 2, 0, '')) → p2=(('move', 1, 2, 0, ''), ('move', 3, 2, 0, '')) ms=112.9
+  4. Δu=-2.1 p1=(('move', 1, 1, 0, ''), ('move', 4, 1, 0, '')) → p2=(('move', 1, 1, 0, ''), ('move', 3, 1, 0, '')) ms=136.6
+  5. Δu=+1661.7 p1=(('move', 1, 2, 0, ''), ('move', 2, 2, 0, '')) → p2=(('move', 1, 2, 0, ''), ('move', 1, 1, 0, '')) ms=373.7
+  6. Δu=+15.3 p1=(('move', 3, 0, 0, ''), ('move', 1, 1, 0, '')) → p2=(('move', 1, 1, 0, ''), ('move', 2, 2, 0, '')) ms=99.7
+  7. Δu=+496.3 p1=(('move', 1, 2, 0, ''), ('move', 1, 1, 0, '')) → p2=(('move', 1, 1, 0, ''), ('move', 2, 1, 0, '')) ms=194.4
+  8. Δu=+122.4 p1=(('move', 1, 2, 0, ''), ('move', 2, 1, 0, '')) → p2=(('move', 1, 1, 0, ''), ('move', 2, 1, 0, '')) ms=111.6
+  9. Δu=-40.0 p1=(('move', 1, 2, 0, ''), ('move', 2, 1, 0, '')) → p2=(('move', 3, 1, 0, ''), ('move', 2, 1, 0, '')) ms=81.3
+  10. Δu=+0.0 p1=(None, ('move', 3, 2, 0, '')) → p2=(('move', 0, 2, 0, ''), ('move', 3, 2, 0, '')) ms=28.7
+  11. Δu=+0.0 p1=(None, ('move', 3, 2, 0, '')) → p2=(('move', 0, 2, 0, ''), ('move', 3, 2, 0, '')) ms=26.7
+  12. Δu=+0.0 p1=(None, ('move', 3, 2, 0, '')) → p2=(('move', 0, 2, 0, ''), ('move', 3, 2, 0, '')) ms=25.9
+
+Player A = validated(expectimax_bayesian) | Player B = greedy_joint
