@@ -16,8 +16,8 @@ from showdown.rl.observation import build_observation_ddqn
 from showdown.rl.reward import RewardCandidate
 
 
-def test_spec_version_v13():
-    assert SPEC_VERSION == 'v1.3'
+def test_spec_version_v14():
+    assert SPEC_VERSION == 'v1.4'
     assert JOINT_ACTION_N == 576
 
 

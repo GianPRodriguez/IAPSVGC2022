@@ -49,8 +49,12 @@ def _is_ps_battle_room(room: str) -> bool:
     return tag.startswith('battle-')
 
 
-PLAYER_A_CHOICES = ('greedy_solo', 'greedy_joint', 'expectimax_bayesian', 'ddqn', 'ppo')
-PLAYER_B_CHOICES = ('random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian', 'ddqn', 'ppo')
+PLAYER_A_CHOICES = (
+    'greedy_solo', 'greedy_joint', 'expectimax_bayesian', 'ddqn', 'ppo', 'mcts_puct',
+)
+PLAYER_B_CHOICES = (
+    'random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian', 'ddqn', 'ppo', 'mcts_puct',
+)
 
 
 class ValidatedBattleMixin:
@@ -731,6 +735,14 @@ def _ppo_player_classes():
     return PPOPlayer, make_validated_ppo_player_class()
 
 
+def _mcts_puct_player_classes():
+    from showdown.rl.mcts_puct.player import (
+        MCTSPuctPlayer,
+        make_validated_mcts_puct_player_class,
+    )
+    return MCTSPuctPlayer, make_validated_mcts_puct_player_class()
+
+
 def validated_player_class(kind: str) -> Type[Player]:
     """Player A del robusto: siempre validated (sync + OTS)."""
     key = str(kind or 'greedy_solo').strip().lower().replace('-', '_')
@@ -746,6 +758,9 @@ def validated_player_class(kind: str) -> Type[Player]:
     if key == 'ppo':
         _, ValidatedPPOPlayer = _ppo_player_classes()
         return ValidatedPPOPlayer
+    if key == 'mcts_puct':
+        _, ValidatedMCTSPuctPlayer = _mcts_puct_player_classes()
+        return ValidatedMCTSPuctPlayer
     raise ValueError(
         f'player-a inválido: {kind!r}. Opciones: {", ".join(PLAYER_A_CHOICES)}'
     )
@@ -770,6 +785,9 @@ def opponent_player_class(kind: str) -> Type[Player]:
     if key == 'ppo':
         PPOPlayer, _ = _ppo_player_classes()
         return PPOPlayer
+    if key == 'mcts_puct':
+        MCTSPuctPlayer, _ = _mcts_puct_player_classes()
+        return MCTSPuctPlayer
     raise ValueError(
         f'player-b inválido: {kind!r}. Opciones: {", ".join(PLAYER_B_CHOICES)}'
     )

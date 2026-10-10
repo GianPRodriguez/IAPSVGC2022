@@ -2,15 +2,15 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.3** |
+| **Version** | **v1.4** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) |
 | **Scope of this doc** | Contract for `VGCEnv` / agents / training. |
-| **Implementation** | `showdown/rl/` (`VGCEnv`, reward, obs, action, BD, DDQN, Masked PPO) — Spec v1.3 |
+| **Implementation** | `showdown/rl/` (`VGCEnv`, reward, obs, action, BD, DDQN, Masked PPO, MCTS+PUCT) — Spec v1.4 |
 
-> **Immutability rule:** Do not silently change Reward / Action / Obs / BD / DDQN / PPO semantics mid-training.
-> Any change requires a new version (`v1.4+`) and an explicit changelog entry at the bottom.
+> **Immutability rule:** Do not silently change Reward / Action / Obs / BD / DDQN / PPO / MCTS semantics mid-training.
+> Any change requires a new version (`v1.5+`) and an explicit changelog entry at the bottom.
 
 ---
 
@@ -168,13 +168,32 @@ BD values clipped / normalized to \([0, 1]\).
 | **2. DDQN (joint)** | Cand. 2 | Joint \(Q(s,(a_1,a_2))\), 576 outs; Double target; soft \(\tau\); \(Q_{\mathrm{illegal}}=-\infty\). **Main value-based path** | Off |
 | 2b. BDQN | Cand. 2 | Branching DQN (**ablation / experimental**); \(Q(s,a_{\mathrm{invalid}})=-\infty\) | Off |
 | 2c. IQL | Cand. 2 | Two independent \(Q_i(s,a_i)\) — **ablation only** (breaks coordination) | Off |
-| 3. MCTS + PUCT | Cand. 1 | Tree expansion over legal actions only | Off |
+| **3. MCTS + PUCT** | Cand. 1 | Joint legal edges; single-agent open-loop PUCT; S2 sim. **Main planning path** | Off |
 | 4. MCTS + Nash | Cand. 1 | Legal payoff matrix \(N\times M\); payoff = **sparse terminal** | Off |
 | 5. QD-PPO | Cand. 2 (PPO) / Cand. 1 (fitness) | Auto-regressive logit masking | **ACTIVE** |
 | 6. QD-PGA-MAP-Elites | Cand. 2 (actor) / Cand. 1 (fitness) | Auto-regressive logit masking | **ACTIVE** |
 | 7. QD-PPGA | Cand. 2 (gradients) / Cand. 1 (fitness) | Auto-regressive logit masking | **ACTIVE** |
 
-**Note:** Prefer joint DDQN (§6.b) or auto-regressive Masked PPO (§6.a) for Slot1/Slot2 coordination. IQL / BDQN are ablations only.
+**Note:** Prefer joint DDQN (§6.b) or auto-regressive Masked PPO (§6.a) for learned Slot1/Slot2 coordination; MCTS+PUCT (§6.c) for pure planning under Cand. 1. IQL / BDQN are ablations only.
+
+---
+
+## 6.c MCTS+PUCTSpec (Standard) — v1.4
+
+Contract for the **main planning** agent. Implementation: `showdown/rl/mcts_puct/`.
+
+> **Exclusive coding spec:** [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) **v1.0**.
+
+| Item | Contract |
+|------|----------|
+| Reward | Candidate 1 only (\(+/-\,1\), tie \(0\)) |
+| Tree | Single-agent open-loop; sample \(a_{\mathrm{opp}}\sim U(L_{\mathrm{opp}})\) |
+| Edges | Joint legal \(a\in\{0..575\}\) |
+| Simulator | S2 `BattleSnapshot` + local heuristic; S1 = fidelity ablation |
+| Prior | Uniform legal (neural → v1.1) |
+| Rollout | `greedy_joint_snapshot` both sides to terminal / turn 40 |
+| PUCT | \(c_{\mathrm{puct}}=1.5\), \(N_{\mathrm{sim}}=200\) (smoke 16) |
+| Played action | \(\arg\max N\) (not rollout policy) |
 
 ---
 
@@ -369,6 +388,7 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 - Treating harness truncate as Loss — **forbidden**.
 - DDQN v1.2: PER / n-step / Rainbow / preview-in-MDP / self-play / train-on-L2 — **forbidden** (see §6.b).
 - Masked PPO v1.0: joint-576 primary policy, PFSP, value-clip, train-on-crash — **forbidden** (see §6.a).
+- MCTS + Nash matrix — **forbidden** inside §6.c (sibling spec only).
 
 ---
 
@@ -376,6 +396,7 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.4** | 2026-10-10 | **MCTS+PUCTSpec** (§6.c): [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) v1.0 + `showdown/rl/mcts_puct/`. Cand. 1, S2, open-loop. Obs/Reward/Action structural semantics unchanged. |
 | **v1.3** | 2026-10-10 | **MaskedPPOSpec** (§6.a): [`docs/ppo_spec.md`](ppo_spec.md) v1.0 + code in `showdown/rl/ppo/`. `info['trunc_reason']` turn_cap vs crash. Obs/Reward/Action structural semantics unchanged. |
 | **v1.2** | 2026-10-10 | **DDQNSpec** (joint Double DQN): 576 actions, `valid_orders` joint mask, soft \(\tau=0.005\), \(\gamma=0.95\), frozen hyperparams, `/team 1234` preview outside MDP, `ValidatedDDQNPlayer`, hybrid curriculum, eval suite 200 BO1. DDQN = main value path; BDQN/IQL = ablations. Obs/Reward/Action structural semantics unchanged. |
 | **v1.1** | 2026-09-15 | Frozen unified sheet: Action/Obs/Reward/BD/Matrix + curriculum, L2 `skip_buffer`, local damage heuristic, hard-switch BD₂, BC from internal bots, Gymnasium terminated/truncated |
@@ -383,7 +404,7 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 ---
 
-*End of frozen contract v1.3.*
+*End of frozen contract v1.4.*
 
 ## Implementation map
 
@@ -396,9 +417,10 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 | Damage heuristic (no Node) | `showdown/rl/damage_heuristic.py` |
 | Gymnasium env | `showdown/rl/env.py` (`VGCEnv`, `MockBattleBackend`) — must expose `trunc_reason` for PPO |
 | Live poke-env backend | `showdown/rl/pokeenv_backend.py` (`PokeEnvBattleBackend`) + `pe_adapter.py` |
+| **MCTS+PUCTSpec (v1.4)** | [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) v1.0 → `showdown/rl/mcts_puct/` + `battle_bots/mcts_puct` |
 | **MaskedPPOSpec (v1.3)** | Coding contract: [`docs/ppo_spec.md`](ppo_spec.md) v1.0 → `showdown/rl/ppo/` + `battle_bots/ppo` |
 | **DDQNSpec (v1.2)** | Coding contract: [`docs/ddqn_spec.md`](ddqn_spec.md) v1.0 → `showdown/rl/ddqn/` + `battle_bots/ddqn` |
-| RL deps | `requirements-rl.txt` (`torch>=2.0.0`) |
-| Tests | `tests/test_rl_env_spec.py`, `tests/test_rl_pe_adapter.py`, `tests/test_rl_ddqn.py`, `tests/test_rl_ppo.py` |
+| RL deps | `requirements-rl.txt` (`torch>=2.0.0`; MCTS v1.0 needs only numpy) |
+| Tests | `tests/test_rl_env_spec.py`, `tests/test_rl_pe_adapter.py`, `tests/test_rl_ddqn.py`, `tests/test_rl_ppo.py`, `tests/test_rl_mcts_puct.py` |
 
 `MockBattleBackend` covers offline CI. Live: `VGCEnv(backend=PokeEnvBattleBackend())` with local PS (`node pokemon-showdown start --no-security`).

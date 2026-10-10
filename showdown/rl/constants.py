@@ -1,7 +1,7 @@
-"""Frozen constants from docs/rl_env_spec.md v1.3."""
+"""Frozen constants from docs/rl_env_spec.md v1.4."""
 from __future__ import annotations
 
-SPEC_VERSION = 'v1.3'
+SPEC_VERSION = 'v1.4'
 
 # ObsSpec segments (must sum to OBS_DIM)
 SEG_SPECIES = 128
