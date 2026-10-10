@@ -2,15 +2,15 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.5** |
+| **Version** | **v1.6** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) |
 | **Scope of this doc** | Contract for `VGCEnv` / agents / training. |
-| **Implementation** | `showdown/rl/` (… DDQN, Masked PPO, MCTS+PUCT, MCTS–PUCT/Nash) — Spec v1.5 |
+| **Implementation** | `showdown/rl/` (… MCTS–PUCT/Nash, **QD-PPO**) — Spec v1.6 |
 
-> **Immutability rule:** Do not silently change Reward / Action / Obs / BD / DDQN / PPO / MCTS semantics mid-training.
-> Any change requires a new version (`v1.6+`) and an explicit changelog entry at the bottom.
+> **Immutability rule:** Do not silently change Reward / Action / Obs / BD / DDQN / PPO / MCTS / QD semantics mid-training.
+> Any change requires a new version (`v1.7+`) and an explicit changelog entry at the bottom.
 
 ---
 
@@ -170,11 +170,27 @@ BD values clipped / normalized to \([0, 1]\).
 | 2c. IQL | Cand. 2 | Two independent \(Q_i(s,a_i)\) — **ablation only** (breaks coordination) | Off |
 | **3. MCTS + PUCT** | Cand. 1 | Joint legal edges; single-agent open-loop PUCT; S2 sim. **Main open-loop planning path** | Off |
 | **4. MCTS–PUCT/Nash** | Cand. 1 | SM-MCTS B1: PUCT over cells + Nash backup; Top‑K. **Simultaneous planning path** | Off |
-| 5. QD-PPO | Cand. 2 (PPO) / Cand. 1 (fitness) | Auto-regressive logit masking | **ACTIVE** |
+| **5. QD-PPO** | Cand. 2 (PPO) / Cand. 1 (fitness \(U\)) | AR IAM + Grid MAP-Elites. **QD policy path** | **ACTIVE** |
 | 6. QD-PGA-MAP-Elites | Cand. 2 (actor) / Cand. 1 (fitness) | Auto-regressive logit masking | **ACTIVE** |
 | 7. QD-PPGA | Cand. 2 (gradients) / Cand. 1 (fitness) | Auto-regressive logit masking | **ACTIVE** |
 
-**Note:** Learned: §6.a/§6.b. Planning open-loop: §6.c. Planning simultaneous: §6.d. IQL / BDQN are ablations only.
+**Note:** Learned: §6.a/§6.b. Planning: §6.c/§6.d. QD policy: §6.e. IQL / BDQN are ablations only.
+
+---
+
+## 6.e QD-PPOSpec (Grid MAP-Elites + Masked PPO) — v1.6
+
+Contract for **quality–diversity** policy search. Implementation: `showdown/rl/qd_ppo/`.
+
+> **Exclusive coding spec:** [`docs/qd_ppo_spec.md`](qd_ppo_spec.md) **v1.0**.
+
+| Item | Contract |
+|------|----------|
+| Archive | Grid \(10\times 10\) over BDSpec; full actor–critic elite / cell |
+| Variation | Masked PPO only (IAM); Cand. **2**; mosaic foes 25/25/50 |
+| Fitness \(U=f\) | Cand. **1**; \(G=20\); insert iff \(g\ge 10\) eligible |
+| Budget | \(T_{\mathrm{total}}=10^6\) incl. \(B_{\mathrm{boot}}=10^5\); serial emitter |
+| Deploy | \(\pi^\star=\arg\max f\); report Coverage + QD-score + WR(\(\pi^\star\)) |
 
 ---
 
@@ -406,6 +422,7 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 - DDQN v1.2: PER / n-step / Rainbow / preview-in-MDP / self-play / train-on-L2 — **forbidden** (see §6.b).
 - Masked PPO v1.0: joint-576 primary policy, PFSP, value-clip, train-on-crash — **forbidden** (see §6.a).
 - Open-loop opp sampling as the primary model inside §6.d — **forbidden** (use cell PUCT + Nash).
+- QD-PPO v1.0: ME-ES weight noise / shared critic / expand-\(\Omega\) as primary diversity / BD inside \(R_t\) / random-only archive seed — **forbidden** (see §6.e).
 
 ---
 
@@ -413,6 +430,7 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.6** | 2026-10-10 | **QD-PPOSpec** (§6.e): [`docs/qd_ppo_spec.md`](qd_ppo_spec.md) v1.0 + `showdown/rl/qd_ppo/`. Grid MAP-Elites + Masked PPO. |
 | **v1.5** | 2026-10-10 | **MCTS–PUCT/NashSpec** (§6.d): [`docs/mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md) v1.0 + `showdown/rl/mcts_puct_nash/`. SM-MCTS B1. |
 | **v1.4** | 2026-10-10 | **MCTS+PUCTSpec** (§6.c): [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) v1.0 + `showdown/rl/mcts_puct/`. Cand. 1, S2, open-loop. Obs/Reward/Action structural semantics unchanged. |
 | **v1.3** | 2026-10-10 | **MaskedPPOSpec** (§6.a): [`docs/ppo_spec.md`](ppo_spec.md) v1.0 + code in `showdown/rl/ppo/`. `info['trunc_reason']` turn_cap vs crash. Obs/Reward/Action structural semantics unchanged. |
@@ -422,7 +440,7 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 ---
 
-*End of frozen contract v1.5.*
+*End of frozen contract v1.6.*
 
 ## Implementation map
 
@@ -435,11 +453,12 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 | Damage heuristic (no Node) | `showdown/rl/damage_heuristic.py` |
 | Gymnasium env | `showdown/rl/env.py` (`VGCEnv`, `MockBattleBackend`) — must expose `trunc_reason` for PPO |
 | Live poke-env backend | `showdown/rl/pokeenv_backend.py` (`PokeEnvBattleBackend`) + `pe_adapter.py` |
+| **QD-PPO (v1.6)** | [`docs/qd_ppo_spec.md`](qd_ppo_spec.md) → `showdown/rl/qd_ppo/` |
 | **MCTS–PUCT/Nash (v1.5)** | [`docs/mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md) → `showdown/rl/mcts_puct_nash/` |
 | **MCTS+PUCTSpec (v1.4)** | [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) v1.0 → `showdown/rl/mcts_puct/` + `battle_bots/mcts_puct` |
 | **MaskedPPOSpec (v1.3)** | Coding contract: [`docs/ppo_spec.md`](ppo_spec.md) v1.0 → `showdown/rl/ppo/` + `battle_bots/ppo` |
 | **DDQNSpec (v1.2)** | Coding contract: [`docs/ddqn_spec.md`](ddqn_spec.md) v1.0 → `showdown/rl/ddqn/` + `battle_bots/ddqn` |
 | RL deps | `requirements-rl.txt` (`torch>=2.0.0`; MCTS agents need only numpy) |
-| Tests | `tests/test_rl_*.py` incl. `test_rl_mcts_puct_nash.py` |
+| Tests | `tests/test_rl_*.py` incl. `test_rl_qd_ppo.py` |
 
 `MockBattleBackend` covers offline CI. Live: `VGCEnv(backend=PokeEnvBattleBackend())` with local PS (`node pokemon-showdown start --no-security`).

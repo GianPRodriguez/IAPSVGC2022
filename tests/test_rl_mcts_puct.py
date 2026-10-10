@@ -20,7 +20,7 @@ from showdown.rl.snapshot import BattleSnapshot
 
 
 def test_spec_version_mcts_aligned():
-    assert SPEC_VERSION == 'v1.5'
+    assert SPEC_VERSION == 'v1.6'
 
 
 def test_legal_only_selection_and_greedy():

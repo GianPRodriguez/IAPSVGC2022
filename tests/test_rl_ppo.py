@@ -12,7 +12,7 @@ from showdown.rl.reward import RewardCandidate
 
 
 def test_spec_version_ppo_aligned():
-    assert SPEC_VERSION == 'v1.5'
+    assert SPEC_VERSION == 'v1.6'
 
 
 def test_trunc_reason_turn_cap():

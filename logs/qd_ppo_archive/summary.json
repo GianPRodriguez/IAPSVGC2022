@@ -1,0 +1,12 @@
+{
+  "seed": 0,
+  "global_steps": 5632,
+  "t_total": 6000,
+  "coverage": 0.01,
+  "qd_score": 0.0,
+  "best_f": 0.0,
+  "accepts": 1,
+  "emits": 15,
+  "n_outer": 7,
+  "smoke": true
+}
