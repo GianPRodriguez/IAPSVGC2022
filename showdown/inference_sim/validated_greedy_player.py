@@ -49,8 +49,8 @@ def _is_ps_battle_room(room: str) -> bool:
     return tag.startswith('battle-')
 
 
-PLAYER_A_CHOICES = ('greedy_solo', 'greedy_joint', 'expectimax_bayesian')
-PLAYER_B_CHOICES = ('random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian')
+PLAYER_A_CHOICES = ('greedy_solo', 'greedy_joint', 'expectimax_bayesian', 'ddqn')
+PLAYER_B_CHOICES = ('random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian', 'ddqn')
 
 
 class ValidatedBattleMixin:
@@ -721,6 +721,11 @@ class ValidatedExpectimaxBayesianPlayer(ValidatedBattleMixin, ExpectimaxBayesian
     """Expectimax-Bayesian + espejo IAP / sync / OTS."""
 
 
+def _ddqn_player_classes():
+    from showdown.rl.ddqn.player import DDQNPlayer, make_validated_ddqn_player_class
+    return DDQNPlayer, make_validated_ddqn_player_class()
+
+
 def validated_player_class(kind: str) -> Type[Player]:
     """Player A del robusto: siempre validated (sync + OTS)."""
     key = str(kind or 'greedy_solo').strip().lower().replace('-', '_')
@@ -730,6 +735,9 @@ def validated_player_class(kind: str) -> Type[Player]:
         return ValidatedGreedyJointPlayer
     if key == 'expectimax_bayesian':
         return ValidatedExpectimaxBayesianPlayer
+    if key == 'ddqn':
+        _, ValidatedDDQNPlayer = _ddqn_player_classes()
+        return ValidatedDDQNPlayer
     raise ValueError(
         f'player-a inválido: {kind!r}. Opciones: {", ".join(PLAYER_A_CHOICES)}'
     )
@@ -748,6 +756,9 @@ def opponent_player_class(kind: str) -> Type[Player]:
         return GreedyJointPlayer
     if key == 'expectimax_bayesian':
         return ExpectimaxBayesianPlayer
+    if key == 'ddqn':
+        DDQNPlayer, _ = _ddqn_player_classes()
+        return DDQNPlayer
     raise ValueError(
         f'player-b inválido: {kind!r}. Opciones: {", ".join(PLAYER_B_CHOICES)}'
     )

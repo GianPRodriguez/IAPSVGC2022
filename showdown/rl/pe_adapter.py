@@ -9,8 +9,9 @@ from showdown.rl.action_space import (
     PASS_ID,
     SLOT_ACTION_N,
     decode_slot_action,
+    legal_joint_mask_from_slot_masks,
 )
-from showdown.rl.constants import N_MOVE_SLOTS, N_SWITCH_SLOTS
+from showdown.rl.constants import JOINT_ACTION_N, N_MOVE_SLOTS, N_SWITCH_SLOTS
 from showdown.rl.snapshot import (
     BattleSnapshot,
     FieldSnapshot,
@@ -397,3 +398,45 @@ def pe_autoregressive_masks(battle, slot1_action_id: Optional[int] = None) -> Tu
     other = decode_slot_action(slot1_action_id) if slot1_action_id is not None else None
     m2 = pe_slot_mask(battle, 1, other=other)
     return m1, m2
+
+
+def legal_joint_mask(battle) -> np.ndarray:
+    """
+    M_joint ∈ {0,1}^576 from poke-env available moves/switches.
+
+    When `valid_orders` is present, further restrict pairs whose decoded orders
+    are not in the legal order sets (best-effort string match).
+    """
+    m1 = pe_slot_mask(battle, 0)
+
+    def _m2(a1: int) -> np.ndarray:
+        return pe_slot_mask(battle, 1, other=decode_slot_action(a1))
+
+    joint = legal_joint_mask_from_slot_masks(m1, _m2)
+
+    vo = getattr(battle, 'valid_orders', None)
+    if not vo or len(vo) < 2:
+        return joint
+
+    try:
+        legal1 = {str(x) for x in (vo[0] or [])}
+        legal2 = {str(x) for x in (vo[1] or [])}
+    except Exception:
+        return joint
+    if not legal1 and not legal2:
+        return joint
+
+    # Filter joint ids whose slot orders are both representable & legal.
+    from showdown.rl.action_space import decode_joint_action
+    filtered = np.zeros(JOINT_ACTION_N, dtype=np.float32)
+    for j in np.flatnonzero(joint > 0.5):
+        a1, a2 = decode_joint_action(int(j))
+        o1 = slot_action_to_pe_order(battle, 0, decode_slot_action(a1))
+        o2 = slot_action_to_pe_order(battle, 1, decode_slot_action(a2))
+        ok1 = (not legal1) or (str(o1) in legal1)
+        ok2 = (not legal2) or (str(o2) in legal2)
+        if ok1 and ok2:
+            filtered[int(j)] = 1.0
+    if np.any(filtered > 0.5):
+        return filtered
+    return joint

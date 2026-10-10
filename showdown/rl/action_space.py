@@ -1,4 +1,4 @@
-"""ActionSpec — auto-regressive double slot + logit masking (Spec v1.1)."""
+"""ActionSpec — auto-regressive double slot + logit masking (Spec v1.2)."""
 from __future__ import annotations
 
 from typing import List, Optional, Sequence, Tuple
@@ -7,6 +7,7 @@ import numpy as np
 
 from showdown.rl.constants import (
     ILLEGAL_LOGIT,
+    JOINT_ACTION_N,
     MEGA_ID,
     N_MOVE_SLOTS,
     N_SWITCH_SLOTS,
@@ -17,6 +18,21 @@ from showdown.rl.constants import (
     TERA_ID,
 )
 from showdown.rl.snapshot import BattleSnapshot, SlotAction
+
+# Re-export for callers
+__all_slot__ = SLOT_ACTION_N
+
+
+def encode_joint_action(a1: int, a2: int) -> int:
+    """a = 24*a1 + a2 ∈ {0..575}."""
+    return int(a1) * SLOT_ACTION_N + int(a2)
+
+
+def decode_joint_action(joint_id: int) -> Tuple[int, int]:
+    j = int(joint_id)
+    if j < 0 or j >= JOINT_ACTION_N:
+        return PASS_ID, PASS_ID
+    return j // SLOT_ACTION_N, j % SLOT_ACTION_N
 
 
 def encode_slot_action(
@@ -177,3 +193,43 @@ def resolve_action_or_fallback(
     if len(legal) == 0:
         return PASS_ID, True
     return int(legal[0]), True
+
+
+def legal_joint_mask_from_slot_masks(
+    m1: np.ndarray,
+    m2_for_a1,
+) -> np.ndarray:
+    """
+    Build M_joint ∈ {0,1}^576.
+
+    m2_for_a1: callable(a1: int) -> mask(24,) conditioned on slot1 choice.
+    """
+    out = np.zeros(JOINT_ACTION_N, dtype=np.float32)
+    m1a = np.asarray(m1, dtype=np.float32).reshape(-1)
+    for a1 in range(min(SLOT_ACTION_N, m1a.shape[0])):
+        if m1a[a1] <= 0.5:
+            continue
+        m2 = np.asarray(m2_for_a1(a1), dtype=np.float32).reshape(-1)
+        base = a1 * SLOT_ACTION_N
+        for a2 in range(min(SLOT_ACTION_N, m2.shape[0])):
+            if m2[a2] > 0.5:
+                out[base + a2] = 1.0
+    if not np.any(out > 0.5):
+        # Safe fallback: both pass
+        out[encode_joint_action(PASS_ID, PASS_ID)] = 1.0
+    return out
+
+
+def legal_joint_mask(battle: BattleSnapshot) -> np.ndarray:
+    """Canonical joint mask from BattleSnapshot (offline / Mock)."""
+    m1 = build_slot_mask(battle, 0)
+
+    def _m2(a1: int) -> np.ndarray:
+        return build_slot_mask(battle, 1, other_slot_action=decode_slot_action(a1))
+
+    return legal_joint_mask_from_slot_masks(m1, _m2)
+
+
+def apply_q_mask(q_values: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    """Q + (1-M)*(-1e9) for masked argmax."""
+    return apply_logit_mask(q_values, mask)

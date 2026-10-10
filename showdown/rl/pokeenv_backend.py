@@ -43,9 +43,56 @@ def _default_teams(seed: Optional[int] = None) -> Tuple[str, str]:
     return to_showdown_export(pool[i]), to_showdown_export(pool[j])
 
 
+LIVE_OPPONENTS = (
+    'random',
+    'greedy_solo',
+    'greedy_joint',
+    'expectimax_bayesian',
+)
+
+
+def _make_foe_player(
+    kind: str,
+    *,
+    account_configuration,
+    battle_format: str,
+    team: str,
+    server_configuration,
+    log_level: int,
+):
+    """Build poke-env opponent Player for RL live training."""
+    key = str(kind or 'random').strip().lower().replace('-', '_')
+    kwargs = dict(
+        account_configuration=account_configuration,
+        battle_format=battle_format,
+        team=team,
+        server_configuration=server_configuration,
+        accept_open_team_sheet=True,
+        max_concurrent_battles=1,
+        log_level=log_level,
+    )
+    if key == 'random':
+        from poke_env.player import RandomPlayer
+        return RandomPlayer(**kwargs)
+    if key == 'greedy_solo':
+        from showdown.battle_bots.greedy_solo.pokeenv_player import GreedyDamagePlayer
+        return GreedyDamagePlayer(**kwargs)
+    if key == 'greedy_joint':
+        from showdown.battle_bots.greedy_joint.pokeenv_player import GreedyJointPlayer
+        return GreedyJointPlayer(**kwargs)
+    if key == 'expectimax_bayesian':
+        from showdown.battle_bots.expectimax_bayesian.pokeenv_player import (
+            ExpectimaxBayesianPlayer,
+        )
+        return ExpectimaxBayesianPlayer(**kwargs)
+    raise ValueError(
+        f'oponente live inválido: {kind!r}. Opciones: {", ".join(LIVE_OPPONENTS)}'
+    )
+
+
 class PokeEnvBattleBackend(BattleBackend):
     """
-    Sync Gym bridge: controlled `_EnvPlayer` vs `RandomPlayer` on local Showdown.
+    Sync Gym bridge: controlled `_EnvPlayer` vs configurable foe on local Showdown.
 
     Episode = one BO1 game (finished battle). Requires PS listening
     (`node pokemon-showdown start --no-security`).
@@ -58,6 +105,7 @@ class PokeEnvBattleBackend(BattleBackend):
         server_configuration=None,
         our_team: Optional[TeamLike] = None,
         opp_team: Optional[TeamLike] = None,
+        opponent: str = 'random',
         challenge_timeout: float = 90.0,
         step_timeout: float = 180.0,
         start_ps: bool = False,
@@ -72,6 +120,12 @@ class PokeEnvBattleBackend(BattleBackend):
         self.server_configuration = server_configuration or LocalhostServerConfiguration
         self._our_team_arg = our_team
         self._opp_team_arg = opp_team
+        self._opponent = str(opponent or 'random').strip().lower().replace('-', '_')
+        if self._opponent not in LIVE_OPPONENTS:
+            raise ValueError(
+                f'oponente live inválido: {opponent!r}. '
+                f'Opciones: {", ".join(LIVE_OPPONENTS)}'
+            )
         self.challenge_timeout = float(challenge_timeout)
         self.step_timeout = float(step_timeout)
         self.start_ps = bool(start_ps)
@@ -84,6 +138,29 @@ class PokeEnvBattleBackend(BattleBackend):
         self._challenge_task = None
         self._uid = 0
         self._closed = False
+        self._cached_opp_export: Optional[str] = None
+
+    @property
+    def opponent(self) -> str:
+        return self._opponent
+
+    def set_opponent(self, kind: str) -> None:
+        """Switch foe policy between episodes (recreates poke-env Player B)."""
+        key = str(kind or 'random').strip().lower().replace('-', '_')
+        if key not in LIVE_OPPONENTS:
+            raise ValueError(
+                f'oponente live inválido: {kind!r}. '
+                f'Opciones: {", ".join(LIVE_OPPONENTS)}'
+            )
+        if key == self._opponent and self._foe is not None:
+            return
+        self._abort_open_battle()
+        self._stop_player(self._foe)
+        self._foe = None
+        self._opponent = key
+        # Recreate foe on next reset via _ensure_players
+        if self._agent is not None:
+            self._ensure_players(seed=None, force_new_foe=True)
 
     # --- BattleBackend -----------------------------------------------------
 
@@ -150,17 +227,8 @@ class PokeEnvBattleBackend(BattleBackend):
             return
         self._closed = True
         self._abort_open_battle()
-        for pl in (self._agent, self._foe):
-            if pl is None:
-                continue
-            try:
-                fut = asyncio.run_coroutine_threadsafe(
-                    pl.ps_client.stop_listening(),
-                    pl.ps_client.loop,
-                )
-                fut.result(timeout=10)
-            except Exception:
-                pass
+        self._stop_player(self._agent)
+        self._stop_player(self._foe)
         self._agent = None
         self._foe = None
         self._battle = None
@@ -178,9 +246,13 @@ class PokeEnvBattleBackend(BattleBackend):
         if not is_ps_up():
             raise RuntimeError(f'PS still down after ensure; {ps_start_hint()}')
 
-    def _ensure_players(self, *, seed: Optional[int]) -> None:
+    def _ensure_players(
+        self,
+        *,
+        seed: Optional[int],
+        force_new_foe: bool = False,
+    ) -> None:
         from poke_env.environment.env import _EnvPlayer
-        from poke_env.player import RandomPlayer
         from poke_env.ps_client import AccountConfiguration
 
         our = _team_export(self._our_team_arg)
@@ -189,6 +261,7 @@ class PokeEnvBattleBackend(BattleBackend):
             d0, d1 = _default_teams(seed=seed)
             our = our or d0
             opp = opp or d1
+        self._cached_opp_export = opp
 
         self._uid += 1
         stamp = int(time.time()) % 100000
@@ -206,19 +279,28 @@ class PokeEnvBattleBackend(BattleBackend):
                 log_level=self.log_level,
                 choose_on_teampreview=False,
             )
-            self._foe = RandomPlayer(
+            self._foe = _make_foe_player(
+                self._opponent,
                 account_configuration=AccountConfiguration(name_b, None),
                 battle_format=self.battle_format,
                 team=opp,
                 server_configuration=self.server_configuration,
-                accept_open_team_sheet=True,
-                max_concurrent_battles=1,
                 log_level=self.log_level,
             )
         else:
-            assert self._foe is not None
             self._agent.update_team(our)
-            self._foe.update_team(opp)
+            if self._foe is None or force_new_foe:
+                self._stop_player(self._foe)
+                self._foe = _make_foe_player(
+                    self._opponent,
+                    account_configuration=AccountConfiguration(name_b, None),
+                    battle_format=self.battle_format,
+                    team=opp,
+                    server_configuration=self.server_configuration,
+                    log_level=self.log_level,
+                )
+            else:
+                self._foe.update_team(opp)
             # Drain queues
             while not self._agent.battle_queue.empty():
                 try:
@@ -231,6 +313,18 @@ class PokeEnvBattleBackend(BattleBackend):
                 except Exception:
                     break
             self._agent.battle = None
+
+    def _stop_player(self, pl) -> None:
+        if pl is None:
+            return
+        try:
+            fut = asyncio.run_coroutine_threadsafe(
+                pl.ps_client.stop_listening(),
+                pl.ps_client.loop,
+            )
+            fut.result(timeout=10)
+        except Exception:
+            pass
 
     def _abort_open_battle(self) -> None:
         from poke_env.player.battle_order import ForfeitBattleOrder

@@ -1,7 +1,7 @@
-"""Frozen constants from docs/rl_env_spec.md v1.1."""
+"""Frozen constants from docs/rl_env_spec.md v1.2."""
 from __future__ import annotations
 
-SPEC_VERSION = 'v1.1'
+SPEC_VERSION = 'v1.2'
 
 # ObsSpec segments (must sum to OBS_DIM)
 SEG_SPECIES = 128
@@ -51,6 +51,7 @@ MEGA_ID = 21
 TERA_ID = 22
 RESERVED_ID = 23
 SLOT_ACTION_N = 24
+JOINT_ACTION_N = SLOT_ACTION_N * SLOT_ACTION_N  # 576 (DDQNSpec)
 
 ILLEGAL_LOGIT = -1.0e9
 

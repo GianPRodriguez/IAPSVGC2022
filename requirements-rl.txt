@@ -1,0 +1,5 @@
+# Optional RL stack (DDQN / future PPO). Heuristic bots do not need this.
+# pip install -r requirements-rl.txt
+
+-r requirements.txt
+torch>=2.0.0,<3

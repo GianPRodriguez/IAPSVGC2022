@@ -201,3 +201,12 @@ def build_observation(battle: BattleSnapshot) -> np.ndarray:
         # Hard guarantee
         return _pad(obs.tolist(), OBS_DIM)
     return obs
+
+
+def build_observation_ddqn(battle: BattleSnapshot) -> np.ndarray:
+    """ObsSpec 1024D with belief segment zeroed (DDQNSpec v1.0 / rl_env_spec v1.2)."""
+    obs = build_observation(battle).copy()
+    lo = SEG_SPECIES
+    hi = SEG_SPECIES + SEG_BELIEF
+    obs[lo:hi] = 0.0
+    return obs
