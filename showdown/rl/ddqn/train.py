@@ -273,7 +273,7 @@ def _run_steps(
             }
             print(
                 f'[ddqn] {phase_label} local={local}/{steps} global={gstep} '
-                f'opp={current} Ω={list(omega)} eps={agent.epsilon:.3f} '
+                f'opp={current} Omega={list(omega)} eps={agent.epsilon:.3f} '
                 f'replay={len(agent.replay)} loss={metrics_last.get("loss", float("nan")):.4f} '
                 f'buf_frac={ {k: round(v, 3) for k, v in agent.replay.origin_fractions().items()} } '
                 f'ep_frac={ {k: round(v, 3) for k, v in frac_ep.items()} } '
@@ -330,11 +330,12 @@ def run_training(
         assert env is not None
         for pi, phase in enumerate(expand_sched):
             probs = omega_sampling_probs(phase.omega, weights=weights)
-            mode = 'expand-Ω' if expand_omega else 'exclusive'
+            mode = 'expand-Omega' if expand_omega else 'exclusive'
             print(
                 f'[ddqn] === phase {pi + 1}/{len(expand_sched)} ({mode}): '
                 f'unlock={phase.unlock} steps={phase.steps} '
-                f'Ω={list(phase.omega)} P={ {k: round(v, 3) for k, v in probs.items()} } ==='
+                f'Omega={list(phase.omega)} '
+                f'P={ {k: round(v, 3) for k, v in probs.items()} } ==='
             )
             # Ensure unlock foe exists at phase start
             env = _ensure_opponent(env, phase.unlock, seed=seed, start_ps=start_ps)

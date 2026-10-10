@@ -2,15 +2,15 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.2** |
+| **Version** | **v1.3** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) |
 | **Scope of this doc** | Contract for `VGCEnv` / agents / training. |
-| **Implementation** | `showdown/rl/` (`VGCEnv`, reward, obs, action, BD, DDQN) — Spec v1.2 |
+| **Implementation** | `showdown/rl/` (`VGCEnv`, reward, obs, action, BD, DDQN, Masked PPO) — Spec v1.3 |
 
-> **Immutability rule:** Do not silently change Reward / Action / Obs / BD / DDQN semantics mid-training.
-> Any change requires a new version (`v1.3+`) and an explicit changelog entry at the bottom.
+> **Immutability rule:** Do not silently change Reward / Action / Obs / BD / DDQN / PPO semantics mid-training.
+> Any change requires a new version (`v1.4+`) and an explicit changelog entry at the bottom.
 
 ---
 
@@ -25,10 +25,13 @@
 
 ### Terminal vs Truncated (Gymnasium)
 
-| Event | `terminated` | `truncated` | \(R_t\) |
-|-------|----------------|-------------|-----------|
-| Win / Loss / Tie (normal end) | `True` | `False` | Per RewardSpec candidate |
-| Crash / harness timeout / L3 desync | `False` | `True` | `0.0` (PPO may bootstrap \(V(s')\); **DDQN must not** store or bootstrap these transitions) |
+| Event | `terminated` | `truncated` | `info['trunc_reason']` | \(R_t\) / buffer |
+|-------|----------------|-------------|--------------------------|------------------|
+| Win / Loss / Tie (normal end) | `True` | `False` | `None` | Per RewardSpec candidate |
+| Turn-cap (max turns) | `False` | `True` | `'turn_cap'` | \(R_t=0.0\); **PPO** stores and bootstraps \(V(s')\); **DDQN** must **not** store/bootstrap |
+| Crash / harness timeout / L3 desync | `False` | `True` | `'crash'` | \(R_t=0.0\); set `skip_buffer=True`; **neither** PPO nor DDQN stores or bootstraps |
+
+`VGCEnv` **must** expose `info['trunc_reason']` ∈ `{None, 'turn_cap', 'crash'}`.
 
 ---
 
@@ -66,9 +69,10 @@ M_{\mathrm{joint}}(a_1, a_2) = M_1(a_1)\cdot M_2(a_2\mid a_1).
 |-------|---------|----------|
 | **L1 Mathematical** | Illegal logit / Q before sample | Masking; expected coverage \(>99\%\) |
 | **L2 Desync / engine mismatch** | \(a_t \notin \texttt{valid\_orders}\) | Execute `valid_orders[0]`; \(R_t = 0.0\); set `info['skip_buffer'] = True`; increment `illegal_action_fallbacks` |
-| **L3 Crash / timeout** | Env/server failure | `truncated=True`, `terminated=False`, \(R_t = 0.0\) |
+| **L3 Crash / timeout** | Env/server failure | `truncated=True`, `terminated=False`, \(R_t = 0.0\), `trunc_reason='crash'`, `skip_buffer=True` |
+| **Turn-cap** | Episode hits max turns | `truncated=True`, `terminated=False`, \(R_t = 0.0\), `trunc_reason='turn_cap'` (PPO may bootstrap; DDQN drops) |
 
-**L2 buffer rule (mandatory):** Rollout collectors for PPO / DDQN / BDQN **must drop** transitions with `skip_buffer=True`. Do not train on L2 fallbacks. Truncated (L3) transitions **must not** enter the DDQN replay.
+**L2 buffer rule (mandatory):** Rollout collectors for PPO / DDQN / BDQN **must drop** transitions with `skip_buffer=True`. Do not train on L2 fallbacks. **DDQN:** any `truncated=True` transition **must not** enter replay. **PPO:** store + bootstrap only when `trunc_reason=='turn_cap'`; drop when `trunc_reason=='crash'` (see §6.a / [`ppo_spec.md`](ppo_spec.md)).
 
 ---
 
@@ -160,7 +164,7 @@ BD values clipped / normalized to \([0, 1]\).
 
 | Algorithm | Active RewardSpec | Architecture / Masking | BDSpec |
 |-----------|-------------------|------------------------|--------|
-| 1. Masked PPO | Cand. 2 → Cand. 1 | Auto-regressive Slot1→Slot2. **Main policy path** | Off (telemetry only) |
+| **1. Masked PPO** | Cand. 2 → Cand. 1 | Auto-regressive Slot1→Slot2 + IAM. **Main policy path** | Off (telemetry only) |
 | **2. DDQN (joint)** | Cand. 2 | Joint \(Q(s,(a_1,a_2))\), 576 outs; Double target; soft \(\tau\); \(Q_{\mathrm{illegal}}=-\infty\). **Main value-based path** | Off |
 | 2b. BDQN | Cand. 2 | Branching DQN (**ablation / experimental**); \(Q(s,a_{\mathrm{invalid}})=-\infty\) | Off |
 | 2c. IQL | Cand. 2 | Two independent \(Q_i(s,a_i)\) — **ablation only** (breaks coordination) | Off |
@@ -170,7 +174,50 @@ BD values clipped / normalized to \([0, 1]\).
 | 6. QD-PGA-MAP-Elites | Cand. 2 (actor) / Cand. 1 (fitness) | Auto-regressive logit masking | **ACTIVE** |
 | 7. QD-PPGA | Cand. 2 (gradients) / Cand. 1 (fitness) | Auto-regressive logit masking | **ACTIVE** |
 
-**Note:** Prefer joint DDQN (§6.b) or auto-regressive PPO for Slot1/Slot2 coordination. IQL / BDQN are ablations only.
+**Note:** Prefer joint DDQN (§6.b) or auto-regressive Masked PPO (§6.a) for Slot1/Slot2 coordination. IQL / BDQN are ablations only.
+
+---
+
+## 6.a MaskedPPOSpec (Auto-regressive) — v1.3
+
+Contract for the **main policy-gradient** agent. Implementation: `showdown/rl/ppo/` + `battle_bots/ppo`.
+
+> **Exclusive coding spec:** [`docs/ppo_spec.md`](ppo_spec.md) **v1.0** is the Masked-PPO-only
+> document used for implementation. Keep it in sync with this section.
+
+### MDP delimitation
+
+| Item | Contract |
+|------|----------|
+| Interaction loop | **Combat only.** One env `step` = one Showdown turn with \((a_1,a_2)\). |
+| Action space | `MultiDiscrete([24, 24])` — Slot1 then Slot2. |
+| Team Preview | **Outside** the MDP. `/team 1234`. WR conditional on this preview. |
+| Belief in obs | 256D = **zeros / flat priors** (same as DDQN v1.2). |
+| Self-play | **In scope** after heuristic bootstrap (uniform pool; see exclusive spec). |
+
+### Policy & masking
+
+| Item | Contract |
+|------|----------|
+| Factorization | \(\pi(a_1,a_2\mid s)=\pi^{(1)}(a_1\mid s)\,\pi^{(2)}(a_2\mid s,a_1)\) |
+| Slot2 conditioning | Concat shared features with \(\mathrm{onehot}(a_1)\in\mathbb{R}^{24}\) |
+| IAM | \(\mathrm{Softmax}(\mathbf{z}+(1-M)\cdot(-10^{9}))\); same path at collect and train |
+| Mask API | `action_masks(slot1_action_id=...)` from **`valid_orders`** |
+| Entropy | \(H[\pi^{(1)}]+H[\pi^{(2)}\mid a_1]\) with trajectory \(a_1\) |
+| Value clip | **Off** |
+| Truncation | `trunc_reason`: `'turn_cap'` → buffer + \(V(s')\); `'crash'` → `skip_buffer`, drop |
+
+### Training outline
+
+| Item | Contract |
+|------|----------|
+| Algorithm | Clipped PPO + GAE-\(\lambda\); \(\gamma=0.95\), \(\lambda=0.95\), \(\varepsilon_{\mathrm{clip}}=0.2\) |
+| BC | Primary warm-start; full fine-tune; post-BC LR \(10^{-4}\) |
+| Heuristic \(\Omega\) | Same expand-\(\Omega\) defaults as DDQN (Cand. 2) |
+| Self-play pool | Last \(K=10\) checkpoints ∪ `best_vs_greedy_joint` (never evicted); **uniform** \(P(o_i)\) |
+| Player class | `ValidatedPPOPlayer` |
+
+Full hyperparams, modules, acceptance tests: [`ppo_spec.md`](ppo_spec.md) v1.0.
 
 ---
 
@@ -284,9 +331,9 @@ r_t + \gamma\, Q_{\theta^-}\big(s',\, \arg\max_{a \in L(s')} Q_{\theta}(s', a)\b
 
 ### Curriculum pipeline
 
-1. **Behavioral Cloning (BC):** Replays from internal `expectimax_bayesian` / `greedy_joint` (and optionally filtered valid human matches). **No Smogon ELO dependency.** Prefer games that completed cleanly (`sync_ok`, no timeout/reject) when sourced from the robust harness. (Primary for PPO; optional for DDQN.)
-2. **PPO / DDQN bootstrap:** Train vs heuristic bots with **Reward Candidate 2**. DDQN phase order and gates: see §6.b.
-3. **Self-play:** Progressive decay toward **Candidate 1** (**PPO path**; **out of scope for DDQN v1.2**).
+1. **Behavioral Cloning (BC):** Replays from internal `expectimax_bayesian` / `greedy_joint` (and optionally filtered valid human matches). **No Smogon ELO dependency.** Prefer games that completed cleanly (`sync_ok`, no timeout/reject) when sourced from the robust harness. (Primary for PPO — see §6.a; optional for DDQN.)
+2. **PPO / DDQN bootstrap:** Train vs heuristic bots with **Reward Candidate 2**. DDQN phases: §6.b. PPO expand-\(\Omega\): §6.a / [`ppo_spec.md`](ppo_spec.md).
+3. **Self-play:** Progressive decay toward **Candidate 1** (**PPO path** — uniform pool \(K=10\)∪best; **out of scope for DDQN v1.2**).
 
 ### Self-play symmetry
 
@@ -303,12 +350,13 @@ r_t + \gamma\, Q_{\theta^-}\big(s',\, \arg\max_{a \in L(s')} Q_{\theta}(s', a)\b
 | `mean_game_length` | Early stall / collapse warning |
 | `mean_q` / `mean_target` / `td_error` | DDQN value stability (telemetry only) |
 | `eps` | Current exploration rate (DDQN) |
+| `approx_kl` / `clip_fraction` / `entropy_slot*` | PPO stability (telemetry only; §6.a) |
 
 These metrics **must not** enter \(R_t\).
 
 ### Evaluation suite (mandatory)
 
-Fixed opponents for reported WR (not only self-play): at least `random`, `greedy_joint`, `expectimax_bayesian` (or frozen checkpoints). QD fitness uses Candidate 1 against a fixed eval suite / archive protocol. DDQN offline volume: **200 BO1** per opponent (§6.b).
+Fixed opponents for reported WR (not only self-play): at least `random`, `greedy_joint`, `expectimax_bayesian` (or frozen checkpoints). QD fitness uses Candidate 1 against a fixed eval suite / archive protocol. DDQN / Masked PPO offline volume: **200 BO1** per opponent (§6.a / §6.b).
 
 ---
 
@@ -320,6 +368,7 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 - Magical per-move bonuses (Tailwind, Fake Out, Sub break, etc.) inside \(R_t\) — **forbidden**.
 - Treating harness truncate as Loss — **forbidden**.
 - DDQN v1.2: PER / n-step / Rainbow / preview-in-MDP / self-play / train-on-L2 — **forbidden** (see §6.b).
+- Masked PPO v1.0: joint-576 primary policy, PFSP, value-clip, train-on-crash — **forbidden** (see §6.a).
 
 ---
 
@@ -327,13 +376,14 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.3** | 2026-10-10 | **MaskedPPOSpec** (§6.a): [`docs/ppo_spec.md`](ppo_spec.md) v1.0 + code in `showdown/rl/ppo/`. `info['trunc_reason']` turn_cap vs crash. Obs/Reward/Action structural semantics unchanged. |
 | **v1.2** | 2026-10-10 | **DDQNSpec** (joint Double DQN): 576 actions, `valid_orders` joint mask, soft \(\tau=0.005\), \(\gamma=0.95\), frozen hyperparams, `/team 1234` preview outside MDP, `ValidatedDDQNPlayer`, hybrid curriculum, eval suite 200 BO1. DDQN = main value path; BDQN/IQL = ablations. Obs/Reward/Action structural semantics unchanged. |
 | **v1.1** | 2026-09-15 | Frozen unified sheet: Action/Obs/Reward/BD/Matrix + curriculum, L2 `skip_buffer`, local damage heuristic, hard-switch BD₂, BC from internal bots, Gymnasium terminated/truncated |
 | v1.0 | — | Drafts (Gemini + Cursor triangulation); superseded by v1.1 |
 
 ---
 
-*End of frozen contract v1.2.*
+*End of frozen contract v1.3.*
 
 ## Implementation map
 
@@ -344,10 +394,11 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 | RewardSpec C1/C2 | `showdown/rl/reward.py` |
 | BDSpec | `showdown/rl/behavioral.py` |
 | Damage heuristic (no Node) | `showdown/rl/damage_heuristic.py` |
-| Gymnasium env | `showdown/rl/env.py` (`VGCEnv`, `MockBattleBackend`) |
+| Gymnasium env | `showdown/rl/env.py` (`VGCEnv`, `MockBattleBackend`) — must expose `trunc_reason` for PPO |
 | Live poke-env backend | `showdown/rl/pokeenv_backend.py` (`PokeEnvBattleBackend`) + `pe_adapter.py` |
+| **MaskedPPOSpec (v1.3)** | Coding contract: [`docs/ppo_spec.md`](ppo_spec.md) v1.0 → `showdown/rl/ppo/` + `battle_bots/ppo` |
 | **DDQNSpec (v1.2)** | Coding contract: [`docs/ddqn_spec.md`](ddqn_spec.md) v1.0 → `showdown/rl/ddqn/` + `battle_bots/ddqn` |
-| DDQN deps | `requirements-rl.txt` (`torch>=2.0.0`) |
-| Tests | `tests/test_rl_env_spec.py`, `tests/test_rl_pe_adapter.py`, `tests/test_rl_ddqn.py` |
+| RL deps | `requirements-rl.txt` (`torch>=2.0.0`) |
+| Tests | `tests/test_rl_env_spec.py`, `tests/test_rl_pe_adapter.py`, `tests/test_rl_ddqn.py`, `tests/test_rl_ppo.py` |
 
 `MockBattleBackend` covers offline CI. Live: `VGCEnv(backend=PokeEnvBattleBackend())` with local PS (`node pokemon-showdown start --no-security`).

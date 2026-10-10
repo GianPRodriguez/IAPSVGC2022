@@ -16,8 +16,8 @@ from showdown.rl.observation import build_observation_ddqn
 from showdown.rl.reward import RewardCandidate
 
 
-def test_spec_version_v12():
-    assert SPEC_VERSION == 'v1.2'
+def test_spec_version_v13():
+    assert SPEC_VERSION == 'v1.3'
     assert JOINT_ACTION_N == 576
 
 
@@ -183,7 +183,7 @@ def test_double_update_uses_online_argmax():
         agent.online.net[-1].bias[3] = 50.0
         agent.target.net[-1].bias[7] = 50.0
     # Spy: run one learn and check a_star would be 3 from online
-    s_b, a_b, r_b, s2_b, term_b, m2_b = agent.replay.sample(8, agent._rng)
+    s_b, a_b, r_b, s2_b, term_b, m2_b, _opp = agent.replay.sample(8, agent._rng)
     s2_t = torch.as_tensor(s2_b, dtype=torch.float32)
     m2_t = torch.as_tensor(m2_b, dtype=torch.float32)
     with torch.no_grad():

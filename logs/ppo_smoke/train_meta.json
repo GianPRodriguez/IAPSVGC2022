@@ -1,0 +1,34 @@
+{
+  "seed": 0,
+  "device": "cpu",
+  "expand_omega": true,
+  "self_play": false,
+  "reward_mode": "candidate2",
+  "weights": {
+    "mock": 1.0,
+    "random": 1.0,
+    "greedy_solo": 1.0,
+    "greedy_joint": 1.0,
+    "expectimax_bayesian": 0.35
+  },
+  "phase_log": [
+    {
+      "index": 0,
+      "unlock": "mock",
+      "omega": [
+        "mock"
+      ],
+      "steps_done": 256,
+      "sampling_probs": {
+        "mock": 1.0
+      },
+      "ep_counts": {
+        "mock": 1
+      },
+      "pool_size": 0
+    }
+  ],
+  "env_steps": 256,
+  "update_steps": 4,
+  "total_steps": 256
+}

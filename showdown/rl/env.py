@@ -1,4 +1,4 @@
-"""VGCEnv — Gymnasium env implementing docs/rl_env_spec.md v1.1."""
+"""VGCEnv — Gymnasium env implementing docs/rl_env_spec.md v1.3."""
 from __future__ import annotations
 
 from typing import Any, Dict, Optional, Tuple
@@ -179,9 +179,11 @@ class MockBattleBackend(BattleBackend):
             snap.won = False
             snap.tied = False
         elif snap.turn > self.max_turns:
+            # Turn-cap: not a game tie — VGCEnv maps this to truncated + trunc_reason
             snap.finished = True
-            snap.tied = True
+            snap.tied = False
             snap.won = None
+            meta['turn_cap'] = True
 
         self._snap = snap
         return snap, meta
@@ -189,10 +191,11 @@ class MockBattleBackend(BattleBackend):
 
 class VGCEnv(gym.Env):
     """
-    Gymnasium environment for VGC doubles RL (Spec v1.1).
+    Gymnasium environment for VGC doubles RL (Spec v1.3).
 
     observation: float32[1024]
     action: MultiDiscrete([24, 24])  — Slot1 then Slot2 (auto-regressive masks in info)
+    info['trunc_reason']: None | 'turn_cap' | 'crash'
     """
 
     metadata = {'render_modes': []}
@@ -234,7 +237,7 @@ class VGCEnv(gym.Env):
         self._prev_our = material_from_side(self._snap.our)
         self._prev_foe = material_from_side(self._snap.foe)
         obs = build_observation(self._snap)
-        info = self._info(skip_buffer=False, truncated=False)
+        info = self._info(skip_buffer=False, truncated=False, trunc_reason=None)
         return obs, info
 
     def step(self, action):
@@ -246,6 +249,7 @@ class VGCEnv(gym.Env):
         skip_buffer = False
         truncated = False
         terminated = False
+        trunc_reason: Optional[str] = None
         reward = 0.0
 
         try:
@@ -259,14 +263,14 @@ class VGCEnv(gym.Env):
 
             new_snap, engine_meta = self.backend.step((a0, a1))
         except Exception as exc:
-            # L3
-            truncated = True
-            reward = 0.0
+            # L3 crash — drop from buffers; no value bootstrap
             obs = build_observation(self._snap)
-            info = self._info(skip_buffer=False, truncated=True)
+            info = self._info(
+                skip_buffer=True, truncated=True, trunc_reason='crash',
+            )
             info['error'] = repr(exc)
             info['spec_version'] = SPEC_VERSION
-            return obs, reward, False, True, info
+            return obs, 0.0, False, True, info
 
         # BD tracking
         s0 = decode_slot_action(a0)
@@ -289,22 +293,42 @@ class VGCEnv(gym.Env):
         finished = bool(new_snap.finished)
         won = new_snap.won
         tied = bool(new_snap.tied)
-
-        if finished:
-            terminated = True
-
-        rr = compute_reward(
-            candidate=self.reward_candidate,
-            prev_our=self._prev_our,
-            prev_foe=self._prev_foe,
-            cur_our=cur_our,
-            cur_foe=cur_foe,
-            finished=finished,
-            won=won,
-            tied=tied,
-            skip_buffer=skip_buffer,
-            truncated=False,
+        is_turn_cap = bool(
+            isinstance(engine_meta, dict) and engine_meta.get('turn_cap')
         )
+
+        if is_turn_cap:
+            truncated = True
+            terminated = False
+            trunc_reason = 'turn_cap'
+            rr = compute_reward(
+                candidate=self.reward_candidate,
+                prev_our=self._prev_our,
+                prev_foe=self._prev_foe,
+                cur_our=cur_our,
+                cur_foe=cur_foe,
+                finished=False,
+                won=None,
+                tied=False,
+                skip_buffer=skip_buffer,
+                truncated=True,
+            )
+        else:
+            if finished:
+                terminated = True
+            rr = compute_reward(
+                candidate=self.reward_candidate,
+                prev_our=self._prev_our,
+                prev_foe=self._prev_foe,
+                cur_our=cur_our,
+                cur_foe=cur_foe,
+                finished=finished,
+                won=won,
+                tied=tied,
+                skip_buffer=skip_buffer,
+                truncated=False,
+            )
+
         reward = rr.reward
         if self.opponent_perspective:
             reward = flip_reward_for_opponent(reward)
@@ -315,7 +339,11 @@ class VGCEnv(gym.Env):
         self._prev_foe = cur_foe
 
         obs = build_observation(new_snap)
-        info = self._info(skip_buffer=rr.skip_buffer or skip_buffer, truncated=False)
+        info = self._info(
+            skip_buffer=rr.skip_buffer or skip_buffer,
+            truncated=truncated,
+            trunc_reason=trunc_reason,
+        )
         info['reward_components'] = rr.components
         info['engine'] = engine_meta
         return obs, float(reward), terminated, truncated, info
@@ -327,7 +355,13 @@ class VGCEnv(gym.Env):
         assert self._snap is not None
         return build_autoregressive_masks(self._snap, slot1_action_id=slot1_action_id)
 
-    def _info(self, *, skip_buffer: bool, truncated: bool) -> dict:
+    def _info(
+        self,
+        *,
+        skip_buffer: bool,
+        truncated: bool,
+        trunc_reason: Optional[str] = None,
+    ) -> dict:
         metrics = self._bd.metrics()
         metrics['illegal_action_fallbacks'] = self._illegal_fallbacks
         m1, m2 = (np.ones(SLOT_ACTION_N), np.ones(SLOT_ACTION_N))
@@ -337,6 +371,7 @@ class VGCEnv(gym.Env):
             'spec_version': SPEC_VERSION,
             'skip_buffer': bool(skip_buffer),
             'truncated_flag': bool(truncated),
+            'trunc_reason': trunc_reason,
             'action_mask_slot1': np.asarray(m1, dtype=np.float32),
             'action_mask_slot2': np.asarray(m2, dtype=np.float32),
             'bd': self._bd.bd_vector() if self._bd.archive_eligible() else None,

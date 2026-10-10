@@ -204,9 +204,14 @@ def build_observation(battle: BattleSnapshot) -> np.ndarray:
 
 
 def build_observation_ddqn(battle: BattleSnapshot) -> np.ndarray:
-    """ObsSpec 1024D with belief segment zeroed (DDQNSpec v1.0 / rl_env_spec v1.2)."""
+    """ObsSpec 1024D with belief segment zeroed (DDQN / Masked PPO flat-belief)."""
     obs = build_observation(battle).copy()
     lo = SEG_SPECIES
     hi = SEG_SPECIES + SEG_BELIEF
     obs[lo:hi] = 0.0
     return obs
+
+
+def build_observation_ppo(battle: BattleSnapshot) -> np.ndarray:
+    """Alias: PPO v1.0 uses the same flat-belief obs as DDQN."""
+    return build_observation_ddqn(battle)

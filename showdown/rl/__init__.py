@@ -1,4 +1,4 @@
-"""VGC Gen 9 RL package — implements docs/rl_env_spec.md v1.2 (frozen)."""
+"""VGC Gen 9 RL package — implements docs/rl_env_spec.md v1.3 (frozen)."""
 
 from showdown.rl.constants import JOINT_ACTION_N, OBS_DIM, SPEC_VERSION
 from showdown.rl.env import VGCEnv, MockBattleBackend, BattleBackend

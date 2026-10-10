@@ -1,0 +1,460 @@
+"""Masked PPO training — docs/ppo_spec.md.
+
+Examples::
+
+  python -m showdown.rl.ppo.train --seed 0 --opponent mock --steps 20000
+  python -m showdown.rl.ppo.train --seed 0 --opponent curriculum --start-ps --expand-omega
+  python -m showdown.rl.ppo.train --seed 0 --opponent self --reward anneal --bc-checkpoint logs/ppo_bc.pt
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import time
+from pathlib import Path
+from typing import Dict, List, Optional, Sequence, Tuple
+
+import numpy as np
+
+from showdown.rl.action_space import build_autoregressive_masks, decode_slot_action, build_slot_mask
+from showdown.rl.ddqn.curriculum import (
+    ExpandPhase,
+    expand_phases_from_exclusive,
+    merge_weights,
+    omega_sampling_probs,
+    parse_weight_overrides,
+    sample_from_omega,
+)
+from showdown.rl.ddqn.train import (
+    DEFAULT_CURRICULUM_PHASE_STEPS,
+    TrainPhase,
+    parse_phases,
+    resolve_schedule,
+)
+from showdown.rl.env import MockBattleBackend, VGCEnv
+from showdown.rl.observation import build_observation_ppo
+from showdown.rl.ppo.agent import PPOAgent, PPOConfig
+from showdown.rl.ppo.selfplay import SelfPlayPool
+from showdown.rl.reward import RewardCandidate
+
+LIVE_OPPONENTS = (
+    'random',
+    'greedy_solo',
+    'greedy_joint',
+    'expectimax_bayesian',
+)
+ALL_OPPONENTS = ('mock',) + LIVE_OPPONENTS + ('curriculum', 'self')
+
+
+def _slot_masks(env: VGCEnv, *, slot1_action_id: Optional[int] = None):
+    live = env.backend.action_masks(slot1_action_id=slot1_action_id)
+    if live is not None:
+        return (
+            np.asarray(live[0], dtype=np.float32),
+            np.asarray(live[1], dtype=np.float32),
+        )
+    assert env._snap is not None
+    return build_autoregressive_masks(env._snap, slot1_action_id=slot1_action_id)
+
+
+def _m2_fn(env: VGCEnv):
+    def _fn(a1: int) -> np.ndarray:
+        live = env.backend.action_masks(slot1_action_id=a1)
+        if live is not None:
+            return np.asarray(live[1], dtype=np.float32)
+        assert env._snap is not None
+        return build_slot_mask(env._snap, 1, other_slot_action=decode_slot_action(a1))
+
+    return _fn
+
+
+def _reward_candidate(mode: str, *, self_play: bool, anneal_frac: float) -> RewardCandidate:
+    key = str(mode or 'candidate2').strip().lower()
+    if key in ('candidate1', 'c1', 'sparse'):
+        return RewardCandidate.SPARSE
+    if key == 'anneal' and self_play:
+        return RewardCandidate.SPARSE if anneal_frac >= 0.5 else RewardCandidate.DENSE
+    return RewardCandidate.DENSE
+
+
+def _make_env(
+    opponent: str,
+    *,
+    seed: int,
+    start_ps: bool,
+    reward: RewardCandidate,
+) -> VGCEnv:
+    if opponent == 'mock':
+        backend = MockBattleBackend(max_turns=40)
+    else:
+        from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
+        backend = PokeEnvBattleBackend(
+            opponent=opponent,
+            start_ps=start_ps,
+            account_prefix=f'Ppo{opponent[:4].title()}',
+        )
+    return VGCEnv(
+        reward_candidate=reward,
+        backend=backend,
+        max_episode_turns=40,
+    )
+
+
+def _ensure_opponent(
+    env: VGCEnv,
+    opponent: str,
+    *,
+    seed: int,
+    start_ps: bool,
+    reward: RewardCandidate,
+) -> VGCEnv:
+    if opponent == 'mock':
+        if isinstance(env.backend, MockBattleBackend):
+            env.reward_candidate = reward
+            return env
+        env.close()
+        return _make_env('mock', seed=seed, start_ps=False, reward=reward)
+
+    backend = env.backend
+    if hasattr(backend, 'set_opponent') and hasattr(backend, 'opponent'):
+        if getattr(backend, 'opponent', None) != opponent:
+            backend.set_opponent(opponent)
+        env.reward_candidate = reward
+        return env
+    env.close()
+    return _make_env(opponent, seed=seed, start_ps=start_ps, reward=reward)
+
+
+def _bootstrap_value(agent: PPOAgent, obs: np.ndarray) -> float:
+    import torch
+
+    agent.net.eval()
+    with torch.no_grad():
+        x = torch.as_tensor(obs, dtype=torch.float32, device=agent.device).view(1, -1)
+        _z1, _z2, v = agent.net(x)
+        return float(v.item())
+
+
+def _collect_and_update(
+    agent: PPOAgent,
+    env: VGCEnv,
+    *,
+    steps: int,
+    omega: Sequence[str],
+    expand_omega: bool,
+    weights: Dict[str, float],
+    rng: np.random.Generator,
+    global_step_offset: int,
+    ckpt_dir: Path,
+    log_every: int,
+    t0: float,
+    phase_label: str,
+    seed: int,
+    start_ps: bool,
+    reward_mode: str,
+    self_play: bool,
+    pool: Optional[SelfPlayPool],
+) -> Tuple[VGCEnv, int, dict]:
+    current = getattr(getattr(env, 'backend', None), 'opponent', None) or (
+        omega[-1] if omega else 'mock'
+    )
+    anneal_frac = 0.0
+    reward = _reward_candidate(reward_mode, self_play=self_play, anneal_frac=anneal_frac)
+    if expand_omega and current not in omega and omega:
+        current = omega[0]
+        env = _ensure_opponent(
+            env, current, seed=seed, start_ps=start_ps, reward=reward,
+        )
+
+    obs, info = env.reset(seed=seed + global_step_offset)
+    assert env._snap is not None
+    obs = build_observation_ppo(env._snap)
+    m1, _ = _slot_masks(env)
+    metrics_last: dict = {}
+    ep_counts: Dict[str, int] = {o: 0 for o in omega}
+    ep_counts[current] = ep_counts.get(current, 0) + 1
+    local_done = 0
+
+    while local_done < int(steps):
+        a1, a2, logp, value = agent.act(obs, m1, _m2_fn(env), greedy=False)
+        m2 = _m2_fn(env)(a1)
+        next_obs, reward_t, terminated, truncated, info = env.step((a1, a2))
+        assert env._snap is not None
+        next_obs = build_observation_ppo(env._snap)
+        skip = bool(info.get('skip_buffer'))
+        trunc_reason = info.get('trunc_reason')
+        eng = info.get('engine') or {}
+        if isinstance(eng, dict) and eng.get('used_fallback'):
+            skip = True
+
+        boot_v = 0.0
+        if trunc_reason == 'turn_cap' and not skip:
+            boot_v = _bootstrap_value(agent, next_obs)
+
+        agent.observe(
+            obs=obs, a1=a1, a2=a2, logp=logp, reward=float(reward_t), value=value,
+            terminated=bool(terminated), m1=m1, m2=m2,
+            skip_buffer=skip, trunc_reason=trunc_reason,
+            bootstrap_value=boot_v,
+        )
+        local_done += 1
+        obs, m1 = next_obs, _slot_masks(env)[0]
+
+        if terminated or truncated:
+            if self_play and pool is not None and len(pool) > 0:
+                # Opponent is frozen checkpoint weights — live foes stay in omega mode.
+                pass
+            if expand_omega and len(omega) > 1 and not self_play:
+                nxt = sample_from_omega(omega, rng, weights=weights)
+                if nxt != current:
+                    env = _ensure_opponent(
+                        env, nxt, seed=seed, start_ps=start_ps, reward=reward,
+                    )
+                    current = nxt
+                ep_counts[current] = ep_counts.get(current, 0) + 1
+            obs, info = env.reset()
+            assert env._snap is not None
+            obs = build_observation_ppo(env._snap)
+            m1, _ = _slot_masks(env)
+
+        if agent.is_rollout_full() or local_done >= int(steps):
+            last_v = 0.0
+            if not (terminated or truncated) and not skip:
+                last_v = _bootstrap_value(agent, obs)
+            elif trunc_reason == 'turn_cap':
+                last_v = boot_v
+            metrics_last = agent.update(last_value=last_v)
+
+        gstep = global_step_offset + local_done
+        if gstep % int(log_every) == 0:
+            elapsed = time.perf_counter() - t0
+            print(
+                f'[ppo] {phase_label} local={local_done}/{steps} global={gstep} '
+                f'opp={current} loss={metrics_last.get("loss", float("nan")):.4f} '
+                f'kl={metrics_last.get("approx_kl", float("nan")):.4f} '
+                f'clip={metrics_last.get("clip_fraction", float("nan")):.3f} '
+                f'ent={metrics_last.get("entropy", float("nan")):.3f} '
+                f'pool={len(pool) if pool else 0} elapsed={elapsed:.1f}s'
+            )
+            agent.save(ckpt_dir / 'last.pt')
+
+    return env, int(local_done), {'metrics': metrics_last, 'ep_counts': ep_counts}
+
+
+def run_training(
+    *,
+    seed: int = 0,
+    schedule: Sequence[TrainPhase],
+    device: str = 'cpu',
+    checkpoint_dir: str | Path = 'logs/ppo_checkpoints',
+    log_every: int = 1000,
+    start_ps: bool = False,
+    expand_omega: bool = True,
+    include_expectimax: bool = True,
+    weight_overrides: Optional[Dict[str, float]] = None,
+    reward_mode: str = 'candidate2',
+    bc_checkpoint: Optional[str] = None,
+    self_play: bool = False,
+    rollout_steps: Optional[int] = None,
+) -> PPOAgent:
+    if not schedule and not self_play:
+        raise ValueError('schedule vacío')
+
+    weights = merge_weights(weight_overrides)
+    cfg = PPOConfig(seed=seed, device=device)
+    if rollout_steps is not None:
+        cfg.rollout_steps = int(rollout_steps)
+    agent = PPOAgent(cfg)
+    if bc_checkpoint:
+        agent.load_bc_weights(bc_checkpoint)
+        print(f'[ppo] loaded BC checkpoint {bc_checkpoint} lr={agent.cfg.lr_post_bc}')
+
+    rng = np.random.default_rng(int(seed) + 17)
+    ckpt_dir = Path(checkpoint_dir)
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+    pool = SelfPlayPool(root=ckpt_dir / 'pool') if self_play else None
+    t0 = time.perf_counter()
+    global_steps = 0
+    phase_log: List[dict] = []
+
+    if self_play:
+        # Self-play stage: train vs uniform pool; seed pool with initial snapshot
+        assert pool is not None
+        pool.push(agent, tag='init')
+        sched = [TrainPhase('mock' if not start_ps else 'random', 50_000)]
+        if schedule:
+            sched = list(schedule)
+        expand_sched = [
+            ExpandPhase(unlock=p.opponent, steps=p.steps, omega=(p.opponent,))
+            for p in sched
+        ]
+    elif expand_omega:
+        sched = list(schedule)
+        if not include_expectimax:
+            sched = [p for p in sched if p.opponent != 'expectimax_bayesian']
+            if not sched:
+                raise ValueError('schedule vacío tras excluir expectimax')
+        expand_sched = expand_phases_from_exclusive(sched)
+    else:
+        expand_sched = [
+            ExpandPhase(unlock=p.opponent, steps=p.steps, omega=(p.opponent,))
+            for p in schedule
+        ]
+
+    first_opp = expand_sched[0].omega[0]
+    reward = _reward_candidate(reward_mode, self_play=self_play, anneal_frac=0.0)
+    env: Optional[VGCEnv] = _make_env(
+        first_opp, seed=seed, start_ps=start_ps, reward=reward,
+    )
+
+    try:
+        assert env is not None
+        for pi, phase in enumerate(expand_sched):
+            probs = omega_sampling_probs(phase.omega, weights=weights)
+            mode = 'self-play' if self_play else (
+                'expand-Omega' if expand_omega else 'exclusive'
+            )
+            print(
+                f'[ppo] === phase {pi + 1}/{len(expand_sched)} ({mode}): '
+                f'unlock={phase.unlock} steps={phase.steps} '
+                f'Omega={list(phase.omega)} '
+                f'P={ {k: round(v, 3) for k, v in probs.items()} } ==='
+            )
+            env = _ensure_opponent(
+                env, phase.unlock, seed=seed, start_ps=start_ps, reward=reward,
+            )
+            env, done, info = _collect_and_update(
+                agent, env,
+                steps=phase.steps,
+                omega=phase.omega,
+                expand_omega=expand_omega and not self_play,
+                weights=weights,
+                rng=rng,
+                global_step_offset=global_steps,
+                ckpt_dir=ckpt_dir,
+                log_every=log_every,
+                t0=t0,
+                phase_label=f'phase={pi}:{phase.unlock}',
+                seed=seed,
+                start_ps=start_ps,
+                reward_mode=reward_mode,
+                self_play=self_play,
+                pool=pool,
+            )
+            global_steps += done
+            if pool is not None:
+                pool.push(agent, tag=f'gate_{pi}')
+            phase_log.append({
+                'index': pi,
+                'unlock': phase.unlock,
+                'omega': list(phase.omega),
+                'steps_done': done,
+                'sampling_probs': probs,
+                'ep_counts': info.get('ep_counts', {}),
+                'pool_size': len(pool) if pool else 0,
+            })
+            agent.save(ckpt_dir / f'phase_{pi}_{phase.unlock}.pt')
+    finally:
+        if env is not None:
+            env.close()
+
+    agent.save(ckpt_dir / 'final.pt')
+    meta = {
+        'seed': seed,
+        'device': device,
+        'expand_omega': bool(expand_omega),
+        'self_play': bool(self_play),
+        'reward_mode': reward_mode,
+        'weights': weights,
+        'phase_log': phase_log,
+        'env_steps': agent.env_steps,
+        'update_steps': agent.update_steps,
+        'total_steps': global_steps,
+    }
+    (ckpt_dir / 'train_meta.json').write_text(
+        json.dumps(meta, indent=2) + '\n', encoding='utf-8',
+    )
+    print(
+        f'[ppo] DONE expand_omega={expand_omega} self_play={self_play} '
+        f'steps={global_steps} saved={ckpt_dir / "final.pt"}'
+    )
+    return agent
+
+
+def main(argv: Optional[list] = None) -> int:
+    p = argparse.ArgumentParser(
+        description='Train Masked PPO (auto-regressive Slot1→Slot2)',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.add_argument('--seed', type=int, required=True)
+    p.add_argument('--device', default='cpu')
+    p.add_argument('--steps', type=int, default=20_000)
+    p.add_argument(
+        '--opponent', default='mock',
+        help='mock|random|greedy_solo|greedy_joint|expectimax_bayesian|curriculum|self',
+    )
+    p.add_argument('--phases', default=None)
+    p.add_argument(
+        '--curriculum-phase-steps', type=int, default=DEFAULT_CURRICULUM_PHASE_STEPS,
+    )
+    p.add_argument('--expand-omega', dest='expand_omega', action='store_true', default=True)
+    p.add_argument('--no-expand-omega', dest='expand_omega', action='store_false')
+    p.add_argument('--include-expectimax', action='store_true', default=True)
+    p.add_argument('--no-expectimax', dest='include_expectimax', action='store_false')
+    p.add_argument('--opponent-weights', default=None)
+    p.add_argument('--reward', default='candidate2',
+                   help='candidate2|candidate1|anneal')
+    p.add_argument('--bc-checkpoint', default=None)
+    p.add_argument('--rollout-steps', type=int, default=None,
+                   help='Override rollout length (default 2048; use 256 for smoke)')
+    p.add_argument('--checkpoint-dir', default='logs/ppo_checkpoints')
+    p.add_argument('--log-every', type=int, default=1000)
+    p.add_argument('--start-ps', action='store_true')
+    args = p.parse_args(argv)
+
+    self_play = str(args.opponent).lower().replace('-', '_') == 'self'
+    if self_play:
+        schedule = resolve_schedule(
+            opponent='mock',
+            steps=args.steps,
+            phases=args.phases,
+            curriculum_phase_steps=args.curriculum_phase_steps,
+        ) if args.phases else [TrainPhase('mock', int(args.steps))]
+    else:
+        schedule = resolve_schedule(
+            opponent=args.opponent,
+            steps=args.steps,
+            phases=args.phases,
+            curriculum_phase_steps=args.curriculum_phase_steps,
+        )
+
+    expand = bool(args.expand_omega)
+    if args.opponent == 'curriculum' and args.phases is None:
+        expand = True
+
+    overrides = parse_weight_overrides(args.opponent_weights)
+    print(
+        '[ppo] schedule:',
+        ', '.join(f'{ph.opponent}:{ph.steps}' for ph in schedule),
+        f'| expand_omega={expand} self_play={self_play} reward={args.reward}',
+    )
+    run_training(
+        seed=args.seed,
+        schedule=schedule,
+        device=args.device,
+        checkpoint_dir=args.checkpoint_dir,
+        log_every=args.log_every,
+        start_ps=bool(args.start_ps),
+        expand_omega=expand,
+        include_expectimax=bool(args.include_expectimax),
+        weight_overrides=overrides or None,
+        reward_mode=args.reward,
+        bc_checkpoint=args.bc_checkpoint,
+        self_play=self_play,
+        rollout_steps=args.rollout_steps,
+    )
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

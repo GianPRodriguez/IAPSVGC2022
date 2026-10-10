@@ -1,5 +1,12 @@
-# Optional RL stack (DDQN / future PPO). Heuristic bots do not need this.
-# pip install -r requirements-rl.txt
+# Optional RL stack (DDQN / Masked PPO). Heuristic bots do not need this.
+#
+# Python 3.11–3.14 recommended (3.12 preferred). On Windows also install
+# Microsoft Visual C++ 2015–2022 Redistributable (x64) if `import torch`
+# fails with WinError 1114 loading c10.dll.
+#
+# Default PyPI may lack wheels for newer CPython; use the PyTorch index:
+#   py -3.14 -m pip install -r requirements.txt pytest
+#   py -3.14 -m pip install "torch>=2.0,<3" --index-url https://download.pytorch.org/whl/cpu
 
 -r requirements.txt
 torch>=2.0.0,<3
