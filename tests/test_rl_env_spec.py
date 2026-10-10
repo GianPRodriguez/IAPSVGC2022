@@ -1,4 +1,4 @@
-"""Unit tests for Spec v1.4 RL package (offline, no PS)."""
+"""Unit tests for Spec v1.5 RL package (offline, no PS)."""
 from __future__ import annotations
 
 import numpy as np
@@ -26,7 +26,7 @@ from showdown.rl.snapshot import (
 
 
 def test_spec_version_and_obs_dim():
-    assert SPEC_VERSION == 'v1.4'
+    assert SPEC_VERSION == 'v1.5'
     assert OBS_DIM == 1024
 
 
@@ -135,7 +135,7 @@ def test_vgcenv_episode_smoke():
     env = VGCEnv(reward_candidate=RewardCandidate.DENSE)
     obs, info = env.reset(seed=42)
     assert obs.shape == (OBS_DIM,)
-    assert info['spec_version'] == 'v1.4'
+    assert info['spec_version'] == 'v1.5'
     assert info['action_mask_slot1'].shape == (SLOT_ACTION_N,)
     done = False
     trunc = False
