@@ -1,101 +1,126 @@
-# DDQN Agent Spec — Joint Double Deep Q-Network (VGC Gen 9)
+# DDQN Agent Spec — Double Deep Q-Network joint (VGC Gen 9)
 
-| Field | Value |
+| Campo | Valor |
 |-------|--------|
-| **Document** | **DDQN-only implementation contract** |
-| **Version** | **1.0** (aligned with `docs/rl_env_spec.md` **v1.2** §6.b) |
-| **Status** | **FROZEN — implemented in `showdown/rl/ddqn/` + `battle_bots/ddqn`** |
-| **Algorithm** | Double DQN (van Hasselt et al., 2016) + invalid-action masking |
-| **Role** | Main **value-based** RL agent (not the PPO policy path) |
+| **Documento** | **Contrato exclusivo de implementación — DDQN** |
+| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.b) |
+| **Estado** | **FROZEN — implementado en `showdown/rl/ddqn/` + `battle_bots/ddqn`** |
+| **Algoritmo** | Double DQN (van Hasselt et al., 2016) + máscara de acciones ilegales |
+| **Rol** | Agente RL **basado en valor** principal (complemento de Masked PPO) |
 | **Code root** | `showdown/rl/ddqn/` |
 | **CLI** | `python -m showdown.rl.ddqn.train` |
-| **Deps** | `requirements-rl.txt` — `torch >= 2.0.0` (heuristics must run without this) |
+| **Deps** | `requirements-rl.txt` — `torch >= 2.0.0` (heuristics sin este extra) |
 
-> **Scope:** This file is the single source of truth for **implementing DDQN**.
-> Shared environment contracts (Obs 1024D, Reward Candidate 2, `VGCEnv` L1/L2/L3,
-> ActionSpec slot ids 0–23) live in [`rl_env_spec.md`](rl_env_spec.md) v1.2 and are
-> **imported by reference** — do not fork their formulas here.
+> **Alcance.** Fuente de verdad para **implementar DDQN**. Obs 1024D, Reward Cand. 2,
+> `VGCEnv` L1/L2/L3 y ActionSpec viven en [`rl_env_spec.md`](rl_env_spec.md) —
+> **no** redefinir fórmulas aquí.
 >
-> **Immutability:** Changing any frozen number or semantic below requires bumping
-> **this** doc to 1.1+ **and** updating `rl_env_spec.md` §6.b in the same change.
+> **Contraste con PPO.** DDQN aprende \(Q(s,(a_1,a_2))\) sobre **576** acciones joint.
+> PPO factoriza \(\pi(a_1\mid s)\,\pi(a_2\mid s,a_1)\). Ver [`ppo_spec.md`](ppo_spec.md).
+> Misma Obs / Reward / preview / foes ⇒ comparación de tesis válida.
+>
+> **Inmutabilidad.** Bump **1.2+** aquí + `rl_env_spec` §6.b en el mismo cambio.
 
 ---
 
-## 1. Inherited environment (do not reimplement)
+## 0. Por qué existe (lectura no técnica)
 
-| Contract | Source | DDQN usage |
-|----------|--------|------------|
-| `VGCEnv` Gymnasium API | `rl_env_spec` §1 | Collector `reset` / `step` |
-| Obs \(s \in \mathbb{R}^{1024}\), `float32` | §3 | Network input |
-| Reward Candidate 2 + clip \([-1.30,+1.40]\) | §4 | \(r_t\) in replay |
-| Slot action ids 0–23 | §2 | Factors of joint id |
-| L2 `skip_buffer`, L3 `truncated` | §2 | **Never** enter replay |
-| No `@smogon/calc` in `step()` | §1 / §8 | Local damage heuristic only in obs |
+Imagina que, para cada posición de batalla, quieres una **tabla de “qué tan buena
+es cada jugada conjunta”**. DDQN aproxima esa tabla con una red: mira el estado
+(vector de 1024 números) y asigna un valor \(Q\) a cada par de órdenes posibles
+de tus dos Pokémon. Luego elige (casi siempre) la jugada legal de mayor \(Q\),
+y a veces explora al azar entre las legales (\(\varepsilon\)-greedy).
 
-**DDQN-specific obs rule:** the 256D belief segment is **zeros / flat priors**
-(no Expectimax SP / MetaVGC inference). OTS is still accepted at the harness for
-protocol sync; it does not refine the belief encoder in this version.
+**Double** significa: una red propone “cuál es la mejor acción siguiente” y
+**otra** (la target, más lenta) dice “cuánto vale esa acción”. Así se reduce el
+sesgo de siempre mirar el máximo con la misma red.
+
+**Analogía:** un crítico que puntúa cada *acorde* posible (acción izq × der) y
+aprende de partidas guardadas en una memoria (replay), no solo de la última.
+
+| Término | Significado aquí |
+|---------|------------------|
+| \(Q(s,a)\) | Estimación de “cuán bueno es hacer \(a\) en \(s\)” |
+| Joint 576 | \(a=24a_1+a_2\); un id por par de slots |
+| Máscara | Pone \(Q=-\infty\) en ilegales antes de elegir |
+| Replay | Buffer de transiciones pasadas para aprender off-policy |
+| Curriculum \(\Omega\) | Conjunto de rivales que crece (random → … → expectimax) |
 
 ---
 
-## 2. MDP delimitation
+## 1. Entorno heredado (no reimplementar)
 
-| Item | Contract |
+| Contrato | Fuente | Uso DDQN |
+|----------|--------|----------|
+| `VGCEnv` Gymnasium | `rl_env_spec` §1 | Collector `reset` / `step` |
+| Obs \(s \in \mathbb{R}^{1024}\), `float32` | §3 | Entrada de la red |
+| Reward Candidate 2 + clip \([-1.30,+1.40]\) | §4 | \(r_t\) en replay |
+| Slot ids 0–23 | §2 | Factores del id joint |
+| L2 `skip_buffer`, L3 `truncated` | §2 | **Nunca** entran al replay |
+| No `@smogon/calc` en `step()` | §1 / §8 | Solo heurística local en obs |
+
+**Regla de obs DDQN:** el segmento belief 256D es **ceros / priors planos**
+(sin SP Expectimax). OTS sí se acepta en harness por sync; no refina el encoder.
+
+---
+
+## 2. Delimitación MDP
+
+| Ítem | Contrato |
 |------|----------|
-| Episode | 1 game (BO1). Max turns = **40** (`VGCEnv` default). Truncate ≠ Loss. |
-| Decision unit | One Showdown **combat turn** → one joint action \((a_1, a_2)\). |
-| Team Preview | **Out of MDP.** Fixed Export Order: `/team 1234`. Same rule in train and eval. Reported WR is **conditional** on this preview. |
-| Self-play | **Forbidden** in this version. |
-| Player class | `ValidatedDDQNPlayer` (poke-env + `ValidatedBattleMixin`): sync + `accept_open_team_sheet=True`. Used as **player A** in validated harnesses. |
+| Episodio | 1 partida (BO1). Max turns = **40**. Truncate ≠ Loss. |
+| Decisión | Un turno Showdown → una acción joint \((a_1,a_2)\). |
+| Team Preview | **Fuera del MDP.** `/team 1234` train = eval. WR **condicional** a ese preview. |
+| Self-play | **Prohibido** en esta versión. |
+| Player | `ValidatedDDQNPlayer` (sync + `accept_open_team_sheet=True`) como player A. |
 
 ---
 
-## 3. Joint action space & masking
+## 3. Espacio joint y máscara
 
-### Encoding
+### Codificación
 
 \[
 a = 24\cdot a_1 + a_2 \in \{0,\ldots,575\}, \quad a_1,a_2 \in \{0,\ldots,23\}
 \]
 
-| Slot id | Meaning |
-|---------|---------|
+| Slot id | Significado |
+|---------|-------------|
 | 0–15 | move \(i\) × target \(t\) |
-| 16–19 | hard switch bench |
+| 16–19 | hard switch banca |
 | 20 | pass |
-| 21 | mega (compact; decode via `pe_adapter`) |
-| 22 | tera (compact; decode via `pe_adapter`) |
+| 21 | mega (compact; decode `pe_adapter`) |
+| 22 | tera (compact; decode `pe_adapter`) |
 | 23 | reserved |
 
-**Mega / Tera:** ids 21 and 22 appear in the joint space. \(M_{\mathrm{joint}}\) may
-enable them **only** when Showdown `valid_orders` allows them at \(s_t\).
+**Mega / Tera:** ids 21–22 solo si `valid_orders` los permite en \(s_t\).
 
-### Mask
+### Máscara
 
 \[
 M_{\mathrm{joint}}(a_1,a_2) = M_1(a_1)\cdot M_2(a_2\mid a_1) \in \{0,1\}^{576}
 \]
 
-| API | Contract |
+| API | Contrato |
 |-----|----------|
-| `legal_joint_mask(battle) -> (576,)` | Canonical; dtype `float32` or `bool`; source = **`valid_orders`** |
-| `action_masks(slot1_action_id=None) -> (M1, M2)` | \(M_2\) conditioned on slot1 when id is provided |
-| Illegal Q | Before \(\arg\max\) / \(\varepsilon\)-greedy: \(Q \leftarrow Q + (1-M)\cdot(-10^{9})\) (equiv. \(Q=-\infty\)) |
-| Sampling | Never sample index with \(M=0\). Warmup and \(\varepsilon\)-greedy = **uniform over legal only**. |
+| `legal_joint_mask(battle) -> (576,)` | Canónico; fuente = **`valid_orders`** |
+| `action_masks(slot1_action_id=None)` | \(M_2\) condicionada si hay slot1 |
+| Illegal Q | \(Q \leftarrow Q + (1-M)\cdot(-10^{9})\) antes de \(\arg\max\) / \(\varepsilon\)-greedy |
+| Sampling | Nunca índice con \(M=0\). Warmup y \(\varepsilon\)-greedy = **uniforme sobre legales** |
 
-L1 coverage target: \(>99\%\) of chosen actions accepted without L2.
+Cobertura L1 objetivo: \(>99\%\) de acciones aceptadas sin L2.
 
 ---
 
-## 4. Double DQN update
+## 4. Update Double DQN
 
-Online \(\theta\), target \(\theta^-\), legal set \(L(s') = \{a : M(s',a)=1\}\):
+Online \(\theta\), target \(\theta^-\), legales \(L(s')=\{a:M(s',a)=1\}\):
 
 \[
 y =
 \begin{cases}
-r_t & \text{if } \texttt{terminated} \\
-r_t + \gamma\, Q_{\theta^-}\big(s',\, \arg\max_{a \in L(s')} Q_{\theta}(s', a)\big) & \text{otherwise}
+r_t & \text{si }\texttt{terminated} \\
+r_t + \gamma\, Q_{\theta^-}\big(s',\, \arg\max_{a \in L(s')} Q_{\theta}(s', a)\big) & \text{si no}
 \end{cases}
 \]
 
@@ -103,170 +128,157 @@ r_t + \gamma\, Q_{\theta^-}\big(s',\, \arg\max_{a \in L(s')} Q_{\theta}(s', a)\b
 L(\theta) = \mathrm{Huber}\big(Q_\theta(s_t, a_t),\; y;\; \delta=1.0\big)
 \]
 
-| Rule | Contract |
-|------|----------|
-| Double | \(a^*\) from **online**; evaluate with **target**. Forbidden: \(\max_{a'} Q_{\theta^-}(s',a')\). |
-| Soft sync | Every gradient step: \(\theta^- \leftarrow \tau\theta + (1-\tau)\theta^-\) with \(\tau=0.005\). |
-| Drop | `skip_buffer=True` or `truncated=True` → **no** replay insert, **no** bootstrap. |
+| Regla | Contrato |
+|-------|----------|
+| Double | \(a^*\) de **online**; evalúa con **target**. Prohibido \(\max Q_{\theta^-}\). |
+| Soft sync | Cada grad step: \(\theta^- \leftarrow \tau\theta + (1-\tau)\theta^-\), \(\tau=0.005\). |
+| Drop | `skip_buffer` o `truncated` → **no** insert, **no** bootstrap. |
 | Grad clip | `max_norm = 10` |
 
 ---
 
-## 5. Network
+## 5. Red
 
-| Item | Contract |
+| Ítem | Contrato |
 |------|----------|
 | Input | `float32[1024]` |
 | Body | `Linear(1024,512) → ReLU → Linear(512,512) → ReLU → Linear(512,576)` |
-| Output | Q-values for all joint actions (mask applied outside the net) |
+| Output | Q de todas las joint (máscara fuera de la net) |
 | Off | Dueling, NoisyNets, PER, n-step, Rainbow, C51, QR-DQN |
-| Device default | **CPU** (GPU optional via CLI flag) |
+| Device | **CPU** por defecto; GPU opcional por CLI |
 
 ---
 
-## 6. Frozen hyperparameters
+## 6. Hiperparámetros congelados
 
-| Parameter | Value |
+| Parámetro | Valor |
 |-----------|--------|
 | \(\gamma\) | `0.95` |
 | Optimizer | Adam |
 | Learning rate | `3e-4` |
-| \(\tau\) (soft) | `0.005` / gradient step |
+| \(\tau\) (soft) | `0.005` / grad step |
 | Batch size | `256` |
 | Replay capacity | `200_000` |
 | Warmup env steps | `5_000` (legal-uniform) |
-| Train frequency | 1 grad step / 4 env steps |
+| Train frequency | 1 grad / 4 env steps |
 | Loss | Huber \(\delta=1.0\) |
 | Grad clip | `max_norm=10` |
-| \(\varepsilon\) | `1.0 → 0.05` linear over first `500_000` env steps |
+| \(\varepsilon\) | `1.0 → 0.05` linear en primeros `500_000` env steps |
 | Eval / gate \(\varepsilon\) | `0` |
 | Replay tuple | `(s_t, a_joint, r_t, s', terminated, m_next)` |
-| Seed | Required CLI arg; logged |
+| Seed | CLI obligatorio; logueado |
 
 ---
 
-## 7. Modules & CLI (implementation checklist)
+## 7. Módulos y CLI
 
-| Module | Responsibility |
-|--------|----------------|
-| `showdown/rl/ddqn/network.py` | Online + target MLP; soft update helper |
-| `showdown/rl/ddqn/replay.py` | Capacity 200k; reject `skip_buffer` / truncated at insert API |
-| `showdown/rl/ddqn/agent.py` | Masked \(\varepsilon\)-greedy / greedy act; encode/decode joint |
-| `showdown/rl/ddqn/train.py` | Collector, curriculum, checkpoint, logging |
-| `showdown/rl/ddqn/player.py` | `DDQNPlayer` + `ValidatedDDQNPlayer` |
-| `showdown/rl/ddqn/__init__.py` | Public exports |
-| `showdown/rl/ddqn/__main__.py` | Entrypoint for `python -m showdown.rl.ddqn.train` |
-| Mask helper | Prefer `showdown/rl/action_space.py` or `pe_adapter.py`: `legal_joint_mask` |
-| Tests | `tests/test_rl_ddqn.py` (acceptance below) |
+| Módulo | Responsabilidad |
+|--------|-----------------|
+| `network.py` | Online + target MLP; soft update |
+| `replay.py` | Capacidad 200k; rechazo skip/truncated |
+| `agent.py` | \(\varepsilon\)-greedy / greedy enmascarado; codec joint |
+| `train.py` | Collector, curriculum, checkpoint, logging |
+| `player.py` | `DDQNPlayer` + `ValidatedDDQNPlayer` |
+| Tests | `tests/test_rl_ddqn.py` |
 
-Suggested train flags:
-
-| Flag | Meaning |
-|------|---------|
-| `--seed` | Required |
+| Flag | Significado |
+|------|-------------|
+| `--seed` | Obligatorio |
 | `--device` | Default `cpu` |
 | `--opponent` | `mock` \| `random` \| `greedy_solo` \| `greedy_joint` \| `expectimax_bayesian` \| `curriculum` |
-| `--steps` | Steps for a **single** `--opponent` (ignored if `--phases` set) |
-| `--phases` | Unlock markers + steps: `opp:steps,...` |
-| `--expand-omega` / `--no-expand-omega` | **Default on:** cumulative \(\Omega\); sample foe each episode. Off = exclusive phases |
-| `--opponent-weights` | e.g. `expectimax_bayesian:0.35,greedy_joint:1.5` |
-| `--no-expectimax` | Drop Expectimax from `--opponent curriculum` |
-| `--curriculum-phase-steps` | Steps per unlock (default `500000`) |
-| `--start-ps` | Start local PS for live foes |
+| `--steps` / `--phases` | Pasos o unlocks `opp:steps,...` |
+| `--expand-omega` / `--no-expand-omega` | \(\Omega\) acumulativo (default on) vs fases exclusivas |
+| `--opponent-weights` | p.ej. `expectimax_bayesian:0.35` |
+| `--no-expectimax` | Omite Expectimax del curriculum |
+| `--curriculum-phase-steps` | Default `500000` |
+| `--start-ps` | PS local (`--no-security`) |
 | `--checkpoint-dir` | Default `logs/ddqn_checkpoints` |
-
-Examples:
 
 ```bat
 python -m showdown.rl.ddqn.train --seed 0 --opponent mock --steps 20000
 python -m showdown.rl.ddqn.train --seed 0 --opponent curriculum --start-ps
 python -m showdown.rl.ddqn.train --seed 0 --start-ps --expand-omega --phases random:100k,greedy_solo:200k,greedy_joint:300k,expectimax_bayesian:50k
-python -m showdown.rl.ddqn.train --seed 0 --start-ps --no-expand-omega --phases random:100k,greedy_joint:200k
 ```
 
 ---
 
-## 8. Curriculum (monotonic \(\Omega\))
+## 8. Curriculum ( \(\Omega\) monótono)
 
-**Default (`--expand-omega`):** opponent set expands accumulatively. Replay is **never cleared** between phases.
+**Default (`--expand-omega`):** el set de rivales crece; el replay **no** se limpia.
 
-| Phase | Unlock | \(\Omega_t\) | Force advance |
-|-------|--------|--------------|---------------|
-| 0 Warmup | — | agent legal-uniform | 5k before learn |
+| Fase | Unlock | \(\Omega_t\) | Advance |
+|------|--------|--------------|---------|
+| 0 Warmup | — | legal-uniform | 5k antes de aprender |
 | 1 | `random` | `{random}` | `500_000` steps |
-| 2 | `greedy_solo` | `{random, greedy_solo}` | same |
-| 3 | `greedy_joint` | `{random, solo, joint}` | same |
-| 4 | `expectimax_bayesian` | \(\Omega_3\cup\{\mathrm{expectimax}\}\) | same (`--no-expectimax` omits) |
+| 2 | `greedy_solo` | `{random, greedy_solo}` | igual |
+| 3 | `greedy_joint` | `{random, solo, joint}` | igual |
+| 4 | `expectimax_bayesian` | \(\Omega_3\cup\{\mathrm{expectimax}\}\) | igual (`--no-expectimax` omite) |
 
-**Episode sampling:** \(o\sim\pi(\Omega_t)\) with weights `random=solo=joint=1.0`, `expectimax_bayesian=0.35` (~10% when all four present).
-
-**Exclusive (`--no-expand-omega`):** one foe per phase; replay still shared.
-
-**Replay tuple:** \(e_t=(s_t,a_t,r_t,s',d_t,M_{s'},\mathrm{opp\_code})\). Telemetry: `buf_frac_*`, `batch_frac_*`.
-
-**Checkpoint:** best WR vs **`greedy_joint`** (\(\varepsilon=0\)).
+Pesos de muestreo: `random=solo=joint=1.0`, `expectimax_bayesian=0.35`.
+**Checkpoint best:** WR vs **`greedy_joint`** (\(\varepsilon=0\)).
 
 ---
 
-## 9. Offline evaluation suite (reported WR)
+## 9. Suite offline (WR reportado)
 
-| Opponent | Games | Mode | \(\varepsilon\) | Preview |
-|----------|-------|------|-----------------|---------|
+| Rival | Juegos | Modo | \(\varepsilon\) | Preview |
+|-------|--------|------|-----------------|---------|
 | `random` | 200 | BO1 | 0 | `/team 1234` |
 | `greedy_joint` | 200 | BO1 | 0 | `/team 1234` |
 | `expectimax_bayesian` | 200 | BO1 | 0 | `/team 1234` |
 
 ---
 
-## 10. Telemetry (must not enter \(R_t\))
+## 10. Telemetría (no entra en \(R_t\))
 
-| Metric | Meaning |
-|--------|---------|
-| `illegal_action_fallbacks` | L2 rate |
-| `mean_game_length` | Stall / collapse |
-| `mean_q` / `mean_target` / `td_error` | Value stability |
-| `eps` | Exploration |
-| `curriculum_phase` | Current unlock phase |
-| `buf_frac_<opp>` / `batch_frac_<opp>` | Replay / minibatch origin mix |
-| `eval_wr_<opponent>` | Gate / suite WR |
+`illegal_action_fallbacks`, `mean_game_length`, `mean_q` / `mean_target` / `td_error`,
+`eps`, `curriculum_phase`, `buf_frac_*` / `batch_frac_*`, `eval_wr_<opponent>`.
 
 ---
 
-## 11. Acceptance tests (mandatory before merge)
+## 11. Tests de aceptación
 
-1. **Double:** mock online/target nets → \(a^*\) from online only.
-2. **Replay:** `skip_buffer=True` does not increase `len(replay)`.
-3. **Codec:** encode/decode joint idempotent on \(\{0,\ldots,575\}\).
-4. **Mask:** with \(\varepsilon=0\), sampled/argmax index always has \(M=1\) when any legal exists.
-5. **Smoke:** ≥100 env steps on `MockBattleBackend` without crash (CPU).
-
----
-
-## 12. Non-goals
-
-- PER, n-step, Rainbow, C51, QR-DQN, Dueling, NoisyNets
-- Team Preview inside \(s_t\) or \(Q\)
-- Training on L2 / truncated transitions
-- \(Q\) as reward potential \(\Phi(s)\)
-- Self-play, IQL, or BDQN as the reported main agent
-- BC pretrain requirement (optional later; not in this contract)
+1. Double: \(a^*\) solo de online.  
+2. Replay: `skip_buffer=True` no aumenta `len(replay)`.  
+3. Codec joint idempotente en \(\{0,\ldots,575\}\).  
+4. Máscara: con \(\varepsilon=0\), argmax siempre \(M=1\).  
+5. Smoke ≥100 steps en `MockBattleBackend` (CPU).
 
 ---
 
-## 13. References
+## 12. Fortalezas y límites (tesis)
 
-- Huang, S., & Ontañón, S. (2022). A closer look at invalid action masking in policy gradient algorithms. *FLAIRS, 35*. https://doi.org/10.32473/flairs.v35i.130584
-- Mnih, V., et al. (2015). Human-level control through deep reinforcement learning. *Nature, 518*(7540), 529–533. https://doi.org/10.1038/nature14236
-- van Hasselt, H., Guez, A., & Silver, D. (2016). Deep reinforcement learning with Double Q-learning. *AAAI, 30*(1). https://doi.org/10.1609/aaai.v30i1.10295
+| Fortaleza | Límite |
+|-----------|--------|
+| Coordina ambos slots en un solo \(Q\) | Espacio 576 grande; sin modelo explícito de \(\pi\) |
+| Off-policy + replay eficiente | Sin self-play en v1.1 |
+| Fácil de contrastar con PPO | Belief plano; preview fijo |
+
+---
+
+## 13. Non-goals
+
+PER, n-step, Rainbow, C51, QR-DQN, Dueling, NoisyNets; preview en MDP;
+entrenar en L2/truncated; \(Q\) como \(\Phi(s)\); self-play; IQL/BDQN como agente principal reportado; BC obligatorio.
+
+---
+
+## 14. Referencias
+
+- Huang & Ontañón (2022). Invalid action masking. *FLAIRS*.  
+- Mnih et al. (2015). Deep RL. *Nature*.  
+- van Hasselt, Guez & Silver (2016). Double Q-learning. *AAAI*.  
+- [`rl_env_spec.md`](rl_env_spec.md); [`ppo_spec.md`](ppo_spec.md); heuristics §6.h.
 
 ---
 
 ## Changelog
 
-| Version | Date | Notes |
-|---------|------|-------|
-| **1.0** | 2026-10-10 | DDQN contract + code; monotonic \(\Omega\) curriculum (`--expand-omega`), shared replay with `opp_code` telemetry |
+| Versión | Fecha | Notas |
+|---------|-------|-------|
+| **1.1** | 2026-10-10 | Redacción amena (ES) + glosario/analogía; **sin** cambio de semántica FROZEN. |
+| **1.0** | 2026-10-10 | Contrato DDQN + curriculum \(\Omega\) monótono. |
 
 ---
 
-*End of DDQN agent spec 1.0 — use this file for coding `showdown/rl/ddqn/`.*
+*Fin del contrato DDQN v1.1.*

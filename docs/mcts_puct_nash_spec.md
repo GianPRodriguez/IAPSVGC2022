@@ -1,46 +1,73 @@
-# MCTS–PUCT/Nash Agent Spec — SM-MCTS (VGC Gen 9)
+# MCTS–PUCT/Nash Agent Spec — SM-MCTS B1 (VGC Gen 9)
 
-| Field | Value |
+| Campo | Valor |
 |-------|--------|
-| **Document** | **MCTS–PUCT/Nash (SM-MCTS B1) — exclusive implementation contract** |
-| **Version** | **1.0** (aligned with `docs/rl_env_spec.md` **v1.5** §6.d) |
-| **Status** | **FROZEN — implemented in `showdown/rl/mcts_puct_nash/`** |
-| **Algorithm** | Simultaneous-move MCTS: PUCT over matrix **cells** + Nash (Fictitious Play) backup |
-| **Role** | Deep simultaneous planning under Cand. 1 (sibling of open-loop [`mcts_puct_spec.md`](mcts_puct_spec.md)) |
+| **Documento** | **Contrato exclusivo — MCTS–PUCT/Nash (SM-MCTS B1)** |
+| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.d) |
+| **Estado** | **FROZEN — implementado en `showdown/rl/mcts_puct_nash/`** |
+| **Algoritmo** | MCTS de turnos simultáneos: PUCT sobre **celdas** de matriz + backup Nash (Fictitious Play) |
+| **Rol** | Planificación profunda **simultánea** bajo Cand. 1 (sibling de open-loop) |
 | **Code root** | `showdown/rl/mcts_puct_nash/` |
 | **CLI** | `python -m showdown.rl.mcts_puct_nash` |
-| **Deps** | `numpy` only (no torch). Reuses S2 from `mcts_puct`. |
+| **Deps** | `numpy` (sin torch). Reusa S2 de `mcts_puct`. |
 
-> **Contrast:** Open-loop MCTS+PUCT samples \(a_{\mathrm{opp}}\sim U\). This agent selects **cells** \((a_i,b_j)\) with PUCT and backs up **Nash values** \(v^\star=\sigma^{\star\top}\hat A\tau^\star\).
+> **Contraste.** Open-loop ([`mcts_puct_spec.md`](mcts_puct_spec.md)) samplea
+> \(a_{\mathrm{opp}}\sim U\). Este agente elige **celdas** \((a_i,b_j)\) con PUCT y
+> propaga valores Nash \(v^\star=\sigma^{\star\top}\hat A\tau^\star\).
+>
+> **Inmutabilidad.** Bump **1.2+** + `rl_env_spec` §6.d juntos.
 
 ---
 
-## 1. Inherited environment
+## 0. Por qué existe (lectura no técnica)
 
-| Contract | Usage |
-|----------|--------|
+En VGC ambos bandos eligen **a la vez**. El MCTS open-loop finge que el rival es
+un dado uniforme. Aquí se construye una **matriz de payoffs** estimada entre tus
+mejores jugadas (Top-K) y las del rival (Top-K en el snapshot volteado), se elige
+qué casilla explorar con PUCT, y al subir el resultado se resuelve un **equilibrio
+aproximado** (Fictitious Play) para saber “cuánto vale esta posición si ambos
+juegan bien en promedio”.
+
+**Analogía:** no solo preguntas “¿qué pasa si yo hago X y el rival algo al azar?”,
+sino “¿qué casilla de la tabla X-mío × Y-suyo merece más visitas?” y al final
+juegas según la mezcla Nash de la raíz.
+
+| Término | Significado aquí |
+|---------|------------------|
+| Celda \((i,j)\) | Par (acción propia Top-K, acción rival Top-K) |
+| \(\hat A\) | Matriz empírica de returns |
+| Nash \(v^\star\) | Valor de equilibrio de \(\hat A\) |
+| Fictitious Play | Algoritmo iterativo para mezclas \(\sigma^\star,\tau^\star\) |
+| Top-K | Recorte a \(K=16\) joints por lado |
+
+---
+
+## 1. Entorno heredado
+
+| Contrato | Uso |
+|----------|-----|
 | Cand. 1 | \(z\in\{+1,-1,0\}\) |
-| S2 simulator + `greedy_joint_snapshot` | From `showdown/rl/mcts_puct/` |
-| Legal masks | IAM on every expand |
-| Flat belief | Parity with v1 agents |
-| Taxonomy | Stochastic **simultaneous-move** (concurrent-action uncertainty; not classic hidden-info Poker) |
+| S2 + `greedy_joint_snapshot` | Desde `mcts_puct/` |
+| Máscaras legales | IAM en cada expand |
+| Belief plano | Paridad agentes v1 |
+| Taxonomía | Stochastic **simultaneous-move** (no Poker de info oculta clásico) |
 
-**S2↔S1 divergence risk:** same as sibling — document in thesis ablations.
+Riesgo S2↔S1: igual que el sibling; documentar en ablaciones.
 
 ---
 
-## 2. Topology (Model B1)
+## 2. Topología (Modelo B1)
 
-- Node = state \(s\).
-- Edge = matrix cell \((a_i,b_j)\) with \(a_i\in I(s)\), \(b_j\in J(s)\).
-- Transition: one S2 `step_sim(s, a_i, b_j)` → child.
-- PUCT over cells:
+- Nodo = estado \(s\).
+- Arista = celda \((a_i,b_j)\), \(a_i\in I(s)\), \(b_j\in J(s)\).
+- Transición: un `step_sim(s,a_i,b_j)` → hijo.
+- PUCT sobre celdas:
 
 \[
 U(s,(i,j))=Q_{ij}+c\,P(i,j\mid s)\frac{\sqrt{N(s)}}{1+n_{ij}}
 \]
 
-with \(Q_{ij}=\hat A_{ij}\) (0 if \(n_{ij}=0\)), \(P=1/(|I||J|)\) uniform on Top‑K cells.
+con \(Q_{ij}=\hat A_{ij}\) (0 si \(n=0\)), \(P=1/(|I||J|)\) uniforme en celdas Top-K.
 
 ---
 
@@ -48,124 +75,111 @@ with \(Q_{ij}=\hat A_{ij}\) (0 if \(n_{ij}=0\)), \(P=1/(|I||J|)\) uniform on Top
 
 - \(K=16\).
 - Score = `score_joint` (sibling).
-- \(I(s)\): top‑K legal self joints; \(J(s)\): top‑K on **flipped** snapshot (opp).
-- If \(|L|<K\), use all. Ties → smaller joint id.
+- \(I(s)\): top-K joints legales propios; \(J(s)\): top-K en snapshot **flipped**.
+- Si \(|L|<K\), usar todos. Empates → joint id menor.
 
 ---
 
-## 4. Simulation loop (single backup rule)
+## 4. Bucle de simulación (backup)
 
 ```
 each sim_id:
-  path ← []
-  node ← root; rng ← hash(seed, turn, sim_id)
+  path ← []; node ← root; rng ← hash(seed, turn, sim_id)
   while True:
-    if not node.expanded: expand Top-K + init n,W
-    if node.state.finished: z ← Cand1; break
+    if not expanded: expand Top-K + init n,W
+    if finished: z ← Cand1; break
     pick cell (i,j) by PUCT (prefer n=0)
-    path.append(node, i, j)
-    child ← step_sim / children[(i,j)]
-    if child.finished:
-      z ← Cand1(child); update cell (i,j) with z; break
-    if child first visit (leaf):
-      z ← rollout(greedy_joint_snapshot both); update cell; break
+    path.append; child ← step_sim
+    if child finished / first-visit leaf:
+      z ← Cand1 or rollout(greedy_joint both); update cell; break
     node ← child
-  # Backup up path:
-  for (node, i, j) in reversed(path):
-    # cell already updated with z at creation time for deepest;
-    # for upper nodes: ensure cell (i,j) got this trajectory's z once
-    if cell not yet updated this sim: n_ij+=1; W_ij+=z
-    z ← NashValue(Â)   # FP; parent receives v*
-play: σ* at root with T_fp=500 → a = argmax_i σ*_i
+  # Backup:
+  deepest: n+=1; W+=z
+  then repeatedly: z ← NashValue(Â); ancestors n+=1; W+=z
+play: σ* at root (T_fp=500) → a = argmax_i σ*_i
 ```
 
-**Precise backup (implementation contract):**
+**Contrato preciso:**
 
-1. Deepest edge: after leaf \(z\), set \(n_{ij}\mathrel{+=}1\), \(W_{ij}\mathrel{+=}z\).
-2. Then \(z \leftarrow v^\star(\hat A)\) via Fictitious Play.
-3. For each ancestor edge in reverse: \(n\mathrel{+=}1\), \(W\mathrel{+=}z\) (here \(z\) is already \(v^\star\) from below), then \(z \leftarrow v^\star(\hat A)\) again.
-
-Leaf terminal: same with \(z\in\{+1,-1,0\}\).
+1. Arista más profunda: tras hoja \(z\), \(n{+}{=}1\), \(W{+}{=}z\).
+2. \(z\leftarrow v^\star(\hat A)\) vía Fictitious Play.
+3. Ancestros en reverse: \(n{+}{=}1\), \(W{+}{=}z\) (ya \(v^\star\)), luego de nuevo \(z\leftarrow v^\star\).
 
 ---
 
 ## 5. Fictitious Play
 
-| Node | \(T_{\mathrm{fp}}\) |
+| Nodo | \(T_{\mathrm{fp}}\) |
 |------|---------------------|
-| Internal | `200` |
-| Root (play) | `500` |
+| Interno | `200` |
+| Raíz (play) | `500` |
 
-- Init: uniform.
-- Output: average of last \(W=50\) frequency vectors.
-- Multiple optima: max-entropy among \(\varepsilon\)-optimal mixes (\(\varepsilon=10^{-6}\)).
+Init uniforme; salida = promedio de últimos \(W=50\) vectores de frecuencia;
+múltiples óptimos → max-entropía entre \(\varepsilon\)-óptimos (\(\varepsilon=10^{-6}\)).
 
 ---
 
-## 6. Frozen hyperparameters
+## 6. Hiperparámetros congelados
 
-| Parameter | Value |
+| Parámetro | Valor |
 |-----------|--------|
 | \(N_{\mathrm{sim}}\) | `50` (smoke `8`) |
 | \(c\) | `1.5` |
 | \(K\) | `16` |
-| Samples per cell visit | `1` (online mean) |
-| Prior | Uniform on Top‑K cells |
+| Samples / visita celda | `1` (media online) |
+| Prior | Uniforme en celdas Top-K |
 | Play | \(\arg\max_i\sigma^\star_{\mathrm{root}}\) |
 | Max turns | `40` |
-| Seed | Required |
+| Seed | Obligatorio |
 
-**Ablation parity:** equalize S2 `step_sim` / terminal-rollout counts vs open-loop MCTS+PUCT; also report native defaults (50 vs 200).
-
----
-
-## 7. Modules
-
-| Module | Role |
-|--------|------|
-| `topk.py` | Top‑K \(I,J\) |
-| `nash.py` | Fictitious Play + \(v^\star\) |
-| `tree.py` | Nodes / cells / PUCT |
-| `search.py` | SM-MCTS loop |
-| `agent.py` / `player.py` | Act + Validated |
-| Reuse | `mcts_puct.simulator`, `greedy_snapshot` |
+**Ablación de paridad:** igualar conteos `step_sim` / rollouts vs open-loop; reportar también defaults nativos (50 vs 200).
 
 ---
 
-## 8. Acceptance tests
+## 7. Módulos
 
-1. Cells only from legal Top‑K.
-2. Toy matching-pennies matrix → FP \(\approx(0.5,0.5)\), \(v\approx0\).
-3. Backup: parent value is \(v^\star\) after child update.
-4. RNG reproducible for fixed `(seed,turn,sim_id)`.
-5. Smoke: mock game `--sims 8`.
+`topk.py`, `nash.py`, `tree.py`, `search.py`, `agent.py` / `player.py`;
+reuso `mcts_puct.simulator`, `greedy_snapshot`.
 
 ---
 
-## 9. Non-goals
+## 8. Tests de aceptación
 
-- Nash-at-root-only (rejected for this agent)
-- Open-loop opp sampling as primary model
-- Neural prior
-- Classic imperfect-info belief tracking
+Celdas solo Top-K legales; matching-pennies → FP \(\approx(0.5,0.5)\), \(v\approx0\);
+backup padre = \(v^\star\); RNG reproducible; smoke `--sims 8`.
 
 ---
 
-## 10. References
+## 9. Fortalezas y límites (tesis)
 
-- Rosin (2011); Silver et al. (2017) — PUCT form.
-- Brown (1951) — fictitious play.
-- Huang & Ontañón (2022) — invalid action masking.
-- Sibling [`mcts_puct_spec.md`](mcts_puct_spec.md); [`rl_env_spec.md`](rl_env_spec.md) Cand. 1.
+| Fortaleza | Límite |
+|-----------|--------|
+| Modela simultaneidad con matriz + Nash | Más caro / menos sims que open-loop (50 vs 200) |
+| Top-K acota explosión combinatoria | Top-K puede omitir joyas fuera del ranking greedy |
+| Contraste limpio vs open-loop | Sigue dependiendo de S2 + rollout Joint |
+
+---
+
+## 10. Non-goals
+
+Nash-solo-en-raíz; open-loop como modelo primario; prior neural; tracking clásico de info imperfecta tipo Poker.
+
+---
+
+## 11. Referencias
+
+Rosin (2011); Silver et al. (2017); Brown (1951) fictitious play; Huang & Ontañón (2022);
+[`mcts_puct_spec.md`](mcts_puct_spec.md); [`rl_env_spec.md`](rl_env_spec.md).
 
 ---
 
 ## Changelog
 
-| Version | Date | Notes |
-|---------|------|-------|
-| **1.0** | 2026-10-10 | SM-MCTS B1: cell PUCT, online Â, Nash backup, \(N_{\mathrm{sim}}=50\), \(K=16\). |
+| Versión | Fecha | Notas |
+|---------|-------|-------|
+| **1.1** | 2026-10-10 | Redacción amena (ES); semántica intacta. |
+| **1.0** | 2026-10-10 | SM-MCTS B1: cell PUCT, Nash backup, \(N_{\mathrm{sim}}=50\), \(K=16\). |
 
 ---
 
-*End of MCTS–PUCT/Nash spec 1.0.*
+*Fin del contrato MCTS–PUCT/Nash v1.1.*

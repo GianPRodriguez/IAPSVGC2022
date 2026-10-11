@@ -218,9 +218,11 @@ def test_smoke_mock_collect_update():
     from showdown.rl.ppo.agent import PPOAgent, PPOConfig
     from showdown.rl.ppo.train import _collect_and_update, _make_env
     from showdown.rl.reward import RewardCandidate
+    from showdown.rl.train_log import TrainHeartbeat
 
     agent = PPOAgent(PPOConfig(seed=0, device='cpu', rollout_steps=32, epochs=2, minibatch_size=16))
     env = _make_env('mock', seed=0, start_ps=False, reward=RewardCandidate.DENSE)
+    hb = TrainHeartbeat(tag='ppo', t_total=100, log_every=50, log_every_sec=9999)
     try:
         env, done, info = _collect_and_update(
             agent, env,
@@ -231,8 +233,7 @@ def test_smoke_mock_collect_update():
             rng=np.random.default_rng(0),
             global_step_offset=0,
             ckpt_dir=__import__('pathlib').Path('logs/ppo_test_smoke'),
-            log_every=1000,
-            t0=__import__('time').perf_counter(),
+            heartbeat=hb,
             phase_label='smoke',
             seed=0,
             start_ps=False,

@@ -13,6 +13,7 @@ from showdown.rl.qd_pga.critic import SharedCritic
 from showdown.rl.qd_pga.mosaic import sample_mosaic_foe
 from showdown.rl.qd_pga.replay import ValueReplay
 from showdown.rl.reward import RewardCandidate
+from showdown.rl.train_log import TrainHeartbeat
 
 K_PG_DEFAULT = 2
 G_C_DEFAULT = 8
@@ -67,6 +68,8 @@ def _collect(
     use_mosaic: bool,
     replay: Optional[ValueReplay],
     write_replay: bool,
+    heartbeat: Optional[TrainHeartbeat] = None,
+    phase: str = '',
 ) -> Tuple[VGCEnv, int, RolloutBuffer, dict]:
     """Collect up to ``steps`` env transitions; values from shared critic."""
     env.reward_candidate = RewardCandidate.DENSE
@@ -143,6 +146,13 @@ def _collect(
             assert env._snap is not None
             obs = build_observation_ppo(env._snap)
             m1, _ = _slot_masks(env)
+
+        if heartbeat is not None:
+            heartbeat.log(
+                int(global_steps) + local,
+                phase=phase or 'collect',
+                extras={'replay': len(replay) if replay is not None else 0},
+            )
 
         if int(global_steps) + local >= int(t_total):
             break
@@ -241,12 +251,15 @@ def pg_improve(
     use_mosaic: bool = True,
     k_pg: int = K_PG_DEFAULT,
     g_c: int = G_C_DEFAULT,
+    heartbeat: Optional[TrainHeartbeat] = None,
+    phase: str = '',
 ) -> Tuple[VGCEnv, int, dict]:
     """Collect, write replay, critic TD, then actor PPO-clip K epochs."""
     env, taken, buf, meta = _collect(
         agent, env, critic,
         steps=steps, rng=rng, global_steps=global_steps, t_total=t_total,
         seed=seed, use_mosaic=use_mosaic, replay=replay, write_replay=True,
+        heartbeat=heartbeat, phase=phase or 'pg',
     )
     metrics: dict = {}
     if taken > 0 and len(buf) > 0:
@@ -268,11 +281,14 @@ def mut_burn_rollout(
     t_total: int,
     seed: int = 0,
     use_mosaic: bool = True,
+    heartbeat: Optional[TrainHeartbeat] = None,
+    phase: str = '',
 ) -> Tuple[VGCEnv, int, dict]:
     """Burn T_emit Cand. 2 steps; no replay write; no PG."""
     env, taken, _buf, _meta = _collect(
         agent, env, critic,
         steps=steps, rng=rng, global_steps=global_steps, t_total=t_total,
         seed=seed, use_mosaic=use_mosaic, replay=None, write_replay=False,
+        heartbeat=heartbeat, phase=phase or 'mut',
     )
     return env, taken, {}

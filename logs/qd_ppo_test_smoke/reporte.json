@@ -1,0 +1,43 @@
+{
+  "agent": "qd_ppo",
+  "status": "DONE",
+  "generated_at": "2026-10-11T02:06:08.664027+00:00",
+  "seed": 0,
+  "device": "cpu",
+  "smoke": true,
+  "global_steps": 5632,
+  "t_total": 6000,
+  "elapsed_sec": 36.48332450003363,
+  "steps_per_sec": 154.37187974773443,
+  "metrics": {
+    "coverage": 0.01,
+    "qd_score": 0.0,
+    "best_f": 0.0,
+    "accepts": 1,
+    "emits": 15,
+    "accept_rate": 0.06666666666666667,
+    "MEAN_WR_star": null
+  },
+  "phases": [],
+  "artifacts": {
+    "archive_pt": "logs\\qd_ppo_test_smoke\\archive.pt",
+    "best_elite_pt": "logs\\qd_ppo_test_smoke\\best_elite.pt",
+    "summary_json": "logs\\qd_ppo_test_smoke\\summary.json",
+    "checkpoint_dir": "logs\\qd_ppo_test_smoke"
+  },
+  "suite_games_per_foe": 0,
+  "suite": [],
+  "suite_note": "",
+  "notes": [
+    "Deploy policy π* = argmax f (best_elite.pt).",
+    "Primary QD metrics: Coverage, QD-score, best_f; primary play: MEAN_WR_star.",
+    "Fitness during search used mosaic foes; suite uses fixed control foes.",
+    "Live console heartbeats complement this static report."
+  ],
+  "config": {
+    "b_boot": 2048,
+    "n_emit": 2,
+    "rollout": 256,
+    "n_outer": 7
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "seed": 0,
+  "device": "cpu",
+  "expand_omega": true,
+  "weights": {
+    "mock": 1.0,
+    "random": 1.0,
+    "greedy_solo": 1.0,
+    "greedy_joint": 1.0,
+    "expectimax_bayesian": 0.35
+  },
+  "exclusive_schedule": [
+    {
+      "opponent": "mock",
+      "steps": 200
+    }
+  ],
+  "expand_schedule": [
+    {
+      "unlock": "mock",
+      "steps": 200,
+      "omega": [
+        "mock"
+      ]
+    }
+  ],
+  "phase_log": [
+    {
+      "index": 0,
+      "unlock": "mock",
+      "omega": [
+        "mock"
+      ],
+      "steps_planned": 200,
+      "steps_done": 200,
+      "sampling_probs": {
+        "mock": 1.0
+      },
+      "ep_counts": {
+        "mock": 1
+      },
+      "buf_frac_end": {
+        "mock": 1.0
+      }
+    }
+  ],
+  "env_steps": 200,
+  "grad_steps": 0,
+  "total_steps": 200,
+  "buf_frac_final": {
+    "mock": 1.0
+  },
+  "suite": [
+    {
+      "foe": "random",
+      "n_games": 2,
+      "wins": 0,
+      "losses": 0,
+      "ties": 2,
+      "mean_return": 0.0,
+      "win_rate": 0.0
+    },
+    {
+      "foe": "greedy_joint",
+      "n_games": 2,
+      "wins": 0,
+      "losses": 0,
+      "ties": 2,
+      "mean_return": 0.0,
+      "win_rate": 0.0
+    },
+    {
+      "foe": "expectimax_bayesian",
+      "n_games": 2,
+      "wins": 0,
+      "losses": 0,
+      "ties": 2,
+      "mean_return": 0.0,
+      "win_rate": 0.0
+    }
+  ]
+}

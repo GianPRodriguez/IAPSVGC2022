@@ -1,0 +1,55 @@
+# Train Report — ddqn
+status: DONE
+generated_at_utc: 2026-10-11T02:06:27.676961+00:00
+seed: 0
+device: cpu
+smoke: true
+
+## Config
+expand_omega: true
+weights: {"mock": 1.0, "random": 1.0, "greedy_solo": 1.0, "greedy_joint": 1.0, "expectimax_bayesian": 0.35}
+schedule: [{"opponent": "mock", "steps": 200}]
+
+## Budget
+steps: 200 / 200 (100.0%) [200/200]
+elapsed: 1s (1.2s)
+steps_per_sec: 163.28
+
+## Outcome metrics
+env_steps: 200
+grad_steps: 0
+epsilon_final: 0.99962
+replay_len: 195
+buf_frac_final: {"mock": 1.0}
+
+## Phases
+### phase[0]
+index: 0
+unlock: mock
+omega: ["mock"]
+steps_planned: 200
+steps_done: 200
+sampling_probs: {"mock": 1.0}
+ep_counts: {"mock": 1}
+buf_frac_end: {"mock": 1.0}
+
+## Artifacts
+final_pt: logs\ddqn_report_test\final.pt
+train_meta_json: logs\ddqn_report_test\train_meta.json
+checkpoint_dir: logs\ddqn_report_test
+
+## Offline suite (Cand. 1 greedy BO1)
+suite_games_per_foe: 2
+note: MockBattleBackend: foe labels nominal; use --start-ps for live suite.
+random: WR=0.000 (W=0 L=0 T=2 n=2) mean_return=0.000
+greedy_joint: WR=0.000 (W=0 L=0 T=2 n=2) mean_return=0.000
+expectimax_bayesian: WR=0.000 (W=0 L=0 T=2 n=2) mean_return=0.000
+MEAN_WR: 0.000
+
+## Analysis notes
+- Primary learning signal: Cand. 2 during train; suite uses Cand. 1 sparse return.
+- Compare MEAN_WR / per-foe WR across seeds for thesis tables.
+- Live console heartbeats complement this static report.
+
+## Machine twin
+Companion JSON: reporte.json (same directory).

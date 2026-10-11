@@ -1,72 +1,91 @@
-# MCTS + PUCT Agent Spec — Standard (VGC Gen 9)
+# MCTS + PUCT Agent Spec — Planificación open-loop (VGC Gen 9)
 
-| Field | Value |
+| Campo | Valor |
 |-------|--------|
-| **Document** | **MCTS + PUCT (standard) — exclusive implementation contract** |
-| **Version** | **1.0** (aligned with `docs/rl_env_spec.md` **v1.4** §6.c) |
-| **Status** | **FROZEN — implemented in `showdown/rl/mcts_puct/` + `battle_bots/mcts_puct`** |
-| **Algorithm** | Monte Carlo Tree Search + PUCT (Rosin 2011; Silver et al. 2017 formula) |
-| **Role** | Main **pure-planning** agent under sparse Cand. 1 (not PPO/DDQN) |
+| **Documento** | **Contrato exclusivo — MCTS + PUCT (estándar)** |
+| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.c) |
+| **Estado** | **FROZEN — implementado en `showdown/rl/mcts_puct/` + `battle_bots/mcts_puct`** |
+| **Algoritmo** | Monte Carlo Tree Search + PUCT (Rosin 2011; forma Silver et al. 2017) |
+| **Rol** | Agente de **planificación pura** bajo Cand. 1 (no aprende pesos) |
 | **Code root** | `showdown/rl/mcts_puct/` |
 | **CLI** | `python -m showdown.rl.mcts_puct` |
-| **Deps** | **No torch** for v1.0 baseline (`numpy` only). Heuristic bots unchanged. |
+| **Deps** | **Sin torch** en v1.1 (`numpy`). Heuristics intactos. |
 
-> **Scope:** Single source of truth for **implementing** MCTS+PUCT.
-> Obs / Action / Reward Cand. 1 / `VGCEnv` are imported from [`rl_env_spec.md`](rl_env_spec.md) v1.4.
+> **Alcance.** SoT de MCTS+PUCT. Env/Cand. 1 en [`rl_env_spec.md`](rl_env_spec.md).
+> Sibling simultáneo: [`mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md).
 >
-> **Sibling:** MCTS + Nash (matrix row 4) is a **separate** exclusive spec — out of scope here.
->
-> **Immutability:** Bump this doc to 1.1+ **and** `rl_env_spec.md` §6.c together.
+> **Inmutabilidad.** Bump **1.2+** + `rl_env_spec` §6.c juntos.
 
 ---
 
-## 1. Inherited environment
+## 0. Por qué existe (lectura no técnica)
 
-| Contract | Source | MCTS usage |
-|----------|--------|------------|
-| `VGCEnv` | §1 | Real-game I/O; search uses S2 cloneable sim |
-| Reward **Candidate 1** | §4 | Terminal \(z\in\{+1,-1,0\}\) (tie \(=0\), never Cand. 2 \(-0.25\)) |
-| Joint legal mask | §2 | Expand / select only \(a\in L(s)\) |
-| No `@smogon/calc` | §1 | Also forbidden inside S2 search steps |
+En vez de entrenar una red durante horas, este agente **piensa en el momento**:
+simula muchas partidas imaginarias desde la posición actual, anota qué jugadas
+propias llevan a mejores resultados (+1 / −1 / 0) y al final juega la acción
+más visitada en la raíz. PUCT equilibra “explotar lo que ya parece bueno” y
+“explorar lo poco visitado”, guiado por un prior (aquí: uniforme sobre legales).
 
-**Belief:** flat / unused in v1.0 search (parity with DDQN/PPO flat-belief agents).
+El rival en el árbol se modela de forma **open-loop**: se muestre su acción al azar
+entre legales (no se construye un árbol minimax de dos jugadores). En las hojas,
+ambos bandos juegan `greedy_joint_snapshot` hasta el final.
+
+**Analogía:** un jugador que, con reloj, juega mentalmente 200 finales rápidos con
+un compañero “greedy”, y elige la apertura que más veces ganó en esas fantasías.
+
+| Término | Significado aquí |
+|---------|------------------|
+| Simulación | Una trayectoria imaginaria en S2 |
+| Open-loop | El rival se samplea; no es nodo de decisión propio |
+| Prior \(P\) | Sesgo de exploración PUCT (uniforme legal) |
+| Rollout | Política de hoja hasta terminal |
+| S2 | Simulador aproximado in-process (sin Node) |
+| Cand. 1 | \(z\in\{+1,-1,0\}\) (tie = 0) |
 
 ---
 
-## 2. MDP delimitation
+## 1. Entorno heredado
 
-| Item | Contract |
+| Contrato | Fuente | Uso |
+|----------|--------|-----|
+| `VGCEnv` | §1 | I/O partida real; búsqueda en S2 |
+| Reward **Cand. 1** | §4 | Terminal \(z\); nunca Cand. 2 −0.25 |
+| Máscara joint | §2 | Solo \(a\in L(s)\) |
+| No `@smogon/calc` | §1 | También prohibido en pasos S2 |
+
+**Belief:** plano / no usado (paridad con DDQN/PPO).
+
+---
+
+## 2. Delimitación MDP
+
+| Ítem | Contrato |
 |------|----------|
-| Episode | BO1; max turns **40**; truncate ≠ loss |
-| Decision | One combat turn → joint \(a\in\{0,\ldots,575\}\) |
-| Team Preview | Out of MDP: `/team 1234` |
-| Training | **None** (pure search). Neural prior → **v1.1** |
+| Episodio | BO1; max turns **40**; truncate ≠ loss |
+| Decisión | Joint \(a\in\{0,\ldots,575\}\) legal |
+| Preview | Fuera: `/team 1234` |
+| Training | **Ninguno** (pure search). Prior neural → v1.2+ |
 | Player | `ValidatedMCTSPuctPlayer` |
 
 ---
 
-## 3. Action space
+## 3. Espacio de acción
 
-**Joint legal edges** (DDQN-compatible):
-
-\[
-a \in L(s)\subseteq\{0,\ldots,575\},\quad L(s)=\{a:M_{\mathrm{joint}}(s,a)=1\}
-\]
-
-No auto-regressive intermediate nodes (would break MDP parity with DDQN/PPO).
+Joint legal (paridad DDQN): \(a\in L(s)\subseteq\{0,\ldots,575\}\).
+Sin nodos intermedios AR Slot1→Slot2 (rompería paridad MDP).
 
 ---
 
-## 4. Search (single-agent, open-loop opponent)
+## 4. Búsqueda (single-agent, open-loop)
 
-### 4.1 Structure
+### 4.1 Estructura
 
-- Decision nodes belong **only** to the searching agent.
-- Edges = legal \(a_{\mathrm{self}}\).
-- Transition: sample \(a_{\mathrm{opp}}\sim U(L_{\mathrm{opp}}(s))\), then S2 step with True MC stochasticity.
-- **Not** a 2P alternating / minimax tree (simultaneous turns).
+- Nodos de decisión = solo el agente que busca.
+- Aristas = \(a_{\mathrm{self}}\) legal.
+- Transición: \(a_{\mathrm{opp}}\sim U(L_{\mathrm{opp}})\), luego S2 con True MC.
+- **No** es árbol 2P alternado / minimax.
 
-### 4.2 PUCT selection
+### 4.2 Selección PUCT
 
 \[
 a^\star=\arg\max_{a\in L(s)}\Big[
@@ -74,102 +93,78 @@ Q(s,a)+c_{\mathrm{puct}}\,P(s,a)\,\frac{\sqrt{N(s)}}{1+N(s,a)}
 \Big]
 \]
 
-with \(Q=W/N\) (0 if \(N=0\)). Dirichlet noise: **off** in eval.
+\(Q=W/N\) (0 si \(N=0\)). Dirichlet: **off** en eval.
 
-### 4.3 Expansion
+### 4.3 Expansión
 
-On first visit to a non-terminal node: create edges for all \(a\in L(s)\) with prior \(P(a)=1/|L(s)|\).
+Primera visita no terminal: aristas \(\forall a\in L(s)\) con \(P(a)=1/|L(s)|\).
 
-### 4.4 Leaf / rollout
+### 4.4 Hoja / rollout
 
-If non-terminal after expanding a new child state: **rollout to terminal** (turn cap 40) with **`greedy_joint_snapshot` for both players**. Return Cand. 1 \(z\).
+Rollout a terminal (cap 40) con **`greedy_joint_snapshot` ambos**. Retorna Cand. 1 \(z\).
 
 ### 4.5 Backup
 
-Tree is single-agent open-loop. Terminal return \(z\in\{+1,-1,0\}\) propagates **unchanged** (no \(-v\)).
+\(z\) se propaga **sin** invertir signo. Por arista del path:
+\(N{+}{=}1\), \(W{+}{=}z\) (\(\gamma=1\)).
 
-For each edge on the path:
+### 4.6 Acción real
 
-\[
-N(s,a)\mathrel{+=}1,\quad W(s,a)\mathrel{+=}z\quad(\gamma=1,\ \text{no discount})
-\]
-
-### 4.6 Real-game action
-
-\[
-a_{\mathrm{play}}=\arg\max_{a\in L(s_0)} N(s_0,a)
-\]
-
-(Eval: visit-greedy. **Not** the rollout policy.)
+\(a_{\mathrm{play}}=\arg\max_{a\in L(s_0)} N(s_0,a)\) (visit-greedy; **no** es la política de rollout).
 
 ---
 
-## 5. Simulator S2
+## 5. Simulador S2
 
-**Default:** in-process `BattleSnapshot` + local damage heuristic (no Node, no poke-env).
+**Default:** `BattleSnapshot` + heurística de daño local (sin Node / poke-env).
+**S1** (PS live): ablación de fidelidad offline.
+**`greedy_joint_snapshot`:** greedy joint nativo en snapshot; **solo** rollouts.
 
-**S1** (live poke-env/PS): offline **fidelity ablation only**.
+**Riesgo tesis:** si S2 diverge de S1, MCTS optimiza una realidad alucinada → cuantificar con ablaciones.
 
-**`greedy_joint_snapshot`:** damage-heuristic joint greedy **native on `BattleSnapshot`**, no network / poke-env calls. Used **only** in rollouts (both sides).
-
-**Divergence risk (thesis):** If S2 damage/speed heuristics diverge substantially from S1, MCTS converges to decisions optimal for a hallucinated reality. Quantify via S1 fidelity ablations.
-
-**Stochasticity:** True MC sample (damage rolls, accuracy). No Expectimax chance nodes.
+**Estocasticidad:** True MC (rolls, accuracy). Sin nodos chance Expectimax.
 
 ---
 
-## 6. Three policies (do not conflate)
+## 6. Tres políticas (no confundir)
 
-| Role | Policy | Where used |
-|------|--------|------------|
-| Prior \(P(s,a)\) | Uniform legal | PUCT formula |
-| Opponent model (tree) | Uniform legal | \(a_{\mathrm{opp}}\) when transitioning in the tree |
-| Rollout (leaf) | `greedy_joint_snapshot` | Both players until terminal / turn 40 |
-| Played action | \(\arg\max N\) | Sent to Showdown / `VGCEnv` |
+| Rol | Política | Dónde |
+|-----|----------|-------|
+| Prior \(P\) | Uniforme legal | Fórmula PUCT |
+| Modelo rival (árbol) | Uniforme legal | Transiciones |
+| Rollout (hoja) | `greedy_joint_snapshot` | Hasta terminal / 40 |
+| Acción jugada | \(\arg\max N\) | Showdown / `VGCEnv` |
 
-Neural prior (PPO/DDQN): **v1.1 only**.
-
----
-
-## 7. RNG reproducibility
-
-Each simulation uses a **local** RNG seeded by a stable mix of
-`(global_seed, root_turn, sim_id)` (e.g. hash → `numpy` SeedSequence)
-so sim \(k\) at turn \(t\) always yields the same opp samples and damage rolls.
+Prior neural (PPO/DDQN): **fuera de v1.1**.
 
 ---
 
-## 8. Frozen hyperparameters (v1.0 baseline)
+## 7. RNG
 
-| Parameter | Value | Notes |
+Cada sim: RNG local de `(global_seed, root_turn, sim_id)` → misma secuencia de opp + daño.
+
+---
+
+## 8. Hiperparámetros congelados
+
+| Parámetro | Valor | Notas |
 |-----------|-------|-------|
-| \(N_{\mathrm{sim}}\) | `200` | `16` smoke. Thesis curve: `{50, 200, 800}` |
-| \(c_{\mathrm{puct}}\) | `1.5` | AlphaZero-family constant |
-| Tree | Single-agent, open-loop opp | Expand \(a_{\mathrm{self}}\); sample \(a_{\mathrm{opp}}\) |
-| Leaf | Rollout to terminal (cap 40) | `greedy_joint_snapshot` both sides; Cand. 1 |
-| Simulator | S2 approximate | S1 = fidelity ablation |
-| Prior \(P(s,a)\) | Uniform legal | \(1/\|L(s)\|\) |
-| Opp model (tree) | Uniform legal | \(a_{\mathrm{opp}}\sim U(L_{\mathrm{opp}})\) |
-| Rollout policy | `greedy_joint_snapshot` | Not used as prior / not as played action |
-| Action space | Joint 576 legal-only | Parity with DDQN |
-| Dirichlet | Off | Eval reproducibility |
-| Stochasticity | True MC sample | No chance nodes |
-| Seed | Required CLI | Drives per-sim RNG |
+| \(N_{\mathrm{sim}}\) | `200` | Smoke `16`. Curva tesis `{50,200,800}` |
+| \(c_{\mathrm{puct}}\) | `1.5` | Familia AlphaZero |
+| Árbol | Single-agent open-loop | |
+| Hoja | Rollout cap 40 | `greedy_joint_snapshot`; Cand. 1 |
+| Sim | S2 | S1 = ablación |
+| Prior / opp | Uniforme legal | |
+| Dirichlet | Off | |
+| Estocasticidad | True MC | |
+| Seed | CLI obligatorio | |
 
 ---
 
-## 9. Modules & CLI
+## 9. Módulos y CLI
 
-| Module | Responsibility |
-|--------|----------------|
-| `simulator.py` | S2 clone / step / terminal Cand. 1 |
-| `greedy_snapshot.py` | `greedy_joint_snapshot` |
-| `tree.py` | Nodes / edges / PUCT |
-| `search.py` | Simulate loop + backup |
-| `agent.py` | `act(snapshot) → joint` |
-| `player.py` | poke-env + Validated |
-| `bench.py` / `__main__.py` | Smoke / eval CLI |
-| Tests | `tests/test_rl_mcts_puct.py` |
+`simulator.py`, `greedy_snapshot.py`, `tree.py`, `search.py`, `agent.py`, `player.py`,
+`bench.py` / `__main__.py`, tests `tests/test_rl_mcts_puct.py`.
 
 ```bat
 python -m showdown.rl.mcts_puct --seed 0 --sims 16 --smoke
@@ -177,60 +172,56 @@ python -m showdown.rl.mcts_puct --seed 0 --sims 16 --smoke
 
 ---
 
-## 10. Evaluation suite
+## 10. Suite de evaluación
 
-| Opponent | Games | Preview | Sims |
-|----------|-------|---------|------|
-| `random` | 200 | `/team 1234` | frozen default |
-| `greedy_joint` | 200 | `/team 1234` | frozen |
-| `expectimax_bayesian` | 200 | `/team 1234` | frozen |
+200 BO1 vs `random`, `greedy_joint`, `expectimax_bayesian`; `/team 1234`; sims = default congelado.
 
 ---
 
-## 11. Telemetry (not in reward)
+## 11. Telemetría
 
 `sims_per_decision`, `tree_nodes`, `avg_depth`, `sim_failures`, `eval_wr_<opp>`, wall time.
 
 ---
 
-## 12. Acceptance tests
+## 12. Tests de aceptación
 
-1. Expanded / selected edges always legal.
-2. PUCT argmax matches formula on a mock node.
-3. Backup: \(W\mathrel{+=}z\) with \(z\in\{+1,-1,0\}\), no sign flip.
-4. Cand. 1 terminals (tie \(=0\)).
-5. **RNG:** fixed `(seed, turn, sim_id)` → identical opp action + damage sequence.
-6. Smoke: mock game with `--sims 16`.
+Legales; PUCT mock; backup \(W{+}{=}z\) sin flip; Cand. 1; RNG reproducible; smoke `--sims 16`.
 
 ---
 
-## 13. Non-goals
+## 13. Fortalezas y límites (tesis)
 
-- **MCTS + Nash equilibrium matrix** (explicitly a **separate sibling spec**)
-- Neural prior / value in v1.0
-- QD / BD in search
-- `@smogon/calc` / Node in S2
-- 2P alternating minimax tree
-- Team Preview in MDP
-- AR Slot1→Slot2 tree nodes
+| Fortaleza | Límite |
+|-----------|--------|
+| Sin train; interpretable en el turno | Costo \(\propto N_{\mathrm{sim}}\) en wall-clock |
+| Paridad joint 576 con DDQN | Open-loop subestima rival estratégico |
+| Rollout Joint ancla heurística fuerte | S2 ≠ PS exacto |
 
 ---
 
-## 14. References
+## 14. Non-goals
 
-- Rosin, C. D. (2011). Multi-armed bandits with episode context. *AMAI* (PUCT theory).
-- Silver, D., et al. (2017). Mastering the game of Go without human knowledge. *Nature* (implemented PUCT form \(P\sqrt{N}/(1+N)\)).
-- Kocsis & Szepesvári (2006). Bandit based Monte-Carlo planning. *ECML*.
-- [`rl_env_spec.md`](rl_env_spec.md) v1.4; siblings [`ddqn_spec.md`](ddqn_spec.md), [`ppo_spec.md`](ppo_spec.md).
+MCTS+Nash (sibling); prior/value neural v1.1; QD/BD en búsqueda; calc/Node en S2;
+minimax 2P; preview en MDP; nodos AR Slot1→Slot2.
+
+---
+
+## 15. Referencias
+
+Rosin (2011); Silver et al. (2017); Kocsis & Szepesvári (2006);
+[`rl_env_spec.md`](rl_env_spec.md); [`mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md);
+[`greedy_joint_spec.md`](greedy_joint_spec.md).
 
 ---
 
 ## Changelog
 
-| Version | Date | Notes |
-|---------|------|-------|
-| **1.0** | 2026-10-10 | Frozen: joint 576, S2, open-loop, Cand. 1 rollout via `greedy_joint_snapshot`, True MC, uniform prior/opp, \(N_{\mathrm{sim}}=200\), \(c_{\mathrm{puct}}=1.5\). |
+| Versión | Fecha | Notas |
+|---------|-------|-------|
+| **1.1** | 2026-10-10 | Redacción amena (ES); semántica intacta. |
+| **1.0** | 2026-10-10 | Frozen: joint 576, S2, open-loop, \(N_{\mathrm{sim}}=200\), \(c=1.5\). |
 
 ---
 
-*End of MCTS+PUCT agent spec 1.0.*
+*Fin del contrato MCTS+PUCT v1.1.*

@@ -1,113 +1,109 @@
-# QD-PPGA Agent Spec — Proximal Policy Gradient Arborescence / MAP-Elites (VGC Gen 9)
+# QD-PPGA Agent Spec — Proximal Policy Gradient Arborescence (VGC Gen 9)
 
-| Field | Value |
+| Campo | Valor |
 |-------|--------|
-| **Document** | **QD-PPGA — exclusive implementation contract** |
-| **Version** | **1.0** (aligned with `docs/rl_env_spec.md` **v1.8** §6.g) |
-| **Status** | **FROZEN — implemented in `showdown/rl/qd_ppga/`** |
-| **Algorithm** | Grid MAP-Elites + **proximal-only** Masked PPO emitters + shared \(V_\phi\) + **arborescence** parent selection |
-| **Role** | Quality–Diversity **policy** path (PPGA); illuminate BD; characterize elites |
+| **Documento** | **Contrato exclusivo — QD-PPGA** |
+| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.g) |
+| **Estado** | **FROZEN — implementado en `showdown/rl/qd_ppga/`** |
+| **Algoritmo** | Grid MAP-Elites + emitters **solo proximales** (Masked PPO) + \(V_\phi\) compartido + selección de padres por **arborescencia** |
+| **Rol** | Camino QD de política (PPGA); iluminar BD sin mutación genética |
 | **Code root** | `showdown/rl/qd_ppga/` |
 | **CLI** | `python -m showdown.rl.qd_ppga.train` |
-| **Deps** | `requirements-rl.txt` — `torch >= 2.0.0` (reuses `ppo/`, `qd_ppo/`, `qd_pga/` critic/replay/PG) |
+| **Deps** | `torch>=2.0`; reusa `ppo/`, `qd_ppo/`, `qd_pga/` (crítico/replay/PG) |
 
-> **Scope:** Single source of truth for **implementing QD-PPGA**.
-> Shared contracts live in [`rl_env_spec.md`](rl_env_spec.md). Masked PPO math in
-> [`ppo_spec.md`](ppo_spec.md). Critic/replay/PG collect reuse [`qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md).
+> **Contraste.** vs QD-PPO: actor-only + \(V_\phi\) + arborescencia (no full AC uniforme).
+> vs QD-PGA: **\(p_{\mathrm{mut}}=0\)** (sin mutación) + padres arborescentes.
+> Non-goal: DQD continuo / measure grads / xNES (arborescencia Batra adaptada a grid discreto).
 >
-> **Contrast with QD-PPO:** per-elite full AC + uniform parents vs **actor-only** + shared \(V_\phi\) + arborescence.  
-> **Contrast with QD-PGA:** hybrid \(p_{\mathrm{mut}}=0.5\) mut/PG vs **\(p_{\mathrm{mut}}=0\)** proximal-only + arborescence.  
-> **Non-goal:** continuous DQD / measure gradients / xNES (Batra arborescence adapted to discrete grid).
->
-> **Immutability:** bump this doc to 1.1+ **and** `rl_env_spec.md` §6.g together.
+> **Inmutabilidad.** Bump **1.2+** + `rl_env_spec` §6.g juntos.
 
 ---
 
-## 0. OPEN → FROZEN (v1.0)
+## 0. Por qué existe (lectura no técnica)
 
-| ID | Decision |
+QD-PGA a veces “tuerce” pesos al azar. QD-PPGA dice: **toda** variación debe ser
+un paso proximal de PPO (seguro, con clip), y además elige *a quién clonar* con
+criterio de **arborescencia**: la mitad del tiempo un elite al azar; la otra mitad,
+el elite más cercano (en BD) a una casilla “frontera” vacía o débil — así se
+empuja a llenar el mapa y a mejorar las salas flojas.
+
+**Analogía:** solo se aceptan retoques de taller con reglas (PPO), y el maestro
+elige el alumno según qué sala del museo está vacía o mal cubierta.
+
+| Término | Significado aquí |
+|---------|------------------|
+| Proximal-only | \(p_{\mathrm{mut}}=0\); sin ruido genético |
+| Arborescencia \(\alpha\) | Mezcla uniforme vs frontera |
+| \(c^\star\) | Celda objetivo (vacía o min \(f\)) |
+| Parent \(L_1\) | Elite filled más cercano en BD a \(c^\star\) |
+
+---
+
+## 0b. OPEN → FROZEN
+
+| ID | Decisión |
 |----|----------|
-| **R1** | Grid \(10\times 10\); **actor-only** elites; shared \(V_\phi\) |
-| **R2** | \(p_{\mathrm{mut}}=0\) — **no** genetic mutation |
-| **R3** | Variation = Masked PPO-clip only; Cand. 2; mosaic; IAM mandatory |
-| **R4** | Critic: off-policy **1-step TD(0)** Huber; replay 200k; \(\gamma=0.95\); LR \(3\times10^{-4}\) |
-| **R5** | Actor: **GAE-\(\lambda\)** vs \(V_\phi\); \(\lambda=\gamma=0.95\); **normalize per emit** |
-| **R6** | Arborescence parents: \(\alpha=0.5\) uniform(filled) else frontier \(c^\star\) |
-| **R7** | \(c^\star\) = empty cell, else filled with **min** \(f\); parent = min \(L_1\) on BD to \(c^\star\) |
-| **R8** | \(T_{\mathrm{emit}}=2048\), \(K_{\mathrm{pg}}=4\), \(n_{\mathrm{emit}}=4\) |
-| **R9** | \(N_{\mathrm{outer}}=\lfloor 900000/8192\rfloor=109\) |
-| **R10** | \(f\) Cand. 1, \(G=20\), \(g_{\min}=10\); mosaic 25/25/50 |
-| **R11** | Bootstrap \(B_{\mathrm{boot}}=100\,000\); serial emitter; deploy \(\pi^\star=\arg\max f\) |
-| **R12** | \(T_{\mathrm{total}}=10^6\) **env steps only** |
+| **R1** | Grid \(10\times10\); actor-only; shared \(V_\phi\) |
+| **R2–R3** | \(p_{\mathrm{mut}}=0\); variación = PPO-clip + IAM; Cand. 2; mosaic |
+| **R4–R5** | Crítico TD(0) Huber; replay 200k; GAE actor; norm por emit |
+| **R6–R7** | Arborescencia \(\alpha=0.5\); \(c^\star\) empty else min \(f\); parent min \(L_1\) |
+| **R8–R12** | \(T_{\mathrm{emit}}=2048\), \(K=4\), \(n_{\mathrm{emit}}=4\), \(N_{\mathrm{outer}}=109\); fitness/mosaic/bootstrap como hermanos; \(T=10^6\) |
 
-**Defaults (parity Masked PPO / PGA):** \(c_e=0.01\), \(\varepsilon=0.2\), \(c_v=0.5\); critic \(G_c=8\times256\); suite 200 BO1 vs `random` / `greedy_joint` / `expectimax_bayesian`; ≤4 aux PG emits from Stage-1; empty archive → seed actor.
+Defaults de paridad: \(c_e=0.01\), \(\varepsilon=0.2\), \(c_v=0.5\); crítico \(G_c=8\times256\);
+suite 200 BO1; ≤4 aux PG desde Stage-1; archivo vacío → seed actor.
 
 ---
 
-## 1. Inherited environment
+## 1–3. Entorno, archivo, crítico/replay
 
-Same as QD-PGA: `VGCEnv`, Obs 1024D, AR+IAM, Cand. 2 improve / Cand. 1 fitness, BDSpec, `/team 1234`.
-
----
-
-## 2. Archive (actor-only)
-
-Identical payload/binning/insert/Coverage/QD-score to QD-PGA.
+Igual que QD-PGA: `VGCEnv`, Obs, AR+IAM, Cand. 2/1, BDSpec, `/team 1234`;
+payload actor-only; \(V_\phi\) TD(0) Huber + replay 200k (escribe PG/bootstrap; drop L2/crash).
 
 ---
 
-## 3. Shared critic \(V_\phi\) + replay
-
-Identical to QD-PGA §§3–4 (TD(0) Huber, 200k, PG writes, L2/crash drop).
-
----
-
-## 4. Proximal variation (only)
+## 4. Variación proximal (única)
 
 ```
-parent ← sample_arborescence(A; α=0.5)   # or seed if empty
+parent ← sample_arborescence(A; α=0.5)   # o seed si vacío
 π' ← deepcopy(actor(parent))
 π' ← PPO_improve(π'; T_emit=2048, K=4, R=Cand2, mosaic, V_φ, GAE)
 (f, b, g) ← evaluate Cand1 (G=20)
 if g ≥ 10: try_insert(A, π', f, b)
 ```
 
-No mutation branch; no mut burn-rollout.
+Sin rama de mutación; sin burn-rollout mut.
 
 ---
 
-## 5. Arborescence parent selection
+## 5. Selección de padres (arborescencia)
 
-| Case | Action |
+| Caso | Acción |
 |------|--------|
-| Archive empty | Return bootstrap seed actor |
-| \(U\sim\mathrm{Unif}<\alpha\) (\(\alpha=0.5\)) | Uniform over filled cells |
-| Else | Pick \(c^\star\): uniform among **empty** cells if any; else cell with **min** \(f\). Parent = filled elite minimizing \(L_1\) distance between BD vectors (or bin centers) and \(c^\star\) |
+| Archivo vacío | Seed actor de bootstrap |
+| \(U\sim\mathrm{Unif}<\alpha\) (\(\alpha=0.5\)) | Uniforme sobre filled |
+| Else | \(c^\star\): uniforme entre **vacías** si hay; si no, celda con **min** \(f\). Parent = filled que minimiza \(L_1\) (BD o centros de bin) a \(c^\star\) |
 
 ---
 
 ## 6. Mosaic / fitness / suite
 
-Same as QD-PPO / QD-PGA.
+Idénticos a QD-PPO / QD-PGA (25/25/50; \(G=20\); \(g_{\min}=10\); 200 BO1).
 
 ---
 
-## 7. Outer loop & budget
+## 7. Bucle externo y presupuesto
 
 ```
-bootstrap ≤ B_boot Cand2 (replay + critic + actor PPO)
-seed archive with ≤ 4 aux PG emits from Stage-1 checkpoint
-N_outer ← floor((T - steps_used) / (n_emit * T_emit))   # = 109 nominal
-for t in 1..N_outer:
-    for e in 1..n_emit:
-        parent ← arborescence(A)
-        PG emit T_emit → critic → actor PPO-K=4 → eval → insert?
+bootstrap ≤ B_boot Cand2
+seed ≤ 4 aux PG emits
+N_outer ← 109
+for each emit: arborescence → PG T_emit → critic → PPO-K=4 → eval → insert?
 deploy π* = argmax f
 ```
 
-| Parameter | Value |
+| Parámetro | Valor |
 |-----------|--------|
-| \(T_{\mathrm{total}}\) | `1_000_000` env steps |
+| \(T_{\mathrm{total}}\) | `1_000_000` |
 | \(B_{\mathrm{boot}}\) | `100_000` |
 | \(T_{\mathrm{emit}}\) | `2048` |
 | \(K_{\mathrm{pg}}\) | `4` |
@@ -115,66 +111,57 @@ deploy π* = argmax f
 | \(N_{\mathrm{outer}}\) | `109` |
 | \(\alpha\) | `0.5` |
 | \(p_{\mathrm{mut}}\) | `0` |
-| Workers | `1` (serial) |
+| Workers | `1` |
 
 ---
 
-## 8. Modules & CLI
+## 8. Módulos y CLI
 
-| Module | Role |
-|--------|------|
-| `arborescence.py` | Parent sampling \(\alpha=0.5\) |
-| `improve.py` | Re-export `qd_pga.improve.pg_improve` |
-| `critic.py` / `replay.py` / `archive.py` | Re-export QD-PGA |
-| `mosaic.py` / `evaluate.py` | Re-export QD-PPO helpers |
-| `train.py` | Budgeted outer loop |
-| `agent.py` / `player.py` | \(\pi^\star\); `ValidatedQDPPGAPlayer` |
-| Tests | `tests/test_rl_qd_ppga.py` |
+`arborescence.py`; `improve.py` reexporta `qd_pga.improve.pg_improve`;
+crítico/replay/archive reexport QD-PGA; mosaic/eval reexport QD-PPO;
+`train.py`, `ValidatedQDPPGAPlayer`; tests `tests/test_rl_qd_ppga.py`.
 
 ```bat
 python -m showdown.rl.qd_ppga.train --seed 0 --smoke
-python -m showdown.rl.qd_ppga.train --seed 0 --device cpu
 ```
 
 ---
 
-## 9. Acceptance tests
+## 9. Aceptación / non-goals
 
-1. \(p_{\mathrm{mut}}=0\) — no mutate path in train.  
-2. \(N_{\mathrm{outer}}=\lfloor 900000/8192\rfloor=109\).  
-3. Arborescence: with \(\alpha=0\) always picks frontier; empty → seed.  
-4. Actor-only elites; IAM; \(g<10\) reject.  
-5. Smoke ≥1 outer iter on mock.
+\(p_{\mathrm{mut}}=0\) (sin path mutate); \(N_{\mathrm{outer}}=109\); arborescencia con \(\alpha=0\) siempre frontera;
+actor-only; IAM; \(g<10\) reject; smoke.
 
----
-
-## 10. Non-goals (v1.0)
-
-- Genetic mutation (QD-PGA)  
-- Continuous DQD / measure Jacobians / xNES coefficient opt  
-- Per-elite critic; CVT; ME-ES primary  
-- Expand-\(\Omega\) / self-play as primary diversity  
-- BD inside \(R_t\)
+Non-goals: mutación genética (PGA); DQD continuo / Jacobianos / xNES; crítico por elite;
+CVT; ME-ES primario; expand-\(\Omega\)/self-play como diversidad primaria; BD en \(R_t\).
 
 ---
 
-## 11. References
+## 10. Fortalezas y límites (tesis)
 
-- Batra, S., Tjanaka, B., Fontaine, M., Petrenko, A., Nikolaidis, S., & Sukhatme, G. (2024). Proximal Policy Gradient Arborescence for Quality Diversity Reinforcement Learning. *ICLR*.  
-- Nilsson, O., & Cully, A. (2021). Policy gradient assisted MAP-Elites. *GECCO*.  
-- Schulman et al. (2017). PPO.  
-- Huang & Ontañón (2022). Invalid action masking.  
-- Sutton & Barto (2018); Yannakakis & Togelius (2018).  
-- [`ppo_spec.md`](ppo_spec.md), [`qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md), [`qd_ppo_spec.md`](qd_ppo_spec.md).
+| Fortaleza | Límite |
+|-----------|--------|
+| Variación estable (solo PPO-clip) | Menos exploración “loca” que mutación |
+| Arborescencia empuja cobertura | Depende de calidad del BD |
+| Paridad de presupuesto con QD-PPO (\(N=109\)) | Sin híbrido mut de PGA |
+
+---
+
+## 11. Referencias
+
+Batra et al. (2024) PPGA *ICLR*; Nilsson & Cully (2021); Schulman et al. (2017);
+Huang & Ontañón (2022); [`ppo_spec.md`](ppo_spec.md), [`qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md),
+[`qd_ppo_spec.md`](qd_ppo_spec.md).
 
 ---
 
 ## Changelog
 
-| Version | Date | Notes |
-|---------|------|-------|
-| **1.0** | 2026-10-10 | Frozen: actor-only + shared \(V_\phi\); \(p_{\mathrm{mut}}=0\); arborescence \(\alpha=0.5\); \(T_{\mathrm{emit}}=2048\), \(K=4\), \(N_{\mathrm{outer}}=109\); mosaic/fitness/suite parity. |
+| Versión | Fecha | Notas |
+|---------|-------|-------|
+| **1.1** | 2026-10-10 | Redacción amena (ES); semántica intacta. |
+| **1.0** | 2026-10-10 | Frozen: \(p_{\mathrm{mut}}=0\); arborescencia \(\alpha=0.5\); \(N_{\mathrm{outer}}=109\). |
 
 ---
 
-*End of QD-PPGA agent spec 1.0.*
+*Fin del contrato QD-PPGA v1.1.*

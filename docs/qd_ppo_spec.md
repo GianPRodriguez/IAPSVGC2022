@@ -1,94 +1,105 @@
-# QD-PPO Agent Spec — Quality–Diversity Proximal Policy Optimization (VGC Gen 9)
+# QD-PPO Agent Spec — Quality–Diversity + Masked PPO (VGC Gen 9)
 
-| Field | Value |
+| Campo | Valor |
 |-------|--------|
-| **Document** | **QD-PPO — exclusive implementation contract** |
-| **Version** | **1.0** (aligned with `docs/rl_env_spec.md` **v1.6** §6.e) |
-| **Status** | **FROZEN — implemented in `showdown/rl/qd_ppo/`** |
-| **Algorithm** | Grid MAP-Elites over BDSpec + Masked PPO (IAM) as sole variation / improvement operator |
-| **Role** | Quality–Diversity **policy** path: illuminate behavior space; characterize multiple elites |
+| **Documento** | **Contrato exclusivo — QD-PPO** |
+| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.e) |
+| **Estado** | **FROZEN — implementado en `showdown/rl/qd_ppo/`** |
+| **Algoritmo** | Grid MAP-Elites sobre BDSpec + Masked PPO (IAM) como único operador de variación |
+| **Rol** | Camino QD de **política**: iluminar el espacio de comportamientos; varios elites |
 | **Code root** | `showdown/rl/qd_ppo/` |
 | **CLI** | `python -m showdown.rl.qd_ppo.train` |
-| **Deps** | `requirements-rl.txt` — `torch >= 2.0.0` (reuses `showdown/rl/ppo/`) |
+| **Deps** | `torch>=2.0`; reusa `showdown/rl/ppo/` |
 
-> **Scope:** Single source of truth for **implementing QD-PPO**.
-> Shared contracts (Obs 1024D, ActionSpec AR + IAM, Reward Cand. 2/1, BDSpec,
-> `VGCEnv`) live in [`rl_env_spec.md`](rl_env_spec.md). Masked PPO math lives in
-> [`ppo_spec.md`](ppo_spec.md) v1.0 — **reuse; do not fork**.
+> **Alcance.** SoT de QD-PPO. Env/BD/Reward en [`rl_env_spec.md`](rl_env_spec.md).
+> Matemática PPO en [`ppo_spec.md`](ppo_spec.md) — **reusar; no forkar**.
 >
-> **Contrast with Masked PPO:** one policy (+ self-play pool) vs **archive of elites**.
-> Archive fitness \(U=f\) = **Candidate 1**; inner PPO \(R_t^{(2)}\) = **Candidate 2**.
+> **Contraste.** Masked PPO = una política (+ pool). QD-PPO = **archivo de elites**.
+> Fitness archivo \(U=f\) = Cand. **1**; PPO interno \(R_t\) = Cand. **2**.
+> PGA/PPGA: [`qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md), [`qd_ppga_spec.md`](qd_ppga_spec.md).
 >
-> **Contrast with matrix rows 6–7:** QD-PGA → [`qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md); QD-PPGA → [`qd_ppga_spec.md`](qd_ppga_spec.md).
->
-> **Immutability:** bump this doc to 1.1+ **and** `rl_env_spec.md` §6.e together.
+> **Inmutabilidad.** Bump **1.2+** + `rl_env_spec` §6.e juntos.
 
 ---
 
-## 0. OPEN → FROZEN (v1.0)
+## 0. Por qué existe (lectura no técnica)
 
-| ID | Decision |
+Un solo agente “campeón” puede ser frágil: gana de una sola forma. QD-PPO mantiene
+un **mapa** (rejilla 10×10) donde cada casilla guarda el mejor agente visto con un
+*estilo* de juego medido por dos números de comportamiento (BD). Para mejorar un
+estilo, se copia un elite y se le aplica un poco de entrenamiento PPO; si el
+resultado es mejor en utilidad Cand. 1 y cae en una casilla, entra al archivo.
+
+**Analogía:** un museo de estrategias: no solo el cuadro más caro, sino el mejor
+de cada sala (agresivo, pivoteo, …). La “calidad” es ganar (Cand. 1); la “diversidad”
+es ocupar salas distintas (BD), **sin** meter la diversidad dentro de la recompensa
+de entrenamiento.
+
+| Término | Significado aquí |
+|---------|------------------|
+| Archive / MAP-Elites | Rejilla de elites por BD |
+| BD | Coordenada de comportamiento \([0,1]^2\) |
+| Fitness \(f\) | Media Cand. 1 (utilidad de archivo) |
+| Improve | PPO corto con Cand. 2 |
+| Mosaic | Mezcla fija de rivales 25/25/50 |
+| Coverage / QD-score | % celdas llenas / suma de fitness |
+
+---
+
+## 0b. OPEN → FROZEN (v1.0 conservado)
+
+| ID | Decisión |
 |----|----------|
-| **O1** | Regular 2D Grid MAP-Elites |
-| **O2** | \(N_1\times N_2=10\times 10\) (100 cells) |
-| **O3** | Full actor–critic `state_dict` per cell; **no** shared critic |
-| **O4** | Uniform over **filled** cells |
-| **O5** | PPO gradients only; **no** ME-ES weight noise |
-| **O6** | \(f=\) mean Cand. 1 over \(G=20\) BO1 |
-| **O7** | BD = mean over eligible games; insert iff \(g\ge g_{\min}=10\) |
-| **O8** | Inner PPO = Cand. 2 only; Cand. 1 = archive utility only |
-| **O9** | Bootstrap \(B_{\mathrm{boot}}=100\,000\) Cand. 2 on mosaic (basal competence); no random-only seed |
-| **O10** | Fitness foes = mosaic 25/25/50 |
-| **O11** | Serial emitter (methodological control) |
-| **O12** | Report Coverage, QD-score, WR(\(\pi^\star\)) |
+| **O1–O2** | Grid 2D regular \(10\times 10\) (100 celdas) |
+| **O3** | Full actor–critic `state_dict` por celda; **sin** crítico compartido |
+| **O4** | Padres: uniforme sobre celdas **llenas** |
+| **O5** | Solo gradientes PPO; **sin** ME-ES noise |
+| **O6–O7** | \(f=\) media Cand. 1 en \(G=20\); BD media en elegibles; insert si \(g\ge 10\) |
+| **O8** | PPO interno = Cand. 2; Cand. 1 solo utilidad archivo |
+| **O9** | Bootstrap \(B_{\mathrm{boot}}=100\,000\) Cand. 2 en mosaic; no seed solo-random |
+| **O10–O12** | Fitness foes = mosaic; emitter serial; reportar Coverage, QD-score, WR(\(\pi^\star\)) |
 
-**Operational freeze:**
-
-| Item | Contract |
-|------|----------|
-| Improve / Stage 1 foes | Same mosaic i.i.d.; **no** expand-\(\Omega\); **no** self-play |
-| BD filter | \(g_{\min}=10\); \(f\) over all \(G=20\); BD over eligible \(g\) |
-| Replace | Strict \(f_{\mathrm{new}}>f_{\mathrm{old}}\) |
+| Ítem operativo | Contrato |
+|----------------|----------|
+| Improve / Stage 1 | Mosaic i.i.d.; **no** expand-\(\Omega\); **no** self-play |
+| Replace | Estricto \(f_{\mathrm{new}}>f_{\mathrm{old}}\) |
 | Deploy | \(\pi^\star=\arg\max f\) |
-| Budget | \(T_{\mathrm{total}}=10^6\) **incl.** \(B_{\mathrm{boot}}\); \(N_{\mathrm{outer}}=\lfloor(T-B_{\mathrm{boot}})/(n_{\mathrm{emit}}\cdot 2048)\rfloor=109\) |
-| Fitness / suite steps | Eval overhead; **not** counted in \(T_{\mathrm{total}}\) |
+| Budget | \(T_{\mathrm{total}}=10^6\) **incl.** bootstrap; \(N_{\mathrm{outer}}=109\) |
+| Eval suite | Overhead; **no** cuenta en \(T_{\mathrm{total}}\) |
 
 ---
 
-## 1. Inherited environment
+## 1. Entorno heredado
 
-| Contract | Source | QD-PPO usage |
-|----------|--------|--------------|
-| `VGCEnv` | `rl_env_spec` §1 | Rollouts; BD in `info` |
-| Obs 1024D | §3 | Masked-PPO torso |
-| AR + **IAM (mandatory)** | §2 / `ppo_spec` §3 | Sample + PPO recompute |
-| Cand. 2 | §4 | \(R_t^{(2)}\) inner PPO + bootstrap |
-| Cand. 1 | §4 | \(U(\pi)=f(\pi)\) archive only |
-| BDSpec | §5 | Archive coordinates |
-| Preview | `/team 1234` | Out of MDP |
-| Belief | Flat priors | Parity with PPO v1 |
+| Contrato | Uso QD-PPO |
+|----------|------------|
+| `VGCEnv`, Obs 1024D | Rollouts; BD en `info` |
+| AR + **IAM** | Sample + recompute PPO |
+| Cand. 2 / Cand. 1 | Improve+bootstrap / fitness archivo |
+| BDSpec | Coordenadas de archivo |
+| Preview `/team 1234` | Fuera del MDP |
+| Belief | Priors planos |
 
 Helper: `BehavioralTracker` (`archive_eligible` iff turns ≥ 4).
 
-### 1.1 Taxonomy \(R\) vs \(U\)
+### Taxonomía \(R\) vs \(U\)
 
-| Signal | Symbol | Classical role | When |
-|--------|--------|----------------|------|
-| Cand. 2 | \(R_t^{(2)}\) | Reward (policy optimization) | Improve + Stage 1 |
-| Cand. 1 | \(U(\pi)=f(\pi)\) | Utility / fitness | Archive insert + suite |
-| BD | \(b\in[0,1]^2\) | Behavior coordinate | Cell index; **not** in \(R_t\) or \(U\) |
+| Señal | Rol | Cuándo |
+|-------|-----|--------|
+| Cand. 2 \(R_t^{(2)}\) | Optimización de política | Improve + Stage 1 |
+| Cand. 1 \(U=f\) | Fitness archivo | Insert + suite |
+| BD \(b\) | Coordenada | Índice de celda; **no** en \(R_t\) ni \(U\) |
 
 ---
 
-## 2. Archive (Grid MAP-Elites)
+## 2. Archivo (Grid MAP-Elites)
 
-| Item | Contract |
+| Ítem | Contrato |
 |------|----------|
-| Grid | \(10\times 10\) on \([0,1]^2\) |
-| Bin | \(i=\min(9,\lfloor\mathrm{BD}_1\cdot 10\rfloor)\); same for \(j\) |
-| Payload | Full AC `state_dict` + \(f\) + BD + metadata |
-| Insert | Empty → insert; else replace iff \(f'>f\) |
-| Ties | Keep incumbent |
+| Grid | \(10\times 10\) en \([0,1]^2\) |
+| Bin | \(i=\min(9,\lfloor\mathrm{BD}_1\cdot 10\rfloor)\) (igual \(j\)) |
+| Payload | Full AC `state_dict` + \(f\) + BD + meta |
+| Insert | Vacía → insert; else replace si \(f'>f\); empate → incumbent |
 
 \[
 \mathrm{Coverage}=\frac{|\mathrm{filled}|}{100},\quad
@@ -97,7 +108,7 @@ Helper: `BehavioralTracker` (`archive_eligible` iff turns ≥ 4).
 
 ---
 
-## 3. Mosaic foes (train + fitness)
+## 3. Mosaic foes
 
 \[
 P(\texttt{random})=0.25,\ 
@@ -105,151 +116,110 @@ P(\texttt{greedy\_solo})=0.25,\
 P(\texttt{greedy\_joint})=0.50
 \]
 
-i.i.d. per episode. Mock backend: mosaic is a no-op (single sim). Live: `set_opponent`.
+i.i.d. por episodio.
 
 ---
 
-## 4. Outer loop & budget
+## 4. Bucle externo y presupuesto
 
 ```
-bootstrap Stage0–2 (≤ B_boot train steps, Cand2, mosaic)
-N_outer ← floor((T_total - steps_used) / (n_emit * 2048))
-for t in 1..N_outer (stop if global_steps >= T_total):
-    parents ← Uniform(filled(A), n_emit)   # or seed policy if empty
-    for each parent:
-        π' ← deepcopy(π)
-        π' ← PPO_improve(π'; 2048 steps, R=Cand2, mosaic)  # hard-stop at T_total
-        (f, b, g) ← evaluate(π')   # G=20 Cand1; overhead
-        if g >= 10: try_insert(A, π', f, b)
+bootstrap ≤ B_boot Cand2 mosaic
+N_outer ← floor((T - used) / (n_emit * 2048))   # 109
+for t in 1..N_outer:
+    parents ← Uniform(filled, n_emit)
+    for parent: deepcopy → PPO_improve 2048 Cand2 → eval Cand1 → insert?
 deploy π* = argmax f
 ```
 
-| Parameter | Value |
+| Parámetro | Valor |
 |-----------|--------|
 | \(T_{\mathrm{total}}\) | `1_000_000` |
 | \(B_{\mathrm{boot}}\) | `100_000` |
-| \(T_{\mathrm{QD}}\) | `900_000` (nominal) |
 | \(n_{\mathrm{emit}}\) | `4` |
 | Steps / emit | `2048` |
-| \(N_{\mathrm{outer}}\) | `109` (derived) |
+| \(N_{\mathrm{outer}}\) | `109` |
 | Workers | `1` (serial) |
-| ME-ES noise | Off |
+| ME-ES | Off |
 
-### 4.1 IAM under variation
-
-\[
-\pi^{(k)}=\mathrm{Softmax}\big(\mathbf{z}^{(k)}+(1-M^{(k)})(-10^{9})\big)
-\]
-
-Same mask at collect and PPO epochs (Huang & Ontañón, 2022).
+IAM bajo variación: mismo softmax enmascarado en collect y épocas PPO.
 
 ---
 
-## 5. PPO improvement (inner)
+## 5. Improve PPO (interno)
 
-Import [`ppo_spec.md`](ppo_spec.md) §§3–6 (GAE, clip, AR IAM, buffer rules).  
-Reward: **Cand. 2 only**. Foes: mosaic §3. No self-play pool.
+Importar [`ppo_spec.md`](ppo_spec.md) §§3–6. Reward: **solo Cand. 2**. Foes: mosaic. Sin self-play pool.
 
 ---
 
-## 6. Fitness & BD (asymmetric)
+## 6. Fitness y BD (asimétrico)
 
-| Item | Contract |
+| Ítem | Contrato |
 |------|----------|
-| \(G\) | 20 BO1, Cand. 1 |
-| Policy | Greedy masked |
-| Foes | Mosaic §3 |
-| \(g\) | Count `archive_eligible` |
-| Discard | \(g < 10\) → no archive write |
-| BD | Mean over \(g\) eligible |
-| \(f\) | Mean Cand. 1 over **all** \(G=20\) |
+| \(G\) | 20 BO1, Cand. 1, greedy masked, mosaic |
+| \(g\) | Conteo `archive_eligible` |
+| Discard | \(g<10\) → no escribe archivo |
+| BD | Media sobre \(g\) elegibles |
+| \(f\) | Media Cand. 1 sobre **todos** \(G=20\) |
 
-### Offline suite (on \(\pi^\star\))
-
-200 BO1 each vs `random`, `greedy_joint`, `expectimax_bayesian` (greedy masked, `/team 1234`).  
-Primary: WR(\(\pi^\star\)); secondary: Coverage, QD-score.
+Suite offline en \(\pi^\star\): 200 BO1 vs `random` / `greedy_joint` / `expectimax_bayesian`.
 
 ---
 
 ## 7. Bootstrap (O9)
 
-| Stage | Contract |
-|-------|----------|
-| 0 | Optional BC → init AC |
-| 1 | PPO Cand. 2 on mosaic, ≤ `100_000` train steps (counts toward \(T_{\mathrm{total}}\)) |
-| 2 | Evaluate + insert; ≤ 4 aux emits **from Stage-1 checkpoint** (not random-init) |
-| 3 | Outer loop |
-
-**Forbidden:** seeding \(\mathcal{A}\) only with max-entropy / random-init nets.
+Stages 0–3: BC opcional → PPO Cand. 2 ≤100k → eval+insert ≤4 emits aux desde Stage-1 (**no** random-init) → outer loop.
+**Prohibido:** seedear archivo solo con redes max-entropy / random-init.
 
 ---
 
-## 8. Modules & CLI
+## 8. Módulos y CLI
 
-| Module | Role |
-|--------|------|
-| `archive.py` | Grid, insert, coverage, QD-score, serialize |
-| `mosaic.py` | Foe sampling 25/25/50 |
-| `evaluate.py` | Cand. 1 fitness + BD filter |
-| `improve.py` | PPO collect/update Cand. 2 |
-| `train.py` | Budgeted outer loop |
-| `agent.py` / `player.py` | \(\pi^\star\); `ValidatedQDPPOPlayer` |
-| Reuse | `ppo/network`, `ppo/buffer`, `ppo/agent` |
-| Tests | `tests/test_rl_qd_ppo.py` |
+`archive.py`, `mosaic.py`, `evaluate.py`, `improve.py`, `train.py`, `agent.py` / `player.py`
+(`ValidatedQDPPOPlayer`); reuso `ppo/*`; tests `tests/test_rl_qd_ppo.py`.
 
 ```bat
 python -m showdown.rl.qd_ppo.train --seed 0 --smoke
-python -m showdown.rl.qd_ppo.train --seed 0 --device cpu
 ```
 
 ---
 
-## 9. Telemetry (not in \(R_t\) / \(U\))
+## 9. Telemetría / aceptación / non-goals
 
-`qd_coverage`, `qd_score`, `archive_best_f`, `emit_accept_rate`, PPO health, `illegal_action_fallbacks`.
+Telemetría: `qd_coverage`, `qd_score`, `archive_best_f`, `emit_accept_rate`, salud PPO, ilegales.
 
----
+Aceptación: IAM; BD formulas; \(g<10\) no inserta; bins extremos; replace estricto;
+Cand1 fitness / Cand2 improve; elites independientes; \(N_{\mathrm{outer}}=109\); smoke.
 
-## 10. Acceptance tests
-
-1. IAM legal samples.  
-2. BD §5 formulas.  
-3. \(g<10\) never inserts.  
-4. Binning \((0,0)\to(0,0)\), \((1,1)\to(9,9)\).  
-5. Strict replace.  
-6. Fitness Cand. 1 / improve Cand. 2.  
-7. Independent elite `state_dict`s.  
-8. \(N_{\mathrm{outer}}=\lfloor 900000/8192\rfloor=109\).  
-9. Smoke ≥1 outer iter on mock; coverage ≥ 1.
+Non-goals: QD-PGA/PPGA; ME-ES; CVT; shared critic; expand-\(\Omega\)/self-play como diversidad
+primaria; BD en \(R_t\); seed random-only; multi-emitter; preview en MDP; head joint-576;
+train en L2/crash.
 
 ---
 
-## 11. Non-goals (v1.0)
+## 10. Fortalezas y límites (tesis)
 
-- QD-PGA / QD-PPGA; ME-ES; CVT; shared critic  
-- Expand-\(\Omega\) / self-play as primary diversity  
-- BD / novelty inside \(R_t\); confuse \(R^{(2)}\) with \(U\)  
-- Random-only archive seed; multi-emitter  
-- Team Preview in MDP; joint-576 head; train on L2/crash  
+| Fortaleza | Límite |
+|-----------|--------|
+| Diversidad explícita vía archivo | Presupuesto repartido entre muchos elites |
+| Reusa PPO+IAM maduro | Sin crítico compartido (más memoria) |
+| Separación clara \(R\) vs \(U\) | Mosaic fijo (no curriculum expand) |
 
 ---
 
-## 12. References
+## 11. Referencias
 
-- Mouret & Clune (2015). Illuminating search spaces by mapping elites. *arXiv:1504.04909*.  
-- Schulman et al. (2017). PPO. *arXiv:1707.06347*.  
-- Huang & Ontañón (2022). Invalid action masking. https://doi.org/10.32473/flairs.v35i1.130642  
-- Yannakakis & Togelius (2018). *Artificial intelligence and games*. Springer.  
-- [`ppo_spec.md`](ppo_spec.md), [`rl_env_spec.md`](rl_env_spec.md) §4–5.
+Mouret & Clune (2015); Schulman et al. (2017); Huang & Ontañón (2022);
+Yannakakis & Togelius (2018); [`ppo_spec.md`](ppo_spec.md); [`rl_env_spec.md`](rl_env_spec.md).
 
 ---
 
 ## Changelog
 
-| Version | Date | Notes |
-|---------|------|-------|
-| **1.0** | 2026-10-10 | Frozen: grid 10×10; full AC elites; uniform parents; PPO+IAM only; mosaic 25/25/50; \(g_{\min}=10\); \(f\) over \(G=20\) / BD over \(g\); \(T=10^6\) incl. \(B_{\mathrm{boot}}\); \(N_{\mathrm{outer}}=109\); serial; deploy \(\pi^\star\). |
+| Versión | Fecha | Notas |
+|---------|-------|-------|
+| **1.1** | 2026-10-10 | Redacción amena (ES); semántica intacta. |
+| **1.0** | 2026-10-10 | Frozen grid 10×10; PPO+IAM; mosaic; \(N_{\mathrm{outer}}=109\). |
 
 ---
 
-*End of QD-PPO agent spec 1.0.*
+*Fin del contrato QD-PPO v1.1.*

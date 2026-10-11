@@ -21,7 +21,6 @@ from __future__ import annotations
 import argparse
 import json
 import re
-import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -36,6 +35,14 @@ from showdown.rl.action_space import (
     legal_joint_mask_from_slot_masks,
 )
 from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
+from showdown.rl.train_log import TrainHeartbeat, schedule_total_steps
+from showdown.rl.train_report import (
+    SUITE_FOES,
+    TrainReport,
+    resolve_suite_games,
+    run_suite_ddqn_act,
+    write_train_report,
+)
 from showdown.rl.ddqn.curriculum import (
     ExpandPhase,
     expand_phases_from_exclusive,
@@ -202,8 +209,7 @@ def _run_steps(
     rng: np.random.Generator,
     global_step_offset: int,
     ckpt_dir: Path,
-    log_every: int,
-    t0: float,
+    heartbeat: TrainHeartbeat,
     phase_label: str,
     seed: int,
     start_ps: bool,
@@ -265,21 +271,20 @@ def _run_steps(
             mask = _joint_masks(env)
 
         gstep = global_step_offset + local
-        if gstep % int(log_every) == 0:
-            elapsed = time.perf_counter() - t0
-            frac_ep = {
-                k: (v / max(1, sum(ep_counts.values())))
-                for k, v in ep_counts.items()
-            }
-            print(
-                f'[ddqn] {phase_label} local={local}/{steps} global={gstep} '
-                f'opp={current} Omega={list(omega)} eps={agent.epsilon:.3f} '
-                f'replay={len(agent.replay)} loss={metrics_last.get("loss", float("nan")):.4f} '
-                f'buf_frac={ {k: round(v, 3) for k, v in agent.replay.origin_fractions().items()} } '
-                f'ep_frac={ {k: round(v, 3) for k, v in frac_ep.items()} } '
-                f'elapsed={elapsed:.1f}s'
-            )
+        loss = metrics_last.get('loss', float('nan'))
+        heartbeat.log(
+            gstep,
+            phase=phase_label,
+            extras={
+                'opp': current,
+                'eps': float(agent.epsilon),
+                'replay': len(agent.replay),
+                'loss': float(loss) if loss == loss else None,
+            },
+        )
+        if heartbeat.should_checkpoint(gstep):
             agent.save(ckpt_dir / 'last.pt')
+            heartbeat.mark_checkpoint(gstep)
 
     return env, int(steps), {'metrics': metrics_last, 'ep_counts': ep_counts}
 
@@ -290,11 +295,14 @@ def run_training(
     schedule: Sequence[TrainPhase],
     device: str = 'cpu',
     checkpoint_dir: str | Path = 'logs/ddqn_checkpoints',
-    log_every: int = 1000,
+    log_every: int = 5_000,
+    log_every_sec: float = 60.0,
     start_ps: bool = False,
     expand_omega: bool = True,
     include_expectimax: bool = True,
     weight_overrides: Optional[Dict[str, float]] = None,
+    suite_games: Optional[int] = None,
+    smoke: bool = False,
 ) -> DDQNAgent:
     if not schedule:
         raise ValueError('schedule vacío')
@@ -305,7 +313,6 @@ def run_training(
     rng = np.random.default_rng(int(seed) + 17)
     ckpt_dir = Path(checkpoint_dir)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
-    t0 = time.perf_counter()
     global_steps = 0
     phase_log: List[dict] = []
 
@@ -325,6 +332,13 @@ def run_training(
 
     first_opp = expand_sched[0].omega[0]
     env: Optional[VGCEnv] = _make_env(first_opp, seed=seed, start_ps=start_ps)
+    t_total = schedule_total_steps(expand_sched)
+    hb = TrainHeartbeat(
+        tag='ddqn',
+        t_total=max(1, t_total),
+        log_every=int(log_every),
+        log_every_sec=float(log_every_sec),
+    )
 
     try:
         assert env is not None
@@ -335,7 +349,8 @@ def run_training(
                 f'[ddqn] === phase {pi + 1}/{len(expand_sched)} ({mode}): '
                 f'unlock={phase.unlock} steps={phase.steps} '
                 f'Omega={list(phase.omega)} '
-                f'P={ {k: round(v, 3) for k, v in probs.items()} } ==='
+                f'P={ {k: round(v, 3) for k, v in probs.items()} } ===',
+                flush=True,
             )
             # Ensure unlock foe exists at phase start
             env = _ensure_opponent(env, phase.unlock, seed=seed, start_ps=start_ps)
@@ -348,8 +363,7 @@ def run_training(
                 rng=rng,
                 global_step_offset=global_steps,
                 ckpt_dir=ckpt_dir,
-                log_every=log_every,
-                t0=t0,
+                heartbeat=hb,
                 phase_label=f'phase={pi}:{phase.unlock}',
                 seed=seed,
                 start_ps=start_ps,
@@ -366,34 +380,99 @@ def run_training(
                 'buf_frac_end': agent.replay.origin_fractions(),
             })
             agent.save(ckpt_dir / f'phase_{pi}_{phase.unlock}.pt')
+            hb.log(
+                global_steps,
+                phase=f'phase={pi}:{phase.unlock}:end',
+                extras={'replay': len(agent.replay)},
+                force=True,
+            )
+
+        agent.save(ckpt_dir / 'final.pt')
+        n_suite = resolve_suite_games(suite_games=suite_games, smoke=smoke)
+        suite_rows, suite_note = [], ''
+        if n_suite > 0 and env is not None:
+            print(
+                f'[ddqn] offline suite: {n_suite} BO1 × {len(SUITE_FOES)} foes',
+                flush=True,
+            )
+            suite_rows, suite_note = run_suite_ddqn_act(
+                agent, env, n_games=n_suite, seed=seed,
+            )
+        report = TrainReport(
+            agent='ddqn',
+            seed=seed,
+            device=device,
+            smoke=smoke,
+            global_steps=global_steps,
+            t_total=max(1, t_total),
+            elapsed_sec=hb.elapsed(),
+            steps_per_sec=hb.rate(max(1, global_steps)),
+            config={
+                'expand_omega': bool(expand_omega),
+                'weights': weights,
+                'schedule': [asdict(p) for p in schedule],
+            },
+            metrics={
+                'env_steps': agent.env_steps,
+                'grad_steps': agent.grad_steps,
+                'epsilon_final': float(agent.epsilon),
+                'replay_len': len(agent.replay),
+                'buf_frac_final': agent.replay.origin_fractions(),
+            },
+            phases=phase_log,
+            artifacts={
+                'final_pt': str(ckpt_dir / 'final.pt'),
+                'train_meta_json': str(ckpt_dir / 'train_meta.json'),
+                'checkpoint_dir': str(ckpt_dir),
+            },
+            suite_games_per_foe=n_suite,
+            suite=suite_rows,
+            suite_note=suite_note,
+            notes=[
+                'Primary learning signal: Cand. 2 during train; suite uses Cand. 1 sparse return.',
+                'Compare MEAN_WR / per-foe WR across seeds for thesis tables.',
+                'Live console heartbeats complement this static report.',
+            ],
+        )
+        write_train_report(ckpt_dir, report)
+        meta = {
+            'seed': seed,
+            'device': device,
+            'expand_omega': bool(expand_omega),
+            'weights': weights,
+            'exclusive_schedule': [asdict(p) for p in schedule],
+            'expand_schedule': [
+                {'unlock': p.unlock, 'steps': p.steps, 'omega': list(p.omega)}
+                for p in expand_sched
+            ],
+            'phase_log': phase_log,
+            'env_steps': agent.env_steps,
+            'grad_steps': agent.grad_steps,
+            'total_steps': global_steps,
+            'buf_frac_final': agent.replay.origin_fractions(),
+            'suite': [asdict(s) for s in suite_rows],
+        }
+        (ckpt_dir / 'train_meta.json').write_text(
+            json.dumps(meta, indent=2) + '\n', encoding='utf-8',
+        )
+        mean_wr = (
+            float(sum(s.win_rate for s in suite_rows) / len(suite_rows))
+            if suite_rows else None
+        )
+        hb.log(
+            global_steps,
+            phase='DONE',
+            extras={
+                'expand_omega': int(bool(expand_omega)),
+                'MEAN_WR': mean_wr,
+                'reporte': str(ckpt_dir / 'reporte.txt'),
+            },
+            force=True,
+        )
     finally:
         if env is not None:
             env.close()
 
-    agent.save(ckpt_dir / 'final.pt')
-    meta = {
-        'seed': seed,
-        'device': device,
-        'expand_omega': bool(expand_omega),
-        'weights': weights,
-        'exclusive_schedule': [asdict(p) for p in schedule],
-        'expand_schedule': [
-            {'unlock': p.unlock, 'steps': p.steps, 'omega': list(p.omega)}
-            for p in expand_sched
-        ],
-        'phase_log': phase_log,
-        'env_steps': agent.env_steps,
-        'grad_steps': agent.grad_steps,
-        'total_steps': global_steps,
-        'buf_frac_final': agent.replay.origin_fractions(),
-    }
-    (ckpt_dir / 'train_meta.json').write_text(
-        json.dumps(meta, indent=2) + '\n', encoding='utf-8',
-    )
-    print(
-        f'[ddqn] DONE expand_omega={expand_omega} steps={global_steps} '
-        f'saved={ckpt_dir / "final.pt"}'
-    )
     return agent
 
 
@@ -446,8 +525,16 @@ def main(argv: Optional[list] = None) -> int:
         help='Overrides: nombre:peso,... (ej. expectimax_bayesian:0.35,greedy_joint:1.5)',
     )
     p.add_argument('--checkpoint-dir', default='logs/ddqn_checkpoints')
-    p.add_argument('--log-every', type=int, default=1000)
+    p.add_argument('--log-every', type=int, default=5_000,
+                   help='Heartbeat every N env steps (also --log-every-sec)')
+    p.add_argument('--log-every-sec', type=float, default=60.0,
+                   help='Heartbeat at least every N seconds')
     p.add_argument('--start-ps', action='store_true')
+    p.add_argument(
+        '--suite-games', type=int, default=None,
+        help='BO1 per foe for offline suite (default 20; 0=skip; smoke default 0)',
+    )
+    p.add_argument('--smoke', action='store_true', help='Treat as smoke (suite default 0)')
     args = p.parse_args(argv)
 
     schedule = resolve_schedule(
@@ -473,10 +560,13 @@ def main(argv: Optional[list] = None) -> int:
         device=args.device,
         checkpoint_dir=args.checkpoint_dir,
         log_every=args.log_every,
+        log_every_sec=args.log_every_sec,
         start_ps=bool(args.start_ps),
         expand_omega=expand,
         include_expectimax=bool(args.include_expectimax),
         weight_overrides=overrides or None,
+        suite_games=args.suite_games,
+        smoke=bool(args.smoke),
     )
     return 0
 

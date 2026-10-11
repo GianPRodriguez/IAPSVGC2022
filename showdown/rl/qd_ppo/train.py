@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import time
 from pathlib import Path
 from typing import Optional
 
@@ -21,6 +20,14 @@ from showdown.rl.qd_ppo.archive import Archive
 from showdown.rl.qd_ppo.evaluate import evaluate_policy
 from showdown.rl.qd_ppo.improve import ppo_improve
 from showdown.rl.reward import RewardCandidate
+from showdown.rl.train_log import TrainHeartbeat
+from showdown.rl.train_report import (
+    SUITE_FOES,
+    TrainReport,
+    resolve_suite_games,
+    run_suite_ppo_act,
+    write_train_report,
+)
 
 T_TOTAL = 1_000_000
 B_BOOT = 100_000
@@ -78,6 +85,9 @@ def run_training(
     smoke: bool = False,
     start_ps: bool = False,
     bc_checkpoint: Optional[str] = None,
+    log_every: int = 5_000,
+    log_every_sec: float = 60.0,
+    suite_games: Optional[int] = None,
 ) -> Archive:
     if smoke:
         t_total = min(int(t_total), 6_000)
@@ -87,6 +97,8 @@ def run_training(
         fitness_games = min(int(fitness_games), 4)
         g_min = min(int(g_min), 2)
         n_aux = min(int(n_aux), 1)
+        log_every = min(int(log_every), 256)
+        log_every_sec = min(float(log_every_sec), 15.0)
 
     cfg = PPOConfig(seed=seed, device=device, rollout_steps=rollout)
     agent = PPOAgent(cfg)
@@ -99,18 +111,24 @@ def run_training(
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     env = _make_env(mock=smoke or not start_ps, seed=seed, start_ps=start_ps)
     global_steps = 0
-    t0 = time.perf_counter()
     accepts = 0
     emits = 0
+    hb = TrainHeartbeat(
+        tag='qd_ppo',
+        t_total=max(1, int(t_total)),
+        log_every=int(log_every),
+        log_every_sec=float(log_every_sec),
+    )
 
     try:
         # --- Stage 1 bootstrap (Cand. 2) ---
         boot_budget = min(int(b_boot), int(t_total) - global_steps)
-        print(f'[qd_ppo] bootstrap steps={boot_budget} (of T={t_total})')
+        print(f'[qd_ppo] bootstrap steps={boot_budget} (of T={t_total})', flush=True)
         env, taken, metrics = ppo_improve(
             agent, env,
             steps=boot_budget, rng=rng, global_steps=global_steps,
             t_total=t_total, seed=seed, use_mosaic=True,
+            heartbeat=hb, phase='bootstrap',
         )
         global_steps += taken
         seed_state = {k: v.detach().cpu().clone() for k, v in agent.net.state_dict().items()}
@@ -118,13 +136,13 @@ def run_training(
         # --- Stage 2: evaluate + insert seed (+ aux from same checkpoint) ---
         for aux_i in range(max(1, int(n_aux))):
             if aux_i > 0:
-                # short improve from seed checkpoint
                 agent.net.load_state_dict(seed_state)
                 env, taken, _ = ppo_improve(
                     agent, env,
                     steps=min(rollout, max(0, t_total - global_steps)),
                     rng=rng, global_steps=global_steps, t_total=t_total,
                     seed=seed + aux_i, use_mosaic=True,
+                    heartbeat=hb, phase=f'aux={aux_i}',
                 )
                 global_steps += taken
             ev = evaluate_policy(
@@ -140,18 +158,19 @@ def run_training(
                     meta={'stage': 'bootstrap', 'aux': aux_i, 'g': ev.g_eligible},
                 ):
                     accepts += 1
-            # restore seed for next aux branch
             agent.net.load_state_dict(seed_state)
 
-        n_outer = derived_n_outer(
-            t_total=t_total, b_boot=global_steps, n_emit=n_emit, rollout=rollout,
-        )
-        # After bootstrap, remaining budget drives N_outer
         rem = max(0, int(t_total) - global_steps)
         n_outer = int(rem // max(1, n_emit * rollout))
-        print(
-            f'[qd_ppo] outer N={n_outer} rem_steps={rem} coverage={archive.coverage():.3f} '
-            f'best_f={archive.best_fitness()}'
+        hb.log(
+            global_steps,
+            phase='outer:start',
+            extras={
+                'N': n_outer,
+                'cov': archive.coverage(),
+                'best_f': archive.best_fitness() if archive.cells else None,
+            },
+            force=True,
         )
 
         for it in range(n_outer):
@@ -168,6 +187,7 @@ def run_training(
                     child, env,
                     steps=rollout, rng=rng, global_steps=global_steps,
                     t_total=t_total, seed=seed + it * 100 + em, use_mosaic=True,
+                    heartbeat=hb, phase=f'iter={it + 1}/{n_outer}',
                 )
                 global_steps += taken
                 ev = evaluate_policy(
@@ -184,19 +204,23 @@ def run_training(
                     ):
                         accepts += 1
 
-            if (it + 1) % max(1, n_outer // 5) == 0 or it == 0:
-                elapsed = time.perf_counter() - t0
-                print(
-                    f'[qd_ppo] iter={it + 1}/{n_outer} steps={global_steps}/{t_total} '
-                    f'cov={archive.coverage():.3f} qd={archive.qd_score():.3f} '
-                    f'best_f={archive.best_fitness():.3f} '
-                    f'accept={accepts}/{emits} elapsed={elapsed:.1f}s'
-                )
-                archive.save(ckpt_dir / 'archive.pt')
-                best = archive.best()
-                if best is not None:
-                    agent.net.load_state_dict(best.state_dict)
-                    agent.save(ckpt_dir / 'best_elite.pt')
+            hb.log(
+                global_steps,
+                phase=f'iter={it + 1}/{n_outer}',
+                extras={
+                    'cov': archive.coverage(),
+                    'qd': archive.qd_score(),
+                    'best_f': archive.best_fitness() if archive.cells else None,
+                    'accept': f'{accepts}/{emits}',
+                },
+                force=True,
+            )
+            archive.save(ckpt_dir / 'archive.pt')
+            best = archive.best()
+            if best is not None:
+                agent.net.load_state_dict(best.state_dict)
+                agent.save(ckpt_dir / 'best_elite.pt')
+            hb.mark_checkpoint(global_steps)
 
         archive.save(ckpt_dir / 'archive.pt')
         best = archive.best()
@@ -218,7 +242,74 @@ def run_training(
         (ckpt_dir / 'summary.json').write_text(
             json.dumps(summary, indent=2), encoding='utf-8',
         )
-        print(f'[qd_ppo] DONE {json.dumps(summary)}')
+        n_suite = resolve_suite_games(suite_games=suite_games, smoke=smoke)
+        suite_rows, suite_note = [], ''
+        if n_suite > 0:
+            print(
+                f'[qd_ppo] offline suite on π*: {n_suite} BO1 × {len(SUITE_FOES)} foes',
+                flush=True,
+            )
+            suite_rows, suite_note = run_suite_ppo_act(
+                agent, env, n_games=n_suite, seed=seed,
+            )
+        mean_wr = (
+            float(sum(s.win_rate for s in suite_rows) / len(suite_rows))
+            if suite_rows else None
+        )
+        report = TrainReport(
+            agent='qd_ppo',
+            seed=seed,
+            device=device,
+            smoke=smoke,
+            global_steps=global_steps,
+            t_total=t_total,
+            elapsed_sec=hb.elapsed(),
+            steps_per_sec=hb.rate(max(1, global_steps)),
+            config={
+                'b_boot': b_boot,
+                'n_emit': n_emit,
+                'rollout': rollout,
+                'n_outer': n_outer,
+            },
+            metrics={
+                'coverage': summary['coverage'],
+                'qd_score': summary['qd_score'],
+                'best_f': summary['best_f'],
+                'accepts': accepts,
+                'emits': emits,
+                'accept_rate': float(accepts) / float(max(1, emits)),
+                'MEAN_WR_star': mean_wr,
+            },
+            artifacts={
+                'archive_pt': str(ckpt_dir / 'archive.pt'),
+                'best_elite_pt': str(ckpt_dir / 'best_elite.pt'),
+                'summary_json': str(ckpt_dir / 'summary.json'),
+                'checkpoint_dir': str(ckpt_dir),
+            },
+            suite_games_per_foe=n_suite,
+            suite=suite_rows,
+            suite_note=suite_note,
+            notes=[
+                'Deploy policy π* = argmax f (best_elite.pt).',
+                'Primary QD metrics: Coverage, QD-score, best_f; primary play: MEAN_WR_star.',
+                'Fitness during search used mosaic foes; suite uses fixed control foes.',
+                'Live console heartbeats complement this static report.',
+            ],
+        )
+        write_train_report(ckpt_dir, report)
+        hb.log(
+            global_steps,
+            phase='DONE',
+            extras={
+                'cov': summary['coverage'],
+                'qd': summary['qd_score'],
+                'best_f': summary['best_f'],
+                'accept': f'{accepts}/{emits}',
+                'MEAN_WR': mean_wr,
+                'reporte': str(ckpt_dir / 'reporte.txt'),
+            },
+            force=True,
+        )
         return archive
     finally:
         env.close()
@@ -234,6 +325,10 @@ def main(argv=None) -> int:
     p.add_argument('--bc-checkpoint', type=str, default=None)
     p.add_argument('--t-total', type=int, default=T_TOTAL)
     p.add_argument('--b-boot', type=int, default=B_BOOT)
+    p.add_argument(
+        '--suite-games', type=int, default=None,
+        help='BO1 per foe on π* (default 20; 0=skip; smoke default 0; use 200 for full suite)',
+    )
     args = p.parse_args(argv)
     run_training(
         seed=args.seed,
@@ -244,6 +339,7 @@ def main(argv=None) -> int:
         smoke=args.smoke,
         start_ps=args.start_ps,
         bc_checkpoint=args.bc_checkpoint,
+        suite_games=args.suite_games,
     )
     return 0
 

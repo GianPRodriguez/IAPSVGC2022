@@ -1,0 +1,98 @@
+{
+  "agent": "ddqn",
+  "status": "DONE",
+  "generated_at": "2026-10-11T02:06:27.676961+00:00",
+  "seed": 0,
+  "device": "cpu",
+  "smoke": true,
+  "global_steps": 200,
+  "t_total": 200,
+  "elapsed_sec": 1.2249082999769598,
+  "steps_per_sec": 163.27726201769664,
+  "metrics": {
+    "env_steps": 200,
+    "grad_steps": 0,
+    "epsilon_final": 0.99962,
+    "replay_len": 195,
+    "buf_frac_final": {
+      "mock": 1.0
+    }
+  },
+  "phases": [
+    {
+      "index": 0,
+      "unlock": "mock",
+      "omega": [
+        "mock"
+      ],
+      "steps_planned": 200,
+      "steps_done": 200,
+      "sampling_probs": {
+        "mock": 1.0
+      },
+      "ep_counts": {
+        "mock": 1
+      },
+      "buf_frac_end": {
+        "mock": 1.0
+      }
+    }
+  ],
+  "artifacts": {
+    "final_pt": "logs\\ddqn_report_test\\final.pt",
+    "train_meta_json": "logs\\ddqn_report_test\\train_meta.json",
+    "checkpoint_dir": "logs\\ddqn_report_test"
+  },
+  "suite_games_per_foe": 2,
+  "suite": [
+    {
+      "foe": "random",
+      "n_games": 2,
+      "wins": 0,
+      "losses": 0,
+      "ties": 2,
+      "mean_return": 0.0,
+      "win_rate": 0.0
+    },
+    {
+      "foe": "greedy_joint",
+      "n_games": 2,
+      "wins": 0,
+      "losses": 0,
+      "ties": 2,
+      "mean_return": 0.0,
+      "win_rate": 0.0
+    },
+    {
+      "foe": "expectimax_bayesian",
+      "n_games": 2,
+      "wins": 0,
+      "losses": 0,
+      "ties": 2,
+      "mean_return": 0.0,
+      "win_rate": 0.0
+    }
+  ],
+  "suite_note": "MockBattleBackend: foe labels nominal; use --start-ps for live suite.",
+  "notes": [
+    "Primary learning signal: Cand. 2 during train; suite uses Cand. 1 sparse return.",
+    "Compare MEAN_WR / per-foe WR across seeds for thesis tables.",
+    "Live console heartbeats complement this static report."
+  ],
+  "config": {
+    "expand_omega": true,
+    "weights": {
+      "mock": 1.0,
+      "random": 1.0,
+      "greedy_solo": 1.0,
+      "greedy_joint": 1.0,
+      "expectimax_bayesian": 0.35
+    },
+    "schedule": [
+      {
+        "opponent": "mock",
+        "steps": 200
+      }
+    ]
+  }
+}

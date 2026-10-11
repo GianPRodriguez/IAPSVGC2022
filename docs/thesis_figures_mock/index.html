@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cómo leer los resultados — mock figuras tesis VGC</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f7f6f2;
+      --ink: #1a1f24;
+      --muted: #5c6570;
+      --card: #ffffff;
+      --line: #d8d4cb;
+      --accent: #0b3d5c;
+      --warn: #8a4b12;
+      --soft: #eef3f7;
+      --tip: #f4efe6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Source Serif 4", "Libre Baskerville", Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 8% 0%, #e8eef3 0%, transparent 42%),
+        radial-gradient(ellipse at 92% 8%, #f0ebe3 0%, transparent 38%),
+        var(--bg);
+      line-height: 1.5;
+    }
+    header {
+      padding: 1.6rem 1.5rem 1.1rem;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(6px);
+      position: sticky; top: 0; z-index: 10;
+    }
+    header h1 {
+      margin: 0 0 0.4rem;
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      color: var(--accent);
+    }
+    header .lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 72ch;
+    }
+    .badge {
+      display: inline-block;
+      margin-top: 0.7rem;
+      padding: 0.25rem 0.6rem;
+      border: 1px solid var(--warn);
+      color: var(--warn);
+      font-size: 0.72rem;
+      font-family: ui-monospace, Consolas, monospace;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    nav {
+      display: flex; flex-wrap: wrap; gap: 0.4rem;
+      padding: 0.85rem 1.5rem;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+    nav button {
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      border: 1px solid var(--line);
+      background: var(--bg);
+      color: var(--ink);
+      padding: 0.45rem 0.8rem;
+      border-radius: 2px;
+      cursor: pointer;
+      font-size: 0.86rem;
+    }
+    nav button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    main { padding: 1.25rem 1.5rem 3rem; max-width: 1100px; margin: 0 auto; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .intro {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      padding: 1rem 1.1rem;
+      margin-bottom: 1.1rem;
+      border-radius: 3px;
+    }
+    .intro h2 {
+      margin: 0 0 0.45rem;
+      font-size: 1.1rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      color: var(--accent);
+    }
+    .intro p, .intro li {
+      margin: 0.35rem 0 0;
+      font-size: 0.95rem;
+      color: var(--ink);
+    }
+    .intro ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+    .glossary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.55rem;
+      margin-top: 0.75rem;
+    }
+    .glossary div {
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 0.55rem 0.65rem;
+      font-size: 0.88rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    .glossary strong { display: block; color: var(--accent); margin-bottom: 0.15rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      padding: 1rem 1.05rem 1.1rem;
+      box-shadow: 0 1px 0 rgba(26,31,36,0.04);
+    }
+    .card.wide { grid-column: 1 / -1; }
+    .card h2 {
+      margin: 0 0 0.35rem;
+      font-size: 1.08rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-weight: 650;
+    }
+    .explain {
+      margin: 0 0 0.55rem;
+      font-size: 0.95rem;
+      color: var(--ink);
+    }
+    .how {
+      margin: 0 0 0.75rem;
+      padding: 0.55rem 0.65rem;
+      background: var(--tip);
+      border-left: 3px solid var(--warn);
+      font-size: 0.88rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      color: #3d3428;
+    }
+    .how strong { color: var(--warn); }
+    .compare-tag {
+      display: inline-block;
+      margin-bottom: 0.45rem;
+      font-size: 0.72rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid #b7c9d6;
+      background: #f3f7fa;
+      padding: 0.12rem 0.4rem;
+    }
+    .chart-wrap { position: relative; height: 280px; }
+    .chart-wrap.tall { height: 360px; }
+    .heatmap {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 2px;
+      margin-top: 0.35rem;
+    }
+    .heatmap div { aspect-ratio: 1; border-radius: 1px; }
+    .legend-bar {
+      display: flex; justify-content: space-between;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.75rem; color: var(--muted); margin-top: 0.4rem;
+    }
+    footer {
+      margin-top: 1.6rem; padding-top: 0.8rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.82rem; color: var(--muted);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.88rem;
+    }
+    th, td {
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      padding: 0.45rem 0.5rem;
+      vertical-align: top;
+    }
+    th { color: var(--accent); font-weight: 650; }
+    .fam { font-size: 0.78rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Cómo leer los resultados de los agentes</h1>
+    <p class="lead">
+      Esta página muestra <strong>ejemplos de gráficas</strong> que usaría una tesis sobre bots de
+      Pokémon VGC. Los números son <strong>inventados</strong> (mock): sirven para entender
+      <em>qué mira cada figura</em> y <em>cómo comparar agentes de la misma familia</em>,
+      no para sacar conclusiones reales.
+    </p>
+    <span class="badge">Datos de ejemplo — no son experimentos reales</span>
+  </header>
+
+  <nav id="tabs">
+    <button type="button" data-panel="guide" class="active">Guía rápida</button>
+    <button type="button" data-panel="learn">¿Aprenden con el tiempo?</button>
+    <button type="button" data-panel="rl">Familia aprendizaje (DDQN · PPO)</button>
+    <button type="button" data-panel="mcts">Familia planificación (MCTS)</button>
+    <button type="button" data-panel="qd">Familia diversidad (QD)</button>
+    <button type="button" data-panel="cmp">Todos frente a frente</button>
+  </nav>
+
+  <main>
+    <!-- GUIDE -->
+    <section class="panel active" id="panel-guide">
+      <div class="intro">
+        <h2>Ideas en lenguaje sencillo</h2>
+        <p>
+          Pensá cada bot como un jugador que, de distintas formas, elige jugadas en combates
+          dobles. Algunas familias <strong>practican mucho</strong> (aprendizaje), otras
+          <strong>piensan en el momento</strong> (planificación) y otras además buscan
+          <strong>varios estilos de juego</strong> (diversidad).
+        </p>
+        <div class="glossary">
+          <div>
+            <strong>% de victorias (WR)</strong>
+            De cada 100 partidas de prueba, cuántas gana. Más alto = mejor en esa prueba.
+          </div>
+          <div>
+            <strong>Pasos de práctica</strong>
+            Cuántas acciones/turnos usó el bot para entrenarse. El eje horizontal suele ser eso.
+          </div>
+          <div>
+            <strong>Rivales de control</strong>
+            Tres oponentes fijos (azar, greedy en pareja, expectimax) para comparar con justicia.
+          </div>
+          <div>
+            <strong>Familia</strong>
+            Métodos parecidos entre sí. Lo justo es compararlos en la <em>misma</em> figura.
+          </div>
+        </div>
+        <ul>
+          <li><strong>DDQN y PPO</strong> — aprenden con práctica repetida (red neuronal).</li>
+          <li><strong>MCTS y MCTS–Nash</strong> — no “estudian” con gradientes; calculan jugadas en el momento.</li>
+          <li><strong>QD-PPO, QD-PGA, QD-PPGA</strong> — aprenden y además llenan un “álbum” de estilos distintos.</li>
+        </ul>
+      </div>
+      <div class="card wide">
+        <h2>Cómo usar esta página</h2>
+        <p class="explain">
+          Empezá por la pestaña <em>¿Aprenden con el tiempo?</em> (visión general).
+          Luego entrá a la familia que te interese: ahí cada gráfica pone
+          <strong>lado a lado</strong> a los agentes de esa familia. Al final,
+          <em>Todos frente a frente</em> resume la comparación global.
+        </p>
+        <p class="how">
+          <strong>Cómo leer una curva:</strong> si la línea sube hacia la derecha, el bot mejora
+          a medida que practica. Si se aplana, ya casi no gana más con más práctica.
+        </p>
+      </div>
+    </section>
+
+    <!-- LEARN / TRANSVERSAL -->
+    <section class="panel" id="panel-learn">
+      <div class="intro">
+        <h2>Pregunta: ¿mejoran mientras practican?</h2>
+        <p>
+          Aquí se mezclan todas las familias solo para una vista panorámica.
+          Para un juicio fino, mirá las pestañas de cada familia (comparan pares justos).
+        </p>
+      </div>
+      <div class="grid">
+        <div class="card wide">
+          <span class="compare-tag">Todas las familias · misma métrica</span>
+          <h2>Porcentaje de victorias a lo largo de la práctica</h2>
+          <p class="explain">
+            Cada línea es un tipo de agente. El eje horizontal es “cuánto practicó”;
+            el vertical es “qué tan a menudo gana” en partidas de prueba.
+          </p>
+          <p class="how">
+            <strong>Qué buscar:</strong> quién sube más rápido al principio y quién termina más alto.
+            Las líneas de MCTS aquí son ilustrativas (en la realidad no usan el mismo “pasos de práctica”).
+          </p>
+          <div class="chart-wrap tall"><canvas id="f1"></canvas></div>
+        </div>
+        <div class="card wide">
+          <span class="compare-tag">Misma prueba final · todos</span>
+          <h2>Examen final contra tres rivales fijos</h2>
+          <p class="explain">
+            Al terminar el entrenamiento (o la evaluación), cada bot juega muchas partidas
+            cortas contra: (1) alguien al azar, (2) un greedy en pareja, (3) un expectimax.
+            Así nadie elige un rival “fácil” a su medida.
+          </p>
+          <p class="how">
+            <strong>Qué buscar:</strong> barras más altas = mejor en ese rival.
+            Un buen bot suele ganar mucho al azar y algo menos al expectimax (más difícil).
+          </p>
+          <div class="chart-wrap tall"><canvas id="f2"></canvas></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">Coste (tiempo de máquina)</span>
+          <h2>¿Cuánto tarda cada enfoque?</h2>
+          <p class="explain">
+            Tiempo de reloj estimado para un experimento completo (valores de ejemplo).
+            Más alto no significa “mejor”: a veces pensar más da más victorias.
+          </p>
+          <p class="how"><strong>Qué buscar:</strong> si un método gana poco más pero tarda el doble, puede no valer la pena.</p>
+          <div class="chart-wrap"><canvas id="f3"></canvas></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">Estabilidad</span>
+          <h2>¿Depende de la suerte del arranque?</h2>
+          <p class="explain">
+            Cada punto es una repetición del experimento con otra semilla aleatoria.
+            Si los puntos de un agente están juntos, es estable; si están muy separados, el resultado es más azaroso.
+          </p>
+          <p class="how"><strong>Qué buscar:</strong> agrupaciones compactas y, a la vez, promedio alto.</p>
+          <div class="chart-wrap"><canvas id="f4"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RL FAMILY -->
+    <section class="panel" id="panel-rl">
+      <div class="intro">
+        <h2>Familia aprendizaje: DDQN frente a PPO</h2>
+        <p>
+          Ambos practican partidas y ajustan una red neuronal. La diferencia está en
+          <em>cómo</em> aprenden: DDQN valora jugadas (estilo “¿qué tan buena es esta acción?”);
+          PPO ajusta una política (estilo “¿qué probabilidad doy a cada jugada?”).
+          En estas figuras los dos van <strong>juntos</strong> para ver quién mejora más limpio.
+        </p>
+      </div>
+      <div class="grid">
+        <div class="card wide">
+          <span class="compare-tag">DDQN · PPO en la misma gráfica</span>
+          <h2>Victorias durante el entrenamiento</h2>
+          <p class="explain">
+            Misma pregunta que la panorámica, pero solo esta familia: ¿quién aprende mejor
+            con la misma cantidad de práctica?
+          </p>
+          <p class="how">
+            <strong>Qué buscar:</strong> si PPO (verde) supera a DDQN (azul) al final, o si DDQN
+            arranca más fuerte. La meseta indica “ya no mejora mucho”.
+          </p>
+          <div class="chart-wrap tall"><canvas id="rl_wr"></canvas></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">DDQN solo (su señal interna)</span>
+          <h2>Error de aprendizaje y exploración</h2>
+          <p class="explain">
+            La curva de “error” debería bajar si la red se estabiliza.
+            La exploración (ε) empieza alta (prueba cosas al azar) y baja (confía más en lo aprendido).
+          </p>
+          <p class="how"><strong>Lectura simple:</strong> error ↓ y exploración ↓ con el tiempo = entrenamiento sano.</p>
+          <div class="chart-wrap"><canvas id="ddqn"></canvas></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">PPO solo (su señal interna)</span>
+          <h2>Salud del entrenamiento PPO</h2>
+          <p class="explain">
+            Tres “luces de tablero”: qué tan brusco cambia la política (KL), cuánto se “corta”
+            el update (clip) y cuánta variedad mantiene (entropía). No son victorias: son
+            diagnósticos de que el aprendizaje no se rompió.
+          </p>
+          <p class="how"><strong>Lectura simple:</strong> KL estable, clip moderado y entropía que baja despacio suelen ser buenas señales.</p>
+          <div class="chart-wrap"><canvas id="ppo"></canvas></div>
+        </div>
+        <div class="card wide">
+          <span class="compare-tag">DDQN · PPO · mismo curriculum</span>
+          <h2>Contra quién practican (curriculum)</h2>
+          <p class="explain">
+            A medida que el entrenamiento avanza, se van “desbloqueando” rivales más difíciles
+            (de azar → greedy → expectimax). Las barras apiladas muestran la mezcla de oponentes
+            en cada fase. Ambos métodos pueden usar el mismo plan de rivales.
+          </p>
+          <p class="how"><strong>Qué buscar:</strong> al final debería haber una mezcla, no solo el rival fácil.</p>
+          <div class="chart-wrap"><canvas id="omega"></canvas></div>
+        </div>
+        <div class="card wide">
+          <span class="compare-tag">DDQN · PPO · examen final</span>
+          <h2>Examen final: DDQN vs PPO</h2>
+          <p class="explain">Mismas tres pruebas de control; barras agrupadas por rival.</p>
+          <p class="how"><strong>Qué buscar:</strong> en cada trío de barras, quién gana más contra el mismo rival.</p>
+          <div class="chart-wrap"><canvas id="rl_suite"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MCTS FAMILY -->
+    <section class="panel" id="panel-mcts">
+      <div class="intro">
+        <h2>Familia planificación: MCTS+PUCT frente a MCTS–Nash</h2>
+        <p>
+          Estos bots no “practican semanas” con gradientes: en cada turno
+          <strong>simulan muchas variantes</strong> y eligen. PUCT es la versión
+          “un jugador mira al rival de forma simple”; Nash intenta razonar el combate
+          como <em>jugada simultánea</em> (ambos eligen a la vez). Se comparan aquí juntos.
+        </p>
+      </div>
+      <div class="grid">
+        <div class="card wide">
+          <span class="compare-tag">PUCT · Nash en la misma gráfica</span>
+          <h2>Más pensamiento → ¿más victorias?</h2>
+          <p class="explain">
+            El eje horizontal es cuántas simulaciones hace el bot por decisión
+            (más = piensa más, tarda más). El vertical es el porcentaje de victorias.
+          </p>
+          <p class="how">
+            <strong>Qué buscar:</strong> ambas curvas deberían subir y luego aplanarse.
+            Si Nash queda por encima con el mismo presupuesto, el razonamiento simultáneo ayuda.
+          </p>
+          <div class="chart-wrap tall"><canvas id="mcts_sims"></canvas></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">PUCT · Nash · mismo eje</span>
+          <h2>Precio del pensamiento</h2>
+          <p class="explain">Milisegundos por decisión (ejemplo). Nash suele ser más lento porque resuelve equilibrios.</p>
+          <p class="how"><strong>Qué buscar:</strong> ¿el extra de victorias justifica el extra de tiempo?</p>
+          <div class="chart-wrap"><canvas id="mcts_time"></canvas></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">Solo Nash (diagnóstico)</span>
+          <h2>Valor de equilibrio en la raíz</h2>
+          <p class="explain">
+            Mientras simula, Nash estima “quién va ganando” en promedio bajo juego óptimo mutuo.
+            Si la curva se estabiliza, el cálculo está convergiendo.
+          </p>
+          <p class="how"><strong>Lectura simple:</strong> una línea que deja de zigzaguear = estimación más fiable.</p>
+          <div class="chart-wrap"><canvas id="nash_v"></canvas></div>
+        </div>
+        <div class="card wide">
+          <span class="compare-tag">PUCT · Nash · examen final</span>
+          <h2>Examen final: planificación</h2>
+          <p class="explain">Mismas tres pruebas; comparación directa entre ambos planificadores.</p>
+          <div class="chart-wrap"><canvas id="mcts_suite"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QD FAMILY -->
+    <section class="panel" id="panel-qd">
+      <div class="intro">
+        <h2>Familia diversidad: QD-PPO · QD-PGA · QD-PPGA</h2>
+        <p>
+          Estos tres buscan no solo <em>un</em> buen jugador, sino un
+          <strong>álbum de estilos</strong> (agresivo, con muchos cambios, etc.).
+          QD-PPO mejora elites con PPO “clásico”; QD-PGA mezcla mutación genética y gradientes;
+          QD-PPGA usa solo gradientes “próximos” y elige padres mirando huecos del álbum (arborescencia).
+          Aquí se comparan los tres en las mismas métricas.
+        </p>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <span class="compare-tag">Los 3 QD juntos</span>
+          <h2>¿Cuánto del álbum se llena?</h2>
+          <p class="explain">
+            Coverage = fracción de “casillas de estilo” ocupadas (rejilla 10×10).
+            0 = álbum vacío; 1 = todas las casillas tienen al menos un ejemplo.
+          </p>
+          <p class="how"><strong>Qué buscar:</strong> quién llena más casillas con el mismo presupuesto de práctica.</p>
+          <div class="chart-wrap"><canvas id="qd_cov"></canvas></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">Los 3 QD juntos</span>
+          <h2>Calidad del álbum y del mejor jugador</h2>
+          <p class="explain">
+            QD-score resume “qué tan buenos son los estilos guardados” en conjunto.
+            best_f es la nota del <em>mejor</em> estilo (el que se usaría para jugar en serio, π★).
+          </p>
+          <p class="how"><strong>Qué buscar:</strong> subir Coverage sin bajar best_f = diversidad sin sacrificar el campeón.</p>
+          <div class="chart-wrap"><canvas id="qd_score"></canvas></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">Ejemplo de álbum final</span>
+          <h2>Mapa de estilos (heatmap)</h2>
+          <p class="explain">
+            Cada cuadradito es un estilo. Más oscuro = mejor desempeño en esa casilla.
+            Gris claro = casilla aún vacía. Es la foto del álbum al terminar.
+          </p>
+          <p class="how"><strong>Qué buscar:</strong> pocas casillas vacías y manchas oscuras repartidas (no solo una esquina).</p>
+          <div class="heatmap" id="heat"></div>
+          <div class="legend-bar"><span>Vacío / flojo</span><span>Fuerte</span></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">PGA · PPGA (mecanismos)</span>
+          <h2>Cómo generan nuevos candidatos</h2>
+          <p class="explain">
+            QD-PGA reparte el esfuerzo entre mutar pesos (exploración “a ciegas”) y subir con gradientes.
+            QD-PPGA no muta: a veces elige padres al azar del álbum y a veces mira huecos (frontera).
+          </p>
+          <p class="how"><strong>Lectura simple:</strong> mitades equilibradas ≈ diseño híbrido / arborescencia al 50-50.</p>
+          <div class="chart-wrap"><canvas id="qd_mix"></canvas></div>
+        </div>
+        <div class="card wide">
+          <span class="compare-tag">Los 3 QD juntos</span>
+          <h2>¿Cuántas novedades entran al álbum?</h2>
+          <p class="explain">
+            Tasa de aceptación: de cada intento de guardar un nuevo estilo, cuántos realmente
+            mejoran o llenan una casilla. Al principio suele ser alta; luego baja porque el álbum ya está lleno.
+          </p>
+          <p class="how"><strong>Qué buscar:</strong> caída suave es normal; caída a cero muy pronto puede indicar estancamiento.</p>
+          <div class="chart-wrap"><canvas id="qd_accept"></canvas></div>
+        </div>
+        <div class="card wide">
+          <span class="compare-tag">Los 3 QD · examen del campeón π★</span>
+          <h2>Examen final del mejor estilo de cada método</h2>
+          <p class="explain">
+            Aunque el álbum tenga muchos estilos, para el ranking de “quién juega mejor”
+            se toma el mejor (π★) de cada método y se examina contra los tres rivales fijos.
+          </p>
+          <div class="chart-wrap"><canvas id="qd_suite"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPARATIVA GLOBAL -->
+    <section class="panel" id="panel-cmp">
+      <div class="intro">
+        <h2>Todos frente a frente</h2>
+        <p>
+          Resumen para el capítulo de resultados. Ojo: comparar MCTS con DDQN/PPO/QD
+          es como comparar “pensar en el momento” con “haber practicado antes”.
+          Por eso la tesis suele mostrar <strong>victorias</strong> y, aparte, <strong>tiempo</strong>.
+        </p>
+      </div>
+      <div class="grid">
+        <div class="card wide">
+          <span class="compare-tag">Los 7 agentes · misma barra de victorias</span>
+          <h2>Promedio de victorias en el examen final</h2>
+          <p class="explain">
+            Una barra por agente (promedio de varias semillas). Es la figura “de portada”
+            para decir quién quedó mejor en la prueba común.
+          </p>
+          <p class="how">
+            <strong>Qué buscar:</strong> orden de barras. Pasá el mouse para ver la dispersión (σ)
+            entre repeticiones.
+          </p>
+          <div class="chart-wrap tall"><canvas id="cmp_wr"></canvas></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">Solo familia QD (+ referencia RL)</span>
+          <h2>Diversidad frente a calidad</h2>
+          <p class="explain">
+            Eje X: qué tan lleno está el álbum (Coverage). Eje Y: qué tan bien juega el campeón.
+            Lo ideal en QD es ir hacia arriba y a la derecha. DDQN/PPO aparecen a la izquierda
+            (Coverage = 0: no tienen álbum).
+          </p>
+          <p class="how"><strong>Qué buscar:</strong> entre los tres QD, quién está más arriba-derecha.</p>
+          <div class="chart-wrap tall"><canvas id="cmp_pareto"></canvas></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">Tabla resumen</span>
+          <h2>Números de ejemplo</h2>
+          <p class="explain">Misma información en tabla, agrupada por familia, para maquetar el texto de la tesis.</p>
+          <div style="overflow-x:auto;"><table id="tbl"></table></div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Archivo: <code>docs/thesis_figures_mock/index.html</code> · Abrir con doble clic en el navegador.
+      Cuando existan corridas reales, estas series se reemplazan con <code>reporte.json</code> / métricas de train.
+    </footer>
+  </main>
+
+  <script>
+    const STEPS = Array.from({ length: 21 }, (_, i) => i * 50000);
+    const LABELS = {
+      ddqn: 'DDQN',
+      ppo: 'PPO',
+      mcts_puct: 'MCTS+PUCT',
+      mcts_puct_nash: 'MCTS–Nash',
+      qd_ppo: 'QD-PPO',
+      qd_pga: 'QD-PGA',
+      qd_ppga: 'QD-PPGA',
+    };
+    const AGENTS = Object.keys(LABELS);
+    const COLORS = {
+      ddqn: '#0b3d5c',
+      ppo: '#1f5c3a',
+      mcts_puct: '#6b3fa0',
+      mcts_puct_nash: '#8a4b12',
+      qd_ppo: '#0a6b7a',
+      qd_pga: '#a13d5c',
+      qd_ppga: '#3d5c1f',
+    };
+    const FOES = [
+      { id: 'random', label: 'Rival al azar' },
+      { id: 'greedy_joint', label: 'Greedy en pareja' },
+      { id: 'expectimax_bayesian', label: 'Expectimax' },
+    ];
+    const suiteWR = {
+      ddqn: [0.62, 0.41, 0.33],
+      ppo: [0.68, 0.48, 0.39],
+      mcts_puct: [0.71, 0.52, 0.44],
+      mcts_puct_nash: [0.70, 0.55, 0.47],
+      qd_ppo: [0.66, 0.50, 0.40],
+      qd_pga: [0.67, 0.51, 0.42],
+      qd_ppga: [0.69, 0.53, 0.45],
+    };
+    const costHours = { ddqn: 14, ppo: 16, mcts_puct: 22, mcts_puct_nash: 28, qd_ppo: 18, qd_pga: 19, qd_ppga: 20 };
+    const seedsWR = {
+      ddqn: [0.42, 0.45, 0.40], ppo: [0.49, 0.51, 0.47],
+      mcts_puct: [0.54, 0.52, 0.56], mcts_puct_nash: [0.56, 0.55, 0.58],
+      qd_ppo: [0.50, 0.48, 0.52], qd_pga: [0.51, 0.53, 0.49], qd_ppga: [0.54, 0.52, 0.55],
+    };
+
+    function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+    function smooth(seed, i, base, amp) {
+      const t = i / 20;
+      return clamp(base + amp * t + 0.03 * Math.sin((t + seed * 0.2) * Math.PI), 0, 1);
+    }
+    const wrCurves = {};
+    AGENTS.forEach((a, ai) => {
+      wrCurves[a] = STEPS.map((_, i) => smooth(ai, i, 0.30 + ai * 0.012, 0.22 + (ai % 3) * 0.025));
+    });
+
+    Chart.defaults.font.family = 'ui-sans-serif, system-ui, sans-serif';
+    Chart.defaults.color = '#5c6570';
+    Chart.defaults.borderColor = '#ebe7df';
+
+    function lineDS(key, data, dashed) {
+      return {
+        label: LABELS[key] || key,
+        data,
+        borderColor: COLORS[key],
+        backgroundColor: COLORS[key] + '22',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        tension: 0.28,
+        borderDash: dashed ? [6, 4] : [],
+      };
+    }
+    function suiteGrouped(keys) {
+      return {
+        labels: FOES.map(f => f.label),
+        datasets: keys.map(k => ({
+          label: LABELS[k],
+          data: suiteWR[k],
+          backgroundColor: COLORS[k],
+        })),
+      };
+    }
+    const stepLabels = STEPS.map(s => (s / 1000) + ' mil');
+
+    /* Panorámica */
+    new Chart(document.getElementById('f1'), {
+      type: 'line',
+      data: { labels: stepLabels, datasets: AGENTS.map(a => lineDS(a, wrCurves[a])) },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+        scales: {
+          x: { title: { display: true, text: 'Cantidad de práctica (pasos)' } },
+          y: { min: 0.25, max: 0.85, title: { display: true, text: '% victorias en pruebas' } },
+        },
+      },
+    });
+
+    new Chart(document.getElementById('f2'), {
+      type: 'bar',
+      data: suiteGrouped(AGENTS),
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
+        scales: { y: { min: 0, max: 1, title: { display: true, text: '% victorias' }, ticks: { callback: v => Math.round(v * 100) + '%' } } },
+      },
+    });
+
+    new Chart(document.getElementById('f3'), {
+      type: 'bar',
+      data: {
+        labels: AGENTS.map(a => LABELS[a]),
+        datasets: [{ label: 'Horas de máquina (ejemplo)', data: AGENTS.map(a => costHours[a]), backgroundColor: AGENTS.map(a => COLORS[a]) }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { title: { display: true, text: 'Horas' } } },
+      },
+    });
+
+    new Chart(document.getElementById('f4'), {
+      type: 'scatter',
+      data: {
+        datasets: AGENTS.map((a, ai) => ({
+          label: LABELS[a],
+          data: seedsWR[a].map((y, si) => ({ x: ai + (si - 1) * 0.14, y })),
+          backgroundColor: COLORS[a],
+          pointRadius: 6,
+        })),
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
+        scales: {
+          x: {
+            min: -0.5, max: AGENTS.length - 0.5,
+            ticks: { callback: v => LABELS[AGENTS[Math.round(v)]] || '', maxRotation: 40, minRotation: 40, font: { size: 9 } },
+            title: { display: true, text: 'Agente' },
+          },
+          y: { min: 0.35, max: 0.65, title: { display: true, text: '% victorias (cada repetición)' }, ticks: { callback: v => Math.round(v * 100) + '%' } },
+        },
+      },
+    });
+
+    /* RL family */
+    new Chart(document.getElementById('rl_wr'), {
+      type: 'line',
+      data: {
+        labels: stepLabels,
+        datasets: [lineDS('ddqn', wrCurves.ddqn), lineDS('ppo', wrCurves.ppo)],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          x: { title: { display: true, text: 'Práctica (pasos)' } },
+          y: { min: 0.25, max: 0.8, title: { display: true, text: '% victorias' }, ticks: { callback: v => Math.round(v * 100) + '%' } },
+        },
+      },
+    });
+
+    const xs = Array.from({ length: 40 }, (_, i) => i);
+    new Chart(document.getElementById('ddqn'), {
+      type: 'line',
+      data: {
+        labels: xs.map(i => i * 25 + ' mil'),
+        datasets: [
+          { label: 'Error (debe bajar)', data: xs.map(i => 1.2 * Math.exp(-i / 18) + 0.15), borderColor: COLORS.ddqn, borderWidth: 2.5, pointRadius: 0, tension: 0.25 },
+          { label: 'Exploración ε (debe bajar)', data: xs.map(i => Math.max(0.05, 1 - i / 38)), borderColor: '#8a4b12', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, tension: 0.2 },
+        ],
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+    });
+
+    new Chart(document.getElementById('ppo'), {
+      type: 'line',
+      data: {
+        labels: xs.map(i => i * 25 + ' mil'),
+        datasets: [
+          { label: 'Cambio de política (KL)', data: xs.map(i => 0.02 + 0.01 * Math.sin(i / 3)), borderColor: COLORS.ppo, borderWidth: 2.5, pointRadius: 0, tension: 0.25 },
+          { label: 'Recorte (clip)', data: xs.map(i => 0.12 + 0.04 * Math.cos(i / 4)), borderColor: '#0a6b7a', borderWidth: 2, borderDash: [5, 4], pointRadius: 0, tension: 0.25 },
+          { label: 'Variedad (entropía)', data: xs.map(i => 2.4 - i * 0.03), borderColor: '#a13d5c', borderWidth: 2, pointRadius: 0, tension: 0.25 },
+        ],
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } } },
+    });
+
+    new Chart(document.getElementById('omega'), {
+      type: 'bar',
+      data: {
+        labels: ['Fase 1\n(fácil)', 'Fase 2', 'Fase 3', 'Fase 4\n(mezcla)'],
+        datasets: [
+          { label: 'Azar', data: [1, 0.5, 0.33, 0.28], backgroundColor: '#8a939c', stack: 's' },
+          { label: 'Greedy solo', data: [0, 0.5, 0.33, 0.24], backgroundColor: COLORS.ddqn, stack: 's' },
+          { label: 'Greedy pareja', data: [0, 0, 0.34, 0.28], backgroundColor: COLORS.ppo, stack: 's' },
+          { label: 'Expectimax', data: [0, 0, 0, 0.20], backgroundColor: '#8a4b12', stack: 's' },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { x: { stacked: true }, y: { stacked: true, max: 1, title: { display: true, text: 'Parte del tiempo de práctica' }, ticks: { callback: v => Math.round(v * 100) + '%' } } },
+      },
+    });
+
+    new Chart(document.getElementById('rl_suite'), {
+      type: 'bar',
+      data: suiteGrouped(['ddqn', 'ppo']),
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { min: 0, max: 1, ticks: { callback: v => Math.round(v * 100) + '%' }, title: { display: true, text: '% victorias' } } },
+      },
+    });
+
+    /* MCTS */
+    const nsims = [16, 50, 100, 200, 400];
+    new Chart(document.getElementById('mcts_sims'), {
+      type: 'line',
+      data: {
+        labels: nsims.map(n => n + ' sims'),
+        datasets: [
+          lineDS('mcts_puct', [0.38, 0.48, 0.54, 0.58, 0.60]),
+          lineDS('mcts_puct_nash', [0.40, 0.50, 0.56, 0.61, 0.63]),
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          x: { title: { display: true, text: 'Cuánto piensa por turno' } },
+          y: { min: 0.3, max: 0.7, ticks: { callback: v => Math.round(v * 100) + '%' }, title: { display: true, text: '% victorias' } },
+        },
+      },
+    });
+
+    new Chart(document.getElementById('mcts_time'), {
+      type: 'bar',
+      data: {
+        labels: nsims.map(String),
+        datasets: [
+          { label: LABELS.mcts_puct, data: [40, 110, 210, 420, 850], backgroundColor: COLORS.mcts_puct },
+          { label: LABELS.mcts_puct_nash, data: [55, 160, 320, 680, 1400], backgroundColor: COLORS.mcts_puct_nash },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          x: { title: { display: true, text: 'Simulaciones por turno' } },
+          y: { title: { display: true, text: 'Milisegundos por decisión' } },
+        },
+      },
+    });
+
+    new Chart(document.getElementById('nash_v'), {
+      type: 'line',
+      data: {
+        labels: Array.from({ length: 50 }, (_, i) => i + 1),
+        datasets: [{
+          label: 'Estimación “quién va ganando”',
+          data: Array.from({ length: 50 }, (_, i) => 0.05 + 0.12 * (1 - Math.exp(-i / 12)) + 0.01 * Math.sin(i / 2)),
+          borderColor: COLORS.mcts_puct_nash, borderWidth: 2.5, pointRadius: 0, tension: 0.25,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          x: { title: { display: true, text: 'Número de simulación' } },
+          y: { title: { display: true, text: 'Valor estimado' } },
+        },
+      },
+    });
+
+    new Chart(document.getElementById('mcts_suite'), {
+      type: 'bar',
+      data: suiteGrouped(['mcts_puct', 'mcts_puct_nash']),
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { min: 0, max: 1, ticks: { callback: v => Math.round(v * 100) + '%' } } },
+      },
+    });
+
+    /* QD */
+    const qdKeys = ['qd_ppo', 'qd_pga', 'qd_ppga'];
+    new Chart(document.getElementById('qd_cov'), {
+      type: 'line',
+      data: {
+        labels: stepLabels,
+        datasets: [
+          lineDS('qd_ppo', STEPS.map((_, i) => clamp(0.05 + 0.55 * (i / 20) ** 0.85, 0, 1))),
+          lineDS('qd_pga', STEPS.map((_, i) => clamp(0.06 + 0.60 * (i / 20) ** 0.8, 0, 1))),
+          lineDS('qd_ppga', STEPS.map((_, i) => clamp(0.07 + 0.65 * (i / 20) ** 0.78, 0, 1))),
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          y: { min: 0, max: 1, ticks: { callback: v => Math.round(v * 100) + '%' }, title: { display: true, text: '% del álbum lleno' } },
+        },
+      },
+    });
+
+    new Chart(document.getElementById('qd_score'), {
+      type: 'line',
+      data: {
+        labels: stepLabels,
+        datasets: [
+          { label: 'QD-PPO · calidad álbum', data: STEPS.map((_, i) => 2 + 14 * (i / 20) ** 1.05), borderColor: COLORS.qd_ppo, borderWidth: 2.5, pointRadius: 0, tension: 0.25 },
+          { label: 'QD-PGA · calidad álbum', data: STEPS.map((_, i) => 2.2 + 16 * (i / 20) ** 1.0), borderColor: COLORS.qd_pga, borderWidth: 2.5, pointRadius: 0, tension: 0.25 },
+          { label: 'QD-PPGA · calidad álbum', data: STEPS.map((_, i) => 2.4 + 18 * (i / 20) ** 1.1), borderColor: COLORS.qd_ppga, borderWidth: 2.5, pointRadius: 0, tension: 0.25 },
+          { label: 'QD-PPGA · mejor jugador', data: STEPS.map((_, i) => (0.1 + 0.55 * (i / 20) ** 0.7) * 20), borderColor: COLORS.qd_ppga, borderWidth: 2, borderDash: [6, 4], pointRadius: 0, tension: 0.25 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } },
+        scales: { y: { title: { display: true, text: 'Puntaje (escala de ejemplo)' } } },
+      },
+    });
+
+    const heat = document.getElementById('heat');
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 10; j++) {
+        const filled = Math.random() > 0.32;
+        const f = filled ? 0.15 + 0.75 * Math.random() * Math.exp(-((i - 4) ** 2 + (j - 5) ** 2) / 40) : 0;
+        const cell = document.createElement('div');
+        const r = Math.round(230 - f * 180), g = Math.round(245 - f * 160), b = Math.round(250 - f * 40);
+        cell.style.background = filled ? `rgb(${r},${g},${b})` : '#eceae4';
+        cell.title = filled ? `Estilo fila ${i + 1}, col ${j + 1}: bastante bueno` : `Casilla vacía (${i + 1},${j + 1})`;
+        heat.appendChild(cell);
+      }
+    }
+
+    new Chart(document.getElementById('qd_mix'), {
+      type: 'bar',
+      data: {
+        labels: ['QD-PGA\n(cómo crea hijos)', 'QD-PPGA\n(cómo elige padres)'],
+        datasets: [
+          { label: 'Mutación / al azar del álbum', data: [48, 51], backgroundColor: COLORS.qd_pga },
+          { label: 'Gradientes / mirando huecos', data: [52, 49], backgroundColor: COLORS.qd_ppga },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { max: 100, title: { display: true, text: '% de intentos' }, ticks: { callback: v => v + '%' } } },
+      },
+    });
+
+    new Chart(document.getElementById('qd_accept'), {
+      type: 'line',
+      data: {
+        labels: stepLabels,
+        datasets: qdKeys.map((k, ki) => lineDS(k, STEPS.map((_, i) => 0.38 - 0.10 * (i / 20) + 0.04 * Math.sin(i + ki)))),
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { min: 0, max: 0.5, ticks: { callback: v => Math.round(v * 100) + '%' }, title: { display: true, text: '% de novedades aceptadas' } } },
+      },
+    });
+
+    new Chart(document.getElementById('qd_suite'), {
+      type: 'bar',
+      data: suiteGrouped(qdKeys),
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { min: 0, max: 1, ticks: { callback: v => Math.round(v * 100) + '%' } } },
+      },
+    });
+
+    /* Global */
+    const mean = a => seedsWR[a].reduce((s, x) => s + x, 0) / 3;
+    const std = a => {
+      const m = mean(a);
+      return Math.sqrt(seedsWR[a].reduce((s, x) => s + (x - m) ** 2, 0) / 3);
+    };
+    new Chart(document.getElementById('cmp_wr'), {
+      type: 'bar',
+      data: {
+        labels: AGENTS.map(a => LABELS[a]),
+        datasets: [{
+          label: '% victorias promedio',
+          data: AGENTS.map(mean),
+          backgroundColor: AGENTS.map(a => COLORS[a]),
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { afterLabel: ctx => 'Variación entre repeticiones (σ): ' + (std(AGENTS[ctx.dataIndex]) * 100).toFixed(1) + ' puntos' } },
+        },
+        scales: { y: { min: 0.35, max: 0.65, ticks: { callback: v => Math.round(v * 100) + '%' }, title: { display: true, text: '% victorias (examen)' } } },
+      },
+    });
+
+    new Chart(document.getElementById('cmp_pareto'), {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: 'Métodos con álbum (QD)',
+            data: [
+              { x: 0.52, y: 0.50, agent: 'QD-PPO' },
+              { x: 0.58, y: 0.51, agent: 'QD-PGA' },
+              { x: 0.64, y: 0.54, agent: 'QD-PPGA' },
+            ],
+            backgroundColor: [COLORS.qd_ppo, COLORS.qd_pga, COLORS.qd_ppga],
+            pointRadius: 9,
+          },
+          {
+            label: 'Sin álbum (DDQN / PPO)',
+            data: [{ x: 0.02, y: 0.45, agent: 'DDQN' }, { x: 0.02, y: 0.49, agent: 'PPO' }],
+            backgroundColor: [COLORS.ddqn, COLORS.ppo],
+            pointRadius: 8,
+            pointStyle: 'triangle',
+          },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: { callbacks: { label: c => (c.raw.agent || '') + ': álbum ' + Math.round(c.raw.x * 100) + '%, victorias ' + Math.round(c.raw.y * 100) + '%' } },
+        },
+        scales: {
+          x: { min: -0.05, max: 0.8, title: { display: true, text: 'Álbum lleno (Coverage)' }, ticks: { callback: v => Math.round(v * 100) + '%' } },
+          y: { min: 0.4, max: 0.6, title: { display: true, text: 'Victorias del campeón' }, ticks: { callback: v => Math.round(v * 100) + '%' } },
+        },
+      },
+    });
+
+    const famOf = {
+      ddqn: 'Aprendizaje', ppo: 'Aprendizaje',
+      mcts_puct: 'Planificación', mcts_puct_nash: 'Planificación',
+      qd_ppo: 'Diversidad (QD)', qd_pga: 'Diversidad (QD)', qd_ppga: 'Diversidad (QD)',
+    };
+    const covFinal = { ddqn: 'No aplica', ppo: 'No aplica', mcts_puct: 'No aplica', mcts_puct_nash: 'No aplica', qd_ppo: '52%', qd_pga: '58%', qd_ppga: '64%' };
+    document.getElementById('tbl').innerHTML =
+      '<thead><tr><th>Familia</th><th>Agente</th><th>Victorias (ej.)</th><th>Álbum</th><th>Horas (ej.)</th><th>En una frase</th></tr></thead><tbody>' +
+      AGENTS.map(a => {
+        const blurb = {
+          ddqn: 'Aprende valorando jugadas.',
+          ppo: 'Aprende ajustando probabilidades de jugada.',
+          mcts_puct: 'Piensa variantes en el momento.',
+          mcts_puct_nash: 'Piensa como juego simultáneo.',
+          qd_ppo: 'Álbum de estilos + PPO.',
+          qd_pga: 'Álbum + mutación y gradientes.',
+          qd_ppga: 'Álbum + solo gradientes y huecos.',
+        }[a];
+        return `<tr>
+          <td><span class="fam">${famOf[a]}</span></td>
+          <td><strong>${LABELS[a]}</strong></td>
+          <td>${(mean(a) * 100).toFixed(1)}%</td>
+          <td>${covFinal[a]}</td>
+          <td>${costHours[a]} h</td>
+          <td>${blurb}</td>
+        </tr>`;
+      }).join('') +
+      '</tbody>';
+
+    document.querySelectorAll('#tabs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#tabs button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

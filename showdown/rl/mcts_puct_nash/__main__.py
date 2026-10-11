@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import argparse
-import time
 
 from showdown.rl.env import MockBattleBackend, VGCEnv
 from showdown.rl.mcts_puct_nash.agent import MCTSPuctNashAgent, MCTSPuctNashConfig
 from showdown.rl.reward import RewardCandidate
+from pathlib import Path
+
+from showdown.rl.train_log import TrainHeartbeat
+from showdown.rl.train_report import TrainReport, write_train_report
 
 
 def smoke(seed: int, sims: int) -> int:
@@ -19,23 +22,64 @@ def smoke(seed: int, sims: int) -> int:
     )
     obs, info = env.reset(seed=seed)
     steps = 0
-    t0 = time.perf_counter()
+    hb = TrainHeartbeat(tag='mcts_puct_nash', t_total=80, log_every=20, log_every_sec=5.0)
+    ep_return = 0.0
     try:
         while steps < 80:
             assert env._snap is not None
             a1, a2 = agent.act_slots(env._snap)
             obs, r, term, trunc, info = env.step((a1, a2))
             steps += 1
+            tel = agent.last_telemetry
+            hb.log(
+                steps,
+                phase='smoke',
+                extras={
+                    'sims': sims,
+                    'nodes': getattr(tel, 'nodes', 0),
+                    'fail': getattr(tel, 'failures', 0),
+                },
+            )
             if term or trunc:
+                ep_return = float(info.get('episode_return', 0.0))
                 break
     finally:
         env.close()
-    elapsed = time.perf_counter() - t0
     tel = agent.last_telemetry
-    print(
-        f'[mcts_puct_nash] SMOKE ok steps={steps} sims={sims} '
-        f'tree_nodes={getattr(tel, "nodes", 0)} '
-        f'failures={getattr(tel, "failures", 0)} elapsed={elapsed:.2f}s'
+    out = Path('logs/mcts_puct_nash_smoke')
+    write_train_report(
+        out,
+        TrainReport(
+            agent='mcts_puct_nash',
+            seed=seed,
+            smoke=True,
+            global_steps=steps,
+            t_total=80,
+            elapsed_sec=hb.elapsed(),
+            steps_per_sec=hb.rate(max(1, steps)),
+            config={'n_sims': sims},
+            metrics={
+                'episode_return': ep_return,
+                'tree_nodes': getattr(tel, 'nodes', 0),
+                'failures': getattr(tel, 'failures', 0),
+            },
+            artifacts={'checkpoint_dir': str(out)},
+            notes=[
+                'Planning agent: no gradient train loop; smoke/eval stub report.',
+                'Full offline suite TBD — use inference_sim / robust e2e for large batches.',
+            ],
+        ),
+    )
+    hb.log(
+        steps,
+        phase='SMOKE:DONE',
+        extras={
+            'sims': sims,
+            'nodes': getattr(tel, 'nodes', 0),
+            'fail': getattr(tel, 'failures', 0),
+            'reporte': str(out / 'reporte.txt'),
+        },
+        force=True,
     )
     return 0
 

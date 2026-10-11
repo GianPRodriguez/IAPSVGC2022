@@ -2,15 +2,15 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.8** |
+| **Version** | **v1.10** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) |
 | **Scope of this doc** | Contract for `VGCEnv` / agents / training. |
-| **Implementation** | `showdown/rl/` (… QD-PGA, **QD-PPGA**) — Spec v1.8 |
+| **Implementation** | `showdown/rl/` (… QD-PGA, QD-PPGA) + heuristic baselines §6.h — Spec v1.10 |
 
-> **Immutability rule:** Do not silently change Reward / Action / Obs / BD / DDQN / PPO / MCTS / QD semantics mid-training.
-> Any change requires a new version (`v1.9+`) and an explicit changelog entry at the bottom.
+> **Immutability rule:** Do not silently change Reward / Action / Obs / BD / DDQN / PPO / MCTS / QD / **heuristic baseline** semantics mid-training.
+> Any change requires a new version (`v1.11+`) and an explicit changelog entry at the bottom.
 
 ---
 
@@ -173,8 +173,38 @@ BD values clipped / normalized to \([0, 1]\).
 | **5. QD-PPO** | Cand. 2 (PPO) / Cand. 1 (fitness \(U\)) | AR IAM + Grid MAP-Elites. **QD policy path** | **ACTIVE** |
 | **6. QD-PGA-MAP-Elites** | Cand. 2 (actor) / Cand. 1 (fitness) | AR IAM + PGA hybrid (mut / PG) + shared \(V_\phi\). **QD PGA path** | **ACTIVE** |
 | **7. QD-PPGA** | Cand. 2 (actor) / Cand. 1 (fitness) | AR IAM + proximal-only PPO + shared \(V_\phi\) + arborescence. **QD PPGA path** | **ACTIVE** |
+| **H. Heuristic baselines** | N/A (no \(R_t\)) | `random` → `greedy_solo` → `greedy_joint` → `expectimax_bayesian`. **Fixed eval / curriculum foes** | Off |
 
-**Note:** Learned: §6.a/§6.b. Planning: §6.c/§6.d. QD policy: §6.e/§6.f/§6.g. IQL / BDQN are ablations only.
+**Note:** Learned: §6.a/§6.b. Planning: §6.c/§6.d. QD policy: §6.e/§6.f/§6.g. Heuristics: §6.h. IQL / BDQN are ablations only.
+
+---
+
+## 6.h HeuristicBaselinesSpec — v1.9
+
+Contract for the **non-learned** reference ladder used in curriculum, mosaic, offline WR suite, and robust E2E.
+
+> **Umbrella / glossary:** [`docs/heuristic_agents_spec.md`](heuristic_agents_spec.md) **v1.1**.
+> **Exclusive coding specs (SoT per agent):**
+> [`random_spec.md`](random_spec.md) ·
+> [`greedy_solo_spec.md`](greedy_solo_spec.md) ·
+> [`greedy_joint_spec.md`](greedy_joint_spec.md) ·
+> [`expectimax_bayesian_spec.md`](expectimax_bayesian_spec.md)
+> (each **v1.0**, Spanish, tribunal-readable).
+
+| Id | Role | Exclusive spec | Code root |
+|----|------|----------------|-----------|
+| `random` | Stochastic legal floor | §6.h.1 [`random_spec`](random_spec.md) | `showdown/battle_bots/random/` |
+| `greedy_solo` | Factored max-damage \(T=1\) | §6.h.2 [`greedy_solo_spec`](greedy_solo_spec.md) | `showdown/battle_bots/greedy_solo/` |
+| `greedy_joint` | Joint \(A_1\times A_2\) \(T=1\) (main heuristic foe) | §6.h.3 [`greedy_joint_spec`](greedy_joint_spec.md) | `showdown/battle_bots/greedy_joint/` |
+| `expectimax_bayesian` | Anytime Bayesian 1-ply Top-K×Top-K, Joint-anchored | §6.h.4 [`expectimax_bayesian_spec`](expectimax_bayesian_spec.md) | `showdown/battle_bots/expectimax_bayesian/` |
+
+| Item | Contract |
+|------|----------|
+| Learning | **None** (no `.pt`, no gradients) |
+| RL RewardSpec | **Not** optimized; harness may telemeter \(R_t\) only |
+| Offline suite | ≥ `random`, `greedy_joint`, `expectimax_bayesian`; **200 BO1** each (§7) |
+| Expectimax default coverage | **75%** (`topk_per_side=7`, `deadline_ms=1600`) — see exclusive spec |
+| Forbidden | Using live Expectimax \(V(s)\) as Ng \(\Phi(s)\) inside \(R_t\) (also §8) |
 
 ---
 
@@ -182,7 +212,7 @@ BD values clipped / normalized to \([0, 1]\).
 
 Contract for **proximal arborescence** quality–diversity. Implementation: `showdown/rl/qd_ppga/`.
 
-> **Exclusive coding spec:** [`docs/qd_ppga_spec.md`](qd_ppga_spec.md) **v1.0**.
+> **Exclusive coding spec:** [`docs/qd_ppga_spec.md`](qd_ppga_spec.md) **v1.1** (ES, tribunal-readable).
 
 | Item | Contract |
 |------|----------|
@@ -200,7 +230,7 @@ Contract for **proximal arborescence** quality–diversity. Implementation: `sho
 
 Contract for **PGA-assisted** quality–diversity. Implementation: `showdown/rl/qd_pga/`.
 
-> **Exclusive coding spec:** [`docs/qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md) **v1.0**.
+> **Exclusive coding spec:** [`docs/qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md) **v1.1** (ES, tribunal-readable).
 
 | Item | Contract |
 |------|----------|
@@ -217,7 +247,7 @@ Contract for **PGA-assisted** quality–diversity. Implementation: `showdown/rl/
 
 Contract for **quality–diversity** policy search. Implementation: `showdown/rl/qd_ppo/`.
 
-> **Exclusive coding spec:** [`docs/qd_ppo_spec.md`](qd_ppo_spec.md) **v1.0**.
+> **Exclusive coding spec:** [`docs/qd_ppo_spec.md`](qd_ppo_spec.md) **v1.1** (ES, tribunal-readable).
 
 | Item | Contract |
 |------|----------|
@@ -233,7 +263,7 @@ Contract for **quality–diversity** policy search. Implementation: `showdown/rl
 
 Contract for **simultaneous-move** deep search. Implementation: `showdown/rl/mcts_puct_nash/`.
 
-> **Exclusive coding spec:** [`docs/mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md) **v1.0**.
+> **Exclusive coding spec:** [`docs/mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md) **v1.1** (ES, tribunal-readable).
 
 | Item | Contract |
 |------|----------|
@@ -250,7 +280,7 @@ Contract for **simultaneous-move** deep search. Implementation: `showdown/rl/mct
 
 Contract for the **main planning** agent. Implementation: `showdown/rl/mcts_puct/`.
 
-> **Exclusive coding spec:** [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) **v1.0**.
+> **Exclusive coding spec:** [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) **v1.1** (ES, tribunal-readable).
 
 | Item | Contract |
 |------|----------|
@@ -269,7 +299,7 @@ Contract for the **main planning** agent. Implementation: `showdown/rl/mcts_puct
 
 Contract for the **main policy-gradient** agent. Implementation: `showdown/rl/ppo/` + `battle_bots/ppo`.
 
-> **Exclusive coding spec:** [`docs/ppo_spec.md`](ppo_spec.md) **v1.0** is the Masked-PPO-only
+> **Exclusive coding spec:** [`docs/ppo_spec.md`](ppo_spec.md) **v1.1** is the Masked-PPO-only
 > document used for implementation. Keep it in sync with this section.
 
 ### MDP delimitation
@@ -304,7 +334,7 @@ Contract for the **main policy-gradient** agent. Implementation: `showdown/rl/pp
 | Self-play pool | Last \(K=10\) checkpoints ∪ `best_vs_greedy_joint` (never evicted); **uniform** \(P(o_i)\) |
 | Player class | `ValidatedPPOPlayer` |
 
-Full hyperparams, modules, acceptance tests: [`ppo_spec.md`](ppo_spec.md) v1.0.
+Full hyperparams, modules, acceptance tests: [`ppo_spec.md`](ppo_spec.md) v1.1.
 
 ---
 
@@ -312,7 +342,7 @@ Full hyperparams, modules, acceptance tests: [`ppo_spec.md`](ppo_spec.md) v1.0.
 
 Contract for the **main value-based** agent. Implementation target: `showdown/rl/ddqn/`. Do not start mid-run changes without a version bump.
 
-> **Exclusive coding spec:** [`docs/ddqn_spec.md`](ddqn_spec.md) **v1.0** is the DDQN-only
+> **Exclusive coding spec:** [`docs/ddqn_spec.md`](ddqn_spec.md) **v1.1** is the DDQN-only
 > document used for implementation. Keep it in sync with this section.
 
 ### MDP delimitation
@@ -443,7 +473,7 @@ These metrics **must not** enter \(R_t\).
 
 ### Evaluation suite (mandatory)
 
-Fixed opponents for reported WR (not only self-play): at least `random`, `greedy_joint`, `expectimax_bayesian` (or frozen checkpoints). QD fitness uses Candidate 1 against a fixed eval suite / archive protocol. DDQN / Masked PPO offline volume: **200 BO1** per opponent (§6.a / §6.b).
+Fixed opponents for reported WR (not only self-play): at least `random`, `greedy_joint`, `expectimax_bayesian` (or frozen checkpoints) — semantics in §6.h / [`heuristic_agents_spec.md`](heuristic_agents_spec.md). QD fitness uses Candidate 1 against a fixed eval suite / archive protocol. DDQN / Masked PPO offline volume: **200 BO1** per opponent (§6.a / §6.b).
 
 ---
 
@@ -467,6 +497,8 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.10** | 2026-10-10 | **Editorial:** exclusive RL specs bumped to **v1.1** (Spanish, tribunal-readable: “por qué existe”, glosario, fortalezas/límites) — [`ppo`](ppo_spec.md), [`ddqn`](ddqn_spec.md), [`mcts_puct`](mcts_puct_spec.md), [`mcts_puct_nash`](mcts_puct_nash_spec.md), [`qd_ppo`](qd_ppo_spec.md), [`qd_pga`](qd_pga_map_elites_spec.md), [`qd_ppga`](qd_ppga_spec.md). **No** Obs/Reward/Action/BD semantic change. |
+| **v1.9** | 2026-10-10 | **HeuristicBaselinesSpec** (§6.h): exclusive specs [`random`](random_spec.md) / [`greedy_solo`](greedy_solo_spec.md) / [`greedy_joint`](greedy_joint_spec.md) / [`expectimax_bayesian`](expectimax_bayesian_spec.md) v1.0 + umbrella [`heuristic_agents_spec`](heuristic_agents_spec.md) v1.1. Obs/Reward/Action structural semantics unchanged. |
 | **v1.8** | 2026-10-10 | **QD-PPGASpec** (§6.g): [`docs/qd_ppga_spec.md`](qd_ppga_spec.md) v1.0 + `showdown/rl/qd_ppga/`. Proximal-only + arborescence. |
 | **v1.7** | 2026-10-10 | **QD-PGA-MAP-ElitesSpec** (§6.f): [`docs/qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md) v1.0 + `showdown/rl/qd_pga/`. Shared \(V_\phi\), hybrid mut/PG. |
 | **v1.6** | 2026-10-10 | **QD-PPOSpec** (§6.e): [`docs/qd_ppo_spec.md`](qd_ppo_spec.md) v1.0 + `showdown/rl/qd_ppo/`. Grid MAP-Elites + Masked PPO. |
@@ -479,7 +511,7 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 ---
 
-*End of frozen contract v1.8.*
+*End of frozen contract v1.10.*
 
 ## Implementation map
 
@@ -492,13 +524,14 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 | Damage heuristic (no Node) | `showdown/rl/damage_heuristic.py` |
 | Gymnasium env | `showdown/rl/env.py` (`VGCEnv`, `MockBattleBackend`) — must expose `trunc_reason` for PPO |
 | Live poke-env backend | `showdown/rl/pokeenv_backend.py` (`PokeEnvBattleBackend`) + `pe_adapter.py` |
-| **QD-PPGA (v1.8)** | [`docs/qd_ppga_spec.md`](qd_ppga_spec.md) → `showdown/rl/qd_ppga/` |
-| **QD-PGA-MAP-Elites (v1.7)** | [`docs/qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md) → `showdown/rl/qd_pga/` |
-| **QD-PPO (v1.6)** | [`docs/qd_ppo_spec.md`](qd_ppo_spec.md) → `showdown/rl/qd_ppo/` |
-| **MCTS–PUCT/Nash (v1.5)** | [`docs/mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md) → `showdown/rl/mcts_puct_nash/` |
-| **MCTS+PUCTSpec (v1.4)** | [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) v1.0 → `showdown/rl/mcts_puct/` + `battle_bots/mcts_puct` |
-| **MaskedPPOSpec (v1.3)** | Coding contract: [`docs/ppo_spec.md`](ppo_spec.md) v1.0 → `showdown/rl/ppo/` + `battle_bots/ppo` |
-| **DDQNSpec (v1.2)** | Coding contract: [`docs/ddqn_spec.md`](ddqn_spec.md) v1.0 → `showdown/rl/ddqn/` + `battle_bots/ddqn` |
+| **Heuristic baselines (v1.9)** | Exclusive: [`random_spec`](random_spec.md), [`greedy_solo_spec`](greedy_solo_spec.md), [`greedy_joint_spec`](greedy_joint_spec.md), [`expectimax_bayesian_spec`](expectimax_bayesian_spec.md) → `showdown/battle_bots/{…}/`; umbrella [`heuristic_agents_spec`](heuristic_agents_spec.md) |
+| **QD-PPGA (v1.8)** | [`docs/qd_ppga_spec.md`](qd_ppga_spec.md) **v1.1** → `showdown/rl/qd_ppga/` |
+| **QD-PGA-MAP-Elites (v1.7)** | [`docs/qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md) **v1.1** → `showdown/rl/qd_pga/` |
+| **QD-PPO (v1.6)** | [`docs/qd_ppo_spec.md`](qd_ppo_spec.md) **v1.1** → `showdown/rl/qd_ppo/` |
+| **MCTS–PUCT/Nash (v1.5)** | [`docs/mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md) **v1.1** → `showdown/rl/mcts_puct_nash/` |
+| **MCTS+PUCTSpec (v1.4)** | [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) **v1.1** → `showdown/rl/mcts_puct/` + `battle_bots/mcts_puct` |
+| **MaskedPPOSpec (v1.3)** | [`docs/ppo_spec.md`](ppo_spec.md) **v1.1** → `showdown/rl/ppo/` + `battle_bots/ppo` |
+| **DDQNSpec (v1.2)** | [`docs/ddqn_spec.md`](ddqn_spec.md) **v1.1** → `showdown/rl/ddqn/` + `battle_bots/ddqn` |
 | RL deps | `requirements-rl.txt` (`torch>=2.0.0`; MCTS agents need only numpy) |
 | Tests | `tests/test_rl_*.py` incl. `test_rl_qd_ppo.py`, `test_rl_qd_pga.py`, `test_rl_qd_ppga.py` |
 

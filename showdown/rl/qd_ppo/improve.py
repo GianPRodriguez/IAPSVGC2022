@@ -10,6 +10,7 @@ from showdown.rl.observation import build_observation_ppo
 from showdown.rl.ppo.agent import PPOAgent
 from showdown.rl.qd_ppo.mosaic import sample_mosaic_foe
 from showdown.rl.reward import RewardCandidate
+from showdown.rl.train_log import TrainHeartbeat
 
 
 def _slot_masks(env: VGCEnv, *, slot1_action_id: Optional[int] = None):
@@ -67,6 +68,8 @@ def ppo_improve(
     t_total: int,
     seed: int = 0,
     use_mosaic: bool = True,
+    heartbeat: Optional[TrainHeartbeat] = None,
+    phase: str = '',
 ) -> Tuple[VGCEnv, int, dict]:
     """
     Collect up to ``steps`` env transitions under Cand. 2; hard-stop at t_total.
@@ -131,6 +134,16 @@ def ppo_improve(
             elif trunc_reason == 'turn_cap':
                 last_v = boot_v
             metrics = agent.update(last_value=last_v)
+
+        if heartbeat is not None:
+            heartbeat.log(
+                int(global_steps) + local,
+                phase=phase or 'improve',
+                extras={
+                    'loss': metrics.get('loss') if metrics else None,
+                    'kl': metrics.get('approx_kl') if metrics else None,
+                },
+            )
 
         if int(global_steps) + local >= int(t_total):
             break

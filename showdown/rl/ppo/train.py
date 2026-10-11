@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import time
+from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -36,6 +36,14 @@ from showdown.rl.observation import build_observation_ppo
 from showdown.rl.ppo.agent import PPOAgent, PPOConfig
 from showdown.rl.ppo.selfplay import SelfPlayPool
 from showdown.rl.reward import RewardCandidate
+from showdown.rl.train_log import TrainHeartbeat, schedule_total_steps
+from showdown.rl.train_report import (
+    SUITE_FOES,
+    TrainReport,
+    resolve_suite_games,
+    run_suite_ppo_act,
+    write_train_report,
+)
 
 LIVE_OPPONENTS = (
     'random',
@@ -146,8 +154,7 @@ def _collect_and_update(
     rng: np.random.Generator,
     global_step_offset: int,
     ckpt_dir: Path,
-    log_every: int,
-    t0: float,
+    heartbeat: TrainHeartbeat,
     phase_label: str,
     seed: int,
     start_ps: bool,
@@ -226,17 +233,21 @@ def _collect_and_update(
             metrics_last = agent.update(last_value=last_v)
 
         gstep = global_step_offset + local_done
-        if gstep % int(log_every) == 0:
-            elapsed = time.perf_counter() - t0
-            print(
-                f'[ppo] {phase_label} local={local_done}/{steps} global={gstep} '
-                f'opp={current} loss={metrics_last.get("loss", float("nan")):.4f} '
-                f'kl={metrics_last.get("approx_kl", float("nan")):.4f} '
-                f'clip={metrics_last.get("clip_fraction", float("nan")):.3f} '
-                f'ent={metrics_last.get("entropy", float("nan")):.3f} '
-                f'pool={len(pool) if pool else 0} elapsed={elapsed:.1f}s'
-            )
+        heartbeat.log(
+            gstep,
+            phase=phase_label,
+            extras={
+                'opp': current,
+                'loss': metrics_last.get('loss'),
+                'kl': metrics_last.get('approx_kl'),
+                'clip': metrics_last.get('clip_fraction'),
+                'ent': metrics_last.get('entropy'),
+                'pool': len(pool) if pool else 0,
+            },
+        )
+        if heartbeat.should_checkpoint(gstep):
             agent.save(ckpt_dir / 'last.pt')
+            heartbeat.mark_checkpoint(gstep)
 
     return env, int(local_done), {'metrics': metrics_last, 'ep_counts': ep_counts}
 
@@ -247,7 +258,8 @@ def run_training(
     schedule: Sequence[TrainPhase],
     device: str = 'cpu',
     checkpoint_dir: str | Path = 'logs/ppo_checkpoints',
-    log_every: int = 1000,
+    log_every: int = 5_000,
+    log_every_sec: float = 60.0,
     start_ps: bool = False,
     expand_omega: bool = True,
     include_expectimax: bool = True,
@@ -256,6 +268,8 @@ def run_training(
     bc_checkpoint: Optional[str] = None,
     self_play: bool = False,
     rollout_steps: Optional[int] = None,
+    suite_games: Optional[int] = None,
+    smoke: bool = False,
 ) -> PPOAgent:
     if not schedule and not self_play:
         raise ValueError('schedule vacío')
@@ -273,7 +287,6 @@ def run_training(
     ckpt_dir = Path(checkpoint_dir)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     pool = SelfPlayPool(root=ckpt_dir / 'pool') if self_play else None
-    t0 = time.perf_counter()
     global_steps = 0
     phase_log: List[dict] = []
 
@@ -306,6 +319,13 @@ def run_training(
     env: Optional[VGCEnv] = _make_env(
         first_opp, seed=seed, start_ps=start_ps, reward=reward,
     )
+    t_total = schedule_total_steps(expand_sched)
+    hb = TrainHeartbeat(
+        tag='ppo',
+        t_total=max(1, t_total),
+        log_every=int(log_every),
+        log_every_sec=float(log_every_sec),
+    )
 
     try:
         assert env is not None
@@ -318,7 +338,8 @@ def run_training(
                 f'[ppo] === phase {pi + 1}/{len(expand_sched)} ({mode}): '
                 f'unlock={phase.unlock} steps={phase.steps} '
                 f'Omega={list(phase.omega)} '
-                f'P={ {k: round(v, 3) for k, v in probs.items()} } ==='
+                f'P={ {k: round(v, 3) for k, v in probs.items()} } ===',
+                flush=True,
             )
             env = _ensure_opponent(
                 env, phase.unlock, seed=seed, start_ps=start_ps, reward=reward,
@@ -332,8 +353,7 @@ def run_training(
                 rng=rng,
                 global_step_offset=global_steps,
                 ckpt_dir=ckpt_dir,
-                log_every=log_every,
-                t0=t0,
+                heartbeat=hb,
                 phase_label=f'phase={pi}:{phase.unlock}',
                 seed=seed,
                 start_ps=start_ps,
@@ -354,30 +374,95 @@ def run_training(
                 'pool_size': len(pool) if pool else 0,
             })
             agent.save(ckpt_dir / f'phase_{pi}_{phase.unlock}.pt')
+            hb.log(
+                global_steps,
+                phase=f'phase={pi}:{phase.unlock}:end',
+                extras={'pool': len(pool) if pool else 0},
+                force=True,
+            )
+
+        agent.save(ckpt_dir / 'final.pt')
+        n_suite = resolve_suite_games(suite_games=suite_games, smoke=smoke)
+        suite_rows, suite_note = [], ''
+        if n_suite > 0 and env is not None:
+            print(
+                f'[ppo] offline suite: {n_suite} BO1 × {len(SUITE_FOES)} foes',
+                flush=True,
+            )
+            suite_rows, suite_note = run_suite_ppo_act(
+                agent, env, n_games=n_suite, seed=seed,
+            )
+        report = TrainReport(
+            agent='ppo',
+            seed=seed,
+            device=device,
+            smoke=smoke,
+            global_steps=global_steps,
+            t_total=max(1, t_total),
+            elapsed_sec=hb.elapsed(),
+            steps_per_sec=hb.rate(max(1, global_steps)),
+            config={
+                'expand_omega': bool(expand_omega),
+                'self_play': bool(self_play),
+                'reward_mode': reward_mode,
+                'weights': weights,
+            },
+            metrics={
+                'env_steps': agent.env_steps,
+                'update_steps': agent.update_steps,
+                'pool_size': len(pool) if pool else 0,
+            },
+            phases=phase_log,
+            artifacts={
+                'final_pt': str(ckpt_dir / 'final.pt'),
+                'train_meta_json': str(ckpt_dir / 'train_meta.json'),
+                'checkpoint_dir': str(ckpt_dir),
+            },
+            suite_games_per_foe=n_suite,
+            suite=suite_rows,
+            suite_note=suite_note,
+            notes=[
+                'Train uses Cand. 2 (or anneal); suite uses Cand. 1 sparse.',
+                'Self-play runs may need live PS for meaningful suite foes.',
+                'Live console heartbeats complement this static report.',
+            ],
+        )
+        write_train_report(ckpt_dir, report)
+        meta = {
+            'seed': seed,
+            'device': device,
+            'expand_omega': bool(expand_omega),
+            'self_play': bool(self_play),
+            'reward_mode': reward_mode,
+            'weights': weights,
+            'phase_log': phase_log,
+            'env_steps': agent.env_steps,
+            'update_steps': agent.update_steps,
+            'total_steps': global_steps,
+            'suite': [asdict(s) for s in suite_rows],
+        }
+        (ckpt_dir / 'train_meta.json').write_text(
+            json.dumps(meta, indent=2) + '\n', encoding='utf-8',
+        )
+        mean_wr = (
+            float(sum(s.win_rate for s in suite_rows) / len(suite_rows))
+            if suite_rows else None
+        )
+        hb.log(
+            global_steps,
+            phase='DONE',
+            extras={
+                'expand_omega': int(bool(expand_omega)),
+                'self_play': int(bool(self_play)),
+                'MEAN_WR': mean_wr,
+                'reporte': str(ckpt_dir / 'reporte.txt'),
+            },
+            force=True,
+        )
     finally:
         if env is not None:
             env.close()
 
-    agent.save(ckpt_dir / 'final.pt')
-    meta = {
-        'seed': seed,
-        'device': device,
-        'expand_omega': bool(expand_omega),
-        'self_play': bool(self_play),
-        'reward_mode': reward_mode,
-        'weights': weights,
-        'phase_log': phase_log,
-        'env_steps': agent.env_steps,
-        'update_steps': agent.update_steps,
-        'total_steps': global_steps,
-    }
-    (ckpt_dir / 'train_meta.json').write_text(
-        json.dumps(meta, indent=2) + '\n', encoding='utf-8',
-    )
-    print(
-        f'[ppo] DONE expand_omega={expand_omega} self_play={self_play} '
-        f'steps={global_steps} saved={ckpt_dir / "final.pt"}'
-    )
     return agent
 
 
@@ -408,8 +493,16 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--rollout-steps', type=int, default=None,
                    help='Override rollout length (default 2048; use 256 for smoke)')
     p.add_argument('--checkpoint-dir', default='logs/ppo_checkpoints')
-    p.add_argument('--log-every', type=int, default=1000)
+    p.add_argument('--log-every', type=int, default=5_000,
+                   help='Heartbeat every N env steps (also --log-every-sec)')
+    p.add_argument('--log-every-sec', type=float, default=60.0,
+                   help='Heartbeat at least every N seconds')
     p.add_argument('--start-ps', action='store_true')
+    p.add_argument(
+        '--suite-games', type=int, default=None,
+        help='BO1 per foe for offline suite (default 20; 0=skip; smoke default 0)',
+    )
+    p.add_argument('--smoke', action='store_true', help='Treat as smoke (suite default 0)')
     args = p.parse_args(argv)
 
     self_play = str(args.opponent).lower().replace('-', '_') == 'self'
@@ -444,6 +537,7 @@ def main(argv: Optional[list] = None) -> int:
         device=args.device,
         checkpoint_dir=args.checkpoint_dir,
         log_every=args.log_every,
+        log_every_sec=args.log_every_sec,
         start_ps=bool(args.start_ps),
         expand_omega=expand,
         include_expectimax=bool(args.include_expectimax),
@@ -452,6 +546,8 @@ def main(argv: Optional[list] = None) -> int:
         bc_checkpoint=args.bc_checkpoint,
         self_play=self_play,
         rollout_steps=args.rollout_steps,
+        suite_games=args.suite_games,
+        smoke=bool(args.smoke),
     )
     return 0
 
