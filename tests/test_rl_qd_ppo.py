@@ -14,7 +14,7 @@ from showdown.rl.snapshot import SlotAction
 
 
 def test_spec_version_qd_aligned():
-    assert SPEC_VERSION == 'v1.6'
+    assert SPEC_VERSION == 'v1.7'
 
 
 def test_derived_n_outer():
