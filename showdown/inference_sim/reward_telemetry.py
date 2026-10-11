@@ -42,45 +42,65 @@ def _iap_mon_hp_pct(pkmn) -> Optional[float]:
         return None
     if bool(getattr(pkmn, 'is_fainted', False)):
         return 0.0
+    raw_cur = getattr(pkmn, 'HPA_battle_actual', None)
+    raw_mx = getattr(pkmn, 'HPB_battle_base', None)
+    if raw_cur is None or raw_mx is None:
+        return None
     try:
-        cur = float(str(getattr(pkmn, 'HPA_battle_actual', '')).split()[0])
-        mx = float(str(getattr(pkmn, 'HPB_battle_base', '')).split()[0])
-    except Exception:
+        cur = float(str(raw_cur).split()[0])
+        mx = float(str(raw_mx).split()[0])
+    except (TypeError, ValueError, IndexError):
         return None
     if mx <= 0:
         return None
+    # Init glitch: foe preview sometimes sets HPA=100 with HPB=base-stat (< max HP).
+    # Treat as full bar until a real max HP (>= cur) is known from protocol.
+    if cur > mx and mx < 150 and cur <= 100:
+        return 100.0
     return max(0.0, min(100.0, 100.0 * cur / mx))
 
 
 def material_from_iap_side(battler, *, party_size: int = 4) -> TeamMaterial:
     """TeamMaterial from IAP Battler (user actives+bench or opp actives+revealed)."""
     slots: List[Any] = []
+    seen: set = set()
+
+    def _add(m) -> None:
+        if m is None:
+            return
+        mid = id(m)
+        if mid in seen:
+            return
+        seen.add(mid)
+        slots.append(m)
+
     if bool(getattr(battler, 'isUser', False)):
-        for m in (getattr(battler, 'active1', None), getattr(battler, 'active2', None)):
-            if m is not None:
-                slots.append(m)
+        _add(getattr(battler, 'active1', None))
+        _add(getattr(battler, 'active2', None))
         for m in list(getattr(battler, 'reserved', None) or []):
-            if m is not None:
-                slots.append(m)
+            _add(m)
     else:
-        for m in (getattr(battler, 'active1', None), getattr(battler, 'active2', None)):
-            if m is not None:
-                slots.append(m)
+        _add(getattr(battler, 'active1', None))
+        _add(getattr(battler, 'active2', None))
         for m in list(getattr(battler, 'opponents', None) or []):
-            if m is None or m in slots:
+            if m is None:
                 continue
             if _iap_mon_hp_pct(m) is not None or bool(getattr(m, 'is_fainted', False)):
-                slots.append(m)
+                _add(m)
 
     faint = 0
     hp = 0.0
     n_known = 0
     for m in slots[: int(party_size)]:
+        if bool(getattr(m, 'is_fainted', False)):
+            n_known += 1
+            faint += 1
+            continue
         pct = _iap_mon_hp_pct(m)
         if pct is None:
             continue
         n_known += 1
-        if pct <= 0.0 or bool(getattr(m, 'is_fainted', False)):
+        if pct <= 0.0:
             faint += 1
         else:
             hp += float(pct)
@@ -89,6 +109,52 @@ def material_from_iap_side(battler, *, party_size: int = 4) -> TeamMaterial:
         n_known=n_known,
         party_size=int(party_size),
     )
+
+
+def push_iap_reward_to_ui(battle, q=None, *, label: str = 'Turno') -> None:
+    """Enqueue Spec-C2 UI payload ``[2, …, delta, color, total, color]`` if ``q`` set."""
+    if battle is None or q is None:
+        return
+    try:
+        delta_f, total_f = battle.calculateRewards()
+    except Exception:
+        return
+    delta = round(float(delta_f), 1)
+    total = round(float(total_f), 1)
+    color5 = '#325928' if delta > 0 else ('#565828' if delta >= 0 else '#582831')
+    color6 = '#325928' if total > 0 else '#582831'
+    try:
+        q.put([
+            2, label, '#FFFFFF', '', '#FFFFFF', '', '#FFFFFF', '', '#FFFFFF',
+            delta, color5, total, color6,
+        ])
+    except Exception:
+        pass
+
+
+def finalize_iap_game_reward(battle, winner: str, q=None) -> None:
+    """Apply terminal Cand.1/2 for an individual game ``|win|`` and push UI."""
+    if battle is None:
+        return
+    user = str(getattr(getattr(battle, 'user', None), 'account_name', '') or '')
+    bot_won = _ps_names_match(winner, user)
+    battle.finished = True
+    battle.won = bool(bot_won)
+    try:
+        observe_iap_spec_reward(battle)
+    except Exception as exc:
+        print(f'[WARN]     observe_iap_spec_reward (fin juego): {exc}')
+    push_iap_reward_to_ui(battle, q, label='Fin juego')
+    # Listo para el siguiente juego del BO3 (initialize_team_preview también resetea).
+    battle.finished = False
+    battle.won = None
+
+
+def _ps_names_match(a: str, b: str) -> bool:
+    def _norm(s: str) -> str:
+        return ''.join(ch for ch in str(s or '').lower() if ch.isalnum())
+    na, nb = _norm(a), _norm(b)
+    return bool(na) and na == nb
 
 
 def observe_iap_spec_reward(battle) -> Tuple[float, float]:

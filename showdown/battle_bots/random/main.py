@@ -325,8 +325,8 @@ class BattleBot(Battle):
             color4 = '#FFFFFF'
 
         lastReward, reward = self.calculateRewards()
-        delta = math.floor(lastReward)
-        total = math.floor(reward)
+        delta = round(float(lastReward), 1)
+        total = round(float(reward), 1)
         if delta > 0:
             color5 = "#325928"
         elif delta >= 0:

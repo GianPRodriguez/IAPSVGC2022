@@ -1,618 +1,1010 @@
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
-========================================================================
-|pm| popplioperu98| Deep1ODDQN|/log popplioperu98 wants to battle!
-
-========================================================================
-  RECV  2026-09-17 00:57:33
-========================================================================
-|pm| Deep1ODDQN| popplioperu98|/challenge
-
-========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:41
 ========================================================================
 |updatesearch|{"searching":[],"games":null}
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:41
 ========================================================================
-|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2682768280":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+|updateuser| Deep1ODDQN|1|1|{"blockChallenges":false,"blockPMs":false,"ignoreTickets":false,"hideBattlesFromTrainerCard":false,"blockInvites":false,"doNotDisturb":false,"blockFriendRequests":false,"allowFriendNotifications":false,"displayBattlesToFriends":false,"hideLogins":false,"hiddenNextBattle":false,"inviteOnlyNextBattle":false,"language":null}
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:41
 ========================================================================
-|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+|updatesearch|{"searching":[],"games":null}
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:41
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
+|pm| Deep1ODDQN| popplioperu98|/challenge gen9championsvgc2026regmcbo3|gen9championsvgc2026regmcbo3|||
+
+========================================================================
+  RECV  2026-10-10 19:34:41
+========================================================================
+|pm| Deep1ODDQN| popplioperu98|/log Deep1ODDQN wants to battle!
+
+========================================================================
+  RECV  2026-10-10 19:34:43
+========================================================================
+|pm| popplioperu98| Deep1ODDQN|/challenge
+
+========================================================================
+  RECV  2026-10-10 19:34:43
+========================================================================
+|updatesearch|{"searching":[],"games":null}
+
+========================================================================
+  RECV  2026-10-10 19:34:43
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2696345395":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+
+========================================================================
+  RECV  2026-10-10 19:34:43
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 |init|battle
-|title|popplioperu98 vs. Deep1ODDQN
-|fieldhtml|<center><br /><strong>popplioperu98 and Deep1ODDQN's Best-of-3 progress:</strong><br /><table><tr><td>popplioperu98: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr><tr><td>Deep1ODDQN: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr></table><br /><br /><table><tr><td><center><strong>popplioperu98</strong></center></td><td></td><td><center><strong>Deep1ODDQN</strong></center></td></tr><tr><td><center><img class="trainersprite" style="transform: scaleX(-1)" src="https://play.pokemonshowdown.com/sprites/trainers/winona.png" /></center></td><td></td><td><center><img class="trainersprite" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td></tr><tr><td><psicon pokemon="Archaludon" style="transform: scaleX(-1)" /><psicon pokemon="Pelipper" style="transform: scaleX(-1)" /><psicon pokemon="Golisopod" style="transform: scaleX(-1)" /><br /><psicon pokemon="Basculegion" style="transform: scaleX(-1)" /><psicon pokemon="Rillaboom" style="transform: scaleX(-1)" /><psicon pokemon="Farigiraf" style="transform: scaleX(-1)" /></td><td> vs </td><td><psicon pokemon="Metagross" /><psicon pokemon="Garchomp" /><psicon pokemon="Volcarona" /><br /><psicon pokemon="Sneasler" /><psicon pokemon="Rillaboom" /><psicon pokemon="Incineroar" /></td></tr></table></center>
-|controlshtml|<center></center>
-|j|☆popplioperu98
+|title|Deep1ODDQN vs. popplioperu98
 |j|☆Deep1ODDQN
 
 ########################################################################
-  BATTLE START  2026-09-17 00:57:33  |  game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
+  BATTLE START  2026-10-10 19:34:43  |  game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 ########################################################################
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:43
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 |cantleave|
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:43
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 |tempnotifyoff|choice
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:43
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 |c|~|/uhtml controls,
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:43
 ========================================================================
-|pm| Deep1ODDQN| popplioperu98|/nonotify Deep1ODDQN accepted the challenge, starting &laquo;<a href="/game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw">game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw</a>&raquo;
-
-========================================================================
-  RECV  2026-09-17 00:57:33
-========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
-|tempnotifyoff|choice
-
-========================================================================
-  RECV  2026-09-17 00:57:33
-========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
-|c|~|/uhtml controls,
-
-========================================================================
-  RECV  2026-09-17 00:57:33
-========================================================================
-|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
-
-========================================================================
-  RECV  2026-09-17 00:57:33
-========================================================================
-|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2682768281":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
-
-========================================================================
-  RECV  2026-09-17 00:57:33
-========================================================================
-|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2682768281":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
-
-========================================================================
-  RECV  2026-09-17 00:57:33
-========================================================================
-|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
-
-========================================================================
-  RECV  2026-09-17 00:57:33
-========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|init|battle
-|title|popplioperu98 vs. Deep1ODDQN
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 |j|☆popplioperu98
+
+========================================================================
+  RECV  2026-10-10 19:34:43
+========================================================================
+|pm| popplioperu98| Deep1ODDQN|/nonotify popplioperu98 accepted the challenge, starting &laquo;<a href="/game-bestof3-gen9championsvgc2026regmcbo3-2696345395">game-bestof3-gen9championsvgc2026regmcbo3-2696345395</a>&raquo;
+
+========================================================================
+  RECV  2026-10-10 19:34:43
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|tempnotifyoff|choice
+
+========================================================================
+  RECV  2026-10-10 19:34:43
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|c|~|/uhtml controls,
+
+========================================================================
+  RECV  2026-10-10 19:34:43
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2696345395":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+
+========================================================================
+  RECV  2026-10-10 19:34:43
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2696345395":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2696345396":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
+
+========================================================================
+  RECV  2026-10-10 19:34:43
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2696345395":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2696345396":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
+
+========================================================================
+  RECV  2026-10-10 19:34:43
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|init|battle
+|title|Deep1ODDQN vs. popplioperu98
 |j|☆Deep1ODDQN
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:43
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|html|<table width="100%"><tr><td align="left">popplioperu98</td><td align="right">Deep1ODDQN</tr><tr><td align="left"><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> </td><td align="right"><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> </tr></table>
-|uhtml|bestof|<h2><strong>Game 1</strong> of <a href="/game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw">a best-of-3</a></h2>
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|j|☆popplioperu98
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:43
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|html|<table width="100%"><tr><td align="left">Deep1ODDQN</td><td align="right">popplioperu98</tr><tr><td align="left"><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> </td><td align="right"><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> </tr></table>
+|uhtml|bestof|<h2><strong>Game 1</strong> of <a href="/game-bestof3-gen9championsvgc2026regmcbo3-2696345395">a best-of-3</a></h2>
+
+========================================================================
+  RECV  2026-10-10 19:34:43
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 |html|<h2>Game 1</h2>
-|uhtml|game1|<a href="/battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw">popplioperu98 vs. Deep1ODDQN</a>
-|fieldhtml|<center><br /><strong>popplioperu98 and Deep1ODDQN's Best-of-3 progress:</strong><br /><table><tr><td>popplioperu98: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr><tr><td>Deep1ODDQN: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr></table><br /><br /><table><tr><td><center><strong>popplioperu98</strong></center></td><td></td><td><center><strong>Deep1ODDQN</strong></center></td></tr><tr><td><center><img class="trainersprite" style="transform: scaleX(-1)" src="https://play.pokemonshowdown.com/sprites/trainers/winona.png" /></center></td><td></td><td><center><img class="trainersprite" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td></tr><tr><td><psicon pokemon="Archaludon" style="transform: scaleX(-1)" /><psicon pokemon="Pelipper" style="transform: scaleX(-1)" /><psicon pokemon="Golisopod" style="transform: scaleX(-1)" /><br /><psicon pokemon="Basculegion" style="transform: scaleX(-1)" /><psicon pokemon="Rillaboom" style="transform: scaleX(-1)" /><psicon pokemon="Farigiraf" style="transform: scaleX(-1)" /></td><td> vs </td><td><psicon pokemon="Metagross" /><psicon pokemon="Garchomp" /><psicon pokemon="Volcarona" /><br /><psicon pokemon="Sneasler" /><psicon pokemon="Rillaboom" /><psicon pokemon="Incineroar" /></td></tr></table></center>
-|controlshtml|<center><p>Game 1: <a href="/battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw"><strong>being played</strong></a></p></center>
+|uhtml|game1|<a href="/battle-gen9championsvgc2026regmcbo3-2696345396">Deep1ODDQN vs. popplioperu98</a>
+|fieldhtml|<center><br /><strong>Deep1ODDQN and popplioperu98's Best-of-3 progress:</strong><br /><table><tr><td>Deep1ODDQN: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr><tr><td>popplioperu98: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr></table><br /><br /><table><tr><td><center><strong>Deep1ODDQN</strong></center></td><td></td><td><center><strong>popplioperu98</strong></center></td></tr><tr><td><center><img class="trainersprite" style="transform: scaleX(-1)" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td><td></td><td><center><img class="trainersprite" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td></tr><tr><td><psicon pokemon="Salamence" style="transform: scaleX(-1)" /><psicon pokemon="Froslass" style="transform: scaleX(-1)" /><psicon pokemon="Rillaboom" style="transform: scaleX(-1)" /><br /><psicon pokemon="Sneasler" style="transform: scaleX(-1)" /><psicon pokemon="Gholdengo" style="transform: scaleX(-1)" /><psicon pokemon="Arcanine-Hisui" style="transform: scaleX(-1)" /></td><td> vs </td><td><psicon pokemon="Salamence" /><psicon pokemon="Rillaboom" /><psicon pokemon="Sneasler" /><br /><psicon pokemon="Arcanine-Hisui" /><psicon pokemon="Kingambit" /><psicon pokemon="Basculegion" /></td></tr></table></center>
+|controlshtml|<center><p>Game 1: <a href="/battle-gen9championsvgc2026regmcbo3-2696345396"><strong>being played</strong></a></p></center>
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:43
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|t:|1789624652
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|t:|1791678883
 |gametype|doubles
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:43
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|player|p1|popplioperu98|winona|
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|player|p1|Deep1ODDQN|1|
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:43
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|player|p2|Deep1ODDQN|2|
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|player|p2|popplioperu98|170|
 |gen|9
 |tier|[Gen 9 Champions] VGC 2026 Reg M-C (Bo3)
 |rule|Species Clause: Limit one of each Pokémon
 |rule|Item Clause: Limit 1 of each item
 |clearpoke
-|poke|p1|Archaludon, L50, M|
-|poke|p1|Pelipper, L50, M|
-|poke|p1|Golisopod, L50, F|
-|poke|p1|Basculegion, L50, M|
-|poke|p1|Rillaboom, L50, M|
-|poke|p1|Farigiraf, L50, F|
-|poke|p2|Metagross, L50|
-|poke|p2|Garchomp, L50, F|
-|poke|p2|Volcarona, L50, M|
-|poke|p2|Sneasler, L50, M|
+|poke|p1|Salamence, L50, M|
+|poke|p1|Froslass, L50, F|
+|poke|p1|Rillaboom, L50, F|
+|poke|p1|Sneasler, L50, M|
+|poke|p1|Gholdengo, L50|
+|poke|p1|Arcanine-Hisui, L50, M|
+|poke|p2|Salamence, L50, F|
 |poke|p2|Rillaboom, L50, M|
-|poke|p2|Incineroar, L50, F|
+|poke|p2|Sneasler, L50, M|
+|poke|p2|Arcanine-Hisui, L50, M|
+|poke|p2|Kingambit, L50, F|
+|poke|p2|Basculegion, L50, M|
 |teampreview|4
-|showteam|p1|Archaludon||Leftovers|Stamina|Protect,Snarl,ElectroShot,DragonPulse|Calm||M|||50|]Pelipper||LifeOrb|Drizzle|Protect,Tailwind,Hurricane,WeatherBall|Modest||M|||50|]Golisopod||Golisopite|EmergencyExit|FirstImpression,LeechLife,CloseCombat,IronHead|Adamant||F|||50|]Basculegion||ChoiceScarf|Adaptability|FlipTurn,AquaJet,WaveCrash,LastRespects|Jolly||M|||50|]Rillaboom||MiracleSeed|GrassySurge|FakeOut,GrassyGlide,WoodHammer,HighHorsepower|Adamant||M|||50|]Farigiraf||SitrusBerry|ArmorTail|Protect,TrickRoom,Thunderbolt,Psychic|Bold||F|||50|
-|showteam|p2|Metagross||Metagrossite|LightMetal|IronHead,PsychicFangs,StompingTantrum,Protect|Adamant|||||50|]Garchomp||GarchompiteZ|RoughSkin|DracoMeteor,PowerGem,Flamethrower,Protect|Modest||F|||50|]Volcarona||GrassySeed|FlameBody|Flamethrower,GigaDrain,QuiverDance,Protect|Modest||M|||50|]Sneasler||WhiteHerb|Unburden|CloseCombat,DireClaw,Coaching,FakeOut|Adamant||M|||50|]Rillaboom||MiracleSeed|GrassySurge|WoodHammer,GrassyGlide,HighHorsepower,FakeOut|Adamant||M|||50|]Incineroar||SitrusBerry|Intimidate|FlareBlitz,ThroatChop,PartingShot,FakeOut|Careful||F|||50|
+|showteam|p1|Salamence||Salamencite|Intimidate|HyperVoice,DoubleEdge,Tailwind,Protect|Hasty||M|||50|]Froslass||Froslassite|SnowCloak|Blizzard,AuroraVeil,ShadowBall,Protect|Timid||F|||50|]Rillaboom||LifeOrb|GrassySurge|FakeOut,GrassyGlide,WoodHammer,HighHorsepower|Adamant||F|||50|]Sneasler||WhiteHerb|Unburden|FakeOut,CloseCombat,DireClaw,Protect|Adamant||M|||50|]Gholdengo||GrassySeed|GoodasGold|NastyPlot,ShadowBall,MakeItRain,Protect|Modest|||||50|]Arcanine-Hisui||FocusSash|RockHead|HeadSmash,FlareBlitz,ExtremeSpeed,Protect|Jolly||M|||50|
+|showteam|p2|Salamence||Salamencite|Intimidate|HyperVoice,DoubleEdge,Tailwind,Protect|Naive||F|||50|]Rillaboom||SitrusBerry|GrassySurge|WoodHammer,GrassyGlide,Uturn,FakeOut|Adamant||M|||50|]Sneasler||GrassySeed|Unburden|DireClaw,CloseCombat,FakeOut,Protect|Adamant||M|||50|]Arcanine-Hisui||FocusSash|RockHead|FlareBlitz,HeadSmash,ExtremeSpeed,Protect|Jolly||M|||50|]Kingambit||ChopleBerry|Defiant|KowtowCleave,IronHead,LowKick,SuckerPunch|Adamant||F|||50|]Basculegion||MysticWater|Adaptability|WaveCrash,LastRespects,AquaJet,Protect|Adamant||M|||50|
 
 ########################################################################
-  BATTLE START  2026-09-17 00:57:33  |  battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+  BATTLE START  2026-10-10 19:34:43  |  battle-gen9championsvgc2026regmcbo3-2696345396
 ########################################################################
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:43
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|request|{"teamPreview":true,"maxChosenTeamSize":4,"side":{"name":"Deep1ODDQN","id":"p2","pokemon":[{"ident":"p2: Metagross","details":"Metagross, L50","condition":"175/175","active":true,"stats":{"atk":177,"def":158,"spa":103,"spd":110,"spe":122},"moves":["ironhead","psychicfangs","stompingtantrum","protect"],"baseAbility":"lightmetal","item":"metagrossite","pokeball":"pokeball","ability":"lightmetal","commanding":false,"reviving":false},{"ident":"p2: Garchomp","details":"Garchomp, L50, F","condition":"185/185","active":true,"stats":{"atk":163,"def":115,"spa":110,"spd":105,"spe":154},"moves":["dracometeor","powergem","flamethrower","protect"],"baseAbility":"roughskin","item":"garchompitez","pokeball":"pokeball","ability":"roughskin","commanding":false,"reviving":false},{"ident":"p2: Volcarona","details":"Volcarona, L50, M","condition":"172/172","active":false,"stats":{"atk":72,"def":116,"spa":176,"spd":125,"spe":138},"moves":["flamethrower","gigadrain","quiverdance","protect"],"baseAbility":"flamebody","item":"grassyseed","pokeball":"pokeball","ability":"flamebody","commanding":false,"reviving":false},{"ident":"p2: Sneasler","details":"Sneasler, L50, M","condition":"157/157","active":false,"stats":{"atk":200,"def":80,"spa":54,"spd":100,"spe":172},"moves":["closecombat","direclaw","coaching","fakeout"],"baseAbility":"unburden","item":"whiteherb","pokeball":"pokeball","ability":"unburden","commanding":false,"reviving":false},{"ident":"p2: Rillaboom","details":"Rillaboom, L50, M","condition":"207/207","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["woodhammer","grassyglide","highhorsepower","fakeout"],"baseAbility":"grassysurge","item":"miracleseed","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false},{"ident":"p2: Incineroar","details":"Incineroar, L50, F","condition":"202/202","active":false,"stats":{"atk":137,"def":110,"spa":90,"spd":156,"spe":80},"moves":["flareblitz","throatchop","partingshot","fakeout"],"baseAbility":"intimidate","item":"sitrusberry","pokeball":"pokeball","ability":"intimidate","commanding":false,"reviving":false}]},"rqid":3}
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"teamPreview":true,"maxChosenTeamSize":4,"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Salamence","details":"Salamence, L50, M","condition":"172/172","active":true,"stats":{"atk":155,"def":118,"spa":162,"spd":100,"spe":132},"moves":["hypervoice","doubleedge","tailwind","protect"],"baseAbility":"intimidate","item":"salamencite","pokeball":"pokeball","ability":"intimidate","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"177/177","active":true,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"207/207","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false},{"ident":"p1: Sneasler","details":"Sneasler, L50, M","condition":"157/157","active":false,"stats":{"atk":200,"def":80,"spa":54,"spd":100,"spe":172},"moves":["fakeout","closecombat","direclaw","protect"],"baseAbility":"unburden","item":"whiteherb","pokeball":"pokeball","ability":"unburden","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"179/179","active":false,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"grassyseed","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":false,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false}]},"rqid":2}
 
 ========================================================================
-  SEND  2026-09-17 00:57:33
+  SEND  2026-10-10 19:34:43
 ========================================================================
-battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw|hf
+battle-gen9championsvgc2026regmcbo3-2696345396|hf
 
 ========================================================================
-  SEND  2026-09-17 00:57:33
+  SEND  2026-10-10 19:34:43
 ========================================================================
-battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw|/team 4612|3
+battle-gen9championsvgc2026regmcbo3-2696345396|/team 3526|2
 
 ========================================================================
-  RECV  2026-09-17 00:57:33
+  RECV  2026-10-10 19:34:43
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |c|☆Deep1ODDQN|hf
 
 ========================================================================
-  RECV  2026-09-17 00:57:49
+  RECV  2026-10-10 19:34:52
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |
-|t:|1789624669
+|t:|1791678892
 |teamsize|p1|4
 |teamsize|p2|4
 |start
-|switch|p1a: Basculegion|Basculegion, L50, M|100/100
-|switch|p1b: Pelipper|Pelipper, L50, M|100/100
-|switch|p2a: Sneasler|Sneasler, L50, M|157/157
-|switch|p2b: Incineroar|Incineroar, L50, F|202/202
-|-weather|RainDance|[from] ability: Drizzle|[of] p1b: Pelipper
-|-ability|p2b: Incineroar|Intimidate|boost
-|-unboost|p1a: Basculegion|atk|1
-|-unboost|p1b: Pelipper|atk|1
+|switch|p1a: Rillaboom|Rillaboom, L50, F|207/207
+|switch|p1b: Gholdengo|Gholdengo, L50|179/179
+|switch|p2a: Salamence|Salamence, L50, F|100/100
+|switch|p2b: Kingambit|Kingambit, L50, F|100/100
+|-ability|p2a: Salamence|Intimidate|boost
+|-unboost|p1a: Rillaboom|atk|1
+|-unboost|p1b: Gholdengo|atk|1
+|-fieldstart|move: Grassy Terrain|[from] ability: Grassy Surge|[of] p1a: Rillaboom
+|-enditem|p1b: Gholdengo|Grassy Seed
+|-boost|p1b: Gholdengo|def|1|[from] item: Grassy Seed
 |turn|1
 
 ========================================================================
-  RECV  2026-09-17 00:57:49
+  RECV  2026-10-10 19:34:52
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|request|{"active":[{"moves":[{"move":"Close Combat","id":"closecombat","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Dire Claw","id":"direclaw","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Coaching","id":"coaching","pp":12,"maxpp":12,"target":"adjacentAlly","disabled":false},{"move":"Fake Out","id":"fakeout","pp":12,"maxpp":12,"target":"normal","disabled":false}]},{"moves":[{"move":"Flare Blitz","id":"flareblitz","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Throat Chop","id":"throatchop","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Parting Shot","id":"partingshot","pp":20,"maxpp":20,"target":"normal","disabled":false},{"move":"Fake Out","id":"fakeout","pp":12,"maxpp":12,"target":"normal","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p2","pokemon":[{"ident":"p2: Sneasler","details":"Sneasler, L50, M","condition":"157/157","active":true,"stats":{"atk":200,"def":80,"spa":54,"spd":100,"spe":172},"moves":["closecombat","direclaw","coaching","fakeout"],"baseAbility":"unburden","item":"whiteherb","pokeball":"pokeball","ability":"unburden","commanding":false,"reviving":false},{"ident":"p2: Incineroar","details":"Incineroar, L50, F","condition":"202/202","active":true,"stats":{"atk":137,"def":110,"spa":90,"spd":156,"spe":80},"moves":["flareblitz","throatchop","partingshot","fakeout"],"baseAbility":"intimidate","item":"sitrusberry","pokeball":"pokeball","ability":"intimidate","commanding":false,"reviving":false},{"ident":"p2: Metagross","details":"Metagross, L50","condition":"175/175","active":false,"stats":{"atk":177,"def":158,"spa":103,"spd":110,"spe":122},"moves":["ironhead","psychicfangs","stompingtantrum","protect"],"baseAbility":"lightmetal","item":"metagrossite","pokeball":"pokeball","ability":"lightmetal","commanding":false,"reviving":false},{"ident":"p2: Garchomp","details":"Garchomp, L50, F","condition":"185/185","active":false,"stats":{"atk":163,"def":115,"spa":110,"spd":105,"spe":154},"moves":["dracometeor","powergem","flamethrower","protect"],"baseAbility":"roughskin","item":"garchompitez","pokeball":"pokeball","ability":"roughskin","commanding":false,"reviving":false}]},"rqid":5}
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"active":[{"moves":[{"move":"Fake Out","id":"fakeout","pp":12,"maxpp":12,"target":"normal","disabled":false},{"move":"Grassy Glide","id":"grassyglide","pp":20,"maxpp":20,"target":"normal","disabled":false},{"move":"Wood Hammer","id":"woodhammer","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"High Horsepower","id":"highhorsepower","pp":12,"maxpp":12,"target":"normal","disabled":false}]},{"moves":[{"move":"Nasty Plot","id":"nastyplot","pp":20,"maxpp":20,"target":"self","disabled":false},{"move":"Shadow Ball","id":"shadowball","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Make It Rain","id":"makeitrain","pp":8,"maxpp":8,"target":"allAdjacentFoes","disabled":false},{"move":"Protect","id":"protect","pp":8,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"207/207","active":true,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"179/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"177/177","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":false,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false}]},"rqid":4}
 
 ========================================================================
-  SEND  2026-09-17 00:57:50
+  SEND  2026-10-10 19:34:53
 ========================================================================
-battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw|/choose move 2 1, move 2 1
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose move 1 2, move 2 1
 
 ========================================================================
-  RECV  2026-09-17 00:57:53
+  RECV  2026-10-10 19:35:05
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |
-|t:|1789624673
-|move|p1a: Basculegion|Wave Crash|p2a: Sneasler
-|-damage|p2a: Sneasler|0 fnt
-|faint|p2a: Sneasler
-|-damage|p1a: Basculegion|73/100|[from] Recoil
-|move|p1b: Pelipper|Weather Ball|p2b: Incineroar
-|-supereffective|p2b: Incineroar|1
-|-damage|p2b: Incineroar|12/202
-|-enditem|p2b: Incineroar|Sitrus Berry|[eat]
-|-heal|p2b: Incineroar|62/202|[from] item: Sitrus Berry
-|-damage|p1b: Pelipper|90/100|[from] item: Life Orb
-|move|p2b: Incineroar|Throat Chop|p1a: Basculegion
-|-supereffective|p1a: Basculegion|1
-|-damage|p1a: Basculegion|0 fnt
-|faint|p1a: Basculegion
+|t:|1791678905
+|detailschange|p2a: Salamence|Salamence-Mega, L50, F
+|-mega|p2a: Salamence|Salamence|Salamencite
+|move|p1a: Rillaboom|Fake Out|p2b: Kingambit
+|-resisted|p2b: Kingambit|1
+|-damage|p2b: Kingambit|96/100
+|-damage|p1a: Rillaboom|187/207|[from] item: Life Orb
+|cant|p2b: Kingambit|flinch
+|move|p2a: Salamence|Hyper Voice|p1b: Gholdengo|[spread] p1a,p1b
+|-supereffective|p1a: Rillaboom|1
+|-resisted|p1b: Gholdengo|1
+|-damage|p1a: Rillaboom|47/207
+|-damage|p1b: Gholdengo|146/179
+|move|p1b: Gholdengo|Shadow Ball|p2a: Salamence
+|-damage|p2a: Salamence|47/100
 |
-|-weather|RainDance|[upkeep]
+|-heal|p1b: Gholdengo|157/179|[from] Grassy Terrain
+|-heal|p1a: Rillaboom|59/207|[from] Grassy Terrain
+|-heal|p2b: Kingambit|100/100|[from] Grassy Terrain
 |upkeep
-
-========================================================================
-  RECV  2026-09-17 00:57:53
-========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|request|{"forceSwitch":[true,false],"side":{"name":"Deep1ODDQN","id":"p2","pokemon":[{"ident":"p2: Sneasler","details":"Sneasler, L50, M","condition":"0 fnt","active":true,"stats":{"atk":200,"def":80,"spa":54,"spd":100,"spe":172},"moves":["closecombat","direclaw","coaching","fakeout"],"baseAbility":"unburden","item":"whiteherb","pokeball":"pokeball","ability":"unburden","commanding":false,"reviving":false},{"ident":"p2: Incineroar","details":"Incineroar, L50, F","condition":"62/202","active":true,"stats":{"atk":137,"def":110,"spa":90,"spd":156,"spe":80},"moves":["flareblitz","throatchop","partingshot","fakeout"],"baseAbility":"intimidate","item":"","pokeball":"pokeball","ability":"intimidate","commanding":false,"reviving":false},{"ident":"p2: Metagross","details":"Metagross, L50","condition":"175/175","active":false,"stats":{"atk":177,"def":158,"spa":103,"spd":110,"spe":122},"moves":["ironhead","psychicfangs","stompingtantrum","protect"],"baseAbility":"lightmetal","item":"metagrossite","pokeball":"pokeball","ability":"lightmetal","commanding":false,"reviving":false},{"ident":"p2: Garchomp","details":"Garchomp, L50, F","condition":"185/185","active":false,"stats":{"atk":163,"def":115,"spa":110,"spd":105,"spe":154},"moves":["dracometeor","powergem","flamethrower","protect"],"baseAbility":"roughskin","item":"garchompitez","pokeball":"pokeball","ability":"roughskin","commanding":false,"reviving":false}]},"rqid":7}
-
-========================================================================
-  SEND  2026-09-17 00:57:54
-========================================================================
-battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw|/choose switch 3, pass
-
-========================================================================
-  RECV  2026-09-17 00:58:09
-========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|
-|t:|1789624689
-|switch|p2a: Metagross|Metagross, L50|175/175
-|switch|p1a: Archaludon|Archaludon, L50, M|100/100
 |turn|2
 
 ========================================================================
-  RECV  2026-09-17 00:58:09
+  RECV  2026-10-10 19:35:05
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|request|{"active":[{"moves":[{"move":"Iron Head","id":"ironhead","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Psychic Fangs","id":"psychicfangs","pp":12,"maxpp":12,"target":"normal","disabled":false},{"move":"Stomping Tantrum","id":"stompingtantrum","pp":12,"maxpp":12,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":8,"maxpp":8,"target":"self","disabled":false}],"canMegaEvo":true},{"moves":[{"move":"Flare Blitz","id":"flareblitz","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Throat Chop","id":"throatchop","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Parting Shot","id":"partingshot","pp":20,"maxpp":20,"target":"normal","disabled":false},{"move":"Fake Out","id":"fakeout","pp":12,"maxpp":12,"target":"normal","disabled":true}]}],"side":{"name":"Deep1ODDQN","id":"p2","pokemon":[{"ident":"p2: Metagross","details":"Metagross, L50","condition":"175/175","active":true,"stats":{"atk":177,"def":158,"spa":103,"spd":110,"spe":122},"moves":["ironhead","psychicfangs","stompingtantrum","protect"],"baseAbility":"lightmetal","item":"metagrossite","pokeball":"pokeball","ability":"lightmetal","commanding":false,"reviving":false},{"ident":"p2: Incineroar","details":"Incineroar, L50, F","condition":"62/202","active":true,"stats":{"atk":137,"def":110,"spa":90,"spd":156,"spe":80},"moves":["flareblitz","throatchop","partingshot","fakeout"],"baseAbility":"intimidate","item":"","pokeball":"pokeball","ability":"intimidate","commanding":false,"reviving":false},{"ident":"p2: Sneasler","details":"Sneasler, L50, M","condition":"0 fnt","active":false,"stats":{"atk":200,"def":80,"spa":54,"spd":100,"spe":172},"moves":["closecombat","direclaw","coaching","fakeout"],"baseAbility":"unburden","item":"whiteherb","pokeball":"pokeball","ability":"unburden","commanding":false,"reviving":false},{"ident":"p2: Garchomp","details":"Garchomp, L50, F","condition":"185/185","active":false,"stats":{"atk":163,"def":115,"spa":110,"spd":105,"spe":154},"moves":["dracometeor","powergem","flamethrower","protect"],"baseAbility":"roughskin","item":"garchompitez","pokeball":"pokeball","ability":"roughskin","commanding":false,"reviving":false}]},"rqid":9}
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"active":[{"moves":[{"move":"Fake Out","id":"fakeout","pp":11,"maxpp":12,"target":"normal","disabled":true},{"move":"Grassy Glide","id":"grassyglide","pp":20,"maxpp":20,"target":"normal","disabled":false},{"move":"Wood Hammer","id":"woodhammer","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"High Horsepower","id":"highhorsepower","pp":12,"maxpp":12,"target":"normal","disabled":false}]},{"moves":[{"move":"Nasty Plot","id":"nastyplot","pp":20,"maxpp":20,"target":"self","disabled":false},{"move":"Shadow Ball","id":"shadowball","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Make It Rain","id":"makeitrain","pp":8,"maxpp":8,"target":"allAdjacentFoes","disabled":false},{"move":"Protect","id":"protect","pp":8,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"59/207","active":true,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"157/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"177/177","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":false,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false}]},"rqid":6}
 
 ========================================================================
-  SEND  2026-09-17 00:58:10
+  SEND  2026-10-10 19:35:15
 ========================================================================
-battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw|/choose move 2 mega 2, move 2 2
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose move 4 2, move 1
 
 ========================================================================
-  RECV  2026-09-17 00:58:20
+  RECV  2026-10-10 19:35:18
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |
-|t:|1789624700
-|detailschange|p2a: Metagross|Metagross-Mega, L50
-|-mega|p2a: Metagross|Metagross|Metagrossite
-|move|p2a: Metagross|Psychic Fangs|p1b: Pelipper
-|-damage|p1b: Pelipper|26/100
-|move|p1a: Archaludon|Electro Shot||[still]
-|-prepare|p1a: Archaludon|Electro Shot
-|-boost|p1a: Archaludon|spa|1
-|-anim|p1a: Archaludon|Electro Shot|p2a: Metagross
-|-crit|p2a: Metagross
-|-damage|p2a: Metagross|36/175
-|move|p1b: Pelipper|Hurricane|p2b: Incineroar
-|-damage|p2b: Incineroar|0 fnt
-|faint|p2b: Incineroar
-|-damage|p1b: Pelipper|16/100|[from] item: Life Orb
+|t:|1791678918
+|move|p2b: Kingambit|Sucker Punch||[still]
+|-fail|p2b: Kingambit
+|move|p2a: Salamence|Hyper Voice|p1a: Rillaboom|[spread] p1a,p1b
+|-supereffective|p1a: Rillaboom|1
+|-resisted|p1b: Gholdengo|1
+|-damage|p1a: Rillaboom|0 fnt
+|-damage|p1b: Gholdengo|123/179
+|faint|p1a: Rillaboom
+|move|p1b: Gholdengo|Nasty Plot|p1b: Gholdengo
+|-boost|p1b: Gholdengo|spa|2
 |
-|-weather|RainDance|[upkeep]
+|-heal|p1b: Gholdengo|134/179|[from] Grassy Terrain
 |upkeep
 
 ========================================================================
-  RECV  2026-09-17 00:58:20
+  RECV  2026-10-10 19:35:18
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|request|{"forceSwitch":[false,true],"side":{"name":"Deep1ODDQN","id":"p2","pokemon":[{"ident":"p2: Metagross","details":"Metagross-Mega, L50","condition":"36/175","active":true,"stats":{"atk":188,"def":178,"spa":112,"spd":130,"spe":162},"moves":["ironhead","psychicfangs","stompingtantrum","protect"],"baseAbility":"toughclaws","item":"metagrossite","pokeball":"pokeball","ability":"toughclaws","commanding":false,"reviving":false},{"ident":"p2: Incineroar","details":"Incineroar, L50, F","condition":"0 fnt","active":true,"stats":{"atk":137,"def":110,"spa":90,"spd":156,"spe":80},"moves":["flareblitz","throatchop","partingshot","fakeout"],"baseAbility":"intimidate","item":"","pokeball":"pokeball","ability":"intimidate","commanding":false,"reviving":false},{"ident":"p2: Sneasler","details":"Sneasler, L50, M","condition":"0 fnt","active":false,"stats":{"atk":200,"def":80,"spa":54,"spd":100,"spe":172},"moves":["closecombat","direclaw","coaching","fakeout"],"baseAbility":"unburden","item":"whiteherb","pokeball":"pokeball","ability":"unburden","commanding":false,"reviving":false},{"ident":"p2: Garchomp","details":"Garchomp, L50, F","condition":"185/185","active":false,"stats":{"atk":163,"def":115,"spa":110,"spd":105,"spe":154},"moves":["dracometeor","powergem","flamethrower","protect"],"baseAbility":"roughskin","item":"garchompitez","pokeball":"pokeball","ability":"roughskin","commanding":false,"reviving":false}]},"noCancel":true,"rqid":11}
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"forceSwitch":[true,false],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":true,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"134/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"177/177","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":false,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false}]},"noCancel":true,"rqid":8}
 
 ========================================================================
-  SEND  2026-09-17 00:58:20
+  SEND  2026-10-10 19:35:18
 ========================================================================
-battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw|/choose pass, switch 4
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose switch 4, pass
 
 ========================================================================
-  RECV  2026-09-17 00:58:20
+  RECV  2026-10-10 19:35:18
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |
-|t:|1789624700
-|switch|p2b: Garchomp|Garchomp, L50, F|185/185
+|t:|1791678918
+|switch|p1a: Arcanine|Arcanine-Hisui, L50, M|172/172
 |turn|3
 
 ========================================================================
-  RECV  2026-09-17 00:58:20
+  RECV  2026-10-10 19:35:18
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|request|{"active":[{"moves":[{"move":"Iron Head","id":"ironhead","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Psychic Fangs","id":"psychicfangs","pp":11,"maxpp":12,"target":"normal","disabled":false},{"move":"Stomping Tantrum","id":"stompingtantrum","pp":12,"maxpp":12,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":8,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Draco Meteor","id":"dracometeor","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Power Gem","id":"powergem","pp":20,"maxpp":20,"target":"normal","disabled":false},{"move":"Flamethrower","id":"flamethrower","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":8,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p2","pokemon":[{"ident":"p2: Metagross","details":"Metagross-Mega, L50","condition":"36/175","active":true,"stats":{"atk":188,"def":178,"spa":112,"spd":130,"spe":162},"moves":["ironhead","psychicfangs","stompingtantrum","protect"],"baseAbility":"toughclaws","item":"metagrossite","pokeball":"pokeball","ability":"toughclaws","commanding":false,"reviving":false},{"ident":"p2: Garchomp","details":"Garchomp, L50, F","condition":"185/185","active":true,"stats":{"atk":163,"def":115,"spa":110,"spd":105,"spe":154},"moves":["dracometeor","powergem","flamethrower","protect"],"baseAbility":"roughskin","item":"garchompitez","pokeball":"pokeball","ability":"roughskin","commanding":false,"reviving":false},{"ident":"p2: Sneasler","details":"Sneasler, L50, M","condition":"0 fnt","active":false,"stats":{"atk":200,"def":80,"spa":54,"spd":100,"spe":172},"moves":["closecombat","direclaw","coaching","fakeout"],"baseAbility":"unburden","item":"whiteherb","pokeball":"pokeball","ability":"unburden","commanding":false,"reviving":false},{"ident":"p2: Incineroar","details":"Incineroar, L50, F","condition":"0 fnt","active":false,"stats":{"atk":137,"def":110,"spa":90,"spd":156,"spe":80},"moves":["flareblitz","throatchop","partingshot","fakeout"],"baseAbility":"intimidate","item":"","pokeball":"pokeball","ability":"intimidate","commanding":false,"reviving":false}]},"rqid":13}
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"active":[{"moves":[{"move":"Head Smash","id":"headsmash","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Flare Blitz","id":"flareblitz","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":8,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Nasty Plot","id":"nastyplot","pp":19,"maxpp":20,"target":"self","disabled":false},{"move":"Shadow Ball","id":"shadowball","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Make It Rain","id":"makeitrain","pp":8,"maxpp":8,"target":"allAdjacentFoes","disabled":false},{"move":"Protect","id":"protect","pp":8,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":true,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"134/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"177/177","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"rqid":10}
 
 ========================================================================
-  SEND  2026-09-17 00:58:21
+  SEND  2026-10-10 19:35:18
 ========================================================================
-battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw|/choose move 3 2, move 1 2
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose move 4, move 4
 
 ========================================================================
-  RECV  2026-09-17 00:58:31
+  RECV  2026-10-10 19:35:31
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |
-|t:|1789624711
-|move|p2a: Metagross|Stomping Tantrum|p1b: Pelipper
-|-immune|p1b: Pelipper
-|move|p2b: Garchomp|Draco Meteor|p1b: Pelipper|[miss]
-|-miss|p2b: Garchomp|p1b: Pelipper
-|move|p1a: Archaludon|Dragon Pulse|p2b: Garchomp
-|-supereffective|p2b: Garchomp|1
-|-damage|p2b: Garchomp|0 fnt
-|faint|p2b: Garchomp
-|move|p1b: Pelipper|Hurricane|p2a: Metagross
-|-resisted|p2a: Metagross|1
-|-damage|p2a: Metagross|0 fnt
-|faint|p2a: Metagross
-|-damage|p1b: Pelipper|7/100|[from] item: Life Orb
+|t:|1791678930
+|move|p1a: Arcanine|Protect|p1a: Arcanine
+|-singleturn|p1a: Arcanine|Protect
+|move|p1b: Gholdengo|Protect|p1b: Gholdengo
+|-singleturn|p1b: Gholdengo|Protect
+|move|p2b: Kingambit|Sucker Punch||[still]
+|-fail|p2b: Kingambit
+|move|p2a: Salamence|Double-Edge|p1a: Arcanine
+|-activate|p1a: Arcanine|move: Protect
 |
-|win|popplioperu98
+|-heal|p1b: Gholdengo|145/179|[from] Grassy Terrain
+|upkeep
+|turn|4
 
 ========================================================================
-  SEND  2026-09-17 00:58:31
+  RECV  2026-10-10 19:35:31
 ========================================================================
-battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw|gg
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"active":[{"moves":[{"move":"Head Smash","id":"headsmash","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Flare Blitz","id":"flareblitz","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":7,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Nasty Plot","id":"nastyplot","pp":19,"maxpp":20,"target":"self","disabled":false},{"move":"Shadow Ball","id":"shadowball","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Make It Rain","id":"makeitrain","pp":8,"maxpp":8,"target":"allAdjacentFoes","disabled":false},{"move":"Protect","id":"protect","pp":7,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":true,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"145/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"177/177","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"rqid":12}
 
 ========================================================================
-  RECV  2026-09-17 00:58:31
+  SEND  2026-10-10 19:35:31
 ========================================================================
-|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose switch 3, move 1
 
 ========================================================================
-  RECV  2026-09-17 00:58:31
+  RECV  2026-10-10 19:35:38
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
-|html|popplioperu98 won game 1!
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|
+|t:|1791678937
+|switch|p1a: Froslass|Froslass, L50, F|177/177
+|move|p2b: Kingambit|Sucker Punch||[still]
+|-fail|p2b: Kingambit
+|move|p2a: Salamence|Double-Edge|p1a: Froslass
+|-damage|p1a: Froslass|0 fnt
+|faint|p1a: Froslass
+|-damage|p2a: Salamence|13/100|[from] Recoil
+|move|p1b: Gholdengo|Nasty Plot|p1b: Gholdengo
+|-boost|p1b: Gholdengo|spa|2
+|
+|-heal|p1b: Gholdengo|156/179|[from] Grassy Terrain
+|upkeep
 
 ========================================================================
-  RECV  2026-09-17 00:58:31
+  RECV  2026-10-10 19:35:38
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
-|fieldhtml|<center><br /><strong>popplioperu98 and Deep1ODDQN's Best-of-3 progress:</strong><br /><table><tr><td>popplioperu98: </td><td><i class="fa fa-circle"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr><tr><td>Deep1ODDQN: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr></table><br /><br /><table><tr><td><center><strong>popplioperu98</strong></center></td><td></td><td><center><strong>Deep1ODDQN</strong></center></td></tr><tr><td><center><img class="trainersprite" style="transform: scaleX(-1)" src="https://play.pokemonshowdown.com/sprites/trainers/winona.png" /></center></td><td></td><td><center><img class="trainersprite" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td></tr><tr><td><psicon pokemon="Archaludon" style="transform: scaleX(-1)" /><psicon pokemon="Pelipper" style="transform: scaleX(-1)" /><psicon pokemon="Golisopod" style="transform: scaleX(-1)" /><br /><psicon pokemon="Basculegion" style="transform: scaleX(-1)" /><psicon pokemon="Rillaboom" style="transform: scaleX(-1)" /><psicon pokemon="Farigiraf" style="transform: scaleX(-1)" /></td><td> vs </td><td><psicon pokemon="Metagross" /><psicon pokemon="Garchomp" /><psicon pokemon="Volcarona" /><br /><psicon pokemon="Sneasler" /><psicon pokemon="Rillaboom" /><psicon pokemon="Incineroar" /></td></tr></table></center>
-|controlshtml|<center><p>Game 1: <a href="/battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw"><strong>won by popplioperu98</strong></a></p></center>
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"forceSwitch":[true,false],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"0 fnt","active":true,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"156/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":false,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"noCancel":true,"rqid":14}
 
 ========================================================================
-  RECV  2026-09-17 00:58:31
+  SEND  2026-10-10 19:35:38
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose switch 3, pass
+
+========================================================================
+  RECV  2026-10-10 19:35:38
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|
+|t:|1791678937
+|switch|p1a: Arcanine|Arcanine-Hisui, L50, M|172/172
+|turn|5
+
+========================================================================
+  RECV  2026-10-10 19:35:38
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"active":[{"moves":[{"move":"Head Smash","id":"headsmash","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Flare Blitz","id":"flareblitz","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":7,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Nasty Plot","id":"nastyplot","pp":18,"maxpp":20,"target":"self","disabled":false},{"move":"Shadow Ball","id":"shadowball","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Make It Rain","id":"makeitrain","pp":8,"maxpp":8,"target":"allAdjacentFoes","disabled":false},{"move":"Protect","id":"protect","pp":7,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":true,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"156/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"0 fnt","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"rqid":16}
+
+========================================================================
+  SEND  2026-10-10 19:35:38
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose move 1 2, move 3
+
+========================================================================
+  RECV  2026-10-10 19:35:46
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|
+|t:|1791678946
+|switch|p2a: Basculegion|Basculegion, L50, M|100/100
+|move|p2b: Kingambit|Sucker Punch|p1b: Gholdengo
+|-supereffective|p1b: Gholdengo|1
+|-damage|p1b: Gholdengo|64/179
+|move|p1a: Arcanine|Head Smash|p2b: Kingambit
+|-resisted|p2b: Kingambit|1
+|-damage|p2b: Kingambit|72/100
+|move|p1b: Gholdengo|Make It Rain|p2a: Basculegion|[spread] p2a,p2b
+|-resisted|p2a: Basculegion|1
+|-crit|p2a: Basculegion
+|-resisted|p2b: Kingambit|1
+|-damage|p2a: Basculegion|0 fnt
+|-damage|p2b: Kingambit|9/100
+|-unboost|p1b: Gholdengo|spa|2
+|faint|p2a: Basculegion
+|
+|-heal|p1b: Gholdengo|75/179|[from] Grassy Terrain
+|-heal|p2b: Kingambit|15/100|[from] Grassy Terrain
+|-fieldend|move: Grassy Terrain
+|upkeep
+
+========================================================================
+  RECV  2026-10-10 19:35:46
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"wait":true,"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":true,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"75/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"0 fnt","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"rqid":18}
+
+========================================================================
+  RECV  2026-10-10 19:35:57
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|
+|t:|1791678957
+|switch|p2a: Salamence|Salamence-Mega, L50, F|13/100
+|turn|6
+
+========================================================================
+  RECV  2026-10-10 19:35:57
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"active":[{"moves":[{"move":"Head Smash","id":"headsmash","pp":7,"maxpp":8,"target":"normal","disabled":false},{"move":"Flare Blitz","id":"flareblitz","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":7,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Nasty Plot","id":"nastyplot","pp":18,"maxpp":20,"target":"self","disabled":false},{"move":"Shadow Ball","id":"shadowball","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Make It Rain","id":"makeitrain","pp":7,"maxpp":8,"target":"allAdjacentFoes","disabled":false},{"move":"Protect","id":"protect","pp":7,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":true,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"75/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"0 fnt","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"rqid":20}
+
+========================================================================
+  SEND  2026-10-10 19:35:57
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose move 4, move 4
+
+========================================================================
+  RECV  2026-10-10 19:36:08
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|
+|t:|1791678968
+|move|p1a: Arcanine|Protect|p1a: Arcanine
+|-singleturn|p1a: Arcanine|Protect
+|move|p1b: Gholdengo|Protect|p1b: Gholdengo
+|-singleturn|p1b: Gholdengo|Protect
+|move|p2b: Kingambit|Sucker Punch||[still]
+|-fail|p2b: Kingambit
+|move|p2a: Salamence|Tailwind|p2a: Salamence
+|-sidestart|p2: popplioperu98|move: Tailwind
+|
+|upkeep
+|turn|7
+
+========================================================================
+  RECV  2026-10-10 19:36:08
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"active":[{"moves":[{"move":"Head Smash","id":"headsmash","pp":7,"maxpp":8,"target":"normal","disabled":false},{"move":"Flare Blitz","id":"flareblitz","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":6,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Nasty Plot","id":"nastyplot","pp":18,"maxpp":20,"target":"self","disabled":false},{"move":"Shadow Ball","id":"shadowball","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Make It Rain","id":"makeitrain","pp":7,"maxpp":8,"target":"allAdjacentFoes","disabled":false},{"move":"Protect","id":"protect","pp":6,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":true,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"75/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"0 fnt","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"rqid":22}
+
+========================================================================
+  SEND  2026-10-10 19:36:08
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose move 1 2, move 4
+
+========================================================================
+  RECV  2026-10-10 19:36:15
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|
+|t:|1791678975
+|switch|p2a: Rillaboom|Rillaboom, L50, M|100/100
+|-fieldstart|move: Grassy Terrain|[from] ability: Grassy Surge|[of] p2a: Rillaboom
+|move|p1b: Gholdengo|Protect||[still]
+|-fail|p1b: Gholdengo
+|move|p2b: Kingambit|Sucker Punch||[still]
+|-fail|p2b: Kingambit
+|move|p1a: Arcanine|Head Smash|p2b: Kingambit
+|-resisted|p2b: Kingambit|1
+|-damage|p2b: Kingambit|0 fnt
+|faint|p2b: Kingambit
+|
+|-heal|p1b: Gholdengo|86/179|[from] Grassy Terrain
+|upkeep
+
+========================================================================
+  RECV  2026-10-10 19:36:15
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"wait":true,"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":true,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"86/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"0 fnt","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"rqid":24}
+
+========================================================================
+  RECV  2026-10-10 19:36:20
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|
+|t:|1791678980
+|switch|p2b: Salamence|Salamence-Mega, L50, F|13/100
+|turn|8
+
+========================================================================
+  RECV  2026-10-10 19:36:20
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"active":[{"moves":[{"move":"Head Smash","id":"headsmash","pp":6,"maxpp":8,"target":"normal","disabled":false},{"move":"Flare Blitz","id":"flareblitz","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":6,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Nasty Plot","id":"nastyplot","pp":18,"maxpp":20,"target":"self","disabled":false},{"move":"Shadow Ball","id":"shadowball","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Make It Rain","id":"makeitrain","pp":7,"maxpp":8,"target":"allAdjacentFoes","disabled":false},{"move":"Protect","id":"protect","pp":5,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":true,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"86/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"0 fnt","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"rqid":26}
+
+========================================================================
+  SEND  2026-10-10 19:36:20
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose move 4, move 3
+
+========================================================================
+  RECV  2026-10-10 19:36:24
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|
+|t:|1791678984
+|move|p1a: Arcanine|Protect|p1a: Arcanine
+|-singleturn|p1a: Arcanine|Protect
+|move|p2b: Salamence|Hyper Voice|p1b: Gholdengo|[spread] p1b
+|-activate|p1a: Arcanine|move: Protect
+|-resisted|p1b: Gholdengo|1
+|-damage|p1b: Gholdengo|51/179
+|move|p2a: Rillaboom|Wood Hammer|p1a: Arcanine
+|-activate|p1a: Arcanine|move: Protect
+|move|p1b: Gholdengo|Make It Rain|p2a: Rillaboom|[spread] p2b
+|-miss|p1b: Gholdengo|p2a: Rillaboom
+|-damage|p2b: Salamence|0 fnt
+|-unboost|p1b: Gholdengo|spa|2
+|faint|p2b: Salamence
+|
+|-heal|p1b: Gholdengo|62/179|[from] Grassy Terrain
+|upkeep
+|turn|9
+
+========================================================================
+  RECV  2026-10-10 19:36:24
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"active":[{"moves":[{"move":"Head Smash","id":"headsmash","pp":6,"maxpp":8,"target":"normal","disabled":false},{"move":"Flare Blitz","id":"flareblitz","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":5,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Nasty Plot","id":"nastyplot","pp":18,"maxpp":20,"target":"self","disabled":false},{"move":"Shadow Ball","id":"shadowball","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Make It Rain","id":"makeitrain","pp":6,"maxpp":8,"target":"allAdjacentFoes","disabled":false},{"move":"Protect","id":"protect","pp":5,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"172/172","active":true,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"62/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"0 fnt","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"rqid":28}
+
+========================================================================
+  SEND  2026-10-10 19:36:24
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose move 4, move 1
+
+========================================================================
+  RECV  2026-10-10 19:36:26
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|
+|t:|1791678986
+|move|p1a: Arcanine|Protect||[still]
+|-fail|p1a: Arcanine
+|move|p2a: Rillaboom|Wood Hammer|p1a: Arcanine
+|-damage|p1a: Arcanine|6/172
+|-damage|p2a: Rillaboom|71/100|[from] Recoil
+|move|p1b: Gholdengo|Nasty Plot|p1b: Gholdengo
+|-boost|p1b: Gholdengo|spa|2
+|
+|-heal|p2a: Rillaboom|77/100|[from] Grassy Terrain
+|-heal|p1a: Arcanine|16/172|[from] Grassy Terrain
+|-heal|p1b: Gholdengo|73/179|[from] Grassy Terrain
+|-sideend|p2: popplioperu98|move: Tailwind
+|upkeep
+|turn|10
+
+========================================================================
+  RECV  2026-10-10 19:36:26
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"active":[{"moves":[{"move":"Head Smash","id":"headsmash","pp":6,"maxpp":8,"target":"normal","disabled":false},{"move":"Flare Blitz","id":"flareblitz","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":4,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Nasty Plot","id":"nastyplot","pp":17,"maxpp":20,"target":"self","disabled":false},{"move":"Shadow Ball","id":"shadowball","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Make It Rain","id":"makeitrain","pp":6,"maxpp":8,"target":"allAdjacentFoes","disabled":false},{"move":"Protect","id":"protect","pp":5,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"16/172","active":true,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"73/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"0 fnt","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"rqid":30}
+
+========================================================================
+  SEND  2026-10-10 19:36:27
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose move 2 2, move 1
+
+========================================================================
+  RECV  2026-10-10 19:36:33
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|
+|t:|1791678993
+|move|p2a: Rillaboom|Grassy Glide|p1a: Arcanine
+|-crit|p1a: Arcanine
+|-damage|p1a: Arcanine|0 fnt
+|faint|p1a: Arcanine
+|move|p1b: Gholdengo|Nasty Plot|p1b: Gholdengo
+|-boost|p1b: Gholdengo|spa|2
+|
+|-heal|p1b: Gholdengo|84/179|[from] Grassy Terrain
+|-heal|p2a: Rillaboom|83/100|[from] Grassy Terrain
+|upkeep
+|turn|11
+
+========================================================================
+  RECV  2026-10-10 19:36:33
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"active":[{"moves":[{"move":"Head Smash","id":"headsmash","pp":6,"maxpp":8,"target":"normal","disabled":false},{"move":"Flare Blitz","id":"flareblitz","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":4,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Nasty Plot","id":"nastyplot","pp":16,"maxpp":20,"target":"self","disabled":false},{"move":"Shadow Ball","id":"shadowball","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Make It Rain","id":"makeitrain","pp":6,"maxpp":8,"target":"allAdjacentFoes","disabled":false},{"move":"Protect","id":"protect","pp":5,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"0 fnt","active":true,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"84/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"0 fnt","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"rqid":32}
+
+========================================================================
+  SEND  2026-10-10 19:36:34
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose pass, move 4
+
+========================================================================
+  RECV  2026-10-10 19:36:39
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|
+|t:|1791678999
+|move|p1b: Gholdengo|Protect|p1b: Gholdengo
+|-singleturn|p1b: Gholdengo|Protect
+|move|p2a: Rillaboom|Wood Hammer|p1b: Gholdengo
+|-activate|p1b: Gholdengo|move: Protect
+|
+|-heal|p1b: Gholdengo|95/179|[from] Grassy Terrain
+|-heal|p2a: Rillaboom|90/100|[from] Grassy Terrain
+|-fieldend|move: Grassy Terrain
+|upkeep
+|turn|12
+
+========================================================================
+  RECV  2026-10-10 19:36:39
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|request|{"active":[{"moves":[{"move":"Head Smash","id":"headsmash","pp":6,"maxpp":8,"target":"normal","disabled":false},{"move":"Flare Blitz","id":"flareblitz","pp":16,"maxpp":16,"target":"normal","disabled":false},{"move":"Extreme Speed","id":"extremespeed","pp":8,"maxpp":8,"target":"normal","disabled":false},{"move":"Protect","id":"protect","pp":4,"maxpp":8,"target":"self","disabled":false}]},{"moves":[{"move":"Nasty Plot","id":"nastyplot","pp":16,"maxpp":20,"target":"self","disabled":false},{"move":"Shadow Ball","id":"shadowball","pp":15,"maxpp":16,"target":"normal","disabled":false},{"move":"Make It Rain","id":"makeitrain","pp":6,"maxpp":8,"target":"allAdjacentFoes","disabled":false},{"move":"Protect","id":"protect","pp":4,"maxpp":8,"target":"self","disabled":false}]}],"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, M","condition":"0 fnt","active":true,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"95/179","active":true,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"0 fnt","active":false,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, F","condition":"0 fnt","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false}]},"rqid":34}
+
+========================================================================
+  SEND  2026-10-10 19:36:39
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2696345396|/choose pass, move 2 1
+
+========================================================================
+  RECV  2026-10-10 19:36:40
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|
+|t:|1791679000
+|move|p1b: Gholdengo|Shadow Ball|p2a: Rillaboom
+|-damage|p2a: Rillaboom|0 fnt
+|faint|p2a: Rillaboom
+|
+|win|Deep1ODDQN
+
+========================================================================
+  SEND  2026-10-10 19:36:40
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2696345396|gg
+
+========================================================================
+  RECV  2026-10-10 19:36:40
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2696345395":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+
+========================================================================
+  RECV  2026-10-10 19:36:40
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|html|Deep1ODDQN won game 1!
+
+========================================================================
+  RECV  2026-10-10 19:36:40
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|fieldhtml|<center><br /><strong>Deep1ODDQN and popplioperu98's Best-of-3 progress:</strong><br /><table><tr><td>Deep1ODDQN: </td><td><i class="fa fa-circle"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr><tr><td>popplioperu98: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr></table><br /><br /><table><tr><td><center><strong>Deep1ODDQN</strong></center></td><td></td><td><center><strong>popplioperu98</strong></center></td></tr><tr><td><center><img class="trainersprite" style="transform: scaleX(-1)" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td><td></td><td><center><img class="trainersprite" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td></tr><tr><td><psicon pokemon="Salamence" style="transform: scaleX(-1)" /><psicon pokemon="Froslass" style="transform: scaleX(-1)" /><psicon pokemon="Rillaboom" style="transform: scaleX(-1)" /><br /><psicon pokemon="Sneasler" style="transform: scaleX(-1)" /><psicon pokemon="Gholdengo" style="transform: scaleX(-1)" /><psicon pokemon="Arcanine-Hisui" style="transform: scaleX(-1)" /></td><td> vs </td><td><psicon pokemon="Salamence" /><psicon pokemon="Rillaboom" /><psicon pokemon="Sneasler" /><br /><psicon pokemon="Arcanine-Hisui" /><psicon pokemon="Kingambit" /><psicon pokemon="Basculegion" /></td></tr></table></center>
+|controlshtml|<center><p>Game 1: <a href="/battle-gen9championsvgc2026regmcbo3-2696345396"><strong>won by Deep1ODDQN</strong></a></p></center>
+
+========================================================================
+  RECV  2026-10-10 19:36:40
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |tempnotify|choice|Next game|It's time for game 2 in your best-of-3!
 
 ========================================================================
-  RECV  2026-09-17 00:58:31
+  RECV  2026-10-10 19:36:40
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|c|~|/uhtml controls,<div class="infobox"><p style="margin:6px">Are you ready for game 2, Deep1ODDQN?</p><p style="margin:6px"><button class="button notifying" name="send" value="/msgroom game-bestof3-gen9championsvgc2026regmcbo3-2696345395,/confirmready">I'm ready!</button></p></div>
+
+========================================================================
+  SEND  2026-10-10 19:36:40
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2696345396|/msgroom game-bestof3-gen9championsvgc2026regmcbo3-2696345395,/confirmready
+
+========================================================================
+  RECV  2026-10-10 19:36:40
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|c|~|/uhtml controls,<div class="infobox"><p style="margin:6px">Are you ready for game 2, Deep1ODDQN?</p><p style="margin:6px"><button class="button notifying" name="send" value="/msgroom game-bestof3-gen9championsvgc2026regmcbo3-2696345395,/confirmready">I'm ready!</button></p></div>
+
+========================================================================
+  RECV  2026-10-10 19:36:40
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |tempnotify|choice|Next game|It's time for game 2 in your best-of-3!
 
 ========================================================================
-  RECV  2026-09-17 00:58:31
+  RECV  2026-10-10 19:36:41
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
-|c|~|/uhtml controls,<div class="infobox"><p style="margin:6px">Are you ready for game 2, Deep1ODDQN?</p><p style="margin:6px"><button class="button notifying" name="send" value="/msgroom game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw,/confirmready">I'm ready!</button></p></div>
-
-========================================================================
-  SEND  2026-09-17 00:58:31
-========================================================================
-battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw|/msgroom game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw,/confirmready
-
-========================================================================
-  RECV  2026-09-17 00:58:31
-========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|c|~|/uhtml controls,<div class="infobox"><p style="margin:6px">Are you ready for game 2, Deep1ODDQN?</p><p style="margin:6px"><button class="button notifying" name="send" value="/msgroom game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw,/confirmready">I'm ready!</button></p></div>
-
-========================================================================
-  RECV  2026-09-17 00:58:31
-========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |c|☆Deep1ODDQN|gg
 
 ========================================================================
-  RECV  2026-09-17 00:58:32
+  RECV  2026-10-10 19:36:41
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |tempnotifyoff|choice
 
 ========================================================================
-  RECV  2026-09-17 00:58:32
+  RECV  2026-10-10 19:36:41
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 |tempnotifyoff|choice
 
 ========================================================================
-  RECV  2026-09-17 00:58:32
+  RECV  2026-10-10 19:36:41
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 |c|~|/uhtml controls,<div class="infobox"><p style="margin:6px">Are you ready for game 2, Deep1ODDQN?</p><p style="margin:6px"><button class="button" disabled><i class="fa fa-check"></i> I'm ready!</button> &ndash; waiting for opponent...</p></div>
 
 ========================================================================
-  RECV  2026-09-17 00:58:32
+  RECV  2026-10-10 19:36:41
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |c|~|/uhtml controls,<div class="infobox"><p style="margin:6px">Are you ready for game 2, Deep1ODDQN?</p><p style="margin:6px"><button class="button" disabled><i class="fa fa-check"></i> I'm ready!</button> &ndash; waiting for opponent...</p></div>
 
 ========================================================================
-  RECV  2026-09-17 00:58:32
+  RECV  2026-10-10 19:36:41
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>battle-gen9championsvgc2026regmcbo3-2696345396
 ||Deep1ODDQN is ready for game 2.
 
 ========================================================================
-  RECV  2026-09-17 00:58:32
+  RECV  2026-10-10 19:36:41
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 ||Deep1ODDQN is ready for game 2.
 
 ========================================================================
-  RECV  2026-09-17 00:58:41
+  RECV  2026-10-10 19:36:51
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|inactive|popplioperu98 has 30 seconds to confirm battle start!
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|inactive|popplioperu98 has 29 seconds to confirm battle start!
 
 ========================================================================
-  RECV  2026-09-17 00:58:41
+  RECV  2026-10-10 19:36:51
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
-|inactive|popplioperu98 has 30 seconds to confirm battle start!
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|inactive|popplioperu98 has 29 seconds to confirm battle start!
 
 ========================================================================
-  RECV  2026-09-17 00:58:51
+  RECV  2026-10-10 19:37:01
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|inactive|popplioperu98 has 20 seconds to confirm battle start!
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|inactive|popplioperu98 has 19 seconds to confirm battle start!
 
 ========================================================================
-  RECV  2026-09-17 00:58:51
+  RECV  2026-10-10 19:37:01
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
-|inactive|popplioperu98 has 20 seconds to confirm battle start!
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|inactive|popplioperu98 has 19 seconds to confirm battle start!
 
 ========================================================================
-  RECV  2026-09-17 00:59:01
+  RECV  2026-10-10 19:37:11
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|inactive|popplioperu98 has 10 seconds to confirm battle start!
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|inactive|popplioperu98 has 9 seconds to confirm battle start!
 
 ========================================================================
-  RECV  2026-09-17 00:59:01
+  RECV  2026-10-10 19:37:11
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
-|inactive|popplioperu98 has 10 seconds to confirm battle start!
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|inactive|popplioperu98 has 9 seconds to confirm battle start!
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |tempnotifyoff|choice
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 |tempnotifyoff|choice
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 |c|~|/uhtml controls,
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
+>battle-gen9championsvgc2026regmcbo3-2696345396
 |c|~|/uhtml controls,
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
-|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2696345395":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
-|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2682768759":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2696345395":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2696346346":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
-|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2682768759":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2696345395":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2696346346":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
-|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*","battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) Battle*"}}
-
-========================================================================
-  RECV  2026-09-17 00:59:11
-========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw
+>battle-gen9championsvgc2026regmcbo3-2696346346
 |init|battle
-|title|popplioperu98 vs. Deep1ODDQN
-|j|☆popplioperu98
+|title|Deep1ODDQN vs. popplioperu98
 |j|☆Deep1ODDQN
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw
-|html|<table width="100%"><tr><td align="left">popplioperu98</td><td align="right">Deep1ODDQN</tr><tr><td align="left"><i class="fa fa-circle"></i> <i class="fa fa-circle-o"></i> </td><td align="right"><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> </tr></table>
-|uhtml|bestof|<h2><strong>Game 2</strong> of <a href="/game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw">a best-of-3</a></h2>
+>battle-gen9championsvgc2026regmcbo3-2696346346
+|j|☆popplioperu98
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
->game-bestof3-gen9championsvgc2026regmcbo3-2682768280-2kw266x032xmylky899j935s1ucf0qbpw
+>battle-gen9championsvgc2026regmcbo3-2696346346
+|html|<table width="100%"><tr><td align="left">Deep1ODDQN</td><td align="right">popplioperu98</tr><tr><td align="left"><i class="fa fa-circle"></i> <i class="fa fa-circle-o"></i> </td><td align="right"><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> </tr></table>
+|uhtml|bestof|<h2><strong>Game 2</strong> of <a href="/game-bestof3-gen9championsvgc2026regmcbo3-2696345395">a best-of-3</a></h2>
+
+========================================================================
+  RECV  2026-10-10 19:37:21
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
 |html|<h2>Game 2</h2>
-|uhtml|game2|<a href="/battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw">popplioperu98 vs. Deep1ODDQN</a>
-|fieldhtml|<center><br /><strong>popplioperu98 and Deep1ODDQN's Best-of-3 progress:</strong><br /><table><tr><td>popplioperu98: </td><td><i class="fa fa-circle"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr><tr><td>Deep1ODDQN: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr></table><br /><br /><table><tr><td><center><strong>popplioperu98</strong></center></td><td></td><td><center><strong>Deep1ODDQN</strong></center></td></tr><tr><td><center><img class="trainersprite" style="transform: scaleX(-1)" src="https://play.pokemonshowdown.com/sprites/trainers/winona.png" /></center></td><td></td><td><center><img class="trainersprite" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td></tr><tr><td><psicon pokemon="Archaludon" style="transform: scaleX(-1)" /><psicon pokemon="Pelipper" style="transform: scaleX(-1)" /><psicon pokemon="Golisopod" style="transform: scaleX(-1)" /><br /><psicon pokemon="Basculegion" style="transform: scaleX(-1)" /><psicon pokemon="Rillaboom" style="transform: scaleX(-1)" /><psicon pokemon="Farigiraf" style="transform: scaleX(-1)" /></td><td> vs </td><td><psicon pokemon="Metagross" /><psicon pokemon="Garchomp" /><psicon pokemon="Volcarona" /><br /><psicon pokemon="Sneasler" /><psicon pokemon="Rillaboom" /><psicon pokemon="Incineroar" /></td></tr></table></center>
-|controlshtml|<center><p>Game 1: <a href="/battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw"><strong>won by popplioperu98</strong></a></p><p>Game 2: <a href="/battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw"><strong>being played</strong></a></p></center>
+|uhtml|game2|<a href="/battle-gen9championsvgc2026regmcbo3-2696346346">Deep1ODDQN vs. popplioperu98</a>
+|fieldhtml|<center><br /><strong>Deep1ODDQN and popplioperu98's Best-of-3 progress:</strong><br /><table><tr><td>Deep1ODDQN: </td><td><i class="fa fa-circle"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr><tr><td>popplioperu98: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr></table><br /><br /><table><tr><td><center><strong>Deep1ODDQN</strong></center></td><td></td><td><center><strong>popplioperu98</strong></center></td></tr><tr><td><center><img class="trainersprite" style="transform: scaleX(-1)" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td><td></td><td><center><img class="trainersprite" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td></tr><tr><td><psicon pokemon="Salamence" style="transform: scaleX(-1)" /><psicon pokemon="Froslass" style="transform: scaleX(-1)" /><psicon pokemon="Rillaboom" style="transform: scaleX(-1)" /><br /><psicon pokemon="Sneasler" style="transform: scaleX(-1)" /><psicon pokemon="Gholdengo" style="transform: scaleX(-1)" /><psicon pokemon="Arcanine-Hisui" style="transform: scaleX(-1)" /></td><td> vs </td><td><psicon pokemon="Salamence" /><psicon pokemon="Rillaboom" /><psicon pokemon="Sneasler" /><br /><psicon pokemon="Arcanine-Hisui" /><psicon pokemon="Kingambit" /><psicon pokemon="Basculegion" /></td></tr></table></center>
+|controlshtml|<center><p>Game 1: <a href="/battle-gen9championsvgc2026regmcbo3-2696345396"><strong>won by Deep1ODDQN</strong></a></p><p>Game 2: <a href="/battle-gen9championsvgc2026regmcbo3-2696346346"><strong>being played</strong></a></p></center>
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768281-o9vpht0dito0eiqmmbyjd4cscjqexcypw
-|uhtml|next|Next: <a href="/battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw"><strong>Game 2 of 3</strong></a>
+>battle-gen9championsvgc2026regmcbo3-2696345396
+|uhtml|next|Next: <a href="/battle-gen9championsvgc2026regmcbo3-2696346346"><strong>Game 2 of 3</strong></a>
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw
-|t:|1789624751
+>battle-gen9championsvgc2026regmcbo3-2696346346
+|t:|1791679040
 |gametype|doubles
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw
-|player|p1|popplioperu98|winona|
+>battle-gen9championsvgc2026regmcbo3-2696346346
+|player|p1|Deep1ODDQN|1|
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw
-|player|p2|Deep1ODDQN|2|
+>battle-gen9championsvgc2026regmcbo3-2696346346
+|player|p2|popplioperu98|170|
 |gen|9
 |tier|[Gen 9 Champions] VGC 2026 Reg M-C (Bo3)
 |rule|Species Clause: Limit one of each Pokémon
 |rule|Item Clause: Limit 1 of each item
 |clearpoke
-|poke|p1|Archaludon, L50, M|
-|poke|p1|Pelipper, L50, F|
-|poke|p1|Golisopod, L50, F|
-|poke|p1|Basculegion, L50, M|
+|poke|p1|Salamence, L50, F|
+|poke|p1|Froslass, L50, F|
 |poke|p1|Rillaboom, L50, M|
-|poke|p1|Farigiraf, L50, M|
-|poke|p2|Metagross, L50|
-|poke|p2|Garchomp, L50, M|
-|poke|p2|Volcarona, L50, M|
-|poke|p2|Sneasler, L50, F|
+|poke|p1|Sneasler, L50, M|
+|poke|p1|Gholdengo, L50|
+|poke|p1|Arcanine-Hisui, L50, F|
+|poke|p2|Salamence, L50, F|
 |poke|p2|Rillaboom, L50, F|
-|poke|p2|Incineroar, L50, F|
+|poke|p2|Sneasler, L50, M|
+|poke|p2|Arcanine-Hisui, L50, M|
+|poke|p2|Kingambit, L50, M|
+|poke|p2|Basculegion, L50, M|
 |teampreview|4
-|showteam|p1|Archaludon||Leftovers|Stamina|Protect,Snarl,ElectroShot,DragonPulse|Calm||M|||50|]Pelipper||LifeOrb|Drizzle|Protect,Tailwind,Hurricane,WeatherBall|Modest||F|||50|]Golisopod||Golisopite|EmergencyExit|FirstImpression,LeechLife,CloseCombat,IronHead|Adamant||F|||50|]Basculegion||ChoiceScarf|Adaptability|FlipTurn,AquaJet,WaveCrash,LastRespects|Jolly||M|||50|]Rillaboom||MiracleSeed|GrassySurge|FakeOut,GrassyGlide,WoodHammer,HighHorsepower|Adamant||M|||50|]Farigiraf||SitrusBerry|ArmorTail|Protect,TrickRoom,Thunderbolt,Psychic|Bold||M|||50|
-|showteam|p2|Metagross||Metagrossite|LightMetal|IronHead,PsychicFangs,StompingTantrum,Protect|Adamant|||||50|]Garchomp||GarchompiteZ|RoughSkin|DracoMeteor,PowerGem,Flamethrower,Protect|Modest||M|||50|]Volcarona||GrassySeed|FlameBody|Flamethrower,GigaDrain,QuiverDance,Protect|Modest||M|||50|]Sneasler||WhiteHerb|Unburden|CloseCombat,DireClaw,Coaching,FakeOut|Adamant||F|||50|]Rillaboom||MiracleSeed|GrassySurge|WoodHammer,GrassyGlide,HighHorsepower,FakeOut|Adamant||F|||50|]Incineroar||SitrusBerry|Intimidate|FlareBlitz,ThroatChop,PartingShot,FakeOut|Careful||F|||50|
+|showteam|p1|Salamence||Salamencite|Intimidate|HyperVoice,DoubleEdge,Tailwind,Protect|Hasty||F|||50|]Froslass||Froslassite|SnowCloak|Blizzard,AuroraVeil,ShadowBall,Protect|Timid||F|||50|]Rillaboom||LifeOrb|GrassySurge|FakeOut,GrassyGlide,WoodHammer,HighHorsepower|Adamant||M|||50|]Sneasler||WhiteHerb|Unburden|FakeOut,CloseCombat,DireClaw,Protect|Adamant||M|||50|]Gholdengo||GrassySeed|GoodasGold|NastyPlot,ShadowBall,MakeItRain,Protect|Modest|||||50|]Arcanine-Hisui||FocusSash|RockHead|HeadSmash,FlareBlitz,ExtremeSpeed,Protect|Jolly||F|||50|
+|showteam|p2|Salamence||Salamencite|Intimidate|HyperVoice,DoubleEdge,Tailwind,Protect|Naive||F|||50|]Rillaboom||SitrusBerry|GrassySurge|WoodHammer,GrassyGlide,Uturn,FakeOut|Adamant||F|||50|]Sneasler||GrassySeed|Unburden|DireClaw,CloseCombat,FakeOut,Protect|Adamant||M|||50|]Arcanine-Hisui||FocusSash|RockHead|FlareBlitz,HeadSmash,ExtremeSpeed,Protect|Jolly||M|||50|]Kingambit||ChopleBerry|Defiant|KowtowCleave,IronHead,LowKick,SuckerPunch|Adamant||M|||50|]Basculegion||MysticWater|Adaptability|WaveCrash,LastRespects,AquaJet,Protect|Adamant||M|||50|
 
 ########################################################################
-  BATTLE START  2026-09-17 00:59:11  |  battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw
+  BATTLE START  2026-10-10 19:37:21  |  battle-gen9championsvgc2026regmcbo3-2696346346
 ########################################################################
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw
-|request|{"teamPreview":true,"maxChosenTeamSize":4,"side":{"name":"Deep1ODDQN","id":"p2","pokemon":[{"ident":"p2: Metagross","details":"Metagross, L50","condition":"175/175","active":true,"stats":{"atk":177,"def":158,"spa":103,"spd":110,"spe":122},"moves":["ironhead","psychicfangs","stompingtantrum","protect"],"baseAbility":"lightmetal","item":"metagrossite","pokeball":"pokeball","ability":"lightmetal","commanding":false,"reviving":false},{"ident":"p2: Garchomp","details":"Garchomp, L50, M","condition":"185/185","active":true,"stats":{"atk":163,"def":115,"spa":110,"spd":105,"spe":154},"moves":["dracometeor","powergem","flamethrower","protect"],"baseAbility":"roughskin","item":"garchompitez","pokeball":"pokeball","ability":"roughskin","commanding":false,"reviving":false},{"ident":"p2: Volcarona","details":"Volcarona, L50, M","condition":"172/172","active":false,"stats":{"atk":72,"def":116,"spa":176,"spd":125,"spe":138},"moves":["flamethrower","gigadrain","quiverdance","protect"],"baseAbility":"flamebody","item":"grassyseed","pokeball":"pokeball","ability":"flamebody","commanding":false,"reviving":false},{"ident":"p2: Sneasler","details":"Sneasler, L50, F","condition":"157/157","active":false,"stats":{"atk":200,"def":80,"spa":54,"spd":100,"spe":172},"moves":["closecombat","direclaw","coaching","fakeout"],"baseAbility":"unburden","item":"whiteherb","pokeball":"pokeball","ability":"unburden","commanding":false,"reviving":false},{"ident":"p2: Rillaboom","details":"Rillaboom, L50, F","condition":"207/207","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["woodhammer","grassyglide","highhorsepower","fakeout"],"baseAbility":"grassysurge","item":"miracleseed","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false},{"ident":"p2: Incineroar","details":"Incineroar, L50, F","condition":"202/202","active":false,"stats":{"atk":137,"def":110,"spa":90,"spd":156,"spe":80},"moves":["flareblitz","throatchop","partingshot","fakeout"],"baseAbility":"intimidate","item":"sitrusberry","pokeball":"pokeball","ability":"intimidate","commanding":false,"reviving":false}]},"rqid":3}
+>battle-gen9championsvgc2026regmcbo3-2696346346
+|request|{"teamPreview":true,"maxChosenTeamSize":4,"side":{"name":"Deep1ODDQN","id":"p1","pokemon":[{"ident":"p1: Salamence","details":"Salamence, L50, F","condition":"172/172","active":true,"stats":{"atk":155,"def":118,"spa":162,"spd":100,"spe":132},"moves":["hypervoice","doubleedge","tailwind","protect"],"baseAbility":"intimidate","item":"salamencite","pokeball":"pokeball","ability":"intimidate","commanding":false,"reviving":false},{"ident":"p1: Froslass","details":"Froslass, L50, F","condition":"177/177","active":true,"stats":{"atk":90,"def":90,"spa":102,"spd":90,"spe":178},"moves":["blizzard","auroraveil","shadowball","protect"],"baseAbility":"snowcloak","item":"froslassite","pokeball":"pokeball","ability":"snowcloak","commanding":false,"reviving":false},{"ident":"p1: Rillaboom","details":"Rillaboom, L50, M","condition":"207/207","active":false,"stats":{"atk":165,"def":110,"spa":72,"spd":119,"spe":105},"moves":["fakeout","grassyglide","woodhammer","highhorsepower"],"baseAbility":"grassysurge","item":"lifeorb","pokeball":"pokeball","ability":"grassysurge","commanding":false,"reviving":false},{"ident":"p1: Sneasler","details":"Sneasler, L50, M","condition":"157/157","active":false,"stats":{"atk":200,"def":80,"spa":54,"spd":100,"spe":172},"moves":["fakeout","closecombat","direclaw","protect"],"baseAbility":"unburden","item":"whiteherb","pokeball":"pokeball","ability":"unburden","commanding":false,"reviving":false},{"ident":"p1: Gholdengo","details":"Gholdengo, L50","condition":"179/179","active":false,"stats":{"atk":72,"def":115,"spa":187,"spd":111,"spe":136},"moves":["nastyplot","shadowball","makeitrain","protect"],"baseAbility":"goodasgold","item":"grassyseed","pokeball":"pokeball","ability":"goodasgold","commanding":false,"reviving":false},{"ident":"p1: Arcanine","details":"Arcanine-Hisui, L50, F","condition":"172/172","active":false,"stats":{"atk":167,"def":100,"spa":103,"spd":100,"spe":156},"moves":["headsmash","flareblitz","extremespeed","protect"],"baseAbility":"rockhead","item":"focussash","pokeball":"pokeball","ability":"rockhead","commanding":false,"reviving":false}]},"rqid":2}
 
 ========================================================================
-  SEND  2026-09-17 00:59:11
+  SEND  2026-10-10 19:37:21
 ========================================================================
-battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw|hf
+battle-gen9championsvgc2026regmcbo3-2696346346|hf
 
 ========================================================================
-  SEND  2026-09-17 00:59:11
+  SEND  2026-10-10 19:37:21
 ========================================================================
-battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw|/team 4612|3
+battle-gen9championsvgc2026regmcbo3-2696346346|/team 4521|2
 
 ========================================================================
-  RECV  2026-09-17 00:59:11
+  RECV  2026-10-10 19:37:21
 ========================================================================
->battle-gen9championsvgc2026regmcbo3-2682768759-4d1rhcfl1jxpcn26bovvqxe5lqkllcgpw
+>battle-gen9championsvgc2026regmcbo3-2696346346
 |c|☆Deep1ODDQN|hf
+
+========================================================================
+  RECV  2026-10-10 19:37:28
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696346346
+|-message|popplioperu98 forfeited.
+
+========================================================================
+  RECV  2026-10-10 19:37:28
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696346346
+|
+|win|Deep1ODDQN
+
+========================================================================
+  SEND  2026-10-10 19:37:28
+========================================================================
+battle-gen9championsvgc2026regmcbo3-2696346346|gg
+
+========================================================================
+  RECV  2026-10-10 19:37:28
+========================================================================
+|updatesearch|{"searching":[],"games":{"game-bestof3-gen9championsvgc2026regmcbo3-2696345395":"[Gen 9 Champions] VGC 2026 Reg M-C (Bo3) (Best-of-3)*"}}
+
+========================================================================
+  RECV  2026-10-10 19:37:28
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|html|Deep1ODDQN won game 2!
+
+========================================================================
+  RECV  2026-10-10 19:37:28
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696346346
+|tempnotifyoff|choice
+
+========================================================================
+  RECV  2026-10-10 19:37:28
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|tempnotifyoff|choice
+
+========================================================================
+  RECV  2026-10-10 19:37:28
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|c|~|/uhtml controls,
+
+========================================================================
+  RECV  2026-10-10 19:37:28
+========================================================================
+>battle-gen9championsvgc2026regmcbo3-2696346346
+|c|~|/uhtml controls,
+
+========================================================================
+  RECV  2026-10-10 19:37:28
+========================================================================
+|updatesearch|{"searching":[],"games":null}
+
+========================================================================
+  RECV  2026-10-10 19:37:28
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|allowleave|
+
+========================================================================
+  RECV  2026-10-10 19:37:28
+========================================================================
+>game-bestof3-gen9championsvgc2026regmcbo3-2696345395
+|win|Deep1ODDQN
+|fieldhtml|<center><br /><strong>Deep1ODDQN and popplioperu98's Best-of-3 progress:</strong><br /><table><tr><td>Deep1ODDQN: </td><td><i class="fa fa-circle"></i> <i class="fa fa-circle"></i> <i class="fa fa-circle-o"></i></td></tr><tr><td>popplioperu98: </td><td><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i></td></tr></table><br /><br /><table><tr><td><center><strong>Deep1ODDQN</strong></center></td><td></td><td><center><strong>popplioperu98</strong></center></td></tr><tr><td><center><img class="trainersprite" style="transform: scaleX(-1)" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td><td></td><td><center><img class="trainersprite" src="https://play.pokemonshowdown.com/sprites/trainers/unknownf.png" /></center></td></tr><tr><td><psicon pokemon="Salamence" style="transform: scaleX(-1)" /><psicon pokemon="Froslass" style="transform: scaleX(-1)" /><psicon pokemon="Rillaboom" style="transform: scaleX(-1)" /><br /><psicon pokemon="Sneasler" style="transform: scaleX(-1)" /><psicon pokemon="Gholdengo" style="transform: scaleX(-1)" /><psicon pokemon="Arcanine-Hisui" style="transform: scaleX(-1)" /></td><td> vs </td><td><psicon pokemon="Salamence" /><psicon pokemon="Rillaboom" /><psicon pokemon="Sneasler" /><br /><psicon pokemon="Arcanine-Hisui" /><psicon pokemon="Kingambit" /><psicon pokemon="Basculegion" /></td></tr></table></center>
+|controlshtml|<center><p>Game 1: <a href="/battle-gen9championsvgc2026regmcbo3-2696345396"><strong>won by Deep1ODDQN</strong></a></p><p>Game 2: <a href="/battle-gen9championsvgc2026regmcbo3-2696346346"><strong>won by Deep1ODDQN</strong></a></p><p>Deep1ODDQN won!</p></center>

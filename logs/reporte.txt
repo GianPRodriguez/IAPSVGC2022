@@ -1,342 +1,832 @@
 
 ########################################################################
- BO3 GAME 1 START  |  Deep1ODDQN vs Deep1ODDQN
+ BO3 GAME 1 START  |  Deep1ODDQN vs popplioperu98
 ########################################################################
 ========================================================================
- TURNO 0 [DECISION]  |  rqid 3  |  BO3 game 1  |  00:57:33
- Deep1ODDQN  vs  Deep1ODDQN
+ TURNO 0 [DECISION]  |  rqid 2  |  BO3 game 1  |  19:34:43
+ Deep1ODDQN  vs  popplioperu98
  clima=-(0)  campo=-
 ------------------------------------------------------------------------
- YO [p2]  side=-
+ YO [p1]  side=-
   A1  (vacio)
   A2  (vacio)
-  RSV  metagross 175/175 (100%) | garchomp 185/185 (100%) | volcarona 172/172 (100%) | sneasler 157/157 (100%) | rillaboom 207/207 (100%) | incineroar 202/202 (100%)
+  RSV  salamence 172/172 (100%) | froslass 177/177 (100%) | rillaboom 207/207 (100%) | sneasler 157/157 (100%) | gholdengo 179/179 (100%) | arcanine-hisui 172/172 (100%)
 ------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=0
+ RIVAL [p2]  side=-  confirmados=0
   A1  (vacio)
   A2  (vacio)
   RSV  (vacia)
 ------------------------------------------------------------------------
  OTS (plantilla showteam; una vez por partida):
-  1. archaludon  item=leftovers  abi=stamina  moves=Protect,Snarl,ElectroShot,DragonPulse
-  2. pelipper  item=lifeorb  abi=drizzle  moves=Protect,Tailwind,Hurricane,WeatherBall
-  3. golisopod  item=golisopite  abi=emergencyexit  moves=FirstImpression,LeechLife,CloseCombat,IronHead
-  4. basculegion  item=choicescarf  abi=adaptability  moves=FlipTurn,AquaJet,WaveCrash,LastRespects
-  5. rillaboom  item=miracleseed  abi=grassysurge  moves=FakeOut,GrassyGlide,WoodHammer,HighHorsepower
-  6. farigiraf  item=sitrusberry  abi=armortail  moves=Protect,TrickRoom,Thunderbolt,Psychic
+  1. salamence  item=salamencite  abi=intimidate  moves=HyperVoice,DoubleEdge,Tailwind,Protect
+  2. rillaboom  item=sitrusberry  abi=grassysurge  moves=WoodHammer,GrassyGlide,Uturn,FakeOut
+  3. sneasler  item=grassyseed  abi=unburden  moves=DireClaw,CloseCombat,FakeOut,Protect
+  4. arcanine-hisui  item=focussash  abi=rockhead  moves=FlareBlitz,HeadSmash,ExtremeSpeed,Protect
+  5. kingambit  item=chopleberry  abi=defiant  moves=KowtowCleave,IronHead,LowKick,SuckerPunch
+  6. basculegion  item=mysticwater  abi=adaptability  moves=WaveCrash,LastRespects,AquaJet,Protect
 ------------------------------------------------------------------------
- ACCION -> ['/team 4612|3']
+ ACCION -> ['/team 3526|2']
 ------------------------------------------------------------------------
  REWARD (Spec v1.1 Candidate 2 dense / turno):
   c2_turn=+0.0000  c2_episode=+0.0000
   c1_turn=+0  c1_episode=+0
   ui_delta=0  ui_total=0
-------------------------------------------------------------------------
- TEAM PREVIEW: ver bloque ranking en CMD (4 de 6 + why)
 ========================================================================
 
 ========================================================================
- TURNO 1 [DECISION]  |  rqid 5  |  BO3 game 1  |  00:57:50
- Deep1ODDQN  vs  Deep1ODDQN
- clima=raindance(5)  campo=-
+ TURNO 1 [DECISION]  |  rqid 4  |  BO3 game 1  |  19:34:53
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=grassyterrain:5
 ------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  sneasler [Fighting/Poison]  157/157 (100%)
-       item=whiteherb  abi=unburden  status=-  boosts=-
-       stats: Atk=200 Def=80 SpA=54 SpD=100 Spe=172
-       moves: closecombat(8), direclaw(16), coaching(12), fakeout(12)
-  A2  incineroar [Fire/Dark]  202/202 (100%)
-       item=sitrusberry  abi=intimidate  status=-  boosts=-
-       stats: Atk=137 Def=110 SpA=90 SpD=156 Spe=80
-       moves: flareblitz(16), throatchop(16), partingshot(20), fakeout(12)
-  RSV  metagross 175/175 (100%) | garchomp 185/185 (100%)
+ YO [p1]  side=-
+  A1  rillaboom [Grass]  207/207 (100%)
+       item=lifeorb  abi=grassysurge  status=-  boosts=atk-1
+       stats: Atk=165 Def=110 SpA=72 SpD=119 Spe=105
+       moves: fakeout(12), grassyglide(20), woodhammer(16), highhorsepower(12)
+  A2  gholdengo [Steel/Ghost]  179/179 (100%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(20), shadowball(16), makeitrain(8), protect(8)
+  RSV  froslass 177/177 (100%) | arcanine-hisui 172/172 (100%)
 ------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=2
-  A1  basculegion [Water/Ghost]  100/100 (100%)  [OK]
-       item=choicescarf  abi=adaptability  status=-  boosts=atk-1
-       stats: Atk=112 Def=65 SpA=80 SpD=75 Spe=78
-       moves: FlipTurn(-1), AquaJet(-1), WaveCrash(-1), LastRespects(-1)
-  A2  pelipper [Water/Flying]  100/100 (100%)  [OK]
-       item=lifeorb  abi=drizzle  status=-  boosts=atk-1
-       stats: Atk=50 Def=100 SpA=95 SpD=70 Spe=65
-       moves: Protect(-1), Tailwind(-1), Hurricane(-1), WeatherBall(-1)
+ RIVAL [p2]  side=-  confirmados=2
+  A1  salamence [Dragon/Flying]  100/100 (100%)  [OK]
+       item=salamencite  abi=intimidate  status=-  boosts=-
+       stats: Atk=135 Def=80 SpA=110 SpD=80 Spe=100
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  A2  kingambit [Dark/Steel]  100/100 (100%)  [OK]
+       item=chopleberry  abi=defiant  status=-  boosts=-
+       stats: Atk=135 Def=120 SpA=60 SpD=85 Spe=50
+       moves: KowtowCleave(-1), IronHead(-1), LowKick(-1), SuckerPunch(-1)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ ACCION -> ['/choose move 1 2, move 2 1']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=+0.0000
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+========================================================================
+
+========================================================================
+ TURNO 2 [DECISION]  |  rqid 6  |  BO3 game 1  |  19:35:15
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=grassyterrain:4
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  rillaboom [Grass]  59/207 (29%)
+       item=lifeorb  abi=grassysurge  status=-  boosts=atk-1
+       stats: Atk=165 Def=110 SpA=72 SpD=119 Spe=105
+       moves: fakeout(11), grassyglide(20), woodhammer(16), highhorsepower(12)
+  A2  gholdengo [Steel/Ghost]  157/179 (88%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(20), shadowball(15), makeitrain(8), protect(8)
+  RSV  froslass 177/177 (100%) | arcanine-hisui 172/172 (100%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=2
+  A1  salamence-mega [Dragon/Flying]  47/100 (47%)  [MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  A2  kingambit [Dark/Steel]  100/100 (100%)  [OK]
+       item=chopleberry  abi=defiant  status=-  boosts=-
+       stats: Atk=135 Def=120 SpA=60 SpD=85 Spe=50
+       moves: KowtowCleave(-1), IronHead(-1), LowKick(-1), SuckerPunch(-1)
   RSV  (vacia)
 ------------------------------------------------------------------------
  STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  basculegion  nat=jolly
+  kingambit  nat=adamant
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
       conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  pelipper  nat=modest
+  salamence  nat=naive  forme=salamence-mega
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
-      conv: obs=0 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=1 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
 ------------------------------------------------------------------------
- ACCION -> ['/choose move 2 1, move 2 1']
+ ACCION -> ['/choose move 4 2, move 1']
 ------------------------------------------------------------------------
  REWARD (Spec v1.1 Candidate 2 dense / turno):
-  c2_turn=+0.0000  c2_episode=+0.0000
+  c2_turn=+0.0265  c2_episode=+0.0265
   c1_turn=+0  c1_episode=+0
-  ui_delta=0  ui_total=0
-------------------------------------------------------------------------
- EXPECTIMAX: ver bloque Top-K en CMD (decision + why)
-  phase=phase2  diverged=YES  gated=NO  K=7 pairs=49/49  ms=692
+  ui_delta=3  ui_total=3
 ========================================================================
 
 ========================================================================
- TURNO 1 [FORCE]  |  rqid 7  |  BO3 game 1  |  00:57:54
- Deep1ODDQN  vs  Deep1ODDQN
- clima=raindance(5)  campo=-
+ TURNO 2 [FORCE]  |  rqid 8  |  BO3 game 1  |  19:35:18
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=grassyterrain:4
 ------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  sneasler [Fighting/Poison]  0/157 (0%)  [FNT]
-       item=whiteherb  abi=unburden  status=-  boosts=-
-       stats: Atk=200 Def=80 SpA=54 SpD=100 Spe=172
-       moves: closecombat(8), direclaw(16), coaching(12), fakeout(12)
-  A2  incineroar [Fire/Dark]  62/202 (31%)
-       item=-  abi=intimidate  status=-  boosts=-
-       stats: Atk=137 Def=110 SpA=90 SpD=156 Spe=80
-       moves: flareblitz(16), throatchop(16), partingshot(20), fakeout(12)
-  RSV  metagross 175/175 (100%) | garchomp 185/185 (100%)
+ YO [p1]  side=-
+  A1  rillaboom [Grass]  0/207 (0%)  [FNT]
+       item=lifeorb  abi=grassysurge  status=-  boosts=-
+       stats: Atk=165 Def=110 SpA=72 SpD=119 Spe=105
+       moves: fakeout(11), grassyglide(20), woodhammer(16), highhorsepower(12)
+  A2  gholdengo [Steel/Ghost]  134/179 (75%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+2
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(20), shadowball(15), makeitrain(8), protect(8)
+  RSV  froslass 177/177 (100%) | arcanine-hisui 172/172 (100%)
 ------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=2
-  A1  basculegion [Water/Ghost]  0/100 (0%)  [FNT OK]
-       item=choicescarf  abi=adaptability  status=-  boosts=-
-       stats: Atk=112 Def=65 SpA=80 SpD=75 Spe=78
-       moves: FlipTurn(-1), AquaJet(-1), WaveCrash(-1), LastRespects(-1)
-  A2  pelipper [Water/Flying]  90/100 (90%)  [OK]
-       item=lifeorb  abi=drizzle  status=-  boosts=atk-1
-       stats: Atk=50 Def=100 SpA=95 SpD=70 Spe=65
-       moves: Protect(-1), Tailwind(-1), Hurricane(-1), WeatherBall(-1)
+ RIVAL [p2]  side=-  confirmados=2
+  A1  salamence-mega [Dragon/Flying]  47/100 (47%)  [MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  A2  kingambit [Dark/Steel]  100/100 (100%)  [OK]
+       item=chopleberry  abi=defiant  status=-  boosts=-
+       stats: Atk=135 Def=120 SpA=60 SpD=85 Spe=50
+       moves: KowtowCleave(-1), IronHead(-1), LowKick(-1), SuckerPunch(-1)
   RSV  (vacia)
 ------------------------------------------------------------------------
  STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  basculegion  nat=jolly
+  kingambit  nat=adamant
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
-      conv: obs=3 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  pelipper  nat=modest
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
-      conv: obs=2 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=2 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
+------------------------------------------------------------------------
+ ACCION -> ['/choose switch 4, pass']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=-0.1500  c2_episode=-0.1235
+  c1_turn=+0  c1_episode=+0
+  ui_delta=-15  ui_total=-15
+========================================================================
+
+========================================================================
+ TURNO 3 [DECISION]  |  rqid 10  |  BO3 game 1  |  19:35:18
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=grassyterrain:3
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
+       item=focussash  abi=rockhead  status=-  boosts=-
+       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
+       moves: headsmash(8), flareblitz(16), extremespeed(8), protect(8)
+  A2  gholdengo [Steel/Ghost]  134/179 (75%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+2
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(19), shadowball(15), makeitrain(8), protect(8)
+  RSV  froslass 177/177 (100%) | rillaboom[FNT] 0/207 (0%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=2
+  A1  salamence-mega [Dragon/Flying]  47/100 (47%)  [MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  A2  kingambit [Dark/Steel]  100/100 (100%)  [OK]
+       item=chopleberry  abi=defiant  status=-  boosts=-
+       stats: Atk=135 Def=120 SpA=60 SpD=85 Spe=50
+       moves: KowtowCleave(-1), IronHead(-1), LowKick(-1), SuckerPunch(-1)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  kingambit  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=2 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
+------------------------------------------------------------------------
+ ACCION -> ['/choose move 4, move 4']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=-0.1235
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+========================================================================
+
+========================================================================
+ TURNO 4 [DECISION]  |  rqid 12  |  BO3 game 1  |  19:35:31
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=grassyterrain:2
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
+       item=focussash  abi=rockhead  status=-  boosts=-
+       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
+       moves: headsmash(8), flareblitz(16), extremespeed(8), protect(7)
+  A2  gholdengo [Steel/Ghost]  145/179 (81%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+2
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(19), shadowball(15), makeitrain(8), protect(7)
+  RSV  froslass 177/177 (100%) | rillaboom[FNT] 0/207 (0%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=2
+  A1  salamence-mega [Dragon/Flying]  47/100 (47%)  [MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  A2  kingambit [Dark/Steel]  100/100 (100%)  [OK]
+       item=chopleberry  abi=defiant  status=-  boosts=-
+       stats: Atk=135 Def=120 SpA=60 SpD=85 Spe=50
+       moves: KowtowCleave(-1), IronHead(-1), LowKick(-1), SuckerPunch(-1)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  kingambit  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=2 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
+------------------------------------------------------------------------
+ ACCION -> ['/choose switch 3, move 1']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=-0.1235
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+========================================================================
+
+========================================================================
+ TURNO 4 [FORCE]  |  rqid 14  |  BO3 game 1  |  19:35:38
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=grassyterrain:2
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  froslass [Ice/Ghost]  0/177 (0%)  [FNT]
+       item=froslassite  abi=snowcloak  status=-  boosts=-
+       stats: Atk=90 Def=90 SpA=102 SpD=90 Spe=178
+       moves: blizzard(-1), auroraveil(-1), shadowball(-1), protect(-1)
+  A2  gholdengo [Steel/Ghost]  156/179 (87%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+4
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(19), shadowball(15), makeitrain(8), protect(7)
+  RSV  arcanine-hisui 172/172 (100%) | rillaboom[FNT] 0/207 (0%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=2
+  A1  salamence-mega [Dragon/Flying]  13/100 (13%)  [MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  A2  kingambit [Dark/Steel]  100/100 (100%)  [OK]
+       item=chopleberry  abi=defiant  status=-  boosts=-
+       stats: Atk=135 Def=120 SpA=60 SpD=85 Spe=50
+       moves: KowtowCleave(-1), IronHead(-1), LowKick(-1), SuckerPunch(-1)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  kingambit  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=3 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
 ------------------------------------------------------------------------
  ACCION -> ['/choose switch 3, pass']
 ------------------------------------------------------------------------
  REWARD (Spec v1.1 Candidate 2 dense / turno):
-  c2_turn=+0.0550  c2_episode=+0.0550
+  c2_turn=-0.1330  c2_episode=-0.2565
   c1_turn=+0  c1_episode=+0
-  ui_delta=6  ui_total=6
-------------------------------------------------------------------------
- EXPECTIMAX: ver bloque Top-K en CMD (decision + why)
-  phase=phase2  diverged=YES  gated=NO  K=7 pairs=49/49  ms=692
+  ui_delta=-13  ui_total=-13
 ========================================================================
 
 ========================================================================
- TURNO 2 [DECISION]  |  rqid 9  |  BO3 game 1  |  00:58:10
- Deep1ODDQN  vs  Deep1ODDQN
- clima=raindance(4)  campo=-
+ TURNO 5 [DECISION]  |  rqid 16  |  BO3 game 1  |  19:35:38
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=grassyterrain:1
 ------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  metagross [Steel/Psychic]  175/175 (100%)  [canMega]
-       item=metagrossite  abi=lightmetal  status=-  boosts=-
-       stats: Atk=177 Def=158 SpA=103 SpD=110 Spe=122
-       moves: ironhead(16), psychicfangs(12), stompingtantrum(12), protect(8)
-  A2  incineroar [Fire/Dark]  62/202 (31%)
-       item=-  abi=intimidate  status=-  boosts=-
-       stats: Atk=137 Def=110 SpA=90 SpD=156 Spe=80
-       moves: flareblitz(16), throatchop(15), partingshot(20), fakeout(12)
-  RSV  sneasler[FNT] 0/157 (0%) | garchomp 185/185 (100%)
+ YO [p1]  side=-
+  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
+       item=focussash  abi=rockhead  status=-  boosts=-
+       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
+       moves: headsmash(8), flareblitz(16), extremespeed(8), protect(7)
+  A2  gholdengo [Steel/Ghost]  156/179 (87%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+4
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(18), shadowball(15), makeitrain(8), protect(7)
+  RSV  froslass[FNT] 0/177 (0%) | rillaboom[FNT] 0/207 (0%)
 ------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=3
-  A1  archaludon [Steel/Dragon]  100/100 (100%)  [OK]
-       item=leftovers  abi=stamina  status=-  boosts=-
-       stats: Atk=105 Def=130 SpA=125 SpD=65 Spe=85
-       moves: Protect(-1), Snarl(-1), ElectroShot(-1), DragonPulse(-1)
-  A2  pelipper [Water/Flying]  90/100 (90%)  [OK]
-       item=lifeorb  abi=drizzle  status=-  boosts=atk-1
-       stats: Atk=50 Def=100 SpA=95 SpD=70 Spe=65
-       moves: Protect(-1), Tailwind(-1), Hurricane(-1), WeatherBall(-1)
-  RSV  basculegion[FNT] 0/100 (0%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  archaludon  nat=calm
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=165-181 Atk=112-126 Def=150-166 SpA=145-161 SpD=93-111 Spe=105-121
-      conv: obs=0 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
-  basculegion  nat=jolly
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
-      conv: obs=3 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  pelipper  nat=modest
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
-      conv: obs=2 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 2 mega 2, move 2 2']
-------------------------------------------------------------------------
- REWARD (Spec v1.1 Candidate 2 dense / turno):
-  c2_turn=-0.2000  c2_episode=-0.1450
-  c1_turn=+0  c1_episode=+0
-  ui_delta=-20  ui_total=-20
-------------------------------------------------------------------------
- EXPECTIMAX: ver bloque Top-K en CMD (decision + why)
-  phase=phase2  diverged=NO  gated=NO  K=7 pairs=42/49  ms=268
-========================================================================
-
-========================================================================
- TURNO 2 [FORCE]  |  rqid 11  |  BO3 game 1  |  00:58:20
- Deep1ODDQN  vs  Deep1ODDQN
- clima=raindance(4)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  metagross-mega [Steel/Psychic]  36/175 (21%)  [MEGA]
-       item=metagrossite  abi=toughclaws  status=-  boosts=-
-       stats: Atk=188 Def=178 SpA=112 SpD=130 Spe=162
-       moves: ironhead(16), psychicfangs(12), stompingtantrum(12), protect(8)
-  A2  incineroar [Fire/Dark]  0/202 (0%)  [FNT]
-       item=-  abi=intimidate  status=-  boosts=-
-       stats: Atk=137 Def=110 SpA=90 SpD=156 Spe=80
-       moves: flareblitz(16), throatchop(15), partingshot(20), fakeout(12)
-  RSV  sneasler[FNT] 0/157 (0%) | garchomp 185/185 (100%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=3
-  A1  archaludon [Steel/Dragon]  100/100 (100%)  [OK]
-       item=leftovers  abi=stamina  status=-  boosts=spa+1
-       stats: Atk=105 Def=130 SpA=125 SpD=65 Spe=85
-       moves: Protect(-1), Snarl(-1), ElectroShot(-1), DragonPulse(-1)
-  A2  pelipper [Water/Flying]  16/100 (16%)  [OK]
-       item=lifeorb  abi=drizzle  status=-  boosts=atk-1
-       stats: Atk=50 Def=100 SpA=95 SpD=70 Spe=65
-       moves: Protect(-1), Tailwind(-1), Hurricane(-1), WeatherBall(-1)
-  RSV  basculegion[FNT] 0/100 (0%)
+ RIVAL [p2]  side=-  confirmados=2
+  A1  salamence-mega [Dragon/Flying]  13/100 (13%)  [MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  A2  kingambit [Dark/Steel]  100/100 (100%)  [OK]
+       item=chopleberry  abi=defiant  status=-  boosts=-
+       stats: Atk=135 Def=120 SpA=60 SpD=85 Spe=50
+       moves: KowtowCleave(-1), IronHead(-1), LowKick(-1), SuckerPunch(-1)
+  RSV  (vacia)
 ------------------------------------------------------------------------
  STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  archaludon  nat=calm
+  kingambit  nat=adamant
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=165-181 Atk=112-126 Def=150-166 SpA=145-161 SpD=93-111 Spe=105-121
-      conv: obs=0 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
-  basculegion  nat=jolly
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
-      conv: obs=3 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  pelipper  nat=modest
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
-      conv: obs=3 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=3 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
 ------------------------------------------------------------------------
- ACCION -> ['/choose pass, switch 4']
+ ACCION -> ['/choose move 1 2, move 3']
 ------------------------------------------------------------------------
  REWARD (Spec v1.1 Candidate 2 dense / turno):
-  c2_turn=-0.1130  c2_episode=-0.2580
-  c1_turn=+0  c1_episode=+0
-  ui_delta=-11  ui_total=-11
-------------------------------------------------------------------------
- EXPECTIMAX: ver bloque Top-K en CMD (decision + why)
-  phase=phase2  diverged=NO  gated=NO  K=7 pairs=42/49  ms=268
-========================================================================
-
-========================================================================
- TURNO 3 [DECISION]  |  rqid 13  |  BO3 game 1  |  00:58:21
- Deep1ODDQN  vs  Deep1ODDQN
- clima=raindance(3)  campo=-
-------------------------------------------------------------------------
- YO [p2]  side=-
-  A1  metagross-mega [Steel/Psychic]  36/175 (21%)  [MEGA]
-       item=metagrossite  abi=toughclaws  status=-  boosts=-
-       stats: Atk=188 Def=178 SpA=112 SpD=130 Spe=162
-       moves: ironhead(16), psychicfangs(11), stompingtantrum(12), protect(8)
-  A2  garchomp [Dragon/Ground]  185/185 (100%)
-       item=garchompitez  abi=roughskin  status=-  boosts=-
-       stats: Atk=163 Def=115 SpA=110 SpD=105 Spe=154
-       moves: dracometeor(8), powergem(20), flamethrower(16), protect(8)
-  RSV  sneasler[FNT] 0/157 (0%) | incineroar[FNT] 0/202 (0%)
-------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=3
-  A1  archaludon [Steel/Dragon]  100/100 (100%)  [OK]
-       item=leftovers  abi=stamina  status=-  boosts=spa+1
-       stats: Atk=105 Def=130 SpA=125 SpD=65 Spe=85
-       moves: Protect(-1), Snarl(-1), ElectroShot(-1), DragonPulse(-1)
-  A2  pelipper [Water/Flying]  16/100 (16%)  [OK]
-       item=lifeorb  abi=drizzle  status=-  boosts=atk-1
-       stats: Atk=50 Def=100 SpA=95 SpD=70 Spe=65
-       moves: Protect(-1), Tailwind(-1), Hurricane(-1), WeatherBall(-1)
-  RSV  basculegion[FNT] 0/100 (0%)
-------------------------------------------------------------------------
- STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  archaludon  nat=calm
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=165-181 Atk=112-126 Def=150-166 SpA=145-161 SpD=93-111 Spe=105-121
-      conv: obs=0 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
-  basculegion  nat=jolly
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
-      conv: obs=3 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  pelipper  nat=modest
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
-      conv: obs=3 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
-------------------------------------------------------------------------
- ACCION -> ['/choose move 3 2, move 1 2']
-------------------------------------------------------------------------
- REWARD (Spec v1.1 Candidate 2 dense / turno):
-  c2_turn=+0.0000  c2_episode=-0.2580
+  c2_turn=+0.0000  c2_episode=-0.2565
   c1_turn=+0  c1_episode=+0
   ui_delta=0  ui_total=0
-------------------------------------------------------------------------
- EXPECTIMAX: ver bloque Top-K en CMD (decision + why)
-  phase=phase2  diverged=YES  gated=NO  K=7 pairs=49/49  ms=342
 ========================================================================
 
-########################################################################
- BO3 GAME 1 END  |  win: popplioperu98  |  Deep1ODDQN vs Deep1ODDQN
-########################################################################
-
-########################################################################
- BO3 GAME 2 START  |  Deep1ODDQN vs Deep1ODDQN
-########################################################################
 ========================================================================
- TURNO 0 [DECISION]  |  rqid 3  |  BO3 game 2  |  00:59:11
- Deep1ODDQN  vs  Deep1ODDQN
+ TURNO 5 [WAIT]  |  rqid 18  |  BO3 game 1  |  19:35:47
+ Deep1ODDQN  vs  popplioperu98
  clima=-(0)  campo=-
 ------------------------------------------------------------------------
- YO [p2]  side=-
+ YO [p1]  side=-
+  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
+       item=focussash  abi=rockhead  status=-  boosts=-
+       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
+       moves: headsmash(8), flareblitz(16), extremespeed(8), protect(7)
+  A2  gholdengo [Steel/Ghost]  75/179 (42%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+2
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(18), shadowball(15), makeitrain(8), protect(7)
+  RSV  froslass[FNT] 0/177 (0%) | rillaboom[FNT] 0/207 (0%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=3
+  A1  basculegion [Water/Ghost]  0/100 (0%)  [FNT OK]
+       item=mysticwater  abi=adaptability  status=-  boosts=-
+       stats: Atk=112 Def=65 SpA=80 SpD=75 Spe=78
+       moves: WaveCrash(-1), LastRespects(-1), AquaJet(-1), Protect(-1)
+  A2  kingambit [Dark/Steel]  15/100 (15%)  [OK]
+       item=chopleberry  abi=defiant  status=-  boosts=-
+       stats: Atk=135 Def=120 SpA=60 SpD=85 Spe=50
+       moves: KowtowCleave(-1), IronHead(-1), LowKick(-1), SuckerPunch(-1)
+  RSV  salamence-mega 13/100 (13%)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  kingambit  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=3 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
+------------------------------------------------------------------------
+ ACCION -> (wait)
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.1990  c2_episode=-0.0575
+  c1_turn=+0  c1_episode=+0
+  ui_delta=20  ui_total=-6
+========================================================================
+
+========================================================================
+ TURNO 6 [DECISION]  |  rqid 20  |  BO3 game 1  |  19:35:57
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=-
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
+       item=focussash  abi=rockhead  status=-  boosts=-
+       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
+       moves: headsmash(7), flareblitz(16), extremespeed(8), protect(7)
+  A2  gholdengo [Steel/Ghost]  75/179 (42%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+2
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(18), shadowball(15), makeitrain(7), protect(7)
+  RSV  froslass[FNT] 0/177 (0%) | rillaboom[FNT] 0/207 (0%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=3
+  A1  salamence-mega [Dragon/Flying]  13/100 (13%)  [MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  A2  kingambit [Dark/Steel]  15/100 (15%)  [OK]
+       item=chopleberry  abi=defiant  status=-  boosts=-
+       stats: Atk=135 Def=120 SpA=60 SpD=85 Spe=50
+       moves: KowtowCleave(-1), IronHead(-1), LowKick(-1), SuckerPunch(-1)
+  RSV  basculegion[FNT] 0/100 (0%)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  kingambit  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=3 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
+------------------------------------------------------------------------
+ ACCION -> ['/choose move 4, move 4']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=-0.1565  c2_episode=-0.2140
+  c1_turn=+0  c1_episode=+0
+  ui_delta=-16  ui_total=-16
+========================================================================
+
+========================================================================
+ TURNO 7 [DECISION]  |  rqid 22  |  BO3 game 1  |  19:36:08
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=-
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
+       item=focussash  abi=rockhead  status=-  boosts=-
+       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
+       moves: headsmash(7), flareblitz(16), extremespeed(8), protect(6)
+  A2  gholdengo [Steel/Ghost]  75/179 (42%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+2
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(18), shadowball(15), makeitrain(7), protect(6)
+  RSV  froslass[FNT] 0/177 (0%) | rillaboom[FNT] 0/207 (0%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=tailwind:3  confirmados=3
+  A1  salamence-mega [Dragon/Flying]  13/100 (13%)  [MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  A2  kingambit [Dark/Steel]  15/100 (15%)  [OK]
+       item=chopleberry  abi=defiant  status=-  boosts=-
+       stats: Atk=135 Def=120 SpA=60 SpD=85 Spe=50
+       moves: KowtowCleave(-1), IronHead(-1), LowKick(-1), SuckerPunch(-1)
+  RSV  basculegion[FNT] 0/100 (0%)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  kingambit  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=3 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
+------------------------------------------------------------------------
+ ACCION -> ['/choose move 1 2, move 4']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=-0.2140
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+========================================================================
+
+========================================================================
+ TURNO 7 [WAIT]  |  rqid 24  |  BO3 game 1  |  19:36:15
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=grassyterrain:5
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
+       item=focussash  abi=rockhead  status=-  boosts=-
+       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
+       moves: headsmash(7), flareblitz(16), extremespeed(8), protect(6)
+  A2  gholdengo [Steel/Ghost]  86/179 (48%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+2
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(18), shadowball(15), makeitrain(7), protect(6)
+  RSV  froslass[FNT] 0/177 (0%) | rillaboom[FNT] 0/207 (0%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=tailwind:3  confirmados=4
+  A1  rillaboom [Grass]  100/100 (100%)  [OK]
+       item=sitrusberry  abi=grassysurge  status=-  boosts=-
+       stats: Atk=125 Def=90 SpA=60 SpD=70 Spe=85
+       moves: WoodHammer(-1), GrassyGlide(-1), Uturn(-1), FakeOut(-1)
+  A2  kingambit [Dark/Steel]  0/100 (0%)  [FNT OK]
+       item=chopleberry  abi=defiant  status=-  boosts=-
+       stats: Atk=135 Def=120 SpA=60 SpD=85 Spe=50
+       moves: KowtowCleave(-1), IronHead(-1), LowKick(-1), SuckerPunch(-1)
+  RSV  basculegion[FNT] 0/100 (0%) | salamence-mega 13/100 (13%)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  kingambit  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=3 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
+------------------------------------------------------------------------
+ ACCION -> (wait)
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.1140  c2_episode=-0.1000
+  c1_turn=+0  c1_episode=+0
+  ui_delta=11  ui_total=-10
+========================================================================
+
+========================================================================
+ TURNO 8 [DECISION]  |  rqid 26  |  BO3 game 1  |  19:36:20
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=grassyterrain:4
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
+       item=focussash  abi=rockhead  status=-  boosts=-
+       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
+       moves: headsmash(6), flareblitz(16), extremespeed(8), protect(6)
+  A2  gholdengo [Steel/Ghost]  86/179 (48%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+2
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(18), shadowball(15), makeitrain(7), protect(5)
+  RSV  froslass[FNT] 0/177 (0%) | rillaboom[FNT] 0/207 (0%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=tailwind:2  confirmados=4
+  A1  rillaboom [Grass]  100/100 (100%)  [OK]
+       item=sitrusberry  abi=grassysurge  status=-  boosts=-
+       stats: Atk=125 Def=90 SpA=60 SpD=70 Spe=85
+       moves: WoodHammer(-1), GrassyGlide(-1), Uturn(-1), FakeOut(-1)
+  A2  salamence-mega [Dragon/Flying]  13/100 (13%)  [MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  RSV  basculegion[FNT] 0/100 (0%) | kingambit[FNT] 0/100 (0%)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  kingambit  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=3 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
+------------------------------------------------------------------------
+ ACCION -> ['/choose move 4, move 3']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=-0.1565  c2_episode=-0.2565
+  c1_turn=+0  c1_episode=+0
+  ui_delta=-16  ui_total=-16
+========================================================================
+
+========================================================================
+ TURNO 9 [DECISION]  |  rqid 28  |  BO3 game 1  |  19:36:24
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=grassyterrain:3
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  arcanine-hisui [Fire/Rock]  172/172 (100%)
+       item=focussash  abi=rockhead  status=-  boosts=-
+       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
+       moves: headsmash(6), flareblitz(16), extremespeed(8), protect(5)
+  A2  gholdengo [Steel/Ghost]  62/179 (35%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(18), shadowball(15), makeitrain(6), protect(5)
+  RSV  froslass[FNT] 0/177 (0%) | rillaboom[FNT] 0/207 (0%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=tailwind:1  confirmados=4
+  A1  rillaboom [Grass]  100/100 (100%)  [OK]
+       item=sitrusberry  abi=grassysurge  status=-  boosts=-
+       stats: Atk=125 Def=90 SpA=60 SpD=70 Spe=85
+       moves: WoodHammer(-1), GrassyGlide(-1), Uturn(-1), FakeOut(-1)
+  A2  salamence-mega [Dragon/Flying]  0/100 (0%)  [FNT MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  RSV  basculegion[FNT] 0/100 (0%) | kingambit[FNT] 0/100 (0%)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  kingambit  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  rillaboom  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=159-177 Def=110-126 SpA=72-86 SpD=90-106 Spe=105-121
+      conv: obs=1 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=4 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
+------------------------------------------------------------------------
+ ACCION -> ['/choose move 4, move 1']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.1565  c2_episode=-0.1000
+  c1_turn=+0  c1_episode=+0
+  ui_delta=16  ui_total=16
+========================================================================
+
+========================================================================
+ TURNO 10 [DECISION]  |  rqid 30  |  BO3 game 1  |  19:36:26
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=grassyterrain:2
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  arcanine-hisui [Fire/Rock]  16/172 (9%)
+       item=focussash  abi=rockhead  status=-  boosts=-
+       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
+       moves: headsmash(6), flareblitz(16), extremespeed(8), protect(4)
+  A2  gholdengo [Steel/Ghost]  73/179 (41%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+2
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(17), shadowball(15), makeitrain(6), protect(5)
+  RSV  froslass[FNT] 0/177 (0%) | rillaboom[FNT] 0/207 (0%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=4
+  A1  rillaboom [Grass]  77/100 (77%)  [OK]
+       item=sitrusberry  abi=grassysurge  status=-  boosts=-
+       stats: Atk=125 Def=90 SpA=60 SpD=70 Spe=85
+       moves: WoodHammer(-1), GrassyGlide(-1), Uturn(-1), FakeOut(-1)
+  A2  salamence-mega [Dragon/Flying]  0/100 (0%)  [FNT MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  RSV  basculegion[FNT] 0/100 (0%) | kingambit[FNT] 0/100 (0%)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  kingambit  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  rillaboom  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=159-177 Def=110-126 SpA=72-86 SpD=90-106 Spe=105-121
+      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=4 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
+------------------------------------------------------------------------
+ ACCION -> ['/choose move 2 2, move 1']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0115  c2_episode=-0.0885
+  c1_turn=+0  c1_episode=+0
+  ui_delta=1  ui_total=1
+========================================================================
+
+========================================================================
+ TURNO 11 [DECISION]  |  rqid 32  |  BO3 game 1  |  19:36:33
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=grassyterrain:1
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  arcanine-hisui [Fire/Rock]  0/172 (0%)  [FNT]
+       item=focussash  abi=rockhead  status=-  boosts=-
+       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
+       moves: headsmash(6), flareblitz(16), extremespeed(8), protect(4)
+  A2  gholdengo [Steel/Ghost]  84/179 (47%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+4
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(16), shadowball(15), makeitrain(6), protect(5)
+  RSV  froslass[FNT] 0/177 (0%) | rillaboom[FNT] 0/207 (0%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=4
+  A1  rillaboom [Grass]  83/100 (83%)  [OK]
+       item=sitrusberry  abi=grassysurge  status=-  boosts=-
+       stats: Atk=125 Def=90 SpA=60 SpD=70 Spe=85
+       moves: WoodHammer(-1), GrassyGlide(-1), Uturn(-1), FakeOut(-1)
+  A2  salamence-mega [Dragon/Flying]  0/100 (0%)  [FNT MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  RSV  basculegion[FNT] 0/100 (0%) | kingambit[FNT] 0/100 (0%)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  kingambit  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  rillaboom  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=159-177 Def=110-126 SpA=72-86 SpD=90-106 Spe=105-121
+      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=4 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
+------------------------------------------------------------------------
+ ACCION -> ['/choose pass, move 4']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=-0.1530  c2_episode=-0.2415
+  c1_turn=+0  c1_episode=+0
+  ui_delta=-15  ui_total=-15
+========================================================================
+
+========================================================================
+ TURNO 12 [DECISION]  |  rqid 34  |  BO3 game 1  |  19:36:39
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=-
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  arcanine-hisui [Fire/Rock]  0/172 (0%)  [FNT]
+       item=focussash  abi=rockhead  status=-  boosts=-
+       stats: Atk=167 Def=100 SpA=103 SpD=100 Spe=156
+       moves: headsmash(6), flareblitz(16), extremespeed(8), protect(4)
+  A2  gholdengo [Steel/Ghost]  95/179 (53%)
+       item=-  abi=goodasgold  status=-  boosts=atk-1 def+1 spa+4
+       stats: Atk=72 Def=115 SpA=187 SpD=111 Spe=136
+       moves: nastyplot(16), shadowball(15), makeitrain(6), protect(4)
+  RSV  froslass[FNT] 0/177 (0%) | rillaboom[FNT] 0/207 (0%)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=4
+  A1  rillaboom [Grass]  90/100 (90%)  [OK]
+       item=sitrusberry  abi=grassysurge  status=-  boosts=-
+       stats: Atk=125 Def=90 SpA=60 SpD=70 Spe=85
+       moves: WoodHammer(-1), GrassyGlide(-1), Uturn(-1), FakeOut(-1)
+  A2  salamence-mega [Dragon/Flying]  0/100 (0%)  [FNT MEGA OK]
+       item=salamencite  abi=aerilate  status=-  boosts=-
+       stats: Atk=145 Def=130 SpA=120 SpD=90 Spe=120
+       moves: HyperVoice(-1), DoubleEdge(-1), Tailwind(-1), Protect(-1)
+  RSV  basculegion[FNT] 0/100 (0%) | kingambit[FNT] 0/100 (0%)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  kingambit  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  rillaboom  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=175-191 Atk=159-177 Def=110-126 SpA=72-86 SpD=90-106 Spe=105-121
+      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=4 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
+------------------------------------------------------------------------
+ ACCION -> ['/choose pass, move 2 1']
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=-0.0035  c2_episode=-0.2450
+  c1_turn=+0  c1_episode=+0
+  ui_delta=-0  ui_total=-0
+========================================================================
+
+########################################################################
+ BO3 GAME 1 END  |  win: Deep1ODDQN  |  Deep1ODDQN vs popplioperu98
+########################################################################
+
+########################################################################
+ BO3 GAME 2 START  |  Deep1ODDQN vs popplioperu98
+########################################################################
+========================================================================
+ TURNO 0 [DECISION]  |  rqid 2  |  BO3 game 2  |  19:37:21
+ Deep1ODDQN  vs  popplioperu98
+ clima=-(0)  campo=-
+------------------------------------------------------------------------
+ YO [p1]  side=-
   A1  (vacio)
   A2  (vacio)
-  RSV  metagross 175/175 (100%) | garchomp 185/185 (100%) | volcarona 172/172 (100%) | sneasler 157/157 (100%) | rillaboom 207/207 (100%) | incineroar 202/202 (100%)
+  RSV  salamence 172/172 (100%) | froslass 177/177 (100%) | rillaboom 207/207 (100%) | sneasler 157/157 (100%) | gholdengo 179/179 (100%) | arcanine-hisui 172/172 (100%)
 ------------------------------------------------------------------------
- RIVAL [p1]  side=-  confirmados=0
+ RIVAL [p2]  side=-  confirmados=0
   A1  (vacio)
   A2  (vacio)
   RSV  (vacia)
 ------------------------------------------------------------------------
  STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  archaludon  nat=calm
+  kingambit  nat=adamant
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=165-181 Atk=112-126 Def=150-166 SpA=145-161 SpD=93-111 Spe=105-121
-      conv: obs=0 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
-  basculegion  nat=jolly
+      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  rillaboom  nat=adamant
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=195-211 Atk=132-148 Def=85-101 SpA=90-104 SpD=95-111 Spe=107-125
-      conv: obs=3 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  pelipper  nat=modest
+      est:  HP=175-191 Atk=159-177 Def=110-126 SpA=72-86 SpD=90-106 Spe=105-121
+      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+  salamence  nat=naive  forme=salamence-mega
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=135-151 Atk=63-77 Def=120-136 SpA=126-144 SpD=90-106 Spe=85-101
-      conv: obs=3 HP=17 Atk=15 Def=17 SpA=17 SpD=17 Spe=17
+      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
+      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
+      conv: obs=4 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
 ------------------------------------------------------------------------
  OTS (plantilla showteam; una vez por partida):
-  1. archaludon  item=leftovers  abi=stamina  moves=Protect,Snarl,ElectroShot,DragonPulse
-  2. pelipper  item=lifeorb  abi=drizzle  moves=Protect,Tailwind,Hurricane,WeatherBall
-  3. golisopod  item=golisopite  abi=emergencyexit  moves=FirstImpression,LeechLife,CloseCombat,IronHead
-  4. basculegion  item=choicescarf  abi=adaptability  moves=FlipTurn,AquaJet,WaveCrash,LastRespects
-  5. rillaboom  item=miracleseed  abi=grassysurge  moves=FakeOut,GrassyGlide,WoodHammer,HighHorsepower
-  6. farigiraf  item=sitrusberry  abi=armortail  moves=Protect,TrickRoom,Thunderbolt,Psychic
+  1. salamence  item=salamencite  abi=intimidate  moves=HyperVoice,DoubleEdge,Tailwind,Protect
+  2. rillaboom  item=sitrusberry  abi=grassysurge  moves=WoodHammer,GrassyGlide,Uturn,FakeOut
+  3. sneasler  item=grassyseed  abi=unburden  moves=DireClaw,CloseCombat,FakeOut,Protect
+  4. arcanine-hisui  item=focussash  abi=rockhead  moves=FlareBlitz,HeadSmash,ExtremeSpeed,Protect
+  5. kingambit  item=chopleberry  abi=defiant  moves=KowtowCleave,IronHead,LowKick,SuckerPunch
+  6. basculegion  item=mysticwater  abi=adaptability  moves=WaveCrash,LastRespects,AquaJet,Protect
 ------------------------------------------------------------------------
- ACCION -> ['/team 4612|3']
+ ACCION -> ['/team 4521|2']
 ------------------------------------------------------------------------
  REWARD (Spec v1.1 Candidate 2 dense / turno):
   c2_turn=+0.0000  c2_episode=+0.0000
   c1_turn=+0  c1_episode=+0
-  ui_delta=0  ui_total=0
-------------------------------------------------------------------------
- TEAM PREVIEW: ver bloque ranking en CMD (4 de 6 + why)
+  ui_delta=100  ui_total=0
 ========================================================================
+
+########################################################################
+ BO3 GAME 2 END  |  win: Deep1ODDQN  |  Deep1ODDQN vs popplioperu98
+########################################################################

@@ -1,5 +1,6 @@
 # Runtime activo (UI + Showdown + bot random)
 # Python >= 3.11 recomendado (probado en 3.12)
+# UI Streamlit opcional: pip install -r requirements-ui.txt
 
 environs>=14.0,<16
 Pillow>=11.0,<13

@@ -193,10 +193,18 @@ async def handle_active_battle_turn(ps_websocket_client: PSWebsocketClient, batt
 
     # Spec C2: delta de material tras el update (antes de decidir / dump).
     try:
-        from showdown.inference_sim.reward_telemetry import observe_iap_spec_reward
-        observe_iap_spec_reward(battle)
-    except Exception:
-        pass
+        from showdown.inference_sim.reward_telemetry import (
+            observe_iap_spec_reward,
+            push_iap_reward_to_ui,
+        )
+        c2_delta, _c2_ep = observe_iap_spec_reward(battle)
+        # En |wait| no hay action_battle → empujar UI aquí si hubo delta.
+        if battle.wait and abs(float(c2_delta)) > 1e-9:
+            push_iap_reward_to_ui(
+                battle, getattr(battle, 'q', None), label='(wait)',
+            )
+    except Exception as exc:
+        print(f'[WARN]     observe_iap_spec_reward: {exc}')
 
     # 3. Si el servidor solicita esperar (p. ej. el oponente está realizando U-Turn / cambio)
     # Igual volcamos snap [WAIT] para paridad rqid vs logs_showdown.txt
@@ -288,9 +296,13 @@ async def handle_finished_battle(ps_websocket_client: PSWebsocketClient, battle:
     else:
         raise ValueError("¡La batalla terminó sin un ganador válido") # Sino, se lanza excepción
 
-    # GANADOR PARCIAL, PRONTO SE USARA PARA LA NUEVA GRAFICA
-    #q.put([-1, winner == battle.opponent.account_name, battle.user.account_name, battle.opponent.account_name])  # Envío el ganador a la Interfaz e indico que ha finalizado la Batalla Individual
     print("[INFO]     Batalla Individual: {} - Ganador: {}".format(battle.battleBO3_count, winner))
+    # Spec C2/C1 terminal + telemetría UI (Streamlit / start.py)
+    try:
+        from showdown.inference_sim.reward_telemetry import finalize_iap_game_reward
+        finalize_iap_game_reward(battle, winner, q)
+    except Exception as exc:
+        print(f'[WARN]     finalize_iap_game_reward: {exc}')
     battle.append_game_banner('END', winner=winner, to_console=True)
     battle.battleBO3_count = battle.battleBO3_count + 1
 

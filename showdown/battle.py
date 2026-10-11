@@ -591,10 +591,11 @@ class Battle(ABC):
 # PENDIENTE - Cálculos de las Recompensas                                                                                                                ###
 ############################################################################################################################################################
     def calculateRewards(self):
-        """UI rewards: prefer Spec C2 delta/return when available."""
+        """UI rewards: Spec C2 delta / episode return (×100 for legacy UI scale)."""
         c2_t = float(getattr(self, 'last_c2_reward', 0.0) or 0.0)
         c2_ep = float(getattr(self, 'spec_c2_return', 0.0) or 0.0)
-        # Escala suave a la UI legacy (enteros ~centenas).
+        # Escala suave a la UI legacy (~centenas). No floor aquí: los bots
+        # deben usar round(..., 1) al empujar a la cola (chips pequeños).
         self.lastReward = c2_t * 100.0
         self.reward = c2_ep * 100.0
         return self.lastReward, self.reward

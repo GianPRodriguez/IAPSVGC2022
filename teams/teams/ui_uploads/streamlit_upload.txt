@@ -1,0 +1,4 @@
+Pikachu @ Light Ball
+Ability: Static
+Level: 50
+- Volt Tackle
