@@ -17,7 +17,7 @@ from showdown.rl.reward import RewardCandidate
 
 
 def test_spec_version_v14():
-    assert SPEC_VERSION == 'v1.7'
+    assert SPEC_VERSION == 'v1.8'
     assert JOINT_ACTION_N == 576
 
 

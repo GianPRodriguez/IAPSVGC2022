@@ -51,11 +51,11 @@ def _is_ps_battle_room(room: str) -> bool:
 
 PLAYER_A_CHOICES = (
     'greedy_solo', 'greedy_joint', 'expectimax_bayesian', 'ddqn', 'ppo',
-    'mcts_puct', 'mcts_puct_nash', 'qd_ppo', 'qd_pga',
+    'mcts_puct', 'mcts_puct_nash', 'qd_ppo', 'qd_pga', 'qd_ppga',
 )
 PLAYER_B_CHOICES = (
     'random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian', 'ddqn', 'ppo',
-    'mcts_puct', 'mcts_puct_nash', 'qd_ppo', 'qd_pga',
+    'mcts_puct', 'mcts_puct_nash', 'qd_ppo', 'qd_pga', 'qd_ppga',
 )
 
 
@@ -769,6 +769,14 @@ def _qd_pga_player_classes():
     return QDPGAPlayer, make_validated_qd_pga_player_class()
 
 
+def _qd_ppga_player_classes():
+    from showdown.rl.qd_ppga.player import (
+        QDPPGAPlayer,
+        make_validated_qd_ppga_player_class,
+    )
+    return QDPPGAPlayer, make_validated_qd_ppga_player_class()
+
+
 def validated_player_class(kind: str) -> Type[Player]:
     """Player A del robusto: siempre validated (sync + OTS)."""
     key = str(kind or 'greedy_solo').strip().lower().replace('-', '_')
@@ -796,6 +804,9 @@ def validated_player_class(kind: str) -> Type[Player]:
     if key == 'qd_pga':
         _, ValidatedQDPGAPlayer = _qd_pga_player_classes()
         return ValidatedQDPGAPlayer
+    if key == 'qd_ppga':
+        _, ValidatedQDPPGAPlayer = _qd_ppga_player_classes()
+        return ValidatedQDPPGAPlayer
     raise ValueError(
         f'player-a inválido: {kind!r}. Opciones: {", ".join(PLAYER_A_CHOICES)}'
     )
@@ -832,6 +843,9 @@ def opponent_player_class(kind: str) -> Type[Player]:
     if key == 'qd_pga':
         QDPGAPlayer, _ = _qd_pga_player_classes()
         return QDPGAPlayer
+    if key == 'qd_ppga':
+        QDPPGAPlayer, _ = _qd_ppga_player_classes()
+        return QDPPGAPlayer
     raise ValueError(
         f'player-b inválido: {kind!r}. Opciones: {", ".join(PLAYER_B_CHOICES)}'
     )

@@ -1,0 +1,17 @@
+{
+  "seed": 0,
+  "global_steps": 5632,
+  "t_total": 6000,
+  "coverage": 0.01,
+  "qd_score": 0.0,
+  "best_f": 0.0,
+  "accepts": 1,
+  "emits": 19,
+  "n_uniform": 9,
+  "n_frontier": 9,
+  "n_outer": 9,
+  "replay_len": 5632,
+  "p_mut": 0.0,
+  "alpha": 0.5,
+  "smoke": true
+}

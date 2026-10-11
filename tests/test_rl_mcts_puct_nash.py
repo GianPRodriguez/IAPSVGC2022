@@ -16,7 +16,7 @@ from showdown.rl.snapshot import BattleSnapshot
 
 
 def test_spec_version_nash_aligned():
-    assert SPEC_VERSION == 'v1.7'
+    assert SPEC_VERSION == 'v1.8'
 
 
 def test_cells_only_from_legal_topk():

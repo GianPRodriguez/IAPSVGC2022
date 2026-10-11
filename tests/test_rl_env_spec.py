@@ -26,7 +26,7 @@ from showdown.rl.snapshot import (
 
 
 def test_spec_version_and_obs_dim():
-    assert SPEC_VERSION == 'v1.7'
+    assert SPEC_VERSION == 'v1.8'
     assert OBS_DIM == 1024
 
 

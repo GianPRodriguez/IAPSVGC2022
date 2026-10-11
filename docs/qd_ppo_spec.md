@@ -19,7 +19,7 @@
 > **Contrast with Masked PPO:** one policy (+ self-play pool) vs **archive of elites**.
 > Archive fitness \(U=f\) = **Candidate 1**; inner PPO \(R_t^{(2)}\) = **Candidate 2**.
 >
-> **Contrast with matrix row 6:** QD-PGA-MAP-Elites → [`qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md). Row 7 (QD-PPGA) out of scope.
+> **Contrast with matrix rows 6–7:** QD-PGA → [`qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md); QD-PPGA → [`qd_ppga_spec.md`](qd_ppga_spec.md).
 >
 > **Immutability:** bump this doc to 1.1+ **and** `rl_env_spec.md` §6.e together.
 

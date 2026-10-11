@@ -19,7 +19,7 @@
 > **Contrast with QD-PPO:** per-elite full AC + PPO-only variation vs **actor-only**
 > elites + **shared** \(V_\phi\) + hybrid mutation / PG emitters.
 >
-> **Contrast with QD-PPGA:** out of scope (row 7).
+> **Contrast with QD-PPGA:** [`qd_ppga_spec.md`](qd_ppga_spec.md) — proximal-only + arborescence (\(p_{\mathrm{mut}}=0\)).
 >
 > **Immutability:** bump this doc to 1.1+ **and** `rl_env_spec.md` §6.f together.
 

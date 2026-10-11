@@ -11,7 +11,7 @@ from showdown.rl.qd_pga.train import derived_n_outer
 
 
 def test_spec_version_qd_pga_aligned():
-    assert SPEC_VERSION == 'v1.7'
+    assert SPEC_VERSION == 'v1.8'
 
 
 def test_derived_n_outer_pga():
