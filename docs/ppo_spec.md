@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Masked PPO** |
-| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.a) |
+| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` **v1.14** §6.a) |
 | **Estado** | **FROZEN — implementado en `showdown/rl/ppo/` + `battle_bots/ppo`** |
 | **Algoritmo** | Proximal Policy Optimization (Schulman et al., 2017) + IAM (Huang & Ontañón, 2022) |
 | **Rol** | Agente RL de **gradiente de política** principal (complemento de DDQN joint) |
@@ -90,7 +90,8 @@ distinto de un ensayo a otro.
 | 0–15 | move × target |
 | 16–19 | hard switch |
 | 20 | pass |
-| 21–22 | mega / tera (si `valid_orders`) |
+| 21 | mega (si `can_mega` / `valid_orders`) |
+| 22 | tera (**off** Reg M-C; máscara siempre 0) |
 | 23 | reserved |
 
 ### Invalid Action Masking (IAM)
@@ -297,7 +298,8 @@ PFSP completo: **fuera de alcance**. Reward: `--reward anneal`.
 ## 13. Non-goals
 
 Joint-576 como política **primaria** PPO; PFSP completo; value clip; entrenar en L2/crash;
-preview en MDP; BD en \(R_t\); reemplazar DDQN; actor recurrente/attention.
+preview en MDP; BD en \(R_t\); reemplazar DDQN; actor recurrente/attention;
+Terastallization legal (Reg M-C: id 22 siempre masked).
 
 ---
 
@@ -322,6 +324,7 @@ declararse en la tesis; no obligan a forzar cabezas idénticas.
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.2** | 2026-10-11 | ActionSpec: Tera id 22 **off** bajo Reg M-C; Mega 21 intacto. |
 | **1.1** | 2026-10-10 | Redacción amena (ES); semántica FROZEN intacta. |
 | **1.0** | 2026-10-10 | Contrato Masked PPO: AR IAM, GAE, BC, self-play uniforme. |
 

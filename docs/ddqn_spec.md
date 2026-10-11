@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — DDQN** |
-| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.b) |
+| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` **v1.14** §6.b) |
 | **Estado** | **FROZEN — implementado en `showdown/rl/ddqn/` + `battle_bots/ddqn`** |
 | **Algoritmo** | Double DQN (van Hasselt et al., 2016) + máscara de acciones ilegales |
 | **Rol** | Agente RL **basado en valor** principal (complemento de Masked PPO) |
@@ -90,10 +90,11 @@ a = 24\cdot a_1 + a_2 \in \{0,\ldots,575\}, \quad a_1,a_2 \in \{0,\ldots,23\}
 | 16–19 | hard switch banca |
 | 20 | pass |
 | 21 | mega (compact; decode `pe_adapter`) |
-| 22 | tera (compact; decode `pe_adapter`) |
+| 22 | tera (**reserved / always illegal** under Reg M-C) |
 | 23 | reserved |
 
-**Mega / Tera:** ids 21–22 solo si `valid_orders` los permite en \(s_t\).
+**Mega:** id 21 solo si `can_mega` / `valid_orders`.  
+**Tera:** id 22 **nunca** legal en este proyecto (`format_rules.TERASTALLIZATION_ENABLED=False`).
 
 ### Máscara
 
@@ -259,7 +260,8 @@ Pesos de muestreo: `random=solo=joint=1.0`, `expectimax_bayesian=0.35`.
 ## 13. Non-goals
 
 PER, n-step, Rainbow, C51, QR-DQN, Dueling, NoisyNets; preview en MDP;
-entrenar en L2/truncated; \(Q\) como \(\Phi(s)\); self-play; IQL/BDQN como agente principal reportado; BC obligatorio.
+entrenar en L2/truncated; \(Q\) como \(\Phi(s)\); self-play; IQL/BDQN como agente principal reportado; BC obligatorio;
+Terastallization como acción legal (Reg M-C: id 22 siempre masked).
 
 ---
 
@@ -276,9 +278,10 @@ entrenar en L2/truncated; \(Q\) como \(\Phi(s)\); self-play; IQL/BDQN como agent
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.2** | 2026-10-11 | ActionSpec: Tera id 22 **off** bajo Reg M-C (`format_rules`); Mega 21 intacto. |
 | **1.1** | 2026-10-10 | Redacción amena (ES) + glosario/analogía; **sin** cambio de semántica FROZEN. |
 | **1.0** | 2026-10-10 | Contrato DDQN + curriculum \(\Omega\) monótono. |
 
 ---
 
-*Fin del contrato DDQN v1.1.*
+*Fin del contrato DDQN v1.2.*

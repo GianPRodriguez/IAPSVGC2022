@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Greedy-Joint** |
-| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.h.3) |
+| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` **v1.14** §6.h.3) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/greedy_joint/`** |
 | **Algoritmo** | Greedy joint: \(\arg\max_{(a_1,a_2)} S(a_1,a_2)\) en horizonte \(T=1\) |
 | **Rol** | Rival heurístico **principal** (curriculum avanzado, suite WR, ancla Expectimax / MCTS rollout) |
@@ -104,9 +104,12 @@ Componentes (orden conceptual):
 
 Clasificación de utility (`_utility_kind`): Protect-family, Follow Me / Rage Powder / Spotlight, Fake Out, Helping Hand, Tailwind / Trick Room / Icy Wind / Electroweb / Bulldoze / Glaciate, charge (turno que no dispara), status residual, else damage.
 
-### 4.4 Tera / Mega
+### 4.4 Mega / Tera (Reg M-C)
 
-Misma filosofía que Solo en la generación de átomos: Mega por defecto si disponible; Tera orientado a convertir KO (vía requests `special` en el colector compartido).
+| Mecánica | Contrato |
+|----------|----------|
+| Mega | Por defecto ON si `canMega` (átomos / `apply_pending_mega`) |
+| Tera | **Off** — Reg M-C no tiene Terastallization. `can_tera` forzado false vía `format_rules.allow_tera` |
 
 ### 4.5 Belief
 
@@ -155,6 +158,7 @@ Misma `apply_belief_stats` que Solo cuando el harness provee creencias.
 - Phase2 bayesiana (Expectimax).
 - Switches voluntarios dentro del producto joint.
 - Usar \(S(a_1,a_2)\) como potencial Ng en \(R_t\).
+- Terastallization (Reg M-C: inexistente; kill-switch `format_rules`).
 
 ---
 
@@ -162,9 +166,10 @@ Misma `apply_belief_stats` que Solo cuando el harness provee creencias.
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.2** | 2026-10-11 | **Reg M-C:** Tera **off**; Mega ON. Alineado `rl_env` v1.14. |
 | **1.1** | 2026-10-11 | Preview: referencia a Solo **v1.1** §3 (sin código Joint propio). Combate sin cambio. |
 | **1.0** | 2026-10-10 | Contrato FROZEN: 1-ply \(A_1\times A_2\), utilidades redirect/FO/HH/speed, `KO_BONUS=1000`, preview=Solo. |
 
 ---
 
-*Fin del contrato Greedy-Joint v1.1.*
+*Fin del contrato Greedy-Joint v1.2.*

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Índice / umbrella** de baselines no aprendidos |
-| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.9** §6.h) |
+| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` **v1.14** §6.h) |
 | **Estado** | **FROZEN** — los contratos **exclusivos** por agente son las fuentes de verdad |
 | **Rol** | Glosario + escalera experimental + punteros; **no** duplica números congelados |
 
@@ -18,10 +18,10 @@
 
 | Id | Spec | Code root |
 |----|------|-----------|
-| `random` | [`random_spec.md`](random_spec.md) **v1.1** | `showdown/battle_bots/random/` |
-| `greedy_solo` | [`greedy_solo_spec.md`](greedy_solo_spec.md) **v1.1** | `showdown/battle_bots/greedy_solo/` |
-| `greedy_joint` | [`greedy_joint_spec.md`](greedy_joint_spec.md) **v1.1** | `showdown/battle_bots/greedy_joint/` |
-| `expectimax_bayesian` | [`expectimax_bayesian_spec.md`](expectimax_bayesian_spec.md) **v1.1** | `showdown/battle_bots/expectimax_bayesian/` |
+| `random` | [`random_spec.md`](random_spec.md) **v1.2** | `showdown/battle_bots/random/` |
+| `greedy_solo` | [`greedy_solo_spec.md`](greedy_solo_spec.md) **v1.2** | `showdown/battle_bots/greedy_solo/` |
+| `greedy_joint` | [`greedy_joint_spec.md`](greedy_joint_spec.md) **v1.2** | `showdown/battle_bots/greedy_joint/` |
+| `expectimax_bayesian` | [`expectimax_bayesian_spec.md`](expectimax_bayesian_spec.md) **v1.2** | `showdown/battle_bots/expectimax_bayesian/` |
 
 **Inmutabilidad:** cambiar semántica de un agente ⇒ bump del **spec exclusivo**
 correspondiente **y** entrada en `rl_env_spec.md` §6.h. Este índice solo se

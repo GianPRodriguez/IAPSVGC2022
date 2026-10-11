@@ -10,3 +10,4 @@
 
 -r requirements.txt
 torch>=2.0.0,<3
+scipy>=1.10  # Team Preview Nash LP (HiGHS); FP fallback if absent

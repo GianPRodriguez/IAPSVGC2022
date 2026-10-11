@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Expectimax-Bayesian** |
-| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.h.4) |
+| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` **v1.14** §6.h.4) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/expectimax_bayesian/`** |
 | **Algoritmo** | Expectimax 1-ply bayesiano anytime; filtro Greedy-Joint Top-K×Top-K; gate vs phase1 |
 | **Rol** | Techo heurístico de la escalera; fuente BC; oponente de suite WR |
@@ -329,6 +329,7 @@ Checklist de reproducibilidad:
 - \(V(s)\) como potencial Ng en RewardSpec.
 - Optimalidad de teoría de juegos.
 - Sustituir el historial de tune (`CONFIG_HISTORY`) por silencio en reportes.
+- Terastallization (Reg M-C: inexistente; `format_rules.allow_tera` → false).
 
 ---
 
@@ -336,9 +337,10 @@ Checklist de reproducibilidad:
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.2** | 2026-10-11 | **Reg M-C:** Tera **off** (non-goal de formato); Mega sin cambio. |
 | **1.1** | 2026-10-11 | **Team Preview §3** afinado: fórmula \(S\), pesos, roles+diversidad, lead quality; constantes nombradas; tests; drop `riesnther`; **fix** `_nid` strip `-`/`_` para formes (`Indeedee-F`→`indeedeef`). Combate / `ExpectimaxConfig` sin cambio semántico. |
 | **1.0** | 2026-10-10 | Contrato FROZEN: cobertura 75%, phase1=joint, phase2 Top-K×Top-K, gate indifference \(\varepsilon=40\), voluntary switch OFF, tabla `ExpectimaxConfig`. |
 
 ---
 
-*Fin del contrato Expectimax-Bayesian v1.0.*
+*Fin del contrato Expectimax-Bayesian v1.2.*

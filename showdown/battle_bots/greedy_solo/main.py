@@ -242,8 +242,13 @@ class BattleBot(Battle):
             a2 = request_active[1] if len(request_active) > 1 else {}
             can_mega_l = bool(a1.get('canMegaEvo', False))
             can_mega_r = bool(a2.get('canMegaEvo', False))
-            can_tera_l = bool(a1.get('canTerastallize', False) or a1.get('canTera', False))
-            can_tera_r = bool(a2.get('canTerastallize', False) or a2.get('canTera', False))
+            from showdown.format_rules import allow_tera
+            can_tera_l = allow_tera(
+                bool(a1.get('canTerastallize', False) or a1.get('canTera', False))
+            )
+            can_tera_r = allow_tera(
+                bool(a2.get('canTerastallize', False) or a2.get('canTera', False))
+            )
 
             best_l, best_r, _ = await best_double_action(
                 _iap_to_calc(left, battle) if left else None,

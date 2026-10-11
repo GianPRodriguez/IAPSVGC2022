@@ -44,8 +44,9 @@ def _species_block(mon: Optional[MonSnapshot], width: int = 16) -> List[float]:
         float(mon.hp_pct) / 100.0,
         1.0 if mon.is_active else 0.0,
         1.0 if mon.can_mega else 0.0,
-        1.0 if mon.can_tera else 0.0,
-        _stable_unit(mon.tera_type),
+        # Reg M-C: Tera channel always 0 (format kill-switch).
+        0.0,
+        0.0,  # tera_type hash unused under M-C
     ]
     return feats + [0.0] * max(0, width - len(feats))
 

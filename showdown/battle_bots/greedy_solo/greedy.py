@@ -420,6 +420,10 @@ def _collect_side_requests(
     tera_type: Optional[str],
 ) -> Tuple[List[Dict[str, Any]], List[Tuple[str, MoveOption, int, CalcPoke, int]]]:
     """Arma requests/meta para un lado. meta: (side, move, tid, foe, special)."""
+    from showdown.format_rules import allow_tera
+    can_tera = allow_tera(can_tera)
+    if not can_tera:
+        tera_type = None
     requests: List[Dict[str, Any]] = []
     meta: List[Tuple[str, MoveOption, int, CalcPoke, int]] = []
     atk_base = _mon_payload(attacker, ally=ally, foe=None)

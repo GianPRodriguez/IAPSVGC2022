@@ -5,6 +5,7 @@ from typing import List, Optional, Sequence, Tuple
 
 import numpy as np
 
+from showdown.format_rules import allow_tera
 from showdown.rl.constants import (
     ILLEGAL_LOGIT,
     JOINT_ACTION_N,
@@ -154,7 +155,8 @@ def build_slot_mask(
 
     if active.can_mega:
         mask[MEGA_ID] = 1.0
-    if active.can_tera:
+    # Reg M-C: Terastallization disabled (id 22 stays illegal).
+    if allow_tera(active.can_tera):
         mask[TERA_ID] = 1.0
     return mask
 

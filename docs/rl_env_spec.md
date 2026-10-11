@@ -2,15 +2,15 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.10** |
+| **Version** | **v1.14** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
-| **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) |
+| **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) — **Mega Evolution yes; Terastallization no** |
 | **Scope of this doc** | Contract for `VGCEnv` / agents / training. |
-| **Implementation** | `showdown/rl/` (… QD-PGA, QD-PPGA) + heuristic baselines §6.h — Spec v1.10 |
+| **Implementation** | `showdown/rl/` + heuristics + Preview PPO/Nash/QD-PGA §6.i–k — Spec v1.14 |
 
-> **Immutability rule:** Do not silently change Reward / Action / Obs / BD / DDQN / PPO / MCTS / QD / **heuristic baseline** semantics mid-training.
-> Any change requires a new version (`v1.11+`) and an explicit changelog entry at the bottom.
+> **Immutability rule:** Do not silently change Reward / Action / Obs / BD / DDQN / PPO / MCTS / QD / heuristic / **Team Preview** semantics mid-training.
+> Any change requires a new version (`v1.15+`) and an explicit changelog entry at the bottom.
 
 ---
 
@@ -55,7 +55,13 @@
 
 4. DDQN: before \(\arg\max\), set \(Q(s,a)=-\infty\) (or add \((1-M)\cdot(-10^{9})\)) for illegal \(a\).
 
-Source of truth for legality: poke-env / PS `valid_orders` (or equivalent request-derived legal set).
+Source of truth for legality: poke-env / PS `valid_orders` (or equivalent request-derived legal set),
+**intersected** with format kill-switches in `showdown/format_rules.py`.
+
+**Regulation M-C — Terastallization:** the mechanic **does not exist** in this format
+(Mega Evolution does). ActionSpec **retains** slot id **22** for protocol / layout
+parity, but \(M[\mathrm{tera}]=0\) always and agents must never emit
+`terastallize` (`TERASTALLIZATION_ENABLED=False`). Obs Tera channels are forced to 0.
 
 Canonical joint helper (DDQN): `legal_joint_mask(battle) -> (576,)` with
 
@@ -174,8 +180,72 @@ BD values clipped / normalized to \([0, 1]\).
 | **6. QD-PGA-MAP-Elites** | Cand. 2 (actor) / Cand. 1 (fitness) | AR IAM + PGA hybrid (mut / PG) + shared \(V_\phi\). **QD PGA path** | **ACTIVE** |
 | **7. QD-PPGA** | Cand. 2 (actor) / Cand. 1 (fitness) | AR IAM + proximal-only PPO + shared \(V_\phi\) + arborescence. **QD PPGA path** | **ACTIVE** |
 | **H. Heuristic baselines** | N/A (no \(R_t\)) | `random` → `greedy_solo` → `greedy_joint` → `expectimax_bayesian`. **Fixed eval / curriculum foes** | Off |
+| **P. Team Preview Masked PPO** | Cand. **1** (terminal) | Flat-360 IAM; obs 512D; \(\pi_c=\)`greedy_joint` frozen. **Preview-only MDP** | Off |
 
-**Note:** Learned: §6.a/§6.b. Planning: §6.c/§6.d. QD policy: §6.e/§6.f/§6.g. Heuristics: §6.h. IQL / BDQN are ablations only.
+**Note:** Learned: §6.a/§6.b. Planning: §6.c/§6.d. QD: §6.e–g. Heuristics: §6.h. Preview PPO: §6.i. Preview Nash: §6.j. Preview QD-PGA: §6.k. IQL / BDQN = ablations only.
+
+---
+
+## 6.k TeamPreviewQDPGASpec — v1.13
+
+Exclusive **Team Preview** QD-PGA-MAP-Elites (policy archive). Not combat.
+
+> **Exclusive coding / thesis spec:** [`docs/team_preview_qd_pga_spec.md`](team_preview_qd_pga_spec.md) **v1.0**.
+
+| Item | Contract |
+|------|----------|
+| MDP | Same bandit as §6.i: Flat-360 IAM, obs 512D, Cand. **1**, \(\pi_c=\)`greedy_joint` |
+| Archive | Grid \(10\times10\); **actor-only** elites; deploy \(\pi^\star=\arg\max f\) |
+| BD | Preview-only \(b\in[0,1]^2\): speed-control bias \(b_1\), offense/support \(b_2\) (OTS flags) |
+| Fitness | Mean Cand. 1 over \(G=20\), \(g_{\min}=10\); mosaic 25/25/50 preview baselines |
+| Variation | \(p_{\mathrm{mut}}=0.5\), \(\sigma=0.02\); else PPO-clip \(K=2\) + shared \(V_\phi\) (\(512\)D) |
+| Budget | \(B_{\mathrm{boot}}=4096\), \(T_{\mathrm{emit}}=128\), \(n_{\mathrm{emit}}=4\), \(N_{\mathrm{outer}}=256\) (episodes) |
+| Code | `showdown/rl/team_preview_qd_pga/` (+ shared `team_preview_{env,obs,action}.py`) |
+| Eval | 200 BO1; argmax masked |
+
+---
+
+## 6.j TeamPreviewNashSpec — v1.12
+
+Exclusive **Team Preview** Payoff Nash (Value Net + LP). Not combat.
+
+> **Exclusive coding / thesis spec:** [`docs/team_preview_nash_spec.md`](team_preview_nash_spec.md) **v1.0**.
+
+| Item | Contract |
+|------|----------|
+| Meta-game | Simultaneous zero-sum (Cand. 1 scale): \(A=2\hat M-1\), \(\hat M\in[0,1]^{360\times360}\) |
+| Action / Obs | **Reuse** Flat-360 Lehmer + obs \(512=210+210+36+56\) (same as §6.i) |
+| \(V_\theta\) | Low-rank: trunk MLP → \(\Phi_{\mathrm{row/col}}(h,e_a)\); \(d_a{=}32\), \(d_{\mathrm{lat}}{=}64\) |
+| Solver | **LP HiGHS** primary; Fictitious Play fallback; row-mean softmax last resort |
+| Train | Uniform \((i,j)\) pairs; labels \(r\in\{0,0.5,1\}\); BCE/MSE; \(\pi_c=\)`greedy_joint` frozen |
+| Self-play preview / Nash-on-policy sample | **Off** in v1.0 |
+| Infer | In-game \(a\sim p^\star\); eval \(\arg\max p^\star\); **no** temperature on \(p^\star\) |
+| Train sizes | \(N_{\mathrm{prod}}=2048\), \(N_{\mathrm{smoke}}=64\), \(B=128\), \(K=4\) |
+| Code | `showdown/rl/team_preview_nash/` (+ shared `team_preview_{env,obs,action}.py`) |
+| Eval | 200 BO1 vs preview baselines; metrics \(v^\star\), \(H(p^\star)\), support size |
+
+---
+
+## 6.i TeamPreviewMaskedPPOSpec — v1.11
+
+Exclusive **Team Preview** agent (not combat `/team 1234`).
+
+> **Exclusive coding / thesis spec:** [`docs/team_preview_masked_ppo_spec.md`](team_preview_masked_ppo_spec.md) **v1.0**.
+
+| Item | Contract |
+|------|----------|
+| MDP | Contextual bandit \(T=1\): preview → BO1 with frozen combat |
+| Action | Discrete \(a\in\{0,\ldots,359\}=P(6,4)\); Lehmer bijection; Showdown 1-based `/team` |
+| IAM | Softmax masked; full roster ⇒ \(M=\mathbf{1}_{360}\) (parity + pool\(<6\)) |
+| Obs | \(512=210+210+36+56\); coverage \(M_{ij}\) once; calc/heuristic **only in `reset()`** |
+| Reward | Cand. **1**: \(+1/-1/0\) (no \(\Delta\)HP) |
+| \(\pi_c\) | **`greedy_joint`** combat (not greedy preview tipado) |
+| Train | \(N_{\mathrm{prod}}=2048\), \(N_{\mathrm{smoke}}=64\), \(B=128\), \(K=4\), \(\gamma=\lambda=1\), \(c_e=0.02\) |
+| Code | `showdown/rl/team_preview_ppo/`, `team_preview_env.py`, `team_preview_obs.py`, `team_preview_action.py` |
+| Eval | 200 BO1 vs random / greedy / expectimax **preview** baselines |
+
+Combat Masked PPO ([`ppo_spec.md`](ppo_spec.md)) remains independent (preview out of that MDP).
+Sibling payoff-matrix agent: §6.j.
 
 ---
 
@@ -189,7 +259,7 @@ Contract for the **non-learned** reference ladder used in curriculum, mosaic, of
 > [`greedy_solo_spec.md`](greedy_solo_spec.md) ·
 > [`greedy_joint_spec.md`](greedy_joint_spec.md) ·
 > [`expectimax_bayesian_spec.md`](expectimax_bayesian_spec.md)
-> (heuristics preview §3 refined: [`random`](random_spec.md) / [`greedy_solo`](greedy_solo_spec.md) / [`greedy_joint`](greedy_joint_spec.md) / [`expectimax_bayesian`](expectimax_bayesian_spec.md) each **v1.1**; Spanish, tribunal-readable).
+> (heuristics: [`random`](random_spec.md) / [`greedy_solo`](greedy_solo_spec.md) / [`greedy_joint`](greedy_joint_spec.md) / [`expectimax_bayesian`](expectimax_bayesian_spec.md) each **v1.2+**; Reg M-C Tera **off**).
 
 | Id | Role | Exclusive spec | Code root |
 |----|------|----------------|-----------|
@@ -359,8 +429,8 @@ Contract for the **main value-based** agent. Implementation target: `showdown/rl
 | Item | Contract |
 |------|----------|
 | Joint id | \(a = 24\cdot a_1 + a_2 \in \{0,\ldots,575\}\), \(a_1,a_2\in\{0,\ldots,23\}\) |
-| Slot layout | Unchanged ActionSpec: 0–15 move×target, 16–19 switch, 20 pass, **21 mega**, **22 tera**, 23 reserved |
-| Mega / Tera | Ids 21 / 22 participate in the joint space. \(M_{\mathrm{joint}}\) enables them **only** when `valid_orders` allows them in \(s_t\). Decode follows `pe_adapter` semantics (compact mega/tera with move0/target0). |
+| Slot layout | Unchanged ActionSpec: 0–15 move×target, 16–19 switch, 20 pass, **21 mega**, **22 tera (reserved/off)**, 23 reserved |
+| Mega / Tera | Id **21** (mega) when `can_mega` / `valid_orders` allow. Id **22** (tera) is **always illegal** under Reg M-C (`format_rules.allow_tera` → false). Decode still recognizes the id for parity but never sets `terastallize=True`. |
 | Mask API | `legal_joint_mask(battle) -> shape (576,) dtype float32/bool`, from **`valid_orders`**. Also expose conditioned `action_masks(slot1_action_id=None) -> (M1, M2)`. |
 | Illegal Q | Before \(\arg\max\) / \(\varepsilon\)-greedy: \(Q(s,a_{\mathrm{illegal}})=-\infty\) (equiv. \(-10^{9}\) addend). |
 | Exploration | \(\varepsilon\)-greedy **uniform over legal** actions only. Never sample \(M=0\). |
@@ -497,6 +567,10 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.14** | 2026-10-11 | **Reg M-C format rule:** Terastallization **off** (`showdown/format_rules.py`); ActionSpec id 22 reserved/masked; Mega remains. Heuristic + RL paths force `can_tera=False` / no `terastallize`. |
+| **v1.13** | 2026-10-11 | **TeamPreviewQDPGASpec** (§6.k): [`team_preview_qd_pga_spec.md`](team_preview_qd_pga_spec.md) v1.0 + `showdown/rl/team_preview_qd_pga/`. Reuses Flat-360 / 512D; combat Obs/Reward/Action unchanged. |
+| **v1.12** | 2026-10-11 | **TeamPreviewNashSpec** (§6.j): [`team_preview_nash_spec.md`](team_preview_nash_spec.md) v1.0 + `showdown/rl/team_preview_nash/`. Reuses Flat-360 / 512D; combat Obs/Reward/Action unchanged. |
+| **v1.11** | 2026-10-11 | **TeamPreviewMaskedPPOSpec** (§6.i): [`team_preview_masked_ppo_spec.md`](team_preview_masked_ppo_spec.md) v1.0 + `showdown/rl/team_preview_*`. Combat Obs/Reward/Action unchanged. |
 | **v1.10** | 2026-10-10 | **Editorial:** exclusive RL specs bumped to **v1.1** (Spanish, tribunal-readable: “por qué existe”, glosario, fortalezas/límites) — [`ppo`](ppo_spec.md), [`ddqn`](ddqn_spec.md), [`mcts_puct`](mcts_puct_spec.md), [`mcts_puct_nash`](mcts_puct_nash_spec.md), [`qd_ppo`](qd_ppo_spec.md), [`qd_pga`](qd_pga_map_elites_spec.md), [`qd_ppga`](qd_ppga_spec.md). **No** Obs/Reward/Action/BD semantic change. Expectimax preview contract refined in [`expectimax_bayesian_spec`](expectimax_bayesian_spec.md) **v1.1** (§3; heuristic baseline, not Obs/Reward). |
 | **v1.9** | 2026-10-10 | **HeuristicBaselinesSpec** (§6.h): exclusive specs [`random`](random_spec.md) / [`greedy_solo`](greedy_solo_spec.md) / [`greedy_joint`](greedy_joint_spec.md) / [`expectimax_bayesian`](expectimax_bayesian_spec.md) v1.0 + umbrella [`heuristic_agents_spec`](heuristic_agents_spec.md) v1.1. Obs/Reward/Action structural semantics unchanged. |
 | **v1.8** | 2026-10-10 | **QD-PPGASpec** (§6.g): [`docs/qd_ppga_spec.md`](qd_ppga_spec.md) v1.0 + `showdown/rl/qd_ppga/`. Proximal-only + arborescence. |
@@ -511,7 +585,7 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 ---
 
-*End of frozen contract v1.10.*
+*End of frozen contract v1.14.*
 
 ## Implementation map
 
@@ -524,6 +598,9 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 | Damage heuristic (no Node) | `showdown/rl/damage_heuristic.py` |
 | Gymnasium env | `showdown/rl/env.py` (`VGCEnv`, `MockBattleBackend`) — must expose `trunc_reason` for PPO |
 | Live poke-env backend | `showdown/rl/pokeenv_backend.py` (`PokeEnvBattleBackend`) + `pe_adapter.py` |
+| **Team Preview QD-PGA (v1.13)** | [`team_preview_qd_pga_spec.md`](team_preview_qd_pga_spec.md) → `showdown/rl/team_preview_qd_pga/` + shared `team_preview_{env,obs,action}.py` |
+| **Team Preview Nash (v1.12)** | [`team_preview_nash_spec.md`](team_preview_nash_spec.md) → `showdown/rl/team_preview_nash/` + shared `team_preview_{env,obs,action}.py` |
+| **Team Preview Masked PPO (v1.11)** | [`team_preview_masked_ppo_spec.md`](team_preview_masked_ppo_spec.md) → `showdown/rl/team_preview_ppo/` + `team_preview_{env,obs,action}.py` |
 | **Heuristic baselines (v1.9)** | Exclusive: [`random_spec`](random_spec.md), [`greedy_solo_spec`](greedy_solo_spec.md), [`greedy_joint_spec`](greedy_joint_spec.md), [`expectimax_bayesian_spec`](expectimax_bayesian_spec.md) → `showdown/battle_bots/{…}/`; umbrella [`heuristic_agents_spec`](heuristic_agents_spec.md) |
 | **QD-PPGA (v1.8)** | [`docs/qd_ppga_spec.md`](qd_ppga_spec.md) **v1.1** → `showdown/rl/qd_ppga/` |
 | **QD-PGA-MAP-Elites (v1.7)** | [`docs/qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md) **v1.1** → `showdown/rl/qd_pga/` |

@@ -383,8 +383,11 @@ class GreedyDamagePlayer(Player):
 
         can_mega_l = bool(battle.can_mega_evolve[0]) if battle.can_mega_evolve else False
         can_mega_r = bool(battle.can_mega_evolve[1]) if len(battle.can_mega_evolve) > 1 else False
-        can_tera_l = bool(battle.can_tera[0]) if battle.can_tera else False
-        can_tera_r = bool(battle.can_tera[1]) if len(battle.can_tera) > 1 else False
+        from showdown.format_rules import allow_tera
+        can_tera_l = allow_tera(bool(battle.can_tera[0]) if battle.can_tera else False)
+        can_tera_r = allow_tera(
+            bool(battle.can_tera[1]) if battle.can_tera and len(battle.can_tera) > 1 else False
+        )
         tera_l = str(left_mon.tera_type.name) if left_mon and left_mon.tera_type else None
         tera_r = str(right_mon.tera_type.name) if right_mon and right_mon.tera_type else None
 
@@ -420,7 +423,7 @@ class GreedyDamagePlayer(Player):
             move = moves[action.move_slot - 1] if 0 < action.move_slot <= len(moves) else moves[0]
             targets = battle.get_possible_showdown_targets(move, mon)
             target = action.target if action.target in targets else (targets[0] if targets else 0)
-            use_tera = action.mega == 2 and can_tera and action.ko
+            use_tera = allow_tera(action.mega == 2 and can_tera and action.ko)
             use_mega = can_mega and (action is None or action.mega != 2)
             return Player.create_order(
                 move,

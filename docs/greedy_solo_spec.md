@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Greedy-Solo** |
-| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.h.2) |
+| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` **v1.14** §6.h.2) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/greedy_solo/`** |
 | **Algoritmo** | Greedy factored: \(\arg\max_{a_i} s_i\) por activo + calc de daño |
 | **Rol** | Primer escalón “inteligente” de la escalera; curriculum early RL |
@@ -150,8 +150,8 @@ Reglas cualitativas congeladas:
 | Regla | Contrato |
 |-------|----------|
 | Status (no dañinos) | No van al calc de daño; score de daño **0** (efectos solo vía `move_mechanics` si aplica) |
-| Tera | Solo si **convierte** un hit en KO garantizado que sin Tera no lo era |
-| Mega | **Por defecto ON** si `canMega` (no solo en KO) |
+| Tera | **Off** en Reg M-C (la mecánica no existe). Código legado gated por `format_rules.allow_tera` → siempre false |
+| Mega | **Por defecto ON** si `canMega` (no solo en KO); mecánica especial activa del formato |
 | Fake Out vs Ghost | Gate de tipado / Scrappy / Mind's Eye (`type_chart`) |
 | Priority fail | Respeta bloqueos de habilidad vía `move_mechanics` |
 
@@ -211,6 +211,7 @@ Reglas cualitativas congeladas:
 - Expectimax / mundos bayesianos.
 - Optimizar RewardSpec Cand. 1/2.
 - Sustituir MCTS (§6.c/§6.d).
+- Terastallization (Reg M-C: inexistente).
 
 ---
 
@@ -218,9 +219,10 @@ Reglas cualitativas congeladas:
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.2** | 2026-10-11 | **Reg M-C:** Terastallization **off** (non-goal); Mega sigue default ON. Kill-switch `format_rules.allow_tera`. |
 | **1.1** | 2026-10-11 | **Team Preview §3** afinado: constantes, fórmula off/def/BST, indiferencia de lead en el mismo bring, contraste Random/Expectimax; tests `test_greedy_team_preview.py`. Combate sin cambio semántico. |
-| **1.0** | 2026-10-10 | Contrato FROZEN: factored max-daño, `KO_BONUS=1000`, Tera-solo-si-KO, Mega default, preview \(\alpha=\beta=1,\gamma=0.01\). |
+| **1.0** | 2026-10-10 | Contrato FROZEN: factored max-daño, `KO_BONUS=1000`, Tera-solo-si-KO (superseded 1.2), Mega default, preview \(\alpha=\beta=1,\gamma=0.01\). |
 
 ---
 
-*Fin del contrato Greedy-Solo v1.1.*
+*Fin del contrato Greedy-Solo v1.2.*

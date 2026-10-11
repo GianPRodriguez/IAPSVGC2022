@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
+from showdown.format_rules import allow_tera
 from showdown.rl.action_space import (
     PASS_ID,
     SLOT_ACTION_N,
@@ -151,8 +152,9 @@ def mon_from_pe(mon, *, is_active: bool, ots_species: str = '') -> Optional[MonS
         is_active=is_active,
         just_switched=bool(getattr(mon, 'first_turn', False) or getattr(mon, 'active', False) and getattr(mon, 'just_switched', False)),
         can_mega=False,
-        can_tera=bool(getattr(mon, 'tera_type', None)),
-        tera_type=str(getattr(getattr(mon, 'tera_type', None), 'name', '') or ''),
+        # Reg M-C: never expose Tera as available (even if mon has tera_type metadata).
+        can_tera=False,
+        tera_type='',
     )
 
 
@@ -219,7 +221,9 @@ def _side_from_pe(
             if i < len(can_mega):
                 snap.can_mega = bool(can_mega[i])
             if i < len(can_tera):
-                snap.can_tera = bool(can_tera[i])
+                snap.can_tera = allow_tera(bool(can_tera[i]))
+            else:
+                snap.can_tera = False
         active_snaps[i] = snap
 
     active_ids = {_norm(_species(m)) for m in actives if m is not None}
@@ -257,7 +261,8 @@ def snapshot_from_battle(
     actives = list(getattr(battle, 'active_pokemon', None) or [None, None])
     foes = list(getattr(battle, 'opponent_active_pokemon', None) or [None, None])
     can_mega = list(getattr(battle, 'can_mega_evolve', None) or [False, False])
-    can_tera = list(getattr(battle, 'can_tera', None) or [False, False])
+    # Reg M-C: strip engine Tera flags before snapshot.
+    can_tera = [allow_tera(bool(x)) for x in (getattr(battle, 'can_tera', None) or [False, False])]
 
     finished = bool(getattr(battle, 'finished', False))
     won = getattr(battle, 'won', None)
@@ -320,7 +325,7 @@ def slot_action_to_pe_order(battle, slot: int, act: SlotAction):
         move,
         move_target=target,
         mega=(act.kind == 'mega'),
-        terastallize=(act.kind == 'tera'),
+        terastallize=allow_tera(act.kind == 'tera'),
     )
 
 
@@ -388,7 +393,7 @@ def pe_slot_mask(battle, slot: int, *, other: Optional[SlotAction] = None) -> np
     can_tera = list(getattr(battle, 'can_tera', None) or [])
     if slot < len(can_mega) and can_mega[slot]:
         mask[21] = 1.0
-    if slot < len(can_tera) and can_tera[slot]:
+    if slot < len(can_tera) and allow_tera(bool(can_tera[slot])):
         mask[22] = 1.0
     return mask
 

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Random** |
-| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.h.1) |
+| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` **v1.14** §6.h.1) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/random/`** |
 | **Algoritmo** | Muestreo estocástico sobre acciones **legales** del request Showdown |
 | **Rol** | Piso de la escalera heurística; primer oponente de curriculum RL |
@@ -102,7 +102,7 @@ Sea un activo no debilitado:
 | Move vs switch | Si atrapado o sin reserva: **move**. Si no: `random.choices(['move','switch'], weights=(80,20))` |
 | Move slot | Uniforme entre índices con PP \(>0\) y no `disabled` |
 | Mega | Si `canMegaEvo` y el move **no** es carga/recarga sin `target`: uniforme \(\{0,1\}\). Como máximo **una** mega por turno (el activo derecho solo si el izquierdo no eligió mega) |
-| Tera | **No** muestreado en v1.0 (flag ausente en este bot) |
+| Tera | **Off** (Reg M-C: la mecánica no existe; nunca emitir `terastallize`) |
 | Target | Ver §4.3 |
 | Sin moves legales | Cascada a `switch` en banco vivo |
 | Activo debilitado | `pass` |
@@ -162,7 +162,7 @@ Si el activo izquierdo ya eligió `switch`, el derecho **no** puede elegir el mi
 
 - Tipado, calc, belief, OTS, roles de preview.
 - \(\varepsilon\)-greedy de Q-learning / exploración dirigida.
-- Terastallize aleatorio (fuera de v1.0).
+- Terastallize (Reg M-C inexistente; non-goal permanente del formato tesis).
 - Sustituir a heuristics o agentes aprendidos.
 
 ---
@@ -171,6 +171,7 @@ Si el activo izquierdo ya eligió `switch`, el derecho **no** puede elegir el mi
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.2** | 2026-10-11 | **Reg M-C:** Tera explicitamente **off** (non-goal de formato). |
 | **1.1** | 2026-10-11 | **Team Preview §3** afinado: módulo `team_preview.py`, constantes, RNG inyectable; tests `test_random_team_preview.py`. Combate sin cambio semántico. |
 | **1.0** | 2026-10-10 | Contrato FROZEN: preview uniforme 4/6; 80/20 move/switch; mega 50%; friendly-fire 10%. |
 

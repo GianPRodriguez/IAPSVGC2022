@@ -41,7 +41,8 @@ BD_MIN_TURNS = 4
 # 16-19: hard switch bench index 0-3
 # 20: pass
 # 21: mega flag with move0/target0 (compact); prefer mega via info in decode
-# 22: tera flag with move0/target0
+# 22: tera flag (ActionSpec reserved). Reg M-C: always masked off —
+#     see showdown.format_rules.TERASTALLIZATION_ENABLED.
 # 23: reserved / default
 N_MOVE_SLOTS = 4
 N_TARGETS = 4  # foe_a, foe_b, ally, self_or_field
