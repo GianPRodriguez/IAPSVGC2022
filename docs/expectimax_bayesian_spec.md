@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Expectimax-Bayesian** |
-| **Versión** | **1.0** (alineado con `docs/rl_env_spec.md` **v1.9** §6.h.4) |
+| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.h.4) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/expectimax_bayesian/`** |
 | **Algoritmo** | Expectimax 1-ply bayesiano anytime; filtro Greedy-Joint Top-K×Top-K; gate vs phase1 |
 | **Rol** | Techo heurístico de la escalera; fuente BC; oponente de suite WR |
@@ -55,22 +55,103 @@ cambia de plan si la media no empeora de más (gate).
 
 ---
 
-## 3. Team Preview
+## 3. Team Preview (contrato afinado)
 
-Módulo: `team_preview.py`.
+Módulo: `showdown/battle_bots/expectimax_bayesian/team_preview.py`.  
+Entradas IAP / poke-env: `main.py` / `pokeenv_player.py` → `best_expectimax_preview_with_meta`.
+
+### 3.1 Intuición
+
+Greedy solo mira tipado+BST. Expectimax añade: (1) **roles de campo**
+reconocibles por especie en preview, (2) **calidad de leads** (los dos que salen
+primero deben tipar y, si pueden, traer redirect / Fake Out / Tailwind),
+(3) un sesgo defensivo ligeramente mayor (\(\beta>\alpha\)).
+
+**No** usa OTS ni moves ocultos: solo nombre/especie visible en Team Preview.
+
+### 3.2 Búsqueda (exhaustiva)
 
 | Ítem | Contrato |
 |------|----------|
-| Base | Score tipado+BST de Solo (`score_combination`) |
-| Extra | Bonos por **roles** visibles en especies de preview |
-| Roles (sets congelados en código) | Redirect, Tailwind, Trick Room, speed control, Fake Out |
-| OTS oculto | **No** inventa sets; solo lo visible en preview |
-| Función | `best_expectimax_preview_with_meta` |
+| Combinaciones | \(\binom{6}{4}\) brings × \(\binom{4}{2}\) leads = **hasta 90** órdenes |
+| Top-K | **No** — se puntúan todos |
+| Empate | Mayor `total`, luego mayor BST |
+| Salida | `PreviewScore.order` = `(lead1, lead2, bench1, bench2)` 1-based |
+| Pool \(<4\) | Relleno defensivo; score 0; meta `pool < 4` |
+| API | `best_expectimax_preview_with_meta` (+ wrapper `best_expectimax_preview_order`) |
+| Meta | `PreviewDecisionMeta`: top líneas, `why_lines`, conteos |
 
-Bonos de rol (magnitudes en código; p.ej. Tailwind +32, redirect +28, TR +26):
-cambiar el set de especies o magnitudes ⇒ bump de versión.
+### 3.3 Fórmula de score (congelada)
+
+Sea \(B\) el score tipado+BST de Solo (`score_combination`):
+
+\[
+B = \alpha\cdot\mathrm{off} + \beta\cdot\mathrm{def} + \gamma\cdot\mathrm{BST}
+\]
+
+\[
+S = B + R_{\mathrm{roles}} + w_{\mathrm{lead}}\cdot Q_{\mathrm{lead}}
+\]
+
+| Símbolo | Constante código | Valor |
+|---------|------------------|-------|
+| \(\alpha\) | `PREVIEW_ALPHA` | **1.05** (greedy: 1.0) |
+| \(\beta\) | `PREVIEW_BETA` | **1.25** (greedy: 1.0) |
+| \(\gamma\) | `PREVIEW_GAMMA` | **0.008** (greedy: 0.01) |
+| \(w_{\mathrm{lead}}\) | `LEAD_QUALITY_WEIGHT` | **0.45** |
+
+### 3.4 Roles \(R_{\mathrm{roles}}\)
+
+Presencia (≥1 especie del set). Matching vía `_nid` =
+`normalize_name(name)` **sin** `-`/`_` (p.ej. `Indeedee-F` → `indeedeef`).
+Los sets abajo están en esa forma compacta; **no** apilan por cantidad:
+
+| Rol | Constante | Bonus | Set de especies (ids) |
+|-----|-----------|-------|------------------------|
+| Redirect | `ROLE_BONUS_REDIRECT` | 28 | `amoonguss`, `indeedee`, `indeedeef`, `sableye`, `clefairy` |
+| Tailwind | `ROLE_BONUS_TAILWIND` | 32 | `tornadus`, `whimsicott`, `kilowattrel`, `suicune`, `pelipper`, `emolga`, `talonflame`, `braviary`, `braviaryhisui`, `zapdos` |
+| Trick Room | `ROLE_BONUS_TRICK_ROOM` | 26 | `indeedee`, `indeedeef`, `hatenna`, `hattrem`, `hatterene`, `slowking`, `slowkinggalar`, `porygon2`, `dusknoir`, `bronzong`, `oranguru` |
+| Speed control | `ROLE_BONUS_SPEED_CONTROL` | 18 | `incineroar`, `rillaboom`, `urshifu`, `urshifurapidstrike`, `landorustherian`, `landorus`, `tinglu`, `greattusk` |
+| Fake Out | `ROLE_BONUS_FAKE_OUT` | 14 | `incineroar`, `scrafty`, `kangaskhan`, `persian`, `meowth`, `sneasler`, `baxcalibur`, `farigiraf` |
+
+**Diversidad de buckets** (`ROLE_DIVERSITY_BONUS = 12`) si al menos **2** de:
+
+1. redirect  
+2. speed_axis = Tailwind **∨** Trick Room  
+3. disrupt = speed control **∨** Fake Out  
+
+### 3.5 Calidad de lead \(Q_{\mathrm{lead}}\)
+
+Sobre los **2** leads (no la banca):
+
+\[
+Q_{\mathrm{lead}} = \sum_{\ell\in\mathrm{leads}}\big(
+1.35\,\mathrm{def}(\ell) + 1.15\,\mathrm{off}(\ell)
++ 10\cdot\mathbf{1}[\ell\in\mathrm{Redirect}\cup\mathrm{FO}\cup\mathrm{TW}]
+\big)
+\]
+
+Constantes: `LEAD_DEF_SCALE=1.35`, `LEAD_OFF_SCALE=1.15`, `LEAD_ROLE_BONUS=10`.
+
+### 3.6 Contraste con Greedy preview
+
+| | Greedy-Solo/Joint | Expectimax |
+|--|-------------------|------------|
+| Pesos tipado | \(\alpha=\beta=1\), \(\gamma=0.01\) | §3.3 |
+| Roles | No | Sí (§3.4) |
+| Lead quality | No (solo orden por score combo) | Sí (§3.5) |
+| Búsqueda | \(\binom{6}{4}\times\binom{4}{2}\) | Igual (exhaustiva) |
+
+### 3.7 Non-goals (preview)
+
+- Inferir moves/item/SP desde OTS en el score de preview.  
+- Top-K / anytime en preview (eso es combate phase2).  
+- Compartir pesos \(\alpha,\beta,\gamma\) con Greedy (son deliberadamente distintos).
+
+Cambiar sets, pesos o fórmula ⇒ bump **1.2+** de este spec.
 
 ---
+
 
 ## 4. Pipeline de combate
 
@@ -255,6 +336,7 @@ Checklist de reproducibilidad:
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.1** | 2026-10-11 | **Team Preview §3** afinado: fórmula \(S\), pesos, roles+diversidad, lead quality; constantes nombradas; tests; drop `riesnther`; **fix** `_nid` strip `-`/`_` para formes (`Indeedee-F`→`indeedeef`). Combate / `ExpectimaxConfig` sin cambio semántico. |
 | **1.0** | 2026-10-10 | Contrato FROZEN: cobertura 75%, phase1=joint, phase2 Top-K×Top-K, gate indifference \(\varepsilon=40\), voluntary switch OFF, tabla `ExpectimaxConfig`. |
 
 ---

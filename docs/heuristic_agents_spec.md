@@ -18,10 +18,10 @@
 
 | Id | Spec | Code root |
 |----|------|-----------|
-| `random` | [`random_spec.md`](random_spec.md) **v1.0** | `showdown/battle_bots/random/` |
-| `greedy_solo` | [`greedy_solo_spec.md`](greedy_solo_spec.md) **v1.0** | `showdown/battle_bots/greedy_solo/` |
-| `greedy_joint` | [`greedy_joint_spec.md`](greedy_joint_spec.md) **v1.0** | `showdown/battle_bots/greedy_joint/` |
-| `expectimax_bayesian` | [`expectimax_bayesian_spec.md`](expectimax_bayesian_spec.md) **v1.0** | `showdown/battle_bots/expectimax_bayesian/` |
+| `random` | [`random_spec.md`](random_spec.md) **v1.1** | `showdown/battle_bots/random/` |
+| `greedy_solo` | [`greedy_solo_spec.md`](greedy_solo_spec.md) **v1.1** | `showdown/battle_bots/greedy_solo/` |
+| `greedy_joint` | [`greedy_joint_spec.md`](greedy_joint_spec.md) **v1.1** | `showdown/battle_bots/greedy_joint/` |
+| `expectimax_bayesian` | [`expectimax_bayesian_spec.md`](expectimax_bayesian_spec.md) **v1.1** | `showdown/battle_bots/expectimax_bayesian/` |
 
 **Inmutabilidad:** cambiar semántica de un agente ⇒ bump del **spec exclusivo**
 correspondiente **y** entrada en `rl_env_spec.md` §6.h. Este índice solo se

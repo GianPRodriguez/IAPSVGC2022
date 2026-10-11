@@ -1,4 +1,7 @@
-"""Módulo A: selección Team Preview por cobertura de tipos + BST."""
+"""Módulo A: selección Team Preview por cobertura de tipos + BST.
+
+Contrato: docs/greedy_solo_spec.md §3 (compartido por greedy_joint).
+"""
 from __future__ import annotations
 
 import itertools
@@ -13,6 +16,12 @@ from showdown.battle_bots.greedy_solo.type_chart import (
     offensive_coverage_score,
     pokemon_types,
 )
+
+# Pesos tipado/BST (≠ Expectimax PREVIEW_ALPHA/BETA/GAMMA).
+PREVIEW_ALPHA: float = 1.0
+PREVIEW_BETA: float = 1.0
+PREVIEW_GAMMA: float = 0.01
+SCORE_EPS: float = 1e-9  # tolerancia al comparar scores / empates
 
 
 @dataclass(frozen=True)
@@ -58,9 +67,9 @@ def score_combination(
     combo: Sequence[PreviewMon],
     foe_mons: Sequence[PreviewMon],
     *,
-    alpha: float = 1.0,
-    beta: float = 1.0,
-    gamma: float = 0.01,
+    alpha: float = PREVIEW_ALPHA,
+    beta: float = PREVIEW_BETA,
+    gamma: float = PREVIEW_GAMMA,
 ) -> PreviewScore:
     foe_type_sets = [m.types for m in foe_mons if m.types]
     if not foe_type_sets:
@@ -88,17 +97,18 @@ def best_team_preview_order(
     our_mons: Sequence[PreviewMon],
     foe_mons: Sequence[PreviewMon],
     *,
-    alpha: float = 1.0,
-    beta: float = 1.0,
-    gamma: float = 0.01,
+    alpha: float = PREVIEW_ALPHA,
+    beta: float = PREVIEW_BETA,
+    gamma: float = PREVIEW_GAMMA,
     lead_preference: Optional[Sequence[int]] = None,
 ) -> PreviewScore:
     """
     Elige la mejor combinación de 4 de 6.
 
     Retorna orden (a,b,c,d) 1-based: a,b salen de lead; c,d banca.
-    Si hay empate, prioriza mayor BST y luego índices estables.
+    Empate de score → mayor BST. `lead_preference` reservado (no usado en v1.1).
     """
+    del lead_preference  # API estable; sin efecto (spec §3 non-goals)
     pool = list(our_mons)
     if len(pool) < 4:
         # Relleno defensivo
@@ -115,7 +125,7 @@ def best_team_preview_order(
 
     best: Optional[PreviewScore] = None
     for combo in itertools.combinations(pool, 4):
-        # Probar permutaciones de lead (primeros 2) manteniendo banca relativa
+        # Leads = C(4,2); banca = los 2 restantes (orden relativo del combo)
         combo_list = list(combo)
         for lead in itertools.combinations(combo_list, 2):
             bench = [m for m in combo_list if m not in lead]
@@ -123,9 +133,9 @@ def best_team_preview_order(
             scored = score_combination(
                 ordered, foe_mons, alpha=alpha, beta=beta, gamma=gamma
             )
-            if best is None or scored.score > best.score + 1e-9:
+            if best is None or scored.score > best.score + SCORE_EPS:
                 best = scored
-            elif best is not None and abs(scored.score - best.score) < 1e-9:
+            elif best is not None and abs(scored.score - best.score) < SCORE_EPS:
                 if scored.bst > best.bst:
                     best = scored
 

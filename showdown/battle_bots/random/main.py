@@ -5,6 +5,7 @@ import constants
 from showdown.battle import Battle
 from showdown.battle_bots.helpers import getMoveName
 from showdown.battle_bots.helpers import getToMovePokemon
+from showdown.battle_bots.random.team_preview import sample_team_preview_order
 
 
 ############################################################################################################################################################
@@ -63,13 +64,10 @@ class BattleBot(Battle):
 # OK - Escoge los 4 Pokémon de los 6 disponibles de manera aleatoria para el inicio de la batalla                                                        ###
 ############################################################################################################################################################
     async def action_team_preview(self, battle: Battle) -> tuple[int, ...]:
-        # 1. Obtener 4 índices únicos aleatorios entre 1 y 6
-        pkmn_indices = random.sample(range(1, 7), 4)
+        # Contrato: docs/random_spec.md §3 — uniforme 4 de 6, sin tipado/roles.
+        pkmn_indices = sample_team_preview_order()
 
-        # 2. Acceso seguro a la lista de Pokémon en el JSON
         pokemon_list = battle.request_json.get('side', {}).get('pokemon', [])
-
-        # 3. Extraer nombres de forma segura usando list comprehension
         names = []
         for idx in pkmn_indices:
             if 0 <= idx - 1 < len(pokemon_list):
@@ -78,12 +76,10 @@ class BattleBot(Battle):
                 name = "Unknown"
             names.append(name)
 
-        # 4. Enviar a la cola para la interfaz gráfica (Módulo de Análisis)
         if getattr(battle, 'q', None) is not None:
             battle.q.put([1, names[0], names[1], names[2], names[3], 0, 0])
 
-        # 5. Retornar los 4 enteros
-        return tuple(pkmn_indices) # tupla (5, 2, 1, 4)
+        return pkmn_indices
 
 
 ############################################################################################################################################################

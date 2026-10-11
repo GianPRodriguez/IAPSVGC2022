@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Random** |
-| **Versión** | **1.0** (alineado con `docs/rl_env_spec.md` **v1.9** §6.h.1) |
+| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.h.1) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/random/`** |
 | **Algoritmo** | Muestreo estocástico sobre acciones **legales** del request Showdown |
 | **Rol** | Piso de la escalera heurística; primer oponente de curriculum RL |
@@ -19,7 +19,7 @@
 > **Contraste.** A diferencia de Greedy-Solo / Joint / Expectimax, no usa tipado
 > ni calculadora de daño: solo legales + RNG.
 >
-> **Inmutabilidad.** Cambiar un número o semántica congelada exige bump a **1.1+**
+> **Inmutabilidad.** Cambiar un número o semántica congelada exige bump a **1.2+**
 > de este doc **y** entrada en `rl_env_spec.md` §6.h en el mismo cambio.
 
 ---
@@ -49,17 +49,38 @@ Si no, el fallo está en la infraestructura, no en el algoritmo aprendido.
 
 ---
 
-## 3. Team Preview
+## 3. Team Preview (contrato afinado)
 
-| Paso | Contrato |
-|------|----------|
-| Selección | `random.sample(range(1, 7), 4)` — 4 índices distintos uniformes |
-| Orden | El orden de la muestra es el orden enviado (leads = primeros dos en la tupla de retorno del bot IAP) |
-| Tipado / BST / roles | **Ignorados** |
+Módulo: `showdown/battle_bots/random/team_preview.py`.  
+Wiring IAP: `main.py` → `sample_team_preview_order()`.
 
-Código: `BattleBot.action_team_preview` en `main.py`.
+### 3.1 Intuición
+
+Elige 4 de 6 **sin mirar** tipado, BST ni roles. Es el piso estocástico de la
+escalera de preview (antes de Greedy tipado y Expectimax con roles).
+
+### 3.2 Contrato
+
+| Ítem | Valor congelado |
+|------|-----------------|
+| API | `sample_team_preview_order(rng=None)` |
+| Slots | \(\{1,\ldots,6\}\) (`PREVIEW_SLOT_LO/HI`) |
+| Cardinalidad | **4** distintos (`PREVIEW_PICK_COUNT`) |
+| Distribución | Uniforme sobre las \(\binom{6}{4}\cdot 4!\) muestras ordenadas de `random.sample` |
+| Leads | Índices en posiciones 0 y 1 de la tupla |
+| Banca | Posiciones 2 y 3 |
+| Tipado / BST / roles / OTS | **Ignorados** |
+| Determinismo | Si se pasa `rng=random.Random(seed)`, reproducible |
+| Validación | `is_valid_preview_order` |
+
+### 3.3 Non-goals (preview)
+
+- Sesgo hacia leads “buenos” o cobertura tipada.  
+- Compartir lógica con Greedy / Expectimax.  
+- Preview fijo `/team 1234` (eso es el env RL de combate, no este bot).
 
 ---
+
 
 ## 4. Turno de combate
 
@@ -150,8 +171,9 @@ Si el activo izquierdo ya eligió `switch`, el derecho **no** puede elegir el mi
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.1** | 2026-10-11 | **Team Preview §3** afinado: módulo `team_preview.py`, constantes, RNG inyectable; tests `test_random_team_preview.py`. Combate sin cambio semántico. |
 | **1.0** | 2026-10-10 | Contrato FROZEN: preview uniforme 4/6; 80/20 move/switch; mega 50%; friendly-fire 10%. |
 
 ---
 
-*Fin del contrato Random v1.0.*
+*Fin del contrato Random v1.1.*

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Greedy-Joint** |
-| **Versión** | **1.0** (alineado con `docs/rl_env_spec.md` **v1.9** §6.h.3) |
+| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.h.3) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/greedy_joint/`** |
 | **Algoritmo** | Greedy joint: \(\arg\max_{(a_1,a_2)} S(a_1,a_2)\) en horizonte \(T=1\) |
 | **Rol** | Rival heurístico **principal** (curriculum avanzado, suite WR, ancla Expectimax / MCTS rollout) |
@@ -56,9 +56,9 @@ mejor *acorde* de dos notas para el compás actual.
 
 ## 3. Team Preview
 
-Contrato idéntico a [`greedy_solo_spec.md`](greedy_solo_spec.md) §3
-(`best_team_preview_order`, \(\alpha=\beta=1\), \(\gamma=0.01\)).
-La diferencia Joint vs Solo es **solo** la política de combate.
+**Idéntico** a [`greedy_solo_spec.md`](greedy_solo_spec.md) **v1.1** §3
+(módulo compartido `greedy_solo/team_preview.py`).  
+Joint **no** tiene preview propio: tipado+BST sin roles; combate sí divergen.
 
 ---
 
@@ -162,8 +162,9 @@ Misma `apply_belief_stats` que Solo cuando el harness provee creencias.
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.1** | 2026-10-11 | Preview: referencia a Solo **v1.1** §3 (sin código Joint propio). Combate sin cambio. |
 | **1.0** | 2026-10-10 | Contrato FROZEN: 1-ply \(A_1\times A_2\), utilidades redirect/FO/HH/speed, `KO_BONUS=1000`, preview=Solo. |
 
 ---
 
-*Fin del contrato Greedy-Joint v1.0.*
+*Fin del contrato Greedy-Joint v1.1.*

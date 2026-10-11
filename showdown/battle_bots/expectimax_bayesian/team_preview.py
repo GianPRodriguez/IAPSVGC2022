@@ -1,9 +1,12 @@
-"""Team Preview propio de expectimax: tipado + roles de campo + calidad de lead."""
+"""Team Preview propio de expectimax: tipado + roles de campo + calidad de lead.
+
+Contrato: docs/expectimax_bayesian_spec.md §3 (Team Preview).
+"""
 from __future__ import annotations
 
 import itertools
 from dataclasses import dataclass, field
-from typing import List, Optional, Sequence, Set, Tuple
+from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 from showdown.battle_bots.greedy_solo.team_preview import (
     PreviewMon,
@@ -12,53 +15,82 @@ from showdown.battle_bots.greedy_solo.team_preview import (
 )
 from teams.team_converter import normalize_name
 
-# Roles por especie (Champions / VGC frecuente). No usa OTS: solo lo visible en preview.
-_REDIRECT: Set[str] = {
-    'amoonguss', 'indeedee', 'indeedeef', 'sableye', 'clefairy', 'riesnther',
-}
-_TAILWIND: Set[str] = {
+# --- Pesos tipado/BST (≠ greedy α=β=1, γ=0.01) ---
+PREVIEW_ALPHA: float = 1.05
+PREVIEW_BETA: float = 1.25
+PREVIEW_GAMMA: float = 0.008
+LEAD_QUALITY_WEIGHT: float = 0.45
+LEAD_DEF_SCALE: float = 1.35
+LEAD_OFF_SCALE: float = 1.15
+LEAD_ROLE_BONUS: float = 10.0
+
+# --- Bonos de rol (presencia ≥1 especie del set; no apilan por cantidad) ---
+ROLE_BONUS_REDIRECT: float = 28.0
+ROLE_BONUS_TAILWIND: float = 32.0
+ROLE_BONUS_TRICK_ROOM: float = 26.0
+ROLE_BONUS_SPEED_CONTROL: float = 18.0
+ROLE_BONUS_FAKE_OUT: float = 14.0
+ROLE_DIVERSITY_BONUS: float = 12.0  # si n_role_buckets ≥ 2
+
+# Roles por especie (ids normalize_name). Solo lo visible en preview — no OTS/moves.
+REDIRECT_SPECIES: Set[str] = frozenset({
+    'amoonguss', 'indeedee', 'indeedeef', 'sableye', 'clefairy',
+})
+TAILWIND_SPECIES: Set[str] = frozenset({
     'tornadus', 'whimsicott', 'kilowattrel', 'suicune', 'pelipper', 'emolga',
     'talonflame', 'braviary', 'braviaryhisui', 'zapdos',
-}
-_TRICK_ROOM: Set[str] = {
+})
+TRICK_ROOM_SPECIES: Set[str] = frozenset({
     'indeedee', 'indeedeef', 'hatenna', 'hattrem', 'hatterene', 'slowking',
     'slowkinggalar', 'porygon2', 'dusknoir', 'bronzong', 'oranguru',
-}
-_SPEED_CONTROL: Set[str] = {
+})
+SPEED_CONTROL_SPECIES: Set[str] = frozenset({
     'incineroar', 'rillaboom', 'urshifu', 'urshifurapidstrike', 'landorustherian',
     'landorus', 'tinglu', 'greattusk',
-}
-_FAKE_OUT: Set[str] = {
+})
+FAKE_OUT_SPECIES: Set[str] = frozenset({
     'incineroar', 'scrafty', 'kangaskhan', 'persian', 'meowth', 'sneasler',
     'baxcalibur', 'farigiraf',
-}
+})
+
+# Aliases internos (tests / spec); mismos objetos frozenset.
+_REDIRECT = REDIRECT_SPECIES
+_TAILWIND = TAILWIND_SPECIES
+_TRICK_ROOM = TRICK_ROOM_SPECIES
+_SPEED_CONTROL = SPEED_CONTROL_SPECIES
+_FAKE_OUT = FAKE_OUT_SPECIES
 
 
 def _nid(name: str) -> str:
-    return normalize_name(name or '') or ''
+    """Id de rol: normalize_name + quitar '-' / '_' (Showdown deja formes con guión)."""
+    return (normalize_name(name or '') or '').replace('-', '').replace('_', '')
+
+
+def role_bucket_flags(ids: Set[str]) -> Dict[str, bool]:
+    """Tres buckets de diversidad: redirect | speed-axis (TW∨TR) | disrupt (spdCtrl∨FO)."""
+    return {
+        'redirect': bool(ids & _REDIRECT),
+        'speed_axis': bool(ids & _TAILWIND) or bool(ids & _TRICK_ROOM),
+        'disrupt': bool(ids & _SPEED_CONTROL) or bool(ids & _FAKE_OUT),
+    }
 
 
 def _role_bonus(mons: Sequence[PreviewMon]) -> float:
     ids = {_nid(m.name) for m in mons}
     s = 0.0
     if ids & _REDIRECT:
-        s += 28.0
+        s += ROLE_BONUS_REDIRECT
     if ids & _TAILWIND:
-        s += 32.0
+        s += ROLE_BONUS_TAILWIND
     if ids & _TRICK_ROOM:
-        s += 26.0
+        s += ROLE_BONUS_TRICK_ROOM
     if ids & _SPEED_CONTROL:
-        s += 18.0
+        s += ROLE_BONUS_SPEED_CONTROL
     if ids & _FAKE_OUT:
-        s += 14.0
-    # Diversidad de roles (evitar 4 attackers sin soporte)
-    n_roles = sum([
-        bool(ids & _REDIRECT),
-        bool(ids & _TAILWIND) or bool(ids & _TRICK_ROOM),
-        bool(ids & _SPEED_CONTROL) or bool(ids & _FAKE_OUT),
-    ])
-    if n_roles >= 2:
-        s += 12.0
+        s += ROLE_BONUS_FAKE_OUT
+    buckets = role_bucket_flags(ids)
+    if sum(1 for v in buckets.values() if v) >= 2:
+        s += ROLE_DIVERSITY_BONUS
     return s
 
 
@@ -88,11 +120,11 @@ def _lead_quality(leads: Sequence[PreviewMon], foes: Sequence[PreviewMon]) -> fl
     foe_types = [m.types for m in foes if m.types] or [tuple()]
     s = 0.0
     for mon in leads:
-        s += 1.35 * defensive_resistance_score(mon.types, foe_types)
-        s += 1.15 * offensive_coverage_score(mon.types, foe_types)
+        s += LEAD_DEF_SCALE * defensive_resistance_score(mon.types, foe_types)
+        s += LEAD_OFF_SCALE * offensive_coverage_score(mon.types, foe_types)
         nid = _nid(mon.name)
         if nid in _REDIRECT or nid in _FAKE_OUT or nid in _TAILWIND:
-            s += 10.0
+            s += LEAD_ROLE_BONUS
     return s
 
 
@@ -120,12 +152,12 @@ def best_expectimax_preview_order(
     our_mons: Sequence[PreviewMon],
     foe_mons: Sequence[PreviewMon],
     *,
-    alpha: float = 1.05,
-    beta: float = 1.25,
-    gamma: float = 0.008,
+    alpha: float = PREVIEW_ALPHA,
+    beta: float = PREVIEW_BETA,
+    gamma: float = PREVIEW_GAMMA,
     top_report: int = 8,
 ) -> PreviewScore:
-    """Wrapper: devuelve PreviewScore; meta en last call via best_expectimax_preview_with_meta."""
+    """Wrapper: devuelve PreviewScore; meta vía best_expectimax_preview_with_meta."""
     scored, _meta = best_expectimax_preview_with_meta(
         our_mons, foe_mons, alpha=alpha, beta=beta, gamma=gamma, top_report=top_report,
     )
@@ -136,14 +168,14 @@ def best_expectimax_preview_with_meta(
     our_mons: Sequence[PreviewMon],
     foe_mons: Sequence[PreviewMon],
     *,
-    alpha: float = 1.05,
-    beta: float = 1.25,
-    gamma: float = 0.008,
+    alpha: float = PREVIEW_ALPHA,
+    beta: float = PREVIEW_BETA,
+    gamma: float = PREVIEW_GAMMA,
     top_report: int = 8,
 ) -> Tuple[PreviewScore, PreviewDecisionMeta]:
     """
     Exhaustivo C(6,4)×C(4,2) — no hay Top-K.
-    score = alpha*off + beta*def + gamma*BST + role_bonus + 0.45*lead_quality
+    score = alpha*off + beta*def + gamma*BST + role_bonus + LEAD_QUALITY_WEIGHT*lead_quality
     """
     meta = PreviewDecisionMeta()
     pool = list(our_mons)
@@ -177,7 +209,7 @@ def best_expectimax_preview_with_meta(
                 ordered, foe_mons, alpha=alpha, beta=beta, gamma=gamma,
             )
             lead_q = _lead_quality(list(lead), foe_mons)
-            total = base.score + role + 0.45 * lead_q
+            total = base.score + role + LEAD_QUALITY_WEIGHT * lead_q
             ps = PreviewScore(
                 order=base.order,
                 offensive=base.offensive,
@@ -214,7 +246,8 @@ def best_expectimax_preview_with_meta(
     why: List[str] = [
         f'criterio: exhaustivo C(6,4)xC(4,2) = {meta.n_scored} ordenes '
         f'(no Top-K); alpha={alpha} beta={beta} gamma={gamma}',
-        f'score = alpha*off + beta*def + gamma*BST + roles + 0.45*leadQ',
+        f'score = alpha*off + beta*def + gamma*BST + roles + '
+        f'{LEAD_QUALITY_WEIGHT}*leadQ',
         f'elegido S={ranked[0][0]:.1f}  roles={ranked[0][4]}(+{ranked[0][2]:.0f})  '
         f'leadQ={ranked[0][3]:.0f}  off={best.offensive:.0f} def={best.defensive:.0f} '
         f'bst={best.bst:.0f}',

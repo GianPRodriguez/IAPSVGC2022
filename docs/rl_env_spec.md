@@ -189,7 +189,7 @@ Contract for the **non-learned** reference ladder used in curriculum, mosaic, of
 > [`greedy_solo_spec.md`](greedy_solo_spec.md) ·
 > [`greedy_joint_spec.md`](greedy_joint_spec.md) ·
 > [`expectimax_bayesian_spec.md`](expectimax_bayesian_spec.md)
-> (each **v1.0**, Spanish, tribunal-readable).
+> (heuristics preview §3 refined: [`random`](random_spec.md) / [`greedy_solo`](greedy_solo_spec.md) / [`greedy_joint`](greedy_joint_spec.md) / [`expectimax_bayesian`](expectimax_bayesian_spec.md) each **v1.1**; Spanish, tribunal-readable).
 
 | Id | Role | Exclusive spec | Code root |
 |----|------|----------------|-----------|
@@ -497,7 +497,7 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 | Version | Date | Notes |
 |---------|------|-------|
-| **v1.10** | 2026-10-10 | **Editorial:** exclusive RL specs bumped to **v1.1** (Spanish, tribunal-readable: “por qué existe”, glosario, fortalezas/límites) — [`ppo`](ppo_spec.md), [`ddqn`](ddqn_spec.md), [`mcts_puct`](mcts_puct_spec.md), [`mcts_puct_nash`](mcts_puct_nash_spec.md), [`qd_ppo`](qd_ppo_spec.md), [`qd_pga`](qd_pga_map_elites_spec.md), [`qd_ppga`](qd_ppga_spec.md). **No** Obs/Reward/Action/BD semantic change. |
+| **v1.10** | 2026-10-10 | **Editorial:** exclusive RL specs bumped to **v1.1** (Spanish, tribunal-readable: “por qué existe”, glosario, fortalezas/límites) — [`ppo`](ppo_spec.md), [`ddqn`](ddqn_spec.md), [`mcts_puct`](mcts_puct_spec.md), [`mcts_puct_nash`](mcts_puct_nash_spec.md), [`qd_ppo`](qd_ppo_spec.md), [`qd_pga`](qd_pga_map_elites_spec.md), [`qd_ppga`](qd_ppga_spec.md). **No** Obs/Reward/Action/BD semantic change. Expectimax preview contract refined in [`expectimax_bayesian_spec`](expectimax_bayesian_spec.md) **v1.1** (§3; heuristic baseline, not Obs/Reward). |
 | **v1.9** | 2026-10-10 | **HeuristicBaselinesSpec** (§6.h): exclusive specs [`random`](random_spec.md) / [`greedy_solo`](greedy_solo_spec.md) / [`greedy_joint`](greedy_joint_spec.md) / [`expectimax_bayesian`](expectimax_bayesian_spec.md) v1.0 + umbrella [`heuristic_agents_spec`](heuristic_agents_spec.md) v1.1. Obs/Reward/Action structural semantics unchanged. |
 | **v1.8** | 2026-10-10 | **QD-PPGASpec** (§6.g): [`docs/qd_ppga_spec.md`](qd_ppga_spec.md) v1.0 + `showdown/rl/qd_ppga/`. Proximal-only + arborescence. |
 | **v1.7** | 2026-10-10 | **QD-PGA-MAP-ElitesSpec** (§6.f): [`docs/qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md) v1.0 + `showdown/rl/qd_pga/`. Shared \(V_\phi\), hybrid mut/PG. |

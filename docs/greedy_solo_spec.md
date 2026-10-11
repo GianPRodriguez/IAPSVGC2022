@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Greedy-Solo** |
-| **Versión** | **1.0** (alineado con `docs/rl_env_spec.md` **v1.9** §6.h.2) |
+| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.h.2) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/greedy_solo/`** |
 | **Algoritmo** | Greedy factored: \(\arg\max_{a_i} s_i\) por activo + calc de daño |
 | **Rol** | Primer escalón “inteligente” de la escalera; curriculum early RL |
@@ -20,7 +20,7 @@
 > **Contraste con Joint.** Solo elige por lado (factored). Joint busca el mejor
 > par \((a_1,a_2)\). Ver [`greedy_joint_spec.md`](greedy_joint_spec.md).
 >
-> **Inmutabilidad.** Bump **1.1+** aquí + `rl_env_spec` §6.h en el mismo cambio.
+> **Inmutabilidad.** Bump **1.2+** aquí + `rl_env_spec` §6.h en el mismo cambio.
 
 ---
 
@@ -49,21 +49,76 @@ sin coordinar un mate en dos.
 
 ---
 
-## 3. Team Preview
+## 3. Team Preview (contrato afinado)
 
-Módulo: `team_preview.py`.
+Módulo: `showdown/battle_bots/greedy_solo/team_preview.py`.  
+Compartido por **Greedy-Joint** ([`greedy_joint_spec.md`](greedy_joint_spec.md) §3).  
+Wiring: `main.py` / `pokeenv_player.py` → `best_team_preview_order`.
+
+### 3.1 Intuición
+
+Elige el bring de 4 y el par de leads que maximizan cobertura tipada ofensiva +
+resistencia defensiva frente a los tipos visibles del rival, con un empate débil
+por BST. **No** modela roles de campo (eso es Expectimax).
+
+### 3.2 Búsqueda
 
 | Ítem | Contrato |
 |------|----------|
-| Entrada | 6 mons propios + foes visibles (especies/tipos) |
-| Búsqueda | Combinaciones \(\binom{6}{4}\); para cada combo, permutaciones de lead (2) |
-| Score | \(\alpha\cdot\mathrm{off} + \beta\cdot\mathrm{def} + \gamma\cdot\mathrm{BST}\) |
-| Defaults congelados | \(\alpha=1\), \(\beta=1\), \(\gamma=0.01\) |
-| Empates | Mayor BST; luego estabilidad de índices |
-| Roles de campo | **No** (Tailwind / TR / FO los añade Expectimax) |
-| Salida | Orden 1-based `(lead1, lead2, bench1, bench2)` → string tipo `'1234'` |
+| Combinaciones | \(\binom{6}{4}\) brings × \(\binom{4}{2}\) leads = **hasta 90** |
+| Top-K | **No** — exhaustivo |
+| Pool \(<4\) | Relleno defensivo; score 0 |
+| API | `best_team_preview_order` / `score_combination` |
+| Salida | `(lead1, lead2, bench1, bench2)` 1-based → `order_to_team_string` |
+| `lead_preference` | Parámetro **reservado**; sin efecto en v1.1 |
+
+### 3.3 Fórmula
+
+\[
+S = \alpha\cdot\mathrm{off} + \beta\cdot\mathrm{def} + \gamma\cdot\mathrm{BST}
+\]
+
+| Constante | Valor |
+|-----------|-------|
+| `PREVIEW_ALPHA` \(\alpha\) | **1.0** |
+| `PREVIEW_BETA` \(\beta\) | **1.0** |
+| `PREVIEW_GAMMA` \(\gamma\) | **0.01** |
+| `SCORE_EPS` | \(10^{-9}\) |
+
+- \(\mathrm{off}\): suma de `offensive_coverage_score` por mon del bring vs tipos foe  
+  (SE \(\ge 2\) suma el mult.; si \(0<\mathrm{mult}<2\), aporta \(0.25\cdot\mathrm{mult}\)).  
+- \(\mathrm{def}\): suma de `defensive_resistance_score` (immune/resist suma; SE resta).  
+- \(\mathrm{BST}\): suma de BST base de los 4 (dex vía `getPkmnInfo` + `resolve_species_name`).
+
+**Propiedad:** \(\mathrm{off}/\mathrm{def}/\mathrm{BST}\) **no dependen del orden lead/bench**
+dentro del mismo conjunto de 4. Por tanto, entre leads de un mismo bring, el
+desempate no usa tipado de lead: queda el **primer** orden encontrado en la
+iteración `itertools` (tras empate de \(S\) y BST). Expectimax añade
+\(Q_{\mathrm{lead}}\) precisamente para romper esa indiferencia.
+
+### 3.4 Empates
+
+1. Mayor \(S\) (margen `SCORE_EPS`).  
+2. Si \(|S-S'|<\varepsilon\): mayor BST.  
+3. Si BST igual: conservar incumbent (orden de exploración estable).
+
+### 3.5 Contraste
+
+| | Random | Greedy | Expectimax |
+|--|--------|--------|------------|
+| Tipado+BST | No | Sí (§3.3) | Sí (pesos distintos) |
+| Roles | No | No | Sí |
+| Lead quality | No | No (indiferente en el mismo 4) | Sí |
+
+### 3.6 Non-goals (preview)
+
+- Roles TW/TR/FO/redirect.  
+- OTS / moves ocultos.  
+- Usar `lead_preference` (reservado).  
+- Compartir \(\alpha,\beta,\gamma\) con Expectimax.
 
 ---
+
 
 ## 4. Política de combate
 
@@ -163,8 +218,9 @@ Reglas cualitativas congeladas:
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.1** | 2026-10-11 | **Team Preview §3** afinado: constantes, fórmula off/def/BST, indiferencia de lead en el mismo bring, contraste Random/Expectimax; tests `test_greedy_team_preview.py`. Combate sin cambio semántico. |
 | **1.0** | 2026-10-10 | Contrato FROZEN: factored max-daño, `KO_BONUS=1000`, Tera-solo-si-KO, Mega default, preview \(\alpha=\beta=1,\gamma=0.01\). |
 
 ---
 
-*Fin del contrato Greedy-Solo v1.0.*
+*Fin del contrato Greedy-Solo v1.1.*
