@@ -1,0 +1,26 @@
+=== MCTS search-hyperparam tracking (mcts_puct) ===
+run_id: mcts_puct_20261012T042118Z_5f2c9a80
+dry_run: True
+rival: greedy_joint
+seed: 10
+teams: 40
+env_key: MCTS_SIMS
+varying: n_sims (others frozen: {'c_puct': 1.5, 'prior': 'uniform_legal', 'opp_model': 'uniform_legal', 'rollout': 'greedy_joint_snapshot', 'max_turns': 40, 'discount': 1.0, 'final_action': 'argmax_N_tie_Q'})
+criteria: {'delta_wr_pp': 1.5, 'time_ratio': 1.8, 'prefer_metric': 'wr_raw'}
+
+--- step log (N_sim changes) ---
+1. N_sim = 50 (first) [RECOMMENDED]
+   WR_raw=41.0%  pair_WR=40.8%  t=10.0s
+   delta_metric=-  time_ratio=-  metric=wr_raw
+2. N_sim 50 -> 100 (delta=50)
+   WR_raw=42.0%  pair_WR=41.5%  t=20.0s
+   delta_metric=+1.00pp  time_ratio=2.00x  metric=wr_raw
+3. N_sim 100 -> 200 (delta=100)
+   WR_raw=44.0%  pair_WR=43.0%  t=40.0s
+   delta_metric=+2.00pp  time_ratio=2.00x  metric=wr_raw
+4. N_sim 200 -> 400 (delta=200)
+   WR_raw=44.2%  pair_WR=43.2%  t=80.0s
+   delta_metric=+0.20pp  time_ratio=2.00x  metric=wr_raw
+
+recommended_n_sims: 50
+reason: meseta: N=50->100 delta_wr_raw=+1.00pp < 1.5pp y tiempo_x2.00 >= 1.8

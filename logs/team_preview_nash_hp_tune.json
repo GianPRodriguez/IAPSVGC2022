@@ -1,0 +1,65 @@
+{
+  "time_utc": "2026-10-12T05:11:52.903035+00:00",
+  "run_id": "team_preview_nash_20261012T051152Z_ec47ba70",
+  "agent": "team_preview_nash",
+  "dry_run": true,
+  "seed": 0,
+  "frozen": {
+    "grad_clip": 0.5,
+    "epochs": 4,
+    "loss": "bce",
+    "solver_timeout_s": 0.2,
+    "pi_c": "greedy_joint",
+    "note": "Varying: lr; independent of MCTS combat trains"
+  },
+  "criteria": "maximize MEAN_SCORE (-loss proxy on mock); accept if improves best; independent of MCTS",
+  "outcomes": [
+    {
+      "trial_index": 1,
+      "overrides": {
+        "lr": 0.0001
+      },
+      "score": 0.48,
+      "accepted": true,
+      "elapsed_s": 1.0399962775409222e-05,
+      "return_code": 0,
+      "checkpoint_dir": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_nash_hp_tune\\trial_01",
+      "note": "dry_run_fake_score"
+    },
+    {
+      "trial_index": 2,
+      "overrides": {
+        "lr": 0.0003
+      },
+      "score": 0.5,
+      "accepted": true,
+      "elapsed_s": 1.0599964298307896e-05,
+      "return_code": 0,
+      "checkpoint_dir": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_nash_hp_tune\\trial_02",
+      "note": "dry_run_fake_score"
+    }
+  ],
+  "best_overrides": {
+    "lr": 0.0003
+  },
+  "best_score": 0.5,
+  "artifacts": {
+    "history": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_nash_hp_tune_history.jsonl",
+    "tracking": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_nash_hp_tune_tracking.txt",
+    "best_hp": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_nash_best_hp.json",
+    "summary_json": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_nash_hp_tune.json",
+    "figures_dir": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures",
+    "figure_svg": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures\\team_preview_nash_hp_tune_latest.svg"
+  },
+  "figures": {
+    "run_figures": {
+      "svg": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures\\team_preview_nash_hp_tune_20261012T051152Z.svg"
+    },
+    "latest_figures": {
+      "svg": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures\\team_preview_nash_hp_tune_latest.svg"
+    },
+    "ledger_agent": {},
+    "ledger_all": {},
+    "ledger_path": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures\\hp_tune_ledger.jsonl"
+  }
+}

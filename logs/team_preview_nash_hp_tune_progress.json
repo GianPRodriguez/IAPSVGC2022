@@ -1,0 +1,15 @@
+{
+  "ts_utc": "2026-10-12T05:11:52.902038+00:00",
+  "run_id": "team_preview_nash_20261012T051152Z_ec47ba70",
+  "agent": "team_preview_nash",
+  "status": "done",
+  "best_overrides": {
+    "lr": 0.0003
+  },
+  "best_score": 0.5,
+  "artifacts": {
+    "history": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_nash_hp_tune_history.jsonl",
+    "tracking": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_nash_hp_tune_tracking.txt",
+    "best_hp": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_nash_best_hp.json"
+  }
+}

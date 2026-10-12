@@ -1,4 +1,4 @@
-"""IAP BattleBot for DDQN — Fixed Export Order preview + joint Q policy.
+"""IAP BattleBot for DDQN — family frozen preview + joint Q policy.
 
 Requires torch + optional DDQN_CHECKPOINT. Without a checkpoint, acts with
 ε=1 legal-uniform over the snapshot joint mask (warmup-style).
@@ -41,18 +41,8 @@ class BattleBot(Battle):
             return None
 
     async def action_team_preview(self, battle: Battle) -> tuple:
-        # Fixed Export Order /team 1234
-        pokemon_list = battle.request_json.get('side', {}).get('pokemon', [])
-        names = []
-        for idx in (1, 2, 3, 4):
-            if 0 <= idx - 1 < len(pokemon_list):
-                name = pokemon_list[idx - 1].get('details', '').partition(',')[0]
-            else:
-                name = 'Unknown'
-            names.append(name)
-        if getattr(battle, 'q', None) is not None:
-            battle.q.put([1, names[0], names[1], names[2], names[3], 0, 0])
-        return (1, 2, 3, 4)
+        from showdown.battle_bots._family_preview_iap import iap_family_team_preview
+        return iap_family_team_preview('ddqn', battle)
 
     def _choose_switch_slot(self, battle: Battle) -> int:
         import random

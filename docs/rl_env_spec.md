@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.15** |
+| **Version** | **v1.16** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) — **Mega Evolution yes; Terastallization no** |
@@ -421,7 +421,7 @@ Contract for the **main value-based** agent. Implementation target: `showdown/rl
 | Item | Contract |
 |------|----------|
 | Interaction loop | **Combat only** (moves / switches on the active matrix). One env `step` = one Showdown turn with joint action \((a_1,a_2)\). |
-| Team Preview | **Outside** the DDQN MDP. Deterministic **Fixed Export Order**: Showdown `/team 1234` (first four mons of the export, that order). Train and eval use the **same** rule. Reported WR is **conditional** on this preview policy. |
+| Team Preview | **Outside** the combat MDP (not a learnable combat action). **Frozen family preview** via `showdown/rl/frozen_preview.py`: DDQN/PPO→`team_preview_ppo`, MCTS*→`team_preview_nash`, QD*→`team_preview_qd_pga`. Train (live) and eval use the **same** frozen preview. Fallback `/team 1234` if checkpoint missing. Reported WR is **conditional** on that preview. |
 | OTS / harness | `ValidatedDDQNPlayer` (poke-env + `ValidatedBattleMixin`): protocol sync + `accept_open_team_sheet=True`. OTS does **not** imply a refined belief encoder in v1.2. |
 | Belief in obs | 256D belief segment = **zeros / flat priors** (no Expectimax SP inference). |
 
@@ -583,18 +583,21 @@ No sustituir un preview por otro a mitad de evaluación.
 | MCTS en inferencia | Árbol S2 por turno | Cambia el árbol efímero, nunca pesos |
 | Conclusión | 11 pipelines, snapshot y checkpoints fijados | Prohibido reentrenar o cambiar configuración |
 
-Durante training de combate, `/team 1234` puede seguir siendo la política fija
-del MDP y el WR queda condicionado a ella. Eso no contradice Conclusión: allí se
-compone el checkpoint final de combate con su preview familiar. Para atribución
-correcta se deben registrar ambos artefactos. Los MCTS no tienen entrenamiento
-por gradiente: `n_sims`, Top-K, solver y rollout son presupuesto/configuración de
-inferencia y deben congelarse igual que un checkpoint.
+**Orden de train recomendado (familias):** (1) entrenar el preview familiar con
+\(\pi_c\) congelado; (2) persistir checkpoint (`final.pt` / `archive.pt`);
+(3) entrenar combate **bajo** ese preview (live `PokeEnvBattleBackend` +
+`choose_on_teampreview=True`); mock combat sigue sin fase preview. Fallback
+`/team 1234` solo si falta el artefacto. Conclusión usa los mismos players
+cableados (`PipelineSpec.preview` + `preview_checkpoint`). Los MCTS no tienen
+entrenamiento por gradiente: `n_sims`, Top-K, solver y rollout se congelan igual
+que un checkpoint.
 
 ### Flujo de evaluación final
 
-1. Finalizar training y escoger `final.pt` o `best_elite.pt` según la familia.
-2. Finalizar el agente preview correspondiente.
-3. Registrar combat, preview y paths de artefactos en el pipeline.
+1. Finalizar el agente preview correspondiente y registrar su path.
+2. Finalizar training de combate (bajo ese preview) y escoger `final.pt` /
+   `best_elite.pt`.
+3. Registrar combat, preview y paths en `pipelines.json`.
 4. Congelar snapshot de equipos, seed, lista y orden de pipelines.
 5. Ejecutar los mismos pares A/B con swap para todos los cruces.
 6. Reportar WR, Wilson 95 %, puntos, fallos y DQ sin actualizar agentes.
@@ -633,6 +636,7 @@ con Tera on no es compatible con este benchmark aunque sus dimensiones encajen.
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.16** | 2026-10-11 | Combat train/infer under **frozen family preview** (`frozen_preview.py`); preview trains persist weights; fallback `/team 1234`. Order: preview → combat. |
 | **v1.15** | 2026-10-11 | Documenta pipelines de Conclusión, pairing familiar de Team Preview, separación training/inferencia y Tera off end-to-end. Índice de lectura: [`SPECS_INDEX.md`](SPECS_INDEX.md). Specs combate enriquecidas (DDQN/PPO v1.4, MCTS/QD v1.3); preview v1.2; heurísticas v1.4. Sin cambio estructural de Obs/Reward/Action/BD. |
 | **v1.14** | 2026-10-11 | **Reg M-C format rule:** Terastallization **off** (`showdown/format_rules.py`); ActionSpec id 22 reserved/masked; Mega remains. Heuristic + RL paths force `can_tera=False` / no `terastallize`. |
 | **v1.13** | 2026-10-11 | **TeamPreviewQDPGASpec** (§6.k): [`team_preview_qd_pga_spec.md`](team_preview_qd_pga_spec.md) v1.0 + `showdown/rl/team_preview_qd_pga/`. Reuses Flat-360 / 512D; combat Obs/Reward/Action unchanged. |

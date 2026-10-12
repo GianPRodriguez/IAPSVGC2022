@@ -2,11 +2,12 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.3** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.15) |
+| **Versión** | **1.5** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.16) |
 | **Estado** | FROZEN; `showdown/rl/qd_ppo/` |
 | **Training** | **Sí**: MAP-Elites serial con PPO como operador de mejora |
 | **Inferencia** | Despliega \(\pi^\*=\arg\max f\) desde `best_elite.pt` |
 | **CLI** | `python -m showdown.rl.qd_ppo.train` |
+| **CLI tune** | `python -m showdown.inference_sim.run_qd_ppo_hp_tune` |
 
 ## Por qué existe
 
@@ -119,6 +120,37 @@ integración, no redefine el contrato.
 | Seed | `0` | Reproducibilidad | Cambia padres, datos y pesos |
 
 Los hiperparámetros internos PPO son los de [`ppo_spec.md`](ppo_spec.md).
+El CLI de train acepta `--lr` y `--clip-eps` para overrides (tune / ablaciones).
+
+### Tune de hiperparámetros (independiente del Preview QD-PGA)
+
+Fase mínima: solo knobs del **actor PPO** dentro de cada emit. Grid, bootstrap,
+`n_emit`, mosaic y Preview QD-PGA quedan congelados (mejora posterior puede
+añadir knobs de archivo).
+
+```bat
+python -m showdown.inference_sim.run_qd_ppo_hp_tune --dry-run
+python -m showdown.inference_sim.run_qd_ppo_hp_tune --seed 0 --max-trials 6 --suite-games 4
+python -m showdown.inference_sim.run_qd_ppo_hp_tune --seed 0 --max-trials 6 --start-ps --no-smoke --t-total 50000
+```
+
+| Ítem | Contrato |
+|------|----------|
+| Knobs variables | `lr ∈ {1e-4,3e-4,1e-3}`, `clip_eps ∈ {0.10,0.20}` |
+| Congelados | grid 10×10, \(\gamma\), mosaic, `n_emit`, BC opcional fijo, … |
+| Score | `MEAN_WR` de \(\pi^\*\) (suite Cand. 1); QD-score solo en reporte de train |
+| Criterio | Aceptar trial si mejora el mejor score |
+| Independencia | No entrena ni afina `team_preview_qd_pga` |
+
+**Tracking** (cómo cambian los HP trial a trial):
+
+| Artefacto | Contenido |
+|-----------|-----------|
+| `logs/qd_ppo_hp_tune_history.jsonl` | `prev_overrides` → `overrides` + `param_change` (from/to/delta) |
+| `logs/qd_ppo_hp_tune_progress.json` | estado vivo del trial actual |
+| `logs/qd_ppo_hp_tune_tracking.txt` | log humano con `param_change` |
+| `logs/qd_ppo_best_hp.json` | mejores overrides + score |
+| `logs/figures/qd_ppo_hp_tune_latest.svg` | score vs trial; ledger en `hp_tune_ledger*.svg` |
 
 ### Ejemplo de inserción
 
@@ -150,10 +182,10 @@ para cambiar de estilo entre partidas.
 
 ## Team Preview y Conclusión
 
-**No hay Team Preview en el MDP de combate.** El pairing familiar es
-**`team_preview_qd_pga` → QD-PPO de combate**. El elite
-de preview y `best_elite.pt` de combate son artefactos distintos. Se congelan
-antes del round-robin descrito en
+**No hay Team Preview en el MDP de combate.** Flujo familiar: (1) entrenar
+Preview QD-PGA → `archive.pt` / `best_elite.pt`; (2) train/infer QD-PPO **bajo**
+ese preview congelado (`frozen_preview`, `combat_family='qd_ppo'`). Artefactos
+de preview y de combate son distintos. Véase
 [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 ## Mapa de código
@@ -194,6 +226,8 @@ siendo la suite de \(\pi^\*\), no coverage por sí sola.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.5** | 2026-10-11 | Train/infer bajo Preview QD-PGA congelado (`frozen_preview`). |
+| **1.4** | 2026-10-11 | CLI `--lr/--clip-eps`; tune `run_qd_ppo_hp_tune` + tracking prev→nuevo; independencia vs Preview QD-PGA. |
 | **1.3** | 2026-10-11 | QD/PPO, red, loop, fallos, evaluación, code map y ejemplo ampliados. |
 | **1.2** | 2026-10-11 | Reescritura dual-audience y pairing QD-PGA-preview. |
 | **1.1** | 2026-10-10 | Lectura pedagógica. |

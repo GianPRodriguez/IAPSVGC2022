@@ -1,0 +1,11 @@
+{
+  "agent": "qd_pga",
+  "run_id": "qd_pga_20261012T051152Z_58ebbdcd",
+  "overrides": {
+    "lr": 0.0001,
+    "clip_eps": 0.2
+  },
+  "score": 0.48,
+  "checkpoint_dir": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\qd_pga_hp_tune\\trial_02",
+  "time_utc": "2026-10-12T05:11:52.853760+00:00"
+}

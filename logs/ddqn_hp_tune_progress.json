@@ -1,0 +1,16 @@
+{
+  "ts_utc": "2026-10-12T05:11:53.177604+00:00",
+  "run_id": "ddqn_20261012T051153Z_fe97ae23",
+  "agent": "ddqn",
+  "status": "done",
+  "best_overrides": {
+    "lr": 0.0001,
+    "gamma": 0.95
+  },
+  "best_score": 0.48,
+  "artifacts": {
+    "history": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ddqn_hp_tune_history.jsonl",
+    "tracking": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ddqn_hp_tune_tracking.txt",
+    "best_hp": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ddqn_best_hp.json"
+  }
+}

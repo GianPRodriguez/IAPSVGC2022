@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | Contrato de la eval final de la tesis (preview + turnos) |
-| **Versión** | **1.1** |
+| **Versión** | **1.2** |
 | **Estado** | **FROZEN — diseño**; harness `showdown.inference_sim.run_conclusion_e2e` |
 | **Formato** | Champions **Reg M-C**, Mega **on**, Tera **off** |
 | **Code** | `showdown/inference_sim/conclusion_eval/`, `run_conclusion_e2e.py` |
@@ -66,7 +66,7 @@ desarrollo: `conclusion_eval/pipelines.py`.
 |-----------|------:|-----------|--------------|
 | Nº pipelines | 11 | Cubrir familias + baselines | Más pipelines → más cruces \(C(n,2)\) |
 | Checkpoints | última versión lista al inicio | Congelar calidad | Reentrenar a mitad invalida el ranking |
-| Preview wiring | registro `preview` por id | Familia coherente | Hasta cablear `team_preview_*` en players, cada bot usa su `action_team_preview` actual |
+| Preview wiring | `PipelineSpec.preview` + `preview_checkpoint` | Familia coherente | Players de familia usan `frozen_preview` (PPO/Nash/QD-PGA); fallback `/team 1234` |
 
 Contratos de cada pieza: ver [`SPECS_INDEX.md`](SPECS_INDEX.md).
 
@@ -217,5 +217,6 @@ Tests de protocolo (sin PS): `tests/test_conclusion_eval.py`.
 
 | Versión | Notas |
 |---------|--------|
+| **1.2** | Preview familiar cableado en players (`frozen_preview` + `preview_checkpoint`); orden preview→combat |
 | **1.1** | Redacción dual-audience; tablas propósito/influencia; entrenamiento = no; enlace SPECS_INDEX |
 | **1.0** | Diseño inicial + harness |

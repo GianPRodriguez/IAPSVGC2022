@@ -9,14 +9,25 @@ from poke_env.player import Player
 from poke_env.player.battle_order import BattleOrder, DefaultBattleOrder
 
 from showdown.rl.action_space import decode_joint_action
+from showdown.rl.family_preview_mixin import FamilyPreviewMixin
 from showdown.rl.mcts_puct_nash.agent import MCTSPuctNashAgent, MCTSPuctNashConfig
 from showdown.rl.pe_adapter import joint_order_from_spec_actions, snapshot_from_battle
 
 
-class MCTSPuctNashPlayer(Player):
-    """Fixed Export Order `/team 1234` + SM-MCTS B1 joint policy."""
+class MCTSPuctNashPlayer(FamilyPreviewMixin, Player):
+    """Frozen ``team_preview_nash`` + SM-MCTS B1 joint policy."""
 
-    def __init__(self, *args, n_sims: Optional[int] = None, seed: int = 0, **kwargs):
+    _combat_family_id = 'mcts_puct_nash'
+
+    def __init__(
+        self,
+        *args,
+        n_sims: Optional[int] = None,
+        seed: int = 0,
+        preview_checkpoint: Optional[str] = None,
+        preview_kind: Optional[str] = None,
+        **kwargs,
+    ):
         kwargs.setdefault('accept_open_team_sheet', True)
         super().__init__(*args, **kwargs)
         sims = n_sims
@@ -29,9 +40,10 @@ class MCTSPuctNashPlayer(Player):
             )
         )
         self.last_joint = 0
-
-    def teampreview(self, battle: AbstractBattle) -> str:
-        return '/team 1234'
+        self.init_family_preview(
+            preview_checkpoint=preview_checkpoint,
+            preview_kind=preview_kind,
+        )
 
     def choose_move(self, battle: AbstractBattle) -> BattleOrder:
         assert isinstance(battle, DoubleBattle)

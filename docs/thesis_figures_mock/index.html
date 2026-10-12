@@ -194,18 +194,88 @@
     }
     th { color: var(--accent); font-weight: 650; }
     .fam { font-size: 0.78rem; color: var(--muted); }
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.6rem;
+    }
+    .pipe-card {
+      border: 1px solid var(--line);
+      background: linear-gradient(165deg, #fff 0%, #f3f7fa 100%);
+      padding: 0.85rem 0.9rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.88rem;
+    }
+    .pipe-card h3 {
+      margin: 0 0 0.45rem;
+      font-size: 0.95rem;
+      color: var(--accent);
+    }
+    .pipe-flow {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem;
+      margin: 0.35rem 0;
+    }
+    .chip {
+      border: 1px solid #b7c9d6;
+      background: #fff;
+      padding: 0.2rem 0.45rem;
+      font-size: 0.78rem;
+    }
+    .chip.preview { border-color: #c4a574; background: #faf6ef; }
+    .chip.combat { border-color: #7a9eb5; background: #eef3f7; }
+    .arrow { color: var(--muted); font-size: 0.9rem; }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0.85rem;
+    }
+    .gal-item {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 0.65rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      font-size: 0.82rem;
+    }
+    .gal-item h3 { margin: 0 0 0.4rem; font-size: 0.9rem; color: var(--accent); }
+    .gal-item img, .gal-item object {
+      width: 100%;
+      min-height: 160px;
+      background: #fafafa;
+      border: 1px solid var(--line);
+    }
+    .gal-miss {
+      padding: 1.2rem 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      border: 1px dashed var(--line);
+      background: #fafafa;
+    }
+    .cli {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.78rem;
+      background: #1a1f24;
+      color: #e8eef3;
+      padding: 0.65rem 0.8rem;
+      overflow-x: auto;
+      margin: 0.5rem 0 0;
+    }
+    .dual-badge { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.65rem; }
+    .badge.ok { border-color: #1f5c3a; color: #1f5c3a; }
   </style>
 </head>
 <body>
   <header>
     <h1>Cómo leer los resultados de los agentes</h1>
     <p class="lead">
-      Esta página muestra <strong>ejemplos de gráficas</strong> que usaría una tesis sobre bots de
-      Pokémon VGC. Los números son <strong>inventados</strong> (mock): sirven para entender
-      <em>qué mira cada figura</em> y <em>cómo comparar agentes de la misma familia</em>,
-      no para sacar conclusiones reales.
+      Maqueta de figuras para la tesis VGC: <strong>mock pedagógico</strong> (números inventados)
+      más una galería de <strong>figuras reales</strong> generadas al cerrar tune/sweep
+      (<code>logs/figures/*_latest.svg</code>) y el flujo preview → combate por familia.
     </p>
-    <span class="badge">Datos de ejemplo — no son experimentos reales</span>
+    <div class="dual-badge">
+      <span class="badge">Mock — no son experimentos reales</span>
+      <span class="badge ok">Reales — SVG desde logs/figures si existen</span>
+    </div>
   </header>
 
   <nav id="tabs">
@@ -214,6 +284,9 @@
     <button type="button" data-panel="rl">Familia aprendizaje (DDQN · PPO)</button>
     <button type="button" data-panel="mcts">Familia planificación (MCTS)</button>
     <button type="button" data-panel="qd">Familia diversidad (QD)</button>
+    <button type="button" data-panel="pipe">Pipelines (preview → turnos)</button>
+    <button type="button" data-panel="tune">Tune HP e histórico</button>
+    <button type="button" data-panel="real">Figuras reales</button>
     <button type="button" data-panel="cmp">Todos frente a frente</button>
   </nav>
 
@@ -245,24 +318,36 @@
             <strong>Familia</strong>
             Métodos parecidos entre sí. Lo justo es compararlos en la <em>misma</em> figura.
           </div>
+          <div>
+            <strong>Preview congelado</strong>
+            Primero se entrena el selector de equipo; luego el combate practica
+            <em>bajo</em> ese preview (no decide `/team` en el MDP de turnos).
+          </div>
+          <div>
+            <strong>Tune / trial</strong>
+            Prueba de hiperparámetros (p. ej. lr). Se acepta si mejora el mejor score hasta ahora.
+          </div>
+          <div>
+            <strong>Ledger histórico</strong>
+            Lista append-only de mejores scores entre corridas → figura tesis de “mejoras en el tiempo”.
+          </div>
         </div>
         <ul>
-          <li><strong>DDQN y PPO</strong> — aprenden con práctica repetida (red neuronal).</li>
-          <li><strong>MCTS y MCTS–Nash</strong> — no “estudian” con gradientes; calculan jugadas en el momento.</li>
-          <li><strong>QD-PPO, QD-PGA, QD-PPGA</strong> — aprenden y además llenan un “álbum” de estilos distintos.</li>
+          <li><strong>DDQN y PPO</strong> — aprenden con práctica repetida; preview = Masked PPO.</li>
+          <li><strong>MCTS y MCTS–Nash</strong> — planifican en el momento; preview = Payoff Nash.</li>
+          <li><strong>QD-PPO, QD-PGA, QD-PPGA</strong> — álbum de estilos; preview = QD-PGA.</li>
         </ul>
       </div>
       <div class="card wide">
         <h2>Cómo usar esta página</h2>
         <p class="explain">
-          Empezá por la pestaña <em>¿Aprenden con el tiempo?</em> (visión general).
-          Luego entrá a la familia que te interese: ahí cada gráfica pone
-          <strong>lado a lado</strong> a los agentes de esa familia. Al final,
-          <em>Todos frente a frente</em> resume la comparación global.
+          Empezá por <em>¿Aprenden con el tiempo?</em>, luego la familia que te interese.
+          <em>Pipelines</em> explica preview → turnos. <em>Tune HP</em> muestra cómo se leen
+          los barridos. <em>Figuras reales</em> carga SVG de <code>logs/figures/</code> si ya corriste un tune.
         </p>
         <p class="how">
           <strong>Cómo leer una curva:</strong> si la línea sube hacia la derecha, el bot mejora
-          a medida que practica. Si se aplana, ya casi no gana más con más práctica.
+          a medida que practica (o el trial de tune mejora). Si se aplana, ya casi no gana más.
         </p>
       </div>
     </section>
@@ -521,6 +606,148 @@
       </div>
     </section>
 
+    <!-- PIPELINES -->
+    <section class="panel" id="panel-pipe">
+      <div class="intro">
+        <h2>Bot completo = preview + turnos</h2>
+        <p>
+          El combate <strong>no aprende</strong> qué cuatro Pokémon sacar: eso lo hace un
+          agente de Team Preview <em>aparte</em>, ya entrenado y congelado.
+          Orden recomendado: (1) train/tune preview → (2) train combate bajo ese checkpoint →
+          (3) Conclusión con ambos artefactos fijos.
+        </p>
+      </div>
+      <div class="pipeline">
+        <div class="pipe-card">
+          <h3>Familia aprendizaje</h3>
+          <div class="pipe-flow">
+            <span class="chip preview">Preview PPO</span>
+            <span class="arrow">→</span>
+            <span class="chip combat">DDQN</span>
+          </div>
+          <div class="pipe-flow">
+            <span class="chip preview">Preview PPO</span>
+            <span class="arrow">→</span>
+            <span class="chip combat">PPO combate</span>
+          </div>
+          <p class="fam">Un solo checkpoint de preview se reutiliza en DDQN y PPO.</p>
+        </div>
+        <div class="pipe-card">
+          <h3>Familia planificación</h3>
+          <div class="pipe-flow">
+            <span class="chip preview">Preview Nash</span>
+            <span class="arrow">→</span>
+            <span class="chip combat">MCTS+PUCT</span>
+          </div>
+          <div class="pipe-flow">
+            <span class="chip preview">Preview Nash</span>
+            <span class="arrow">→</span>
+            <span class="chip combat">MCTS–Nash</span>
+          </div>
+          <p class="fam">Sin pesos de combate; se congela N_sim (barrido de meseta).</p>
+        </div>
+        <div class="pipe-card">
+          <h3>Familia diversidad</h3>
+          <div class="pipe-flow">
+            <span class="chip preview">Preview QD-PGA</span>
+            <span class="arrow">→</span>
+            <span class="chip combat">QD-PPO · PGA · PPGA</span>
+          </div>
+          <p class="fam">Mismo preview QD-PGA para las tres variantes de combate.</p>
+        </div>
+      </div>
+      <div class="card wide" style="margin-top:1rem;">
+        <h2>Fallback</h2>
+        <p class="explain">
+          Si falta el checkpoint de preview, el bot usa <code>/team 1234</code> (orden de exportación).
+          Eso sirve para smoke, no para reportar Conclusión.
+        </p>
+        <p class="how">
+          <strong>Qué buscar en la tesis:</strong> declarar paths de preview y combate en
+          <code>pipelines.json</code> antes del round-robin.
+        </p>
+      </div>
+    </section>
+
+    <!-- TUNE -->
+    <section class="panel" id="panel-tune">
+      <div class="intro">
+        <h2>Tune de hiperparámetros e histórico</h2>
+        <p>
+          Cada <em>trial</em> entrena (o barre) con un juego de knobs y mide un score
+          (<code>MEAN_WR</code> / <code>MEAN_SCORE</code>). Se acepta si mejora el mejor hasta ahora.
+          El tracking guarda <strong>prev → nuevo</strong> por parámetro.
+        </p>
+      </div>
+      <div class="grid">
+        <div class="card wide">
+          <span class="compare-tag">Mock de un run de tune</span>
+          <h2>Score y mejor-hasta-ahora vs trial</h2>
+          <p class="explain">
+            Azul: score del trial. Rojo: mejor score acumulado. Si el rojo no sube,
+            ese trial se rechazó (o empató).
+          </p>
+          <p class="how">
+            <strong>Qué buscar:</strong> saltos del rojo = mejoras reales de HP.
+            Al final del run real sale <code>logs/figures/&lt;agente&gt;_hp_tune_latest.svg</code>.
+          </p>
+          <div class="chart-wrap tall"><canvas id="tune_score"></canvas></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">Cambio de parámetros</span>
+          <h2>prev → nuevo (ejemplo)</h2>
+          <p class="explain">Tabla como la del <code>*_tracking.txt</code> / history.jsonl.</p>
+          <div style="overflow-x:auto;"><table id="tune_tbl"></table></div>
+        </div>
+        <div class="card">
+          <span class="compare-tag">Ledger entre runs</span>
+          <h2>Mejoras históricas (mock)</h2>
+          <p class="explain">
+            Cada punto = mejor score de una corrida de tune. La línea roja es el máximo histórico.
+            En disco: <code>hp_tune_ledger.jsonl</code> (append-only).
+          </p>
+          <div class="chart-wrap"><canvas id="tune_ledger"></canvas></div>
+        </div>
+      </div>
+      <div class="card wide" style="margin-top:1rem;">
+        <h2>CLIs (reales)</h2>
+        <pre class="cli">python -m showdown.inference_sim.run_ddqn_hp_tune --seed 0 --max-trials 6
+python -m showdown.inference_sim.run_plot_tune_history --agent ddqn
+python -m showdown.inference_sim.run_plot_tune_history --all</pre>
+      </div>
+    </section>
+
+    <!-- REAL FIGURES -->
+    <section class="panel" id="panel-real">
+      <div class="intro">
+        <h2>Galería de figuras reales</h2>
+        <p>
+          Intenta cargar SVG desde <code>../../logs/figures/</code> (sirve si abrís la página
+          vía servidor HTTP desde la raíz del repo). Si falla (file:// o aún no hay tune),
+          verás el aviso y podés pegar/abrir un SVG a mano.
+        </p>
+      </div>
+      <div class="card wide" style="margin-bottom:1rem;">
+        <h2>Servir el repo (recomendado)</h2>
+        <pre class="cli">cd ruta\del\repo
+py -3 -m http.server 8765
+:: luego abrir http://localhost:8765/docs/thesis_figures_mock/</pre>
+        <p class="how" style="margin-top:0.75rem;">
+          <strong>Regenerar figuras:</strong>
+          <code>python -m showdown.inference_sim.run_plot_tune_history --all</code>
+        </p>
+        <label style="font-family:ui-sans-serif,system-ui,sans-serif;font-size:0.88rem;display:block;margin-top:0.75rem;">
+          Cargar SVG local:
+          <input type="file" id="svg_upload" accept=".svg,image/svg+xml" style="display:block;margin-top:0.35rem;" />
+        </label>
+        <div id="svg_upload_preview" class="gal-item" style="margin-top:0.75rem;display:none;">
+          <h3>Vista previa (archivo elegido)</h3>
+          <div id="svg_upload_slot"></div>
+        </div>
+      </div>
+      <div class="gallery" id="real_gallery"></div>
+    </section>
+
     <!-- COMPARATIVA GLOBAL -->
     <section class="panel" id="panel-cmp">
       <div class="intro">
@@ -566,8 +793,10 @@
     </section>
 
     <footer>
-      Archivo: <code>docs/thesis_figures_mock/index.html</code> · Abrir con doble clic en el navegador.
-      Cuando existan corridas reales, estas series se reemplazan con <code>reporte.json</code> / métricas de train.
+      Archivo: <code>docs/thesis_figures_mock/index.html</code> ·
+      Mock pedagógico + galería <code>logs/figures/</code> ·
+      Specs: <code>docs/SPECS_INDEX.md</code> ·
+      UI Streamlit: página <em>Figuras y tune</em>.
     </footer>
   </main>
 
@@ -1034,6 +1263,114 @@
         </tr>`;
       }).join('') +
       '</tbody>';
+
+    /* Tune HP (mock) */
+    const tuneTrials = [1, 2, 3, 4, 5, 6, 7, 8];
+    const tuneScores = [0.41, 0.44, 0.42, 0.47, 0.46, 0.49, 0.48, 0.51];
+    let best = -Infinity;
+    const tuneBest = tuneScores.map(s => { best = Math.max(best, s); return best; });
+    new Chart(document.getElementById('tune_score'), {
+      type: 'line',
+      data: {
+        labels: tuneTrials.map(t => 'T' + t),
+        datasets: [
+          { label: 'Score del trial', data: tuneScores, borderColor: COLORS.ppo, borderWidth: 2.5, pointRadius: 4, tension: 0.2 },
+          { label: 'Mejor hasta ahora', data: tuneBest, borderColor: '#a13d5c', borderWidth: 2, borderDash: [6, 4], pointRadius: 3, tension: 0 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          x: { title: { display: true, text: 'Trial' } },
+          y: { min: 0.35, max: 0.55, title: { display: true, text: 'MEAN_SCORE / MEAN_WR' }, ticks: { callback: v => Math.round(v * 100) + '%' } },
+        },
+      },
+    });
+
+    const tuneRows = [
+      { t: 1, lr: '3e-4 → 3e-4', gamma: '0.99 → 0.99', ok: 'sí (baseline)' },
+      { t: 2, lr: '3e-4 → 1e-4', gamma: '0.99 → 0.99', ok: 'sí' },
+      { t: 3, lr: '1e-4 → 5e-4', gamma: '0.99 → 0.995', ok: 'no' },
+      { t: 4, lr: '1e-4 → 2e-4', gamma: '0.99 → 0.99', ok: 'sí' },
+      { t: 6, lr: '2e-4 → 1.5e-4', gamma: '0.99 → 0.98', ok: 'sí' },
+      { t: 8, lr: '1.5e-4 → 1.2e-4', gamma: '0.98 → 0.98', ok: 'sí' },
+    ];
+    document.getElementById('tune_tbl').innerHTML =
+      '<thead><tr><th>Trial</th><th>lr (prev→nuevo)</th><th>γ</th><th>¿Mejora?</th></tr></thead><tbody>' +
+      tuneRows.map(r => `<tr><td>${r.t}</td><td>${r.lr}</td><td>${r.gamma}</td><td>${r.ok}</td></tr>`).join('') +
+      '</tbody>';
+
+    const ledgerRuns = [
+      { label: 'run A', score: 0.44 },
+      { label: 'run B', score: 0.47 },
+      { label: 'run C', score: 0.46 },
+      { label: 'run D', score: 0.51 },
+      { label: 'run E', score: 0.50 },
+    ];
+    let hist = -Infinity;
+    const ledgerBest = ledgerRuns.map(r => { hist = Math.max(hist, r.score); return hist; });
+    new Chart(document.getElementById('tune_ledger'), {
+      type: 'line',
+      data: {
+        labels: ledgerRuns.map(r => r.label),
+        datasets: [
+          { label: 'Mejor del run', data: ledgerRuns.map(r => r.score), borderColor: COLORS.ddqn, borderWidth: 2.5, pointRadius: 5, tension: 0.15 },
+          { label: 'Máximo histórico', data: ledgerBest, borderColor: '#a13d5c', borderWidth: 2, borderDash: [5, 4], pointRadius: 3, tension: 0 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } },
+        scales: {
+          y: { min: 0.4, max: 0.55, ticks: { callback: v => Math.round(v * 100) + '%' }, title: { display: true, text: 'Score' } },
+        },
+      },
+    });
+
+    /* Figuras reales */
+    const REAL_FIGS = [
+      { file: 'ddqn_hp_tune_latest.svg', title: 'DDQN · HP tune' },
+      { file: 'ppo_hp_tune_latest.svg', title: 'PPO · HP tune' },
+      { file: 'team_preview_ppo_hp_tune_latest.svg', title: 'Preview PPO · HP tune' },
+      { file: 'team_preview_nash_hp_tune_latest.svg', title: 'Preview Nash · HP tune' },
+      { file: 'team_preview_qd_pga_hp_tune_latest.svg', title: 'Preview QD-PGA · HP tune' },
+      { file: 'qd_ppo_hp_tune_latest.svg', title: 'QD-PPO · HP tune' },
+      { file: 'qd_pga_hp_tune_latest.svg', title: 'QD-PGA · HP tune' },
+      { file: 'qd_ppga_hp_tune_latest.svg', title: 'QD-PPGA · HP tune' },
+      { file: 'hp_tune_ledger_all.svg', title: 'Ledger histórico (todos)' },
+    ];
+    const FIG_BASE = '../../logs/figures/';
+    const gallery = document.getElementById('real_gallery');
+    REAL_FIGS.forEach(fig => {
+      const item = document.createElement('div');
+      item.className = 'gal-item';
+      item.innerHTML = `<h3>${fig.title}</h3><div class="gal-miss">Cargando…</div>`;
+      gallery.appendChild(item);
+      const slot = item.querySelector('.gal-miss');
+      const url = FIG_BASE + fig.file;
+      fetch(url, { method: 'HEAD' }).then(r => {
+        if (!r.ok) throw new Error('missing');
+        slot.outerHTML = `<object type="image/svg+xml" data="${url}" title="${fig.title}">` +
+          `<img src="${url}" alt="${fig.title}" /></object>` +
+          `<p class="fam" style="margin:0.4rem 0 0;">${fig.file}</p>`;
+      }).catch(() => {
+        slot.textContent = 'No disponible (¿servidor HTTP? ¿corriste el tune?). ' + fig.file;
+      });
+    });
+
+    document.getElementById('svg_upload').addEventListener('change', (ev) => {
+      const f = ev.target.files && ev.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const box = document.getElementById('svg_upload_preview');
+        const slot = document.getElementById('svg_upload_slot');
+        box.style.display = 'block';
+        slot.innerHTML = reader.result;
+      };
+      reader.readAsText(f);
+    });
 
     document.querySelectorAll('#tabs button').forEach(btn => {
       btn.addEventListener('click', () => {

@@ -1,0 +1,21 @@
+=== ddqn HP tune ===
+run_id: ddqn_20261012T051153Z_fe97ae23
+
+=== RL HP tune tracking (ddqn) ===
+run_id: ddqn_20261012T051153Z_fe97ae23
+frozen_defaults: {'tau': 0.005, 'batch_size': 256, 'replay_capacity': 200000, 'eps_end': 0.05, 'note': 'Varying: lr, gamma'}
+criteria: maximize MEAN_WR from offline suite (Cand.1); accept if improves best
+
+--- trial log (prev -> new HP) ---
+1. {'lr': 0.0001, 'gamma': 0.9} -> score=0.3800 ACCEPT t=0.0s rc=0
+   param_change: lr: (start)->0.0001; gamma: (start)->0.9
+   note: dry_run_fake_score
+2. {'lr': 0.0001, 'gamma': 0.95} -> score=0.4800 ACCEPT t=0.0s rc=0 [BEST]
+   param_change: gamma: 0.9->0.95 (d=0.04999999999999993); lr: 0.0001->0.0001 (d=0.0)
+   note: dry_run_fake_score
+3. {'lr': 0.0003, 'gamma': 0.9} -> score=0.4000 reject t=0.0s rc=0
+   param_change: gamma: 0.95->0.9 (d=-0.04999999999999993); lr: 0.0001->0.0003 (d=0.00019999999999999998)
+   note: dry_run_fake_score
+
+best_overrides: {'lr': 0.0001, 'gamma': 0.95}
+best_score: 0.48

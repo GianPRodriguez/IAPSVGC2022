@@ -1,0 +1,15 @@
+{
+  "ts_utc": "2026-10-12T04:21:18.187237+00:00",
+  "run_id": "mcts_puct_20261012T042118Z_5f2c9a80",
+  "agent": "mcts_puct",
+  "status": "done",
+  "recommended_n_sims": 50,
+  "reason": "meseta: N=50->100 delta_wr_raw=+1.00pp < 1.5pp y tiempo_x2.00 >= 1.8",
+  "artifacts": {
+    "json": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\mcts_sims_sweep_mcts_puct.json",
+    "txt": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\mcts_sims_sweep_mcts_puct.txt",
+    "tracking": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\mcts_sims_sweep_mcts_puct_tracking.txt",
+    "history": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\mcts_sims_sweep_mcts_puct_history.jsonl",
+    "progress": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\mcts_sims_sweep_mcts_puct_progress.json"
+  }
+}

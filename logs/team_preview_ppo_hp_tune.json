@@ -1,0 +1,67 @@
+{
+  "time_utc": "2026-10-12T05:11:52.804707+00:00",
+  "run_id": "team_preview_ppo_20261012T051152Z_483e1f1c",
+  "agent": "team_preview_ppo",
+  "dry_run": true,
+  "seed": 0,
+  "frozen": {
+    "gamma": 1.0,
+    "gae_lambda": 1.0,
+    "ent_coef": 0.02,
+    "pi_c": "greedy_joint",
+    "note": "Varying: lr, clip_eps; independent of combat DDQN/PPO trains"
+  },
+  "criteria": "maximize MEAN_SCORE (-pg_loss proxy on mock); accept if improves best",
+  "outcomes": [
+    {
+      "trial_index": 1,
+      "overrides": {
+        "lr": 0.0001,
+        "clip_eps": 0.1
+      },
+      "score": 0.38,
+      "accepted": true,
+      "elapsed_s": 7.4999406933784485e-06,
+      "return_code": 0,
+      "checkpoint_dir": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_ppo_hp_tune\\trial_01",
+      "note": "dry_run_fake_score"
+    },
+    {
+      "trial_index": 2,
+      "overrides": {
+        "lr": 0.0001,
+        "clip_eps": 0.2
+      },
+      "score": 0.48,
+      "accepted": true,
+      "elapsed_s": 1.1699972674250603e-05,
+      "return_code": 0,
+      "checkpoint_dir": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_ppo_hp_tune\\trial_02",
+      "note": "dry_run_fake_score"
+    }
+  ],
+  "best_overrides": {
+    "lr": 0.0001,
+    "clip_eps": 0.2
+  },
+  "best_score": 0.48,
+  "artifacts": {
+    "history": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_ppo_hp_tune_history.jsonl",
+    "tracking": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_ppo_hp_tune_tracking.txt",
+    "best_hp": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_ppo_best_hp.json",
+    "summary_json": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\team_preview_ppo_hp_tune.json",
+    "figures_dir": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures",
+    "figure_svg": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures\\team_preview_ppo_hp_tune_latest.svg"
+  },
+  "figures": {
+    "run_figures": {
+      "svg": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures\\team_preview_ppo_hp_tune_20261012T051152Z.svg"
+    },
+    "latest_figures": {
+      "svg": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures\\team_preview_ppo_hp_tune_latest.svg"
+    },
+    "ledger_agent": {},
+    "ledger_all": {},
+    "ledger_path": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures\\hp_tune_ledger.jsonl"
+  }
+}

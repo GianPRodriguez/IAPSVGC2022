@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.4** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.15) |
+| **Versión** | **1.7** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.16) |
 | **Estado** | FROZEN; `showdown/rl/ppo/` y `battle_bots/ppo/` |
 | **Training** | **Sí, parcial**: PPO/curriculum operativos; self-play tiene infraestructura básica, no un rival de checkpoint plenamente cableado |
 | **Inferencia** | `ValidatedPPOPlayer`, greedy masked desde checkpoint |
@@ -143,6 +143,34 @@ con rollout 256 son controles operativos, no nuevos hiperparámetros del agente.
 | Device | `cpu` | Ejecución por defecto | GPU acelera updates, no cambia IAM |
 | Seed | `0` | Repetibilidad | Controla inicialización y sampling |
 
+CLI de train acepta `--lr` y `--clip-eps` para overrides (tune / ablaciones).
+
+### Tune de hiperparámetros (independiente del Preview PPO)
+
+```bat
+python -m showdown.inference_sim.run_ppo_hp_tune --dry-run
+python -m showdown.inference_sim.run_ppo_hp_tune --seed 0 --max-trials 6 --steps 8000 --suite-games 4
+python -m showdown.inference_sim.run_ppo_hp_tune --seed 0 --max-trials 6 --opponent greedy_joint --start-ps
+```
+
+| Ítem | Contrato |
+|------|----------|
+| Knobs variables | `lr ∈ {1e-4,3e-4,1e-3}`, `clip_eps ∈ {0.10,0.20}` |
+| Congelados | \(\gamma\), \(\lambda\) GAE, `ent_coef`, red AR, … |
+| Score | `MEAN_WR` suite offline Cand. 1 |
+| Criterio | Aceptar si mejora el mejor score |
+| Independencia | No entrena Team Preview PPO; preview se afina en otro CLI |
+
+**Tracking:** `logs/ppo_hp_tune_history.jsonl`, `_progress.json`, `_tracking.txt`,
+`ppo_best_hp.json`.
+
+**Figuras:** `logs/figures/ppo_hp_tune_latest.svg` + ledger
+`hp_tune_ledger_ppo.svg` (append en `hp_tune_ledger.jsonl`). Regenerar:
+`python -m showdown.inference_sim.run_plot_tune_history --agent ppo`.
+
+En Conclusión se compone **el mismo** checkpoint de Preview PPO (entrenado/
+afinado aparte) con este combate PPO — no hay co-entrenamiento.
+
 ### Mini-ejemplo auto-regresivo
 
 Supóngase que slot 1 tiene legales `{movimiento 0, switch 16}`. IAM normaliza
@@ -179,11 +207,11 @@ round-robin.
 
 ## Team Preview y Conclusión
 
-**No hay Team Preview en el MDP de combate.** El pairing familiar es
-**`team_preview_ppo` → PPO de combate**. Son dos MDP y
-dos checkpoints: el preview es un bandit que selecciona equipo/orden; PPO recibe
-la batalla ya iniciada y elige turnos. Se congelan antes de Conclusión. Véase
-[`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
+**No hay Team Preview en el MDP de combate** (PPO no aprende `/team`).
+Flujo: (1) entrenar Preview PPO; (2) entrenar/inferir combate **bajo** ese
+checkpoint congelado (`frozen_preview`, `combat_family='ppo'`); fallback
+`/team 1234` si falta el artefacto. Pairing: **`team_preview_ppo` → PPO**.
+Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 ## Mapa de código
 
@@ -211,6 +239,9 @@ la batalla ya iniciada y elige turnos. Se congelan antes de Conclusión. Véase
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.7** | 2026-10-12 | Figuras reales al cerrar tune + ledger histórico en `logs/figures/`. |
+| **1.6** | 2026-10-11 | Train/infer bajo Preview PPO congelado (`frozen_preview`). |
+| **1.5** | 2026-10-11 | CLI `--lr/--clip-eps`; tune `run_ppo_hp_tune` + tracking; independencia vs Preview PPO. |
 | **1.4** | 2026-10-11 | Matemática, arquitectura, curriculum, fallos, evaluación, code map y ejemplo ampliados. |
 | **1.3** | 2026-10-11 | Guía dual-audience, estado real de self-play y pairing de Conclusión. |
 | **1.2** | 2026-10-11 | Tera reservado/off. |

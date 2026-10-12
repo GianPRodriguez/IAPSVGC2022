@@ -1,0 +1,191 @@
+{
+  "time_utc": "2026-10-12T04:21:18.183034+00:00",
+  "run_id": "mcts_puct_20261012T042118Z_5f2c9a80",
+  "agent": "mcts_puct",
+  "dry_run": true,
+  "player_b": "greedy_joint",
+  "teams": 40,
+  "seed": 10,
+  "workers": 2,
+  "env_key": "MCTS_SIMS",
+  "varying_hyperparam": "n_sims",
+  "frozen_search_hyperparams": {
+    "c_puct": 1.5,
+    "prior": "uniform_legal",
+    "opp_model": "uniform_legal",
+    "rollout": "greedy_joint_snapshot",
+    "max_turns": 40,
+    "discount": 1.0,
+    "final_action": "argmax_N_tie_Q"
+  },
+  "criteria": {
+    "delta_wr_pp": 1.5,
+    "time_ratio": 1.8,
+    "prefer_metric": "wr_raw"
+  },
+  "sims_grid": [
+    50,
+    100,
+    200,
+    400
+  ],
+  "points": [
+    {
+      "n_sims": 50,
+      "wr_raw": 41.0,
+      "pair_wr": 40.75,
+      "elapsed_s": 10.0,
+      "wins": 0,
+      "losses": 0,
+      "pair_invalid": 0,
+      "need_fix": "NO",
+      "sync_ok": "YES",
+      "inf_ok": "YES"
+    },
+    {
+      "n_sims": 100,
+      "wr_raw": 42.0,
+      "pair_wr": 41.5,
+      "elapsed_s": 20.0,
+      "wins": 0,
+      "losses": 0,
+      "pair_invalid": 0,
+      "need_fix": "NO",
+      "sync_ok": "YES",
+      "inf_ok": "YES"
+    },
+    {
+      "n_sims": 200,
+      "wr_raw": 44.0,
+      "pair_wr": 43.0,
+      "elapsed_s": 40.0,
+      "wins": 0,
+      "losses": 0,
+      "pair_invalid": 0,
+      "need_fix": "NO",
+      "sync_ok": "YES",
+      "inf_ok": "YES"
+    },
+    {
+      "n_sims": 400,
+      "wr_raw": 44.2,
+      "pair_wr": 43.2,
+      "elapsed_s": 80.0,
+      "wins": 0,
+      "losses": 0,
+      "pair_invalid": 0,
+      "need_fix": "NO",
+      "sync_ok": "YES",
+      "inf_ok": "YES"
+    }
+  ],
+  "tracking": {
+    "run_id": "mcts_puct_20261012T042118Z_5f2c9a80",
+    "agent": "mcts_puct",
+    "dry_run": true,
+    "player_b": "greedy_joint",
+    "seed": 10,
+    "teams": 40,
+    "env_key": "MCTS_SIMS",
+    "varying_hyperparam": "n_sims",
+    "frozen_search_hyperparams": {
+      "c_puct": 1.5,
+      "prior": "uniform_legal",
+      "opp_model": "uniform_legal",
+      "rollout": "greedy_joint_snapshot",
+      "max_turns": 40,
+      "discount": 1.0,
+      "final_action": "argmax_N_tie_Q"
+    },
+    "criteria": {
+      "delta_wr_pp": 1.5,
+      "time_ratio": 1.8,
+      "prefer_metric": "wr_raw"
+    },
+    "steps": [
+      {
+        "n_sims": 50,
+        "n_sims_prev": null,
+        "n_sims_delta": null,
+        "wr_raw": 41.0,
+        "pair_wr": 40.75,
+        "elapsed_s": 10.0,
+        "metric": "wr_raw",
+        "metric_value": 41.0,
+        "delta_wr_raw_pp": null,
+        "delta_pair_wr_pp": null,
+        "delta_metric_pp": null,
+        "time_ratio": null,
+        "note": "baseline_first_point",
+        "is_recommended": true
+      },
+      {
+        "n_sims": 100,
+        "n_sims_prev": 50,
+        "n_sims_delta": 50,
+        "wr_raw": 42.0,
+        "pair_wr": 41.5,
+        "elapsed_s": 20.0,
+        "metric": "wr_raw",
+        "metric_value": 42.0,
+        "delta_wr_raw_pp": 1.0,
+        "delta_pair_wr_pp": 0.75,
+        "delta_metric_pp": 1.0,
+        "time_ratio": 2.0,
+        "note": "step",
+        "is_recommended": false
+      },
+      {
+        "n_sims": 200,
+        "n_sims_prev": 100,
+        "n_sims_delta": 100,
+        "wr_raw": 44.0,
+        "pair_wr": 43.0,
+        "elapsed_s": 40.0,
+        "metric": "wr_raw",
+        "metric_value": 44.0,
+        "delta_wr_raw_pp": 2.0,
+        "delta_pair_wr_pp": 1.5,
+        "delta_metric_pp": 2.0,
+        "time_ratio": 2.0,
+        "note": "step",
+        "is_recommended": false
+      },
+      {
+        "n_sims": 400,
+        "n_sims_prev": 200,
+        "n_sims_delta": 200,
+        "wr_raw": 44.2,
+        "pair_wr": 43.2,
+        "elapsed_s": 80.0,
+        "metric": "wr_raw",
+        "metric_value": 44.2,
+        "delta_wr_raw_pp": 0.20000000000000284,
+        "delta_pair_wr_pp": 0.20000000000000284,
+        "delta_metric_pp": 0.20000000000000284,
+        "time_ratio": 2.0,
+        "note": "step",
+        "is_recommended": false
+      }
+    ],
+    "recommended_n_sims": 50,
+    "reason": "meseta: N=50->100 delta_wr_raw=+1.00pp < 1.5pp y tiempo_x2.00 >= 1.8",
+    "plateau_index": 0
+  },
+  "recommended_n_sims": 50,
+  "reason": "meseta: N=50->100 delta_wr_raw=+1.00pp < 1.5pp y tiempo_x2.00 >= 1.8",
+  "return_codes": [
+    null,
+    null,
+    null,
+    null
+  ],
+  "table": "   N_sim   WR_raw%   pair_WR%   elapsed_s        W-L  note\n----------------------------------------------------------------\n      50      41.0       40.8        10.0    0-0    NO/YES/YES <-- recommend\n     100      42.0       41.5        20.0    0-0    NO/YES/YES\n     200      44.0       43.0        40.0    0-0    NO/YES/YES\n     400      44.2       43.2        80.0    0-0    NO/YES/YES\n\nmetric=wr_raw\nrecommended_n_sims=50\nreason: meseta: N=50->100 delta_wr_raw=+1.00pp < 1.5pp y tiempo_x2.00 >= 1.8\n",
+  "artifacts": {
+    "json": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\mcts_sims_sweep_mcts_puct.json",
+    "txt": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\mcts_sims_sweep_mcts_puct.txt",
+    "tracking": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\mcts_sims_sweep_mcts_puct_tracking.txt",
+    "history": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\mcts_sims_sweep_mcts_puct_history.jsonl",
+    "progress": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\mcts_sims_sweep_mcts_puct_progress.json"
+  }
+}

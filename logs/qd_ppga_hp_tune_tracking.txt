@@ -1,0 +1,15 @@
+=== RL HP tune tracking (qd_ppga) ===
+run_id: qd_ppga_20261012T051152Z_bc5e9969
+frozen_defaults: {'gamma': 0.95, 'gae_lambda': 0.95, 'ent_coef': 0.01, 'grid': '10x10', 'critic_lr_shared': 0.0003, 'note': 'Varying: lr, clip_eps (actor); archive knobs frozen for now', 'preview': 'independent team_preview_qd_pga (not co-tuned)', 't_total_per_trial': 6000, 'smoke': True}
+criteria: maximize MEAN_WR of pi* from offline suite (Cand.1); accept if improves best; QD-score tracked in train report only
+
+--- trial log (prev -> new HP) ---
+1. {'lr': 0.0001, 'clip_eps': 0.1} -> score=0.3800 ACCEPT t=0.0s rc=0
+   param_change: lr: (start)->0.0001; clip_eps: (start)->0.1
+   note: dry_run_fake_score
+2. {'lr': 0.0001, 'clip_eps': 0.2} -> score=0.4800 ACCEPT t=0.0s rc=0 [BEST]
+   param_change: clip_eps: 0.1->0.2 (d=0.1); lr: 0.0001->0.0001 (d=0.0)
+   note: dry_run_fake_score
+
+best_overrides: {'lr': 0.0001, 'clip_eps': 0.2}
+best_score: 0.48

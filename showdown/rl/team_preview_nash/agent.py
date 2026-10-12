@@ -1,8 +1,9 @@
 """Team Preview Nash agent: Value Net + Nash LP (spec v1.0)."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
 
@@ -152,3 +153,38 @@ class PreviewNashAgent:
                 steps += 1
         self.update_steps += 1
         return {'loss': total_loss / max(steps, 1)}
+
+    def save(self, path: Union[str, Path]) -> Path:
+        self._ensure_torch()
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            'kind': 'team_preview_nash',
+            'cfg': asdict(self.cfg),
+            'state_dict': self.net.state_dict(),
+            'env_pairs': int(self.env_pairs),
+            'update_steps': int(self.update_steps),
+        }
+        self._torch.save(payload, path)
+        return path
+
+    def load(self, path: Union[str, Path]) -> None:
+        self._ensure_torch()
+        path = Path(path)
+        try:
+            payload = self._torch.load(path, map_location='cpu', weights_only=False)
+        except TypeError:
+            payload = self._torch.load(path, map_location='cpu')
+        if isinstance(payload, dict) and 'state_dict' in payload:
+            sd = payload['state_dict']
+            cfg = payload.get('cfg') or {}
+            if isinstance(cfg, dict):
+                for k, v in cfg.items():
+                    if hasattr(self.cfg, k):
+                        setattr(self.cfg, k, v)
+            self.env_pairs = int(payload.get('env_pairs', 0))
+            self.update_steps = int(payload.get('update_steps', 0))
+        else:
+            sd = payload
+        self.net.load_state_dict(sd)
+        self.net.to(self.device)

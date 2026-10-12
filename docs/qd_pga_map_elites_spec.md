@@ -2,11 +2,12 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.3** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.15) |
+| **Versión** | **1.5** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.16) |
 | **Estado** | FROZEN; `showdown/rl/qd_pga/` |
 | **Training** | **Sí**: variación híbrida mutación/PPO y crítico compartido |
 | **Inferencia** | `ValidatedQDPGAPlayer` con el mejor elite actor-only |
 | **CLI** | `python -m showdown.rl.qd_pga.train` |
+| **CLI tune** | `python -m showdown.inference_sim.run_qd_pga_hp_tune` |
 
 ## Por qué existe
 
@@ -121,6 +122,28 @@ Sin `--start-ps` se usa backend mock. Live requiere Showdown local
 | Log pasos/tiempo | `5_000` / `60 s` | Heartbeat | No altera aprendizaje |
 | Max turns | `40` | Acotar episodio | Define truncation común |
 
+CLI de train acepta `--lr` y `--clip-eps` (actor). El LR del crítico compartido
+sigue fijo en `3e-4` en esta fase de tune.
+
+### Tune de hiperparámetros (independiente del Preview QD-PGA)
+
+```bat
+python -m showdown.inference_sim.run_qd_pga_hp_tune --dry-run
+python -m showdown.inference_sim.run_qd_pga_hp_tune --seed 0 --max-trials 6 --suite-games 4
+```
+
+| Ítem | Contrato |
+|------|----------|
+| Knobs variables | `lr`, `clip_eps` del actor (mismo grid que PPO combate) |
+| Congelados | crítico LR, \(p_{\rm mut}\), \(\sigma\), grid, mosaic, preview |
+| Score | `MEAN_WR` de \(\pi^\*\) |
+| Criterio | Aceptar si mejora el mejor score |
+| Independencia | No co-afina `team_preview_qd_pga` |
+
+**Tracking:** `logs/qd_pga_hp_tune_{history.jsonl,progress.json,tracking.txt}` y
+`qd_pga_best_hp.json` con `prev_overrides` → `overrides` / `param_change`.
+**Figuras:** `logs/figures/qd_pga_hp_tune_latest.svg` + ledger histórico.
+
 ### Ejemplo de las dos ramas
 
 Desde el mismo padre, la rama mut añade ruido `σ=0.02`; si cambia el estilo de
@@ -152,10 +175,9 @@ crítico, replay ni selección dinámica de elites.
 
 ## Team Preview y Conclusión
 
-**No hay Team Preview en el MDP de combate.** El pipeline familiar es
-**`team_preview_qd_pga` → QD-PGA de combate**. Comparten
-familia algorítmica, no pesos, observación ni archivo: preview usa su propio
-bandit/BD y combate usa este grid. Congelar ambos artefactos según
+**No hay Team Preview en el MDP de combate.** Flujo: Preview QD-PGA congelado
+(`frozen_preview`, `combat_family='qd_pga'`) → combate QD-PGA. Comparten
+familia, no pesos/obs/archivo. Fallback `/team 1234` si falta checkpoint.
 [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 ## Mapa de código
@@ -196,6 +218,8 @@ acompañar cualquier comparación.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.5** | 2026-10-11 | Train/infer bajo Preview QD-PGA congelado (`frozen_preview`). |
+| **1.4** | 2026-10-11 | CLI `--lr/--clip-eps`; tune `run_qd_pga_hp_tune` + tracking prev→nuevo. |
 | **1.3** | 2026-10-11 | Híbrido, arquitectura, loop, tabla, fallos, evaluación, code map y ejemplo. |
 | **1.2** | 2026-10-11 | Guía dual-audience, data loop/freeze y pairing de Conclusión. |
 | **1.1** | 2026-10-10 | Lectura pedagógica. |

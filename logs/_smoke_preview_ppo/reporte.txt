@@ -1,0 +1,8 @@
+=== Team Preview PPO train ===
+seed: 0
+lr: 0.0003
+clip_eps: 0.2
+updates: 1
+pg_loss: -0.013248
+MEAN_SCORE: 0.013248
+MEAN_WR: 0.013248

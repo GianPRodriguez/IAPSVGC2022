@@ -100,6 +100,7 @@ def _make_env(
             opponent=opponent,
             start_ps=start_ps,
             account_prefix=f'Ppo{opponent[:4].title()}',
+            combat_family='ppo',
         )
     return VGCEnv(
         reward_candidate=reward,
@@ -270,6 +271,8 @@ def run_training(
     rollout_steps: Optional[int] = None,
     suite_games: Optional[int] = None,
     smoke: bool = False,
+    lr: Optional[float] = None,
+    clip_eps: Optional[float] = None,
 ) -> PPOAgent:
     if not schedule and not self_play:
         raise ValueError('schedule vacío')
@@ -278,6 +281,10 @@ def run_training(
     cfg = PPOConfig(seed=seed, device=device)
     if rollout_steps is not None:
         cfg.rollout_steps = int(rollout_steps)
+    if lr is not None:
+        cfg.lr = float(lr)
+    if clip_eps is not None:
+        cfg.clip_eps = float(clip_eps)
     agent = PPOAgent(cfg)
     if bc_checkpoint:
         agent.load_bc_weights(bc_checkpoint)
@@ -406,6 +413,8 @@ def run_training(
                 'self_play': bool(self_play),
                 'reward_mode': reward_mode,
                 'weights': weights,
+                'lr': float(cfg.lr),
+                'clip_eps': float(cfg.clip_eps),
             },
             metrics={
                 'env_steps': agent.env_steps,
@@ -503,6 +512,8 @@ def main(argv: Optional[list] = None) -> int:
         help='BO1 per foe for offline suite (default 20; 0=skip; smoke default 0)',
     )
     p.add_argument('--smoke', action='store_true', help='Treat as smoke (suite default 0)')
+    p.add_argument('--lr', type=float, default=None, help='Override PPOConfig.lr')
+    p.add_argument('--clip-eps', type=float, default=None, help='Override PPOConfig.clip_eps')
     args = p.parse_args(argv)
 
     self_play = str(args.opponent).lower().replace('-', '_') == 'self'
@@ -548,6 +559,8 @@ def main(argv: Optional[list] = None) -> int:
         rollout_steps=args.rollout_steps,
         suite_games=args.suite_games,
         smoke=bool(args.smoke),
+        lr=args.lr,
+        clip_eps=args.clip_eps,
     )
     return 0
 

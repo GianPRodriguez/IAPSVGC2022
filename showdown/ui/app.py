@@ -32,13 +32,14 @@ st.markdown(
     """
 Laboratorio local para **aprender** cómo piensan los agentes de VGC,
 **jugar** un BO3 contra ellos en Pokémon Showdown (Reglamento M-C),
-y **practicar** en el laboratorio (con advertencia de tiempo).
+**practicar** en el laboratorio, y **ver figuras** de tune/train.
 
 Usa el menú de la izquierda:
 
 1. **Aprender** — analogías con el ajedrez, sin jerga técnica  
 2. **Jugar** — pegas tu usuario; el bot te invita a un BO3  
 3. **Laboratorio** — práctica agente vs bots en Showdown  
+4. **Figuras y tune** — SVG de `logs/figures`, pipelines preview→combate, ledger  
 
 Público: jugadores de VGC y estudiantes. Todo el texto está en español.
 """
@@ -49,18 +50,20 @@ st.info(
     'La cuenta del bot se lee del archivo `.env` del proyecto (no hace falta pegar su contraseña aquí).'
 )
 
-with st.expander('Glosario rápido (5 palabras)', expanded=False):
+with st.expander('Glosario rápido', expanded=False):
     st.markdown(
         """
 - **Agente / bot:** programa que elige movimientos por ti en la batalla.  
 - **Movimiento legal:** acción que Showdown permite en ese turno.  
 - **BO3:** al mejor de 3 partidas (el primero en ganar 2).  
 - **Recompensa:** número interno que sube si al bot le va bien y baja si le va mal (no es Elo).  
-- **Export de equipo:** texto que copias desde el teambuilder de Showdown.
+- **Export de equipo:** texto que copias desde el teambuilder de Showdown.  
+- **Preview congelado:** selector de equipo ya entrenado; el combate no decide `/team`.  
+- **Tune / ledger:** barrido de hiperparámetros; el ledger acumula mejores scores entre corridas.
 """
     )
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.subheader('Aprender')
     st.write('Lee cómo decide cada agente, comparado con el ajedrez.')
@@ -70,5 +73,8 @@ with col2:
 with col3:
     st.subheader('Laboratorio')
     st.write('Sesiones de práctica vs otros bots. Consume tiempo y CPU: léete la advertencia.')
+with col4:
+    st.subheader('Figuras y tune')
+    st.write('SVG reales de HP tune, pipelines por familia y ledger histórico.')
 
-st.caption('IAPSVGC2022 · Streamlit · v1 (random, greedy solo/joint, expectimax)')
+st.caption('IAPSVGC2022 · Streamlit · v1 + figuras tune (logs/figures)')

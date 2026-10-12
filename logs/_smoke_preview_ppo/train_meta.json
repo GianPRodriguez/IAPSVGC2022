@@ -1,0 +1,17 @@
+{
+  "seed": 0,
+  "device": "cpu",
+  "smoke": true,
+  "updates": 1,
+  "lr": 0.0003,
+  "clip_eps": 0.2,
+  "last_metrics": {
+    "pg_loss": -0.013247578870505095,
+    "v_loss": 0.8588194698095322,
+    "entropy": 5.884769678115845,
+    "n": 64.0
+  },
+  "MEAN_SCORE": 0.013247578870505095,
+  "note": "MEAN_SCORE = -pg_loss (proxy); live BO1 suite is separate.",
+  "final_pt": "logs\\_smoke_preview_ppo\\final.pt"
+}

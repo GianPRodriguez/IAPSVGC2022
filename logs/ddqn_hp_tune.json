@@ -1,0 +1,80 @@
+{
+  "time_utc": "2026-10-12T05:11:53.178457+00:00",
+  "run_id": "ddqn_20261012T051153Z_fe97ae23",
+  "agent": "ddqn",
+  "dry_run": true,
+  "seed": 0,
+  "frozen": {
+    "tau": 0.005,
+    "batch_size": 256,
+    "replay_capacity": 200000,
+    "eps_end": 0.05,
+    "note": "Varying: lr, gamma"
+  },
+  "criteria": "maximize MEAN_WR from offline suite (Cand.1); accept if improves best",
+  "outcomes": [
+    {
+      "trial_index": 1,
+      "overrides": {
+        "lr": 0.0001,
+        "gamma": 0.9
+      },
+      "score": 0.3800000000000001,
+      "accepted": true,
+      "elapsed_s": 1.200009137392044e-05,
+      "return_code": 0,
+      "checkpoint_dir": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ddqn_hp_tune\\trial_01",
+      "note": "dry_run_fake_score"
+    },
+    {
+      "trial_index": 2,
+      "overrides": {
+        "lr": 0.0001,
+        "gamma": 0.95
+      },
+      "score": 0.48,
+      "accepted": true,
+      "elapsed_s": 2.6999972760677338e-05,
+      "return_code": 0,
+      "checkpoint_dir": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ddqn_hp_tune\\trial_02",
+      "note": "dry_run_fake_score"
+    },
+    {
+      "trial_index": 3,
+      "overrides": {
+        "lr": 0.0003,
+        "gamma": 0.9
+      },
+      "score": 0.40000000000000013,
+      "accepted": false,
+      "elapsed_s": 1.2299977242946625e-05,
+      "return_code": 0,
+      "checkpoint_dir": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ddqn_hp_tune\\trial_03",
+      "note": "dry_run_fake_score"
+    }
+  ],
+  "best_overrides": {
+    "lr": 0.0001,
+    "gamma": 0.95
+  },
+  "best_score": 0.48,
+  "artifacts": {
+    "history": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ddqn_hp_tune_history.jsonl",
+    "tracking": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ddqn_hp_tune_tracking.txt",
+    "best_hp": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ddqn_best_hp.json",
+    "summary_json": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ddqn_hp_tune.json",
+    "figures_dir": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures",
+    "figure_svg": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures\\ddqn_hp_tune_latest.svg"
+  },
+  "figures": {
+    "run_figures": {
+      "svg": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures\\ddqn_hp_tune_20261012T051153Z.svg"
+    },
+    "latest_figures": {
+      "svg": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures\\ddqn_hp_tune_latest.svg"
+    },
+    "ledger_agent": {},
+    "ledger_all": {},
+    "ledger_path": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\figures\\hp_tune_ledger.jsonl"
+  }
+}

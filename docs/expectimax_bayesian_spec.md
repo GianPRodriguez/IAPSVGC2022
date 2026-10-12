@@ -373,6 +373,7 @@ Checklist de reproducibilidad:
 | Pendientes tune | `PENDING.md` |
 | Robust smoke | `python -m showdown.inference_sim.run_robust_e2e --teams 4 --player-a expectimax_bayesian --player-b random` |
 | Tune offline | `python -m showdown.inference_sim.run_expectimax_tune` |
+| Figuras tune | `logs/figures/expectimax_tune_latest.svg` + ledger `hp_tune_ledger.jsonl` |
 | Tests | `tests/test_expectimax_bayesian.py`; `tests/test_expectimax_team_preview.py`; `tests/test_conclusion_eval.py` |
 
 ---

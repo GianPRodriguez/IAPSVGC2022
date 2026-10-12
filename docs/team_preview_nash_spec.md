@@ -3,12 +3,14 @@
 | Campo | Valor |
 |-------|-------|
 | **Documento** | Contrato exclusivo — Payoff Nash solo Team Preview |
-| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` v1.15 §6.j) |
+| **Versión** | **1.3** (alineado con `docs/rl_env_spec.md` v1.16 §6.j) |
 | **Estado** | **FROZEN** — implementado en `showdown/rl/team_preview_nash/` |
 | **Algoritmo** | Value Net de bajo rango + equilibrio de Nash por LP |
 | **Formato** | Gen 9 VGC **Regulation M-C**, OTS, Mega on, **Tera off** |
 | **Código** | `showdown/rl/team_preview_nash/` y `team_preview_{env,obs,action}.py` |
-| **CLI** | `python -m showdown.rl.team_preview_nash.train --seed N` |
+| **CLI** | `python -m showdown.rl.team_preview_nash.train --seed N` → `final.pt` |
+| **CLI tune** | `python -m showdown.inference_sim.run_team_preview_nash_hp_tune` |
+| **Consumidores** | MCTS+PUCT / MCTS–Nash (`frozen_preview`) |
 
 Este agente no aprende directamente una policy con PPO. Aprende a estimar el
 resultado de cada par de formaciones y resuelve ese juego para elegir.
@@ -152,9 +154,8 @@ embeddings fila/columna y ambas cabezas. También debe guardar versión del spec
 seed, loss, updates, pares vistos y origen `mock/live`. El solver no se aprende,
 pero su método, timeout y fallback son parte del artefacto desplegable.
 
-Para reanudar hacen falta además optimizador y RNG. El CLI devuelve el agente,
-pero no serializa automáticamente; `DONE team_preview_nash` no significa que
-exista un archivo de pesos.
+El CLI persiste `final.pt` + `train_meta.json` + `reporte.txt` (`MEAN_SCORE`).
+Para reanudar hacen falta además optimizador y RNG.
 
 ## 6. Hiperparámetros
 
@@ -172,6 +173,36 @@ exista un archivo de pesos.
 | Timeout LP | `0.2 s` | Presupuesto del solver | Bajo reduce latencia y aumenta uso de fallback |
 | Umbral soporte | `1e-6` | Métrica de acciones activas | Mayor umbral reporta mezclas más pequeñas |
 | Seed | Obligatoria | Reproducibilidad | Fija inicialización, pares y muestreo de \(p^\star\) |
+
+CLI de train acepta `--lr` para overrides (tune / ablaciones).
+
+### Tune de hiperparámetros (independiente de MCTS)
+
+Fase mínima: solo `lr`. Solver, epochs, loss y \(\pi_c\) quedan congelados.
+
+```bat
+python -m showdown.inference_sim.run_team_preview_nash_hp_tune --dry-run
+python -m showdown.inference_sim.run_team_preview_nash_hp_tune --seed 0 --max-trials 3 --smoke --updates 2
+```
+
+| Ítem | Contrato |
+|------|----------|
+| Knobs variables | `lr ∈ {1e-4,3e-4,1e-3}` |
+| Congelados | grad clip, epochs, BCE, timeout LP, \(\pi_c\)=`greedy_joint` |
+| Score | `MEAN_SCORE` (= `-loss` en backend mock) |
+| Criterio | Aceptar si mejora el mejor score |
+| Independencia | No lanza ni afina MCTS / MCTS–Nash |
+
+**Tracking** (cómo cambian los HP trial a trial):
+
+| Artefacto | Contenido |
+|-----------|-----------|
+| `logs/team_preview_nash_hp_tune_history.jsonl` | `prev_overrides` → `overrides` + `param_change` |
+| `logs/team_preview_nash_hp_tune_progress.json` | estado vivo |
+| `logs/team_preview_nash_hp_tune_tracking.txt` | log humano prev→nuevo |
+| `logs/team_preview_nash_best_hp.json` | mejores overrides + score |
+| `logs/figures/team_preview_nash_hp_tune_latest.svg` | score vs trial (real) |
+| `logs/figures/hp_tune_ledger.jsonl` | histórico append entre runs |
 
 ## 7. Inferencia y despliegue en batalla
 
@@ -202,7 +233,7 @@ El protocolo común está en
 - El muestreo uniforme puede dedicar muchos BO1 a celdas poco relevantes.
 - Resolver un LP \(360\times360\) añade CPU y puede activar fallbacks.
 - El modelo low-rank impone una restricción expresiva.
-- El CLI directo usa proxy mock y no guarda checkpoints.
+- El CLI directo usa proxy mock; suite BO1 live es aparte del proxy de tune.
 - No hay Nash-on-policy ni self-play preview.
 - Tera está desactivada; otro formato requiere revalidar encoder y datos.
 
@@ -218,8 +249,9 @@ El protocolo común está en
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.3** | 2026-10-11 | `final.pt` + tune `run_team_preview_nash_hp_tune` + tracking prev→nuevo; `--lr`. |
 | **1.2** | 2026-10-11 | Value Net, low-rank, LP, entrenamiento, despliegue y Conclusión; alineación actualizada a rl_env v1.15. |
 | **1.1** | 2026-10-11 | Nombre Payoff Nash, glosario y límites. |
 | **1.0** | 2026-10-11 | Low-rank, HiGHS, pares uniformes, \(A=2M-1\), Flat-360/512D. |
 
-*Fin del contrato Team Preview Payoff Nash v1.2.*
+*Fin del contrato Team Preview Payoff Nash v1.3.*

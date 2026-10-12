@@ -55,6 +55,7 @@ def _make_env(*, mock: bool, seed: int, start_ps: bool) -> VGCEnv:
             opponent='random',
             start_ps=start_ps,
             account_prefix='QdPpo',
+            combat_family='qd_ppo',
         )
     return VGCEnv(
         reward_candidate=RewardCandidate.DENSE,
@@ -88,6 +89,8 @@ def run_training(
     log_every: int = 5_000,
     log_every_sec: float = 60.0,
     suite_games: Optional[int] = None,
+    lr: Optional[float] = None,
+    clip_eps: Optional[float] = None,
 ) -> Archive:
     if smoke:
         t_total = min(int(t_total), 6_000)
@@ -100,7 +103,12 @@ def run_training(
         log_every = min(int(log_every), 256)
         log_every_sec = min(float(log_every_sec), 15.0)
 
-    cfg = PPOConfig(seed=seed, device=device, rollout_steps=rollout)
+    cfg_kw = dict(seed=seed, device=device, rollout_steps=rollout)
+    if lr is not None:
+        cfg_kw['lr'] = float(lr)
+    if clip_eps is not None:
+        cfg_kw['clip_eps'] = float(clip_eps)
+    cfg = PPOConfig(**cfg_kw)
     agent = PPOAgent(cfg)
     if bc_checkpoint:
         agent.load_bc_weights(bc_checkpoint)
@@ -329,6 +337,8 @@ def main(argv=None) -> int:
         '--suite-games', type=int, default=None,
         help='BO1 per foe on π* (default 20; 0=skip; smoke default 0; use 200 for full suite)',
     )
+    p.add_argument('--lr', type=float, default=None, help='Override PPOConfig.lr')
+    p.add_argument('--clip-eps', type=float, default=None, help='Override PPOConfig.clip_eps')
     args = p.parse_args(argv)
     run_training(
         seed=args.seed,
@@ -340,6 +350,8 @@ def main(argv=None) -> int:
         start_ps=args.start_ps,
         bc_checkpoint=args.bc_checkpoint,
         suite_games=args.suite_games,
+        lr=args.lr,
+        clip_eps=args.clip_eps,
     )
     return 0
 

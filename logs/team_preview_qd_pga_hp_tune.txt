@@ -1,0 +1,18 @@
+=== team_preview_qd_pga HP tune ===
+run_id: team_preview_qd_pga_20261012T051152Z_fc49ce1f
+
+=== RL HP tune tracking (team_preview_qd_pga) ===
+run_id: team_preview_qd_pga_20261012T051152Z_fc49ce1f
+frozen_defaults: {'p_mut': 0.5, 'sigma': 0.02, 'grid': '10x10', 'pi_c': 'greedy_joint', 'note': 'Varying: lr, clip_eps; independent of QD-PPO/PGA/PPGA combat trains'}
+criteria: maximize MEAN_SCORE (best_f elite fitness); accept if improves best; independent of QD combat
+
+--- trial log (prev -> new HP) ---
+1. {'lr': 0.0001, 'clip_eps': 0.1} -> score=0.3800 ACCEPT t=0.0s rc=0
+   param_change: lr: (start)->0.0001; clip_eps: (start)->0.1
+   note: dry_run_fake_score
+2. {'lr': 0.0001, 'clip_eps': 0.2} -> score=0.4800 ACCEPT t=0.0s rc=0 [BEST]
+   param_change: clip_eps: 0.1->0.2 (d=0.1); lr: 0.0001->0.0001 (d=0.0)
+   note: dry_run_fake_score
+
+best_overrides: {'lr': 0.0001, 'clip_eps': 0.2}
+best_score: 0.48

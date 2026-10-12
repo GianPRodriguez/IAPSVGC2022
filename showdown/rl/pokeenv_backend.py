@@ -111,10 +111,14 @@ class PokeEnvBattleBackend(BattleBackend):
         start_ps: bool = False,
         log_level: int = 30,
         account_prefix: str = 'RlEnv',
+        combat_family: str = 'ddqn',
+        preview_checkpoint: Optional[str] = None,
+        preview_kind: Optional[str] = None,
     ):
         from poke_env.ps_client import LocalhostServerConfiguration
 
         from showdown.inference_sim.paths import BATTLE_FORMAT
+        from showdown.rl.frozen_preview import family_preview_for_combat, load_frozen_preview
 
         self.battle_format = battle_format or BATTLE_FORMAT
         self.server_configuration = server_configuration or LocalhostServerConfiguration
@@ -131,6 +135,15 @@ class PokeEnvBattleBackend(BattleBackend):
         self.start_ps = bool(start_ps)
         self.log_level = int(log_level)
         self.account_prefix = str(account_prefix)
+        self.combat_family = str(combat_family or 'ddqn')
+        if preview_kind:
+            self._preview_policy = load_frozen_preview(
+                kind=preview_kind, checkpoint=preview_checkpoint,
+            )
+        else:
+            self._preview_policy = family_preview_for_combat(
+                self.combat_family, checkpoint=preview_checkpoint,
+            )
 
         self._agent = None
         self._foe = None
@@ -268,8 +281,14 @@ class PokeEnvBattleBackend(BattleBackend):
         name_a = f'{self.account_prefix}A{stamp}{self._uid}'
         name_b = f'{self.account_prefix}B{stamp}{self._uid}'
 
+        preview_pol = self._preview_policy
+
+        class _FamilyPreviewEnvPlayer(_EnvPlayer):
+            def teampreview(self, battle):
+                return preview_pol.teampreview(battle)
+
         if self._agent is None:
-            self._agent = _EnvPlayer(
+            self._agent = _FamilyPreviewEnvPlayer(
                 account_configuration=AccountConfiguration(name_a, None),
                 battle_format=self.battle_format,
                 team=our,
@@ -277,7 +296,7 @@ class PokeEnvBattleBackend(BattleBackend):
                 accept_open_team_sheet=True,
                 max_concurrent_battles=1,
                 log_level=self.log_level,
-                choose_on_teampreview=False,
+                choose_on_teampreview=True,
             )
             self._foe = _make_foe_player(
                 self._opponent,

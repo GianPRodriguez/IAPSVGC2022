@@ -144,12 +144,24 @@ async def run_cross(
 
     server = server_configuration_for_port(port)
     t0_a, t0_b = team_pairs[0]
+
+    def _preview_kwargs(pl: PipelineSpec) -> dict:
+        if pl.group != 'family':
+            return {}
+        kw = {'preview_kind': pl.preview}
+        if pl.preview_checkpoint:
+            kw['preview_checkpoint'] = pl.preview_checkpoint
+        if pl.checkpoint:
+            kw['checkpoint'] = pl.checkpoint
+        return kw
+
     p1 = make_opponent_player(
         pl_i.combat,
         team=t0_a,
         account_configuration=AccountConfiguration(f'C{stamp}i{i}'[:18], None),
         battle_format=format_id,
         server_configuration=server,
+        **_preview_kwargs(pl_i),
     )
     p2 = make_opponent_player(
         pl_j.combat,
@@ -157,6 +169,7 @@ async def run_cross(
         account_configuration=AccountConfiguration(f'C{stamp}j{j}'[:18], None),
         battle_format=format_id,
         server_configuration=server,
+        **_preview_kwargs(pl_j),
     )
 
     cr = CrossResult(i=i, j=j, id_i=pl_i.id, id_j=pl_j.id)

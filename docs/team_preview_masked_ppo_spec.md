@@ -3,12 +3,13 @@
 | Campo | Valor |
 |-------|-------|
 | **Documento** | Contrato exclusivo — Masked PPO solo Team Preview |
-| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` v1.15 §6.i) |
+| **Versión** | **1.4** (alineado con `docs/rl_env_spec.md` v1.16 §6.i) |
 | **Estado** | **FROZEN** — implementado en `showdown/rl/team_preview_ppo/` |
 | **Algoritmo** | PPO + Invalid Action Masking (IAM), acción Flat-360 |
 | **Formato** | Gen 9 VGC **Regulation M-C**, OTS, Mega on, **Tera off** |
 | **Código** | `showdown/rl/team_preview_ppo/` y `team_preview_{env,obs,action}.py` |
-| **CLI** | `python -m showdown.rl.team_preview_ppo.train --seed N` |
+| **CLI** | `python -m showdown.rl.team_preview_ppo.train --seed N` → `final.pt` |
+| **Consumidores** | DDQN / PPO combate (`frozen_preview`) |
 
 Este agente solo elige cuatro Pokémon, con los dos leads primero y los dos de
 banca después. No decide movimientos durante el combate.
@@ -162,6 +163,35 @@ implica que se hayan guardado pesos.
 | Épocas \(K\) | `4` | Reutilizar rollout | Más señal, pero mayor deriva de la policy antigua |
 | Seed | Obligatoria | Reproducibilidad | Fija inicialización y muestreo |
 
+CLI de train acepta `--lr`, `--clip-eps`, `--checkpoint-dir` y escribe
+`reporte.txt` / `train_meta.json` con `MEAN_SCORE` (proxy \(-\)pg_loss en mock).
+
+### Tune de hiperparámetros (independiente de DDQN / PPO combate)
+
+Este módulo se afina **aparte**. Un solo mejor checkpoint se reutiliza en
+Conclusión para **DDQN y PPO combate** (no se entrena dos veces ni “dentro” de
+esos trains).
+
+```bat
+python -m showdown.inference_sim.run_team_preview_ppo_hp_tune --dry-run
+python -m showdown.inference_sim.run_team_preview_ppo_hp_tune --seed 0 --max-trials 6 --smoke --updates 3
+```
+
+| Ítem | Contrato |
+|------|----------|
+| Knobs variables | `lr ∈ {1e-4,3e-4,1e-3}`, `clip_eps ∈ {0.10,0.20}` |
+| Congelados | \(\gamma=1\), \(\lambda=1\), `ent_coef`, \(\pi_c\)=greedy_joint, … |
+| Score | `MEAN_SCORE` (= `-pg_loss` en backend mock del train actual) |
+| Criterio | Aceptar si mejora el mejor score |
+| Independencia | No lanza `ddqn.train` ni `ppo.train` de combate |
+
+**Tracking:** `logs/team_preview_ppo_hp_tune_history.jsonl`, `_progress.json`,
+`_tracking.txt`, `team_preview_ppo_best_hp.json`.
+
+**Figuras:** `logs/figures/team_preview_ppo_hp_tune_latest.svg` + ledger
+histórico `hp_tune_ledger_team_preview_ppo.svg`. Regenerar:
+`python -m showdown.inference_sim.run_plot_tune_history --agent team_preview_ppo`.
+
 ## 7. Inferencia y despliegue en batalla
 
 1. Construir exactamente la observación 512D desde ambas OTS.
@@ -208,6 +238,8 @@ métricas en [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.4** | 2026-10-11 | Persiste `final.pt`; consumido por DDQN/PPO vía `frozen_preview`. |
+| **1.3** | 2026-10-11 | Tune `run_team_preview_ppo_hp_tune` + tracking; CLI lr/clip; independencia vs combate DDQN/PPO. |
 | **1.2** | 2026-10-11 | Algoritmo, loop, checkpoint, despliegue y Conclusión; alineación documental actualizada a rl_env v1.15. |
 | **1.1** | 2026-10-11 | Redacción dual inicial, glosario y límites. |
 | **1.0** | 2026-10-11 | Flat-360 IAM, obs 512D, Cand. 1 y \(\pi_c\)=`greedy_joint`. |

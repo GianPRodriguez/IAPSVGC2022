@@ -184,6 +184,13 @@ def write_train_report(
         f'[{report.agent}] wrote {txt_path} and {json_path}',
         flush=True,
     )
+    try:
+        from showdown.inference_sim.tune_plots import plot_train_reporte_suite
+        figs = plot_train_reporte_suite(json_path, agent=str(report.agent))
+        if figs.get('svg'):
+            print(f'[{report.agent}] figure={figs["svg"]}', flush=True)
+    except Exception:
+        pass
     return txt_path, json_path
 
 

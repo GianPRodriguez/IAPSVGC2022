@@ -437,6 +437,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     TUNE_SUMMARY.write_text('\n'.join(lines) + '\n', encoding='utf-8')
     print('\n'.join(lines), flush=True)
 
+    try:
+        from showdown.inference_sim.tune_plots import plot_expectimax_tune_run
+        fig_info = plot_expectimax_tune_run(
+            TUNE_HISTORY,
+            run_id=f'expectimax_{datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")}',
+        )
+        latest = (fig_info or {}).get('latest_figures') or {}
+        if latest.get('svg'):
+            print(f'figure={latest["svg"]}', flush=True)
+    except Exception as exc:  # pragma: no cover
+        print(f'[tune] figures warn: {exc!r}', flush=True)
+
     # Exit: 0 ok, 2 si hubo NEED_FIX (señal única para el humano/agente)
     return 2 if need_fix_any else 0
 

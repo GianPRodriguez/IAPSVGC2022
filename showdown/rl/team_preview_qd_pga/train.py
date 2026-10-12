@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -53,6 +55,8 @@ def train(
     seed: int = 0,
     smoke: bool = False,
     device: str = 'cpu',
+    lr: Optional[float] = None,
+    clip_eps: Optional[float] = None,
 ) -> Archive:
     import torch
 
@@ -62,6 +66,8 @@ def train(
     n_outer = 2 if smoke else N_OUTER
     g_fit = 4 if smoke else G_FIT
     g_min = 2 if smoke else G_MIN
+    actor_lr = 3e-4 if lr is None else float(lr)
+    actor_clip = 0.2 if clip_eps is None else float(clip_eps)
 
     rng = np.random.default_rng(int(seed))
     torch.manual_seed(int(seed))
@@ -71,9 +77,9 @@ def train(
     critic = SharedPreviewCritic(OBS_DIM).to(dev)
     actor_optim = torch.optim.Adam(
         [p for n, p in net.named_parameters() if not n.startswith('value.')],
-        lr=3e-4,
+        lr=actor_lr,
     )
-    critic_optim = torch.optim.Adam(critic.parameters(), lr=3e-4)
+    critic_optim = torch.optim.Adam(critic.parameters(), lr=actor_lr)
     archive = Archive(10, 10)
     act_fn = _make_act_fn(net, dev, rng)
 
@@ -81,7 +87,7 @@ def train(
     print(f'bootstrap episodes={b_boot}', flush=True)
     pg_improve(
         env, net, critic, actor_optim, critic_optim, dev,
-        n_episodes=b_boot, epochs=K_PG,
+        n_episodes=b_boot, epochs=K_PG, clip_eps=actor_clip,
     )
     f, bd, g, meta = evaluate_actor(env, act_fn, G=g_fit, g_min=g_min, greedy=True)
     if meta['eligible']:
@@ -113,7 +119,7 @@ def train(
             else:
                 pg_improve(
                     env, net, critic, actor_optim, critic_optim, dev,
-                    n_episodes=t_emit, epochs=K_PG,
+                    n_episodes=t_emit, epochs=K_PG, clip_eps=actor_clip,
                 )
 
             f, bd, g, meta = evaluate_actor(
@@ -137,13 +143,85 @@ def train(
     return archive
 
 
+def train_and_save(
+    *,
+    seed: int = 0,
+    smoke: bool = False,
+    device: str = 'cpu',
+    checkpoint_dir: str | Path = 'logs/team_preview_qd_pga_checkpoints',
+    lr: Optional[float] = None,
+    clip_eps: Optional[float] = None,
+) -> Archive:
+    actor_lr = 3e-4 if lr is None else float(lr)
+    actor_clip = 0.2 if clip_eps is None else float(clip_eps)
+    arch = train(
+        seed=seed, smoke=smoke, device=device,
+        lr=actor_lr, clip_eps=actor_clip,
+    )
+    ckpt_dir = Path(checkpoint_dir)
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+    archive_pt = arch.save(ckpt_dir / 'archive.pt')
+    best = arch.best()
+    best_path = None
+    best_f = float('nan')
+    if best is not None:
+        import torch
+        best_path = ckpt_dir / 'best_elite.pt'
+        best_f = float(best.fitness)
+        torch.save({'state_dict': best.state_dict, 'fitness': best.fitness}, best_path)
+    # Score for HP tune: best elite fitness (Cand. 1); NaN → 0 so trial is rejectable.
+    score = 0.0 if (best_f != best_f) else best_f
+    meta = {
+        'seed': seed,
+        'device': device,
+        'smoke': smoke,
+        'lr': actor_lr,
+        'clip_eps': actor_clip,
+        'coverage': arch.coverage(),
+        'qd_score': arch.qd_score(),
+        'best_f': None if (best_f != best_f) else best_f,
+        'MEAN_SCORE': score,
+        'note': 'MEAN_SCORE = best_f (elite fitness); independent of QD combat.',
+        'archive_pt': str(archive_pt),
+        'best_elite_pt': str(best_path) if best_path else None,
+    }
+    (ckpt_dir / 'train_meta.json').write_text(
+        json.dumps(meta, indent=2) + '\n', encoding='utf-8',
+    )
+    (ckpt_dir / 'reporte.txt').write_text(
+        '=== Team Preview QD-PGA train ===\n'
+        f'seed: {seed}\n'
+        f'lr: {actor_lr}\n'
+        f'clip_eps: {actor_clip}\n'
+        f'coverage: {arch.coverage():.6f}\n'
+        f'qd_score: {arch.qd_score():.6f}\n'
+        f'best_f: {best_f:.6f}\n'
+        f'MEAN_SCORE: {score:.6f}\n'
+        f'MEAN_WR: {score:.6f}\n',
+        encoding='utf-8',
+    )
+    print(f'MEAN_SCORE: {score:.6f}', flush=True)
+    print(f'checkpoint: {archive_pt}', flush=True)
+    return arch
+
+
 def main(argv: Optional[list] = None) -> int:
     p = argparse.ArgumentParser(description='Team Preview QD-PGA')
     p.add_argument('--seed', type=int, required=True)
     p.add_argument('--device', default='cpu')
     p.add_argument('--smoke', action='store_true')
+    p.add_argument('--lr', type=float, default=None, help='Override actor/critic Adam lr')
+    p.add_argument('--clip-eps', type=float, default=None, help='Override PPO clip_eps')
+    p.add_argument('--checkpoint-dir', default='logs/team_preview_qd_pga_checkpoints')
     args = p.parse_args(argv)
-    arch = train(seed=args.seed, smoke=args.smoke, device=args.device)
+    arch = train_and_save(
+        seed=args.seed,
+        smoke=args.smoke,
+        device=args.device,
+        checkpoint_dir=args.checkpoint_dir,
+        lr=args.lr,
+        clip_eps=args.clip_eps,
+    )
     print(
         f'DONE team_preview_qd_pga cov={arch.coverage():.3f} '
         f'cells={len(arch.cells)}',

@@ -2,199 +2,286 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.3** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.15) |
+| **Documento** | Contrato exclusivo — MCTS–PUCT/Nash simultáneo (solo turnos) |
+| **Versión** | **1.5** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.16) |
 | **Estado** | FROZEN; `showdown/rl/mcts_puct_nash/` |
-| **Training** | **No**: planificación en tiempo de decisión, sin gradientes |
-| **CLI** | `python -m showdown.rl.mcts_puct_nash --seed 0 --sims 8 --smoke` |
-| **Dependencias** | NumPy; reutiliza el simulador S2 de MCTS estándar |
+| **Training** | **No**: sin gradientes ni `.pt` de combate |
+| **Ajuste** | Presupuesto \(N_{\rm sim}\), Top-K, FP; barrido automatizado de sims |
+| **CLI smoke** | `python -m showdown.rl.mcts_puct_nash --seed 0 --sims 8 --smoke` |
+| **CLI barrido** | `python -m showdown.inference_sim.run_mcts_sims_sweep --agent mcts_puct_nash ...` |
+| **Env presupuesto** | `MCTS_NASH_SIMS` (fallback `MCTS_SIMS`; default config `50`) |
+| **Dependencias** | NumPy; reutiliza S2 de `mcts_puct` |
 
-## Por qué existe
+> **Para quien aprende IA.** En VGC ambos eligen a la vez. Este agente no asume
+> un rival al azar “después” de ti: mantiene una **tabla** (matriz) de “mi
+> jugada × su jugada”, la rellena con simulaciones y resume cada nodo con un
+> equilibrio aproximado (Nash / Fictitious Play). Sigue sin entrenar una red.
 
-VGC es simultáneo: ambos jugadores eligen sin conocer la orden actual del otro.
-El MCTS open-loop aproxima al rival con una muestra uniforme. Esta variante
-mantiene una matriz entre acciones propias y rivales, explora celdas con PUCT y
-resume cada nodo mediante un equilibrio cero-suma aproximado. Así pregunta “¿qué
-mezcla resiste una buena respuesta?” y no solo “¿qué gana contra azar?”.
+---
 
-## Glosario
+## 1. Por qué existe
+
+El MCTS open-loop ([`mcts_puct_spec.md`](mcts_puct_spec.md)) samplea al rival de
+forma uniforme al expandir. Aquí se pregunta: *¿qué mezcla mía resiste una buena
+respuesta suya?* Explora **celdas** \((i,j)\) con PUCT y hace backup del valor
+de la matriz resuelta, no solo de una muestra open-loop.
+
+**Analogía:** no solo “¿qué pasa si yo hago A y el mundo tira un dado?”, sino
+“si yo mezclo A/B y él responde bien, ¿quedo cubierto?”.
+
+Preview familiar en Conclusión: [`team_preview_nash_spec.md`](team_preview_nash_spec.md)
+(otro Nash: formación, no turnos).
+
+---
+
+## 2. Glosario
 
 | Término | Significado |
 |---|---|
 | Celda \((i,j)\) | Acción propia Top-K contra acción rival Top-K |
-| \(\hat A\) | Matriz empírica de retornos medios |
-| Top-K | Recorte greedy de acciones legales por lado |
-| Fictitious Play | Aproximación iterativa de estrategias mixtas |
-| \(\sigma,\tau\) | Mezclas propia y rival |
-| Valor Nash | \(\sigma^\top\hat A\tau\) usado en backup |
+| \(n_{ij}\) | Visitas de la celda (análogo a \(N\) por celda) |
+| \(W_{ij}\) | Suma de retornos en la celda |
+| \(\hat A_{ij}=W_{ij}/n_{ij}\) | Media empírica (análogo a \(Q\) por celda) |
+| Top-K | Recorte greedy de joints legales por lado |
+| Fictitious Play (FP) | Aproxima mezclas \((\sigma,\tau)\) y valor \(v=\sigma^\top\hat A\tau\) |
+| PUCT (celdas) | Explora celdas poco visitadas de la matriz |
+| \(N_{\rm sim}\) | Sims por decisión de turno (llena celdas) |
 | SM-MCTS | Árbol para movimientos simultáneos |
 
-## Algoritmo paso a paso
+---
 
-1. Desde el snapshot se ordenan joints legales y se retienen hasta 16 por lado;
-   para el rival se usa el snapshot volteado.
-2. El nodo crea una matriz de celdas y prior uniforme \(1/(|I||J|)\).
-3. PUCT selecciona una celda \((i,j)\), priorizando celdas sin visitar.
-4. S2 aplica simultáneamente ambas acciones.
-5. En terminal se toma Candidate 1; en hoja nueva se hace rollout greedy joint.
-6. La celda profunda recibe la muestra \(z\).
-7. Fictitious Play resuelve la matriz estimada; su valor sube a los ancestros.
-8. En la raíz se resuelve con más iteraciones y se juega
-   \(\arg\max_i\sigma_i\).
+## 3. Qué son \(Q\)/\(N\) aquí (celdas de la matriz)
 
-El Top-K limita una matriz que, sin recorte, podría combinar cientos de acciones
-por lado. Empates del ranking se resuelven por id joint menor.
+### 3.1 Misma idea que open-loop, otra unidad
 
-### Intuición matricial
+En open-loop, \(N\) y \(Q\) viven en **aristas propias**.  
+En MCTS–Nash viven en **celdas** \((i,j)\):
 
-En un nodo simultáneo no basta preguntar qué acción propia tiene mayor media:
-el rival puede responder. La matriz \(\hat A_{ij}=W_{ij}/n_{ij}\) estima el
-retorno de cada pareja. Fictitious Play aproxima mezclas
-\((\sigma,\tau)\) y el valor
-\[
-v=\sigma^\top\hat A\tau.
-\]
-Una mezcla es útil cuando ninguna acción pura cubre todas las respuestas. El
-backup no propaga ciegamente la última celda: tras actualizarla, vuelve a
-resolver la matriz del nodo y entrega su valor al ancestro.
+| Open-loop | Nash (esta spec) |
+|---|---|
+| Arista acción propia \(a\) | Celda (mi joint \(i\), su joint \(j\)) |
+| \(N(s,a)\) | \(n_{ij}\) |
+| \(Q(s,a)=W/N\) | \(\hat A_{ij}=W_{ij}/n_{ij}\) |
 
-Las celdas no visitadas tienen prioridad de expansión. Después PUCT combina su
-media con prior uniforme por celda. Top-K reduce el producto cartesiano de hasta
-576×576, a costa de excluir respuestas cuyo score greedy previo sea bajo.
+**Tampoco se entrenan:** se reinician con cada árbol de turno. No hay checkpoint
+neural de combate.
+
+### 3.2 Por qué la matriz necesita más que un \(Q\) propio
+
+Una acción propia con buen promedio contra un rival aleatorio puede ser
+explotable. Tras actualizar una celda, el nodo **resuelve** la matriz y sube el
+valor Nash aproximado a los ancestros. La decisión de raíz juega
+\(\arg\max_i \sigma_i\) (masa de la mezcla propia), no \(\arg\max N\) de una
+sola arista open-loop.
+
+### 3.3 Ejemplo intuición \(n\) y \(\hat A\)
+
+Si una celda tiene \(\hat A_{ij}=1\) con \(n_{ij}=1\), es una victoria suelta:
+puede deformar la mezcla. Más \(N_{\rm sim}\) reparte visitas y estabiliza
+\(\hat A\). Más iteraciones FP estabilizan \((\sigma,\tau)\) **dado** ese
+contenido (otro knob, no sustituye sims).
+
+Para el aprendiz: cada casilla de la tabla es un “mini \(Q\)”; \(n_{ij}\) dice
+cuántas veces se miró esa casilla; el Nash resume la tabla entera.
+
+### 3.4 Mini-ejemplo de mezcla
+
+Para
+\(\hat A=\begin{bmatrix}1&-1\\-1&1\end{bmatrix}\),
+jugar siempre una fila permite al rival castigar. \(\sigma\approx(0.5,0.5)\)
+hace indiferente al rival (valor ~0). Con pocas muestras, una celda ruidosa
+tuerce \(\sigma\); con más sims la tabla se llena.
+
+---
+
+## 4. Algoritmo paso a paso
+
+1. Ordenar joints legales; Top-K (hasta 16) por lado (rival = snapshot volteado).
+2. Crear matriz de celdas; prior uniforme \(1/(|I||J|)\).
+3. Por cada simulación:
+   - Elegir celda no visitada o PUCT sobre celdas.
+   - S2 aplica ambas joints a la vez.
+   - Terminal → Candidate 1; hoja nueva → rollout greedy joint.
+   - Actualizar \(n_{ij},W_{ij}\); FP interno (~200 it.) en ancestros.
+4. Tras \(N_{\rm sim}\): FP raíz (~500 it.) → jugar \(\arg\max_i\sigma_i\).
+
+Top-K evita matrices hasta \(576\times576\). Empates de ranking: joint id menor.
 
 ### Ciclo de presupuesto
 
-1. Se crean \(I(s)\) y \(J(s)\), ordenados por score y joint id.
-2. La raíz contiene hasta \(K^2=256\) celdas.
-3. Cada simulación elige una celda no probada o usa PUCT.
-4. S2 ejecuta ambas joints simultáneamente y crea un hijo.
-5. Una hoja no terminal se completa con rollout greedy.
-6. La celda recibe \(z\); cada ancestro resuelve FP interno de 200 iteraciones.
-7. Tras 50 simulaciones, la raíz ejecuta FP de 500 iteraciones.
-8. Se juega el joint de máxima masa en \(\sigma\), con desempate por id menor.
+Costo = `step_sim` **más** solves FP. Comparar solo \(N_{\rm sim}\) con open-loop
+**no** iguala tiempo de pared. Default config: **50** sims (`8` smoke).
 
-El coste combina transiciones S2 y solves repetidos. Por eso comparar solo
-`n_sims` con MCTS open-loop no iguala necesariamente tiempo de pared.
+---
 
-## Observación, acción y máscaras
+## 5. Observación, acción y máscaras
 
-La interacción real sigue [`rl_env_spec.md`](rl_env_spec.md); el árbol consume
-`BattleSnapshot`, no Obs 1024D. Solo entran joints legales. Mega se conserva y
-Tera id 22 permanece enmascarada. La recompensa de hoja es Candidate 1 para que
-la matriz mantenga interpretación cero-suma.
+Live: [`rl_env_spec.md`](rl_env_spec.md). Árbol sobre `BattleSnapshot`. Solo
+joints legales; Mega ok; Tera 22 off. Hojas Candidate 1.
 
-## Búsqueda e inferencia
+**No hay Team Preview en este MDP de combate.** Preview familiar congelado:
+[`team_preview_nash`](team_preview_nash_spec.md) vía `frozen_preview`
+(`MCTSPuctNashPlayer`); fallback `/team 1234` si falta checkpoint.
 
-No hay entrenamiento ni checkpoint neural. La CLI implementada es un smoke; el
-presupuesto real se configura en `MCTSPuctNashConfig`. S2, ranking Top-K, rollout
-y solver permanecen fijos durante evaluación.
+---
+
+## 6. “Mejorar” sin entrenamiento
+
+| Palanca | Efecto |
+|---|---|
+| \(N_{\rm sim}\) | Más cobertura de celdas; meseta WR/tiempo |
+| Top-K | Más cobertura estratégica; costo cuadrático en K |
+| FP it. | Mezcla más estable; CPU por nodo |
+| Ranking Top-K | Qué joints entran (cambio de agente) |
+
+### 6.1 Meseta de \(N_{\rm sim}\)
+
+Misma filosofía que open-loop, **rejilla propia** (más cara): default
+`25,50,100,200`. Env: `MCTS_NASH_SIMS`.
+
+### 6.2 Barrido automatizado
+
+```bat
+python -m showdown.inference_sim.run_mcts_sims_sweep --agent mcts_puct_nash ^
+    --player-b greedy_joint --seed 10 --teams 40 ^
+    --delta-wr-pp 1.5 --time-ratio 1.8 --metric wr_raw --start-ps
+```
+
+Ambos agentes:
+
+```bat
+python -m showdown.inference_sim.run_mcts_sims_sweep --agent both ^
+    --player-b greedy_joint --seed 10 --teams 40 --start-ps
+```
+
+| Parámetro CLI | Default | Propósito | Cómo influye |
+|---|---:|---|---|
+| `--agent` | `both` / `mcts_puct_nash` | Qué barrer | Nash usa grilla más corta por costo FP |
+| `--player-b` | `greedy_joint` | Rival robust e2e | Fijar al reportar meseta |
+| `--seed` | `10` | Repro + `MCTS_NASH_SEED` | Cambia curva, no metodología |
+| `--teams` | `40` | Tamaño batch | Precisión vs horas |
+| `--sims` | `25,50,100,200` | Rejilla | Vacío = default Nash |
+| `--delta-wr-pp` | `1.5` | Umbral de mejora WR | Criterio de meseta |
+| `--time-ratio` | `1.8` | Factor tiempo | Meseta si el salto es caro y poco ganancia |
+| `--metric` | `wr_raw` | Métrica | `pair_wr` opcional |
+| `--dry-run` | off | Sin PS | Prueba criterio/tabla |
+
+Por punto: `MCTS_NASH_SIMS=<N>` + robust e2e `--player-a mcts_puct_nash`.
+
+#### Tracking del barrido
+
+Igual que open-loop: solo varía `n_sims`; Top-K / FP / \(c\) se registran como
+congelados. Artefactos:
+
+| Artefacto | Rol |
+|-----------|-----|
+| `..._mcts_puct_nash_history.jsonl` | Eventos `hyperparam_step` + decisión final |
+| `..._mcts_puct_nash_progress.json` | Progreso vivo |
+| `..._mcts_puct_nash_tracking.txt` | Seguimiento legible prev→nuevo N, ΔWR, time_ratio |
+| `..._mcts_puct_nash.{txt,json}` | Resumen + tracking embebido |
+| `logs/figures/mcts_puct_nash_sims_sweep_latest.svg` | WR vs paso (figura real al DONE) |
+
+Código: `mcts_sims_sweep.py` + `run_mcts_sims_sweep.py`.  
+Tests: `tests/test_mcts_sims_sweep.py`.
+
+Congelar el \(N_{\rm sim}\) recomendado antes de Conclusión.
 
 ```bat
 python -m showdown.rl.mcts_puct_nash --seed 0 --sims 8 --smoke
 ```
 
-Subir simulaciones mejora el muestreo de celdas, pero cada nodo también requiere
-resolver Fictitious Play. Para comparar con MCTS open-loop conviene reportar
-tanto defaults nativos como costo equivalente en llamadas a `step_sim`.
+---
 
-### Mini-ejemplo
-
-Para \(\hat A=\begin{bmatrix}1&-1\\-1&1\end{bmatrix}\), escoger siempre una
-fila permite al rival elegir la columna perdedora. La mezcla aproximada
-\(\sigma=(0.5,0.5)\) hace indiferente al rival y produce valor cercano a cero.
-Con pocas muestras, una celda ruidosa puede deformar la mezcla; más sims llenan
-la matriz, mientras más iteraciones FP estabilizan el solve dado ese contenido.
-
-## Hiperparámetros
+## 7. Hiperparámetros de búsqueda
 
 | Parámetro | Valor | Propósito | Cómo influye |
 |---|---:|---|---|
-| \(N_{\rm sim}\) | `50` (`8` smoke) | Presupuesto por decisión | Más llena mejor la matriz y cuesta más |
+| \(N_{\rm sim}\) | `50` (`8` smoke) | Presupuesto por decisión | Más llena la matriz; barrer hasta meseta |
 | \(c\) PUCT | `1.5` | Explorar celdas | Mayor dispersa visitas |
-| \(K\) | `16` | Acotar matriz | Mayor cubre más y multiplica celdas |
-| FP interno | `200` | Valor de nodos | Más iteraciones estabilizan backup |
-| FP raíz | `500` | Mezcla jugada | Reduce error de la decisión final |
+| \(K\) | `16` | Acotar matriz | Mayor cubre más; hasta \(K^2\) celdas |
+| FP interno | `200` | Valor de nodos | Estabiliza backup |
+| FP raíz | `500` | Mezcla jugada | Reduce error de decisión |
 | Ventana FP | `50` | Promedio final | Suaviza oscilaciones |
-| \(\varepsilon_{\rm opt}\) | `1e-6` | Empates óptimos | Controla selección max-entropía |
-| Prior | uniforme por celda | Inicio neutral | No usa red previa |
-| Samples/visita | `1` | Actualización online | Más reduciría ruido con mayor costo |
-| Max turns | `40` | Acotar simulación | Limita profundidad |
-| Descuento | `1` | Backup Candidate 1 | Conserva escala cero-suma |
-| RNG | seed+turn+sim | Reproducibilidad | Controla azar de S2 y rollout |
-| Acción final | `argmax σ` | Convertir mezcla en orden | Desempata por joint id menor |
+| \(\varepsilon_{\rm opt}\) | `1e-6` | Empates óptimos | Max-entropía en óptimos |
+| Prior | uniforme por celda | Inicio neutral | Sin red |
+| Samples/visita | `1` | Update online | Más reduce ruido a más costo |
+| Max turns | `40` | Acotar sim | Profundidad |
+| Descuento | `1` | Backup Cand. 1 | Escala cero-suma |
+| RNG | seed+turn+sim | Repro | Azar S2 |
+| Acción final | `argmax σ` | Orden jugable | Desempate joint id |
 
-## Ilegales, máscaras y fallos
+---
 
-- Top-K se calcula después de filtrar legalidad; nunca rehabilita una ilegal.
-- Tera 22 permanece fuera y Mega depende del snapshot.
-- Si \(I\) queda vacío, se retorna `(pass, pass)`; matrices vacías valen cero.
-- L1 del adaptador live puede aplicar fallback seguro y observable.
-- L2 invalida la decisión por desync; no se trata como muestra de Nash.
-- Una excepción de simulación propaga cero por la ruta y suma `failures`.
-- FP aproximado no garantiza equilibrio exacto; su error es error de búsqueda.
-- L3/crash aborta de acuerdo con `rl_env_spec`.
+## 8. Ilegales, máscaras y fallos
 
-## Training frente a inferencia
+- Top-K tras filtrar legalidad; nunca rehabilita ilegales.
+- Tera 22 fuera; Mega según snapshot.
+- \(I\) vacío → `(pass, pass)`; matriz vacía → valor 0.
+- L1/L2/L3 como en open-loop / `rl_env_spec`.
+- Fallo S2 → cero + `failures`.
+- FP aproximado ≠ equilibrio exacto.
 
-Todo ocurre en inferencia: construir árbol, simular, resolver matrices y elegir
-la mezcla. “Presupuesto” significa simulaciones y solver por turno, no épocas.
-No se debe presentar el smoke como entrenamiento ni como checkpoint aprendido.
+---
 
-En desarrollo se evalúan exploitabilidad aproximada, estabilidad de
-\(\sigma\), cobertura de celdas, fidelidad S2↔S1 y latencia. La **Conclusion
-eval** congela K, simulaciones, FP, ranking, seed policy y rollout; agrega
-resultados con el protocolo común y no aprende de partidas previas.
+## 9. Training frente a inferencia
 
-## Team Preview y Conclusión
+Todo es inferencia. “Presupuesto” = sims + solver por turno. El smoke no es
+entrenamiento. Conclusión congela K, sims, FP, ranking, seed y rollout.
+Protocolo: [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
-**No hay Team Preview en el MDP de combate.** El pipeline familiar es
-**`team_preview_nash` → MCTS–PUCT/Nash de combate**.
-Aunque ambos dicen Nash, resuelven problemas distintos: uno selecciona el equipo
-en preview; el otro resuelve matrices locales dentro del árbol de combate.
-Detalles del round-robin: [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
+---
 
-## Mapa de código
+## 10. Team Preview y Conclusión
+
+Pipeline familiar: **`team_preview_nash` → MCTS–PUCT/Nash combate**
+(cableado en train live e inferencia; no solo en el registro de Conclusión).
+Mismo apellido “Nash”, problemas distintos (formación vs matrices locales).
+
+---
+
+## 11. Mapa de código
 
 | Archivo | Responsabilidad |
 |---|---|
-| `showdown/rl/mcts_puct_nash/agent.py` | configuración y acción |
-| `showdown/rl/mcts_puct_nash/search.py` | SM-MCTS y backup Nash |
-| `showdown/rl/mcts_puct_nash/tree.py` | matrices, celdas y PUCT |
-| `showdown/rl/mcts_puct_nash/nash.py` | Fictitious Play, ventana y epsilon |
-| `showdown/rl/mcts_puct_nash/topk.py` | ranking Top-K estable |
-| `showdown/rl/mcts_puct/simulator.py` | transición S2 compartida |
-| `showdown/rl/mcts_puct_nash/player.py` | adaptador validado |
-| `showdown/battle_bots/mcts_puct_nash/pokeenv_player.py` | integración live |
+| `showdown/rl/mcts_puct_nash/agent.py` | config / acción |
+| `showdown/rl/mcts_puct_nash/search.py` | SM-MCTS + backup |
+| `showdown/rl/mcts_puct_nash/tree.py` | matrices, celdas, PUCT |
+| `showdown/rl/mcts_puct_nash/nash.py` | Fictitious Play |
+| `showdown/rl/mcts_puct_nash/topk.py` | ranking Top-K |
+| `showdown/rl/mcts_puct/simulator.py` | S2 compartido |
+| `showdown/rl/mcts_puct_nash/player.py` | poke-env + `MCTS_NASH_SIMS` |
+| `showdown/inference_sim/mcts_sims_sweep.py` | meseta |
+| `showdown/inference_sim/run_mcts_sims_sweep.py` | CLI barrido |
 
-## Limitaciones
+---
 
-- Top-K puede excluir una respuesta decisiva con score greedy bajo.
-- Resolver muchas matrices reduce el número asequible de simulaciones.
-- Fictitious Play es aproximado; su error entra en cada backup.
-- S2 y rollout greedy conservan sesgo de modelo.
-- No realiza belief search de información imperfecta estilo póker.
-- Tera está fuera del formato.
+## 12. Limitaciones
 
-## Lectura de telemetría
+- Top-K puede excluir respuestas con score greedy bajo.
+- Muchos solves FP limitan sims asequibles.
+- FP aproximado propaga error en cada backup.
+- Sesgo S2 + rollout greedy.
+- No es belief search de información imperfecta estilo póker.
+- Tera off.
 
-Además de sims, nodos, fallos y profundidad, conviene inspeccionar la entropía
-de \(\sigma\) y cuántas celdas de la raíz recibieron visitas. Una mezcla casi
-uniforme puede representar simetría real o falta de presupuesto; la matriz
-\(\hat A\) y sus conteos permiten distinguir ambos casos.
+---
 
-El valor Nash estimado no es una probabilidad de victoria calibrada. Es retorno
-Candidate 1 bajo S2, Top-K y FP aproximado. Comparar configuraciones requiere
-congelar K y contabilizar tanto `step_sim` como iteraciones del solver. Un
-`failures>0` se reporta por separado y nunca se celebra como regularización.
+## 13. Lectura de telemetría
 
-También se conserva la seed y el turno para reproducir el RNG de cada sim.
-La masa de \(\sigma\) se interpreta junto a los ids Top-K efectivamente
-incluidos, no contra el espacio joint completo.
+Además de sims/nodos/fallos: entropía de \(\sigma\), fracción de celdas raíz
+visitadas, y conteos \(n_{ij}\). Valor Nash ≠ probabilidad calibrada de victoria.
+Comparar configs congelando K y midiendo `step_sim` + tiempo FP. Conservar seed
+y turno.
+
+---
 
 ## Changelog
 
 | Versión | Fecha | Notas |
 |---|---|---|
-| **1.3** | 2026-10-11 | Matemática matricial, presupuesto, fallos, evaluación, code map y ejemplo. |
-| **1.2** | 2026-10-11 | Guía dual-audience, search-time budget y composición Nash-preview. |
+| **1.5** | 2026-10-11 | Inferencia bajo Preview Nash congelado (`frozen_preview`). |
+| **1.4** | 2026-10-11 | §Q/N por celdas; meseta \(N_{\rm sim}\); CLI sweep; rival/seed/criterio; **tracking** de cambios de N_sim. |
+| **1.3** | 2026-10-11 | Matemática matricial, presupuesto, fallos, code map. |
+| **1.2** | 2026-10-11 | Dual-audience; Nash-preview. |
 | **1.1** | 2026-10-10 | Lectura pedagógica. |
 | **1.0** | 2026-10-10 | Contrato SM-MCTS B1. |

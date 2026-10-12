@@ -8,6 +8,7 @@ from poke_env.battle import AbstractBattle, DoubleBattle
 from poke_env.player import Player
 from poke_env.player.battle_order import BattleOrder, DefaultBattleOrder
 
+from showdown.rl.family_preview_mixin import FamilyPreviewMixin
 from showdown.rl.observation import build_observation_ppo
 from showdown.rl.pe_adapter import (
     joint_order_from_spec_actions,
@@ -17,8 +18,10 @@ from showdown.rl.pe_adapter import (
 from showdown.rl.qd_ppo.agent import QDPPOAgent
 
 
-class QDPPOPlayer(Player):
-    """Fixed Export Order `/team 1234` + best-elite QD-PPO policy."""
+class QDPPOPlayer(FamilyPreviewMixin, Player):
+    """Frozen ``team_preview_qd_pga`` + best-elite QD-PPO policy."""
+
+    _combat_family_id = 'qd_ppo'
 
     def __init__(
         self,
@@ -26,6 +29,8 @@ class QDPPOPlayer(Player):
         checkpoint: Optional[str] = None,
         archive_path: Optional[str] = None,
         greedy: bool = True,
+        preview_checkpoint: Optional[str] = None,
+        preview_kind: Optional[str] = None,
         **kwargs,
     ):
         kwargs.setdefault('accept_open_team_sheet', True)
@@ -36,9 +41,10 @@ class QDPPOPlayer(Player):
             archive_path=archive_path or os.environ.get('QD_PPO_ARCHIVE'),
         )
         self.last_actions = (0, 0)
-
-    def teampreview(self, battle: AbstractBattle) -> str:
-        return '/team 1234'
+        self.init_family_preview(
+            preview_checkpoint=preview_checkpoint,
+            preview_kind=preview_kind,
+        )
 
     def choose_move(self, battle: AbstractBattle) -> BattleOrder:
         assert isinstance(battle, DoubleBattle)

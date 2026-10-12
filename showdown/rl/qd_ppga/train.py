@@ -61,6 +61,7 @@ def _make_env(*, mock: bool, seed: int, start_ps: bool) -> VGCEnv:
             opponent='random',
             start_ps=start_ps,
             account_prefix='QdPpga',
+            combat_family='qd_ppga',
         )
     return VGCEnv(
         reward_candidate=RewardCandidate.DENSE,
@@ -96,6 +97,8 @@ def run_training(
     log_every: int = 5_000,
     log_every_sec: float = 60.0,
     suite_games: Optional[int] = None,
+    lr: Optional[float] = None,
+    clip_eps: Optional[float] = None,
 ) -> Archive:
     assert float(P_MUT) == 0.0, 'QD-PPGA forbids genetic mutation'
     if smoke:
@@ -109,10 +112,12 @@ def run_training(
         log_every = min(int(log_every), 256)
         log_every_sec = min(float(log_every_sec), 15.0)
 
+    actor_lr = 3e-4 if lr is None else float(lr)
+    actor_clip = 0.2 if clip_eps is None else float(clip_eps)
     cfg = PPOConfig(
         seed=seed, device=device, rollout_steps=t_emit,
         epochs=k_pg, gamma=0.95, gae_lambda=0.95,
-        ent_coef=0.01, vf_coef=0.5, lr=3e-4, clip_eps=0.2,
+        ent_coef=0.01, vf_coef=0.5, lr=actor_lr, clip_eps=actor_clip,
     )
     agent = PPOAgent(cfg)
     if bc_checkpoint:
@@ -379,6 +384,8 @@ def main(argv=None) -> int:
         '--suite-games', type=int, default=None,
         help='BO1 per foe on π* (default 20; 0=skip; smoke default 0; use 200 for full suite)',
     )
+    p.add_argument('--lr', type=float, default=None, help='Override actor PPOConfig.lr')
+    p.add_argument('--clip-eps', type=float, default=None, help='Override actor PPOConfig.clip_eps')
     args = p.parse_args(argv)
     run_training(
         seed=args.seed,
@@ -391,6 +398,8 @@ def main(argv=None) -> int:
         start_ps=args.start_ps,
         bc_checkpoint=args.bc_checkpoint,
         suite_games=args.suite_games,
+        lr=args.lr,
+        clip_eps=args.clip_eps,
     )
     return 0
 

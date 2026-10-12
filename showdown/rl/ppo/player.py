@@ -9,6 +9,7 @@ from poke_env.battle import AbstractBattle, DoubleBattle
 from poke_env.player import Player
 from poke_env.player.battle_order import BattleOrder, DefaultBattleOrder
 
+from showdown.rl.family_preview_mixin import FamilyPreviewMixin
 from showdown.rl.observation import build_observation_ppo
 from showdown.rl.pe_adapter import (
     joint_order_from_spec_actions,
@@ -18,14 +19,24 @@ from showdown.rl.pe_adapter import (
 from showdown.rl.ppo.agent import PPOAgent, PPOConfig
 
 
-class PPOPlayer(Player):
+class PPOPlayer(FamilyPreviewMixin, Player):
     """
     poke-env player driven by a Masked PPO checkpoint.
 
-    Team preview: Fixed Export Order `/team 1234` (PPOSpec).
+    Team preview: frozen ``team_preview_ppo`` (fallback ``/team 1234``).
     """
 
-    def __init__(self, *args, checkpoint: Optional[str] = None, greedy: bool = True, **kwargs):
+    _combat_family_id = 'ppo'
+
+    def __init__(
+        self,
+        *args,
+        checkpoint: Optional[str] = None,
+        greedy: bool = True,
+        preview_checkpoint: Optional[str] = None,
+        preview_kind: Optional[str] = None,
+        **kwargs,
+    ):
         kwargs.setdefault('accept_open_team_sheet', True)
         super().__init__(*args, **kwargs)
         self.greedy = bool(greedy)
@@ -35,9 +46,10 @@ class PPOPlayer(Player):
         if self.checkpoint_path and Path(self.checkpoint_path).is_file():
             self.agent.load(self.checkpoint_path)
         self.last_actions = (0, 0)
-
-    def teampreview(self, battle: AbstractBattle) -> str:
-        return '/team 1234'
+        self.init_family_preview(
+            preview_checkpoint=preview_checkpoint,
+            preview_kind=preview_kind,
+        )
 
     def choose_move(self, battle: AbstractBattle) -> BattleOrder:
         assert isinstance(battle, DoubleBattle)

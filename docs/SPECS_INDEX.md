@@ -59,6 +59,24 @@ En las specs enriquecidas, los hiperparámetros usan:
 ## Entrenamiento vs inferencia (resumen)
 
 - **Heurísticas:** no entrenan; la “calidad” es el diseño de reglas.
-- **Preview RL / QD:** entrenan con \(\pi_c\) de combate **congelado** (default `greedy_joint`).
-- **DDQN / PPO / QD combate:** entrenan pesos; en Conclusión se carga el último checkpoint.
+- **Orden familiar:** (1) train preview → (2) train combate **bajo** ese preview congelado (`frozen_preview.py`).
+- **Preview RL / QD:** entrenan con \(\pi_c\) de combate **congelado** (default `greedy_joint`); persisten `final.pt` / `archive.pt`.
+- **DDQN / PPO / QD combate:** entrenan pesos bajo preview familiar; live `PokeEnvBattleBackend(combat_family=…)`.
+- **Pairing:** PPO-preview→DDQN/PPO; Nash-preview→MCTS*; QD-PGA-preview→QD-*.  
+- **Tune HP (pesos vs knobs):**  
+  - DDQN: `python -m showdown.inference_sim.run_ddqn_hp_tune`  
+  - PPO combate: `python -m showdown.inference_sim.run_ppo_hp_tune`  
+  - Preview PPO: `python -m showdown.inference_sim.run_team_preview_ppo_hp_tune`  
+  - Preview Nash: `python -m showdown.inference_sim.run_team_preview_nash_hp_tune` (`lr`; score `-loss`)  
+  - Preview QD-PGA: `python -m showdown.inference_sim.run_team_preview_qd_pga_hp_tune` (`lr`/`clip_eps`; score `best_f`)  
+  - QD-PPO / QD-PGA / QD-PPGA: `run_qd_{ppo,pga,ppga}_hp_tune` (actor `lr`/`clip_eps`; tracking `prev→new`)  
+  - Expectimax (heurístico): `python -m showdown.inference_sim.run_expectimax_tune`  
 - **MCTS / MCTS–Nash:** no hay gradientes; se congela el **presupuesto de búsqueda** (`n_sims`, etc.).
+  Barrido de meseta: `python -m showdown.inference_sim.run_mcts_sims_sweep --agent both ...`
+  (ver §6 de [`mcts_puct_spec`](mcts_puct_spec.md) / [`mcts_puct_nash_spec`](mcts_puct_nash_spec.md)).
+- **Figuras reales (tune/train):** al cerrar un tune/sweep se escriben SVG (+ PNG si hay matplotlib) en
+  `logs/figures/` y se **append** a `logs/figures/hp_tune_ledger.jsonl` (histórico tesis).
+  Regenerar: `python -m showdown.inference_sim.run_plot_tune_history --all`
+  UI: Streamlit **Figuras y tune** (`streamlit run showdown/ui/app.py`) y
+  mock + galería [`thesis_figures_mock/`](thesis_figures_mock/README.md)
+  (pestañas Pipelines / Tune HP / Figuras reales).

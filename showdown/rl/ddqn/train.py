@@ -173,6 +173,7 @@ def _make_env(opponent: str, *, seed: int, start_ps: bool) -> VGCEnv:
             opponent=opponent,
             start_ps=start_ps,
             account_prefix=f'Ddqn{opponent[:4].title()}',
+            combat_family='ddqn',
         )
     return VGCEnv(
         reward_candidate=RewardCandidate.DENSE,
@@ -303,12 +304,18 @@ def run_training(
     weight_overrides: Optional[Dict[str, float]] = None,
     suite_games: Optional[int] = None,
     smoke: bool = False,
+    lr: Optional[float] = None,
+    gamma: Optional[float] = None,
 ) -> DDQNAgent:
     if not schedule:
         raise ValueError('schedule vacío')
 
     weights = merge_weights(weight_overrides)
     cfg = DDQNConfig(seed=seed, device=device)
+    if lr is not None:
+        cfg.lr = float(lr)
+    if gamma is not None:
+        cfg.gamma = float(gamma)
     agent = DDQNAgent(cfg)
     rng = np.random.default_rng(int(seed) + 17)
     ckpt_dir = Path(checkpoint_dir)
@@ -411,6 +418,8 @@ def run_training(
                 'expand_omega': bool(expand_omega),
                 'weights': weights,
                 'schedule': [asdict(p) for p in schedule],
+                'lr': float(cfg.lr),
+                'gamma': float(cfg.gamma),
             },
             metrics={
                 'env_steps': agent.env_steps,
@@ -535,6 +544,8 @@ def main(argv: Optional[list] = None) -> int:
         help='BO1 per foe for offline suite (default 20; 0=skip; smoke default 0)',
     )
     p.add_argument('--smoke', action='store_true', help='Treat as smoke (suite default 0)')
+    p.add_argument('--lr', type=float, default=None, help='Override DDQNConfig.lr')
+    p.add_argument('--gamma', type=float, default=None, help='Override DDQNConfig.gamma')
     args = p.parse_args(argv)
 
     schedule = resolve_schedule(
@@ -567,6 +578,8 @@ def main(argv: Optional[list] = None) -> int:
         weight_overrides=overrides or None,
         suite_games=args.suite_games,
         smoke=bool(args.smoke),
+        lr=args.lr,
+        gamma=args.gamma,
     )
     return 0
 

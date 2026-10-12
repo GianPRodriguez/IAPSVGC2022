@@ -858,9 +858,12 @@ def make_opponent_player(
     account_configuration: AccountConfiguration,
     battle_format: str,
     server_configuration=LocalhostServerConfiguration,
+    preview_checkpoint: Optional[str] = None,
+    preview_kind: Optional[str] = None,
+    checkpoint: Optional[str] = None,
 ) -> Player:
     cls = opponent_player_class(kind)
-    return cls(
+    kwargs = dict(
         account_configuration=account_configuration,
         battle_format=battle_format,
         team=to_showdown_export(team),
@@ -869,3 +872,16 @@ def make_opponent_player(
         max_concurrent_battles=1,
         log_level=30,
     )
+    # Family combat players accept frozen preview + optional combat ckpt.
+    key = str(kind or '').strip().lower().replace('-', '_')
+    if key in {
+        'ddqn', 'ppo', 'qd_ppo', 'qd_pga', 'qd_ppga',
+        'mcts_puct', 'mcts_puct_nash',
+    }:
+        if preview_checkpoint is not None:
+            kwargs['preview_checkpoint'] = preview_checkpoint
+        if preview_kind is not None:
+            kwargs['preview_kind'] = preview_kind
+        if checkpoint is not None:
+            kwargs['checkpoint'] = checkpoint
+    return cls(**kwargs)

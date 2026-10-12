@@ -71,4 +71,21 @@ if a != b:
 else:
     st.warning('Elige dos agentes distintos para comparar.')
 
-st.caption('v1: aleatorio, greedy solo, greedy joint, expectimax. PPO / QD-PPO / MCTS llegarán en otra versión de la UI.')
+st.divider()
+with st.expander('Familias de tesis (preview → combate)', expanded=False):
+    st.markdown(
+        """
+Además de estos rivales heurísticos, el trabajo de tesis arma bots en tres familias.
+Cada una congela primero un **Team Preview** y luego entrena/juega el combate:
+
+| Familia | Preview | Combate |
+|---------|---------|---------|
+| Aprendizaje | Masked PPO | DDQN, PPO |
+| Planificación | Payoff Nash | MCTS+PUCT, MCTS–Nash |
+| Diversidad | QD-PGA | QD-PPO, QD-PGA, QD-PPGA |
+
+Figuras de tune e histórico: menú **Figuras y tune**, o
+`docs/thesis_figures_mock/index.html`.
+"""
+    )
+st.caption('v1 en Jugar/Lab: aleatorio, greedy solo/joint, expectimax. Familias RL/MCTS/QD: ver Figuras y tune.')

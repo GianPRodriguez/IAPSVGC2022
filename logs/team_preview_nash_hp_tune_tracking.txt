@@ -1,0 +1,15 @@
+=== RL HP tune tracking (team_preview_nash) ===
+run_id: team_preview_nash_20261012T051152Z_ec47ba70
+frozen_defaults: {'grad_clip': 0.5, 'epochs': 4, 'loss': 'bce', 'solver_timeout_s': 0.2, 'pi_c': 'greedy_joint', 'note': 'Varying: lr; independent of MCTS combat trains'}
+criteria: maximize MEAN_SCORE (-loss proxy on mock); accept if improves best; independent of MCTS
+
+--- trial log (prev -> new HP) ---
+1. {'lr': 0.0001} -> score=0.4800 ACCEPT t=0.0s rc=0
+   param_change: lr: (start)->0.0001
+   note: dry_run_fake_score
+2. {'lr': 0.0003} -> score=0.5000 ACCEPT t=0.0s rc=0 [BEST]
+   param_change: lr: 0.0001->0.0003 (d=0.00019999999999999998)
+   note: dry_run_fake_score
+
+best_overrides: {'lr': 0.0003}
+best_score: 0.5

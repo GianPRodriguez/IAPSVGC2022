@@ -1,0 +1,16 @@
+{
+  "ts_utc": "2026-10-12T05:11:52.786767+00:00",
+  "run_id": "ppo_20261012T051152Z_a983ab51",
+  "agent": "ppo",
+  "status": "done",
+  "best_overrides": {
+    "lr": 0.0001,
+    "clip_eps": 0.2
+  },
+  "best_score": 0.48,
+  "artifacts": {
+    "history": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ppo_hp_tune_history.jsonl",
+    "tracking": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ppo_hp_tune_tracking.txt",
+    "best_hp": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\ppo_best_hp.json"
+  }
+}

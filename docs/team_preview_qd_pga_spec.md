@@ -3,12 +3,14 @@
 | Campo | Valor |
 |-------|-------|
 | **Documento** | Contrato exclusivo — QD-PGA MAP-Elites solo Team Preview |
-| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` v1.15 §6.k) |
+| **Versión** | **1.3** (alineado con `docs/rl_env_spec.md` v1.16 §6.k) |
 | **Estado** | **FROZEN** — implementado en `showdown/rl/team_preview_qd_pga/` |
 | **Algoritmo** | Grid MAP-Elites + mutación Gaussiana o mejora PPO-clip (PGA) |
 | **Formato** | Gen 9 VGC **Regulation M-C**, OTS, Mega on, **Tera off** |
 | **Código** | `showdown/rl/team_preview_qd_pga/` y módulos `team_preview_*` |
-| **CLI** | `python -m showdown.rl.team_preview_qd_pga.train --seed N` |
+| **CLI** | `python -m showdown.rl.team_preview_qd_pga.train --seed N` → `archive.pt` |
+| **CLI tune** | `python -m showdown.inference_sim.run_team_preview_qd_pga_hp_tune` |
+| **Consumidores** | QD-PPO / QD-PGA / QD-PPGA combate (`frozen_preview`) |
 
 El resultado no es una sola policy, sino un archivo de políticas de preview:
 la mejor conocida para cada región de comportamiento.
@@ -152,9 +154,8 @@ de origen. Debe añadir versión, seed, budgets, procedencia `mock/live` y tabla
 heurísticas usadas por los BD.
 
 Para reanudar exactamente también se guardan crítico compartido,
-optimizadores, RNG e iteración outer. Para desplegar una sola policy basta el
-actor de la elite elegida y el contrato obs/acción. El CLI actual devuelve
-`Archive`, pero no lo serializa; la línea `DONE` solo informa coverage/celdas.
+optimizadores, RNG e iteración outer. El CLI persiste `archive.pt`,
+`best_elite.pt`, `train_meta.json` y `reporte.txt` (`MEAN_SCORE` = `best_f`).
 
 ## 6. Hiperparámetros
 
@@ -177,6 +178,34 @@ actor de la elite elegida y el contrato obs/acción. El CLI actual devuelve
 | \(G,g_{\min}\) | `20,10`; smoke `4,2` | Fiabilidad/elegibilidad | Más partidas estabilizan fitness/BD |
 | Reemplazo | Estricto `>` | Proteger elite | Evita rotación por empates |
 | Selección padre | Uniforme en celdas llenas | Dar oportunidad a cada nicho | No favorece automáticamente al campeón |
+
+CLI de train acepta `--lr` y `--clip-eps` (actor PG / critic Adam).
+
+### Tune de hiperparámetros (independiente del QD combate)
+
+Fase mínima: knobs del actor PPO dentro de emits PG. Grid, \(p_{\rm mut}\),
+\(\sigma\) y Preview→combate quedan fuera (no co-tune QD-*).
+
+```bat
+python -m showdown.inference_sim.run_team_preview_qd_pga_hp_tune --dry-run
+python -m showdown.inference_sim.run_team_preview_qd_pga_hp_tune --seed 0 --max-trials 6 --smoke
+```
+
+| Ítem | Contrato |
+|------|----------|
+| Knobs variables | `lr ∈ {1e-4,3e-4,1e-3}`, `clip_eps ∈ {0.10,0.20}` |
+| Congelados | \(p_{\rm mut}\), \(\sigma\), grid 10×10, \(\pi_c\)=`greedy_joint` |
+| Score | `MEAN_SCORE` (= `best_f` de la elite) |
+| Criterio | Aceptar si mejora el mejor score |
+| Independencia | No lanza `qd_ppo` / `qd_pga` / `qd_ppga` de combate |
+
+**Tracking:** `logs/team_preview_qd_pga_hp_tune_{history.jsonl,progress.json,tracking.txt}`
+y `team_preview_qd_pga_best_hp.json` con `prev_overrides` → `overrides` /
+`param_change` (from/to/delta).
+
+**Figuras:** `logs/figures/team_preview_qd_pga_hp_tune_latest.svg` + ledger
+`hp_tune_ledger_team_preview_qd_pga.svg`. Regenerar:
+`python -m showdown.inference_sim.run_plot_tune_history --agent team_preview_qd_pga`.
 
 ## 7. Inferencia y despliegue en batalla
 
@@ -211,7 +240,6 @@ del round-robin. Véase
 - La mutación en pesos es ciega y puede destruir comportamiento útil.
 - Un crítico compartido puede favorecer estilos frecuentes.
 - El CLI directo usa proxy mock y no implementa el mosaico live completo.
-- El archivo no se serializa automáticamente.
 - Tera está desactivada; activarla invalida parte del dominio.
 
 ## 10. Referencias
@@ -227,8 +255,9 @@ del round-robin. Véase
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.3** | 2026-10-11 | `archive.pt` + tune `run_team_preview_qd_pga_hp_tune` + tracking prev→nuevo; `--lr/--clip-eps`. |
 | **1.2** | 2026-10-11 | MAP-Elites, BD, loop, despliegue y familias QD; alineación documental actualizada a rl_env v1.15. |
 | **1.1** | 2026-10-11 | Redacción dual, glosario y límites. |
 | **1.0** | 2026-10-11 | Archivo actor-only, BD, Cand. 1, budget y variación mutación/PGA. |
 
-*Fin del contrato Team Preview QD-PGA v1.2.*
+*Fin del contrato Team Preview QD-PGA v1.3.*

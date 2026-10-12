@@ -11,13 +11,14 @@ from showdown.inference_sim.conclusion_eval.constants import PIPELINES_PATH
 
 @dataclass(frozen=True)
 class PipelineSpec:
-    """Un bot completo: combate + preview de familia (documentado)."""
+    """Un bot completo: combate + preview de familia (cableado en players)."""
 
     id: str
     combat: str
     preview: str
     group: str  # 'family' | 'heuristic'
-    checkpoint: str = ''  # path opcional; vacío = default del player
+    checkpoint: str = ''  # combat ckpt opcional
+    preview_checkpoint: str = ''  # preview ckpt; vacío = default de frozen_preview
 
 
 # Orden canónico = índices i < j para asientos p1/p2.
@@ -59,6 +60,7 @@ def load_pipelines(path: Optional[Path] = None) -> List[PipelineSpec]:
                 preview=str(row.get('preview') or ''),
                 group=str(row.get('group') or 'family'),
                 checkpoint=str(row.get('checkpoint') or ''),
+                preview_checkpoint=str(row.get('preview_checkpoint') or ''),
             )
         )
     if len(out) < 2:

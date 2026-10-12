@@ -2,11 +2,12 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.3** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.15) |
+| **Versión** | **1.5** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.16) |
 | **Estado** | FROZEN; `showdown/rl/qd_ppga/` |
 | **Training** | **Sí**: emits PPO-only con crítico compartido y padres por arborescencia |
 | **Inferencia** | `ValidatedQDPPGAPlayer` con el mejor elite actor-only |
 | **CLI** | `python -m showdown.rl.qd_ppga.train` |
+| **CLI tune** | `python -m showdown.inference_sim.run_qd_ppga_hp_tune` |
 
 ## Por qué existe
 
@@ -118,6 +119,28 @@ Artefactos: `archive.pt`, `best_elite.pt`, `summary.json`, `reporte.txt`.
 | Log pasos/tiempo | `5_000` / `60 s` | Heartbeat | Solo observabilidad |
 | Max turns | `40` | Acotar episodios | Aplica truncation común |
 
+CLI de train acepta `--lr` y `--clip-eps` (actor). Crítico compartido y
+\(\alpha\) / \(p_{\rm mut}=0\) quedan fuera del grid mínimo.
+
+### Tune de hiperparámetros (independiente del Preview QD-PGA)
+
+```bat
+python -m showdown.inference_sim.run_qd_ppga_hp_tune --dry-run
+python -m showdown.inference_sim.run_qd_ppga_hp_tune --seed 0 --max-trials 6 --suite-games 4
+```
+
+| Ítem | Contrato |
+|------|----------|
+| Knobs variables | `lr`, `clip_eps` del actor |
+| Congelados | crítico LR, \(\alpha\), \(p_{\rm mut}=0\), grid, mosaic, preview |
+| Score | `MEAN_WR` de \(\pi^\*\) |
+| Criterio | Aceptar si mejora el mejor score |
+| Independencia | No co-afina `team_preview_qd_pga` |
+
+**Tracking:** `logs/qd_ppga_hp_tune_{history.jsonl,progress.json,tracking.txt}` y
+`qd_ppga_best_hp.json` con cambios `prev → new` por knob.
+**Figuras:** `logs/figures/qd_ppga_hp_tune_latest.svg` + ledger histórico.
+
 ### Ejemplo de elección de padre
 
 Si la celda objetivo vacía es `(8,2)` y hay elites en `(6,2)`, `(8,6)` y
@@ -149,10 +172,9 @@ crítico, replay y archivo quedan fuera de inferencia.
 
 ## Team Preview y Conclusión
 
-**No hay Team Preview en el MDP de combate.** El pipeline familiar es
-**`team_preview_qd_pga` → QD-PPGA de combate**. Se usa
-QD-PGA en preview porque esa es la política familiar congelada para las tres
-variantes QD; no implica que PPGA entrene el preview. Protocolo completo:
+**No hay Team Preview en el MDP de combate.** Preview familiar congelado =
+QD-PGA (`frozen_preview`, `combat_family='qd_ppga'`) → combate PPGA. No implica
+que PPGA entrene el preview. Protocolo:
 [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 ## Mapa de código
@@ -195,6 +217,8 @@ El metadata de cada elite conserva el modo de padre para auditoría.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.5** | 2026-10-11 | Train/infer bajo Preview QD-PGA congelado (`frozen_preview`). |
+| **1.4** | 2026-10-11 | CLI `--lr/--clip-eps`; tune `run_qd_ppga_hp_tune` + tracking prev→nuevo. |
 | **1.3** | 2026-10-11 | Arborescencia, arquitectura, loop, fallos, evaluación, code map y ejemplo. |
 | **1.2** | 2026-10-11 | Reescritura dual-audience, freeze/data loop y pairing QD-PGA-preview. |
 | **1.1** | 2026-10-10 | Lectura pedagógica. |

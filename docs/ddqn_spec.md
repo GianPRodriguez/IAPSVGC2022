@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.4** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.15) |
+| **Versión** | **1.7** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.16) |
 | **Estado** | FROZEN; implementado en `showdown/rl/ddqn/` y `battle_bots/ddqn/` |
 | **Training** | **Sí**: off-policy con replay; entrenamiento live requiere Showdown local |
 | **Inferencia** | `ValidatedDDQNPlayer`, acción greedy legal desde un checkpoint |
@@ -137,6 +137,47 @@ Los `20_000` pasos del CLI son un default práctico, no la fase contractual de
 | Device | `cpu` | Dispositivo por defecto | GPU acelera batches, no cambia la regla |
 | Seed | `0` | Reproducibilidad | Cambia pesos, replay y exploración |
 
+CLI de train también acepta `--lr` y `--gamma` para overrides (tune / ablaciones).
+
+### Tune de hiperparámetros (independiente del Preview PPO)
+
+Los **pesos** se actualizan dentro de `ddqn.train`. Los **hiperparámetros** `lr`
+y `gamma` se pueden barrer con un CLI aparte que **no** entrena el preview:
+
+```bat
+python -m showdown.inference_sim.run_ddqn_hp_tune --dry-run
+python -m showdown.inference_sim.run_ddqn_hp_tune --seed 0 --max-trials 6 --steps 8000 --suite-games 4
+python -m showdown.inference_sim.run_ddqn_hp_tune --seed 0 --max-trials 6 --opponent greedy_joint --start-ps
+```
+
+| Ítem | Contrato |
+|------|----------|
+| Knobs variables | `lr ∈ {1e-4,3e-4,1e-3}`, `gamma ∈ {0.90,0.95}` |
+| Congelados | \(\tau\), batch, replay, ε-schedule, red, … |
+| Score | `MEAN_WR` del suite offline en `reporte.txt` (Cand. 1) |
+| Criterio | Aceptar trial si mejora el mejor score hasta ahora |
+| Independencia | No lanza ni modifica Team Preview PPO |
+
+**Tracking:** `logs/ddqn_hp_tune_history.jsonl`, `_progress.json`,
+`_tracking.txt`, `ddqn_best_hp.json`. Cada evento registra overrides prev→nuevos
+y si se aceptó.
+
+**Figuras** (al `DONE` del tune; también regenerables):
+
+| Artefacto | Contenido |
+|-----------|-----------|
+| `logs/figures/ddqn_hp_tune_latest.svg` (+ `.png` si matplotlib) | Score y best_so_far vs trial |
+| `logs/figures/hp_tune_ledger.jsonl` | Append histórico de mejores scores entre runs |
+| `logs/figures/hp_tune_ledger_ddqn.svg` | Curva de mejoras históricas |
+
+```bat
+python -m showdown.inference_sim.run_plot_tune_history --agent ddqn
+```
+
+Tras el tune, reentrena (o reutiliza el checkpoint del mejor trial) con esos
+hiperparámetros para el artefacto de Conclusión. El preview familiar sigue
+siendo un train/tune **separado**.
+
 ### Ejemplo mínimo de un objetivo
 
 Con \(r=0.2\), episodio no terminal y
@@ -170,15 +211,18 @@ suite interna favorable no equivale a un resultado de Conclusión.
 
 ## Team Preview y Conclusión
 
-**No hay Team Preview en el MDP de combate.** El entrenamiento usa preview fijo
-`/team 1234`; seleccionar cuarteto y orden pertenece a otro componente. En la
-evaluación final el pipeline familiar es:
+**No hay Team Preview en el MDP de combate** (DDQN no aprende `/team`).
+Seleccionar cuarteto/orden es un componente **externo congelado**:
 
-**`team_preview_ppo` → DDQN de combate**.
+1. Entrenar/afinar primero [`team_preview_masked_ppo_spec.md`](team_preview_masked_ppo_spec.md)
+   (\(\pi_c\)=`greedy_joint`) → `logs/team_preview_ppo_checkpoints/final.pt`.
+2. Entrenar DDQN **bajo** ese preview congelado (live: `PokeEnvBattleBackend`
+   con `combat_family='ddqn'`; inferencia: `DDQNPlayer.teampreview`).
+3. Si falta el checkpoint de preview → fallback `/team 1234` (solo smoke/dev).
 
-El primer componente escoge cuatro Pokémon y orden; luego DDQN decide los turnos.
-Sus checkpoints se congelan antes del round-robin. Diseño, swap de equipos,
-fallos y métricas: [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
+Pipeline familiar: **`team_preview_ppo` → DDQN**. Código compartido:
+`showdown/rl/frozen_preview.py`. Conclusión:
+[`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 ## Mapa de código
 
@@ -206,6 +250,9 @@ fallos y métricas: [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md)
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.7** | 2026-10-12 | Figuras reales al cerrar tune (`logs/figures/`) + ledger histórico tesis. |
+| **1.6** | 2026-10-11 | Train/infer bajo Preview PPO congelado (`frozen_preview`); fallback `/team 1234`. |
+| **1.5** | 2026-10-11 | CLI `--lr/--gamma`; tune `run_ddqn_hp_tune` + tracking; independencia vs Preview PPO. |
 | **1.4** | 2026-10-11 | Arquitectura, loop, fallos, evaluación, code map y ejemplo ampliados. |
 | **1.3** | 2026-10-11 | Reescritura dual-audience; training/inferencia y pairing `team_preview_ppo` para Conclusión. |
 | **1.2** | 2026-10-11 | Tera id 22 reservado/off; Mega 21 intacto. |
