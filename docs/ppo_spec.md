@@ -1,333 +1,218 @@
-# Masked PPO Agent Spec — Auto-regresivo Slot1→Slot2 (VGC Gen 9)
+# Masked PPO Agent Spec — auto-regresivo Slot1→Slot2 (VGC Gen 9)
 
 | Campo | Valor |
-|-------|--------|
-| **Documento** | **Contrato exclusivo de implementación — Masked PPO** |
-| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` **v1.14** §6.a) |
-| **Estado** | **FROZEN — implementado en `showdown/rl/ppo/` + `battle_bots/ppo`** |
-| **Algoritmo** | Proximal Policy Optimization (Schulman et al., 2017) + IAM (Huang & Ontañón, 2022) |
-| **Rol** | Agente RL de **gradiente de política** principal (complemento de DDQN joint) |
-| **Code root** | `showdown/rl/ppo/` |
+|---|---|
+| **Versión** | **1.4** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.15) |
+| **Estado** | FROZEN; `showdown/rl/ppo/` y `battle_bots/ppo/` |
+| **Training** | **Sí, parcial**: PPO/curriculum operativos; self-play tiene infraestructura básica, no un rival de checkpoint plenamente cableado |
+| **Inferencia** | `ValidatedPPOPlayer`, greedy masked desde checkpoint |
 | **CLI** | `python -m showdown.rl.ppo.train` |
-| **Deps** | `requirements-rl.txt` — `torch >= 2.0.0` |
 
-> **Alcance.** Fuente de verdad para **Masked PPO**. Env compartido en
-> [`rl_env_spec.md`](rl_env_spec.md). Sibling valor: [`ddqn_spec.md`](ddqn_spec.md).
->
-> **Contraste con DDQN.** PPO: \(\pi(a_1\mid s)\,\pi(a_2\mid s,a_1)\) con máscaras
-> por slot. DDQN: \(Q\) joint 576. Misma Obs/Reward/preview/foes ⇒ contraste válido.
->
-> **Inmutabilidad.** Bump **1.2+** aquí + `rl_env_spec` §6.a juntos.
+Obs, reward, acciones, truncations y Tera off se heredan de
+[`rl_env_spec.md`](rl_env_spec.md).
 
----
+## Por qué existe
 
-## 0. Por qué existe (lectura no técnica)
+PPO aprende directamente una política. Primero decide la orden del slot 1 y
+después la del slot 2 condicionada a la primera. Esta factorización evita una
+cabeza plana de 576 probabilidades y representa el conflicto entre órdenes. El
+clip de PPO limita cambios bruscos entre la política que recogió el rollout y la
+que se está optimizando.
 
-En lugar de puntuar *todas* las jugadas conjuntas (como DDQN), PPO aprende una
-**política**: una distribución de probabilidad sobre “qué hace el Pokémon de la
-izquierda” y, *condicionado a eso*, “qué hace el de la derecha”. Entrena jugando
-rollouts recientes (on-policy) y actualiza con un recorte (clip) para no cambiar
-la política de golpe — de ahí “proximal”.
+## Glosario
 
-La **máscara de acciones inválidas (IAM)** pone a cero la probabilidad de órdenes
-ilegales *antes* de muestrear y *también* al recalcular \(\pi\) en las épocas PPO
-(no basta con castigar ilegales en la recompensa).
+| Término | Significado |
+|---|---|
+| Política \(\pi\) | Distribución sobre acciones legales |
+| Auto-regresiva | \(\pi(a_1,a_2|s)=\pi(a_1|s)\pi(a_2|s,a_1)\) |
+| IAM | Invalid Action Masking antes de samplear y recalcular log-prob |
+| Rollout | Bloque reciente de experiencia on-policy |
+| GAE | Estimador de ventaja con menor varianza |
+| Ratio PPO | \(\pi_\theta/\pi_{\theta_{\rm old}}\) |
+| BC | Behavioral Cloning opcional para iniciar el actor |
 
-**Analogía:** un director que primero elige la línea del primer músico y luego la
-del segundo, ensayando con partituras recientes y sin saltar a un estilo totalmente
-distinto de un ensayo a otro.
+## Algoritmo paso a paso
 
-| Término | Significado aquí |
-|---------|------------------|
-| Política \(\pi\) | Probabilidad de acciones (no valores \(Q\)) |
-| Auto-regresivo | Slot2 depende del Slot1 elegido |
-| IAM | Softmax solo sobre legales |
-| GAE | Estimador de ventaja temporal |
-| BC | Imitación previa de Expectimax/Joint |
-| Self-play pool | Rivales = checkpoints propios + best vs Joint |
+1. La red procesa la observación y produce logits del slot 1 y \(V(s)\).
+2. IAM elimina acciones ilegales; se samplea \(a_1\).
+3. La segunda cabeza recibe features más `onehot(a1)`, aplica la máscara
+   condicionada y samplea \(a_2\).
+4. Se guardan acción, log-prob conjunta, valor, reward y máscaras.
+5. L2 y crash se descartan. Turn-cap se conserva y bootstrappea \(V(s')\).
+6. Al llenar el rollout se calculan GAE y retornos, y se normalizan ventajas.
+7. Durante cuatro épocas se recalculan log-probs con las mismas máscaras y se
+   optimizan surrogate clipped, error de valor y entropía.
+8. Se vacía el buffer: PPO no reutiliza replay antiguo.
 
----
+Red: torso `1024→512→512`, cabeza slot 1 `512→24`, cabeza slot 2
+`[512+onehot(24)]→24` y value `512→1`.
 
-## 1. Entorno heredado
+### Intuición de PPO y GAE
 
-| Contrato | Fuente | Uso PPO |
-|----------|--------|---------|
-| `VGCEnv` | §1 | Rollout `reset` / `step` |
-| Obs 1024D | §3 | Torso actor–crítico |
-| Reward Cand. 2 → Cand. 1 | §4 | Curriculum §8 |
-| Slot ids 0–23 | §2 | Cabezas factorizadas |
-| L2 `skip_buffer` | §2 | **Drop** del buffer |
-| `trunc_reason` | §1 / §4 | turn_cap vs crash |
-| No `@smogon/calc` en `step()` | §1 / §8 | Heurística local |
-
-**Obs PPO:** belief 256D = ceros / priors planos. OTS solo para sync en harness.
-
----
-
-## 2. Delimitación MDP
-
-| Ítem | Contrato |
-|------|----------|
-| Episodio | BO1; max turns **40**; truncate ≠ Loss |
-| Decisión | Par ordenado \((a_1,a_2)\) |
-| Action space env | `MultiDiscrete([24, 24])` |
-| Preview | Fuera del MDP: `/team 1234`; WR condicional |
-| Self-play | **En alcance** tras bootstrap heurístico (§8) |
-| Player | `ValidatedPPOPlayer` |
-
----
-
-## 3. Espacio auto-regresivo y IAM
+La ventaja \(A_t\) pregunta cuánto mejor fue la acción que lo esperado por
+\(V(s_t)\). GAE combina residuos
+\(\delta_t=r_t+\gamma V(s_{t+1})-V(s_t)\):
 
 \[
-\pi_\theta(a_1, a_2 \mid s)
-= \pi_\theta^{(1)}(a_1 \mid s)\,\,
-  \pi_\theta^{(2)}(a_2 \mid s, a_1)
+\hat A_t=\sum_{l\ge0}(\gamma\lambda)^l\delta_{t+l}.
 \]
 
-| Slot id | Significado |
-|---------|-------------|
-| 0–15 | move × target |
-| 16–19 | hard switch |
-| 20 | pass |
-| 21 | mega (si `can_mega` / `valid_orders`) |
-| 22 | tera (**off** Reg M-C; máscara siempre 0) |
-| 23 | reserved |
+PPO compara la política actual con la que recogió el dato mediante
+\(\rho_t=\exp(\log\pi_\theta-\log\pi_{\rm old})\), y optimiza
+\(\min(\rho_tA_t,\operatorname{clip}(\rho_t,1-\epsilon,1+\epsilon)A_t)\).
+El clip no prohíbe todo cambio: evita que una muestra obtenga incentivo extra
+por alejar demasiado su probabilidad. El término de valor enseña el baseline y
+la entropía evita colapsar prematuramente entre las opciones legales.
 
-### Invalid Action Masking (IAM)
+### Arquitectura y condicionamiento
 
-Fuente: `valid_orders` vía `action_masks(slot1_action_id=...)`.
+El torso compartido comprime 1024 features a un embedding de 512. `policy1`
+produce 24 logits. Tras elegir \(a_1\), su one-hot de 24 posiciones se concatena
+al embedding: `policy2` puede aprender que una orden para slot 2 deja de ser
+válida o conveniente por la orden del slot 1. `value` produce un escalar.
 
-1. Logits \(\mathbf{z}^{(1)}\), luego \(\mathbf{z}^{(2)}\) condicionados a \(a_1\).
-2. Máscaras \(M_1(s),\; M_2(s\mid a_1)\).
-3. Softmax legal:
+Actor y crítico comparten torso; ninguna cabeza está congelada. Los logits
+ilegales reciben `-1e9` antes de construir `Categorical`. La misma máscara
+guardada durante collect se reutiliza en update: recalcularla desde un estado
+que ya cambió rompería el ratio PPO.
+
+## Observación, acción y máscaras
+
+El contrato canónico es [`rl_env_spec.md`](rl_env_spec.md): Obs `float32[1024]`,
+Candidate 2 durante bootstrap y `MultiDiscrete([24,24])`. Los ids son 0–15
+movimiento×objetivo, 16–19 switch, 20 pass, 21 Mega, 22 Tera reservado y 23
+reservado. Tera está off y su máscara siempre vale cero.
+
+IAM debe ser idéntica en collect y update:
 
 \[
-\mathrm{Softmax}\big(\mathbf{z} + (1-M)\cdot(-10^{9})\big)
+\operatorname{softmax}(z+(1-M)(-10^9)).
 \]
 
-4. Misma máscara en muestreo interactivo **y** en épocas PPO (Huang & Ontañón).
+La log-prob conjunta es la suma de ambos slots. El belief de combate es plano;
+OTS no activa inferencia oculta adicional.
 
-Helpers: `apply_logit_mask` / `softmax_masked` en `action_space.py`.
+## Entrenamiento
 
-| API | Contrato |
-|-----|----------|
-| `action_masks(...)` | Path de muestreo PPO |
-| `legal_joint_mask` | Telemetría / paridad DDQN; **no** path PPO |
-| Log-prob | \(\log\pi=\log\pi^{(1)}+\log\pi^{(2)}\) enmascarado |
-| L1 | \(>99\%\) sin L2 |
-
----
-
-## 4. Objetivo PPO (clip) + GAE
-
-### Truncation (`info['trunc_reason']`)
-
-| Evento | `terminated` | `truncated` | Buffer | Bootstrap \(V(s')\) |
-|--------|----------------|-------------|---------|----------------------|
-| Win/Loss/Tie | True | False | Store | No (\(d_t=1\)) |
-| Turn-cap (40) | False | True | Store | **Sí** (\(d_t=0\)) |
-| Crash / L3 | False | True | **Drop** | No |
-| L2 fallback | — | — | **Drop** | No |
-
-### GAE-\(\lambda\)
-
-\[
-\delta_t = r_t + \gamma\, V_\phi(s_{t+1})\,(1-d_t) - V_\phi(s_t),\quad
-\hat{A}_t = \sum_{l=0}^{T-t-1} (\gamma\lambda)^l\, \delta_{t+l}
-\]
-
-Normalizar ventajas por rollout. \(\hat{R}_t=\hat{A}_t+V_{\phi_{\mathrm{old}}}(s_t)\).
-
-### Surrogate
-
-\[
-r_t(\theta)=\frac{\pi_\theta(a_t\mid s_t)}{\pi_{\theta_{\mathrm{old}}}(a_t\mid s_t)},\quad
-a_t=(a_1,a_2)
-\]
-
-\[
-L^{\mathrm{CLIP}}=\mathbb{E}_t\Big[\min\big(
-r_t\hat{A}_t,\;
-\mathrm{clip}(r_t,1-\varepsilon_{\mathrm{clip}},1+\varepsilon_{\mathrm{clip}})\hat{A}_t
-\big)\Big]
-\]
-
-\[
-L^V=\mathbb{E}_t[(V_\phi(s_t)-\hat{R}_t)^2]
-\]
-
-**Value clip:** **OFF**. Entropía \(H_t=H[\pi^{(1)}]+H[\pi^{(2)}(\cdot\mid a_{1,t})]\)
-(condicionada al \(a_1\) del rollout).
-
-\[
-L=-L^{\mathrm{CLIP}}+c_v L^V-c_e\,\mathbb{E}_t[H_t]
-\]
-
-On-policy: limpiar buffer tras \(K\) épocas. Ratio con \(\pi\) **enmascarada**. Grad clip `max_norm=0.5`.
-
----
-
-## 5. Red
-
-| Ítem | Contrato |
-|------|----------|
-| Input | `float32[1024]` |
-| Torso | `1024→512→512` ReLU → \(\mathrm{h}\) |
-| Policy Slot1 | `Linear(512,24)` |
-| Policy Slot2 | \([\mathrm{h};\,\mathrm{onehot}(a_1)]\rightarrow\) `Linear(536,24)` |
-| Value | `Linear(512,1)` → \(V(s)\) (**no** \(Q\)) |
-| Off v1.1 | LSTM, attention, dual actors, FiLM |
-| Device | CPU default |
-
----
-
-## 6. Hiperparámetros congelados
-
-| Parámetro | Valor |
-|-----------|--------|
-| \(\gamma\) | `0.95` |
-| \(\lambda\) (GAE) | `0.95` |
-| \(\varepsilon_{\mathrm{clip}}\) | `0.2` |
-| Optimizer | Adam |
-| LR (scratch / post-BC warmup done) | `3e-4` |
-| LR **post-BC fine-tune** | \(10^{-4}\) (full; **sin** freeze) |
-| Rollout \(T\) | `2048` |
-| Num envs | `8` |
-| Minibatch | `256` |
-| Epochs \(K\) | `4` |
-| \(c_v\) | `0.5` |
-| \(c_e\) | `0.01` |
-| Grad clip | `0.5` |
-| Max turns | `40` |
-| Value clip | **Off** |
-| Seed | CLI obligatorio |
-
-Sin experience replay en el path PPO (on-policy). BC = etapa offline separada.
-
----
-
-## 7. Módulos y CLI
-
-| Módulo | Rol |
-|--------|-----|
-| `network.py` | Torso + AR + \(V\) |
-| `buffer.py` | Rollout; reject skip / crash |
-| `agent.py` | Sample / greedy masked |
-| `train.py` | Collect → GAE → PPO → curriculum / self-play |
-| `player.py` | `PPOPlayer` + `ValidatedPPOPlayer` |
-| `bc.py` | Pretrain BC |
-| Tests | `tests/test_rl_ppo.py` |
-
-Flags: `--seed`, `--device`, `--opponent` (`…|curriculum|self`), `--phases`,
-`--expand-omega`, `--reward candidate2|candidate1|anneal`, `--bc-checkpoint`,
-`--start-ps`, `--checkpoint-dir`.
+El flujo implementado es collect → GAE → minibatches PPO → checkpoint. Si se
+carga BC, se transfieren sus pesos y se ajusta toda la red: no se congela el
+torso ni las cabezas. El oponente y el entorno no reciben gradientes.
 
 ```bat
-python -m showdown.rl.ppo.train --seed 0 --opponent mock --steps 20000
+python -m showdown.rl.ppo.train --seed 0 --opponent mock --steps 20000 --rollout-steps 256 --smoke
 python -m showdown.rl.ppo.train --seed 0 --opponent curriculum --start-ps --expand-omega
 python -m showdown.rl.ppo.train --seed 0 --opponent self --reward anneal --bc-checkpoint logs/ppo_bc.pt --start-ps
 ```
 
----
+El último comando existe, pero el path actual de self-play conserva el pool y
+checkpoints sin reemplazar plenamente al oponente live por pesos del pool; por
+eso el estado se declara parcial. No usarlo como evidencia de self-play completo
+sin validar ese cableado. Showdown local se inicia con `--no-security`.
 
-## 8. Curriculum
+### Curriculum y ciclo de rollout
 
-### Stage 0 — Behavioral Cloning (primario)
+1. Candidate 2 produce rewards densos mientras la política samplea.
+2. Cada transición guarda ambas máscaras, log-prob vieja y \(V(s)\).
+3. Al reunir 2048 pasos se calcula GAE, se normalizan ventajas y se forman
+   minibatches aleatorios.
+4. Cuatro épocas reutilizan únicamente ese rollout; después se vacía.
+5. El curriculum puede expandir \(\Omega\) de random a heurísticos más fuertes.
+6. BC opcional carga todo el actor-crítico y cambia LR a `1e-4`.
 
-| Ítem | Contrato |
-|------|----------|
-| Loss | Cross-entropy enmascarada sobre \((a_1^*,a_2^*)\) expertos |
-| Data | Interno `expectimax_bayesian` / `greedy_joint`; sin scrape Smogon ELO |
-| Filter | Preferir `sync_ok` |
-| Transfer | Full fine-tune; LR inicial on-policy \(10^{-4}\) |
+`num_envs=8` pertenece al contrato de configuración aunque el backend concreto
+puede recolectar de forma serial. El default CLI de `20_000` pasos y un smoke
+con rollout 256 son controles operativos, no nuevos hiperparámetros del agente.
 
-### Stage 1 — Bootstrap heurístico (Cand. 2)
+## Hiperparámetros
 
-\(\Omega\) monótono (defaults como DDQN): random → solo → joint → expectimax opcional;
-pesos `1/1/1/0.35`. Gate cada **10_000** steps: 100 BO1, avanzar si \(WR\ge 0.60\).
+| Parámetro | Valor | Propósito | Cómo influye |
+|---|---:|---|---|
+| \(\gamma\) | `0.95` | Descuento | Mayor extiende crédito temporal |
+| \(\lambda\) GAE | `0.95` | Sesgo/varianza | Mayor usa trazas más largas |
+| Clip PPO | `0.2` | Limitar cambio | Menor hace updates conservadores |
+| LR | `3e-4` | Optimización normal | Alto aprende rápido y puede divergir |
+| LR post-BC | `1e-4` | Fine-tune suave | Reduce borrado del warm-start |
+| Rollout | `2048` | Datos por update | Mayor estabiliza y retrasa updates |
+| Minibatch / épocas | `256` / `4` | Reuso on-policy | Más épocas extraen más, con más drift |
+| \(c_v\) | `0.5` | Peso value loss | Afecta calidad del crítico |
+| \(c_e\) | `0.01` | Entropía | Mayor mantiene exploración |
+| Grad clip | `0.5` | Estabilidad | Limita updates extremos |
+| Value clip | off | Valor sin clipping | Simplifica, puede variar más |
+| Max turns | `40` | Acotar episodio | Turn-cap sí bootstrappea |
+| Entornos configurados | `8` | Paralelismo nominal | Afecta diversidad/throughput del collect |
+| Device | `cpu` | Ejecución por defecto | GPU acelera updates, no cambia IAM |
+| Seed | `0` | Repetibilidad | Controla inicialización y sampling |
 
-### Stage 2 — Self-play pool (anneal Cand. 1)
+### Mini-ejemplo auto-regresivo
 
-\[
-\mathcal{P}=\{\text{últimos }K=10\text{ checkpoints}\}
-\cup\{\texttt{best\_vs\_greedy\_joint}\}
-\]
+Supóngase que slot 1 tiene legales `{movimiento 0, switch 16}`. IAM normaliza
+solo esos dos logits y samplea `16`. La máscara condicionada de slot 2 se
+construye entonces sabiendo que ese switch ya ocupa su destino; si `switch 16`
+conflictúa, queda a cero. La log-prob conjunta es
+\(\log\pi(a_1|s)+\log\pi(a_2|s,a_1)\). En el update se usan exactamente esas
+dos máscaras, aunque la política nueva prefiera otra combinación.
 
-`best_vs_greedy_joint` **nunca** se evicta. Matchmaking v1.1: uniforme \(1/|\mathcal{P}|\).
-PFSP completo: **fuera de alcance**. Reward: `--reward anneal`.
+## Ilegales, máscaras y fallos
 
----
+- Si un slot no tiene legales, la defensa selecciona `pass`; con legales,
+  cualquier sample ilegal se corrige al primer id legal y debe investigarse.
+- Una máscara errónea afecta acciones, entropía y ratio; no es un fallo inocuo.
+- L1 usa el fallback seguro del contrato y deja telemetría.
+- L2/crash usa `skip_buffer`: no entra al rollout.
+- Turn-cap es truncation bootstrapeable con \(V(s')\), no terminal artificial.
+- L3 aborta y no se transforma en una muestra negativa.
+- En inferencia, el adaptador validado vuelve a comprobar legalidad antes de
+  enviar la orden a Showdown.
 
-## 9. Suite offline
+## Training frente a inferencia
 
-200 BO1 cada uno vs `random`, `greedy_joint`, `expectimax_bayesian`; política greedy masked; `/team 1234`. Reportar `illegal_action_fallbacks`.
+Training samplea, almacena rollout, calcula ventajas y cambia actor-crítico.
+Inferencia carga pesos, usa greedy masked y no conserva buffer ni optimiza. La
+política de combate no decide qué cuatro Pokémon entran a la partida.
 
----
+La evaluación intermedia mide pérdidas, KL aproximado, fracción de clip,
+entropía, explained variance y suites frente a controles. Sirve para detectar
+colapso o regresión y elegir checkpoint. La **Conclusion eval** usa el checkpoint
+ya congelado, greedy masked, protocolo compartido y pairing de preview; no
+samplea para explorar, no calcula GAE y no actualiza con resultados del
+round-robin.
 
-## 10. Telemetría (no en \(R_t\))
+## Team Preview y Conclusión
 
-`illegal_action_fallbacks`, `approx_kl` / `clip_fraction`, `entropy_slot*`,
-`explained_variance`, `curriculum_phase` / `reward_mode`, `eval_wr_*`,
-`bc_acc_legal`, `selfplay_pool_size`.
+**No hay Team Preview en el MDP de combate.** El pairing familiar es
+**`team_preview_ppo` → PPO de combate**. Son dos MDP y
+dos checkpoints: el preview es un bandit que selecciona equipo/orden; PPO recibe
+la batalla ya iniciada y elige turnos. Se congelan antes de Conclusión. Véase
+[`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
----
+## Mapa de código
 
-## 11. Tests de aceptación
+| Archivo | Responsabilidad |
+|---|---|
+| `showdown/rl/ppo/network.py` | torso, cabezas AR, value e IAM |
+| `showdown/rl/ppo/agent.py` | sampling, GAE/PPO y checkpoint |
+| `showdown/rl/ppo/buffer.py` | rollout, truncations y minibatches |
+| `showdown/rl/ppo/bc.py` | warm-start por imitación |
+| `showdown/rl/ppo/selfplay.py` | pool experimental de self-play |
+| `showdown/rl/ppo/train.py` | curriculum, CLI y reporting |
+| `showdown/rl/ppo/player.py` | inferencia validada |
+| `showdown/battle_bots/ppo/pokeenv_player.py` | integración live |
 
-1. Samples siempre legales bajo IAM.  
-2. Log-prob = suma de slots; ratio finito.  
-3. `skip_buffer` no crece buffer.  
-4. Turn-cap aporta \(V(s')\) en GAE.  
-5. Crash nunca entra al buffer.  
-6. Si \(\theta=\theta_{\mathrm{old}}\), \(L^{\mathrm{CLIP}}=\mathbb{E}[\hat{A}]\) (salvo norm).  
-7. Smoke ≥100 steps mock CPU.
+## Limitaciones
 
----
-
-## 12. Fortalezas y límites (tesis)
-
-| Fortaleza | Límite |
-|-----------|--------|
-| Factorización natural 2v2 + IAM | On-policy: más sample-hungry que DDQN |
-| BC + self-play en alcance | Pool uniforme (no PFSP) |
-| Contraste metodológico claro vs joint-Q | Belief plano; preview fijo |
-
----
-
-## 13. Non-goals
-
-Joint-576 como política **primaria** PPO; PFSP completo; value clip; entrenar en L2/crash;
-preview en MDP; BD en \(R_t\); reemplazar DDQN; actor recurrente/attention;
-Terastallization legal (Reg M-C: id 22 siempre masked).
-
----
-
-## 14. Nota de paridad PPO vs DDQN
-
-La comparación empírica AR-Masked-PPO vs joint-DDQN es válida bajo contrato de env
-compartido. Las topologías de acción son inherentes a cada algoritmo y deben
-declararse en la tesis; no obligan a forzar cabezas idénticas.
-
----
-
-## 15. Referencias
-
-- Schulman et al. (2017). PPO. *arXiv:1707.06347*.  
-- Schulman et al. (2015). GAE. *arXiv:1506.02438*.  
-- Huang & Ontañón (2022). IAM.  
-- [`rl_env_spec.md`](rl_env_spec.md); [`ddqn_spec.md`](ddqn_spec.md).
-
----
+- On-policy: consume más partidas y no reaprovecha replay histórico.
+- Una mala máscara invalida tanto muestreo como ratio PPO.
+- Self-play está parcial en la implementación actual.
+- Belief plano y preview externo limitan adaptación conjunta.
+- Candidate 2 puede inducir preferencias distintas al win rate final.
+- Tera está deshabilitada; no es una opción aprendible.
 
 ## Changelog
 
 | Versión | Fecha | Notas |
-|---------|-------|-------|
-| **1.2** | 2026-10-11 | ActionSpec: Tera id 22 **off** bajo Reg M-C; Mega 21 intacto. |
-| **1.1** | 2026-10-10 | Redacción amena (ES); semántica FROZEN intacta. |
-| **1.0** | 2026-10-10 | Contrato Masked PPO: AR IAM, GAE, BC, self-play uniforme. |
-
----
-
-*Fin del contrato Masked PPO v1.1.*
+|---|---|---|
+| **1.4** | 2026-10-11 | Matemática, arquitectura, curriculum, fallos, evaluación, code map y ejemplo ampliados. |
+| **1.3** | 2026-10-11 | Guía dual-audience, estado real de self-play y pairing de Conclusión. |
+| **1.2** | 2026-10-11 | Tera reservado/off. |
+| **1.1** | 2026-10-10 | Lectura pedagógica. |
+| **1.0** | 2026-10-10 | Contrato inicial Masked PPO. |

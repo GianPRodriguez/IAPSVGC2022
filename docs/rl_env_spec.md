@@ -2,15 +2,16 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.14** |
+| **Version** | **v1.15** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) — **Mega Evolution yes; Terastallization no** |
 | **Scope of this doc** | Contract for `VGCEnv` / agents / training. |
-| **Implementation** | `showdown/rl/` + heuristics + Preview PPO/Nash/QD-PGA §6.i–k — Spec v1.14 |
+| **Implementation** | `showdown/rl/` + heuristics + Preview PPO/Nash/QD-PGA §6.i–k — Spec v1.15 |
+| **Reading map** | [`SPECS_INDEX.md`](SPECS_INDEX.md) · eval final [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md) |
 
 > **Immutability rule:** Do not silently change Reward / Action / Obs / BD / DDQN / PPO / MCTS / QD / heuristic / **Team Preview** semantics mid-training.
-> Any change requires a new version (`v1.15+`) and an explicit changelog entry at the bottom.
+> Any change requires a new version (`v1.16+`) and an explicit changelog entry at the bottom.
 
 ---
 
@@ -190,7 +191,7 @@ BD values clipped / normalized to \([0, 1]\).
 
 Exclusive **Team Preview** QD-PGA-MAP-Elites (policy archive). Not combat.
 
-> **Exclusive coding / thesis spec:** [`docs/team_preview_qd_pga_spec.md`](team_preview_qd_pga_spec.md) **v1.0**.
+> **Exclusive coding / thesis spec:** [`docs/team_preview_qd_pga_spec.md`](team_preview_qd_pga_spec.md) **v1.1**.
 
 | Item | Contract |
 |------|----------|
@@ -209,7 +210,7 @@ Exclusive **Team Preview** QD-PGA-MAP-Elites (policy archive). Not combat.
 
 Exclusive **Team Preview** Payoff Nash (Value Net + LP). Not combat.
 
-> **Exclusive coding / thesis spec:** [`docs/team_preview_nash_spec.md`](team_preview_nash_spec.md) **v1.0**.
+> **Exclusive coding / thesis spec:** [`docs/team_preview_nash_spec.md`](team_preview_nash_spec.md) **v1.1**.
 
 | Item | Contract |
 |------|----------|
@@ -230,7 +231,7 @@ Exclusive **Team Preview** Payoff Nash (Value Net + LP). Not combat.
 
 Exclusive **Team Preview** agent (not combat `/team 1234`).
 
-> **Exclusive coding / thesis spec:** [`docs/team_preview_masked_ppo_spec.md`](team_preview_masked_ppo_spec.md) **v1.0**.
+> **Exclusive coding / thesis spec:** [`docs/team_preview_masked_ppo_spec.md`](team_preview_masked_ppo_spec.md) **v1.1**.
 
 | Item | Contract |
 |------|----------|
@@ -259,7 +260,7 @@ Contract for the **non-learned** reference ladder used in curriculum, mosaic, of
 > [`greedy_solo_spec.md`](greedy_solo_spec.md) ·
 > [`greedy_joint_spec.md`](greedy_joint_spec.md) ·
 > [`expectimax_bayesian_spec.md`](expectimax_bayesian_spec.md)
-> (heuristics: [`random`](random_spec.md) / [`greedy_solo`](greedy_solo_spec.md) / [`greedy_joint`](greedy_joint_spec.md) / [`expectimax_bayesian`](expectimax_bayesian_spec.md) each **v1.2+**; Reg M-C Tera **off**).
+> (heuristics **v1.3** dual-audience: [`random`](random_spec.md) / [`greedy_solo`](greedy_solo_spec.md) / [`greedy_joint`](greedy_joint_spec.md) / [`expectimax_bayesian`](expectimax_bayesian_spec.md); Reg M-C Tera **off**. Preview RL: PPO/Nash/QD-PGA specs **v1.1**).
 
 | Id | Role | Exclusive spec | Code root |
 |----|------|----------------|-----------|
@@ -282,7 +283,7 @@ Contract for the **non-learned** reference ladder used in curriculum, mosaic, of
 
 Contract for **proximal arborescence** quality–diversity. Implementation: `showdown/rl/qd_ppga/`.
 
-> **Exclusive coding spec:** [`docs/qd_ppga_spec.md`](qd_ppga_spec.md) **v1.1** (ES, tribunal-readable).
+> **Exclusive coding spec:** [`docs/qd_ppga_spec.md`](qd_ppga_spec.md) **v1.2** (ES, dual-audience).
 
 | Item | Contract |
 |------|----------|
@@ -300,7 +301,7 @@ Contract for **proximal arborescence** quality–diversity. Implementation: `sho
 
 Contract for **PGA-assisted** quality–diversity. Implementation: `showdown/rl/qd_pga/`.
 
-> **Exclusive coding spec:** [`docs/qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md) **v1.1** (ES, tribunal-readable).
+> **Exclusive coding spec:** [`docs/qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md) **v1.2** (ES, dual-audience).
 
 | Item | Contract |
 |------|----------|
@@ -317,7 +318,7 @@ Contract for **PGA-assisted** quality–diversity. Implementation: `showdown/rl/
 
 Contract for **quality–diversity** policy search. Implementation: `showdown/rl/qd_ppo/`.
 
-> **Exclusive coding spec:** [`docs/qd_ppo_spec.md`](qd_ppo_spec.md) **v1.1** (ES, tribunal-readable).
+> **Exclusive coding spec:** [`docs/qd_ppo_spec.md`](qd_ppo_spec.md) **v1.2** (ES, dual-audience).
 
 | Item | Contract |
 |------|----------|
@@ -333,7 +334,7 @@ Contract for **quality–diversity** policy search. Implementation: `showdown/rl
 
 Contract for **simultaneous-move** deep search. Implementation: `showdown/rl/mcts_puct_nash/`.
 
-> **Exclusive coding spec:** [`docs/mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md) **v1.1** (ES, tribunal-readable).
+> **Exclusive coding spec:** [`docs/mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md) **v1.2** (ES, dual-audience).
 
 | Item | Contract |
 |------|----------|
@@ -350,7 +351,7 @@ Contract for **simultaneous-move** deep search. Implementation: `showdown/rl/mct
 
 Contract for the **main planning** agent. Implementation: `showdown/rl/mcts_puct/`.
 
-> **Exclusive coding spec:** [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) **v1.1** (ES, tribunal-readable).
+> **Exclusive coding spec:** [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) **v1.2** (ES, dual-audience).
 
 | Item | Contract |
 |------|----------|
@@ -369,7 +370,7 @@ Contract for the **main planning** agent. Implementation: `showdown/rl/mcts_puct
 
 Contract for the **main policy-gradient** agent. Implementation: `showdown/rl/ppo/` + `battle_bots/ppo`.
 
-> **Exclusive coding spec:** [`docs/ppo_spec.md`](ppo_spec.md) **v1.1** is the Masked-PPO-only
+> **Exclusive coding spec:** [`docs/ppo_spec.md`](ppo_spec.md) **v1.3** is the Masked-PPO-only
 > document used for implementation. Keep it in sync with this section.
 
 ### MDP delimitation
@@ -404,7 +405,7 @@ Contract for the **main policy-gradient** agent. Implementation: `showdown/rl/pp
 | Self-play pool | Last \(K=10\) checkpoints ∪ `best_vs_greedy_joint` (never evicted); **uniform** \(P(o_i)\) |
 | Player class | `ValidatedPPOPlayer` |
 
-Full hyperparams, modules, acceptance tests: [`ppo_spec.md`](ppo_spec.md) v1.1.
+Full hyperparams, modules, acceptance tests: [`ppo_spec.md`](ppo_spec.md) v1.3.
 
 ---
 
@@ -412,7 +413,7 @@ Full hyperparams, modules, acceptance tests: [`ppo_spec.md`](ppo_spec.md) v1.1.
 
 Contract for the **main value-based** agent. Implementation target: `showdown/rl/ddqn/`. Do not start mid-run changes without a version bump.
 
-> **Exclusive coding spec:** [`docs/ddqn_spec.md`](ddqn_spec.md) **v1.1** is the DDQN-only
+> **Exclusive coding spec:** [`docs/ddqn_spec.md`](ddqn_spec.md) **v1.3** is the DDQN-only
 > document used for implementation. Keep it in sync with this section.
 
 ### MDP delimitation
@@ -547,6 +548,71 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 ---
 
+## 7.b De entrenamiento a Conclusión: pipelines completos
+
+Un agente de **combate** y un agente de **Team Preview** resuelven decisiones
+distintas. Preview observa los seis Pokémon de cada roster, elige cuatro y su
+orden; después termina. El agente de combate recibe la partida ya iniciada y
+elige movimientos/switches turno a turno. No comparten necesariamente red,
+observación, reward ni checkpoint.
+
+### Composición familiar canónica
+
+| Familia de combate | Team Preview en Conclusión | Pipeline resultante |
+|---|---|---|
+| DDQN | `team_preview_ppo` | PPO-preview → DDQN |
+| Masked PPO | `team_preview_ppo` | PPO-preview → PPO |
+| MCTS + PUCT | `team_preview_nash` | Nash-preview → MCTS |
+| MCTS–PUCT/Nash | `team_preview_nash` | Nash-preview → MCTS–Nash |
+| QD-PPO | `team_preview_qd_pga` | QD-PGA-preview → QD-PPO |
+| QD-PGA | `team_preview_qd_pga` | QD-PGA-preview → QD-PGA |
+| QD-PPGA | `team_preview_qd_pga` | QD-PGA-preview → QD-PPGA |
+
+Esta tabla es la familia por defecto de
+`showdown/inference_sim/conclusion_eval/pipelines.py`. El registro congelado
+`logs/conclusion_eval/pipelines.json` es la fuente efectiva de una corrida.
+No sustituir un preview por otro a mitad de evaluación.
+
+### Training e inferencia no son lo mismo
+
+| Momento | Componentes activos | Mutabilidad |
+|---|---|---|
+| Training de combate | `VGCEnv`, collector, oponentes y DDQN/PPO/QD | Cambian pesos/replay/archivo según algoritmo |
+| Training de preview | Bandit preview 512D y combat policy \(\pi_c\) congelada | Cambia solo el agente de preview |
+| Inferencia completa | Preview checkpoint seguido por combat player | Todo congelado; sin gradientes ni replay |
+| MCTS en inferencia | Árbol S2 por turno | Cambia el árbol efímero, nunca pesos |
+| Conclusión | 11 pipelines, snapshot y checkpoints fijados | Prohibido reentrenar o cambiar configuración |
+
+Durante training de combate, `/team 1234` puede seguir siendo la política fija
+del MDP y el WR queda condicionado a ella. Eso no contradice Conclusión: allí se
+compone el checkpoint final de combate con su preview familiar. Para atribución
+correcta se deben registrar ambos artefactos. Los MCTS no tienen entrenamiento
+por gradiente: `n_sims`, Top-K, solver y rollout son presupuesto/configuración de
+inferencia y deben congelarse igual que un checkpoint.
+
+### Flujo de evaluación final
+
+1. Finalizar training y escoger `final.pt` o `best_elite.pt` según la familia.
+2. Finalizar el agente preview correspondiente.
+3. Registrar combat, preview y paths de artefactos en el pipeline.
+4. Congelar snapshot de equipos, seed, lista y orden de pipelines.
+5. Ejecutar los mismos pares A/B con swap para todos los cruces.
+6. Reportar WR, Wilson 95 %, puntos, fallos y DQ sin actualizar agentes.
+
+El protocolo normativo de volumen, swaps, ranking, retries y CLI es
+[`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
+
+### Tera off de extremo a extremo
+
+Regulation M-C mantiene Mega y desactiva Terastallization en **ambas** etapas.
+Preview no debe derivar features que presupongan una Tera elegible; combate
+conserva el id 22 solo por paridad de layout, con máscara cero. Training,
+inferencia, simuladores MCTS, players de poke-env y el harness de Conclusión
+deben coincidir en `TERASTALLIZATION_ENABLED=False`. Un checkpoint que aprendió
+con Tera on no es compatible con este benchmark aunque sus dimensiones encajen.
+
+---
+
 ## 8. Non-goals (explicit)
 
 - Expectimax live \(V(s)\) as Ng potential \(\Phi(s)\) inside \(R_t\) — **forbidden** (stochastic / anytime / \(\pi_{\mathrm{opp}}\)-dependent).
@@ -567,6 +633,7 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.15** | 2026-10-11 | Documenta pipelines de Conclusión, pairing familiar de Team Preview, separación training/inferencia y Tera off end-to-end. Índice de lectura: [`SPECS_INDEX.md`](SPECS_INDEX.md). Specs combate enriquecidas (DDQN/PPO v1.4, MCTS/QD v1.3); preview v1.2; heurísticas v1.4. Sin cambio estructural de Obs/Reward/Action/BD. |
 | **v1.14** | 2026-10-11 | **Reg M-C format rule:** Terastallization **off** (`showdown/format_rules.py`); ActionSpec id 22 reserved/masked; Mega remains. Heuristic + RL paths force `can_tera=False` / no `terastallize`. |
 | **v1.13** | 2026-10-11 | **TeamPreviewQDPGASpec** (§6.k): [`team_preview_qd_pga_spec.md`](team_preview_qd_pga_spec.md) v1.0 + `showdown/rl/team_preview_qd_pga/`. Reuses Flat-360 / 512D; combat Obs/Reward/Action unchanged. |
 | **v1.12** | 2026-10-11 | **TeamPreviewNashSpec** (§6.j): [`team_preview_nash_spec.md`](team_preview_nash_spec.md) v1.0 + `showdown/rl/team_preview_nash/`. Reuses Flat-360 / 512D; combat Obs/Reward/Action unchanged. |
@@ -585,7 +652,7 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 
 ---
 
-*End of frozen contract v1.14.*
+*End of frozen contract v1.15. Índice de lectura: [`SPECS_INDEX.md`](SPECS_INDEX.md).*
 
 ## Implementation map
 
@@ -602,13 +669,13 @@ Fixed opponents for reported WR (not only self-play): at least `random`, `greedy
 | **Team Preview Nash (v1.12)** | [`team_preview_nash_spec.md`](team_preview_nash_spec.md) → `showdown/rl/team_preview_nash/` + shared `team_preview_{env,obs,action}.py` |
 | **Team Preview Masked PPO (v1.11)** | [`team_preview_masked_ppo_spec.md`](team_preview_masked_ppo_spec.md) → `showdown/rl/team_preview_ppo/` + `team_preview_{env,obs,action}.py` |
 | **Heuristic baselines (v1.9)** | Exclusive: [`random_spec`](random_spec.md), [`greedy_solo_spec`](greedy_solo_spec.md), [`greedy_joint_spec`](greedy_joint_spec.md), [`expectimax_bayesian_spec`](expectimax_bayesian_spec.md) → `showdown/battle_bots/{…}/`; umbrella [`heuristic_agents_spec`](heuristic_agents_spec.md) |
-| **QD-PPGA (v1.8)** | [`docs/qd_ppga_spec.md`](qd_ppga_spec.md) **v1.1** → `showdown/rl/qd_ppga/` |
-| **QD-PGA-MAP-Elites (v1.7)** | [`docs/qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md) **v1.1** → `showdown/rl/qd_pga/` |
-| **QD-PPO (v1.6)** | [`docs/qd_ppo_spec.md`](qd_ppo_spec.md) **v1.1** → `showdown/rl/qd_ppo/` |
-| **MCTS–PUCT/Nash (v1.5)** | [`docs/mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md) **v1.1** → `showdown/rl/mcts_puct_nash/` |
-| **MCTS+PUCTSpec (v1.4)** | [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) **v1.1** → `showdown/rl/mcts_puct/` + `battle_bots/mcts_puct` |
-| **MaskedPPOSpec (v1.3)** | [`docs/ppo_spec.md`](ppo_spec.md) **v1.1** → `showdown/rl/ppo/` + `battle_bots/ppo` |
-| **DDQNSpec (v1.2)** | [`docs/ddqn_spec.md`](ddqn_spec.md) **v1.1** → `showdown/rl/ddqn/` + `battle_bots/ddqn` |
+| **QD-PPGA (v1.8)** | [`docs/qd_ppga_spec.md`](qd_ppga_spec.md) **v1.2** → `showdown/rl/qd_ppga/` |
+| **QD-PGA-MAP-Elites (v1.7)** | [`docs/qd_pga_map_elites_spec.md`](qd_pga_map_elites_spec.md) **v1.2** → `showdown/rl/qd_pga/` |
+| **QD-PPO (v1.6)** | [`docs/qd_ppo_spec.md`](qd_ppo_spec.md) **v1.2** → `showdown/rl/qd_ppo/` |
+| **MCTS–PUCT/Nash (v1.5)** | [`docs/mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md) **v1.2** → `showdown/rl/mcts_puct_nash/` |
+| **MCTS+PUCTSpec (v1.4)** | [`docs/mcts_puct_spec.md`](mcts_puct_spec.md) **v1.2** → `showdown/rl/mcts_puct/` + `battle_bots/mcts_puct` |
+| **MaskedPPOSpec (v1.3)** | [`docs/ppo_spec.md`](ppo_spec.md) **v1.3** → `showdown/rl/ppo/` + `battle_bots/ppo` |
+| **DDQNSpec (v1.2)** | [`docs/ddqn_spec.md`](ddqn_spec.md) **v1.3** → `showdown/rl/ddqn/` + `battle_bots/ddqn` |
 | RL deps | `requirements-rl.txt` (`torch>=2.0.0`; MCTS agents need only numpy) |
 | Tests | `tests/test_rl_*.py` incl. `test_rl_qd_ppo.py`, `test_rl_qd_pga.py`, `test_rl_qd_ppga.py` |
 

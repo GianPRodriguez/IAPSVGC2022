@@ -1,0 +1,82 @@
+{
+  "note": "Congelar justo antes del run de Conclusi\u00f3n (docs/conclusion_eval_protocol.md \u00a71).",
+  "pipelines": [
+    {
+      "id": "ddqn",
+      "combat": "ddqn",
+      "preview": "team_preview_ppo",
+      "group": "family",
+      "checkpoint": ""
+    },
+    {
+      "id": "ppo",
+      "combat": "ppo",
+      "preview": "team_preview_ppo",
+      "group": "family",
+      "checkpoint": ""
+    },
+    {
+      "id": "mcts_puct",
+      "combat": "mcts_puct",
+      "preview": "team_preview_nash",
+      "group": "family",
+      "checkpoint": ""
+    },
+    {
+      "id": "mcts_puct_nash",
+      "combat": "mcts_puct_nash",
+      "preview": "team_preview_nash",
+      "group": "family",
+      "checkpoint": ""
+    },
+    {
+      "id": "qd_ppo",
+      "combat": "qd_ppo",
+      "preview": "team_preview_qd_pga",
+      "group": "family",
+      "checkpoint": ""
+    },
+    {
+      "id": "qd_pga",
+      "combat": "qd_pga",
+      "preview": "team_preview_qd_pga",
+      "group": "family",
+      "checkpoint": ""
+    },
+    {
+      "id": "qd_ppga",
+      "combat": "qd_ppga",
+      "preview": "team_preview_qd_pga",
+      "group": "family",
+      "checkpoint": ""
+    },
+    {
+      "id": "random",
+      "combat": "random",
+      "preview": "random",
+      "group": "heuristic",
+      "checkpoint": ""
+    },
+    {
+      "id": "greedy_solo",
+      "combat": "greedy_solo",
+      "preview": "greedy_solo",
+      "group": "heuristic",
+      "checkpoint": ""
+    },
+    {
+      "id": "greedy_joint",
+      "combat": "greedy_joint",
+      "preview": "greedy_solo",
+      "group": "heuristic",
+      "checkpoint": ""
+    },
+    {
+      "id": "expectimax_bayesian",
+      "combat": "expectimax_bayesian",
+      "preview": "expectimax_bayesian",
+      "group": "heuristic",
+      "checkpoint": ""
+    }
+  ]
+}

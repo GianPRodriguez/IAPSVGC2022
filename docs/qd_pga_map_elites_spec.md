@@ -1,187 +1,202 @@
-# QD-PGA-MAP-Elites Agent Spec — Policy Gradient Assisted MAP-Elites (VGC Gen 9)
+# QD-PGA-MAP-Elites Agent Spec (VGC Gen 9)
 
 | Campo | Valor |
-|-------|--------|
-| **Documento** | **Contrato exclusivo — QD-PGA-MAP-Elites** |
-| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.f) |
-| **Estado** | **FROZEN — implementado en `showdown/rl/qd_pga/`** |
-| **Algoritmo** | Grid MAP-Elites + variación híbrida: mutación Gaussiana **o** PPO-clip corto (PGA) con crítico **compartido** \(V_\phi\) |
-| **Rol** | Camino QD de política (variante PGA); iluminar BD; elites actor-only |
-| **Code root** | `showdown/rl/qd_pga/` |
+|---|---|
+| **Versión** | **1.3** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.15) |
+| **Estado** | FROZEN; `showdown/rl/qd_pga/` |
+| **Training** | **Sí**: variación híbrida mutación/PPO y crítico compartido |
+| **Inferencia** | `ValidatedQDPGAPlayer` con el mejor elite actor-only |
 | **CLI** | `python -m showdown.rl.qd_pga.train` |
-| **Deps** | `torch>=2.0`; reusa `ppo/`, helpers de `qd_ppo/` |
 
-> **Contraste con QD-PPO.** Elites full AC + solo PPO vs **actor-only** + \(V_\phi\)
-> compartido + híbrido mut/PG.
->
-> **Contraste con QD-PPGA.** Aquí \(p_{\mathrm{mut}}=0.5\); PPGA fuerza \(p_{\mathrm{mut}}=0\) + arborescencia.
->
-> **Inmutabilidad.** Bump **1.2+** + `rl_env_spec` §6.f juntos.
+## Por qué existe
 
----
+QD-PGA explora un mapa de estilos con dos herramientas complementarias. La
+mutación Gaussiana puede saltar a comportamientos nuevos sin seguir el gradiente;
+la rama policy-gradient mejora de forma dirigida con PPO. Para no guardar un
+crítico por celda, todos los emits aprenden contra un crítico común mientras el
+archivo conserva solo actores.
 
-## 0. Por qué existe (lectura no técnica)
+## Glosario
 
-Igual que QD-PPO, se quiere un **museo de estilos**. La diferencia es *cómo se
-proponen nuevos cuadros*:
+| Término | Significado |
+|---|---|
+| Actor-only elite | Pesos de política, sin `value.*` |
+| Crítico compartido | \(V_\phi\) usado por todos los actores |
+| Mutación | Ruido Gaussiano sobre parámetros float del actor |
+| Burn-rollout | Interacción de rama mut para medir conducta, sin replay |
+| PG emit | Rollout + GAE + PPO sobre el actor |
+| Value replay | Datos de bootstrap/rama PG para TD(0) del crítico |
+| Fitness/BD | Candidate 1 para calidad; descriptor solo para bin |
 
-1. **Mutación:** se tiembla un poco los pesos del actor (ruido Gaussiano) y se
-   “quema” un rollout para medir el estilo — barato, exploratorio.
-2. **PGA:** un mini-entrenamiento PPO usando un crítico **compartido** por todo
-   el archivo (como un profesor de valoración común) — más dirigido a subir
-   calidad.
+## Algoritmo paso a paso
 
-La moneda \(p_{\mathrm{mut}}=0.5\) elige el camino. Los elites guardan **solo el actor**
-(menos memoria que un crítico por celda).
+1. Bootstrappea un actor y el crítico con Candidate 2.
+2. Evalúa e inserta actores semilla en el grid 10×10.
+3. Samplea un padre uniformemente entre celdas llenas.
+4. Con probabilidad 0.5:
+   - **mut:** añade ruido \(\mathcal N(0,0.02^2)\), hace burn-rollout y no escribe replay;
+   - **PG:** recoge 1024 pasos, escribe replay, calcula GAE y hace dos épocas PPO.
+5. La rama PG también actualiza el crítico compartido desde replay TD(0) Huber.
+6. Evalúa fitness Candidate 1 y BD sobre el mosaic.
+7. Inserta solo si hay al menos 10 episodios elegibles y mejora la celda.
+8. Despliega el actor con mayor fitness.
 
-**Analogía:** taller con dos herramientas — tijeras aleatorias (mutación) y
-cincel guiado por un crítico maestro compartido (PGA).
+### Intuición híbrida
 
-| Término | Significado aquí |
-|---------|------------------|
-| Actor-only elite | Se serializa política; no `value.*` por celda |
-| \(V_\phi\) compartido | Un crítico para todos los emits |
-| Mutación \(\sigma\) | Ruido isótropo en floats del actor |
-| Burn-rollout | Pasos Cand. 2 sin escribir replay |
-| PGA emit | Collect + PPO-K + updates de crítico |
+MAP-Elites separa calidad dentro de un nicho y exploración entre nichos. La
+mutación \(\theta'=\theta+\epsilon,\ \epsilon\sim\mathcal N(0,\sigma^2)\)
+puede atravesar zonas donde el gradiente de reward no apunta a un BD nuevo.
+La rama PG, en cambio, usa ventajas y clip PPO para elevar Candidate 2 sin
+alejarse bruscamente del padre. `p_mut=0.5` estudia ambas fuentes con la misma
+probabilidad, no garantiza exactamente mitad de emits en una seed finita.
 
----
+El crítico compartido aproxima valor para muchas políticas. Ahorra un value
+head por elite y transfiere señal, pero su replay mezcla distribuciones. Solo la
+rama PG y bootstrap escriben ese replay; el burn de mutación observa el estilo
+sin enseñar al crítico con una política perturbada accidentalmente.
 
-## 0b. OPEN → FROZEN
+### Arquitectura
 
-| ID | Decisión |
-|----|----------|
-| **P1** | Grid \(10\times 10\) (mismos bins que QD-PPO) |
-| **P2** | Actor-only + shared \(V_\phi\) |
-| **P3–P5** | \(p_{\mathrm{mut}}=0.5\); \(\sigma=0.02\); mut **no** escribe replay |
-| **P6–P9** | \(T_{\mathrm{emit}}=1024\), \(K_{\mathrm{pg}}=2\); replay 200k; crítico TD(0) Huber; GAE actor |
-| **P10–P13** | Fitness/BD como QD-PPO; mosaic; bootstrap 100k; \(T=10^6\) env steps |
+El actor usa el torso PPO `1024→512→512` y cabezas AR 24/24. `actor_state_dict`
+excluye claves `value.*`; cada hijo recibe actor del padre y usa el
+`SharedCritic` separado. Este crítico es un MLP de valor entrenado por TD(0)
+Huber. `best_elite.pt` se guarda en formato de agente para inferencia greedy.
 
-| Operativo | Contrato |
-|-----------|----------|
-| \(n_{\mathrm{emit}}\) | `4` |
-| \(N_{\mathrm{outer}}\) | \(\lfloor 900000/4096\rfloor=219\) |
-| Cada emit | Cuesta \(T_{\mathrm{emit}}\) env steps |
-| IAM | Obligatorio en sample + recompute |
+## Observación, acción y máscaras
 
----
+Usa Obs 1024D, acción auto-regresiva e IAM de
+[`rl_env_spec.md`](rl_env_spec.md). Candidate 2 alimenta bootstrap, burn y PG;
+Candidate 1 define \(f\). Los BD canónicos ubican el elite y no alteran el
+gradiente. Tanto actor mutado como actor PG aplican máscaras derivadas de
+`valid_orders`. Mega sigue disponible; Tera id 22 está siempre apagada.
 
-## 1. Entorno y taxonomía \(R\)/\(U\)
+## Entrenamiento
 
-Igual que QD-PPO: Cand. 2 en PG/bootstrap/mut burn; Cand. 1 fitness; BD fuera de \(R_t\)/\(U\); preview `/team 1234`.
-
----
-
-## 2. Archivo (actor-only)
-
-Payload: keys de actor (excluir `value.*`) + \(f\) + BD. Insert/replace/Coverage/QD-score como QD-PPO. Padres: uniforme sobre filled.
-
----
-
-## 3. Crítico compartido \(V_\phi\)
-
-| Ítem | Contrato |
-|------|----------|
-| Net | MLP \(1024\to512\to512\to1\) |
-| Target | \(y=r+\gamma V(s')\) stop-grad; \(\gamma=0.95\) |
-| Loss | Huber; opcional \(c_v=0.5\) |
-| Data | Replay \(200\,000\) |
-| LR | \(3\times10^{-4}\) |
-| Contador | Gradientes de crítico **no** incrementan \(T\) |
-
----
-
-## 4. Replay
-
-Capacidad 200k; tupla \((s,r,s',\mathrm{terminated})\); escribe **solo** rama PG + bootstrap;
-drop L2/crash; turn-cap store con bootstrap \(V(s')\).
-
----
-
-## 5. Variación híbrida
-
-Con prob. \(p_{\mathrm{mut}}=0.5\):
-
-1. \(\theta'\leftarrow\theta+\mathcal{N}(0,\sigma^2 I)\), \(\sigma=0.02\).
-2. Burn-rollout \(T_{\mathrm{emit}}\) Cand. 2; **sin** replay / **sin** PG.
-3. Eval Cand. 1; try insert.
-
-Si no (PG):
-
-1. Clone actor; collect \(T_{\mathrm{emit}}\) Cand. 2; **write** replay.
-2. GAE vs \(V_\phi\); normalizar ventajas **por emit**.
-3. PPO-clip \(K=2\), \(\varepsilon=0.2\), \(c_e=0.01\); update **solo actor**.
-4. Updates crítico desde replay (`8×256` default).
-5. Eval Cand. 1; try insert.
-
----
-
-## 6–8. Mosaic, bucle, fitness
-
-Mosaic 25/25/50. Outer loop: bootstrap → ≤4 aux emits (moneda mut) → \(N_{\mathrm{outer}}=219\) → deploy \(\pi^\star\).
-
-| Parámetro | Valor |
-|-----------|--------|
-| \(T_{\mathrm{total}}\) | `1_000_000` |
-| \(B_{\mathrm{boot}}\) | `100_000` |
-| \(T_{\mathrm{emit}}\) | `1024` |
-| \(n_{\mathrm{emit}}\) | `4` |
-| \(N_{\mathrm{outer}}\) | `219` |
-| \(p_{\mathrm{mut}}\) | `0.5` |
-| \(\sigma\) | `0.02` |
-| \(K_{\mathrm{pg}}\) | `2` |
-| Workers | `1` |
-
-Fitness/BD/suite: idénticos a QD-PPO (\(G=20\), \(g_{\min}=10\), 200 BO1).
-
----
-
-## 9. Módulos y CLI
-
-`archive.py`, `critic.py`, `replay.py`, `mutate.py`, `improve.py`, `evaluate.py`,
-`mosaic.py`, `train.py`, `agent.py` / `player.py` (`ValidatedQDPGAPlayer`);
-tests `tests/test_rl_qd_pga.py`.
+El actor padre se congela como entrada: se modifica una copia. Los elites no
+guardan crítico; \(V_\phi\) se comparte y cambia solo con replay de bootstrap y
+rama PG. La rama mutación consume pasos para observar comportamiento, pero sus
+transiciones no contaminan el replay.
 
 ```bat
 python -m showdown.rl.qd_pga.train --seed 0 --smoke
+python -m showdown.rl.qd_pga.train --seed 0 --start-ps --suite-games 200
+python -m showdown.rl.qd_pga.train --seed 0 --bc-checkpoint logs/ppo_bc.pt --checkpoint-dir logs/qd_pga_archive
 ```
 
----
+Sin `--start-ps` se usa backend mock. Live requiere Showdown local
+`node pokemon-showdown start --no-security`. El resultado desplegable es
+`best_elite.pt`; `archive.pt` conserva el repertorio.
 
-## 10. Aceptación / non-goals
+### Loop de datos completo
 
-IAM; mut no crece replay; PG sí; elites sin `value.*`; \(N_{\mathrm{outer}}=219\); \(g<10\) reject; smoke.
+1. Bootstrap alterna chunks de 1024 pasos PG hasta 100k.
+2. Semilla y auxiliares intentan poblar el grid.
+3. Se samplea uniformemente una celda ocupada.
+4. Una moneda elige mutación o PG.
+5. Mutación añade ruido y hace burn de 1024 pasos sin replay.
+6. PG recoge 1024 pasos, hace dos épocas y ocho updates de crítico.
+7. Veinte BO1 calculan fitness/BD; diez elegibles son el mínimo.
+8. Inserción estricta, checkpoint y métricas cierran el outer nominal 219.
 
-Non-goals: QD-PPGA; ME-ES primario; CVT; crítico por elite; mut→replay;
-expand-\(\Omega\)/self-play como diversidad primaria; BD en \(R_t\); multi-emitter; preview en MDP.
+## Hiperparámetros
 
----
+| Parámetro | Valor | Propósito | Cómo influye |
+|---|---:|---|---|
+| Grid | `10×10` | Archivo de estilos | Resolución frente a cobertura |
+| \(T_{\rm total}\) | `1_000_000` | Presupuesto | Limita interacciones de variación |
+| Bootstrap | `100_000` | Semilla/crítico | Más estabilidad, menos emits |
+| \(n_{\rm emit}\) | `4` | Hijos/outer | Agrupa trabajo serial |
+| \(T_{\rm emit}\) | `1024` | Datos por hijo | Menor que QD-PPO, permite más emits |
+| \(N_{\rm outer}\) | `219` nominal | Iteraciones | Derivado de presupuesto |
+| \(p_{\rm mut}\) | `0.5` | Balance exploración/PG | Mayor prioriza saltos ciegos |
+| \(\sigma\) | `0.02` | Escala de mutación | Mayor cambia más la política |
+| \(K_{\rm pg}\) | `2` | Épocas PPO | Más explota cada rollout |
+| Replay crítico | `200_000` | TD compartido | Mezcla datos de múltiples actores |
+| Critic updates | `8×256` | Aprender valor | Más costo y ajuste por emit |
+| Fitness \(G/g_{\min}\) | `20/10` | Calidad del archivo | Controla ruido y validez de BD |
+| Crítico LR/\(\gamma\)/\(c_v\) | `3e-4` / `0.95` / `0.5` | TD compartido | Escala y horizonte del valor |
+| Clip/GAE/entropía | `0.2` / `0.95` / `0.01` | Mejora PPO | Conservadurismo y exploración |
+| Semillas auxiliares | `4` | Diversidad inicial | Puede usar rama mut o PG |
+| Mosaic | `25%/25%/50%` | Rivales de búsqueda | Pondera random/solo/joint |
+| Log pasos/tiempo | `5_000` / `60 s` | Heartbeat | No altera aprendizaje |
+| Max turns | `40` | Acotar episodio | Define truncation común |
 
-## 11. Fortalezas y límites (tesis)
+### Ejemplo de las dos ramas
 
-| Fortaleza | Límite |
-|-----------|--------|
-| Exploración mut + mejora PG | Mutación ciega puede degradar IAM-sensible |
-| Crítico compartido eficiente | Menos “personalidad” de valor por elite |
-| Más emits que QD-PPO (\(N=219\)) | \(T_{\mathrm{emit}}\) más corto (1024) |
+Desde el mismo padre, la rama mut añade ruido `σ=0.02`; si cambia el estilo de
+BD `(0.2,0.4)` a `(0.7,0.4)`, puede llenar un nicho lejano aunque su fitness sea
+modesto. La rama PG probablemente queda cerca del BD original, pero puede
+reemplazar su incumbent al elevar fitness. Ninguna rama inserta si no reúne diez
+episodios elegibles.
 
----
+## Ilegales, máscaras y fallos
 
-## 12. Referencias
+- Actor mutado y actor PG conservan IAM; ruido no habilita ids ilegales.
+- Máscara vacía usa `pass` como defensa y se audita.
+- L1 permite fallback seguro y observable.
+- L2/crash se descarta tanto del rollout como del replay.
+- Turn-cap puede bootstrappear en PG; Candidate 1 rige evaluación.
+- Burn mut no escribe replay incluso si la transición es válida.
+- L3 aborta sin crear un elite artificial.
 
-Nilsson & Cully (2021) PGA-MAP-Elites; Mouret & Clune (2015); Schulman et al. (2017);
-Sutton & Barto (2018); Huang & Ontañón (2022);
-[`ppo_spec.md`](ppo_spec.md), [`qd_ppo_spec.md`](qd_ppo_spec.md), [`qd_ppga_spec.md`](qd_ppga_spec.md).
+## Training frente a inferencia
 
----
+Training necesita archivo, replay, crítico, actores hijos y dos operadores.
+Inferencia carga únicamente el actor de `best_elite.pt`; no muta, no consulta el
+archivo y no usa el crítico compartido para actuar.
+
+La evaluación durante training sigue coverage, QD-score, fitness, aceptación,
+conteos mut/PG y suite de \(\pi^\*\). La **Conclusion eval** carga solo el actor
+congelado, lo combina con preview familiar y aplica el protocolo común; no usa
+crítico, replay ni selección dinámica de elites.
+
+## Team Preview y Conclusión
+
+**No hay Team Preview en el MDP de combate.** El pipeline familiar es
+**`team_preview_qd_pga` → QD-PGA de combate**. Comparten
+familia algorítmica, no pesos, observación ni archivo: preview usa su propio
+bandit/BD y combate usa este grid. Congelar ambos artefactos según
+[`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
+
+## Mapa de código
+
+| Archivo | Responsabilidad |
+|---|---|
+| `showdown/rl/qd_pga/train.py` | presupuesto y mezcla de ramas |
+| `showdown/rl/qd_pga/archive.py` | elites actor-only y bins |
+| `showdown/rl/qd_pga/mutate.py` | ruido Gaussiano |
+| `showdown/rl/qd_pga/improve.py` | burn, PPO y updates del crítico |
+| `showdown/rl/qd_pga/critic.py` | valor compartido TD(0) |
+| `showdown/rl/qd_pga/replay.py` | replay de valor |
+| `showdown/rl/qd_pga/evaluate.py` | fitness y BD |
+| `showdown/battle_bots/qd_pga/pokeenv_player.py` | integración live |
+
+## Limitaciones
+
+- Mutación es ciega y puede destruir una política competente.
+- El crítico compartido mezcla distribuciones de muchos estilos.
+- No guardar crítico por elite reduce memoria, pero pierde especialización.
+- Fitness corto y mosaic fijo pueden sobreajustar el archivo.
+- Desplegar solo \(\pi^\*\) no aprovecha adaptación entre elites.
+- Tera está desactivada.
+
+## Cómo leer las métricas
+
+Los conteos `n_mut` y `n_pg` verifican la mezcla realizada; no tienen por qué
+ser idénticos. Coverage atribuido a una rama requiere mirar metadata del elite,
+no inferirlo solo del conteo. Replay length mide datos del crítico y excluye
+deliberadamente burn-rollouts mutados.
+
+Coverage y QD-score describen el archivo; `best_f` y `MEAN_WR_star` describen
+mejor el despliegue. Una subida de coverage con caída temporal de aceptación es
+posible cuando quedan nichos difíciles. Seed, mosaic y presupuesto deben
+acompañar cualquier comparación.
 
 ## Changelog
 
 | Versión | Fecha | Notas |
-|---------|-------|-------|
-| **1.1** | 2026-10-10 | Redacción amena (ES); semántica intacta. |
-| **1.0** | 2026-10-10 | Frozen: shared \(V_\phi\); \(p_{\mathrm{mut}}=0.5\); \(N_{\mathrm{outer}}=219\). |
-
----
-
-*Fin del contrato QD-PGA-MAP-Elites v1.1.*
+|---|---|---|
+| **1.3** | 2026-10-11 | Híbrido, arquitectura, loop, tabla, fallos, evaluación, code map y ejemplo. |
+| **1.2** | 2026-10-11 | Guía dual-audience, data loop/freeze y pairing de Conclusión. |
+| **1.1** | 2026-10-10 | Lectura pedagógica. |
+| **1.0** | 2026-10-10 | Contrato híbrido PGA-MAP-Elites. |

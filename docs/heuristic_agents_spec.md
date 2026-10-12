@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Índice / umbrella** de baselines no aprendidos |
-| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` **v1.14** §6.h) |
+| **Versión** | **1.4** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h) |
 | **Estado** | **FROZEN** — los contratos **exclusivos** por agente son las fuentes de verdad |
 | **Rol** | Glosario + escalera experimental + punteros; **no** duplica números congelados |
 
@@ -11,6 +11,8 @@
 > hace falta una **escalera de rivales fijos**: programas con reglas a mano y
 > calculadora de daño. Cada peldaño tiene su propio contrato (como PPO o DDQN).
 > Este archivo solo orienta; el detalle auditable está en los cuatro specs exclusivos.
+> Mapa global: [`SPECS_INDEX.md`](SPECS_INDEX.md). Eval final (los 4 como baselines
+> completos): [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 ---
 
@@ -18,10 +20,19 @@
 
 | Id | Spec | Code root |
 |----|------|-----------|
-| `random` | [`random_spec.md`](random_spec.md) **v1.2** | `showdown/battle_bots/random/` |
-| `greedy_solo` | [`greedy_solo_spec.md`](greedy_solo_spec.md) **v1.2** | `showdown/battle_bots/greedy_solo/` |
-| `greedy_joint` | [`greedy_joint_spec.md`](greedy_joint_spec.md) **v1.2** | `showdown/battle_bots/greedy_joint/` |
-| `expectimax_bayesian` | [`expectimax_bayesian_spec.md`](expectimax_bayesian_spec.md) **v1.2** | `showdown/battle_bots/expectimax_bayesian/` |
+| `random` | [`random_spec.md`](random_spec.md) **v1.4** | `showdown/battle_bots/random/` |
+| `greedy_solo` | [`greedy_solo_spec.md`](greedy_solo_spec.md) **v1.4** | `showdown/battle_bots/greedy_solo/` |
+| `greedy_joint` | [`greedy_joint_spec.md`](greedy_joint_spec.md) **v1.4** | `showdown/battle_bots/greedy_joint/` |
+| `expectimax_bayesian` | [`expectimax_bayesian_spec.md`](expectimax_bayesian_spec.md) **v1.4** | `showdown/battle_bots/expectimax_bayesian/` |
+
+Cada exclusivo explica el algoritmo para dos lectores: intuición para quien
+aprende IA y contrato auditable para quien mantiene código, CLI y tests.
+
+**Capítulo Team Preview (7 políticas):** Random / Greedy Solo / Greedy Joint
+(preview=Solo) / Expectimax + Masked PPO / Payoff Nash / QD-PGA
+([`team_preview_masked_ppo_spec`](team_preview_masked_ppo_spec.md),
+[`team_preview_nash_spec`](team_preview_nash_spec.md),
+[`team_preview_qd_pga_spec`](team_preview_qd_pga_spec.md)).
 
 **Inmutabilidad:** cambiar semántica de un agente ⇒ bump del **spec exclusivo**
 correspondiente **y** entrada en `rl_env_spec.md` §6.h. Este índice solo se
@@ -76,15 +87,32 @@ acciones ilegales prohibidas; servidor local con `--no-security` en harnesses.
 Wrappers en `showdown/inference_sim/validated_greedy_player.py`
 (+ player Expectimax): sync Battle y soundness OTS cuando actúan como player A.
 
+## 3. Evaluación de Conclusión
+
+Los cuatro aparecen como pipelines completos del grupo `heuristic` en
+[`conclusion_eval_protocol.md`](conclusion_eval_protocol.md):
+
+- `random`: preview Random + combate Random.
+- `greedy_solo`: preview Greedy-Solo + combate Greedy-Solo.
+- `greedy_joint`: preview Greedy-Solo compartido + combate Greedy-Joint.
+- `expectimax_bayesian`: preview Expectimax + combate Expectimax.
+
+Los ids y combinaciones ejecutables viven en
+`showdown/inference_sim/conclusion_eval/pipelines.py`; este índice no redefine
+el round-robin, métricas ni snapshot de equipos.
+
 ---
 
 ## Changelog
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.4** | 2026-10-11 | Exclusivos v1.4 y puntero explícito al protocolo/pipelines de Conclusión. |
+| **1.3** | 2026-10-11 | Índice capítulo Team Preview (7 políticas); exclusivos heurísticos **v1.3** dual-audience. |
+| **1.2** | 2026-10-11 | Alineación Reg M-C Tera off / exclusivos v1.2. |
 | **1.1** | 2026-10-10 | Umbrella: specs exclusivos por agente; este doc deja de ser fuente de números congelados. |
 | **1.0** | 2026-10-10 | Contrato monolítico inicial (superseded como SoT por 1.1 + exclusivos). |
 
 ---
 
-*Fin del índice heurístico v1.1.*
+*Fin del índice heurístico v1.4.*

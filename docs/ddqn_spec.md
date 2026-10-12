@@ -1,287 +1,213 @@
 # DDQN Agent Spec — Double Deep Q-Network joint (VGC Gen 9)
 
 | Campo | Valor |
-|-------|--------|
-| **Documento** | **Contrato exclusivo de implementación — DDQN** |
-| **Versión** | **1.2** (alineado con `docs/rl_env_spec.md` **v1.14** §6.b) |
-| **Estado** | **FROZEN — implementado en `showdown/rl/ddqn/` + `battle_bots/ddqn`** |
-| **Algoritmo** | Double DQN (van Hasselt et al., 2016) + máscara de acciones ilegales |
-| **Rol** | Agente RL **basado en valor** principal (complemento de Masked PPO) |
-| **Code root** | `showdown/rl/ddqn/` |
+|---|---|
+| **Versión** | **1.4** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.15) |
+| **Estado** | FROZEN; implementado en `showdown/rl/ddqn/` y `battle_bots/ddqn/` |
+| **Training** | **Sí**: off-policy con replay; entrenamiento live requiere Showdown local |
+| **Inferencia** | `ValidatedDDQNPlayer`, acción greedy legal desde un checkpoint |
 | **CLI** | `python -m showdown.rl.ddqn.train` |
-| **Deps** | `requirements-rl.txt` — `torch >= 2.0.0` (heuristics sin este extra) |
+| **Dependencias** | `requirements-rl.txt` (`torch>=2.0`) |
 
-> **Alcance.** Fuente de verdad para **implementar DDQN**. Obs 1024D, Reward Cand. 2,
-> `VGCEnv` L1/L2/L3 y ActionSpec viven en [`rl_env_spec.md`](rl_env_spec.md) —
-> **no** redefinir fórmulas aquí.
->
-> **Contraste con PPO.** DDQN aprende \(Q(s,(a_1,a_2))\) sobre **576** acciones joint.
-> PPO factoriza \(\pi(a_1\mid s)\,\pi(a_2\mid s,a_1)\). Ver [`ppo_spec.md`](ppo_spec.md).
-> Misma Obs / Reward / preview / foes ⇒ comparación de tesis válida.
->
-> **Inmutabilidad.** Bump **1.2+** aquí + `rl_env_spec` §6.b en el mismo cambio.
+Esta especificación explica el agente de combate. Observación, recompensa, acciones,
+fallos y Tera off pertenecen al contrato común de
+[`rl_env_spec.md`](rl_env_spec.md); no deben duplicarse con otra semántica aquí.
 
----
+## Por qué existe
 
-## 0. Por qué existe (lectura no técnica)
+DDQN aprende cuánto conviene cada orden conjunta de los dos Pokémon activos. Una
+red *online* elige la mejor continuación y una red *target* la valora. Separar
+esas tareas reduce la sobreestimación del DQN clásico. Es útil como contraste
+basado en valor frente a PPO: usa experiencias antiguas y una salida joint de
+576 valores, en vez de aprender directamente una distribución de acciones.
 
-Imagina que, para cada posición de batalla, quieres una **tabla de “qué tan buena
-es cada jugada conjunta”**. DDQN aproxima esa tabla con una red: mira el estado
-(vector de 1024 números) y asigna un valor \(Q\) a cada par de órdenes posibles
-de tus dos Pokémon. Luego elige (casi siempre) la jugada legal de mayor \(Q\),
-y a veces explora al azar entre las legales (\(\varepsilon\)-greedy).
+## Glosario
 
-**Double** significa: una red propone “cuál es la mejor acción siguiente” y
-**otra** (la target, más lenta) dice “cuánto vale esa acción”. Así se reduce el
-sesgo de siempre mirar el máximo con la misma red.
+| Término | Significado |
+|---|---|
+| \(Q(s,a)\) | Retorno futuro estimado al ejecutar \(a\) en \(s\) |
+| Acción joint | Un id \(a=24a_1+a_2\), con \(a\in[0,575]\) |
+| Red online | Red que actúa y recibe gradientes |
+| Red target | Copia lenta que estabiliza el objetivo TD |
+| Replay | Memoria de transiciones reutilizables; DDQN es off-policy |
+| \(\varepsilon\)-greedy | Mejor acción legal salvo exploración uniforme legal |
+| \(\Omega\) | Conjunto acumulativo de oponentes del curriculum |
 
-**Analogía:** un crítico que puntúa cada *acorde* posible (acción izq × der) y
-aprende de partidas guardadas en una memoria (replay), no solo de la última.
+## Algoritmo paso a paso
 
-| Término | Significado aquí |
-|---------|------------------|
-| \(Q(s,a)\) | Estimación de “cuán bueno es hacer \(a\) en \(s\)” |
-| Joint 576 | \(a=24a_1+a_2\); un id por par de slots |
-| Máscara | Pone \(Q=-\infty\) en ilegales antes de elegir |
-| Replay | Buffer de transiciones pasadas para aprender off-policy |
-| Curriculum \(\Omega\) | Conjunto de rivales que crece (random → … → expectimax) |
+1. `VGCEnv` entrega \(s_t\) y la máscara joint legal.
+2. Durante warm-up se elige uniformemente entre acciones legales; después se usa
+   \(\varepsilon\)-greedy.
+3. Se ejecuta \((a_1,a_2)\) y se obtiene \(r_t,s_{t+1}\).
+4. Si hubo L2 (`skip_buffer`), crash o cualquier truncation, la transición se
+   descarta. En otro caso se guarda con la máscara siguiente.
+5. Cada cuatro pasos de entorno se muestrea un minibatch del replay.
+6. La online selecciona
+   \(a^\*=\arg\max_{a\in L(s')}Q_\theta(s',a)\); la target calcula
+   \(y=r+\gamma Q_{\theta^-}(s',a^\*)\), o \(y=r\) si terminó.
+7. Se minimiza Huber y se actualiza suavemente la target.
+8. En inferencia se fija \(\varepsilon=0\) y se toma el máximo legal.
 
----
+La red es `1024→512→512→576` con ReLU. Dueling, PER, n-step y Rainbow están fuera.
 
-## 1. Entorno heredado (no reimplementar)
+### Intuición matemática
 
-| Contrato | Fuente | Uso DDQN |
-|----------|--------|----------|
-| `VGCEnv` Gymnasium | `rl_env_spec` §1 | Collector `reset` / `step` |
-| Obs \(s \in \mathbb{R}^{1024}\), `float32` | §3 | Entrada de la red |
-| Reward Candidate 2 + clip \([-1.30,+1.40]\) | §4 | \(r_t\) en replay |
-| Slot ids 0–23 | §2 | Factores del id joint |
-| L2 `skip_buffer`, L3 `truncated` | §2 | **Nunca** entran al replay |
-| No `@smogon/calc` en `step()` | §1 / §8 | Solo heurística local en obs |
-
-**Regla de obs DDQN:** el segmento belief 256D es **ceros / priors planos**
-(sin SP Expectimax). OTS sí se acepta en harness por sync; no refina el encoder.
-
----
-
-## 2. Delimitación MDP
-
-| Ítem | Contrato |
-|------|----------|
-| Episodio | 1 partida (BO1). Max turns = **40**. Truncate ≠ Loss. |
-| Decisión | Un turno Showdown → una acción joint \((a_1,a_2)\). |
-| Team Preview | **Fuera del MDP.** `/team 1234` train = eval. WR **condicional** a ese preview. |
-| Self-play | **Prohibido** en esta versión. |
-| Player | `ValidatedDDQNPlayer` (sync + `accept_open_team_sheet=True`) como player A. |
-
----
-
-## 3. Espacio joint y máscara
-
-### Codificación
+El retorno \(G_t=\sum_{k\ge0}\gamma^k r_{t+k}\) resume rewards futuros. La red
+aproxima \(\mathbb E[G_t\mid s_t,a_t]\), no solo el reward inmediato. DDQN
+separa «qué acción elegir» de «cuánto vale»:
 
 \[
-a = 24\cdot a_1 + a_2 \in \{0,\ldots,575\}, \quad a_1,a_2 \in \{0,\ldots,23\}
+a^\*=\arg\max_{a\in L(s')}Q_\theta(s',a),\qquad
+y=r+\gamma(1-d)Q_{\theta^-}(s',a^\*).
 \]
 
-| Slot id | Significado |
-|---------|-------------|
-| 0–15 | move \(i\) × target \(t\) |
-| 16–19 | hard switch banca |
-| 20 | pass |
-| 21 | mega (compact; decode `pe_adapter`) |
-| 22 | tera (**reserved / always illegal** under Reg M-C) |
-| 23 | reserved |
+Una única red tendería a seleccionar también el ruido positivo de sus propias
+estimaciones. La copia lenta reduce esa realimentación. Huber es cuadrática
+cerca de cero y lineal ante errores TD grandes.
 
-**Mega:** id 21 solo si `can_mega` / `valid_orders`.  
-**Tera:** id 22 **nunca** legal en este proyecto (`format_rules.TERASTALLIZATION_ENABLED=False`).
+### Arquitectura y flujo tensorial
 
-### Máscara
+La observación `float32[1024]` atraviesa dos capas densas de 512 unidades con
+ReLU. La salida contiene 576 escalares, uno por joint; no es una probabilidad
+ni usa softmax. `apply_q_mask` vuelve ineligibles los Q de acciones ilegales.
+Online y target son MLP idénticas, pero solo online pertenece a Adam. Después
+de cada gradiente se aplica
+\(\theta^-\leftarrow\tau\theta+(1-\tau)\theta^-\). El checkpoint guarda ambas
+redes y contadores; el replay no se serializa.
+
+## Observación, acción y máscaras
+
+Se heredan Obs 1024D, Candidate 2, ActionSpec y protocolos L1/L2/L3 de
+[`rl_env_spec.md`](rl_env_spec.md). El segmento belief es cero/prior plano.
+`legal_joint_mask` se deriva de `valid_orders`:
 
 \[
-M_{\mathrm{joint}}(a_1,a_2) = M_1(a_1)\cdot M_2(a_2\mid a_1) \in \{0,1\}^{576}
+M(a_1,a_2)=M_1(a_1)M_2(a_2\mid a_1).
 \]
 
-| API | Contrato |
-|-----|----------|
-| `legal_joint_mask(battle) -> (576,)` | Canónico; fuente = **`valid_orders`** |
-| `action_masks(slot1_action_id=None)` | \(M_2\) condicionada si hay slot1 |
-| Illegal Q | \(Q \leftarrow Q + (1-M)\cdot(-10^{9})\) antes de \(\arg\max\) / \(\varepsilon\)-greedy |
-| Sampling | Nunca índice con \(M=0\). Warmup y \(\varepsilon\)-greedy = **uniforme sobre legales** |
+Los ids 0–15 son movimiento×objetivo, 16–19 switch, 20 pass, 21 Mega,
+22 Tera reservado y 23 reservado. En Reg M-C, Tera está desactivada y el id 22
+siempre queda enmascarado. Ni exploración ni inferencia pueden elegir ilegales.
 
-Cobertura L1 objetivo: \(>99\%\) de acciones aceptadas sin L2.
+## Entrenamiento
 
----
-
-## 4. Update Double DQN
-
-Online \(\theta\), target \(\theta^-\), legales \(L(s')=\{a:M(s',a)=1\}\):
-
-\[
-y =
-\begin{cases}
-r_t & \text{si }\texttt{terminated} \\
-r_t + \gamma\, Q_{\theta^-}\big(s',\, \arg\max_{a \in L(s')} Q_{\theta}(s', a)\big) & \text{si no}
-\end{cases}
-\]
-
-\[
-L(\theta) = \mathrm{Huber}\big(Q_\theta(s_t, a_t),\; y;\; \delta=1.0\big)
-\]
-
-| Regla | Contrato |
-|-------|----------|
-| Double | \(a^*\) de **online**; evalúa con **target**. Prohibido \(\max Q_{\theta^-}\). |
-| Soft sync | Cada grad step: \(\theta^- \leftarrow \tau\theta + (1-\tau)\theta^-\), \(\tau=0.005\). |
-| Drop | `skip_buffer` o `truncated` → **no** insert, **no** bootstrap. |
-| Grad clip | `max_norm = 10` |
-
----
-
-## 5. Red
-
-| Ítem | Contrato |
-|------|----------|
-| Input | `float32[1024]` |
-| Body | `Linear(1024,512) → ReLU → Linear(512,512) → ReLU → Linear(512,576)` |
-| Output | Q de todas las joint (máscara fuera de la net) |
-| Off | Dueling, NoisyNets, PER, n-step, Rainbow, C51, QR-DQN |
-| Device | **CPU** por defecto; GPU opcional por CLI |
-
----
-
-## 6. Hiperparámetros congelados
-
-| Parámetro | Valor |
-|-----------|--------|
-| \(\gamma\) | `0.95` |
-| Optimizer | Adam |
-| Learning rate | `3e-4` |
-| \(\tau\) (soft) | `0.005` / grad step |
-| Batch size | `256` |
-| Replay capacity | `200_000` |
-| Warmup env steps | `5_000` (legal-uniform) |
-| Train frequency | 1 grad / 4 env steps |
-| Loss | Huber \(\delta=1.0\) |
-| Grad clip | `max_norm=10` |
-| \(\varepsilon\) | `1.0 → 0.05` linear en primeros `500_000` env steps |
-| Eval / gate \(\varepsilon\) | `0` |
-| Replay tuple | `(s_t, a_joint, r_t, s', terminated, m_next)` |
-| Seed | CLI obligatorio; logueado |
-
----
-
-## 7. Módulos y CLI
-
-| Módulo | Responsabilidad |
-|--------|-----------------|
-| `network.py` | Online + target MLP; soft update |
-| `replay.py` | Capacidad 200k; rechazo skip/truncated |
-| `agent.py` | \(\varepsilon\)-greedy / greedy enmascarado; codec joint |
-| `train.py` | Collector, curriculum, checkpoint, logging |
-| `player.py` | `DDQNPlayer` + `ValidatedDDQNPlayer` |
-| Tests | `tests/test_rl_ddqn.py` |
-
-| Flag | Significado |
-|------|-------------|
-| `--seed` | Obligatorio |
-| `--device` | Default `cpu` |
-| `--opponent` | `mock` \| `random` \| `greedy_solo` \| `greedy_joint` \| `expectimax_bayesian` \| `curriculum` |
-| `--steps` / `--phases` | Pasos o unlocks `opp:steps,...` |
-| `--expand-omega` / `--no-expand-omega` | \(\Omega\) acumulativo (default on) vs fases exclusivas |
-| `--opponent-weights` | p.ej. `expectimax_bayesian:0.35` |
-| `--no-expectimax` | Omite Expectimax del curriculum |
-| `--curriculum-phase-steps` | Default `500000` |
-| `--start-ps` | PS local (`--no-security`) |
-| `--checkpoint-dir` | Default `logs/ddqn_checkpoints` |
+El bucle real está en `ddqn/train.py`: collect → replay → minibatch TD → checkpoint.
+La red target no recibe optimización directa; se mueve por soft update. El
+entorno y los rivales están congelados respecto de los gradientes. El replay se
+mantiene entre fases de \(\Omega\).
 
 ```bat
-python -m showdown.rl.ddqn.train --seed 0 --opponent mock --steps 20000
+python -m showdown.rl.ddqn.train --seed 0 --opponent mock --steps 20000 --smoke
 python -m showdown.rl.ddqn.train --seed 0 --opponent curriculum --start-ps
 python -m showdown.rl.ddqn.train --seed 0 --start-ps --expand-omega --phases random:100k,greedy_solo:200k,greedy_joint:300k,expectimax_bayesian:50k
 ```
 
----
+`--start-ps` usa el servidor local con `node pokemon-showdown start --no-security`.
+Artefactos: `final.pt`, checkpoints por fase, `train_meta.json` y `reporte.txt`.
+El curriculum por defecto desbloquea random → greedy_solo → greedy_joint →
+expectimax_bayesian; este último puede omitirse con `--no-expectimax`.
 
-## 8. Curriculum ( \(\Omega\) monótono)
+### Ciclo de datos y curriculum
 
-**Default (`--expand-omega`):** el set de rivales crece; el replay **no** se limpia.
+1. El actor genera una transición Candidate 2 bajo una máscara legal.
+2. Replay rechaza L2, crash y truncation antes de contaminar datos.
+3. `opponent_code` audita la procedencia; no entra como feature.
+4. Tras warm-up, cada cuarto paso activa como máximo un gradiente.
+5. `--expand-omega` conserva acumulativamente rivales desbloqueados.
+6. Los checkpoints por fase permiten observar progreso y olvido.
 
-| Fase | Unlock | \(\Omega_t\) | Advance |
-|------|--------|--------------|---------|
-| 0 Warmup | — | legal-uniform | 5k antes de aprender |
-| 1 | `random` | `{random}` | `500_000` steps |
-| 2 | `greedy_solo` | `{random, greedy_solo}` | igual |
-| 3 | `greedy_joint` | `{random, solo, joint}` | igual |
-| 4 | `expectimax_bayesian` | \(\Omega_3\cup\{\mathrm{expectimax}\}\) | igual (`--no-expectimax` omite) |
+Los `20_000` pasos del CLI son un default práctico, no la fase contractual de
+`500_000`. `--smoke` valida cableado, no calidad.
 
-Pesos de muestreo: `random=solo=joint=1.0`, `expectimax_bayesian=0.35`.
-**Checkpoint best:** WR vs **`greedy_joint`** (\(\varepsilon=0\)).
+## Hiperparámetros
 
----
+| Parámetro | Valor | Propósito | Cómo influye |
+|---|---:|---|---|
+| \(\gamma\) | `0.95` | Descuento TD | Mayor valor mira más lejos |
+| LR / optimizador | `3e-4` / Adam | Actualizar online | Alto acelera pero puede desestabilizar |
+| \(\tau\) | `0.005` por grad step | Soft update target | Menor separa más ambas redes |
+| Batch | `256` | Estimar gradiente | Mayor suaviza y consume memoria |
+| Replay | `200_000` | Reutilizar datos | Amplía diversidad y antigüedad |
+| Warm-up | `5_000` pasos | Llenar replay | Evita aprender de una muestra mínima |
+| Frecuencia | 1 grad / 4 env steps | Relación aprendizaje/datos | Más updates elevan costo y correlación |
+| \(\varepsilon\) | `1.0→0.05` en `500_000` | Exploración | Decae de aleatorio legal a casi greedy |
+| Loss / clip | Huber \(\delta=1\), norm `10` | Robustez | Limita outliers y gradientes |
+| Fase curriculum | `500_000` pasos | Desbloquear rivales | Controla exposición a dificultad |
+| Max turns | `40` | Acotar episodio | Truncation se descarta en DDQN |
+| Device | `cpu` | Dispositivo por defecto | GPU acelera batches, no cambia la regla |
+| Seed | `0` | Reproducibilidad | Cambia pesos, replay y exploración |
 
-## 9. Suite offline (WR reportado)
+### Ejemplo mínimo de un objetivo
 
-| Rival | Juegos | Modo | \(\varepsilon\) | Preview |
-|-------|--------|------|-----------------|---------|
-| `random` | 200 | BO1 | 0 | `/team 1234` |
-| `greedy_joint` | 200 | BO1 | 0 | `/team 1234` |
-| `expectimax_bayesian` | 200 | BO1 | 0 | `/team 1234` |
+Con \(r=0.2\), episodio no terminal y
+\(Q_{\theta^-}(s',a^\*)=0.6\), resulta
+\(y=0.2+0.95(0.6)=0.77\). Si terminó, \(y=0.2\). Si una acción tiene mayor Q
+pero es ilegal, la máscara impide que sea \(a^\*\).
 
----
+## Ilegales, máscaras y niveles de fallo
 
-## 10. Telemetría (no entra en \(R_t\))
+- Una ilegal prevenible queda fuera de exploración, inferencia y bootstrap.
+- Una máscara vacía inesperada produce `(pass, pass)` como defensa, no como
+  redefinición del espacio legal.
+- L1 admite la corrección segura definida por el contrato común y se registra.
+- L2, crash o truncation marcan la transición para no entrenar con ella.
+- L3 aborta; no se convierte artificialmente en derrota o reward.
+- Una máscara siguiente desfasada sería crítica: haría bootstrap sobre una
+  acción imposible. La validación de sync debe detectarlo.
 
-`illegal_action_fallbacks`, `mean_game_length`, `mean_q` / `mean_target` / `td_error`,
-`eps`, `curriculum_phase`, `buf_frac_*` / `batch_frac_*`, `eval_wr_<opponent>`.
+## Training frente a inferencia
 
----
+Training usa Candidate 2, \(\varepsilon>0\), replay, online+target y gradientes.
+Inferencia carga un checkpoint, fija modo evaluación y \(\varepsilon=0\); no
+escribe replay ni actualiza pesos. OTS habilita sincronización del harness, no
+añade inferencia bayesiana al belief.
 
-## 11. Tests de aceptación
+La evaluación durante training diagnostica aprendizaje, composición del replay
+y estabilidad en suites de control; puede orientar el checkpoint. La
+**Conclusion eval** ocurre después, con pesos congelados, pairing familiar,
+equipos comunes y métricas de round-robin. No actualiza replay ni redes. Una
+suite interna favorable no equivale a un resultado de Conclusión.
 
-1. Double: \(a^*\) solo de online.  
-2. Replay: `skip_buffer=True` no aumenta `len(replay)`.  
-3. Codec joint idempotente en \(\{0,\ldots,575\}\).  
-4. Máscara: con \(\varepsilon=0\), argmax siempre \(M=1\).  
-5. Smoke ≥100 steps en `MockBattleBackend` (CPU).
+## Team Preview y Conclusión
 
----
+**No hay Team Preview en el MDP de combate.** El entrenamiento usa preview fijo
+`/team 1234`; seleccionar cuarteto y orden pertenece a otro componente. En la
+evaluación final el pipeline familiar es:
 
-## 12. Fortalezas y límites (tesis)
+**`team_preview_ppo` → DDQN de combate**.
 
-| Fortaleza | Límite |
-|-----------|--------|
-| Coordina ambos slots en un solo \(Q\) | Espacio 576 grande; sin modelo explícito de \(\pi\) |
-| Off-policy + replay eficiente | Sin self-play en v1.1 |
-| Fácil de contrastar con PPO | Belief plano; preview fijo |
+El primer componente escoge cuatro Pokémon y orden; luego DDQN decide los turnos.
+Sus checkpoints se congelan antes del round-robin. Diseño, swap de equipos,
+fallos y métricas: [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
----
+## Mapa de código
 
-## 13. Non-goals
+| Archivo | Responsabilidad |
+|---|---|
+| `showdown/rl/ddqn/network.py` | MLP, copia y soft update |
+| `showdown/rl/ddqn/agent.py` | epsilon-greedy, DDQN, Huber, checkpoint |
+| `showdown/rl/ddqn/replay.py` | filtros y minibatches |
+| `showdown/rl/ddqn/curriculum.py` | fases y mezcla de \(\Omega\) |
+| `showdown/rl/ddqn/train.py` | loop, CLI, reporting y artefactos |
+| `showdown/rl/ddqn/player.py` | inferencia validada |
+| `showdown/battle_bots/ddqn/pokeenv_player.py` | integración poke-env |
+| `showdown/rl/action_space.py` | joints y máscaras |
 
-PER, n-step, Rainbow, C51, QR-DQN, Dueling, NoisyNets; preview en MDP;
-entrenar en L2/truncated; \(Q\) como \(\Phi(s)\); self-play; IQL/BDQN como agente principal reportado; BC obligatorio;
-Terastallization como acción legal (Reg M-C: id 22 siempre masked).
+## Limitaciones
 
----
-
-## 14. Referencias
-
-- Huang & Ontañón (2022). Invalid action masking. *FLAIRS*.  
-- Mnih et al. (2015). Deep RL. *Nature*.  
-- van Hasselt, Guez & Silver (2016). Double Q-learning. *AAAI*.  
-- [`rl_env_spec.md`](rl_env_spec.md); [`ppo_spec.md`](ppo_spec.md); heuristics §6.h.
-
----
+- La salida 576 coordina slots, pero es grande y no factoriza estructura.
+- Replay antiguo puede quedar desalineado con el curriculum.
+- No hay self-play en este contrato ni belief oculto sofisticado.
+- La calidad queda condicionada al simulador, al reward denso y al preview usado.
+- No se entrena con fallbacks ni truncations; eso protege el dataset pero pierde datos.
+- Tera no puede aprenderse ni ejecutarse porque está desactivada por formato.
 
 ## Changelog
 
 | Versión | Fecha | Notas |
-|---------|-------|-------|
-| **1.2** | 2026-10-11 | ActionSpec: Tera id 22 **off** bajo Reg M-C (`format_rules`); Mega 21 intacto. |
-| **1.1** | 2026-10-10 | Redacción amena (ES) + glosario/analogía; **sin** cambio de semántica FROZEN. |
-| **1.0** | 2026-10-10 | Contrato DDQN + curriculum \(\Omega\) monótono. |
-
----
-
-*Fin del contrato DDQN v1.2.*
+|---|---|---|
+| **1.4** | 2026-10-11 | Arquitectura, loop, fallos, evaluación, code map y ejemplo ampliados. |
+| **1.3** | 2026-10-11 | Reescritura dual-audience; training/inferencia y pairing `team_preview_ppo` para Conclusión. |
+| **1.2** | 2026-10-11 | Tera id 22 reservado/off; Mega 21 intacto. |
+| **1.1** | 2026-10-10 | Glosario y lectura pedagógica. |
+| **1.0** | 2026-10-10 | Contrato inicial DDQN. |

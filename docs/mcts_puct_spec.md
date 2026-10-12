@@ -1,227 +1,200 @@
-# MCTS + PUCT Agent Spec — Planificación open-loop (VGC Gen 9)
+# MCTS + PUCT Agent Spec — planificación open-loop (VGC Gen 9)
 
 | Campo | Valor |
-|-------|--------|
-| **Documento** | **Contrato exclusivo — MCTS + PUCT (estándar)** |
-| **Versión** | **1.1** (alineado con `docs/rl_env_spec.md` **v1.10** §6.c) |
-| **Estado** | **FROZEN — implementado en `showdown/rl/mcts_puct/` + `battle_bots/mcts_puct`** |
-| **Algoritmo** | Monte Carlo Tree Search + PUCT (Rosin 2011; forma Silver et al. 2017) |
-| **Rol** | Agente de **planificación pura** bajo Cand. 1 (no aprende pesos) |
-| **Code root** | `showdown/rl/mcts_puct/` |
-| **CLI** | `python -m showdown.rl.mcts_puct` |
-| **Deps** | **Sin torch** en v1.1 (`numpy`). Heuristics intactos. |
+|---|---|
+| **Versión** | **1.3** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.15) |
+| **Estado** | FROZEN; `showdown/rl/mcts_puct/` y `battle_bots/mcts_puct/` |
+| **Training** | **No**: búsqueda pura en cada decisión; no hay gradientes ni checkpoint de combate |
+| **CLI** | `python -m showdown.rl.mcts_puct --seed 0 --sims 16 --smoke` |
+| **Dependencias** | NumPy; no requiere Torch |
 
-> **Alcance.** SoT de MCTS+PUCT. Env/Cand. 1 en [`rl_env_spec.md`](rl_env_spec.md).
-> Sibling simultáneo: [`mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md).
->
-> **Inmutabilidad.** Bump **1.2+** + `rl_env_spec` §6.c juntos.
+## Por qué existe
 
----
+MCTS cambia costo de entrenamiento por costo de decisión. Desde el estado actual
+simula futuros con un modelo local S2, equilibra explorar acciones nuevas y
+explotar acciones prometedoras mediante PUCT, y juega la raíz más visitada. Es
+un baseline de planificación interpretable frente a agentes que comprimen la
+experiencia en pesos.
 
-## 0. Por qué existe (lectura no técnica)
+## Glosario
 
-En vez de entrenar una red durante horas, este agente **piensa en el momento**:
-simula muchas partidas imaginarias desde la posición actual, anota qué jugadas
-propias llevan a mejores resultados (+1 / −1 / 0) y al final juega la acción
-más visitada en la raíz. PUCT equilibra “explotar lo que ya parece bueno” y
-“explorar lo poco visitado”, guiado por un prior (aquí: uniforme sobre legales).
+| Término | Significado |
+|---|---|
+| Simulación | Trayectoria imaginada dentro de S2 |
+| Open-loop | El rival se samplea; no tiene un nodo estratégico propio |
+| PUCT | Score \(Q\) más bono de prior/visitas |
+| Prior \(P\) | Distribución inicial; aquí uniforme sobre legales |
+| Rollout | Política `greedy_joint_snapshot` desde la hoja |
+| Backup | Acumular retorno en aristas visitadas |
+| Presupuesto | Número de simulaciones por decisión, no pasos de training |
 
-El rival en el árbol se modela de forma **open-loop**: se muestre su acción al azar
-entre legales (no se construye un árbol minimax de dos jugadores). En las hojas,
-ambos bandos juegan `greedy_joint_snapshot` hasta el final.
+## Algoritmo paso a paso
 
-**Analogía:** un jugador que, con reloj, juega mentalmente 200 finales rápidos con
-un compañero “greedy”, y elige la apertura que más veces ganó en esas fantasías.
+1. Se convierte la batalla sincronizada en `BattleSnapshot`.
+2. La raíz expande todas las acciones joint legales.
+3. PUCT selecciona
+   \[
+   \arg\max_a Q(s,a)+c_{\rm puct}P(s,a)\frac{\sqrt{N(s)}}{1+N(s,a)}.
+   \]
+4. Se samplea la acción rival uniformemente entre sus legales.
+5. `step_sim` avanza S2 con azar Monte Carlo.
+6. En una hoja nueva, ambos lados usan `greedy_joint_snapshot` hasta terminal o
+   cap; el resultado es Candidate 1 \(z\in\{-1,0,1\}\).
+7. Se propaga \(z\) sin invertir signo: \(N{+}{=}1,W{+}{=}z,Q=W/N\).
+8. Tras agotar `n_sims`, se juega `argmax` de visitas de la raíz.
 
-| Término | Significado aquí |
-|---------|------------------|
-| Simulación | Una trayectoria imaginaria en S2 |
-| Open-loop | El rival se samplea; no es nodo de decisión propio |
-| Prior \(P\) | Sesgo de exploración PUCT (uniforme legal) |
-| Rollout | Política de hoja hasta terminal |
-| S2 | Simulador aproximado in-process (sin Node) |
-| Cand. 1 | \(z\in\{+1,-1,0\}\) (tie = 0) |
+No aprende pesos entre partidas. El árbol se vuelve a construir para la
+decisión actual.
 
----
+### Intuición de PUCT
 
-## 1. Entorno heredado
-
-| Contrato | Fuente | Uso |
-|----------|--------|-----|
-| `VGCEnv` | §1 | I/O partida real; búsqueda en S2 |
-| Reward **Cand. 1** | §4 | Terminal \(z\); nunca Cand. 2 −0.25 |
-| Máscara joint | §2 | Solo \(a\in L(s)\) |
-| No `@smogon/calc` | §1 | También prohibido en pasos S2 |
-
-**Belief:** plano / no usado (paridad con DDQN/PPO).
-
----
-
-## 2. Delimitación MDP
-
-| Ítem | Contrato |
-|------|----------|
-| Episodio | BO1; max turns **40**; truncate ≠ loss |
-| Decisión | Joint \(a\in\{0,\ldots,575\}\) legal |
-| Preview | Fuera: `/team 1234` |
-| Training | **Ninguno** (pure search). Prior neural → v1.2+ |
-| Player | `ValidatedMCTSPuctPlayer` |
-
----
-
-## 3. Espacio de acción
-
-Joint legal (paridad DDQN): \(a\in L(s)\subseteq\{0,\ldots,575\}\).
-Sin nodos intermedios AR Slot1→Slot2 (rompería paridad MDP).
-
----
-
-## 4. Búsqueda (single-agent, open-loop)
-
-### 4.1 Estructura
-
-- Nodos de decisión = solo el agente que busca.
-- Aristas = \(a_{\mathrm{self}}\) legal.
-- Transición: \(a_{\mathrm{opp}}\sim U(L_{\mathrm{opp}})\), luego S2 con True MC.
-- **No** es árbol 2P alternado / minimax.
-
-### 4.2 Selección PUCT
-
+\(Q=W/N\) resume la evidencia observada para una arista. El bono
 \[
-a^\star=\arg\max_{a\in L(s)}\Big[
-Q(s,a)+c_{\mathrm{puct}}\,P(s,a)\,\frac{\sqrt{N(s)}}{1+N(s,a)}
-\Big]
+U(s,a)=c_{\rm puct}P(s,a)\frac{\sqrt{N(s)}}{1+N(s,a)}
 \]
+es grande para aristas poco visitadas. Al principio fuerza cobertura; después
+\(Q\) domina. Con prior uniforme, el conocimiento proviene del rollout greedy
+y de S2, no de una red previa.
 
-\(Q=W/N\) (0 si \(N=0\)). Dirichlet: **off** en eval.
+Open-loop no conserva una rama estratégica rival separada. Al crear un hijo se
+samplea una joint rival y ese estado queda asociado a la arista propia. Es
+barato, pero mezcla la incertidumbre rival dentro del retorno.
 
-### 4.3 Expansión
+### Ciclo de vida del presupuesto
 
-Primera visita no terminal: aristas \(\forall a\in L(s)\) con \(P(a)=1/|L(s)|\).
+1. Cada turno real crea una raíz y expande sus joints legales.
+2. La simulación `k` recibe RNG derivado de `seed|turn|k`.
+3. Se baja con PUCT; las aristas no probadas se consumen primero.
+4. Al crear un hijo, S2 samplea rival, accuracy y daño.
+5. Desde la hoja, ambos bandos ejecutan rollout greedy.
+6. Candidate 1 terminal/cap se propaga por el camino.
+7. Tras \(N_{\rm sim}\), la raíz elige por visitas y luego Q.
+8. El árbol se descarta; el próximo turno usa un snapshot sincronizado nuevo.
 
-### 4.4 Hoja / rollout
+La telemetría cuenta sims, nodos, fallos y profundidad media. Una excepción de
+simulación aporta cero y se registra; no produce directamente una orden ilegal.
 
-Rollout a terminal (cap 40) con **`greedy_joint_snapshot` ambos**. Retorna Cand. 1 \(z\).
+## Observación, acción y máscaras
 
-### 4.5 Backup
+La batalla real usa el contrato de [`rl_env_spec.md`](rl_env_spec.md). La
+búsqueda opera sobre snapshots, no sobre el vector neural 1024D. Sus aristas son
+acciones joint \(a=24a_1+a_2\) filtradas por legalidad. Mega puede ser legal;
+Tera (id 22) está siempre apagada bajo Reg M-C. Candidate 1 conserva el juego
+cero-suma y asigna cero al empate/cap.
 
-\(z\) se propaga **sin** invertir signo. Por arista del path:
-\(N{+}{=}1\), \(W{+}{=}z\) (\(\gamma=1\)).
+## Búsqueda e inferencia
 
-### 4.6 Acción real
-
-\(a_{\mathrm{play}}=\arg\max_{a\in L(s_0)} N(s_0,a)\) (visit-greedy; **no** es la política de rollout).
-
----
-
-## 5. Simulador S2
-
-**Default:** `BattleSnapshot` + heurística de daño local (sin Node / poke-env).
-**S1** (PS live): ablación de fidelidad offline.
-**`greedy_joint_snapshot`:** greedy joint nativo en snapshot; **solo** rollouts.
-
-**Riesgo tesis:** si S2 diverge de S1, MCTS optimiza una realidad alucinada → cuantificar con ablaciones.
-
-**Estocasticidad:** True MC (rolls, accuracy). Sin nodos chance Expectimax.
-
----
-
-## 6. Tres políticas (no confundir)
-
-| Rol | Política | Dónde |
-|-----|----------|-------|
-| Prior \(P\) | Uniforme legal | Fórmula PUCT |
-| Modelo rival (árbol) | Uniforme legal | Transiciones |
-| Rollout (hoja) | `greedy_joint_snapshot` | Hasta terminal / 40 |
-| Acción jugada | \(\arg\max N\) | Showdown / `VGCEnv` |
-
-Prior neural (PPO/DDQN): **fuera de v1.1**.
-
----
-
-## 7. RNG
-
-Cada sim: RNG local de `(global_seed, root_turn, sim_id)` → misma secuencia de opp + daño.
-
----
-
-## 8. Hiperparámetros congelados
-
-| Parámetro | Valor | Notas |
-|-----------|-------|-------|
-| \(N_{\mathrm{sim}}\) | `200` | Smoke `16`. Curva tesis `{50,200,800}` |
-| \(c_{\mathrm{puct}}\) | `1.5` | Familia AlphaZero |
-| Árbol | Single-agent open-loop | |
-| Hoja | Rollout cap 40 | `greedy_joint_snapshot`; Cand. 1 |
-| Sim | S2 | S1 = ablación |
-| Prior / opp | Uniforme legal | |
-| Dirichlet | Off | |
-| Estocasticidad | True MC | |
-| Seed | CLI obligatorio | |
-
----
-
-## 9. Módulos y CLI
-
-`simulator.py`, `greedy_snapshot.py`, `tree.py`, `search.py`, `agent.py`, `player.py`,
-`bench.py` / `__main__.py`, tests `tests/test_rl_mcts_puct.py`.
+No existe un comando de entrenamiento: la CLI actual solo acepta `--smoke`.
+“Mejorar” MCTS significa aumentar o ajustar el presupuesto de búsqueda y medir
+latencia/fidelidad, no hacer backpropagation.
 
 ```bat
 python -m showdown.rl.mcts_puct --seed 0 --sims 16 --smoke
 ```
 
----
+En una ejecución final, el player usa el presupuesto configurado en cada turno.
+El prior, el modelo rival y la política de rollout quedan congelados; el único
+estado efímero son estadísticas del árbol. S1/Showdown live sirve para evaluar
+fidelidad, no para entrenar S2.
 
-## 10. Suite de evaluación
+### Ejemplo de selección
 
-200 BO1 vs `random`, `greedy_joint`, `expectimax_bayesian`; `/team 1234`; sims = default congelado.
+Con \(Q_A=0.30,N_A=20\) y \(Q_B=0.10,N_B=2\), B puede ganar temporalmente por
+su bono de exploración. Al recibir visitas, ese bono cae. La decisión final usa
+el mayor \(N\), no el Q aislado, y resiste mejor una muestra afortunada.
 
----
+## Hiperparámetros
 
-## 11. Telemetría
+| Parámetro | Valor | Propósito | Cómo influye |
+|---|---:|---|---|
+| \(N_{\rm sim}\) | `200` (`16` smoke) | Presupuesto por decisión | Más reduce varianza y aumenta latencia |
+| \(c_{\rm puct}\) | `1.5` | Exploración | Mayor visita acciones menos probadas |
+| Prior | uniforme legal | Iniciar aristas | No aporta conocimiento neural |
+| Rival en árbol | uniforme legal | Resolver transición | Simplifica, pero no anticipa estrategia |
+| Rollout | greedy joint ambos | Valorar hojas | Su sesgo define gran parte del valor |
+| Max turns | `40` | Acotar rollout | Caps devuelven señal no ganadora |
+| Descuento | `1` | Backup terminal | Mantiene escala Candidate 1 |
+| Dirichlet | off | Ruido en raíz | Inferencia determinista dado RNG |
+| RNG | seed+turn+sim | Reproducibilidad | Controla rival, accuracy y rolls |
+| Acción final | máximo \(N\), desempate \(Q\) | Decidir raíz | Favorece evidencia acumulada |
+| Expansión | primera no probada | Cobertura estable | Prueba legales antes de reusar |
 
-`sims_per_decision`, `tree_nodes`, `avg_depth`, `sim_failures`, `eval_wr_<opp>`, wall time.
+## Ilegales, máscaras y fallos
 
----
+- Cada nodo genera joints legales desde su snapshot; Tera 22 no aparece.
+- Mega solo entra cuando el estado simulado la permite.
+- Sin aristas, se devuelve `(pass, pass)` como defensa.
+- L1 permite el fallback seguro y observable del player live.
+- L2 marca desincronización no reparable; la decisión no cuenta como válida.
+- Un fallo interno de simulación suma retorno cero y telemetría.
+- Más simulaciones no corrigen un sesgo sistemático de S2.
+- L3/crash aborta según el contrato común.
 
-## 12. Tests de aceptación
+## Training frente a inferencia
 
-Legales; PUCT mock; backup \(W{+}{=}z\) sin flip; Cand. 1; RNG reproducible; smoke `--sims 16`.
+No hay pesos, dataset ni artefacto de training. Toda computación útil ocurre en
+inferencia. Cambiar `--sims` cambia costo y calidad en el momento; no produce un
+modelo reutilizable. La reproducibilidad exige congelar seed, simulador, rollout
+y presupuesto.
 
----
+Durante desarrollo se evalúan Candidate 1, fidelidad S2↔S1, latencia,
+profundidad y tasa de fallos. No existen loss ni checkpoint. La **Conclusion
+eval** congela presupuesto, simulador, rollout y seed policy, usa el protocolo
+común y no adapta el árbol con partidas anteriores.
 
-## 13. Fortalezas y límites (tesis)
+## Team Preview y Conclusión
 
-| Fortaleza | Límite |
-|-----------|--------|
-| Sin train; interpretable en el turno | Costo \(\propto N_{\mathrm{sim}}\) en wall-clock |
-| Paridad joint 576 con DDQN | Open-loop subestima rival estratégico |
-| Rollout Joint ancla heurística fuerte | S2 ≠ PS exacto |
+**No hay Team Preview en el MDP de combate.** El pipeline familiar es
+**`team_preview_nash` → MCTS+PUCT de combate**. El Nash
+de preview resuelve la selección de cuatro Pokémon; después MCTS planifica cada
+turno. No comparten árbol ni parámetros. El presupuesto debe quedar congelado
+antes del round-robin. Véase
+[`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
----
+## Mapa de código
 
-## 14. Non-goals
+| Archivo | Responsabilidad |
+|---|---|
+| `showdown/rl/mcts_puct/agent.py` | configuración y API |
+| `showdown/rl/mcts_puct/search.py` | select, expand, rollout y backup |
+| `showdown/rl/mcts_puct/tree.py` | nodos, aristas y PUCT |
+| `showdown/rl/mcts_puct/simulator.py` | S2, rival y Candidate 1 |
+| `showdown/rl/mcts_puct/greedy_snapshot.py` | política de rollout |
+| `showdown/rl/mcts_puct/player.py` | adaptador validado |
+| `showdown/battle_bots/mcts_puct/pokeenv_player.py` | integración live |
+| `showdown/rl/snapshot.py` | estado compacto |
 
-MCTS+Nash (sibling); prior/value neural v1.1; QD/BD en búsqueda; calc/Node en S2;
-minimax 2P; preview en MDP; nodos AR Slot1→Slot2.
+## Limitaciones
 
----
+- El rival uniforme open-loop subestima respuestas estratégicas.
+- S2 es aproximado: optimizarlo puede no optimizar Showdown real.
+- El costo crece aproximadamente con simulaciones y longitud de rollout.
+- El prior uniforme desperdicia conocimiento previo.
+- La política greedy de hoja introduce sesgo.
+- No modela Tera porque el formato la desactiva.
 
-## 15. Referencias
+## Lectura de telemetría
 
-Rosin (2011); Silver et al. (2017); Kocsis & Szepesvári (2006);
-[`rl_env_spec.md`](rl_env_spec.md); [`mcts_puct_nash_spec.md`](mcts_puct_nash_spec.md);
-[`greedy_joint_spec.md`](greedy_joint_spec.md).
+`sims` debe coincidir con el presupuesto incluso cuando alguna trayectoria
+falla. `nodes` aproxima cuánta expansión efectiva produjo el presupuesto;
+`avg_depth` distingue búsqueda superficial con muchas ramas de trayectorias más
+largas. `failures>0` exige investigar S2: no es evidencia de una posición
+equilibrada. Para comparar configuraciones se reportan también tiempo por
+decisión y llamadas a `step_sim`.
 
----
+La acción más visitada puede tener Q menor que otra poco probada. Eso no es una
+contradicción: visitas reflejan el proceso acumulado de selección, y Q de una
+muestra escasa tiene alta varianza. La inspección conjunta de \(N,Q,P\) hace
+el baseline interpretable sin convertir telemetría en información del agente.
+
+El reporte debe conservar también la seed global y el turno de la decisión.
+Así una trayectoria anómala puede reproducirse sin reutilizar el árbol.
 
 ## Changelog
 
 | Versión | Fecha | Notas |
-|---------|-------|-------|
-| **1.1** | 2026-10-10 | Redacción amena (ES); semántica intacta. |
-| **1.0** | 2026-10-10 | Frozen: joint 576, S2, open-loop, \(N_{\mathrm{sim}}=200\), \(c=1.5\). |
-
----
-
-*Fin del contrato MCTS+PUCT v1.1.*
+|---|---|---|
+| **1.3** | 2026-10-11 | PUCT, lifecycle, fallos, evaluación, code map y ejemplo ampliados. |
+| **1.2** | 2026-10-11 | Explicación dual-audience, presupuesto search-time y pairing Nash-preview. |
+| **1.1** | 2026-10-10 | Lectura pedagógica. |
+| **1.0** | 2026-10-10 | Contrato open-loop PUCT. |
