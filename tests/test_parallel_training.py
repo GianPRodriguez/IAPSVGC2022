@@ -428,6 +428,9 @@ def test_node_executable_prefers_env_then_path_then_latest_nvm(tmp_path, monkeyp
     from pathlib import Path
 
     assert Path(paths.node_executable()).parts[-3:] == ('v26.13.1', 'bin', 'node')
+    # La carpeta de nvm queda en el PATH: `pokemon-showdown` ejecuta `node build` solo.
+    import os
+    assert str(tmp_path / 'versions' / 'node' / 'v26.13.1' / 'bin') in os.environ['PATH'].split(os.pathsep)
 
     monkeypatch.setenv('NVM_DIR', str(tmp_path / 'vacio'))
     assert paths.node_executable() == 'node'

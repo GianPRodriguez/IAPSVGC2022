@@ -274,6 +274,7 @@ class DamageCalcBridge:
             _LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
             if not _LOCK_FILE.exists():
                 _LOCK_FILE.write_text(str(os.getpid()), encoding='utf-8')
+                _node_bin()  # deja node en el PATH antes de copiar el entorno
                 env = os.environ.copy()
                 env['DAMAGE_CALC_DIST'] = str(dist)
                 env['DAMAGE_CALC_HOST'] = _DEFAULT_HOST
@@ -304,6 +305,7 @@ class DamageCalcBridge:
         if not _WORKER_JS.is_file():
             print(f'[STAT-INF] calc_worker.js no encontrado: {_WORKER_JS}')
             return False
+        _node_bin()  # deja node en el PATH antes de copiar el entorno
         env = os.environ.copy()
         env['DAMAGE_CALC_DIST'] = str(dist)
         try:

@@ -127,6 +127,9 @@ def _spawn_ps(port: int = PS_PORT) -> subprocess.Popen:
     example = POKEMON_SHOWDOWN_ROOT / 'config' / 'config-example.js'
     if not cfg.exists() and example.exists():
         cfg.write_text(example.read_text(encoding='utf-8'), encoding='utf-8')
+    # Resolver node antes de copiar el entorno: añade nvm al PATH si hace falta.
+    from showdown.inference_sim.paths import node_executable
+    node_executable()
     env = os.environ.copy()
     env['PSPORT'] = str(int(port))
     return subprocess.Popen(

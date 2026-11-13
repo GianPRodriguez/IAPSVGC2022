@@ -33,6 +33,7 @@ def node_executable() -> str:
 
     explicit = os.environ.get('NODE_BINARY', '').strip()
     if explicit:
+        _prepend_to_path(Path(explicit).parent)
         return explicit
     found = shutil.which('node')
     if found:
@@ -43,8 +44,23 @@ def node_executable() -> str:
         key=_version_key,
     )
     if candidates:
+        _prepend_to_path(candidates[-1] / 'bin')
         return str(candidates[-1] / 'bin' / 'node')
     return 'node'
+
+
+def _prepend_to_path(bin_dir: Path) -> None:
+    """Pone ``bin_dir`` al inicio del PATH de este proceso (lo heredan los hijos).
+
+    El lanzador ``pokemon-showdown`` ejecuta ``node build`` por su cuenta: no
+    basta con invocarlo por ruta absoluta, ``node`` debe estar en el PATH.
+    """
+    d = str(bin_dir)
+    if not d or d == '.':
+        return
+    parts = os.environ.get('PATH', '').split(os.pathsep)
+    if d not in parts:
+        os.environ['PATH'] = os.pathsep.join([d] + [p for p in parts if p])
 
 BATTLE_FORMAT = os.environ.get(
     'INFERENCE_SIM_FORMAT',
