@@ -751,7 +751,11 @@ def main(argv: Optional[list] = None) -> int:
                    help='Entornos por servidor Showdown (puertos base-port..)')
     p.add_argument('--base-port', type=int, default=None,
                    help='Primer puerto Showdown (default PS_PORT=8000)')
+    from showdown.rl.frozen_preview import add_preview_cli_args, configure_preview
+    add_preview_cli_args(p)
     args = p.parse_args(argv)
+    print(f'[ppo] ' + configure_preview('ppo', checkpoint=args.preview_checkpoint,
+                                          required=args.require_preview), flush=True)
     if args.num_envs == 0:
         from showdown.rl.parallel import default_num_envs
         args.num_envs = default_num_envs()

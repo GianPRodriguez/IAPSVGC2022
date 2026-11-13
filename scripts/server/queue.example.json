@@ -1,34 +1,26 @@
 {
-  "name": "tesis_server_ejemplo",
+  "name": "tesis_familia_ppo_ejemplo",
   "steps": [
     {
-      "name": "baseline_joint_vs_solo",
-      "module": "showdown.inference_sim.run_robust_e2e",
-      "args": ["--teams", "100", "--seed", "10",
-               "--player-a", "greedy_joint", "--player-b", "greedy_solo",
-               "--procs", "{procs}", "--workers", "1", "--start-ps"]
+      "name": "check_regmc",
+      "module": "showdown.inference_sim.validate_regmc_teams",
+      "args": []
     },
     {
-      "name": "baseline_expectimax_vs_joint",
-      "module": "showdown.inference_sim.run_robust_e2e",
-      "args": ["--teams", "100", "--seed", "10",
-               "--player-a", "expectimax_bayesian", "--player-b", "greedy_joint",
-               "--procs", "{procs}", "--workers", "1", "--start-ps"]
-    },
-    {
-      "name": "ddqn_hp_tune",
-      "module": "showdown.inference_sim.run_ddqn_hp_tune",
-      "args": ["--seed", "0", "--max-trials", "6", "--steps", "50000",
-               "--opponent", "greedy_joint", "--suite-games", "20",
-               "--parallel-trials", "{gpus}", "--num-envs", "8",
-               "--device", "{device}", "--start-ps"]
+      "name": "preview_ppo_live",
+      "module": "showdown.rl.team_preview_ppo.train",
+      "args": ["--seed", "0", "--updates", "10",
+               "--backend", "live", "--num-workers", "{num_envs}", "--start-ps",
+               "--device", "{device}", "--checkpoint-dir", "{run_dir}/preview_ppo"],
+      "timeout_h": 48
     },
     {
       "name": "ddqn_combate",
       "module": "showdown.rl.ddqn.train",
       "args": ["--seed", "0", "--opponent", "curriculum", "--start-ps",
                "--num-envs", "{num_envs}", "--envs-per-server", "4",
-               "--device", "{device}", "--checkpoint-dir", "{run_dir}/ddqn"],
+               "--device", "{device}", "--checkpoint-dir", "{run_dir}/ddqn",
+               "--preview-checkpoint", "{run_dir}/preview_ppo/final.pt", "--require-preview"],
       "timeout_h": 72
     },
     {
@@ -36,7 +28,8 @@
       "module": "showdown.rl.ppo.train",
       "args": ["--seed", "0", "--opponent", "curriculum", "--start-ps",
                "--num-envs", "{num_envs}", "--envs-per-server", "4",
-               "--device", "{device}", "--checkpoint-dir", "{run_dir}/ppo"],
+               "--device", "{device}", "--checkpoint-dir", "{run_dir}/ppo",
+               "--preview-checkpoint", "{run_dir}/preview_ppo/final.pt", "--require-preview"],
       "timeout_h": 72
     }
   ]

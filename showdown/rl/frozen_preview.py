@@ -55,9 +55,14 @@ def resolve_preview_kind(combat_or_preview: str) -> str:
     return FAMILY_PREVIEW_KIND.get(key, key)
 
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
 def default_checkpoint_for(kind: str) -> Path:
     k = resolve_preview_kind(kind)
-    return Path(DEFAULT_PREVIEW_CKPT.get(k, DEFAULT_PREVIEW_CKPT['team_preview_ppo']))
+    rel = DEFAULT_PREVIEW_CKPT.get(k, DEFAULT_PREVIEW_CKPT['team_preview_ppo'])
+    # Absoluta desde la raíz del repo: no depende del directorio de trabajo.
+    return _REPO_ROOT / rel
 
 
 def _species_name(mon: Any) -> str:
@@ -258,6 +263,9 @@ def load_frozen_preview(
         or os.environ.get('PREVIEW_CHECKPOINT', '').strip()
         or str(default_checkpoint_for(k))
     )
+    # PREVIEW_REQUIRED=1: no caer en silencio a /team 1234 si falta el preview.
+    if os.environ.get('PREVIEW_REQUIRED', '').strip().lower() in ('1', 'true', 'yes'):
+        allow_missing = False
     pol = FrozenPreviewPolicy(
         kind=k,
         checkpoint=ckpt,
@@ -284,3 +292,42 @@ def family_preview_for_combat(
         'team_preview_ppo',
     )
     return load_frozen_preview(kind=kind, checkpoint=checkpoint, device=device)
+
+
+# --------------------------------------------------------------------------- #
+# CLI de los entrenadores de combate
+# --------------------------------------------------------------------------- #
+
+def add_preview_cli_args(parser) -> None:
+    parser.add_argument(
+        '--preview-checkpoint', default=None,
+        help='Checkpoint del preview congelado de la familia (default: logs/<preview>/...)',
+    )
+    parser.add_argument(
+        '--require-preview', action='store_true',
+        help='Fallar si el preview no carga (si no, se usa /team 1234). Recomendado en runs oficiales',
+    )
+
+
+def configure_preview(combat_family: str, *, checkpoint: Optional[str] = None,
+                      required: bool = False) -> str:
+    """Fija el preview de la familia para este proceso y sus workers; devuelve una línea de estado.
+
+    Se propaga por variables de entorno (PREVIEW_CHECKPOINT / PREVIEW_REQUIRED),
+    que heredan los procesos de los entornos vectorizados.
+    """
+    if checkpoint:
+        os.environ['PREVIEW_CHECKPOINT'] = str(Path(checkpoint).resolve())
+    if required:
+        os.environ['PREVIEW_REQUIRED'] = '1'
+    kind = FAMILY_PREVIEW_KIND.get(str(combat_family).strip().lower().replace('-', '_'),
+                                   'team_preview_ppo')
+    pol = load_frozen_preview(kind=kind, allow_missing=True)
+    pol._ensure()
+    if pol.available:
+        return f'preview={kind} ckpt={pol.checkpoint} cargado=sí'
+    msg = (f'preview={kind} ckpt={pol.checkpoint} cargado=NO ({pol._load_error}); '
+           'se usará /team 1234')
+    if required:
+        raise FileNotFoundError(msg.replace('; se usará /team 1234', ''))
+    return msg

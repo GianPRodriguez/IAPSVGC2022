@@ -167,3 +167,50 @@ def test_real_bo1_pool_plays_and_reports():
         s = pool.summary()
     assert r.shape == (2,) and set(np.unique(r)).issubset({-1.0, 0.0, 1.0})
     assert s['battles'] == 2 and s['failures'] == 0
+
+
+# --------------------------------------------------------------------------- #
+# Preview congelado de la familia en el combate (sin caída silenciosa a 1234)
+# --------------------------------------------------------------------------- #
+
+@pytest.fixture
+def _clean_preview_env(monkeypatch):
+    monkeypatch.delenv('PREVIEW_CHECKPOINT', raising=False)
+    monkeypatch.delenv('PREVIEW_REQUIRED', raising=False)
+    yield
+    os.environ.pop('PREVIEW_CHECKPOINT', None)
+    os.environ.pop('PREVIEW_REQUIRED', None)
+
+
+def test_default_preview_checkpoint_is_absolute():
+    from showdown.rl.frozen_preview import default_checkpoint_for
+
+    p = default_checkpoint_for('ddqn')
+    assert p.is_absolute() and p.parts[-2:] == ('team_preview_ppo_checkpoints', 'final.pt')
+
+
+def test_missing_preview_falls_back_with_warning_or_fails_if_required(tmp_path, _clean_preview_env):
+    from showdown.rl.frozen_preview import configure_preview
+
+    missing = tmp_path / 'no_existe.pt'
+    status = configure_preview('ddqn', checkpoint=str(missing))
+    assert 'cargado=NO' in status and '/team 1234' in status
+    with pytest.raises(FileNotFoundError):
+        configure_preview('ddqn', checkpoint=str(missing), required=True)
+
+
+def test_trained_preview_checkpoint_loads_for_combat(tmp_path, _clean_preview_env):
+    from showdown.rl.frozen_preview import configure_preview
+    from showdown.rl.team_preview_ppo.train import train
+
+    train(seed=0, smoke=True, updates=1, checkpoint_dir=tmp_path)
+    status = configure_preview('ppo', checkpoint=str(tmp_path / 'final.pt'), required=True)
+    assert 'cargado=sí' in status
+    assert os.environ['PREVIEW_CHECKPOINT'].endswith('final.pt')  # lo heredan los workers
+
+
+def test_battle_timeout_is_bounded_per_pilot():
+    from showdown.rl.preview_live import default_battle_timeout_s
+
+    assert default_battle_timeout_s('greedy_joint') <= 300      # un BO1 dura ~5 s
+    assert default_battle_timeout_s('expectimax_bayesian') >= default_battle_timeout_s('greedy_joint')

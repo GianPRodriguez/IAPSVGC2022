@@ -24,6 +24,15 @@ import numpy as np
 
 PILOTS = ('greedy_joint', 'expectimax_bayesian')
 
+# Tiempo máximo por BO1 antes de darlo por colgado (se reintenta en otro intento
+# con el worker reiniciado). Un BO1 con greedy_joint dura ~5 s (máx. 40 turnos
+# < 1 min); un cuelgue ocasional bloqueaba el lote entero hasta los 600 s.
+DEFAULT_BATTLE_TIMEOUT_S = {'greedy_joint': 180.0, 'expectimax_bayesian': 600.0}
+
+
+def default_battle_timeout_s(pilot: str) -> float:
+    return DEFAULT_BATTLE_TIMEOUT_S.get(str(pilot), 600.0)
+
 
 @dataclass(frozen=True)
 class PreviewMatch:
@@ -224,7 +233,7 @@ class LivePreviewPool:
         pilot: str = 'greedy_joint',
         max_turns: int = 40,
         battle_format: Optional[str] = None,
-        battle_timeout_s: float = 600.0,
+        battle_timeout_s: Optional[float] = None,
         start_timeout_s: float = 240.0,
         max_retries: int = 2,
         max_restarts_per_worker: int = 30,
@@ -237,7 +246,9 @@ class LivePreviewPool:
         self.pilot = pilot
         self.max_turns = int(max_turns)
         self.battle_format = battle_format
-        self.battle_timeout_s = float(battle_timeout_s)
+        self.battle_timeout_s = float(
+            battle_timeout_s if battle_timeout_s is not None else default_battle_timeout_s(pilot)
+        )
         self.start_timeout_s = float(start_timeout_s)
         self.max_retries = int(max_retries)
         self.max_restarts = int(max_restarts_per_worker)
@@ -376,8 +387,11 @@ class LivePreviewPool:
 
     def _retry_or_fail(self, j, attempts, pending, rewards, err) -> None:
         attempts[j] += 1
+        last = err.strip().splitlines()[-1] if err.strip() else err
         if attempts[j] <= self.max_retries:
             self.stats['retries'] += 1
+            print(f'[preview_live] BO1 #{j} intento {attempts[j]} falló ({last[:120]}); reintento',
+                  flush=True)
             pending.append(j)
         else:
             self.stats['failures'] += 1

@@ -124,6 +124,22 @@ python -m showdown.rl.ppo.train --seed 0 --opponent curriculum --start-ps \
 - Si un entorno se cuelga o muere, se relanza solo. Ese paso se marca como
   `crash` y no entra al buffer. El contador `restarts=` aparece en el heartbeat.
 
+#### Preview congelado de la familia (obligatorio en runs oficiales)
+
+El combate juega con el preview ya entrenado de su familia: PPO-preview para
+DDQN/PPO, Nash para MCTS y QD-PGA para la familia QD. Si el checkpoint no
+aparece, el código usa la formación fija `/team 1234`. Para que eso no pase en
+silencio en un run oficial:
+
+```bash
+python -m showdown.rl.ddqn.train ... \
+  --preview-checkpoint ~/iapsvgc_runs/<run>/preview_ppo/final.pt --require-preview
+```
+
+Al arrancar, el entrenador imprime `preview=... cargado=sí|NO`. Con
+`--require-preview`, un preview que no carga detiene el entrenamiento. La ruta
+se propaga a los procesos de los entornos.
+
 ### Tuning de hiperparámetros (DDQN / PPO)
 
 ```bash
