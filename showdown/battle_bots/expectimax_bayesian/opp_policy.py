@@ -24,6 +24,16 @@ def set_pred_sink(fn) -> None:
     global _PRED_SINK
     _PRED_SINK = fn
 
+
+def emit_pred(move_names, merged) -> None:
+    """Publica una predicción al diagnóstico (no-op si no hay sink)."""
+    if _PRED_SINK is None:
+        return
+    try:
+        _PRED_SINK({'moves': list(move_names), 'merged': dict(merged)})
+    except Exception:
+        pass
+
 _CONTROL_MOVES = frozenset({
     'protect', 'detect', 'spikyshield', 'banefulbunker', 'silktrap',
     'burningbulwark', 'obstruct', 'substitute', 'followme', 'ragepowder',

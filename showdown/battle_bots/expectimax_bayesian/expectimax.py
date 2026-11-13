@@ -53,6 +53,7 @@ from showdown.battle_bots.expectimax_bayesian.divergence import (
 )
 from showdown.battle_bots.expectimax_bayesian.opp_policy import (
     OppAction,
+    emit_pred,
     is_control_move,
     is_switch_action,
     move_options_from_names,
@@ -1024,6 +1025,10 @@ def _opp_dists_greedy_mirror(
                     best_side = side
         if best_action is not None and best_side is not None:
             out[best_side].append((best_action, 1.0))
+            emit_pred(
+                [m.name for m in moves],
+                {(_norm_move(best_action.move_name), int(best_action.target), 'greedy'): 1.0},
+            )
     return out
 
 
