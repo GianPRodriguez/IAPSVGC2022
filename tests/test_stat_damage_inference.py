@@ -59,11 +59,14 @@ def _setup_cross_hit(*, user_speed_stats=True):
 
 def test_ohko_keeps_high_atk_candidates():
     """
-    KO / overkill: el daño reportado es solo el HP restante. Atk altos cuya
-    ventana de rolls queda por encima de ese tope deben seguir siendo válidos.
+    KO / overkill: el daño reportado es solo el HP restante, o sea una cota
+    inferior. Que los Atk bajos no lleguen a matar no prueba el limite: podria
+    faltar Helping Hand, clima, etc. Un bloque ancho no se poda; los Atk altos
+    (cuya ventana queda por encima del tope) siguen siendo validos.
     """
     battle, mine, theirs = _setup_cross_hit()
     belief = battle.stat_beliefs.belief_for(theirs)
+    before = set(belief.candidates['atk'])
 
     def fake_range(req):
         atk = req['attacker']['stats']['atk']
@@ -80,26 +83,36 @@ def test_ohko_keeps_high_atk_candidates():
         mine.HPA_battle_actual = 155
         heal_or_damage(battle, ['', '-damage', 'p1a: Whimsicott', '0 fnt'])
 
-        assert belief.observations >= 1
         assert max(belief.candidates['atk']) == 32
-        # Los Atk bajos que no llegan a matar sí se pueden excluir
-        assert min(belief.candidates['atk']) > 0 or 32 in belief.candidates['atk']
+        assert belief.candidates['atk'] == before
+        assert belief.skipped >= 1
     finally:
         set_damage_range_override(None)
         si.reset_sp_limits()
 
-
 def test_opponent_physical_hit_narrows_atk_with_mock_bridge():
     battle, mine, theirs = _setup_cross_hit()
     belief = battle.stat_beliefs.belief_for(theirs)
+    # Evidencia previa ya descarto los SP mas bajos (el piso SP0 no esta en juego).
+    belief.narrow('atk', set(range(10, 33)))
+    before = set(belief.candidates['atk'])
     before_spe = set(belief.candidates['spe'])
 
-    # Solo SP altos de Atk "pegan" 40 de dano (SP0 adamant Dragonite ya da Atk~169)
+    # Corte pequeño y seguro: tres SP no pueden producir 40 de daño ni con la
+    # tolerancia de desync del calc (rolls 1-5 vs 40 observados).
+    base = belief.base_stats['atk']
+    threshold = si.champions_stat(base, 13, belief.nature, 'atk')
+    expected = {
+        sp for sp in before
+        if si.champions_stat(base, sp, belief.nature, 'atk') >= threshold
+    }
+    assert 0 < len(before - expected) < 5
+
     def fake_range(req):
         atk = req['attacker']['stats']['atk']
-        if atk >= 185:
+        if atk >= threshold:
             return (38, 42)
-        return (8, 12)
+        return (1, 5)
 
     set_damage_range_override(fake_range)
     try:
@@ -112,27 +125,91 @@ def test_opponent_physical_hit_narrows_atk_with_mock_bridge():
         heal_or_damage(battle, ['', '-damage', 'p1a: Whimsicott', '115/155'])
 
         assert belief.observations >= 1
-        assert max(belief.candidates['atk']) >= min(belief.candidates['atk'])
-        # Debe haberse estrechado respecto al set completo 0..32
-        assert len(belief.candidates['atk']) < 33
-        # Spe no se toca por esta evidencia (salvo budget extremo)
-        assert belief.candidates['spe'] == before_spe or max(belief.candidates['spe']) <= 32
+        assert belief.candidates['atk'] == expected
+        assert len(belief.candidates['atk']) < len(before)
+        # Spe no se toca por esta evidencia
+        assert belief.candidates['spe'] == before_spe
     finally:
         set_damage_range_override(None)
         si.reset_sp_limits()
 
 
+def test_opponent_physical_hit_keeps_floor_sp_candidates():
+    """Con SP0 aun posible, un corte bajo pequeño (SP0-2) tampoco se aplica: un
+    redondeo del calc o un modificador no visto bastan para explicar la diferencia."""
+    battle, mine, theirs = _setup_cross_hit()
+    belief = battle.stat_beliefs.belief_for(theirs)
+    before = set(belief.candidates['atk'])
+    base = belief.base_stats['atk']
+    threshold = si.champions_stat(base, 3, belief.nature, 'atk')
+
+    def fake_range(req):
+        atk = req['attacker']['stats']['atk']
+        return (38, 42) if atk >= threshold else (1, 5)
+
+    set_damage_range_override(fake_range)
+    try:
+        observe_move(
+            battle,
+            ['', 'move', 'p2a: Dragonite', 'Extreme Speed', 'p1a: Whimsicott'],
+        )
+        mine.HPA_battle_actual = 155
+        heal_or_damage(battle, ['', '-damage', 'p1a: Whimsicott', '115/155'])
+
+        assert 0 in belief.candidates['atk']
+        assert belief.candidates['atk'] == before
+    finally:
+        set_damage_range_override(None)
+        si.reset_sp_limits()
+
+def test_opponent_physical_hit_never_discards_a_wide_block_of_atk():
+    """Un salto a un bloque alto (>=5 SP bajos descartados) no es un limite
+    seguro: el calc pudo subestimar (clima, boosts, item). No se poda."""
+    battle, mine, theirs = _setup_cross_hit()
+    belief = battle.stat_beliefs.belief_for(theirs)
+    before = set(belief.candidates['atk'])
+
+    def fake_range(req):
+        atk = req['attacker']['stats']['atk']
+        if atk >= 185:
+            return (38, 42)
+        return (1, 5)
+
+    set_damage_range_override(fake_range)
+    try:
+        observe_move(
+            battle,
+            ['', 'move', 'p2a: Dragonite', 'Extreme Speed', 'p1a: Whimsicott'],
+        )
+        mine.HPA_battle_actual = 155
+        heal_or_damage(battle, ['', '-damage', 'p1a: Whimsicott', '115/155'])
+
+        assert belief.candidates['atk'] == before
+        assert belief.skipped >= 1
+    finally:
+        set_damage_range_override(None)
+        si.reset_sp_limits()
+
 def test_our_special_hit_on_opponent_percent_narrows_spd():
     battle, mine, theirs = _setup_cross_hit()
     belief = battle.stat_beliefs.belief_for(theirs)
+    before = set(belief.candidates['spd'])
+
+    # Golpe del 50%: supera la tolerancia en % (32), asi que un SpD muy alto
+    # (que dejaria el daño en 2-6%) queda descartado con certeza.
+    base = belief.base_stats['spd']
+    cut = si.champions_stat(base, 20, belief.nature, 'spd')
+    expected = {
+        sp for sp in before
+        if si.champions_stat(base, sp, belief.nature, 'spd') <= cut
+    }
 
     def fake_range(req):
         spd = req['defender']['stats']['spd']
         hp = req['defender']['stats']['hp']
-        # ~22% solo con SpD baja; SpD alta pega mucho menos
-        if spd <= 125:
-            return (max(1, hp * 20 // 100), max(2, hp * 25 // 100))
-        return (max(1, hp * 2 // 100), max(2, hp * 5 // 100))
+        if spd <= cut:
+            return (max(1, hp * 45 // 100), max(2, hp * 55 // 100))
+        return (max(1, hp * 2 // 100), max(2, hp * 6 // 100))
 
     set_damage_range_override(fake_range)
     try:
@@ -142,14 +219,14 @@ def test_our_special_hit_on_opponent_percent_narrows_spd():
         )
         theirs.HPA_battle_actual = 100
         theirs.HPB_battle_base = 100
-        heal_or_damage(battle, ['', '-damage', 'p2a: Dragonite', '78/100'])
+        heal_or_damage(battle, ['', '-damage', 'p2a: Dragonite', '50/100'])
 
         assert belief.observations >= 1
-        assert len(belief.candidates['spd']) < 33
+        assert belief.candidates['spd'] == expected
+        assert len(belief.candidates['spd']) < len(before)
     finally:
         set_damage_range_override(None)
         si.reset_sp_limits()
-
 
 def test_crit_discards_damage_observation():
     battle, mine, theirs = _setup_cross_hit()
@@ -301,22 +378,31 @@ def test_observe_damage_skips_when_intersection_empty():
         si.reset_sp_limits()
 
 
-def test_bilateral_upper_bound_excludes_high_atk_when_clean():
-    """Daño flojo + contexto limpio => se descarta Atk alto (min_roll > observado)."""
+def test_bilateral_upper_bound_excludes_low_def_when_clean():
+    """Rival DEFIENDE + contexto limpio + daño flojo: un Def tan bajo que el
+    roll minimo supera lo observado (min_roll > observado) queda descartado."""
     si.reset_sp_limits()
-    si.configure_sp_limits(63, 129)
     beliefs = si.TeamStatBeliefs()
     opp = build_pkmn('dragonite', is_opponent=True, hp=100)
     opp.nature = 'adamant'
     belief = beliefs.belief_for(opp)
-    belief.candidates['atk'] = set(range(0, 64))
+    belief.narrow('def', set(range(8, 33)))  # piso SP0 fuera por evidencia previa
+    before = set(belief.candidates['def'])
+
+    base = belief.base_stats['def']
+    floor_stat = si.champions_stat(base, 11, 'adamant', 'def')
+    expected = {
+        sp for sp in before
+        if si.champions_stat(base, sp, 'adamant', 'def') >= floor_stat
+    }
+    assert 0 < len(before - expected) < 5
 
     def fake_batch(reqs):
         out = []
         for req in reqs:
-            atk = int(req['attacker']['stats']['atk'])
-            # Simula: Atk alto nunca baja de 80; Atk bajo hace ~20-30.
-            if atk >= 200:
+            dfn = int(req['defender']['stats']['def'])
+            # Def bajo recibe mucho mas daño (min_roll 80) que el visto (25).
+            if dfn < floor_stat:
                 out.append((80, 100))
             else:
                 out.append((20, 30))
@@ -325,6 +411,50 @@ def test_bilateral_upper_bound_excludes_high_atk_when_clean():
     set_damage_range_override(fake_batch)
     try:
         ctx = si.DamageContext()  # limpio
+        assert ctx.is_clean_for_upper_bound is True
+        beliefs.observe_damage(
+            opponent_pkmn=opp,
+            move_name='Extreme Speed',
+            category='p',
+            opponent_is_attacker=False,
+            observed_damage=25,
+            damage_is_percent=False,
+            known_stats={'hp': 155, 'atk': 78, 'def': 111, 'spa': 105, 'spd': 95, 'spe': 184},
+            known_species='whimsicott',
+            known_nature='timid',
+            ctx=ctx,
+            is_ko=False,
+        )
+        assert belief.candidates['def'] == expected
+        for sp in belief.candidates['def']:
+            final = si.champions_stat(base, sp, 'adamant', 'def')
+            assert final >= floor_stat, f'SP={sp} final={final} debería haberse excluido'
+    finally:
+        set_damage_range_override(None)
+        si.reset_sp_limits()
+
+
+def test_bilateral_upper_bound_not_applied_when_opponent_attacks():
+    """Si el rival ATACA no hay cota superior: un Atk/SpA subestimado por el calc
+    expulsaria SP bajos reales. Con daño flojo no se descarta ningun Atk alto."""
+    si.reset_sp_limits()
+    beliefs = si.TeamStatBeliefs()
+    opp = build_pkmn('dragonite', is_opponent=True, hp=100)
+    opp.nature = 'adamant'
+    belief = beliefs.belief_for(opp)
+    before = set(belief.candidates['atk'])
+    base = belief.base_stats['atk']
+    top = si.champions_stat(base, 20, 'adamant', 'atk')
+
+    def fake_batch(reqs):
+        return [
+            (80, 100) if int(r['attacker']['stats']['atk']) >= top else (20, 30)
+            for r in reqs
+        ]
+
+    set_damage_range_override(fake_batch)
+    try:
+        ctx = si.DamageContext()
         assert ctx.is_clean_for_upper_bound is True
         beliefs.observe_damage(
             opponent_pkmn=opp,
@@ -339,14 +469,10 @@ def test_bilateral_upper_bound_excludes_high_atk_when_clean():
             ctx=ctx,
             is_ko=False,
         )
-        # Los SP que producen Atk final >= 200 deben salir.
-        for sp in list(belief.candidates['atk']):
-            final = si.champions_stat(belief.base_stats['atk'], sp, 'adamant', 'atk')
-            assert final < 200, f'SP={sp} final={final} debería haberse excluido'
+        assert belief.candidates['atk'] == before
     finally:
         set_damage_range_override(None)
         si.reset_sp_limits()
-
 
 def test_bilateral_upper_bound_skipped_when_not_clean():
     """Con Helping Hand / sash no se aplica cota superior."""
@@ -492,16 +618,22 @@ def test_spread_our_special_narrows_each_foe_spd():
     before_dn = set(bel_dn.candidates['spd'])
     before_pr = set(bel_pr.candidates['spd'])
 
+    # Golpes de ~50%: superan la tolerancia en % (32). El corte (SP 20) es por
+    # especie y deja fuera con certeza los SpD mas altos.
+    cut_by_species = {
+        'dragonite': si.champions_stat(bel_dn.base_stats['spd'], 20, bel_dn.nature, 'spd'),
+        'primarina': si.champions_stat(bel_pr.base_stats['spd'], 20, bel_pr.nature, 'spd'),
+    }
+
     def fake_range(req):
         field = req.get('field') or {}
         assert field.get('isSpread') is True
         species = (req['defender'].get('species') or '').lower()
         spd = req['defender']['stats']['spd']
         hp = req['defender']['stats']['hp']
-        # Mitad baja del rango Champions de cada especie "encaja" ~25%.
-        cut = 128 if 'dragonite' in species else 144
+        cut = cut_by_species['dragonite' if 'dragonite' in species else 'primarina']
         if spd <= cut:
-            return (max(1, hp * 20 // 100), max(2, hp * 28 // 100))
+            return (max(1, hp * 40 // 100), max(2, hp * 60 // 100))
         return (max(1, hp * 2 // 100), max(2, hp * 6 // 100))
 
     set_damage_range_override(fake_range)
@@ -515,19 +647,18 @@ def test_spread_our_special_narrows_each_foe_spd():
         assert battle.pending_damage_ctx['is_spread'] is True
 
         dragonite.HPA_battle_actual = 100
-        heal_or_damage(battle, ['', '-damage', 'p2a: Dragonite', '78/100'])
+        heal_or_damage(battle, ['', '-damage', 'p2a: Dragonite', '50/100'])
         assert battle.pending_damage_ctx is not None  # spread sigue vivo
         assert bel_dn.observations >= 1
         assert len(bel_dn.candidates['spd']) < len(before_dn)
 
         primarina.HPA_battle_actual = 100
-        heal_or_damage(battle, ['', '-damage', 'p2b: Primarina', '75/100'])
+        heal_or_damage(battle, ['', '-damage', 'p2b: Primarina', '55/100'])
         assert bel_pr.observations >= 1
         assert len(bel_pr.candidates['spd']) < len(before_pr)
     finally:
         set_damage_range_override(None)
         si.reset_sp_limits()
-
 
 def test_spread_opp_physical_narrows_atk_from_both_hits():
     """Earthquake rival: dos hits en nosotros aportan Atk del atacante."""

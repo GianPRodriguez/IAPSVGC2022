@@ -337,8 +337,10 @@ class PokeEnvBattleBackend(BattleBackend):
         if pl is None:
             return
         try:
+            from showdown.inference_sim.ps_client_shutdown import stop_player_client
+
             fut = asyncio.run_coroutine_threadsafe(
-                pl.ps_client.stop_listening(),
+                stop_player_client(pl),
                 pl.ps_client.loop,
             )
             fut.result(timeout=10)

@@ -20,7 +20,12 @@ def bo3_series_decided(games: Sequence[Tuple[int, bool]]) -> bool:
 
 
 def drain_battle_count_queue(player: Any) -> int:
-    """Vacía `_battle_count_queue` marcando task_done. Devuelve items drenados."""
+    """Vacía `_battle_count_queue` marcando task_done. Devuelve items drenados.
+
+    Solo usar al abandonar una serie (timeout/reject/cleanup). Drenar mientras
+    `battle_against` espera `join()` hace que la serie parezca 'ok' incompleta
+    (short_bo3).
+    """
     q = getattr(player, '_battle_count_queue', None)
     if q is None:
         return 0
@@ -41,13 +46,14 @@ def drain_battle_count_queue(player: Any) -> int:
     return n
 
 
-def reset_bo3_runtime_state(player: Any) -> None:
+def reset_bo3_runtime_state(player: Any, *, drain_queue: bool = True) -> None:
     """Limpia estado BO3 entre series / tras timeout (idempotente)."""
     try:
         player._bestof_games = set()
     except Exception:
         pass
-    drain_battle_count_queue(player)
+    if drain_queue:
+        drain_battle_count_queue(player)
     # Batallas hijas huérfanas tras cancel: evitar referencias stale.
     try:
         battles = getattr(player, '_battles', None)
@@ -62,7 +68,11 @@ def reset_bo3_runtime_state(player: Any) -> None:
         pass
 
 
-def reset_bo3_runtime_state_many(players: List[Any]) -> None:
+def reset_bo3_runtime_state_many(
+    players: List[Any],
+    *,
+    drain_queue: bool = True,
+) -> None:
     for pl in players:
         if pl is not None:
-            reset_bo3_runtime_state(pl)
+            reset_bo3_runtime_state(pl, drain_queue=drain_queue)

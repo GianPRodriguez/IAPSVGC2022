@@ -85,11 +85,9 @@ async def run_battles(
                 ))
                 report.battle_errors += 1
         finally:
-            for pl in (mirror, foe):
-                try:
-                    await pl.ps_client.stop_listening()
-                except Exception:
-                    pass
+            from showdown.inference_sim.ps_client_shutdown import stop_players
+
+            await stop_players(mirror, foe)
 
     report._teams_used = teams_used  # type: ignore[attr-defined]
     return report

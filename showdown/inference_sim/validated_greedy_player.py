@@ -74,12 +74,15 @@ class ValidatedBattleMixin:
         soundness_report: Optional[SoundnessReport] = None,
         account_configuration: Optional[AccountConfiguration] = None,
         battle_format: str = BATTLE_FORMAT,
+        skip_sync: bool = False,
         **kwargs,
     ):
         self.user_team = user_team
         self.opp_team = opp_team
         self.state_report = state_report
         self.soundness_report = soundness_report
+        # Fast tune: sin espejo IAP / contrast / OTS (solo poke-env + BO3 bookkeeping).
+        self.skip_sync = bool(skip_sync)
         self.iap_battle = None
         self.protocol_log: List[str] = []
         self._bootstrapped = False
@@ -211,6 +214,43 @@ class ValidatedBattleMixin:
         pending_sync = False
         pending_infer = False
         is_battle_room = _is_ps_battle_room(room)
+
+        # Modo rápido (--skip-sync): sin feed IAP / contrast / OTS.
+        if getattr(self, 'skip_sync', False):
+            try:
+                await super()._handle_battle_message(split_messages)
+            except KeyError as exc:
+                if not is_battle_room:
+                    raise
+                if len(self.protocol_log) < 420:
+                    self.protocol_log.append(f'# poke-env KeyError skipped: {exc!r}')
+                return
+            except Exception as exc:
+                name = type(exc).__name__
+                msg = str(exc).lower()
+                if name in (
+                    'ConnectionClosedOK', 'ConnectionClosedError', 'ConnectionClosed',
+                ) or 'close' in msg:
+                    return
+                if not is_battle_room:
+                    raise
+                if len(self.protocol_log) < 420:
+                    self.protocol_log.append(f'# poke-env handler skipped: {exc!r}')
+                return
+            if not is_battle_room:
+                return
+            pe = self._current_pe_battle(room)
+            if pe is not None:
+                self._pe_battle = pe
+                pe_tag = (
+                    getattr(pe, 'battle_tag', None) or room or ''
+                ).lstrip('>').strip()
+                if pe_tag and pe_tag != getattr(self, '_pe_battle_tag', ''):
+                    self._pe_battle_tag = pe_tag
+                    self._reset_reward_acc(pe_tag)
+                self._observe_reward(pe)
+            self._note_finished_game(room, pe)
+            return
 
         # Antes de alimentar: si poke-env ya cambió de battle-*, resetear espejo.
         if is_battle_room:
@@ -367,14 +407,22 @@ class ValidatedBattleMixin:
         try:
             await super()._handle_battle_message(split_messages)
         except KeyError as exc:
+            # NUNCA tragar errores en sala padre game-bestof*: si se pierde |win|,
+            # la cola poke-env no hace task_done → hang / short_bo3 en cascada.
+            if not is_battle_room:
+                raise
             if len(self.protocol_log) < 420:
                 self.protocol_log.append(f'# poke-env KeyError skipped: {exc!r}')
             return
         except Exception as exc:
             name = type(exc).__name__
             msg = str(exc).lower()
-            if name in ('ConnectionClosedOK', 'ConnectionClosedError', 'ConnectionClosed') or 'close' in msg:
+            if name in (
+                'ConnectionClosedOK', 'ConnectionClosedError', 'ConnectionClosed',
+            ) or 'close' in msg:
                 return
+            if not is_battle_room:
+                raise
             if len(self.protocol_log) < 420:
                 self.protocol_log.append(f'# poke-env handler skipped: {exc!r}')
             return

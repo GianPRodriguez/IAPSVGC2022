@@ -1,48 +1,32 @@
 ########################################################################
- BO3 GAME 2 START  |  Deep1ODDQN vs popplioperu98
+ BO3 GAME 1 START  |  agent vs rival
 ########################################################################
 ========================================================================
- TURNO 0 [DECISION]  |  rqid 2  |  BO3 game 2  |  19:37:21
- Deep1ODDQN  vs  popplioperu98
+ TURNO 0 [DECISION]  |  rqid None  |  BO3 game 1  |  01:24:18
+ agent  vs  rival
  clima=-(0)  campo=-
 ------------------------------------------------------------------------
  YO [p1]  side=-
   A1  (vacio)
   A2  (vacio)
-  RSV  salamence 172/172 (100%) | froslass 177/177 (100%) | rillaboom 207/207 (100%) | sneasler 157/157 (100%) | gholdengo 179/179 (100%) | arcanine-hisui 172/172 (100%)
+  RSV  (vacia)
 ------------------------------------------------------------------------
  RIVAL [p2]  side=-  confirmados=0
-  A1  (vacio)
+  A1  dragonite [Dragon/Flying]  100/91 (110%)
+       item=-  abi=-  status=-  boosts=-
+       stats: Atk=134 Def=95 SpA=100 SpD=100 Spe=80
+       moves: -
   A2  (vacio)
   RSV  (vacia)
 ------------------------------------------------------------------------
  STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
-  kingambit  nat=adamant
+  dragonite  nat=adamant
       SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=175-191 Atk=170-188 Def=140-156 SpA=72-86 SpD=105-121 Spe=70-86
+      est:  HP=166-182 Atk=169-187 Def=115-131 SpA=108-122 SpD=120-136 Spe=100-116
       conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  rillaboom  nat=adamant
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=175-191 Atk=159-177 Def=110-126 SpA=72-86 SpD=90-106 Spe=105-121
-      conv: obs=2 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
-  salamence  nat=naive  forme=salamence-mega
-      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
-      est:  HP=170-186 Atk=165-181 Def=150-166 SpA=140-156 SpD=99-113 Spe=154-171
-      base: HP=170-186 Atk=155-171 Def=100-116 SpA=130-146 SpD=90-104 Spe=132-149  (forma salamence)
-      conv: obs=4 HP=17 Atk=17 Def=17 SpA=17 SpD=15 Spe=17
-------------------------------------------------------------------------
- OTS (plantilla showteam; una vez por partida):
-  1. salamence  item=salamencite  abi=intimidate  moves=HyperVoice,DoubleEdge,Tailwind,Protect
-  2. rillaboom  item=sitrusberry  abi=grassysurge  moves=WoodHammer,GrassyGlide,Uturn,FakeOut
-  3. sneasler  item=grassyseed  abi=unburden  moves=DireClaw,CloseCombat,FakeOut,Protect
-  4. arcanine-hisui  item=focussash  abi=rockhead  moves=FlareBlitz,HeadSmash,ExtremeSpeed,Protect
-  5. kingambit  item=chopleberry  abi=defiant  moves=KowtowCleave,IronHead,LowKick,SuckerPunch
-  6. basculegion  item=mysticwater  abi=adaptability  moves=WaveCrash,LastRespects,AquaJet,Protect
-------------------------------------------------------------------------
- ACCION -> ['/team 4521|2']
 ------------------------------------------------------------------------
  REWARD (Spec v1.1 Candidate 2 dense / turno):
   c2_turn=+0.0000  c2_episode=+0.0000
   c1_turn=+0  c1_episode=+0
-  ui_delta=100  ui_total=0
+  ui_delta=0  ui_total=0
 ========================================================================

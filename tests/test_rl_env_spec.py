@@ -135,7 +135,7 @@ def test_vgcenv_episode_smoke():
     env = VGCEnv(reward_candidate=RewardCandidate.DENSE)
     obs, info = env.reset(seed=42)
     assert obs.shape == (OBS_DIM,)
-    assert info['spec_version'] == 'v1.6'
+    assert info['spec_version'] == 'v1.8'
     assert info['action_mask_slot1'].shape == (SLOT_ACTION_N,)
     done = False
     trunc = False

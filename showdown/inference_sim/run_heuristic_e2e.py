@@ -109,11 +109,9 @@ def _build_report(
 
 
 async def _stop_players(*players) -> None:
-    for pl in players:
-        try:
-            await pl.ps_client.stop_listening()
-        except Exception:
-            pass
+    from showdown.inference_sim.ps_client_shutdown import stop_players
+
+    await stop_players(*players)
 
 
 async def run_batch(

@@ -1,0 +1,11 @@
+=== Greedy-Joint pair diagnosis (proposal C) ===
+policy: unchanged (v_stable); telemetry only
+battles: W=115 L=116
+turns:   W=13883 L=42780
+
+kind                       win_n   win_%  loss_n  loss_%    d_pp
+----------------------------------------------------------------
+none                       13883  100.0%   42780  100.0%   +0.0
+
+d_pp = win_% - loss_% (positivo → más frecuente en victorias).
+Interpretar: protect_hit/redirect/fakeout altos en losses → support caro; double_attack_* dominante en ambos → poca coordinación distinta de solo.

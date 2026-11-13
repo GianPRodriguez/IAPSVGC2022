@@ -1,0 +1,18 @@
+=== Greedy-Joint pair diagnosis (proposal C) ===
+policy: A5+B-lite+field Spe+A9 + Spe PE (open belief); telemetry only
+battles: W=240 L=221
+turns:   W=72081 L=75384
+
+kind                       win_n   win_%  loss_n  loss_%    d_pp
+----------------------------------------------------------------
+double_attack_focus        35235   48.9%   36408   48.3%   +0.6
+double_attack_split        36575   50.7%   33360   44.3%   +6.5
+protect_hit                   36    0.0%       3    0.0%   +0.0
+helpinghand                   31    0.0%      32    0.0%   +0.0
+redirect                       4    0.0%       4    0.0%   +0.0
+speed                          8    0.0%       0    0.0%   +0.0
+damage_mix                    77    0.1%    5276    7.0%   -6.9
+single_side                  115    0.2%     301    0.4%   -0.2
+
+d_pp = win_% - loss_% (positivo → más frecuente en victorias).
+Interpretar: protect_hit/redirect/fakeout altos en losses → support caro; double_attack_* dominante en ambos → poca coordinación distinta de solo.

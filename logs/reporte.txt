@@ -830,3 +830,135 @@
 ########################################################################
  BO3 GAME 2 END  |  win: Deep1ODDQN  |  Deep1ODDQN vs popplioperu98
 ########################################################################
+
+########################################################################
+ BO3 GAME 1 START  |  agent vs rival
+########################################################################
+========================================================================
+ TURNO 0 [DECISION]  |  rqid None  |  BO3 game 1  |  01:22:15
+ agent  vs  rival
+ clima=-(0)  campo=-
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  (vacio)
+  A2  (vacio)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=0
+  A1  dragonite [Dragon/Flying]  100/91 (110%)
+       item=-  abi=-  status=-  boosts=-
+       stats: Atk=134 Def=95 SpA=100 SpD=100 Spe=80
+       moves: -
+  A2  (vacio)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  dragonite  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=166-182 Atk=169-187 Def=115-131 SpA=108-122 SpD=120-136 Spe=100-116
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=+0.0000
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+========================================================================
+
+########################################################################
+ BO3 GAME 1 START  |  agent vs rival
+########################################################################
+========================================================================
+ TURNO 0 [DECISION]  |  rqid None  |  BO3 game 1  |  01:22:30
+ agent  vs  rival
+ clima=-(0)  campo=-
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  (vacio)
+  A2  (vacio)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=0
+  A1  dragonite [Dragon/Flying]  100/91 (110%)
+       item=-  abi=-  status=-  boosts=-
+       stats: Atk=134 Def=95 SpA=100 SpD=100 Spe=80
+       moves: -
+  A2  (vacio)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  dragonite  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=166-182 Atk=169-187 Def=115-131 SpA=108-122 SpD=120-136 Spe=100-116
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=+0.0000
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+========================================================================
+
+########################################################################
+ BO3 GAME 1 START  |  agent vs rival
+########################################################################
+========================================================================
+ TURNO 0 [DECISION]  |  rqid None  |  BO3 game 1  |  01:23:14
+ agent  vs  rival
+ clima=-(0)  campo=-
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  (vacio)
+  A2  (vacio)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=0
+  A1  dragonite [Dragon/Flying]  100/91 (110%)
+       item=-  abi=-  status=-  boosts=-
+       stats: Atk=134 Def=95 SpA=100 SpD=100 Spe=80
+       moves: -
+  A2  (vacio)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  dragonite  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=166-182 Atk=169-187 Def=115-131 SpA=108-122 SpD=120-136 Spe=100-116
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=+0.0000
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+========================================================================
+
+########################################################################
+ BO3 GAME 1 START  |  agent vs rival
+########################################################################
+========================================================================
+ TURNO 0 [DECISION]  |  rqid None  |  BO3 game 1  |  01:24:18
+ agent  vs  rival
+ clima=-(0)  campo=-
+------------------------------------------------------------------------
+ YO [p1]  side=-
+  A1  (vacio)
+  A2  (vacio)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ RIVAL [p2]  side=-  confirmados=0
+  A1  dragonite [Dragon/Flying]  100/91 (110%)
+       item=-  abi=-  status=-  boosts=-
+       stats: Atk=134 Def=95 SpA=100 SpD=100 Spe=80
+       moves: -
+  A2  (vacio)
+  RSV  (vacia)
+------------------------------------------------------------------------
+ STAT POINTS ESTIMADOS (rival)  |  tope 32/stat, 66 total:
+  dragonite  nat=adamant
+      SP:   HP=0-32 Atk=0-32 Def=0-32 SpA=0-32 SpD=0-32 Spe=0-32
+      est:  HP=166-182 Atk=169-187 Def=115-131 SpA=108-122 SpD=120-136 Spe=100-116
+      conv: obs=0 HP=17 Atk=17 Def=17 SpA=15 SpD=17 Spe=17
+------------------------------------------------------------------------
+ REWARD (Spec v1.1 Candidate 2 dense / turno):
+  c2_turn=+0.0000  c2_episode=+0.0000
+  c1_turn=+0  c1_episode=+0
+  ui_delta=0  ui_total=0
+========================================================================

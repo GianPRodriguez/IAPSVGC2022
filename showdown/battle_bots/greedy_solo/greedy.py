@@ -24,6 +24,10 @@ from showdown.stat_inference import _poke_payload, _terrain_for_calc, _weather_f
 
 KO_BONUS = 1000.0
 
+# Spe abierta en belief: PE (preferred_sp/mediana) para carreras 1-ply.
+# Atk/SpA/bulk abiertos siguen en max SP. False → Spe abierta otra vez a max.
+_SPE_OPEN_POINT_ESTIMATE = True
+
 
 def _norm_abi(raw: Optional[str]) -> str:
     return str(raw or '').strip().lower().replace(' ', '').replace('-', '')
@@ -65,6 +69,10 @@ class FieldContext:
     wonder_room: bool = False
     magic_room: bool = False
     gravity: bool = False
+    trick_room: bool = False
+    # Tailwind por bando (Spe efectiva en orden 1-ply).
+    tailwind: bool = False
+    opp_tailwind: bool = False
     reflect: bool = False
     light_screen: bool = False
     aurora_veil: bool = False
@@ -104,9 +112,11 @@ def apply_belief_stats(poke: CalcPoke, belief) -> CalcPoke:
     Sobrescribe stats/cur_hp del rival con el belief SP.
 
     - Si el belief está estrecho (pocos SP o resuelto): usa el point-estimate.
-    - Si sigue abierto en bulk (HP/Def/SpD): usa el extremo ALTO (más duro de
-      tumbar) para no inflar KOs falsos.
-    - Si sigue abierto en ofensiva (Atk/SpA/Spe): usa el extremo ALTO (amenaza).
+    - Si sigue abierto en bulk (HP/Def/SpD): extremo ALTO (más duro de tumbar).
+    - Si sigue abierto en Atk/SpA: extremo ALTO (amenaza de daño).
+    - Si sigue abierto en Spe: point-estimate (`preferred_sp` / mediana) para
+      carreras (B-lite, TW/TR, prio-gate). El max Spe sesgaba setup/orden 1-ply.
+      Rollback: `_SPE_OPEN_POINT_ESTIMATE=False` → Spe abierta otra vez a max SP.
     """
     if belief is None:
         return poke
@@ -141,10 +151,20 @@ def apply_belief_stats(poke: CalcPoke, belief) -> CalcPoke:
                 if key in est:
                     stats[key] = int(est[key])
             continue
-        # Belief ancho: extremos pesimistas para decisión greedy.
+        # Belief ancho: extremos pesimistas (bulk/ofensiva); Spe → PE de carrera.
         if champions_stat is None:
             continue
-        if key in ('hp', 'def', 'spd', 'atk', 'spa', 'spe'):
+        if key == 'spe' and _SPE_OPEN_POINT_ESTIMATE:
+            use_sp = None
+            try:
+                use_sp = belief.preferred_sp('spe')
+            except Exception:
+                use_sp = None
+            if use_sp is None or int(use_sp) not in set(cands):
+                use_sp = cands[len(cands) // 2]
+            stats[key] = champions_stat(base, int(use_sp), nature, key)
+            continue
+        if key in ('hp', 'def', 'spd', 'atk', 'spa'):
             use_sp = cands[-1]  # max SP → mayor stat final (bulk/amenaza)
             stats[key] = champions_stat(base, use_sp, nature, key)
 
@@ -815,7 +835,7 @@ def field_context_from_iap(battle) -> FieldContext:
     if weather and str(weather).lower() in ('none', 'null', ''):
         weather = None
     terrain = None
-    wonder = magic = gravity = False
+    wonder = magic = gravity = trick_room = False
     for key, val in dict(getattr(battle, 'terrain', None) or {}).items():
         if not val:
             continue
@@ -828,15 +848,19 @@ def field_context_from_iap(battle) -> FieldContext:
             magic = True
         elif k == 'gravity':
             gravity = True
+        elif k == 'trickroom':
+            trick_room = True
 
     opp = getattr(battle, 'opponent', None)
+    user = getattr(battle, 'user', None)
     sc = dict(getattr(opp, 'side_conditions', None) or {}) if opp else {}
+    our_sc = dict(getattr(user, 'side_conditions', None) or {}) if user else {}
 
-    def _sc(name: str) -> bool:
-        return int(sc.get(name, 0) or 0) > 0
+    def _sc(name: str, bag: dict) -> bool:
+        return int(bag.get(name, 0) or 0) > 0
 
     actives = []
-    for side in (getattr(battle, 'user', None), opp):
+    for side in (user, opp):
         if side is None:
             continue
         for attr in ('active1', 'active2'):
@@ -853,9 +877,12 @@ def field_context_from_iap(battle) -> FieldContext:
         wonder_room=wonder,
         magic_room=magic,
         gravity=gravity,
-        reflect=_sc('reflect'),
-        light_screen=_sc('lightscreen'),
-        aurora_veil=_sc('auroraveil'),
+        trick_room=trick_room,
+        tailwind=_sc('tailwind', our_sc),
+        opp_tailwind=_sc('tailwind', sc),
+        reflect=_sc('reflect', sc),
+        light_screen=_sc('lightscreen', sc),
+        aurora_veil=_sc('auroraveil', sc),
         is_beads_of_ruin=_has('beadsofruin'),
         is_sword_of_ruin=_has('swordofruin'),
         is_tablets_of_ruin=_has('tabletsofruin'),

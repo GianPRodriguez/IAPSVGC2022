@@ -1410,15 +1410,15 @@ def test_guard_split_and_swap_live_message_shapes():
     assert opp.DEF_battle_actual == user.DEF_battle_actual
     assert user.guard_split_active is True
 
-    user.boosts[constants.DEFENSE] = 0
-    user.boosts[constants.SPECIAL_DEFENSE] = 0
-    torkoal.boosts[constants.DEFENSE] = 2
-    torkoal.boosts[constants.SPECIAL_DEFENSE] = 1
+    user.boosts['def'] = 0
+    user.boosts['spd'] = 0
+    torkoal.boosts['def'] = 2
+    torkoal.boosts['spd'] = 1
     # Live swap was Runerigus <-> Torkoal; mirror that pairing
     from showdown.battle_modifier import swapboost as sb
 
-    battle.opponent.active2.boosts[constants.DEFENSE] = 0
-    battle.opponent.active2.boosts[constants.SPECIAL_DEFENSE] = 0
+    battle.opponent.active2.boosts['def'] = 0
+    battle.opponent.active2.boosts['spd'] = 0
     sb(
         battle,
         [
@@ -1430,10 +1430,10 @@ def test_guard_split_and_swap_live_message_shapes():
             '[from] move: Guard Swap',
         ],
     )
-    assert battle.opponent.active2.boosts[constants.DEFENSE] == 2
-    assert battle.opponent.active2.boosts[constants.SPECIAL_DEFENSE] == 1
-    assert torkoal.boosts[constants.DEFENSE] == 0
-    assert torkoal.boosts[constants.SPECIAL_DEFENSE] == 0
+    assert battle.opponent.active2.boosts['def'] == 2
+    assert battle.opponent.active2.boosts['spd'] == 1
+    assert torkoal.boosts['def'] == 0
+    assert torkoal.boosts['spd'] == 0
 
 
 # Estimacion de Stat Points del rival (showdown/stat_inference.py)
@@ -1486,47 +1486,88 @@ def test_sp_pairs_collapse_to_the_same_stat():
     assert si.champions_stat(80, 38, 'adamant', 'spe') != si.champions_stat(80, 39, 'adamant', 'spe')
 
 
-def test_speed_order_narrows_opponent_when_opponent_moves_first():
-    battle, _, theirs = _build_speed_scenario(user_speed=120)
-    belief = battle.stat_beliefs.belief_for(theirs)
-    assert belief.stat_range('spe') == (100, 132)
+_SPE_MARGIN = 24  # showdown.stat_inference._SPEED_COMPARE_MARGIN
 
-    # El rival actua primero con la misma prioridad -> su velocidad es >= 120
-    # (con margen de desync Spe >= user - margin).
-    observe_move(battle, ['', 'move', 'p2a: Dragonite', 'Dragon Dance', 'p2a: Dragonite'])
-    observe_move(battle, ['', 'move', 'p1a: Whimsicott', 'Moonblast', 'p2a: Dragonite'])
 
-    assert belief.stat_range('spe') == (114, 132)
-    assert min(belief.candidates['spe']) == 27
-    assert belief.observations == 1
+def _observe_order(battle, opponent_first):
+    first = ['', 'move', 'p2a: Dragonite', 'Dragon Dance', 'p2a: Dragonite']
+    second = ['', 'move', 'p1a: Whimsicott', 'Moonblast', 'p2a: Dragonite']
+    if opponent_first:
+        observe_move(battle, first)
+        observe_move(battle, second)
+    else:
+        observe_move(battle, second)
+        observe_move(battle, first)
+
+
+def test_speed_order_opponent_first_gives_no_safe_lower_bound():
+    # "Actuo primero" solo prueba Spe >= la nuestra, pero Tailwind, Scarf o un
+    # desync lo explican igual: una cota inferior nunca es el limite seguro. La
+    # inferencia no debe descartar ningun SP posible, cualquiera sea nuestra Spe.
+    for user_speed in (120, 125, 126, 150):
+        battle, _, theirs = _build_speed_scenario(user_speed=user_speed)
+        belief = battle.stat_beliefs.belief_for(theirs)
+        before = set(belief.candidates['spe'])
+
+        _observe_order(battle, opponent_first=True)
+
+        assert belief.candidates['spe'] == before, user_speed
+        assert belief.stat_range('spe') == (100, 132), user_speed
 
     si.reset_sp_limits()
 
 
 def test_speed_order_narrows_opponent_when_agent_moves_first():
-    battle, _, theirs = _build_speed_scenario(user_speed=120)
+    # El agente actua primero -> Spe rival <= la nuestra (+ margen de desync).
+    # Recorte pequeno y seguro por arriba: se aplica.
+    user_speed = 105
+    battle, _, theirs = _build_speed_scenario(user_speed=user_speed)
     belief = battle.stat_beliefs.belief_for(theirs)
+    assert belief.stat_range('spe') == (100, 132)
 
-    # El agente actua primero -> la velocidad del rival es <= 120 (+ margen).
-    observe_move(battle, ['', 'move', 'p1a: Whimsicott', 'Moonblast', 'p2a: Dragonite'])
-    observe_move(battle, ['', 'move', 'p2a: Dragonite', 'Dragon Dance', 'p2a: Dragonite'])
+    _observe_order(battle, opponent_first=False)
 
-    assert belief.stat_range('spe') == (100, 126)
-    assert max(belief.candidates['spe']) == 52
+    lo, hi = belief.stat_range('spe')
+    assert lo == 100
+    # Cota = Spe propia + margen; +1 de tolerancia por el redondeo de frontera.
+    assert hi <= user_speed + _SPE_MARGIN + 1
+    assert hi < 132
+    assert belief.observations == 1
 
     si.reset_sp_limits()
 
 
 def test_trick_room_inverts_the_speed_conclusion():
-    battle, _, theirs = _build_speed_scenario(user_speed=120)
+    user_speed = 105
+    battle, _, theirs = _build_speed_scenario(user_speed=user_speed)
     battle.terrain['trickroom'] = 5
     belief = battle.stat_beliefs.belief_for(theirs)
 
-    # Con Trick Room actuar primero significa ser MAS LENTO (+ margen).
-    observe_move(battle, ['', 'move', 'p2a: Dragonite', 'Dragon Dance', 'p2a: Dragonite'])
-    observe_move(battle, ['', 'move', 'p1a: Whimsicott', 'Moonblast', 'p2a: Dragonite'])
+    # Con Trick Room actuar primero significa ser MAS LENTO (+ margen): misma
+    # conclusion que "el agente actua primero" sin Trick Room.
+    _observe_order(battle, opponent_first=True)
 
-    assert belief.stat_range('spe') == (100, 126)
+    lo, hi = belief.stat_range('spe')
+    assert lo == 100
+    assert hi <= user_speed + _SPE_MARGIN + 1
+    assert hi < 132
+
+    si.reset_sp_limits()
+
+
+def test_speed_order_never_discards_a_wide_block_of_possible_speeds():
+    # Spe propia 90, el agente actua primero: habria que descartar casi todo el
+    # rango (rival <= 114). Un bloque ancho no es un limite seguro (Choice Scarf,
+    # Tailwind del rival...), asi que se omite la observacion en vez de podar.
+    battle, _, theirs = _build_speed_scenario(user_speed=90)
+    belief = battle.stat_beliefs.belief_for(theirs)
+    before = set(belief.candidates['spe'])
+
+    _observe_order(battle, opponent_first=False)
+
+    assert belief.candidates['spe'] == before
+    assert belief.stat_range('spe') == (100, 132)
+    assert belief.skipped >= 1
 
     si.reset_sp_limits()
 
@@ -1740,23 +1781,42 @@ def test_calibration_keeps_champions_limits_even_if_own_team_exceeds():
 
 
 def test_forme_change_keeps_stat_points_and_swaps_bases():
+    """Aegislash Shield -> Blade por el camino real (|-formechange|):
+    el Pokemon se recrea con el nombre de la forma nueva, las bases salen del
+    dex de esa forma y los Stat Points ya inferidos se conservan."""
     si.reset_sp_limits()
-    beliefs = si.TeamStatBeliefs()
+    battle = TestBattle()
+    battle.user.id = 'p1'
+    battle.opponent.id = 'p2'
     aegislash = build_pkmn('aegislash', is_opponent=True, hp=100)
     aegislash.nature = 'sassy'
+    battle.opponent.active1 = aegislash
+    beliefs = battle.stat_beliefs
 
     belief = beliefs.belief_for(aegislash)
     belief.narrow('spe', {4, 5})
     assert belief.base_stats['def'] == 140
     assert belief.base_stats['atk'] == 50
 
-    # Al pasar a Blade cambian las bases pero los Stat Points son los mismos
-    aegislash.ATK_battle_base = 140
-    aegislash.DEF_battle_base = 50
-    same = beliefs.belief_for(aegislash)
+    form_change(battle, ['', '-formechange', 'p2a: Aegislash', 'Aegislash-Blade'])
+
+    blade = battle.opponent.active1
+    assert blade.name == 'aegislash-blade'
+    same = beliefs.belief_for(blade)
     assert same is belief
     assert belief.base_stats['atk'] == 140
+    assert belief.base_stats['def'] == 50
     assert belief.candidates['spe'] == {4, 5}
+
+    # Y de vuelta a Shield (Aegislash vuelve al forme base con King's Shield).
+    form_change(battle, ['', '-formechange', 'p2a: Aegislash', 'Aegislash'])
+    shield = battle.opponent.active1
+    assert beliefs.belief_for(shield) is belief
+    assert belief.base_stats['atk'] == 50
+    assert belief.base_stats['def'] == 140
+    assert belief.candidates['spe'] == {4, 5}
+
+    si.reset_sp_limits()
 
 
 def test_mega_belief_ranges_remap_finals_but_keep_sp():

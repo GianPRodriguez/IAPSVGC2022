@@ -33,6 +33,7 @@ from showdown.battle_bots.greedy_solo.team_preview import (
     mon_from_species,
     order_to_team_string,
 )
+from showdown.inference_sim.stale_room_guard import StaleRoomGuardMixin
 
 _MOVES_PATH = Path(__file__).resolve().parents[3] / 'API' / 'JSONs' / 'moves.json'
 
@@ -207,6 +208,7 @@ def _field_context_from_pe(battle: DoubleBattle) -> FieldContext:
     terrain = _terrain_str(battle)
     fields = getattr(battle, 'fields', None) or {}
     field_ids = {_field_key(k) for k in fields.keys()}
+    our_sc = getattr(battle, 'side_conditions', None) or {}
     opp_sc = getattr(battle, 'opponent_side_conditions', None) or {}
 
     actives = []
@@ -230,6 +232,9 @@ def _field_context_from_pe(battle: DoubleBattle) -> FieldContext:
         wonder_room='WONDERROOM' in field_ids,
         magic_room='MAGICROOM' in field_ids,
         gravity='GRAVITY' in field_ids,
+        trick_room='TRICKROOM' in field_ids,
+        tailwind=_side_has(our_sc, 'TAILWIND'),
+        opp_tailwind=_side_has(opp_sc, 'TAILWIND'),
         reflect=_side_has(opp_sc, 'REFLECT'),
         light_screen=_side_has(opp_sc, 'LIGHTSCREEN'),
         aurora_veil=_side_has(opp_sc, 'AURORAVEIL'),
@@ -240,7 +245,7 @@ def _field_context_from_pe(battle: DoubleBattle) -> FieldContext:
     )
 
 
-class GreedyDamagePlayer(Player):
+class GreedyDamagePlayer(StaleRoomGuardMixin, Player):
     """
     Player A del baseline:
       - Team Preview: cobertura tipada + BST (Módulo A)
@@ -254,7 +259,6 @@ class GreedyDamagePlayer(Player):
         super().__init__(*args, **kwargs)
         self.last_preview_order: str = '1234'
         self.last_decision_score: float = 0.0
-        self._left_rooms: set = set()
         # Precalienta calc (TCP/stdio) fuera del primer turno crítico
         try:
             warm_damage_calc()
@@ -265,29 +269,6 @@ class GreedyDamagePlayer(Player):
             _moves_dex()
         except Exception:
             pass
-
-    def _battle_finished_callback(self, battle: AbstractBattle):
-        tag = getattr(battle, 'battle_tag', None)
-        if tag:
-            self._left_rooms.add(str(tag).lstrip('>'))
-        return super()._battle_finished_callback(battle)
-
-    async def _handle_battle_request(
-        self, battle: AbstractBattle, maybe_default_order: bool = False
-    ):
-        """Evita /choose a salas BO3 ya cerradas (popup 'not in that room')."""
-        if getattr(battle, 'finished', False):
-            return
-        tag = getattr(battle, 'battle_tag', None)
-        if tag and str(tag).lstrip('>') in self._left_rooms:
-            return
-        battles = getattr(self, 'battles', None) or {}
-        if tag and battles and tag not in battles and maybe_default_order:
-            return
-        try:
-            await super()._handle_battle_request(battle, maybe_default_order=maybe_default_order)
-        except Exception:
-            return
 
     def teampreview(self, battle: AbstractBattle) -> str:
         assert isinstance(battle, DoubleBattle)

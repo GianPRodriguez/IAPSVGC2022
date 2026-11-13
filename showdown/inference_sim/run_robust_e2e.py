@@ -232,23 +232,37 @@ class _TeamRejectWatch(logging.Handler):
             self._event.set()
 
 
-async def _cancel_challenges(*players) -> None:
-    """Limpia challenge/sala entre series.
+async def _cancel_challenges(*players, drain_queue: bool = True) -> None:
+    """Limpia salas entre series (no spamear cancelchallenge/reject).
 
-    No usar '/reject all' ni '/leave' sin room: en PS moderno producen
-    popup «User all not found» y pm «The room '' does not exist».
+    Tras un BO3 normal no hay challenge pendiente: enviar
+    '/cancelchallenge' + '/reject' produce popups
+    «You are not challenging…» / «…is not challenging you».
+    Basta con /leave de rooms conocidas + drenar cola BO3 al abandonar.
     """
     from showdown.inference_sim.bo3_runtime import reset_bo3_runtime_state_many
 
-    for pl in players:
-        try:
-            # Cancela challenge saliente si el servidor lo acepta; no-op si no.
-            await pl.ps_client.send_message('/cancel')
-        except Exception:
-            pass
+    pls = [pl for pl in players if pl is not None]
+    for pl in pls:
         try:
             battles = getattr(pl, 'battles', None) or {}
             for tag in list(battles.keys()):
+                if not tag:
+                    continue
+                # Marcar stale ANTES del leave: un choose en vuelo no debe
+                # reenviar /choose a la sala que acabamos de abandonar.
+                mark = getattr(pl, '_mark_room_left', None)
+                if callable(mark):
+                    try:
+                        mark(tag)
+                    except Exception:
+                        pass
+                try:
+                    await pl.ps_client.send_message(f'/leave {tag}')
+                except Exception:
+                    pass
+            # También salir de salas padre game-bestof* huérfanas.
+            for tag in list(getattr(pl, '_bestof_games', None) or []):
                 if not tag:
                     continue
                 try:
@@ -257,15 +271,18 @@ async def _cancel_challenges(*players) -> None:
                     pass
         except Exception:
             pass
-    # Siempre drenar cola BO3 tras cancel/timeout (evita cascada 600s).
-    reset_bo3_runtime_state_many(list(players))
+    # Drenar cola solo al abandonar (timeout/retry). No drenar si la serie
+    # sigue viva: join() devolvería 'ok' prematuro → short_bo3.
+    reset_bo3_runtime_state_many(pls, drain_queue=drain_queue)
 
 
 # Timeout serie BO3: baseline histórico con deadline_ms=550 → 420s.
 # Escala con ExpectimaxConfig.deadline_ms (cobertura 75% ≈ 1600ms → ~1220s).
 _EXPECTIMAX_SERIES_TIMEOUT_BASELINE_S = 420.0
 _EXPECTIMAX_SERIES_TIMEOUT_BASELINE_DEADLINE_MS = 550.0
-_GREEDY_SERIES_TIMEOUT_S = 180.0
+# Validated greedy (sync+OTS+calc) en BO3 1-1→g3: 180s provocaba short_bo3.
+_GREEDY_SERIES_TIMEOUT_S = 480.0
+_MAX_SERIES_ATTEMPTS = 3
 
 
 def _expectimax_deadline_ms() -> float:
@@ -293,6 +310,23 @@ def default_series_timeout_s(*, uses_expectimax: bool) -> float:
     )
     # Mínimo el baseline; tope 40min/serie para batch local.
     return float(max(_EXPECTIMAX_SERIES_TIMEOUT_BASELINE_S, min(scaled, 2400.0)))
+
+
+def _series_activity_fingerprint(player) -> Tuple[int, Tuple[Tuple[str, int], ...], int]:
+    """Señal de progreso mid-BO3: games cerrados + turnos de hijas activas."""
+    games = list(getattr(player, 'series_games', None) or [])
+    battles = getattr(player, 'battles', None) or {}
+    active: List[Tuple[str, int]] = []
+    for tag, bat in battles.items():
+        if getattr(bat, 'finished', False):
+            continue
+        key = str(tag or '').lstrip('>')
+        if not key.startswith('battle-'):
+            continue
+        active.append((key, int(getattr(bat, 'turn', 0) or 0)))
+    active.sort()
+    bestof_n = len(getattr(player, '_bestof_games', None) or ())
+    return (len(games), tuple(active), bestof_n)
 
 
 async def _run_one_series(
@@ -329,7 +363,7 @@ async def _run_one_series(
     reject_task = asyncio.create_task(reject_event.wait())
     loop = asyncio.get_running_loop()
     deadline = loop.time() + float(timeout_s)
-    last_games = 0
+    last_fp = _series_activity_fingerprint(player_a_pl)
     last_progress = loop.time()
     decided_since: Optional[float] = None
     # Stall mid-game: un solo game puede durar muchos turnos × wall expectimax.
@@ -352,24 +386,30 @@ async def _run_one_series(
                     await battle_task
                 except (asyncio.CancelledError, Exception):
                     pass
-                await _cancel_challenges(player_a_pl, player_b_pl)
+                await _cancel_challenges(player_a_pl, player_b_pl, drain_queue=True)
                 return 'reject', reject_bucket.get('msg') or 'team_rejected'
             if battle_task in done_set:
                 exc = battle_task.exception()
                 if exc is not None:
-                    await _cancel_challenges(player_a_pl, player_b_pl)
+                    await _cancel_challenges(player_a_pl, player_b_pl, drain_queue=True)
                     games = list(getattr(player_a_pl, 'series_games', None) or [])
                     # Serie ya decidida: excepción al cerrar/cola no es ERR.
                     if bo3_series_decided(games):
                         return 'ok', f'forced_ok_after_exc:{type(exc).__name__}'
                     return 'error', repr(exc)
+                games = list(getattr(player_a_pl, 'series_games', None) or [])
+                # join() prematuro (cola drenada) → no tratar como ok limpio.
+                if not bo3_series_decided(games):
+                    await _cancel_challenges(player_a_pl, player_b_pl, drain_queue=True)
+                    return 'error', f'short_bo3_early_join:games={len(games)}'
                 return 'ok', ''
 
+            fp = _series_activity_fingerprint(player_a_pl)
+            if fp != last_fp:
+                last_fp = fp
+                last_progress = loop.time()
             games = list(getattr(player_a_pl, 'series_games', None) or [])
             n_games = len(games)
-            if n_games > last_games:
-                last_games = n_games
-                last_progress = loop.time()
             if bo3_series_decided(games):
                 if decided_since is None:
                     decided_since = loop.time()
@@ -380,7 +420,7 @@ async def _run_one_series(
                         await battle_task
                     except (asyncio.CancelledError, Exception):
                         pass
-                    await _cancel_challenges(player_a_pl, player_b_pl)
+                    await _cancel_challenges(player_a_pl, player_b_pl, drain_queue=True)
                     return 'ok', 'forced_ok_after_bo3_hang'
             else:
                 decided_since = None
@@ -406,7 +446,7 @@ async def _run_one_series(
             await battle_task
         except (asyncio.CancelledError, Exception):
             pass
-        await _cancel_challenges(player_a_pl, player_b_pl)
+        await _cancel_challenges(player_a_pl, player_b_pl, drain_queue=True)
         # Si ya hubo progreso decisivo en series_games, no marcar timeout duro.
         games = list(getattr(player_a_pl, 'series_games', None) or [])
         if bo3_series_decided(games):
@@ -511,6 +551,7 @@ def _build_report(
     player_b: str = 'random',
     reward_rows: Optional[List] = None,
     reward_analysis_lines: Optional[List[str]] = None,
+    skip_sync: bool = False,
 ) -> str:
     decided = wins + losses
     wr_raw = (100.0 * wins / decided) if decided else 0.0
@@ -549,6 +590,7 @@ def _build_report(
         f'matchups: {n_matchups} (each = 2 crossed BO3)',
         f'bo3_series: {n_bo3}',
         f'seed: {seed if seed is not None else "-"}',
+        f'skip_sync: {"YES" if skip_sync else "NO"}',
         f'elapsed_s: {elapsed_s:.1f}',
         f'bo3_per_s: {bps:.3f}',
         '',
@@ -618,15 +660,15 @@ def _build_report(
         f'fail_inference: {int(fail_kinds.get("inference", 0))}',
         '',
         '--- sync (Battle vs PS local) ---',
-        f'sync_ok: {"YES" if state.ok else "NO"}',
-        f'state_mismatch: {state.flag_line()}',
+        f'sync_ok: {"SKIP" if skip_sync else ("YES" if state.ok else "NO")}',
+        f'state_mismatch: {"NO" if skip_sync else state.flag_line()}',
         f'state_checks: {state.checks}',
         f'state_mismatches: {state._total_mismatches}',
         f'feed_errors: {state.feed_errors}',
         '',
         '--- inference (OTS ground truth) ---',
-        f'inf_ok: {"YES" if sound.ok else "NO"}',
-        f'inference_ok: {"YES" if sound.ok else "NO"}',
+        f'inf_ok: {"SKIP" if skip_sync else ("YES" if sound.ok else "NO")}',
+        f'inference_ok: {"SKIP" if skip_sync else ("YES" if sound.ok else "NO")}',
         f'soundness_checks: {sound.checks}',
         f'soundness_failures: {sound.failure_count}',
         f'belief_observations: {sound.observations}',
@@ -702,16 +744,17 @@ def _build_report(
         lines.extend(reward_analysis_lines)
 
     lines.append('')
-    lines.append(f'Player A = validated({player_a}) | Player B = {player_b}')
+    lines.append(
+        f'Player A = validated({player_a}'
+        f'{" skip_sync" if skip_sync else ""}) | Player B = {player_b}'
+    )
     return '\n'.join(lines) + '\n'
 
 
 async def _stop_players(*players) -> None:
-    for pl in players:
-        try:
-            await pl.ps_client.stop_listening()
-        except Exception:
-            pass
+    from showdown.inference_sim.ps_client_shutdown import stop_players
+
+    await stop_players(*players)
 
 
 def _merge_state_reports(dst: StateCheckReport, src: StateCheckReport) -> None:
@@ -763,16 +806,36 @@ async def run_batch(
     player_a: str = 'greedy_solo',
     player_b: str = 'random',
     workers: int = 2,
+    skip_sync: bool = False,
 ) -> str:
     if n_teams % 2 != 0 or n_teams < 2:
         raise ValueError('--teams debe ser un entero par >= 2')
 
     set_chat_quiet(quiet)
     workers = max(1, int(workers))
+    skip_sync = bool(skip_sync)
+    # Silenciar popups / CancelledError cosméticos en loggers poke-env y root.
+    try:
+        from showdown.inference_sim.stale_room_guard import _StaleRoomPopupFilter
+        filt = _StaleRoomPopupFilter()
+        filt.name = '_stale_room_popup_filter'  # type: ignore[attr-defined]
+        for name in ('poke-env', 'poke_env', ''):
+            lg = logging.getLogger(name)
+            if not any(getattr(f, 'name', '') == filt.name for f in lg.filters):
+                lg.addFilter(filt)
+    except Exception:
+        pass
     ports = parse_ps_ports(workers=workers)
     if len(ports) < workers:
         workers = len(ports)
     ports = ports[:workers]
+
+    if 'greedy_joint' in (player_a, player_b):
+        try:
+            from showdown.battle_bots.greedy_joint.diag import reset as reset_joint_diag
+            reset_joint_diag()
+        except Exception:
+            pass
 
     if 'expectimax' in str(player_a).lower() or 'expectimax' in str(player_b).lower():
         try:
@@ -799,6 +862,8 @@ async def run_batch(
     n_bo3 = n_matchups * 2
     state = StateCheckReport()
     sound = SoundnessReport()
+    # --skip-sync: no contrast ni OTS (soundness_report=None en players).
+    sound_for_players: Optional[SoundnessReport] = None if skip_sync else sound
     used_metas: List[TeamMeta] = []
     for a, b in pairs:
         used_metas.extend([a, b])
@@ -840,7 +905,8 @@ async def run_batch(
     print(
         f'BATCH robust teams={n_teams} matchups={n_matchups} bo3={n_bo3} '
         f'(crossed) A={player_a} B={player_b} format={format_id} seed={seed} '
-        f'workers={workers} ports={ports} timeout_s={timeout_s} quiet={int(quiet)}',
+        f'workers={workers} ports={ports} timeout_s={timeout_s} quiet={int(quiet)} '
+        f'skip_sync={int(skip_sync)}',
         flush=True,
     )
 
@@ -883,46 +949,63 @@ async def run_batch(
         feed_before = local_state.feed_errors
         fail_before = local_sound.failure_count
 
-        outcome, err_detail = await _run_one_series(
-            player_a_pl, player_b_pl, timeout_s=timeout_s,
-        )
-        # Reintento: serie incompleta O outcome fallido (timeout/error/vacío).
-        series_games_try = list(getattr(player_a_pl, 'series_games', None) or [])
         from showdown.inference_sim.bo3_runtime import bo3_series_decided as _decided
-        need_retry = (
-            not _decided(series_games_try)
-            and (
-                outcome in ('timeout', 'partial_timeout', 'error')
-                or (outcome == 'ok' and len(series_games_try) < 3)
-            )
-        )
-        if need_retry:
-            try:
-                await _cancel_challenges(player_a_pl, player_b_pl)
-                player_a_pl.reset_battles()
-                player_b_pl.reset_battles()
-            except Exception:
-                pass
-            player_a_pl.reset_for_next_battle(ta, tb)
-            player_b_pl.update_team(to_showdown_export(tb))
-            try:
-                from showdown.inference_sim.bo3_runtime import reset_bo3_runtime_state
-                reset_bo3_runtime_state(player_b_pl)
-                if hasattr(player_b_pl, 'series_games'):
-                    player_b_pl.series_games = []
-                if hasattr(player_b_pl, '_logged_game_tags'):
-                    player_b_pl._logged_game_tags = set()
-            except Exception:
-                pass
-            wins_before = player_a_pl.n_won_battles
-            finished_before = player_a_pl.n_finished_battles
+        outcome, err_detail = 'error', 'no_attempt'
+        attempt_notes: List[str] = []
+        for attempt in range(1, _MAX_SERIES_ATTEMPTS + 1):
+            if attempt > 1:
+                try:
+                    await _cancel_challenges(
+                        player_a_pl, player_b_pl, drain_queue=True,
+                    )
+                    player_a_pl.reset_battles()
+                    player_b_pl.reset_battles()
+                except Exception:
+                    pass
+                player_a_pl.reset_for_next_battle(ta, tb)
+                player_b_pl.update_team(to_showdown_export(tb))
+                try:
+                    from showdown.inference_sim.bo3_runtime import (
+                        reset_bo3_runtime_state,
+                    )
+                    reset_bo3_runtime_state(player_b_pl)
+                    if hasattr(player_b_pl, 'series_games'):
+                        player_b_pl.series_games = []
+                    if hasattr(player_b_pl, '_logged_game_tags'):
+                        player_b_pl._logged_game_tags = set()
+                except Exception:
+                    pass
+                wins_before = player_a_pl.n_won_battles
+                finished_before = player_a_pl.n_finished_battles
+
             outcome, err_detail = await _run_one_series(
                 player_a_pl, player_b_pl, timeout_s=timeout_s,
             )
-            if err_detail:
-                err_detail = f'retry_after_short:{err_detail}'
-            else:
-                err_detail = 'retry_after_short'
+            series_games_try = list(
+                getattr(player_a_pl, 'series_games', None) or []
+            )
+            if _decided(series_games_try) and outcome in (
+                'ok', 'timeout', 'error',
+            ):
+                if attempt > 1:
+                    attempt_notes.append(f'ok_after_attempt_{attempt}')
+                break
+            # Serie incompleta: reintentar (short_bo3 / timeout / early join).
+            note = err_detail or outcome or 'undecided'
+            attempt_notes.append(f'a{attempt}:{note}')
+            if attempt >= _MAX_SERIES_ATTEMPTS:
+                break
+
+        if attempt_notes and not (
+            _decided(list(getattr(player_a_pl, 'series_games', None) or []))
+            and outcome == 'ok'
+        ):
+            err_detail = (
+                f'retry_x{len(attempt_notes)}:'
+                + ','.join(attempt_notes[-3:])
+            )
+        elif attempt_notes and outcome == 'ok':
+            err_detail = ','.join(attempt_notes[-2:]) if len(attempt_notes) > 1 else ''
         row['outcome'] = outcome
 
         games_done = player_a_pl.n_finished_battles - finished_before
@@ -942,9 +1025,9 @@ async def run_batch(
                 outcome = 'ok'
                 row['outcome'] = 'ok'
                 err_detail = err_detail or 'counted_from_series_games'
-        # Timeout a mitad de serie: NO contar como W/L (antes 1-0 → WIN falso).
+        # Timeout / early-join a mitad de serie: NO contar como W/L.
         elif (
-            outcome == 'timeout'
+            outcome in ('timeout', 'error')
             and series_games
             and not bo3_series_decided(series_games)
         ):
@@ -982,7 +1065,7 @@ async def run_batch(
                     losses += 1
                     status = 'LOSS'
             elif outcome == 'ok' and games_done > 0 and not decided:
-                row['error'] = row.get('error') or 'short_bo3'
+                row['error'] = row.get('error') or err_detail or 'short_bo3'
                 status = 'SKIP'
                 skips += 1
                 try:
@@ -1026,10 +1109,14 @@ async def run_batch(
                     pass
 
             row['state_mismatch'] = (
-                local_state._total_mismatches > mm_before
-                or local_state.feed_errors > feed_before
+                False if skip_sync else (
+                    local_state._total_mismatches > mm_before
+                    or local_state.feed_errors > feed_before
+                )
             )
-            row['inference_fail'] = local_sound.failure_count > fail_before
+            row['inference_fail'] = (
+                False if skip_sync else (local_sound.failure_count > fail_before)
+            )
             series_i += 1
             done_now = series_i
             w, l, e, s = wins, losses, errors, skips
@@ -1087,7 +1174,8 @@ async def run_batch(
             user_team=team_a0,
             opp_team=team_b0,
             state_report=local_state,
-            soundness_report=local_sound,
+            soundness_report=sound_for_players,
+            skip_sync=skip_sync,
             account_configuration=AccountConfiguration(
                 f'{a_nick}{stamp % 10000}w{worker_id}'[:18], None
             ),
@@ -1309,16 +1397,26 @@ async def run_batch(
         player_b=player_b,
         reward_rows=all_reward_rows,
         reward_analysis_lines=analysis_lines,
+        skip_sync=skip_sync,
     )
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text(report, encoding='utf-8')
     fixplan = write_fixplan(report)
 
+    joint_diag_path = ''
+    if 'greedy_joint' in (player_a, player_b):
+        try:
+            from showdown.battle_bots.greedy_joint.diag import dump as dump_joint_diag
+            jp = dump_joint_diag(REPORT_PATH.parent / 'greedy_joint_pair_diag.txt')
+            joint_diag_path = str(jp)
+        except Exception as exc:
+            joint_diag_path = f'error:{exc!r}'
+
     decided = wins + losses
     wr_raw = (100.0 * wins / decided) if decided else 0.0
     need = 'YES' if 'NEED_FIX=YES' in fixplan.read_text(encoding='utf-8') else 'NO'
-    sync_ok = 'YES' if state.ok else 'NO'
-    inf_ok = 'YES' if sound.ok else 'NO'
+    sync_ok = 'SKIP' if skip_sync else ('YES' if state.ok else 'NO')
+    inf_ok = 'SKIP' if skip_sync else ('YES' if sound.ok else 'NO')
     try:
         from showdown.battle_bots.expectimax_bayesian.config_history import (
             record_e2e_run,
@@ -1344,12 +1442,17 @@ async def run_batch(
         f'bo3={n_bo3}: W={wins} L={losses} E={errors} S={skips} WR_raw={wr_raw:.1f}%\n'
         f'matchups={n_matchups}: pair_A={pair_a_sweeps} pair_B={pair_b_sweeps} '
         f'draw={pair_draws} invalid={pair_invalid}\n'
-        f'sync_ok={sync_ok} fail_sync={fail_kinds.get("sync", 0)}\n'
+        f'sync_ok={sync_ok} fail_sync={fail_kinds.get("sync", 0)}'
+        f'{" (skipped)" if skip_sync else ""}\n'
         f'inf_ok={inf_ok} fail_matchup_inf={fail_kinds.get("inference", 0)} '
         f'fail_bo3_inf={sound.failure_count}\n'
         f'NEED_FIX={need} NEED_FLAGS_ADD={flag_audit.flag_line()} '
         f'elapsed_s={elapsed:.1f} workers={workers} ports={ports}\n'
         f'reward_analysis={REPORT_PATH.parent / "robust_e2e_reward_analysis.txt"}'
+        + (
+            f'\njoint_pair_diag={joint_diag_path}'
+            if joint_diag_path else ''
+        )
         + (
             f'\ndivergence={REPORT_PATH.parent / "expectimax_divergence.txt"}'
             if divergence_lines else ''
@@ -1401,9 +1504,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         type=float,
         default=None,
         help=(
-            'Timeout por serie BO3 (s). Default: 180; con expectimax escala con '
-            'ExpectimaxConfig.deadline_ms (baseline 550ms→420s; cobertura 75% '
-            '~1600ms→~1220s).'
+            'Timeout por serie BO3 (s). Default: 480s greedy validated; con '
+            'expectimax escala con ExpectimaxConfig.deadline_ms (baseline '
+            '550ms→420s; cobertura 75%% ~1600ms→~1220s).'
         ),
     )
     parser.add_argument('--progress-every', type=int, default=5)
@@ -1416,6 +1519,14 @@ def main(argv: Optional[List[str]] = None) -> int:
         type=int,
         default=2,
         help='Workers paralelos (default 2). Puertos: PS_PORTS o PS_PORT..+N-1',
+    )
+    parser.add_argument(
+        '--skip-sync',
+        action='store_true',
+        help=(
+            'Tune rápido: desactiva sync Battle + OTS (sin espejo IAP). '
+            'Solo para comparar agentes; no usar para NEED_FIX de sync/inf.'
+        ),
     )
     args = parser.parse_args(argv)
 
@@ -1443,6 +1554,14 @@ def main(argv: Optional[List[str]] = None) -> int:
             f'timeout_s={timeout_s}'
         )
 
+    # Windows: Proactor cierra el pipe mientras aún escribe el websocket →
+    # AssertionError cosmético en _loop_writing. Selector evita esa race.
+    if sys.platform == 'win32':
+        try:
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        except Exception:
+            pass
+
     asyncio.run(
         run_batch(
             args.teams,
@@ -1459,17 +1578,26 @@ def main(argv: Optional[List[str]] = None) -> int:
             player_a=args.player_a,
             player_b=args.player_b,
             workers=args.workers,
+            skip_sync=bool(args.skip_sync),
         )
     )
 
     text = REPORT_PATH.read_text(encoding='utf-8') if REPORT_PATH.exists() else ''
+    skip_sync_run = 'skip_sync: YES' in text
     sync_bad = (
-        'sync_ok: NO' in text
-        or 'state_mismatch: YES' in text
+        not skip_sync_run
+        and (
+            'sync_ok: NO' in text
+            or 'state_mismatch: YES' in text
+        )
     )
     inf_bad = (
-        'inf_ok: NO' in text
-        or 'inference_ok: NO' in text
+        not skip_sync_run
+        and (
+            'inf_ok: NO' in text
+            or 'inference_ok: NO' in text
+            or 'soundness_ok: NO' in text
+        )
     )
     if sync_bad or inf_bad:
         return 1

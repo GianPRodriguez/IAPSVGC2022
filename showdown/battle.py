@@ -762,7 +762,10 @@ class Battler:
                     found_pkmn = create_pokemon(pkmn_data, target_name)
                 else:
                     # Alinear forme del request (Mega-Y vs base, etc.).
-                    found_pkmn.name = target_name
+                    # Un Ditto transformado conserva la identidad copiada: el request
+                    # sigue diciendo details=Ditto y no debe pisar el nombre.
+                    if not (found_pkmn.is_ditto and target_key == 'ditto'):
+                        found_pkmn.name = target_name
                     if 'mega' in target_name.replace('-', ''):
                         found_pkmn.is_mega_evo = True
                 if found_pkmn is not None:

@@ -45,3 +45,16 @@ def test_reset_bo3_clears_bestof_and_queue():
     assert q.empty()
     assert 'battle-a' not in player._battles
     assert 'battle-b' in player._battles
+
+
+def test_reset_bo3_can_skip_drain():
+    q: asyncio.Queue = asyncio.Queue()
+    q.put_nowait(None)
+    player = SimpleNamespace(
+        _battle_count_queue=q,
+        _bestof_games={'game-bestof3-old'},
+        _battles={},
+    )
+    reset_bo3_runtime_state(player, drain_queue=False)
+    assert player._bestof_games == set()
+    assert not q.empty()
