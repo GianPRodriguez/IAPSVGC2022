@@ -28,6 +28,7 @@ _MOVE_EXPORT_ALIASES = {
 }
 
 _REGMC_WARNED = False
+_REGMC_REPORTED: set = set()
 
 
 def canonicalize_species(species: str) -> str:
@@ -357,6 +358,9 @@ def active_teams() -> List[TeamMeta]:
             from showdown.inference_sim.validate_regmc_teams import validate_team_metas
             ps_ok, ps_bad = validate_team_metas(ok)
             for t, problems in ps_bad:
+                if t.name in _REGMC_REPORTED:
+                    continue  # una vez por equipo y proceso (se llama en cada reset)
+                _REGMC_REPORTED.add(t.name)
                 tip = problems[0] if problems else 'invalid'
                 print(f'[team_factory] skip Reg M-C invalid: {t.name} ({tip})')
             ok = ps_ok

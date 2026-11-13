@@ -30,15 +30,24 @@ DEFAULT_FORMAT = os.environ.get(
     os.environ.get('POKEMON_MODE', 'gen9championsvgc2026regmcbo3'),
 )
 REPORT_PATH = REPO_ROOT / 'logs' / 'regmc_team_validation.txt'
-_BATCH_JS = POKEMON_SHOWDOWN_ROOT / 'tools' / 'validate_regmc_batch.js'
+# Script propio del repo (no depende de archivos añadidos a pokemon-showdown).
+_BATCH_JS = REPO_ROOT / 'showdown' / 'tools' / 'validate_regmc_batch.js'
+_LEGACY_BATCH_JS = POKEMON_SHOWDOWN_ROOT / 'tools' / 'validate_regmc_batch.js'
+
+# Caché por proceso: (formato, export) -> problemas. active_teams() se llama en
+# cada reset de batalla; sin caché se lanzaría node por episodio y por entorno.
+_RESULT_CACHE: Dict[Tuple[str, str], List[str]] = {}
 
 
 def _ensure_batch_script() -> Path:
-    if _BATCH_JS.is_file():
-        return _BATCH_JS
-    raise FileNotFoundError(
-        f'No está {_BATCH_JS}. Se necesita pokemon-showdown con tools/validate_regmc_batch.js'
-    )
+    for p in (_BATCH_JS, _LEGACY_BATCH_JS):
+        if p.is_file():
+            return p
+    raise FileNotFoundError(f'No está {_BATCH_JS}')
+
+
+def clear_validation_cache() -> None:
+    _RESULT_CACHE.clear()
 
 
 def validate_exports(
@@ -78,21 +87,33 @@ def validate_team_metas(
 ) -> Tuple[List[TeamMeta], List[Tuple[TeamMeta, List[str]]]]:
     """Devuelve (ok_teams, [(bad_team, problems), ...])."""
     pool = list(teams) if teams is not None else load_scraped_teams()
-    rows = [{'name': t.name, 'text': to_showdown_export(t)} for t in pool]
-    results = validate_exports(rows, format_id=format_id)
-    by_name = {r.get('name'): r for r in results}
+    exports = [to_showdown_export(t) for t in pool]
+    pending = [
+        (i, t, exp) for i, (t, exp) in enumerate(zip(pool, exports))
+        if (format_id, exp) not in _RESULT_CACHE
+    ]
+    if pending:
+        # Nombre interno único por fila: dos equipos pueden compartir nombre.
+        rows = [{'name': f'#{i}', 'text': exp} for i, _t, exp in pending]
+        results = validate_exports(rows, format_id=format_id)
+        by_key = {r.get('name'): r for r in results}
+        for i, _t, exp in pending:
+            hit = by_key.get(f'#{i}')
+            if hit is None:
+                problems = ['missing validation result']
+            else:
+                problems = list(hit.get('problems') or [])
+                if not hit.get('ok') and not problems:
+                    problems = ['invalid']
+            _RESULT_CACHE[(format_id, exp)] = problems
     ok: List[TeamMeta] = []
     bad: List[Tuple[TeamMeta, List[str]]] = []
-    for t in pool:
-        hit = by_name.get(t.name)
-        if hit is None:
-            bad.append((t, ['missing validation result']))
-            continue
-        problems = list(hit.get('problems') or [])
-        if hit.get('ok') and not problems:
-            ok.append(t)
+    for t, exp in zip(pool, exports):
+        problems = _RESULT_CACHE[(format_id, exp)]
+        if problems:
+            bad.append((t, list(problems)))
         else:
-            bad.append((t, problems or ['invalid']))
+            ok.append(t)
     return ok, bad
 
 
