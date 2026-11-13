@@ -214,6 +214,11 @@ class ExpectimaxConfig:
     opp_policy_use_real_damage: bool = True
     opp_policy_split_targets: bool = False
     opp_policy_mirror_solo: bool = False
+    # Slots de movimiento distintos por rival (sin esto, los dos rivales se pisan el daño por slot).
+    opp_policy_unique_slots: bool = False
+    # Fake Out rival: solo en su primer turno en campo; entonces masa ~p (si puede afectar).
+    opp_policy_fakeout_rule: bool = False
+    opp_policy_fakeout_first_p: float = 0.7
     # V anclada a offense (EV de daño = chance abstraction C).
     v_solo_isomorphic: bool = True
     phase2_retarget_only: bool = False
@@ -1051,6 +1056,7 @@ def _rebuild_opp_dists_from_hits(
     use_real_damage: bool,
     w_switch: float = 0.10,
     split_targets: bool = True,
+    fakeout_first_p: float = 0.0,
 ) -> Dict[str, List[Tuple[OppAction, float]]]:
     """π_opp por lado con daño real post-calc.
 
@@ -1095,6 +1101,17 @@ def _rebuild_opp_dists_from_hits(
             for t in available:
                 per[t] = 1.0
         dmg_st[m.slot] = per
+
+    if fakeout_first_p > 0.0:
+        p_fo = min(0.95, float(fakeout_first_p))
+        ratio = p_fo / (1.0 - p_fo)
+        fo_slots = {m.slot for m in opp_moves if _norm_move(m.name) == 'fakeout'}
+        for t in available:
+            others = sum(float((dmg_st.get(m.slot) or {}).get(t, 0.0)) for m in opp_moves
+                         if m.slot not in fo_slots and not is_control_move(m.name))
+            for s in fo_slots:
+                if float((dmg_st.get(s) or {}).get(t, 0.0)) > 0.0 and others > 0.0:
+                    dmg_st[s][t] = ratio * others
 
     w_uniform = max(
         0.0,
@@ -1736,15 +1753,26 @@ async def best_expectimax_bayesian_action(
             opp_moves_by_tag: Dict[str, List[MoveOption]] = {}
             seen_opp_slots: Set[Tuple[str, int]] = set()
             all_opp_move_names: List[str] = []
+            fakeout_first_any = False
 
             for i, (tid, foe) in enumerate(world_foes):
                 tag = 'F1' if i == 0 else 'F2'
                 prof = world_profiles.get(tid)
                 move_names = list(resolve_opp_move_names(prof, known_moves.get(tid) or ()))
+                if bool(cfg.opp_policy_fakeout_rule):
+                    has_fo = any(_norm_move(n) == 'fakeout' for n in move_names)
+                    if has_fo and not foe.just_switched:
+                        # Showdown: Fake Out falla tras el primer turno en campo
+                        move_names = [n for n in move_names if _norm_move(n) != 'fakeout']
+                    elif has_fo:
+                        fakeout_first_any = True
                 if not move_names:
                     continue
                 all_opp_move_names.extend(move_names)
-                opp_moves = move_options_from_names(move_names)
+                opp_moves = move_options_from_names(
+                    move_names,
+                    start_slot=(1 if i == 0 else 5) if bool(cfg.opp_policy_unique_slots) else 1,
+                )
                 opp_moves_by_tag[tag] = list(opp_moves)
                 for m in opp_moves:
                     key = (_norm_move(m.name), int(m.slot))
@@ -1837,6 +1865,8 @@ async def best_expectimax_bayesian_action(
                     use_real_damage=bool(cfg.opp_policy_use_real_damage),
                     w_switch=float(cfg.opp_policy_switch_weight),
                     split_targets=bool(cfg.opp_policy_split_targets),
+                    fakeout_first_p=(float(cfg.opp_policy_fakeout_first_p)
+                                     if (fakeout_first_any and bool(cfg.opp_policy_fakeout_rule)) else 0.0),
                 )
 
             foe_types = [tuple(f.types or ()) for _, f in world_foes]

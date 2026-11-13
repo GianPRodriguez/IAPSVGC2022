@@ -64,3 +64,33 @@ def test_expectimax_env_overrides(monkeypatch):
     monkeypatch.setenv('EXPECTIMAX_OVERRIDES', 'no_existe=1')
     with pytest.raises(ValueError):
         load_expectimax_config()
+
+
+def _dist(opp_moves, hit_map, **kw):
+    from showdown.battle_bots.expectimax_bayesian.expectimax import _rebuild_opp_dists_from_hits
+    out = _rebuild_opp_dists_from_hits(
+        opp_moves, hit_map, left_atk=object(), right_atk=None, w_greedy=1.0, w_control=0.0,
+        use_real_damage=True, w_switch=0.0, split_targets=False, **kw)
+    return {a.move_name.lower().replace(' ', ''): p for a, p in out['OL']}
+
+
+def test_opp_dist_slot_collision_between_foes_is_avoided_with_unique_slots():
+    from showdown.battle_bots.expectimax_bayesian.opp_policy import move_options_from_names
+    hit = {('F1', 'flamethrower', 'OL'): (40, 50), ('F2', 'surf', 'OL'): (10, 20)}
+    # Mismo slot 1 para los dos rivales: se pisan el daño y salen igual de probables.
+    collided = move_options_from_names(['Flamethrower']) + move_options_from_names(['Surf'])
+    d0 = _dist(collided, hit)
+    assert abs(d0['flamethrower'] - d0['surf']) < 1e-9
+    unique = move_options_from_names(['Flamethrower'], start_slot=1) + move_options_from_names(['Surf'], start_slot=5)
+    d1 = _dist(unique, hit)
+    assert d1['flamethrower'] > 2.5 * d1['surf']
+
+
+def test_opp_dist_fakeout_first_turn_gets_target_mass():
+    from showdown.battle_bots.expectimax_bayesian.opp_policy import move_options_from_names
+    hit = {('F1', 'fakeout', 'OL'): (10, 12), ('F1', 'closecombat', 'OL'): (80, 90)}
+    moves = move_options_from_names(['Fake Out', 'Close Combat'])
+    base = _dist(moves, hit)
+    boosted = _dist(moves, hit, fakeout_first_p=0.7)
+    assert base['fakeout'] < 0.2
+    assert abs(boosted['fakeout'] - 0.7) < 0.02
