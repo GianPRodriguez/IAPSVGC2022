@@ -910,14 +910,59 @@ def _threat_by_foe_tid(
     return out
 
 
+_FLINCH_IMMUNE_ABILITIES = frozenset({'innerfocus', 'shielddust'})
+_ABILITY_IGNORING = frozenset({'moldbreaker', 'teravolt', 'turboblaze'})
+
+
+def _flinch_immune(attacker: Optional[CalcPoke], foe: CalcPoke) -> bool:
+    """El foe no se achanta: Inner Focus / Shield Dust (salvo Mold Breaker), Covert Cloak o Substitute."""
+    if bool(getattr(foe, 'has_substitute', False)):
+        return True
+    if _norm_move(getattr(foe, 'item', None) or '') == 'covertcloak':
+        return True
+    atk_abi = _norm_move(getattr(attacker, 'ability', None) or '') if attacker is not None else ''
+    if atk_abi in _ABILITY_IGNORING:
+        return False
+    return _norm_move(getattr(foe, 'ability', None) or '') in _FLINCH_IMMUNE_ABILITIES
+
+
+def _foe_beats_fakeout(
+    attacker: Optional[CalcPoke],
+    foe: CalcPoke,
+    foe_moves: Sequence[str],
+    *,
+    trick_room: bool,
+    our_tailwind: bool,
+    opp_tailwind: bool,
+) -> bool:
+    """True si el foe actúa antes (o a la vez) con su propio Fake Out (+3): el nuestro llega tarde.
+
+    Solo cuenta si el foe está en su primer turno y conoce Fake Out; empate de Spe = no seguro.
+    """
+    if attacker is None or not bool(getattr(foe, 'just_switched', False)):
+        return False
+    if not any(_norm_move(n) == 'fakeout' for n in (foe_moves or ())):
+        return False
+    return not acts_before(
+        poke_effective_spe(attacker, tailwind=our_tailwind), 3,
+        poke_effective_spe(foe, tailwind=opp_tailwind), 3,
+        trick_room=trick_room,
+    )
+
+
 def _fakeout_fails_by_tid(
     attacker: Optional[CalcPoke],
     world_foes: Sequence[Tuple[int, CalcPoke]],
     *,
     terrain: Optional[str],
     gravity: bool = False,
+    known_moves: Optional[Dict[int, Sequence[str]]] = None,
+    trick_room: bool = False,
+    our_tailwind: bool = False,
+    opp_tailwind: bool = False,
 ) -> Dict[int, bool]:
-    """True si Fake Out fallaría vs ese foe (Psychic Terrain / Armor Tail / Ghost…)."""
+    """True si Fake Out no anularía a ese foe: Psychic Terrain / Armor Tail / Ghost, no se achanta
+    (Inner Focus, Shield Dust, Covert Cloak, Substitute) o el foe actúa antes con su propio Fake Out."""
     from showdown.battle_bots.move_mechanics import priority_move_fails
     from showdown.battle_bots.greedy_joint.joint import fake_out_can_affect
 
@@ -934,6 +979,13 @@ def _fakeout_fails_by_tid(
             defender_side=foe_mons,
             terrain=terrain,
             gravity=gravity,
+        ):
+            fails = True
+        elif _flinch_immune(attacker, foe):
+            fails = True
+        elif _foe_beats_fakeout(
+            attacker, foe, (known_moves or {}).get(int(tid)) or (),
+            trick_room=trick_room, our_tailwind=our_tailwind, opp_tailwind=opp_tailwind,
         ):
             fails = True
         out[int(tid)] = fails
@@ -2078,11 +2130,19 @@ async def best_expectimax_bayesian_action(
                     left_atk, world_foes,
                     terrain=terrain or ctx.terrain,
                     gravity=bool(getattr(ctx, 'gravity', False)),
+                    known_moves=known_moves,
+                    trick_room=bool(pos.our_trick_room or pos.opp_trick_room),
+                    our_tailwind=bool(pos.our_tailwind),
+                    opp_tailwind=bool(pos.opp_tailwind),
                 )
                 fo_fails_r = _fakeout_fails_by_tid(
                     right_atk, world_foes,
                     terrain=terrain or ctx.terrain,
                     gravity=bool(getattr(ctx, 'gravity', False)),
+                    known_moves=known_moves,
+                    trick_room=bool(pos.our_trick_room or pos.opp_trick_room),
+                    our_tailwind=bool(pos.our_tailwind),
+                    opp_tailwind=bool(pos.opp_tailwind),
                 )
                 # Fails si CUALQUIER atacante del par con FO fallaría vs ese tid.
                 fo_fails = {
