@@ -89,11 +89,21 @@ def _speed_sink(ev: Dict[str, Any]) -> None:
     from showdown.inference_sim.soundness import _lookup_truth
     from teams.team_converter import normalize_name
 
-    true_sp, _final = _lookup_truth(meta, normalize_name(ev['species']))
+    sid = normalize_name(ev['species'])
+    true_sp, tfinal = _lookup_truth(meta, sid)
     if not true_sp:
         return
     tsp = int(true_sp.get('spe', 0))
+    natures = getattr(meta, 'natures', {}) or {}
+    tnat = natures.get(sid)
+    if tnat is None:
+        for k, v in natures.items():
+            if sid.startswith(k) or k.startswith(sid.split('-')[0]):
+                tnat = v
+                break
     rec = dict(ev)
+    rec['true_nature'] = tnat
+    rec['true_final_spe'] = (tfinal or {}).get('spe') if isinstance(tfinal, dict) else None
     rec.update({'kind': 'speed', 'true_spe_sp': tsp,
                 'true_in_before': tsp in ev['before'] if ev['before'] is not None else None,
                 'true_in_after': tsp in ev['after'],
