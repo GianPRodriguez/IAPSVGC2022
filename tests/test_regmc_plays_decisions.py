@@ -31,8 +31,13 @@ def mon(species: str, spe: int, hp: int = 160, types=('Normal',), **kw) -> CalcP
     )
 
 
+STATUS_MOVES = {'tailwind', 'spore', 'protect', 'helping hand', 'follow me', 'rage powder', 'wide guard',
+                'quick guard', 'trick room', 'reflect', 'light screen', 'sleep powder', 'taunt', 'encore'}
+
+
 def moves(*names: str) -> List[MoveOption]:
-    return [MoveOption(i + 1, n, 'normal', 'Physical') for i, n in enumerate(names)]
+    return [MoveOption(i + 1, n, 'normal', 'Status' if n.lower() in STATUS_MOVES else 'Physical')
+            for i, n in enumerate(names)]
 
 
 def make_damage(table: Dict[Tuple[str, str, str], Tuple[int, int]],
