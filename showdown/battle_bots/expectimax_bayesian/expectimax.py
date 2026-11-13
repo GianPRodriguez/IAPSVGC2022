@@ -1117,6 +1117,13 @@ def _rebuild_opp_dists_from_hits(
             w_control=w_control,
             w_uniform=max(0.0, 1.0 - float(w_greedy) - float(w_control)),
         )
+    merged_legacy: Dict[Tuple[str, int, str], float] = {}
+    for def_tag, tgt in (('OL', 1), ('OR', 2)):
+        for action, p in out.get(def_tag) or []:
+            key = (_norm_move(action.move_name), tgt, action.kind)
+            merged_legacy[key] = merged_legacy.get(key, 0.0) + float(p)
+    if merged_legacy:
+        emit_pred([m.name for m in opp_moves], merged_legacy, norm='per_target')
     return out
 
 

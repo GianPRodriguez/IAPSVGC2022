@@ -88,11 +88,26 @@ def score_event(preds: Sequence[dict], move: str, target: int) -> Optional[Dict[
     total = sum(by_move.values()) or 1.0
     top_move = max(by_move, key=by_move.get)
     top_pair = max(by_pair, key=by_pair.get)
+    p_move = by_move.get(mid, 0.0) / total
+    p_exact = by_pair.get((mid, target), 0.0) / total
+    if cands[0].get('norm') == 'per_target':
+        # una distribución independiente por objetivo (suma 1 en cada lado)
+        side_mass: Dict[int, float] = {}
+        for (m, t), p in by_pair.items():
+            side_mass[t] = side_mass.get(t, 0.0) + p
+        n_sides = len(side_mass) or 1
+        total = float(n_sides)
+        p_move = sum(by_pair.get((mid, t), 0.0) / (side_mass[t] or 1.0) for t in side_mass) / n_sides
+        p_exact = (by_pair.get((mid, target), 0.0) / side_mass[target]) if target in side_mass else p_move
+        by_move = {m: sum(p / (side_mass[t] or 1.0) for (mm, t), p in by_pair.items() if mm == m) / n_sides
+                   for m in {m for m, _ in by_pair}}
+        top_move = max(by_move, key=by_move.get)
+        top_pair = max(by_pair, key=lambda k: by_pair[k] / (side_mass[k[1]] or 1.0))
     n_moves = len({m for m in by_move if m != '__switch__'}) or 1
     return {
         'status': 'ok',
-        'p_move': by_move.get(mid, 0.0) / total,
-        'p_exact': by_pair.get((mid, target), 0.0) / total,
+        'p_move': p_move,
+        'p_exact': p_exact,
         'top1_move_hit': top_move == mid,
         'top1_exact_hit': top_pair == (mid, target),
         'pred_top_move': top_move,
@@ -101,6 +116,7 @@ def score_event(preds: Sequence[dict], move: str, target: int) -> Optional[Dict[
         'mass_control': mass_kind.get('control', 0.0) / total,
         'mass_switch': mass_kind.get('switch', 0.0) / total,
         'mass_greedy': mass_kind.get('greedy', 0.0) / total,
+        'norm': cands[0].get('norm', 'global'),
     }
 
 

@@ -25,12 +25,12 @@ def set_pred_sink(fn) -> None:
     _PRED_SINK = fn
 
 
-def emit_pred(move_names, merged) -> None:
+def emit_pred(move_names, merged, norm: str = 'global') -> None:
     """Publica una predicción al diagnóstico (no-op si no hay sink)."""
     if _PRED_SINK is None:
         return
     try:
-        _PRED_SINK({'moves': list(move_names), 'merged': dict(merged)})
+        _PRED_SINK({'moves': list(move_names), 'merged': dict(merged), 'norm': norm})
     except Exception:
         pass
 
