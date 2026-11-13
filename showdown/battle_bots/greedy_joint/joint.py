@@ -24,6 +24,7 @@ from showdown.battle_bots.greedy_solo.greedy import (
     _collect_ally_hit_requests,
     _collect_side_requests,
     _is_damaging,
+    first_turn_only_fails,
     _stats_or_default,
     apply_pending_mega,
 )
@@ -282,6 +283,8 @@ def _atoms_from_side(
 
     for (_side, move, tid, foe, special), rng in zip(meta, ranges):
         is_fakeout = _norm_move(move.name) == 'fakeout'
+        if first_turn_only_fails(move.name, attacker):
+            continue  # Showdown: falla tras el primer turno en campo
         if is_fakeout and not fake_out_can_affect(attacker, foe):
             continue
         if _prio_fails(move.name, foe):
@@ -380,6 +383,8 @@ def _atoms_from_side(
         tid for tid, foe in foes
         if fake_out_can_affect(attacker, foe) and not _prio_fails('fakeout', foe)
     ]
+    if first_turn_only_fails('Fake Out', attacker):
+        hittable_fakeout = []
 
     for move in moves:
         kind = _utility_kind(

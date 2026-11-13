@@ -86,7 +86,7 @@ def test_fake_out_on_first_turn_against_the_biggest_threat(agent):
     (lm, lt), (rm, rt) = decide(agent, left, right, moves('Fake Out', 'Flare Blitz'),
                                 moves('Wood Hammer', 'Protect'), foes, dmg,
                                 {1: ('Earthquake', 'Dragon Claw'), 2: ('Hurricane',)})
-    assert lm == 'Fake Out' and lt == 1
+    assert lm == 'Fake Out' and lt == 1, (agent, lm, lt, rm, rt)
 
 
 @pytest.mark.parametrize('agent', AGENTS)
@@ -94,9 +94,9 @@ def test_fake_out_not_chosen_after_the_first_turn(agent):
     left = mon('Incineroar', 80, types=('Fire', 'Dark'), just_switched=False)
     right = mon('Rillaboom', 85, types=('Grass',))
     foes = [(1, mon('Garchomp', 140)), (2, mon('Pelipper', 60))]
-    (lm, _), _ = decide(agent, left, right, moves('Fake Out', 'Flare Blitz'),
-                        moves('Wood Hammer', 'Protect'), foes, make_damage({}))
-    assert lm != 'Fake Out'
+    (lm, _), (rm, _) = decide(agent, left, right, moves('Fake Out', 'Flare Blitz'),
+                              moves('Wood Hammer', 'Protect'), foes, make_damage({}))
+    assert lm != 'Fake Out', (agent, lm, rm)
 
 
 # --- Sueño -------------------------------------------------------------------
@@ -110,7 +110,7 @@ def test_sleep_move_on_a_vulnerable_threat_when_no_ko_is_available(agent):
     (lm, lt), _ = decide(agent, left, right, moves('Spore', 'Pollen Puff'),
                          moves('Wood Hammer', 'Protect'), foes, dmg,
                          {1: ('Earthquake',), 2: ('Hurricane',)})
-    assert lm == 'Spore' and lt in (1, 2)
+    assert lm == 'Spore' and lt in (1, 2), (agent, lm, lt)
 
 
 @pytest.mark.parametrize('agent', AGENTS)
@@ -119,9 +119,9 @@ def test_sleep_move_not_used_when_every_target_is_immune(agent):
     right = mon('Rillaboom', 85, types=('Grass',))
     foes = [(1, mon('Ferrothorn', 40, types=('Grass', 'Steel'))),
             (2, mon('Snorlax', 30, types=('Normal',), status='slp'))]
-    (lm, _), _ = decide(agent, left, right, moves('Spore', 'Pollen Puff'),
-                        moves('Wood Hammer', 'Protect'), foes, make_damage({}, default=(30, 36)))
-    assert lm != 'Spore'
+    (lm, _), (rm, _) = decide(agent, left, right, moves('Spore', 'Pollen Puff'),
+                              moves('Wood Hammer', 'Protect'), foes, make_damage({}, default=(30, 36)))
+    assert lm != 'Spore', (agent, lm, rm)
 
 
 # --- Tailwind / Trick Room ---------------------------------------------------
@@ -134,7 +134,7 @@ def test_tailwind_when_the_team_is_outsped_by_both_foes(agent):
     (lm, _), (rm, _) = decide(agent, left, right, moves('Tailwind', 'Moonblast'),
                               moves('Wood Hammer', 'Protect'), foes, dmg,
                               {1: ('Earthquake',), 2: ('Shadow Ball',)})
-    assert 'Tailwind' in (lm, rm)
+    assert 'Tailwind' in (lm, rm), (agent, lm, rm)
 
 
 @pytest.mark.parametrize('agent', AGENTS)
@@ -145,7 +145,7 @@ def test_no_tailwind_when_the_team_already_outspeeds_everything(agent):
     dmg = make_damage({}, default=(70, 80))
     (lm, _), (rm, _) = decide(agent, left, right, moves('Tailwind', 'Moonblast'),
                               moves('Shadow Ball', 'Protect'), foes, dmg)
-    assert 'Tailwind' not in (lm, rm)
+    assert 'Tailwind' not in (lm, rm), (agent, lm, rm)
 
 
 # --- Helping Hand ------------------------------------------------------------
@@ -158,7 +158,7 @@ def test_helping_hand_when_it_turns_the_partner_hit_into_a_ko(agent):
     dmg = make_damage({('rillaboom', 'wood hammer', 'garchomp'): (115, 125)}, default=(20, 24))
     (lm, _), (rm, rt) = decide(agent, left, right, moves('Helping Hand', 'Psychic'),
                                moves('Wood Hammer', 'Protect'), foes, dmg)
-    assert lm == 'Helping Hand' and rm == 'Wood Hammer' and rt == 1
+    assert lm == 'Helping Hand' and rm == 'Wood Hammer' and rt == 1, (agent, lm, rm, rt)
 
 
 # --- Redirección --------------------------------------------------------------
@@ -172,7 +172,7 @@ def test_follow_me_to_cover_a_partner_that_secures_a_ko(agent):
     (lm, _), (rm, rt) = decide(agent, left, right, moves('Follow Me', 'Moonblast'),
                                moves('Wood Hammer', 'Protect'), foes, dmg,
                                {1: ('Hurricane',), 2: ('Earthquake',)})
-    assert lm == 'Follow Me' and rm == 'Wood Hammer'
+    assert lm == 'Follow Me' and rm == 'Wood Hammer', (agent, lm, rm)
 
 
 # --- Lo que el código aún no implementa (documentado) -------------------------
@@ -186,8 +186,10 @@ def test_wide_guard_against_two_spread_attackers(agent):
     dmg = make_damage({
         ('garchomp', 'earthquake', 'whimsicott'): (170, 190), ('garchomp', 'earthquake', 'rillaboom'): (170, 190),
         ('dragapult', 'hyper voice', 'whimsicott'): (170, 190), ('dragapult', 'hyper voice', 'rillaboom'): (170, 190),
+        ('whimsicott', 'moonblast', 'garchomp'): (70, 80), ('whimsicott', 'moonblast', 'dragapult'): (70, 80),
+        ('rillaboom', 'wood hammer', 'garchomp'): (70, 80), ('rillaboom', 'wood hammer', 'dragapult'): (70, 80),
     }, default=(10, 12))
     (lm, _), (rm, _) = decide(agent, left, right, moves('Wide Guard', 'Moonblast'),
                               moves('Wood Hammer', 'Protect'), foes, dmg,
                               {1: ('Earthquake',), 2: ('Hyper Voice',)})
-    assert 'Wide Guard' in (lm, rm)
+    assert 'Wide Guard' in (lm, rm), (agent, lm, rm)

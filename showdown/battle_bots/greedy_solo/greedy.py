@@ -33,6 +33,18 @@ def _norm_abi(raw: Optional[str]) -> str:
     return str(raw or '').strip().lower().replace(' ', '').replace('-', '')
 
 
+# Movimientos que Showdown hace fallar si el usuario ya lleva un turno en campo (onTry).
+_FIRST_TURN_ONLY = frozenset({'fakeout', 'firstimpression', 'matblock'})
+
+
+def first_turn_only_fails(move_name: Optional[str], attacker) -> bool:
+    """True si ``move_name`` solo funciona en el primer turno y el atacante ya no está en él."""
+    if attacker is None:
+        return False
+    mid = str(move_name or '').strip().lower().replace(' ', '').replace('-', '')
+    return mid in _FIRST_TURN_ONLY and not bool(getattr(attacker, 'just_switched', False))
+
+
 @dataclass
 class CalcPoke:
     species: str
@@ -561,6 +573,8 @@ def _actions_from_ranges(
     side_foes = list(foes_for_priority or [])
 
     for (_side, move, tid, foe, special), rng in zip(meta, ranges):
+        if first_turn_only_fails(move.name, attacker):
+            continue
         if str(move.name or '').strip().lower().replace(' ', '').replace('-', '') == 'fakeout':
             from showdown.battle_bots.greedy_solo.type_chart import fake_out_can_affect
             abi = attacker.ability if attacker is not None else None
