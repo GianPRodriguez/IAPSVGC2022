@@ -16,6 +16,14 @@ W_SWITCH = 0.10
 # Acción sintética: pivot rival (0 dmg este turno).
 SWITCH_MOVE_NAME = '__switch__'
 
+# Diagnóstico (opp_model_trace): recibe {'moves': [...], 'merged': {(move, target, kind): p}}.
+_PRED_SINK = None
+
+
+def set_pred_sink(fn) -> None:
+    global _PRED_SINK
+    _PRED_SINK = fn
+
 _CONTROL_MOVES = frozenset({
     'protect', 'detect', 'spikyshield', 'banefulbunker', 'silktrap',
     'burningbulwark', 'obstruct', 'substitute', 'followme', 'ragepowder',
@@ -284,6 +292,12 @@ def opp_policy_targeted(
         for action, p in dist:
             key = (_norm_move(action.move_name), int(action.target), action.kind)
             merged[key] = merged.get(key, 0.0) + scale * float(p)
+
+    if _PRED_SINK is not None:
+        try:
+            _PRED_SINK({'moves': [m.name for m in moves], 'merged': dict(merged)})
+        except Exception:
+            pass
 
     name_by_norm = {_norm_move(m.name): m.name for m in moves}
     name_by_norm[_norm_move(SWITCH_MOVE_NAME)] = SWITCH_MOVE_NAME

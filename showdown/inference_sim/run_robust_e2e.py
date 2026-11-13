@@ -1212,6 +1212,11 @@ async def run_batch(
             from showdown.inference_sim import decision_trace
             decision_trace.install(player_a_pl, 'A')
             decision_trace.install(player_b_pl, 'B')
+            from showdown.inference_sim import opp_model_trace
+            if hasattr(player_a_pl, 'set_opp_ots_sheet'):  # solo jugadores expectimax
+                opp_model_trace.install(player_a_pl)
+            if hasattr(player_b_pl, 'set_opp_ots_sheet'):
+                opp_model_trace.install(player_b_pl)
         except Exception:
             pass
         try:
