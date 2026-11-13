@@ -44,6 +44,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument('--device', default='cpu', help='cpu | cuda | auto')
     ap.add_argument('--parallel-trials', type=int, default=1,
                     help='Trials simultáneos (uno por GPU, puertos separados). Servidor: 3')
+    ap.add_argument('--backend', choices=('mock', 'live'), default='mock',
+                    help='mock = proxy; live = BO1 reales con π_c congelado')
+    ap.add_argument('--num-workers', type=int, default=0,
+                    help='BO1 en paralelo por trial (live); 0 = automático')
+    ap.add_argument('--start-ps', action='store_true')
+    ap.add_argument('--pilot', default='greedy_joint')
     ap.add_argument('--dry-run', action='store_true')
     args = ap.parse_args(list(argv) if argv is not None else None)
 
@@ -61,6 +67,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         ]
         if args.smoke:
             cmd.append('--smoke')
+        cmd.extend(['--backend', args.backend, '--pilot', args.pilot,
+                    '--num-workers', str(args.num_workers)])
+        if args.start_ps:
+            cmd.append('--start-ps')
         return cmd
 
     def parse_score(trial_dir: Path):

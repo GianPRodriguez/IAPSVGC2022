@@ -508,3 +508,62 @@ def test_spawned_ps_gets_its_own_process_group(monkeypatch, tmp_path):
     else:
         assert seen.get('start_new_session') is True
     assert seen['env']['PSPORT'] == '9005'
+
+
+# --------------------------------------------------------------------------- #
+# Familia QD vectorizada (QD-PPO / QD-PGA / QD-PPGA)
+# --------------------------------------------------------------------------- #
+
+@pytest.mark.parametrize('module', ['qd_ppo', 'qd_pga', 'qd_ppga'])
+def test_qd_trainers_vectorized_smoke_mock(module, tmp_path):
+    import importlib
+
+    train = importlib.import_module(f'showdown.rl.{module}.train')
+    rc = train.main([
+        '--seed', '0', '--smoke', '--num-envs', '2', '--suite-games', '0',
+        '--checkpoint-dir', str(tmp_path),
+    ])
+    assert rc == 0
+    assert (tmp_path / 'archive.pt').is_file()
+
+
+def test_qd_evaluate_policy_vec_plays_exactly_n_games():
+    from showdown.rl.ppo.agent import PPOAgent, PPOConfig
+    from showdown.rl.qd_ppo.evaluate import evaluate_policy
+
+    venv = SyncVecVGCEnv(_mock_specs(3, turns=4), seed=5)
+    try:
+        agent = PPOAgent(PPOConfig(seed=0))
+        res = evaluate_policy(agent, venv, rng=np.random.default_rng(0), n_games=7, g_min=0)
+        assert res.n_games == 7
+        assert np.isfinite(res.fitness)
+        assert venv.in_flight() == []
+    finally:
+        venv.close()
+
+
+def test_qd_mosaic_never_turns_mock_envs_live():
+    from showdown.rl.ppo.agent import PPOAgent, PPOConfig
+    from showdown.rl.qd_ppo.improve import ppo_improve
+
+    venv = SyncVecVGCEnv(_mock_specs(2, turns=4), seed=6)
+    try:
+        agent = PPOAgent(PPOConfig(seed=0, rollout_steps=16))
+        venv2, taken, _m = ppo_improve(agent, venv, steps=40, rng=np.random.default_rng(0),
+                                       global_steps=0, t_total=10_000, use_mosaic=True)
+        assert venv2 is venv and taken == 40
+        assert all(s.opponent == 'mock' for s in venv.specs)
+    finally:
+        venv.close()
+
+
+def test_vec_env_set_reward_switches_candidate():
+    venv = SyncVecVGCEnv(_mock_specs(2), seed=7)
+    try:
+        venv.set_reward('candidate_1')
+        assert all(s.reward == 'candidate_1' for s in venv.specs)
+        assert all(r.env.reward_candidate.value == 'candidate_1' for r in venv._runners)
+        venv.set_reward('candidate_2')
+        assert all(r.env.reward_candidate.value == 'candidate_2' for r in venv._runners)
+    finally:
+        venv.close()

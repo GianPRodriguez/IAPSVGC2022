@@ -72,8 +72,16 @@ def _collect(
     phase: str = '',
 ) -> Tuple[VGCEnv, int, RolloutBuffer, dict]:
     """Collect up to ``steps`` env transitions; values from shared critic."""
-    env.reward_candidate = RewardCandidate.DENSE
+    from showdown.rl.vec_rollout import is_vec_env
+
     budget = min(int(steps), max(0, int(t_total) - int(global_steps)))
+    if is_vec_env(env):
+        return _collect_vec(
+            agent, env, critic, budget=budget, rng=rng, global_steps=global_steps,
+            use_mosaic=use_mosaic, replay=replay, write_replay=write_replay,
+            heartbeat=heartbeat, phase=phase,
+        )
+    env.reward_candidate = RewardCandidate.DENSE
     buf = RolloutBuffer(capacity=max(1, budget))
     meta = {
         'last_obs': None,
@@ -171,6 +179,16 @@ def _ppo_actor_update(
     """GAE vs shared V_φ; PPO-clip on actor only (no local value loss)."""
     if len(buf) == 0:
         return {}
+    if 'last_values' in meta:
+        # Vectorizado: V(s) del crítico por entorno (0 si el último paso se descartó).
+        last_v = meta['last_values']
+        buf.compute_gae(
+            last_value=last_v,
+            gamma=agent.cfg.gamma,
+            lam=agent.cfg.gae_lambda,
+            normalize_adv=True,
+        )
+        return _ppo_actor_epochs(agent, buf, k_pg=k_pg)
     last_obs = meta.get('last_obs')
     terminated = bool(meta.get('terminated'))
     truncated = bool(meta.get('truncated'))
@@ -189,7 +207,11 @@ def _ppo_actor_update(
         lam=agent.cfg.gae_lambda,
         normalize_adv=True,
     )
+    return _ppo_actor_epochs(agent, buf, k_pg=k_pg)
 
+
+def _ppo_actor_epochs(agent: PPOAgent, buf, *, k_pg: int) -> dict:
+    """K épocas PPO-clip solo sobre el actor (ventajas ya calculadas en ``buf``)."""
     torch_mod = agent._torch
     clip_eps = agent.cfg.clip_eps
     ent_coef = agent.cfg.ent_coef
@@ -292,3 +314,59 @@ def mut_burn_rollout(
         heartbeat=heartbeat, phase=phase or 'mut',
     )
     return env, taken, {}
+
+
+def _collect_vec(agent, venv, critic, *, budget, rng, global_steps, use_mosaic, replay,
+                 write_replay, heartbeat, phase):
+    """Versión vectorizada de ``_collect``: buffer por entorno, V del crítico compartido."""
+    from showdown.rl.ppo.buffer import VecRolloutBuffer
+    from showdown.rl.vec_rollout import run_vec_rollout
+
+    n = int(venv.num_envs)
+    per_env = max(1, -(-int(budget) // n) + 1)
+    buf = VecRolloutBuffer(n, capacity=per_env)
+    meta = {'last_values': np.zeros(n, dtype=np.float32)}
+    if budget <= 0:
+        return venv, 0, buf, meta
+    venv.set_reward(RewardCandidate.DENSE.value)
+
+    def act_fn(obs, m1, idx):
+        a1, a2, logp, _v_actor, m2 = agent.act_batch(
+            obs, m1, lambda a1s: venv.mask2_subset(idx, a1s), greedy=False,
+        )
+        value = critic.values_batch(obs)
+        return {'a1': a1, 'a2': a2, 'logp': logp, 'value': value, 'm2': m2}
+
+    def on_step(i, rec):
+        r = rec['result']
+        trunc_reason = r['info']['trunc_reason']
+        buf.add(
+            env_index=i, obs=rec['obs'], a1=rec['a1'], a2=rec['a2'], logp=rec['logp'],
+            reward=float(r['reward']), value=rec['value'],
+            terminated=bool(r['terminated']), m1=rec['m1'], m2=rec['m2'],
+            skip_buffer=rec['skip'], trunc_reason=trunc_reason,
+            bootstrap_value=rec['boot_v'],
+        )
+        if write_replay and replay is not None:
+            done = bool(r['terminated'] or r['truncated'])
+            replay.add(
+                s=rec['obs'], r=float(r['reward']),
+                s_next=r['final_obs'] if done else r['obs'],
+                terminated=bool(r['terminated']),
+                skip_buffer=rec['skip'], trunc_reason=trunc_reason,
+            )
+
+    out = run_vec_rollout(
+        venv, steps=budget, act_fn=act_fn, on_step=on_step,
+        boot_fn=critic.values_batch,
+        foe_sampler=(lambda: sample_mosaic_foe(rng)) if use_mosaic else None,
+        heartbeat=heartbeat, hb_offset=int(global_steps), phase=phase or 'collect',
+        hb_extras=lambda: {'replay': len(replay) if replay is not None else 0},
+    )
+    if out['last_obs'] is not None:
+        last_v = critic.values_batch(out['last_obs'])
+        for i, sk in enumerate(out['last_skip']):
+            if sk:
+                last_v[i] = 0.0
+        meta['last_values'] = last_v
+    return venv, int(out['taken']), buf, meta

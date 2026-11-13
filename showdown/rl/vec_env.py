@@ -117,8 +117,22 @@ def _set_opponent(env, spec: EnvSpec, opponent: str):
     return make_env(new_spec), new_spec
 
 
-def _lite_info(info: Dict[str, Any]) -> Dict[str, Any]:
+def _lite_info(info: Dict[str, Any], env=None) -> Dict[str, Any]:
     eng = info.get('engine') or {}
+    tel = info.get('telemetry') or {}
+    eligible = bool(tel.get('archive_eligible'))
+    bd = getattr(env, '_bd', None) if env is not None else None
+    if not eligible and bd is not None:
+        try:
+            eligible = bool(bd.archive_eligible())
+        except Exception:
+            eligible = False
+    bd_raw = info.get('bd_raw') or info.get('bd')
+    if bd_raw is None and bd is not None:
+        try:
+            bd_raw = bd.bd_vector()
+        except Exception:
+            bd_raw = None
     return {
         'skip_buffer': bool(info.get('skip_buffer')),
         'trunc_reason': info.get('trunc_reason'),
@@ -126,6 +140,9 @@ def _lite_info(info: Dict[str, Any]) -> Dict[str, Any]:
         'episode_return': float(info.get('episode_return', 0.0) or 0.0),
         'turn': int(info.get('turn', 0) or 0),
         'error': info.get('error'),
+        # Descriptor de comportamiento (QD): válido al terminar el episodio.
+        'archive_eligible': eligible,
+        'bd_raw': None if bd_raw is None else (float(bd_raw[0]), float(bd_raw[1])),
     }
 
 
@@ -147,7 +164,7 @@ class _EnvRunner:
     def step(self, action: Tuple[int, int], on_done_opponent: Optional[str]) -> Dict[str, Any]:
         _obs, reward, terminated, truncated, info = self.env.step(tuple(int(a) for a in action))
         obs = _observe(self.env, self.spec.obs_kind)
-        lite = _lite_info(info)
+        lite = _lite_info(info, self.env)
         out: Dict[str, Any] = {
             'reward': float(reward),
             'terminated': bool(terminated),
@@ -173,6 +190,14 @@ class _EnvRunner:
     def set_opponent(self, opponent: str) -> Tuple[np.ndarray, np.ndarray]:
         self.env, self.spec = _set_opponent(self.env, self.spec, opponent)
         return self.reset()
+
+    def set_reward(self, candidate: str) -> None:
+        """Cambia el candidato de recompensa (Cand. 1 evaluar / Cand. 2 mejorar)."""
+        from showdown.rl.reward import RewardCandidate
+
+        value = RewardCandidate(candidate).value
+        self.env.reward_candidate = RewardCandidate(value)
+        self.spec = replace(self.spec, reward=value)
 
     def close(self) -> None:
         try:
@@ -206,6 +231,9 @@ def _worker_main(conn, spec: EnvSpec, seed: int, threads: int) -> None:
                     conn.send(('ok', runner.mask2(payload)))
                 elif cmd == 'set_opponent':
                     conn.send(('ok', runner.set_opponent(payload)))
+                elif cmd == 'set_reward':
+                    runner.set_reward(payload)
+                    conn.send(('ok', None))
                 elif cmd == 'close':
                     conn.send(('ok', None))
                     break
@@ -330,11 +358,20 @@ class SyncVecVGCEnv(_VecBase):
         return self.step_wait_any()
 
     def set_opponent(self, opponent: str) -> Tuple[np.ndarray, np.ndarray]:
+        return self.set_opponents([opponent] * self.num_envs)
+
+    def set_opponents(self, opponents: Sequence[str]) -> Tuple[np.ndarray, np.ndarray]:
+        """Un rival por entorno (p. ej. mosaico QD); reinicia todos los episodios."""
         pairs = []
-        for i, r in enumerate(self._runners):
-            pairs.append(r.set_opponent(opponent))
+        for i, (r, opp) in enumerate(zip(self._runners, opponents)):
+            pairs.append(r.set_opponent(opp))
             self.specs[i] = r.spec
         return np.stack([p[0] for p in pairs]), np.stack([p[1] for p in pairs])
+
+    def set_reward(self, candidate: str) -> None:
+        for i, r in enumerate(self._runners):
+            r.set_reward(candidate)
+            self.specs[i] = r.spec
 
     def close(self) -> None:
         for r in self._runners:
@@ -658,13 +695,25 @@ class SubprocVecVGCEnv(_VecBase):
         return out
 
     def set_opponent(self, opponent: str) -> Tuple[np.ndarray, np.ndarray]:
-        out = self._broadcast('set_opponent', [str(opponent)] * self.num_envs)
+        return self.set_opponents([opponent] * self.num_envs)
+
+    def set_opponents(self, opponents: Sequence[str]) -> Tuple[np.ndarray, np.ndarray]:
+        """Un rival por entorno (p. ej. mosaico QD); reinicia todos los episodios."""
+        opps = [str(o) for o in opponents]
+        out = self._broadcast('set_opponent', opps)
         for i, (res, err) in enumerate(out):
-            self.specs[i] = self.specs[i].with_opponent(opponent)
+            self.specs[i] = self.specs[i].with_opponent(opps[i])
             if err is not None:
                 res = self._restart(i)
             self._last_obs[i], self._last_mask[i] = res
         return np.stack(self._last_obs), np.stack(self._last_mask)
+
+    def set_reward(self, candidate: str) -> None:
+        out = self._broadcast('set_reward', [str(candidate)] * self.num_envs)
+        for i, (_res, err) in enumerate(out):
+            self.specs[i] = replace(self.specs[i], reward=str(candidate))
+            if err is not None:
+                self._restart(i)
 
     def close(self) -> None:
         if self._closed:

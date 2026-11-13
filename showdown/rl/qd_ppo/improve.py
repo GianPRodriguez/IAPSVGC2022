@@ -76,8 +76,15 @@ def ppo_improve(
 
     Returns (env, steps_taken, metrics).
     """
-    env.reward_candidate = RewardCandidate.DENSE
+    from showdown.rl.vec_rollout import is_vec_env
+
     budget = min(int(steps), max(0, int(t_total) - int(global_steps)))
+    if is_vec_env(env):
+        return _ppo_improve_vec(
+            agent, env, budget=budget, rng=rng, global_steps=global_steps,
+            use_mosaic=use_mosaic, heartbeat=heartbeat, phase=phase,
+        )
+    env.reward_candidate = RewardCandidate.DENSE
     if budget <= 0:
         return env, 0, {}
 
@@ -149,3 +156,53 @@ def ppo_improve(
             break
 
     return env, int(local), metrics
+
+
+def _ppo_improve_vec(agent, venv, *, budget, rng, global_steps, use_mosaic, heartbeat, phase):
+    """Versión vectorizada: mismas reglas (Cand. 2, mosaico por episodio, update al llenar)."""
+    from showdown.rl.vec_rollout import run_vec_rollout
+
+    if budget <= 0:
+        return venv, 0, {}
+    n = int(venv.num_envs)
+    buf = getattr(agent, 'buffer', None)
+    if getattr(buf, 'num_envs', None) != n:
+        agent.use_vec_buffer(n)
+    venv.set_reward(RewardCandidate.DENSE.value)
+    metrics: dict = {}
+
+    def act_fn(obs, m1, idx):
+        a1, a2, logp, value, m2 = agent.act_batch(
+            obs, m1, lambda a1s: venv.mask2_subset(idx, a1s), greedy=False,
+        )
+        return {'a1': a1, 'a2': a2, 'logp': logp, 'value': value, 'm2': m2}
+
+    def on_step(i, rec):
+        r = rec['result']
+        agent.observe(
+            obs=rec['obs'], a1=rec['a1'], a2=rec['a2'], logp=rec['logp'],
+            reward=float(r['reward']), value=rec['value'],
+            terminated=bool(r['terminated']), m1=rec['m1'], m2=rec['m2'],
+            skip_buffer=rec['skip'], trunc_reason=r['info']['trunc_reason'],
+            bootstrap_value=rec['boot_v'], env_index=i,
+        )
+
+    def flush(obs, last_skip):
+        nonlocal metrics
+        if len(agent.buffer) == 0:
+            return
+        last_v = agent.values_batch(obs)
+        for i, sk in enumerate(last_skip):
+            if sk:
+                last_v[i] = 0.0
+        metrics = agent.update(last_value=last_v)
+
+    out = run_vec_rollout(
+        venv, steps=budget, act_fn=act_fn, on_step=on_step,
+        boot_fn=agent.values_batch,
+        foe_sampler=(lambda: sample_mosaic_foe(rng)) if use_mosaic else None,
+        should_flush=agent.is_rollout_full, flush_fn=flush, final_flush=True,
+        heartbeat=heartbeat, hb_offset=int(global_steps), phase=phase or 'improve',
+        hb_extras=lambda: {'loss': metrics.get('loss'), 'kl': metrics.get('approx_kl')},
+    )
+    return venv, int(out['taken']), metrics

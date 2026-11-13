@@ -44,6 +44,8 @@ def run_qd_agent_hp_tune(
     ap.add_argument('--device', default='cpu', help='cpu | cuda | auto')
     ap.add_argument('--parallel-trials', type=int, default=1,
                     help='Trials simultáneos (uno por GPU, puertos separados). Servidor: 3')
+    ap.add_argument('--num-envs', type=int, default=1,
+                    help='Entornos paralelos por trial (ver showdown.rl.vec_env)')
     ap.add_argument('--bc-checkpoint', default=None)
     ap.add_argument('--start-ps', action='store_true')
     ap.add_argument('--smoke', action='store_true', default=True)
@@ -72,6 +74,7 @@ def run_qd_agent_hp_tune(
             cmd.append('--smoke')
         if args.start_ps:
             cmd.append('--start-ps')
+        cmd.extend(['--num-envs', str(args.num_envs)])
         if args.bc_checkpoint:
             cmd.extend(['--bc-checkpoint', str(args.bc_checkpoint)])
         return cmd

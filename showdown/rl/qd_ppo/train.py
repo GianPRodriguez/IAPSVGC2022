@@ -91,7 +91,17 @@ def run_training(
     suite_games: Optional[int] = None,
     lr: Optional[float] = None,
     clip_eps: Optional[float] = None,
+    num_envs: int = 1,
+    envs_per_server: int = 4,
+    base_port: Optional[int] = None,
 ) -> Archive:
+    from showdown.rl.parallel import describe_resources, raise_nofile_limit, resolve_device
+
+    raise_nofile_limit()
+    device = resolve_device(device)
+    num_envs = max(1, int(num_envs))
+    print(f'[qd_ppo] recursos: {describe_resources()} device={device} num_envs={num_envs}',
+          flush=True)
     if smoke:
         t_total = min(int(t_total), 6_000)
         b_boot = min(int(b_boot), 2_048)
@@ -117,7 +127,15 @@ def run_training(
     rng = np.random.default_rng(int(seed) + 91)
     ckpt_dir = Path(checkpoint_dir)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
-    env = _make_env(mock=smoke or not start_ps, seed=seed, start_ps=start_ps)
+    from showdown.rl.vec_rollout import is_vec_env, make_qd_env
+
+    mock_env = bool(smoke or not start_ps)
+    env = make_qd_env(
+        make_single=lambda: _make_env(mock=mock_env, seed=seed, start_ps=start_ps),
+        mock=mock_env, num_envs=num_envs, seed=seed, start_ps=start_ps,
+        account_prefix='QdPpo', combat_family='qd_ppo',
+        envs_per_server=envs_per_server, base_port=base_port,
+    )
     global_steps = 0
     accepts = 0
     emits = 0
@@ -252,6 +270,10 @@ def run_training(
         )
         n_suite = resolve_suite_games(suite_games=suite_games, smoke=smoke)
         suite_rows, suite_note = [], ''
+        if n_suite > 0 and is_vec_env(env):
+            # La suite offline usa un entorno simple (BO1 secuenciales por rival).
+            env.close()
+            env = _make_env(mock=mock_env, seed=seed, start_ps=start_ps)
         if n_suite > 0:
             print(
                 f'[qd_ppo] offline suite on π*: {n_suite} BO1 × {len(SUITE_FOES)} foes',
@@ -326,7 +348,7 @@ def run_training(
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description='QD-PPO (Grid MAP-Elites + Masked PPO)')
     p.add_argument('--seed', type=int, required=True)
-    p.add_argument('--device', type=str, default='cpu')
+    p.add_argument('--device', type=str, default='cpu', help='cpu | cuda | auto')
     p.add_argument('--checkpoint-dir', type=str, default='logs/qd_ppo_archive')
     p.add_argument('--smoke', action='store_true')
     p.add_argument('--start-ps', action='store_true')
@@ -339,7 +361,16 @@ def main(argv=None) -> int:
     )
     p.add_argument('--lr', type=float, default=None, help='Override PPOConfig.lr')
     p.add_argument('--clip-eps', type=float, default=None, help='Override PPOConfig.clip_eps')
+    p.add_argument('--num-envs', type=int, default=1,
+                   help='Entornos paralelos (procesos). Servidor: ~24; 0 = automático')
+    p.add_argument('--envs-per-server', type=int, default=4,
+                   help='Entornos por servidor Showdown')
+    p.add_argument('--base-port', type=int, default=None,
+                   help='Primer puerto Showdown (default PS_PORT)')
     args = p.parse_args(argv)
+    if args.num_envs == 0:
+        from showdown.rl.parallel import default_num_envs
+        args.num_envs = default_num_envs()
     run_training(
         seed=args.seed,
         device=args.device,
@@ -352,6 +383,9 @@ def main(argv=None) -> int:
         suite_games=args.suite_games,
         lr=args.lr,
         clip_eps=args.clip_eps,
+        num_envs=args.num_envs,
+        envs_per_server=args.envs_per_server,
+        base_port=args.base_port,
     )
     return 0
 

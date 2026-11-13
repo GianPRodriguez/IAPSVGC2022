@@ -78,6 +78,12 @@ def evaluate_policy(
 
     f = mean over all G; BD = mean over eligible only; accept iff g >= g_min.
     """
+    from showdown.rl.vec_rollout import evaluate_policy_vec, is_vec_env
+
+    if is_vec_env(env):
+        return evaluate_policy_vec(
+            agent, env, rng=rng, n_games=n_games, g_min=g_min, use_mosaic=use_mosaic,
+        )
     returns: list[float] = []
     bds: list[Tuple[float, float]] = []
     prev_cand = env.reward_candidate
