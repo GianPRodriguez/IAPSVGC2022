@@ -215,9 +215,9 @@ class ExpectimaxConfig:
     opp_policy_split_targets: bool = False
     opp_policy_mirror_solo: bool = False
     # Slots de movimiento distintos por rival (sin esto, los dos rivales se pisan el daño por slot).
-    opp_policy_unique_slots: bool = False
+    opp_policy_unique_slots: bool = True
     # Fake Out rival: solo en su primer turno en campo; entonces masa ~p (si puede afectar).
-    opp_policy_fakeout_rule: bool = False
+    opp_policy_fakeout_rule: bool = True
     opp_policy_fakeout_first_p: float = 0.7
     # V anclada a offense (EV de daño = chance abstraction C).
     v_solo_isomorphic: bool = True
