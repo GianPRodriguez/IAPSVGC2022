@@ -434,3 +434,77 @@ def test_node_executable_prefers_env_then_path_then_latest_nvm(tmp_path, monkeyp
 
     monkeypatch.setenv('NVM_DIR', str(tmp_path / 'vacio'))
     assert paths.node_executable() == 'node'
+
+
+# --------------------------------------------------------------------------- #
+# Servidores Showdown: arranque en paralelo y apagado del árbol de procesos
+# --------------------------------------------------------------------------- #
+
+def test_ensure_ps_ports_spawns_all_down_ports_at_once(monkeypatch):
+    from showdown.inference_sim import ps_server
+
+    up = set()
+    spawned = []
+
+    class _FakeProc:
+        def __init__(self, port):
+            self.port = port
+            self.pid = 10_000 + port
+
+        def poll(self):
+            return None
+
+    def fake_spawn(port):
+        spawned.append(port)
+        return _FakeProc(port)
+
+    def fake_up(host='localhost', port=0, timeout=1.0):
+        # Ningún puerto responde hasta que se lanzaron todos: si el arranque
+        # fuera secuencial, el primero esperaría hasta el timeout.
+        if len(spawned) == 3:
+            up.update(spawned)
+        return port in up
+
+    monkeypatch.setattr(ps_server, '_spawn_ps', fake_spawn)
+    monkeypatch.setattr(ps_server, 'is_ps_up', fake_up)
+    monkeypatch.setattr(ps_server, '_ps_procs', {})
+    assert ps_server.ensure_ps_ports([9001, 9002, 9003], start=True, wait_s=5)
+    assert spawned == [9001, 9002, 9003]
+
+
+def test_stop_started_ps_kills_each_process_tree(monkeypatch):
+    from showdown.inference_sim import ps_server
+
+    killed = []
+    monkeypatch.setattr(ps_server, '_kill_process_tree', lambda proc, timeout=8.0: killed.append(proc))
+    monkeypatch.setattr(ps_server, '_ps_procs', {9001: 'a', 9002: 'b'})
+    ps_server.stop_started_ps()
+    assert killed == ['a', 'b'] and ps_server._ps_procs == {}
+
+
+def test_spawned_ps_gets_its_own_process_group(monkeypatch, tmp_path):
+    import os
+    import subprocess as sp
+
+    from showdown.inference_sim import ps_server
+
+    seen = {}
+
+    def fake_popen(argv, **kwargs):
+        seen.update(kwargs)
+
+        class _P:
+            pid = 1
+
+        return _P()
+
+    (tmp_path / 'config').mkdir()
+    monkeypatch.setattr(ps_server, 'POKEMON_SHOWDOWN_ROOT', tmp_path)
+    monkeypatch.setattr(sp, 'Popen', fake_popen)
+    monkeypatch.setattr(ps_server, '_cleanup_registered', True)
+    ps_server._spawn_ps(9005)
+    if os.name == 'nt':
+        assert 'creationflags' in seen
+    else:
+        assert seen.get('start_new_session') is True
+    assert seen['env']['PSPORT'] == '9005'

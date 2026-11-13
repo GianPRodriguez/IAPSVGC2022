@@ -1,7 +1,10 @@
 """Healthcheck / ensure del servidor Pokémon Showdown local (1+ puertos)."""
 from __future__ import annotations
 
+import atexit
 import os
+import re
+import signal
 import socket
 import subprocess
 import time
@@ -71,7 +74,9 @@ def is_ps_up(host: str = PS_HOST, port: int = PS_PORT, timeout: float = 1.0) -> 
 
 
 def _pids_listening_on_port(port: int = PS_PORT) -> Set[int]:
-    """PIDs que escuchan el puerto (Windows netstat)."""
+    """PIDs que escuchan el puerto (Windows: netstat; Linux/macOS: ss)."""
+    if os.name != 'nt':
+        return _pids_listening_posix(port)
     pids: Set[int] = set()
     try:
         out = subprocess.check_output(
@@ -91,6 +96,20 @@ def _pids_listening_on_port(port: int = PS_PORT) -> Set[int]:
                 pids.add(int(parts[-1]))
             except ValueError:
                 continue
+    except Exception:
+        pass
+    return {p for p in pids if p > 0}
+
+
+def _pids_listening_posix(port: int) -> Set[int]:
+    pids: Set[int] = set()
+    try:
+        out = subprocess.check_output(
+            ['ss', '-ltnpH', f'sport = :{int(port)}'],
+            text=True, errors='replace', timeout=10,
+        )
+        for m in re.finditer(r'pid=(\d+)', out):
+            pids.add(int(m.group(1)))
     except Exception:
         pass
     return {p for p in pids if p > 0}
@@ -132,13 +151,64 @@ def _spawn_ps(port: int = PS_PORT) -> subprocess.Popen:
     node_executable()
     env = os.environ.copy()
     env['PSPORT'] = str(int(port))
+    _register_cleanup()
+    kwargs = {}
+    if os.name == 'nt':
+        kwargs['creationflags'] = getattr(subprocess, 'CREATE_NEW_PROCESS_GROUP', 0)
+    else:
+        # Grupo propio: al apagar se cierran también los subprocesos de PS
+        # (sockets, room-battle, validator...), no solo el lanzador.
+        kwargs['start_new_session'] = True
     return subprocess.Popen(
         ps_start_argv(port),
         cwd=str(POKEMON_SHOWDOWN_ROOT),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         env=env,
+        **kwargs,
     )
+
+
+_cleanup_registered = False
+
+
+def _register_cleanup() -> None:
+    """Apaga al salir los servidores que arrancó este proceso.
+
+    En un servidor compartido no deben quedar decenas de PS ociosos tras un
+    entrenamiento. ``PS_KEEP_SERVERS=1`` desactiva el apagado (para reutilizar
+    servidores entre corridas seguidas).
+    """
+    global _cleanup_registered
+    if _cleanup_registered:
+        return
+    _cleanup_registered = True
+    if os.environ.get('PS_KEEP_SERVERS', '').strip().lower() in ('1', 'true', 'yes'):
+        return
+    atexit.register(stop_started_ps)
+
+
+def _kill_process_tree(proc: subprocess.Popen, timeout: float = 8.0) -> None:
+    if proc.poll() is not None:
+        return
+    try:
+        if os.name == 'nt':
+            subprocess.run(
+                ['taskkill', '/PID', str(proc.pid), '/T', '/F'],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,
+            )
+        else:
+            os.killpg(proc.pid, signal.SIGTERM)
+        proc.wait(timeout=timeout)
+    except Exception:
+        try:
+            if os.name != 'nt':
+                os.killpg(proc.pid, signal.SIGKILL)
+            else:
+                proc.kill()
+            proc.wait(timeout=5)
+        except Exception:
+            pass
 
 
 def ensure_ps(
@@ -178,12 +248,30 @@ def ensure_ps_ports(
     restart: bool = False,
     wait_s: float = 60.0,
 ) -> bool:
-    """Asegura todos los puertos (paralelismo horizontal)."""
-    ok = True
-    for p in ports:
-        if not ensure_ps(start=start, restart=restart, wait_s=wait_s, port=p):
-            ok = False
-    return ok
+    """Asegura todos los puertos (paralelismo horizontal).
+
+    Con ``start``, lanza a la vez todos los servidores caídos y luego espera
+    (24 servidores arrancan en segundos, no uno tras otro).
+    """
+    ports = [int(p) for p in ports]
+    if restart:
+        for p in ports:
+            stop_ps_listeners(p)
+        start = True
+    down = [p for p in ports if not is_ps_up(port=p)]
+    if not down:
+        return True
+    if not start:
+        return False
+    for p in down:
+        _ps_procs[p] = _spawn_ps(p)
+    deadline = time.time() + wait_s
+    pending = set(down)
+    while pending and time.time() < deadline:
+        pending = {p for p in pending if not is_ps_up(port=p)}
+        if pending:
+            time.sleep(0.25)
+    return not pending
 
 
 def stop_started_ps(port: Optional[int] = None) -> None:
@@ -195,11 +283,4 @@ def stop_started_ps(port: Optional[int] = None) -> None:
         proc = _ps_procs.pop(p, None)
         if proc is None:
             continue
-        try:
-            proc.terminate()
-            proc.wait(timeout=5)
-        except Exception:
-            try:
-                proc.kill()
-            except Exception:
-                pass
+        _kill_process_tree(proc)
