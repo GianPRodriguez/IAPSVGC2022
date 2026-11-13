@@ -818,6 +818,14 @@ async def run_batch(
     set_chat_quiet(quiet)
     workers = max(1, int(workers))
     skip_sync = bool(skip_sync)
+    try:
+        from showdown.inference_sim import calibration
+        calibration.install()  # solo si PS_CALIB_LOG está definido
+    except Exception:
+        pass
+    if seed is not None:
+        from showdown.inference_sim.ps_server import seed_python_rngs
+        seed_python_rngs(int(seed) + 7919 * (int(shard[0]) if shard else 0))
     # Silenciar popups / CancelledError cosméticos en loggers poke-env y root.
     try:
         from showdown.inference_sim.stale_room_guard import _StaleRoomPopupFilter
@@ -1200,6 +1208,12 @@ async def run_batch(
             server_configuration=cfg,
         )
 
+        try:
+            from showdown.inference_sim import decision_trace
+            decision_trace.install(player_a_pl, 'A')
+            decision_trace.install(player_b_pl, 'B')
+        except Exception:
+            pass
         try:
             for i, (team_a, team_b) in enumerate(matchup_pairs):
                 base_label = f'{team_a.name} vs {team_b.name}'
@@ -1608,6 +1622,9 @@ def run_batch_multiprocess(
     if seed is None:
         # Todos los procesos deben generar exactamente los mismos pares.
         seed = _random.randrange(1, 2**31 - 1)
+        if 'PS_BATTLE_SEED' not in os.environ and not os.environ.get('PS_NO_BATTLE_SEED'):
+            from showdown.inference_sim.ps_server import set_battle_seed
+            set_battle_seed(seed)
     from showdown.inference_sim.paths import PS_PORT
 
     base = int(PS_PORT)
@@ -1806,6 +1823,18 @@ def main(argv: Optional[List[str]] = None) -> int:
             'de puertos). Servidor: ~24; 0 = automático según núcleos.'
         ),
     )
+    parser.add_argument(
+        '--battle-seed', type=int, default=None,
+        help=(
+            'Semilla base de las batallas de Showdown (default: --seed). Hace que dos '
+            'corridas con la misma semilla jueguen las mismas batallas (azar de críticos, '
+            'rolls y empates). Solo aplica a servidores que arranca esta corrida.'
+        ),
+    )
+    parser.add_argument(
+        '--no-battle-seed', action='store_true',
+        help='No fijar la semilla de batalla (azar de Showdown distinto en cada corrida)',
+    )
     parser.add_argument('--shard', default=None, help=argparse.SUPPRESS)
     parser.add_argument('--shard-out', default=None, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
@@ -1842,12 +1871,22 @@ def main(argv: Optional[List[str]] = None) -> int:
         except Exception:
             pass
 
+    from showdown.inference_sim.ps_server import set_battle_seed
     from showdown.rl.parallel import default_num_envs, raise_nofile_limit
 
     raise_nofile_limit()
+    if args.no_battle_seed:
+        os.environ.pop('PS_BATTLE_SEED', None)
+    elif args.battle_seed is not None:
+        set_battle_seed(args.battle_seed)
+    elif args.seed is not None and not os.environ.get('PS_BATTLE_SEED'):
+        set_battle_seed(args.seed)
     procs = int(args.procs)
     if procs == 0:
         procs = default_num_envs()
+    if os.environ.get('PS_BATTLE_SEED') and (procs <= 1 or args.shard):
+        from showdown.inference_sim.ps_server import ensure_fixed_hash_seed
+        ensure_fixed_hash_seed()
     if procs > 1 and not args.shard:
         run_batch_multiprocess(
             args.teams,

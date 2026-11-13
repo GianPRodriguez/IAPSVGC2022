@@ -59,6 +59,29 @@ PLAYER_B_CHOICES = (
 )
 
 
+def _player_log_level() -> int:
+    """Nivel de log de los jugadores poke-env (30 = solo avisos).
+
+    ``PS_PLAYER_LOG_LEVEL=25`` muestra los ``|error|`` que Showdown devuelve a una
+    orden (útil para diagnosticar reintentos / cuelgues).
+    """
+    import os
+
+    try:
+        return int(os.environ.get('PS_PLAYER_LOG_LEVEL', '30'))
+    except ValueError:
+        return 30
+
+
+def _calibration_set_truth(opp_team) -> None:
+    """Verdad terreno para la calibración de la inferencia (PS_CALIB_LOG); no-op si no está activa."""
+    try:
+        from showdown.inference_sim import calibration
+        calibration.set_truth(opp_team)
+    except Exception:
+        pass
+
+
 class ValidatedBattleMixin:
     """
     Feed del protocolo a Battle IAP + contraste con poke-env.
@@ -79,6 +102,7 @@ class ValidatedBattleMixin:
     ):
         self.user_team = user_team
         self.opp_team = opp_team
+        _calibration_set_truth(opp_team)
         self.state_report = state_report
         self.soundness_report = soundness_report
         # Fast tune: sin espejo IAP / contrast / OTS (solo poke-env + BO3 bookkeeping).
@@ -107,7 +131,7 @@ class ValidatedBattleMixin:
         kwargs.setdefault('server_configuration', LocalhostServerConfiguration)
         kwargs.setdefault('accept_open_team_sheet', True)
         kwargs.setdefault('max_concurrent_battles', 1)
-        kwargs.setdefault('log_level', 30)
+        kwargs.setdefault('log_level', _player_log_level())
         super().__init__(
             account_configuration=account_configuration,
             battle_format=battle_format,
@@ -125,6 +149,7 @@ class ValidatedBattleMixin:
     def reset_for_next_battle(self, user_team: TeamMeta, opp_team: TeamMeta) -> None:
         self.user_team = user_team
         self.opp_team = opp_team
+        _calibration_set_truth(opp_team)
         try:
             from showdown.battle_bots.expectimax_bayesian.ots import ots_sheet_from_team_meta
             if hasattr(self, 'set_opp_ots_sheet'):
@@ -918,7 +943,7 @@ def make_opponent_player(
         server_configuration=server_configuration,
         accept_open_team_sheet=True,
         max_concurrent_battles=1,
-        log_level=30,
+        log_level=_player_log_level(),
     )
     # Family combat players accept frozen preview + optional combat ckpt.
     key = str(kind or '').strip().lower().replace('-', '_')

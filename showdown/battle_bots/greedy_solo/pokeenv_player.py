@@ -1,6 +1,8 @@
 """GreedyDamagePlayer: baseline poke-env (Team Preview + greedy max-damage)."""
 from __future__ import annotations
 
+from showdown.battle_bots.helpers import enforce_single_mega
+
 import json
 from functools import lru_cache
 from pathlib import Path
@@ -415,6 +417,10 @@ class GreedyDamagePlayer(StaleRoomGuardMixin, Player):
 
         o1 = to_order(left_mon, left_moves_raw, best_l, can_mega_l, can_tera_l)
         o2 = to_order(right_mon, right_moves_raw, best_r, can_mega_r, can_tera_r)
+        o1, o2 = enforce_single_mega(
+            o1, o2,
+            float(getattr(best_l, 'total_damage_pct', None) or getattr(best_l, 'damage_pct', 0.0) or 0.0), float(getattr(best_r, 'total_damage_pct', None) or getattr(best_r, 'damage_pct', 0.0) or 0.0),
+        )
         return DoubleBattleOrder(o1, o2)
 
     def _forced_switch_order(self, battle: DoubleBattle) -> BattleOrder:
@@ -431,15 +437,15 @@ class GreedyDamagePlayer(StaleRoomGuardMixin, Player):
         used = set()
         for i, need in enumerate(battle.force_switch):
             if not need:
-                mon = battle.active_pokemon[i] if i < len(battle.active_pokemon) else None
-                if mon is None or mon.fainted:
-                    orders.append(PassBattleOrder())
-                else:
-                    orders.append(DefaultBattleOrder())
+                # Showdown exige `pass` en el hueco que NO cambia durante un cambio
+                # forzado. Con `default` lo toma como otro cambio y responde
+                # "You sent more switches than Pokémon that need to switch"; poke-env
+                # reintenta la misma orden hasta que un 1/1000 de azar acepta `default`.
+                orders.append(PassBattleOrder())
                 continue
             switches = [s for s in battle.available_switches[i] if s not in used]
             if not switches:
-                orders.append(DefaultBattleOrder())
+                orders.append(PassBattleOrder())
                 continue
             ranked = []
             for s in switches:

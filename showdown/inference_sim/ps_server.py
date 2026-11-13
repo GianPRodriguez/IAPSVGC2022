@@ -34,8 +34,17 @@ def ps_start_argv(port: Optional[int] = None) -> List[str]:
     El puerto se pasa por env PSPORT al spawn (varios listeners en paralelo).
     El argv opcionalmente incluye el puerto numérico por compatibilidad CLI.
     """
-    from showdown.inference_sim.paths import node_executable
+    from showdown.inference_sim.paths import REPO_ROOT, node_executable
 
+    if battle_seed_enabled():
+        # Lanzador propio: fija la semilla de cada batalla (ver ps_seeded_start.js).
+        # Exige dist/ ya compilado (no ejecuta `node build`).
+        argv = [node_executable(), str(REPO_ROOT / 'showdown' / 'tools' / 'ps_seeded_start.js')]
+        if ps_no_security_enabled():
+            argv.append('--no-security')
+        if port is not None:
+            argv.append(str(int(port)))
+        return argv
     argv = [node_executable(), 'pokemon-showdown', 'start']
     if ps_is_built():
         # Sin esto el lanzador ejecuta `node build` en cada arranque: con muchos
@@ -46,6 +55,57 @@ def ps_start_argv(port: Optional[int] = None) -> List[str]:
     if port is not None:
         argv.append(str(int(port)))
     return argv
+
+
+def battle_seed_enabled() -> bool:
+    """True si hay semilla base de batallas (``PS_BATTLE_SEED``) y el servidor está compilado."""
+    return bool(os.environ.get('PS_BATTLE_SEED', '').strip()) and ps_is_built()
+
+
+def set_battle_seed(seed: Optional[int], *, log_path: Optional[str] = None) -> None:
+    """Fija la semilla base de las batallas de los servidores que lance este proceso.
+
+    Debe llamarse ANTES de arrancar Showdown; un servidor que ya estaba encendido
+    conserva su azar (``ensure_ps`` lo avisa). Los procesos hijos la heredan.
+    """
+    if seed is None:
+        return
+    os.environ['PS_BATTLE_SEED'] = str(int(seed))
+    if log_path:
+        os.environ['PS_SEED_LOG'] = str(log_path)
+    # Python aleatoriza por proceso el orden de set/dict con cadenas, y los bots
+    # desempatan por ese orden. Los procesos hijos (workers, shards) lo heredan.
+    os.environ.setdefault('PYTHONHASHSEED', '0')
+
+
+def ensure_fixed_hash_seed() -> None:
+    """Re-ejecuta este proceso con ``PYTHONHASHSEED`` fijo si aún no lo tiene.
+
+    Solo hace falta cuando el propio proceso juega las batallas (``--procs 1``);
+    los procesos hijos ya reciben la variable al crearse.
+    """
+    import sys
+
+    if os.environ.get('PYTHONHASHSEED') or not getattr(sys.flags, 'hash_randomization', 0):
+        return
+    os.environ['PYTHONHASHSEED'] = '0'
+    orig = getattr(sys, 'orig_argv', None)
+    if not orig:
+        return
+    os.execv(sys.executable, [sys.executable, *orig[1:]])
+
+
+def seed_python_rngs(seed: int) -> None:
+    """Siembra ``random`` y numpy (jugador random, desempates de los bots)."""
+    import random
+
+    random.seed(int(seed))
+    try:
+        import numpy as np
+
+        np.random.seed(int(seed) % (2 ** 32))
+    except ImportError:
+        pass
 
 
 def ps_is_built() -> bool:
@@ -247,6 +307,23 @@ def _kill_process_tree(proc: subprocess.Popen, timeout: float = 8.0) -> None:
             pass
 
 
+_seed_warned: Set[int] = set()
+
+
+def _warn_unseeded_server(port: int) -> None:
+    """Un servidor ya encendido no cambia su azar: avisa una vez por puerto."""
+    if not os.environ.get('PS_BATTLE_SEED', '').strip() or port in _ps_procs:
+        return
+    if port in _seed_warned:
+        return
+    _seed_warned.add(port)
+    print(
+        f'[ps_server] AVISO: el servidor del puerto {port} ya estaba encendido; '
+        'PS_BATTLE_SEED no se aplica a sus batallas. Usa --restart-ps o ciérralo.',
+        flush=True,
+    )
+
+
 def ensure_ps(
     start: bool = False,
     wait_s: float = 60.0,
@@ -265,6 +342,7 @@ def ensure_ps(
         stop_ps_listeners(p)
         start = True
     if is_ps_up(port=p) and not restart:
+        _warn_unseeded_server(p)
         return True
     if not start:
         return False
@@ -296,6 +374,9 @@ def ensure_ps_ports(
             stop_ps_listeners(p)
         start = True
     down = [p for p in ports if not is_ps_up(port=p)]
+    for p in ports:
+        if p not in down:
+            _warn_unseeded_server(p)
     if not down:
         return True
     if not start:

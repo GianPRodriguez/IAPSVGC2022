@@ -14,7 +14,9 @@ no del proxy de cobertura del backend ``mock``. Este módulo lo implementa:
 """
 from __future__ import annotations
 
+import json
 import multiprocessing as mp
+import os
 import time
 import traceback
 from dataclasses import dataclass
@@ -137,7 +139,15 @@ class _MatchRunner:
         fut = asyncio.run_coroutine_threadsafe(
             self.us.battle_against(self.foe, n_battles=1), self.us.ps_client.loop,
         )
-        fut.result(timeout=timeout_s)
+        try:
+            fut.result(timeout=timeout_s)
+        except Exception as exc:
+            if type(exc).__name__ in ('TimeoutError', 'CancelledError'):
+                fut.cancel()
+                diag = self.diagnose(before, match, timeout_s)
+                _log_hang(diag)
+                raise RuntimeError('BO1_TIMEOUT ' + json.dumps(diag, default=str)) from exc
+            raise
         new = [b for tag, b in self.us.battles.items() if tag not in before]
         if not new:
             raise RuntimeError('el BO1 terminó sin batalla registrada')
@@ -162,6 +172,53 @@ class _MatchRunner:
             pass
         return {'reward': reward, 'turns': turns, 'capped': bool(capped)}
 
+    def diagnose(self, before, match: PreviewMatch, timeout_s: float) -> Dict[str, Any]:
+        """Foto del estado de ambos lados de un BO1 colgado (para encontrar la causa)."""
+
+        def side(player) -> Dict[str, Any]:
+            out: Dict[str, Any] = {'username': getattr(player, 'username', None)}
+            try:
+                tags = [t for t in player.battles if t not in before] or list(player.battles)
+                b = player.battles[tags[-1]]
+            except Exception as exc:
+                out['error'] = f'sin batalla: {exc!r}'
+                return out
+
+            def get(name, fn):
+                try:
+                    out[name] = fn()
+                except Exception as exc:
+                    out[name] = f'<{type(exc).__name__}>'
+
+            get('room', lambda: b.battle_tag)
+            get('turn', lambda: b.turn)
+            get('finished', lambda: b.finished)
+            get('won', lambda: b.won)
+            get('force_switch', lambda: b.force_switch)
+            get('wait', lambda: getattr(b, '_wait', None))
+            get('teampreview', lambda: getattr(b, 'teampreview', None))
+            get('trapped', lambda: b.trapped)
+            get('avail_moves', lambda: [[m.id for m in ms] for ms in b.available_moves])
+            get('avail_switches', lambda: [[m.species for m in sw] for sw in b.available_switches])
+            get('active', lambda: [m.species if m else None for m in b.active_pokemon])
+            get('hp', lambda: [m.current_hp_fraction if m else None for m in b.active_pokemon])
+            get('request_keys', lambda: sorted((b.last_request or {}).keys()))
+            get('side_request', lambda: bool((b.last_request or {}).get('wait')))
+            get('order_queue', lambda: player.order_queue.qsize())
+            get('battle_queue', lambda: player.battle_queue.qsize())
+            get('choice_pending', lambda: len(getattr(player, '_waiting', []) or []))
+            return out
+
+        return {
+            'timeout_s': timeout_s,
+            'our_order': match.our_order,
+            'foe_order': match.foe_order,
+            'port': self.port,
+            'us': side(self.us),
+            'foe': side(self.foe),
+            'seed_env': os.environ.get('PS_BATTLE_SEED'),
+        }
+
     def close(self) -> None:
         import asyncio
 
@@ -174,6 +231,18 @@ class _MatchRunner:
                 ).result(timeout=10)
             except Exception:
                 pass
+
+
+def _log_hang(diag: Dict[str, Any]) -> None:
+    """Añade el diagnóstico de un BO1 colgado a ``PS_HANG_LOG`` (si está definido)."""
+    path = os.environ.get('PS_HANG_LOG', '').strip()
+    if not path:
+        return
+    try:
+        with open(path, 'a', encoding='utf-8') as fh:
+            fh.write(json.dumps(diag, default=str) + chr(10))
+    except OSError:
+        pass
 
 
 def _worker_main(conn, port, worker_id, pilot, max_turns, battle_format, start_ps,
@@ -199,7 +268,11 @@ def _worker_main(conn, port, worker_id, pilot, max_turns, battle_format, start_p
             try:
                 conn.send(('ok', runner.play(payload, timeout_s)))
             except Exception:
-                conn.send(('error', traceback.format_exc()))
+                err = traceback.format_exc()
+                # Tras un cuelgue el desafío sigue abierto en el servidor: reiniciar.
+                conn.send(('fatal' if 'BO1_TIMEOUT' in err else 'error', err))
+                if 'BO1_TIMEOUT' in err:
+                    break
     except (EOFError, KeyboardInterrupt, BrokenPipeError):
         pass
     except Exception:

@@ -344,6 +344,8 @@ def joint_order_from_spec_actions(
     a1 = decode_slot_action(int(action[1]))
     o1 = slot_action_to_pe_order(battle, 0, a0)
     o2 = slot_action_to_pe_order(battle, 1, a1)
+    from showdown.battle_bots.helpers import enforce_single_mega
+    o1, o2 = enforce_single_mega(o1, o2)
     joined = DoubleBattleOrder.join_orders([o1], [o2])
     if joined:
         order = joined[0]
@@ -372,6 +374,11 @@ def pe_slot_mask(battle, slot: int, *, other: Optional[SlotAction] = None) -> np
     if slot < len(fs):
         force = bool(fs[slot])
 
+    # Cambio forzado de OTRO hueco: este hueco solo admite `pass` (Showdown rechaza
+    # cualquier otra orden y poke-env entra en un bucle de reintentos).
+    if any(bool(x) for x in fs) and not force:
+        return mask
+
     switches = list(battle.available_switches[slot]) if slot < len(getattr(battle, 'available_switches', [])) else []
     taken = set()
     if other is not None and other.kind == 'switch':
@@ -391,7 +398,9 @@ def pe_slot_mask(battle, slot: int, *, other: Optional[SlotAction] = None) -> np
 
     can_mega = list(getattr(battle, 'can_mega_evolve', None) or [])
     can_tera = list(getattr(battle, 'can_tera', None) or [])
-    if slot < len(can_mega) and can_mega[slot]:
+    # Una sola mega por combate: si el otro hueco ya la pidió, este no puede.
+    other_mega = other is not None and other.kind == 'mega'
+    if slot < len(can_mega) and can_mega[slot] and not other_mega:
         mask[21] = 1.0
     if slot < len(can_tera) and allow_tera(bool(can_tera[slot])):
         mask[22] = 1.0

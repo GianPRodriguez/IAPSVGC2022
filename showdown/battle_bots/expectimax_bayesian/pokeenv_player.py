@@ -1,6 +1,8 @@
 """ExpectimaxBayesianPlayer: poke-env con expectimax bayesiano anytime."""
 from __future__ import annotations
 
+from showdown.battle_bots.helpers import enforce_single_mega
+
 import asyncio
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -358,4 +360,8 @@ class ExpectimaxBayesianPlayer(GreedyJointPlayer):
             and int(best_l.move_slot) == int(best_r.move_slot)
         ):
             o2 = DefaultBattleOrder()
+        o1, o2 = enforce_single_mega(
+            o1, o2,
+            float(getattr(best_l, 'total_damage_pct', None) or getattr(best_l, 'damage_pct', 0.0) or 0.0), float(getattr(best_r, 'total_damage_pct', None) or getattr(best_r, 'damage_pct', 0.0) or 0.0),
+        )
         return DoubleBattleOrder(o1, o2)

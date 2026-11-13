@@ -57,3 +57,25 @@ async def getToMovePokemon(battle: Battle, toMove: str) -> str:
     else:
         # toMove == 0
         return None
+
+
+def enforce_single_mega(first, second, score_first: float = 0.0, score_second: float = 0.0):
+    """Como mucho UNA mega-evolución por orden doble.
+
+    Showdown solo admite una por combate y rechaza ``move X mega, move Y mega``
+    con ``[Invalid choice] Can't move: You can only mega-evolve once per battle``.
+    poke-env reintenta entonces la misma orden (el bot es determinista) hasta que
+    ``random.random() < 1/1000`` acepta la orden por defecto: miles de reintentos
+    por turno. Se conserva la mega del hueco con la acción de más valor (empate:
+    el izquierdo) y se quita del otro.
+    """
+    from dataclasses import replace
+
+    if not (getattr(first, 'mega', False) and getattr(second, 'mega', False)):
+        return first, second
+    try:
+        if float(score_second) > float(score_first):
+            return replace(first, mega=False), second
+        return first, replace(second, mega=False)
+    except TypeError:  # orden que no es un dataclass: no tocar
+        return first, second

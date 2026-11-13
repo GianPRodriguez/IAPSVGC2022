@@ -161,6 +161,12 @@ class StaleRoomGuardMixin:
         ):
             msg = str(message or '')
             room_key = _norm_room(room)
+            # La sala padre del BO3 (game-bestof*) NO está en player.battles (solo
+            # contiene battle-*): sin esta excepción el guard se tragaba el
+            # `/confirmready` y marcaba la sala como abandonada, así que Showdown
+            # esperaba su temporizador completo (40 s) entre juego y juego.
+            if room_key.startswith('game-'):
+                return await orig(message, room, message_2)
             if room_key and msg.startswith((
                 '/choose', '/team', '/confirmready', '/timer',
             )):

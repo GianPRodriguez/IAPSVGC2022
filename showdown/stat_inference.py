@@ -850,6 +850,17 @@ def _field_payload(ctx: DamageContext, category: str) -> Dict:
 # Desync tipico calc Champions vs PS: pantallas+terreno, redondeo de % HP,
 # shells de especies ausentes en el dex (STAB), Aerilate, etc.
 # Preferimos no podar el verdadero: tolerancia holgada en %.
+# Gancho de calibración (solo diagnóstico, nunca cambia la decisión): recibe cada
+# observación de daño con los rangos del calc de todos los candidatos, para medir
+# contra la verdad terreno cuánto se desvía el calc de Showdown.
+_CALIBRATION_SINK = None
+
+
+def set_calibration_sink(fn) -> None:
+    global _CALIBRATION_SINK
+    _CALIBRATION_SINK = fn
+
+
 _ABS_DAMAGE_TOLERANCE = 28
 _PERCENT_DAMAGE_TOLERANCE = 32
 # Cota superior bilateral en %: margen extra (calc a menudo sobreestima
@@ -1507,6 +1518,30 @@ class TeamStatBeliefs:
         # tratado como "no encaja" expulsaria SP validos.
         if any(rolls is None for rolls in rolls_list):
             return False
+
+        if _CALIBRATION_SINK is not None:
+            try:
+                _CALIBRATION_SINK({
+                    'species': belief.species,
+                    'nature': belief.nature,
+                    'stat': unknown_stat,
+                    'base': int(belief.base_stats.get(unknown_stat) or 0),
+                    'hp_base': int(belief.base_stats.get('hp') or 0),
+                    'observed': int(observed_damage),
+                    'percent': bool(damage_is_percent),
+                    'opponent_is_attacker': bool(opponent_is_attacker),
+                    'is_ko': bool(is_ko),
+                    'clean': bool(ctx.is_clean_for_upper_bound),
+                    'spread': bool(getattr(ctx, 'is_spread', False)),
+                    'move': str(move_name),
+                    'category': str(category),
+                    'groups': [
+                        (k[0], k[1], int(group_payloads[k]['_hp']), r[0], r[1])
+                        for k, r in zip(keys_ordered, rolls_list)
+                    ],
+                })
+            except Exception:
+                pass
 
         allowed_u: Set[int] = set()
         allowed_hp: Set[int] = set()

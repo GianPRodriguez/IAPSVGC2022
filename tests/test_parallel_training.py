@@ -603,3 +603,55 @@ def test_vec_env_set_reward_switches_candidate():
         assert all(r.env.reward_candidate.value == 'candidate_2' for r in venv._runners)
     finally:
         venv.close()
+
+
+# --------------------------------------------------------------------------- #
+# Semilla fija de batallas de Showdown
+# --------------------------------------------------------------------------- #
+
+def test_set_battle_seed_exports_env_for_children(monkeypatch):
+    import os
+
+    from showdown.inference_sim import ps_server
+
+    for var in ('PS_BATTLE_SEED', 'PYTHONHASHSEED', 'PS_SEED_LOG'):
+        monkeypatch.delenv(var, raising=False)
+    ps_server.set_battle_seed(42, log_path='/tmp/seeds.jsonl')
+    assert os.environ['PS_BATTLE_SEED'] == '42'
+    assert os.environ['PYTHONHASHSEED'] == '0'      # orden de set/dict estable en los hijos
+    assert os.environ['PS_SEED_LOG'] == '/tmp/seeds.jsonl'
+    ps_server.set_battle_seed(None)                  # None no cambia nada
+    assert os.environ['PS_BATTLE_SEED'] == '42'
+
+
+def test_ps_start_argv_uses_seeded_launcher_only_with_seed_and_build(monkeypatch):
+    from showdown.inference_sim import ps_server
+
+    monkeypatch.setattr(ps_server, 'ps_is_built', lambda: True)
+    monkeypatch.delenv('PS_BATTLE_SEED', raising=False)
+    assert not any('ps_seeded_start' in a for a in ps_server.ps_start_argv(9000))
+    monkeypatch.setenv('PS_BATTLE_SEED', '7')
+    argv = ps_server.ps_start_argv(9000)
+    assert any(a.endswith('ps_seeded_start.js') for a in argv) and argv[-1] == '9000'
+    # Sin build no se puede usar el lanzador (no ejecuta `node build`).
+    monkeypatch.setattr(ps_server, 'ps_is_built', lambda: False)
+    assert not any('ps_seeded_start' in a for a in ps_server.ps_start_argv(9000))
+
+
+def test_unseeded_server_already_running_is_warned_once(monkeypatch, capsys):
+    from showdown.inference_sim import ps_server
+
+    monkeypatch.setenv('PS_BATTLE_SEED', '9')
+    monkeypatch.setattr(ps_server, '_ps_procs', {})
+    monkeypatch.setattr(ps_server, '_seed_warned', set())
+    monkeypatch.setattr(ps_server, 'is_ps_up', lambda host='localhost', port=0, timeout=1.0: True)
+    assert ps_server.ensure_ps(port=9555)
+    assert ps_server.ensure_ps(port=9555)
+    assert capsys.readouterr().out.count('9555') == 1
+
+
+def test_seeded_launcher_script_ships_with_repo():
+    from showdown.inference_sim.paths import REPO_ROOT
+
+    js = (REPO_ROOT / 'showdown' / 'tools' / 'ps_seeded_start.js').read_text(encoding='utf-8')
+    assert 'PS_BATTLE_SEED' in js and 'Rooms.createBattle' in js and 'sodium,' in js
