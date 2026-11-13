@@ -135,6 +135,59 @@ def champions_stat(base: int, sp: int, nature: Optional[str], stat: str) -> int:
 # Creencia por Pokemon
 # --------------------------------------------------------------------------- #
 
+_MEGA_SPE_CACHE: Dict[str, Tuple[int, ...]] = {}
+_MEGA_STONE_SUFFIXES = ('ite', 'itex', 'itey', 'itez')
+
+
+def _norm_forme_key(name: str) -> str:
+    return ''.join(ch for ch in (name or '').lower() if ch.isalnum())
+
+
+def mega_family_spe_bases(species: str, item: Optional[str]) -> Tuple[int, ...]:
+    """Bases de Spe alternativas que pudieron decidir el orden de un rival que
+    lleva (o pudo llevar) una mega piedra: la forma mega y la forma sin mega.
+
+    Showdown no recalcula el orden de acciones del turno si un Pokémon megaevoluciona
+    (solo lo hace en Gen 7), y el protocolo llega antes que el |move|; por eso el
+    orden pudo decidirse con la velocidad previa o la posterior a megaevolucionar.
+    Vacío si no aplica (objeto conocido que no es mega piedra, o sin forma mega).
+    """
+    item_id = _norm_forme_key(item or '')
+    if item_id and not item_id.endswith(_MEGA_STONE_SUFFIXES):
+        return ()
+    root = (species or '').lower().replace(' ', '-').split('-')[0]
+    if not root:
+        return ()
+    cached = _MEGA_SPE_CACHE.get(root)
+    if cached is None:
+        found = set()
+        try:
+            path = Path(__file__).resolve().parent.parent / 'API' / 'JSONs' / 'champions_info_stats.json'
+            with path.open(encoding='utf-8') as handle:
+                data = json.load(handle)
+            has_mega = any(k.lower().split('-')[0] == root and 'mega' in k.lower() for k in data)
+            if has_mega:
+                for key, row in data.items():
+                    low = key.lower()
+                    if low.split('-')[0] == root and 'gmax' not in low:
+                        spe = int(row.get('velocidad') or 0)
+                        if spe > 0:
+                            found.add(spe)
+        except Exception:
+            found = set()
+        cached = tuple(sorted(found))
+        _MEGA_SPE_CACHE[root] = cached
+    return cached
+
+
+def speed_order_ok(speed: int, user_speed: int, opponent_first: bool, trick_room: bool,
+                   margin: int) -> bool:
+    """Compatibilidad de una velocidad efectiva con el orden observado (cotas inclusivas)."""
+    if trick_room:
+        return speed <= user_speed + margin if opponent_first else speed >= user_speed - margin
+    return speed >= user_speed - margin if opponent_first else speed <= user_speed + margin
+
+
 _ORACLE_TRUTH = {'lookup': None}
 
 
@@ -1281,22 +1334,17 @@ class TeamStatBeliefs:
         # Ambas direcciones son inclusivas, asi que no son complementarias entre si.
         allowed = set()
         margin = _SPEED_COMPARE_MARGIN
+        # Mega piedra: el orden pudo decidirse con la base previa o la posterior.
+        bases = {int(base_spe), *mega_family_spe_bases(belief.species, opponent_ctx.item)}
         for sp in belief.candidates['spe']:
-            stat = champions_stat(base_spe, sp, belief.nature, 'spe')
-            speed = opponent_ctx.speed_of(stat)
-            # Cotas inclusivas + margen: ante desync menor no expulsar el Spe real.
-            if trick_room:
-                ok = (
-                    speed <= user_speed + margin
-                    if opponent_first
-                    else speed >= user_speed - margin
-                )
-            else:
-                ok = (
-                    speed >= user_speed - margin
-                    if opponent_first
-                    else speed <= user_speed + margin
-                )
+            ok = False
+            for b in bases:
+                stat = champions_stat(b, sp, belief.nature, 'spe')
+                speed = opponent_ctx.speed_of(stat)
+                # Cotas inclusivas + margen: ante desync menor no expulsar el Spe real.
+                if speed_order_ok(speed, user_speed, opponent_first, trick_room, margin):
+                    ok = True
+                    break
             if ok:
                 allowed.add(sp)
 

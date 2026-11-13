@@ -29,3 +29,20 @@ def test_speed_sink_is_optional_and_clearable():
     si.set_speed_sink(lambda ev: None)
     si.set_speed_sink(None)
     assert si._SPEED_SINK is None
+
+
+def test_mega_family_bases_cover_pre_and_post_mega():
+    from showdown.stat_inference import mega_family_spe_bases
+    bases = mega_family_spe_bases('floette-eternal', 'floettite')
+    assert 92 in bases and 102 in bases
+    assert 112 in mega_family_spe_bases('lucario', 'lucarionite')
+    assert mega_family_spe_bases('lucario', 'leftovers') == ()
+    assert mega_family_spe_bases('incineroar', 'lifeorb') == ()
+
+
+def test_speed_order_ok_directions():
+    from showdown.stat_inference import speed_order_ok as ok
+    assert ok(120, 100, True, False, 0) and not ok(90, 100, True, False, 0)
+    assert ok(90, 100, False, False, 0) and not ok(120, 100, False, False, 0)
+    assert ok(90, 100, True, True, 0) and not ok(120, 100, True, True, 0)
+    assert ok(90, 100, True, False, 12)
