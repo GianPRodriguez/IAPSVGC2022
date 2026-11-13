@@ -161,15 +161,14 @@ def install(player, path: Optional[str] = None) -> bool:
                 pass
 
     def wrapped(battle):
-        _before(battle)  # fija el búfer en el contexto de quien llama (y de su tarea)
-        res = orig(battle)
+        res = orig(battle)  # una corrutina aún no ha empezado a ejecutarse
         if inspect.isawaitable(res):
             async def _aw():
+                _before(battle)  # el búfer se fija en el contexto de la tarea que sí calcula
                 order = await res
                 _after(battle)
                 return order
             return _aw()
-        _after(battle)
         return res
 
     player.choose_move = wrapped
