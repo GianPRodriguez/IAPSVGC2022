@@ -324,6 +324,7 @@ Herramientas de diagnóstico (todas inertes si no se activan):
 | `PS_SEED_LOG=<archivo>` | una línea por batalla con su semilla (para reproducirla) |
 | `PS_HANG_LOG=<archivo>` | estado de ambos lados de un BO1 de preview colgado |
 | `PS_CALIB_LOG=<archivo>` | residuos del cálculo de daño contra la verdad terreno |
+| `PS_CALIB_PROFILE=1` | añade a cada línea de calibración qué valores excluye cada tolerancia (para `analyze_evidence`) |
 
 ## Calibración de la inferencia por daño
 
@@ -355,9 +356,25 @@ distintas):
   Con una tabla de cota inferior se vieron 31–50 estrechamientos por cada 200 BO3
   (frente a 1–2) con 0 fallos de soundness, pero a nivel de observación no pasó
   la validación, así que se dejó apagado.
-- Camino para estrechar de verdad: acumular evidencia de varias observaciones
-  independientes (excluir un SP solo si varias lo contradicen) en lugar de decidir
-  con una sola. Requiere rediseñar la inferencia y medir su riesgo.
+- **Acumular evidencia dentro del BO3 tampoco basta** (`analyze_evidence.py`, 83 mil
+  observaciones de entrenamiento y 42 mil independientes; mediana de 2 a 3
+  observaciones por Pokémon y stat). Ninguna regla "excluir si lo contradicen k
+  observaciones" llega a riesgo 0; la mejor con riesgo ≤ 1 % solo poda el 2,2 % de
+  los valores falsos. Los fallos son **sistemáticos**: cuando el valor verdadero
+  se marca como imposible, el 58–73 % de las observaciones de ese mismo Pokémon
+  lo marcan, así que votar amplifica el sesgo en vez de cancelarlo.
+- **El sesgo es unilateral y se concentra en ataques especiales:** en todas las
+  observaciones marcadas el cálculo predice MENOS daño del observado (428 contra
+  0), sobre todo en `Hyper Voice`, `Heat Wave`, `Dazzling Gleam` (de área),
+  `Hurricane`, `Make It Rain`, `Psychic` y `Moonblast`; el Atq. Esp. falla en el
+  2,3 % de los casos y la Def. Esp. en el 0,2 %. Apunta a un modificador sin
+  modelar (objeto, habilidad, clima o terreno, reducción de golpes de área).
+- Camino para estrechar de verdad: **corregir el modelado** de esos movimientos
+  (medir con `PS_CALIB_LOG` hasta que su residuo colapse a ~0). Solo entonces una
+  tolerancia estrecha por movimiento pasaría la validación con datos
+  independientes; acumular observaciones no sustituye eso. Nota: hoy los bots no
+  usan la inferencia por daño de forma que cambie sus decisiones (los win rates no
+  cambian con o sin ella).
 
 ## Versiones de los repos hermanos
 

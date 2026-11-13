@@ -22,11 +22,62 @@ import json
 import os
 from typing import Any, Dict, Optional
 
-_STATE: Dict[str, Any] = {'meta': None, 'path': None, 'n': 0}
+_STATE: Dict[str, Any] = {'meta': None, 'path': None, 'n': 0, 'series': 0, 'seq': 0}
+
+# Rejilla de tolerancias para el análisis de acumulación de evidencia
+# (activar con PS_CALIB_PROFILE=1; añade el perfil de exclusión a cada línea).
+PROFILE_TOL_ABS = (2, 4, 8, 14, 28)
+PROFILE_TOL_PCT = (3, 6, 12, 20, 32)
 
 
 def set_truth(opp_meta) -> None:
+    """Nueva serie (BO3): cambia la verdad terreno y reinicia el orden de observaciones."""
+    if opp_meta is not _STATE.get('meta'):
+        _STATE['series'] += 1
+        _STATE['seq'] = 0
     _STATE['meta'] = opp_meta
+
+
+def _profile(ev: Dict[str, Any]) -> Dict[str, Any]:
+    """Qué valores finales quedan excluidos con cada tolerancia (imitando a producción).
+
+    Un valor final se considera compatible si ALGÚN grupo (HP) con ese final encaja,
+    igual que ``observe_damage``. ``lo`` = solo cota inferior; ``bi`` = con cota
+    superior (solo golpes no KO).
+    """
+    from showdown.stat_inference import _rolls_match_absolute, _rolls_match_percent
+
+    percent = bool(ev['percent'])
+    obs = int(ev['observed'])
+    grid = PROFILE_TOL_PCT if percent else PROFILE_TOL_ABS
+    finals = sorted({g[0] for g in ev['groups']})
+    out: Dict[str, Any] = {'finals': finals}
+    for mode in ('lo', 'bi'):
+        if mode == 'bi' and ev['is_ko']:
+            continue
+        for t in grid:
+            excluded = []
+            for fu in finals:
+                ok = False
+                for g in ev['groups']:
+                    if g[0] != fu:
+                        continue
+                    if percent:
+                        ok = _rolls_match_percent(
+                            g[3], g[4], g[2], obs, is_ko=bool(ev['is_ko']),
+                            bilateral=(mode == 'bi'), tol_lo=t, tol_hi=t,
+                        )
+                    else:
+                        ok = _rolls_match_absolute(
+                            g[3], g[4], obs, is_ko=bool(ev['is_ko']),
+                            bilateral=(mode == 'bi'), tol_lo=t, tol_hi=t,
+                        )
+                    if ok:
+                        break
+                if not ok:
+                    excluded.append(fu)
+            out[f'{mode}{t}'] = excluded
+    return out
 
 
 def install(path: Optional[str] = None) -> bool:
@@ -81,7 +132,11 @@ def _sink(ev: Dict[str, Any]) -> None:
         'ko': ev['is_ko'], 'clean': ev['clean'], 'spread': ev['spread'],
         'move': ev['move'], 'cat': ev['category'], 'true_final': true_final,
         'n_groups': len(groups),
+        'series': _STATE['series'], 'seq': _STATE['seq'], 'pid': os.getpid(),
     }
+    _STATE['seq'] += 1
+    if os.environ.get('PS_CALIB_PROFILE', '').strip() in ('1', 'true', 'yes'):
+        rec['profile'] = _profile(ev)
     if not cand:
         rec['true_in_groups'] = False
     else:
