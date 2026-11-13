@@ -238,6 +238,46 @@ python -m showdown.inference_sim.run_train_queue scripts/server/queue.example.js
 | random, greedy_solo, greedy_joint, expectimax (E2E) | Sí: procesos (`--procs`) |
 | MCTS / MCTS-Nash (E2E y barrido) | Sí: procesos |
 
+## Rendimiento medido en el servidor
+
+Mediciones con Showdown real (`greedy_joint` como rival), 2026-11-13. Son cortas
+(~1500 pasos, incluyen ~10 s de arranque), así que sirven para comparar entre sí
+y subestiman el ritmo sostenido.
+
+| Prueba | Resultado |
+|---|---|
+| PPO, 8 / 16 / 24 / 28 / 32 entornos | 36 / **48** / 47 / 45 / 43 pasos/s |
+| PPO, 24 entornos con 2 / 4 / 8 entornos por servidor | 47 / 47 / 45 pasos/s |
+| Pool preview live, 8 / 16 / 28 workers | 6,7 / 7,7 / 4,6 BO1/s (el de 28 se midió aparte) |
+| E2E robust `--procs` 10 / 20 / 28 (56 BO3, sin sync) | 457 / 309 / 205 s |
+| 20 procesos, 160 BO3 con sync (4 cruces) | 145–197 s por cruce, 0 errores |
+| 24 servidores Showdown a la vez | arrancan en 2,8 s |
+
+**Cómo leerlo**
+
+- PPO y DDQN **dejan de escalar a ~16 entornos**: coincide con los 16 núcleos
+  físicos (los 32 hilos son SMT). Con 16–24 entornos se obtiene lo mismo; usar
+  más no ayuda con rivales rápidos. Para rivales lentos (expectimax) los
+  entornos pasan más tiempo esperando y compensa subir. Recomendación inicial:
+  `--num-envs 16` a `24`; ajustar con una corrida corta del método real.
+- El E2E de heurísticos sí sigue mejorando hasta 28 procesos: usa `--procs 28`.
+- **El proceso que entrena no es el cuello de botella**: perfilado con cProfile,
+  pasa el 85–90 % del tiempo esperando a los workers (`poll`). La GPU queda por
+  debajo del 1 % (redes pequeñas); sirve para correr varios trials a la vez.
+- **El cálculo de daño tampoco**: PPO contra `greedy_joint` no arranca el
+  servidor de damage-calc, y forzar un worker por proceso
+  (`DAMAGE_CALC_FORCE_LOCAL=1`) no cambió nada (50 contra 51 pasos/s). Los
+  procesos comparten un servidor Node de damage-calc (puerto 8765); si algún día
+  se mide contención con expectimax o con la inferencia por daño, ese es el
+  primer sitio a revisar.
+- Un BO1 de preview dura ~5 s, pero se vio una vez un lote que tardó 1170 s por
+  batallas colgadas. El timeout por BO1 ahora es de 180 s (600 s con
+  expectimax) y cada reintento se imprime (`[preview_live] ... reintento`).
+  Un `retries` alto en `reporte.txt` indica el problema.
+- **Reproducibilidad:** `--seed` fija los equipos y los emparejamientos, no el
+  azar interno de Showdown (críticos, rolls, empates de velocidad). Dos corridas
+  con la misma semilla no dan exactamente el mismo win rate.
+
 ## Versiones de los repos hermanos
 
 Para que los resultados sean comparables, el servidor usa los mismos commits que
