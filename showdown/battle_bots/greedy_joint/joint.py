@@ -1873,3 +1873,32 @@ async def best_joint_double_action(
     bl, br = best_pair
     note_turn_kind(classify_pair(bl, br))
     return _atom_to_scored(bl), _atom_to_scored(br), best_score
+
+
+def _apply_env_overrides() -> None:
+    """Diagnóstico de ablación: ``JOINT_OVERRIDES="_OPP_THREAT=0;_RESIDUAL_SCALE=0.2"``.
+
+    Solo cambia constantes de módulo ya existentes (bool/float); sin la variable no hace nada.
+    """
+    import os
+
+    raw = os.environ.get('JOINT_OVERRIDES', '').strip()
+    if not raw:
+        return
+    g = globals()
+    for item in raw.split(';'):
+        if '=' not in item:
+            continue
+        name, value = (x.strip() for x in item.split('=', 1))
+        if name not in g or name.startswith('__'):
+            raise ValueError(f'JOINT_OVERRIDES: constante desconocida {name!r}')
+        cur = g[name]
+        if isinstance(cur, bool):
+            g[name] = value.lower() in ('1', 'true', 'yes', 'on')
+        elif isinstance(cur, (int, float)):
+            g[name] = type(cur)(float(value))
+        else:
+            raise ValueError(f'JOINT_OVERRIDES: {name!r} no es bool/numérica')
+
+
+_apply_env_overrides()
