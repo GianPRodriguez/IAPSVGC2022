@@ -82,6 +82,17 @@ def _calibration_set_truth(opp_team) -> None:
         pass
 
 
+    import os
+    if os.environ.get('PS_ORACLE_SP') == '1':  # diagnóstico: SP verdaderos del rival
+        try:
+            from showdown.inference_sim.soundness import _lookup_truth
+            from showdown.stat_inference import set_oracle_lookup
+            from teams.team_converter import normalize_name
+            set_oracle_lookup(lambda sp: _lookup_truth(opp_team, normalize_name(sp))[0])
+        except Exception:
+            pass
+
+
 class ValidatedBattleMixin:
     """
     Feed del protocolo a Battle IAP + contraste con poke-env.

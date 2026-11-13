@@ -135,6 +135,30 @@ def champions_stat(base: int, sp: int, nature: Optional[str], stat: str) -> int:
 # Creencia por Pokemon
 # --------------------------------------------------------------------------- #
 
+_ORACLE_TRUTH = {'lookup': None}
+
+
+def set_oracle_lookup(fn) -> None:
+    """Diagnóstico: ``fn(species) -> {stat: sp} | None``. Con él, cada creencia nueva nace
+    resuelta con los SP verdaderos (cota superior del valor de saber los SP). Nunca en producción."""
+    _ORACLE_TRUTH['lookup'] = fn
+
+
+def _apply_oracle(belief) -> None:
+    fn = _ORACLE_TRUTH['lookup']
+    if fn is None:
+        return
+    try:
+        sp = fn(belief.species)
+    except Exception:
+        return
+    if not sp:
+        return
+    for stat in STAT_KEYS:
+        if stat in sp:
+            belief.candidates[stat] = {int(sp[stat])}
+
+
 class StatBelief:
     """Conjuntos de Stat Points todavia posibles para un Pokemon rival."""
 
@@ -1167,6 +1191,7 @@ class TeamStatBeliefs:
         if belief is None:
             belief = StatBelief(species, base_stats, getattr(pkmn, 'nature', None))
             belief.current_forme = forme
+            _apply_oracle(belief)
             self.beliefs[species] = belief
         else:
             # Mega/Blade: mismas SP, bases distintas. Cotas hechas con bases viejas
