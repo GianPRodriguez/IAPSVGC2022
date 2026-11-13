@@ -150,3 +150,82 @@ class RolloutBuffer:
         for start in range(0, n, bs):
             sl = idx[start:start + bs]
             yield {k: v[sl] for k, v in data.items()}
+
+
+class VecRolloutBuffer:
+    """Un ``RolloutBuffer`` por entorno paralelo.
+
+    El GAE se calcula *por entorno* (cada sub-buffer es una secuencia temporal
+    contigua de un mismo entorno; mezclar entornos rompería la cadena lambda) y
+    la normalización de ventajas es global sobre todo el lote, igual que en el
+    caso de un solo entorno. ``len()`` es el total de transiciones guardadas.
+    """
+
+    def __init__(self, num_envs: int, capacity: int, *, obs_dim: int = OBS_DIM):
+        self.num_envs = max(1, int(num_envs))
+        self.capacity = int(capacity)
+        self.obs_dim = int(obs_dim)
+        self.buffers = [
+            RolloutBuffer(capacity=self.capacity, obs_dim=self.obs_dim)
+            for _ in range(self.num_envs)
+        ]
+
+    def __len__(self) -> int:
+        return int(sum(len(b) for b in self.buffers))
+
+    def clear(self) -> None:
+        for b in self.buffers:
+            b.clear()
+
+    def add(self, *, env_index: int = 0, **kwargs) -> bool:
+        return self.buffers[int(env_index)].add(**kwargs)
+
+    def any_full(self) -> bool:
+        return any(len(b) >= b.capacity for b in self.buffers)
+
+    def compute_gae(
+        self,
+        *,
+        last_value=0.0,
+        gamma: float = 0.95,
+        lam: float = 0.95,
+        normalize_adv: bool = True,
+    ) -> None:
+        lv = np.broadcast_to(
+            np.asarray(last_value, dtype=np.float32).reshape(-1), (self.num_envs,)
+        )
+        for i, b in enumerate(self.buffers):
+            b.compute_gae(
+                last_value=float(lv[i]), gamma=gamma, lam=lam, normalize_adv=False,
+            )
+        if not normalize_adv:
+            return
+        n = len(self)
+        if n <= 1:
+            return
+        adv = np.concatenate([b._adv[:len(b)] for b in self.buffers])
+        mu = float(adv.mean())
+        std = float(adv.std())
+        if std < 1e-8:
+            std = 1.0
+        for b in self.buffers:
+            k = len(b)
+            if k:
+                b._adv[:k] = (b._adv[:k] - mu) / std
+
+    def get(self) -> Dict[str, np.ndarray]:
+        parts = [b.get() for b in self.buffers if len(b)]
+        if not parts:
+            return RolloutBuffer(capacity=1, obs_dim=self.obs_dim).get()
+        return {k: np.concatenate([p[k] for p in parts]) for k in parts[0]}
+
+    def minibatches(self, batch_size: int, rng: np.random.Generator):
+        data = self.get()
+        n = len(self)
+        if n == 0:
+            return
+        idx = rng.permutation(n)
+        bs = max(1, int(batch_size))
+        for start in range(0, n, bs):
+            sl = idx[start:start + bs]
+            yield {k: v[sl] for k, v in data.items()}

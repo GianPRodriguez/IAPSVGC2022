@@ -347,3 +347,30 @@ def write_divergence_summary(
     with DIVERGENCE_JSONL.open('a', encoding='utf-8') as fh:
         fh.write(json.dumps(payload, ensure_ascii=False) + '\n')
     return DIVERGENCE_TXT
+
+
+def snapshot_divergence_stats() -> DivergenceStats:
+    """Copia del acumulado (picklable) para combinar procesos de un E2E repartido."""
+    import copy
+
+    with _lock:
+        return copy.deepcopy(_STATS)
+
+
+def merge_divergence_stats(other: Optional[DivergenceStats]) -> None:
+    """Suma los contadores de ``other``; las muestras se concatenan con su tope."""
+    from dataclasses import fields
+
+    if other is None:
+        return
+    with _lock:
+        for f in fields(DivergenceStats):
+            if f.name == 'max_samples':
+                continue
+            mine = getattr(_STATS, f.name)
+            theirs = getattr(other, f.name)
+            if isinstance(mine, list):
+                room = max(0, int(_STATS.max_samples) - len(mine))
+                mine.extend(list(theirs)[:room])
+            elif isinstance(mine, (int, float)) and not isinstance(mine, bool):
+                setattr(_STATS, f.name, mine + theirs)

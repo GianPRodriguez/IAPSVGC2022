@@ -218,11 +218,20 @@ def run_hp_tune_loop(
     frozen: Dict[str, Any],
     criteria_note: str,
     fake_score_fn=None,
+    parallel_trials: int = 1,
+    port_stride: int = 50,
 ) -> Dict[str, Any]:
     """Ejecuta hasta max_trials candidatos; acepta si mejora el mejor score.
 
     ``build_cmd(trial, trial_ckpt_dir) -> list[str]``
     ``parse_score_from_dir(trial_ckpt_dir) -> Optional[float]``
+
+    ``parallel_trials > 1``: los trials (mismo método, independientes: cada uno
+    entrena desde cero) corren de a ``parallel_trials`` a la vez, uno por GPU
+    (``CUDA_VISIBLE_DEVICES`` rotativo) y con su propio bloque de puertos
+    Showdown (``PS_PORT`` = base + slot × ``port_stride``). La regla "se acepta
+    si mejora el mejor" se aplica después y en el orden original, así el
+    resultado es idéntico al de la corrida secuencial.
     """
     import subprocess
     import time
@@ -256,6 +265,17 @@ def run_hp_tune_loop(
     best: Optional[TrialOutcome] = None
     prev_overrides: Optional[Dict[str, float]] = None
 
+    precomputed: Dict[int, Tuple[Optional[float], int, str, float]] = {}
+    if not dry_run and int(parallel_trials) > 1 and len(trials) > 1:
+        precomputed = _run_trials_parallel(
+            trials,
+            build_cmd=build_cmd,
+            parse_score_from_dir=parse_score_from_dir,
+            root=paths.root,
+            parallel=int(parallel_trials),
+            port_stride=int(port_stride),
+        )
+
     for i, trial in enumerate(trials, start=1):
         trial_dir = paths.root / f'trial_{i:02d}'
         trial_dir.mkdir(parents=True, exist_ok=True)
@@ -265,7 +285,9 @@ def run_hp_tune_loop(
         note = ''
         param_change = override_deltas(prev_overrides, dict(trial.overrides))
 
-        if dry_run:
+        if i in precomputed:
+            score, rc, note, _elapsed_par = precomputed[i]
+        elif dry_run:
             if fake_score_fn is not None:
                 score = float(fake_score_fn(trial))
             else:
@@ -288,6 +310,8 @@ def run_hp_tune_loop(
                 note = 'missing_score'
 
         elapsed = time.perf_counter() - t0
+        if i in precomputed:
+            elapsed = precomputed[i][3]
         accepted = False
         if score is not None:
             if best is None or score > (best.score or -1e30):
@@ -456,3 +480,69 @@ def run_hp_tune_loop(
     )
     return payload
 
+
+def _trial_slot_env(slot: int, *, port_stride: int) -> Dict[str, str]:
+    """Entorno de un trial paralelo: su GPU y su bloque de puertos Showdown."""
+    import os
+
+    from showdown.inference_sim.paths import PS_PORT
+    from showdown.rl.parallel import gpu_count
+
+    env = dict(os.environ)
+    n_gpu = gpu_count()
+    if n_gpu > 0:
+        env['CUDA_VISIBLE_DEVICES'] = str(int(slot) % n_gpu)
+    env['PS_PORT'] = str(int(PS_PORT) + int(slot) * int(port_stride))
+    env.pop('PS_PORTS', None)
+    env.setdefault('PYTHONIOENCODING', 'utf-8')
+    return env
+
+
+def _run_trials_parallel(
+    trials: Sequence[HpTrial],
+    *,
+    build_cmd,
+    parse_score_from_dir,
+    root: Path,
+    parallel: int,
+    port_stride: int,
+) -> Dict[int, Tuple[Optional[float], int, str, float]]:
+    """Lanza los trials de a ``parallel`` procesos; devuelve {i: (score, rc, note, s)}."""
+    import subprocess
+    import time
+
+    from showdown.inference_sim.paths import REPO_ROOT
+
+    pending = list(enumerate(trials, start=1))
+    running: Dict[int, Tuple[int, Any, float, Path]] = {}  # slot -> (i, proc, t0, dir)
+    free_slots = list(range(int(parallel)))
+    results: Dict[int, Tuple[Optional[float], int, str, float]] = {}
+    while pending or running:
+        while pending and free_slots:
+            slot = free_slots.pop(0)
+            i, trial = pending.pop(0)
+            trial_dir = root / f'trial_{i:02d}'
+            trial_dir.mkdir(parents=True, exist_ok=True)
+            cmd = build_cmd(trial, trial_dir)
+            env = _trial_slot_env(slot, port_stride=port_stride)
+            print(
+                f'\n>>> trial {i}/{len(trials)} slot={slot} '
+                f'gpu={env.get("CUDA_VISIBLE_DEVICES", "-")} ps_port={env["PS_PORT"]} '
+                f'{trial.overrides}\n{" ".join(cmd)}',
+                flush=True,
+            )
+            proc = subprocess.Popen(cmd, cwd=str(REPO_ROOT), env=env, text=True)
+            running[slot] = (i, proc, time.perf_counter(), trial_dir)
+        time.sleep(1.0)
+        for slot in list(running):
+            i, proc, t0, trial_dir = running[slot]
+            rc = proc.poll()
+            if rc is None:
+                continue
+            del running[slot]
+            free_slots.append(slot)
+            score = parse_score_from_dir(trial_dir)
+            note = '' if score is not None else 'missing_score'
+            results[i] = (score, int(rc), note, time.perf_counter() - t0)
+            print(f'  trial {i} terminó rc={rc} score={score}', flush=True)
+    return results

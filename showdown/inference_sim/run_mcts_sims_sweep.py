@@ -155,6 +155,7 @@ def run_robust_point(
         '--player-a', agent,
         '--player-b', player_b,
         '--workers', str(int(workers)),
+        '--procs', str(int(os.environ.get('ROBUST_E2E_PROCS', '1') or 1)),
     ]
     if restart_ps:
         cmd.append('--restart-ps')
@@ -566,6 +567,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument('--seed', type=int, default=10)
     ap.add_argument('--teams', type=int, default=40, help='Equipos robust e2e (par)')
     ap.add_argument('--workers', type=int, default=2)
+    ap.add_argument('--procs', type=int, default=1,
+                    help='Procesos del robust E2E por punto (servidor: ~24; 0 = automático)')
     ap.add_argument(
         '--sims',
         default='',
@@ -593,6 +596,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument('--restart-ps', action='store_true')
     ap.add_argument('--dry-run', action='store_true')
     args = ap.parse_args(list(argv) if argv is not None else None)
+    os.environ['ROBUST_E2E_PROCS'] = str(int(args.procs))
 
     rival = str(args.player_b).strip().lower().replace('-', '_')
     if rival not in PLAYER_B_CHOICES:

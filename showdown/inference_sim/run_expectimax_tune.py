@@ -179,6 +179,7 @@ def run_robust_e2e(
     restart_ps: bool,
     player_b: str,
     workers: int,
+    procs: int = 1,
 ) -> Tuple[int, str]:
     cmd = [
         sys.executable, '-m', 'showdown.inference_sim.run_robust_e2e',
@@ -187,6 +188,7 @@ def run_robust_e2e(
         '--player-a', 'expectimax_bayesian',
         '--player-b', player_b,
         '--workers', str(workers),
+        '--procs', str(procs),
     ]
     if restart_ps:
         cmd.append('--restart-ps')
@@ -222,7 +224,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument('--seed', type=int, default=10)
     ap.add_argument('--hours', type=float, default=10.0, help='Techo de wall-clock (default 10h)')
     ap.add_argument('--player-b', default='greedy_joint')
-    ap.add_argument('--workers', type=int, default=2)
+    ap.add_argument('--workers', type=int, default=2,
+                    help='Corrutinas por proceso del robust E2E')
+    ap.add_argument('--procs', type=int, default=1,
+                    help='Procesos del robust E2E (servidor: ~24; 0 = automático)')
     ap.add_argument('--skip-baseline', action='store_true',
                     help='Usa métricas del último report como baseline (no re-corre OFF)')
     ap.add_argument('--no-restart-ps', action='store_true')
@@ -263,6 +268,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         rc, base_report = run_robust_e2e(
             teams=args.teams, seed=args.seed, restart_ps=restart,
             player_b=args.player_b, workers=args.workers,
+            procs=args.procs,
         )
         baseline = parse_metrics_from_report(base_report)
         fp = FIXPLAN_PATH.read_text(encoding='utf-8') if FIXPLAN_PATH.is_file() else ''
@@ -307,6 +313,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         rc, report = run_robust_e2e(
             teams=args.teams, seed=args.seed, restart_ps=restart,
             player_b=args.player_b, workers=args.workers,
+            procs=args.procs,
         )
         metrics = parse_metrics_from_report(report)
         fp = FIXPLAN_PATH.read_text(encoding='utf-8') if FIXPLAN_PATH.is_file() else ''

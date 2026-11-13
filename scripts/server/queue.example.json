@@ -1,0 +1,43 @@
+{
+  "name": "tesis_server_ejemplo",
+  "steps": [
+    {
+      "name": "baseline_joint_vs_solo",
+      "module": "showdown.inference_sim.run_robust_e2e",
+      "args": ["--teams", "100", "--seed", "10",
+               "--player-a", "greedy_joint", "--player-b", "greedy_solo",
+               "--procs", "{procs}", "--workers", "1", "--start-ps"]
+    },
+    {
+      "name": "baseline_expectimax_vs_joint",
+      "module": "showdown.inference_sim.run_robust_e2e",
+      "args": ["--teams", "100", "--seed", "10",
+               "--player-a", "expectimax_bayesian", "--player-b", "greedy_joint",
+               "--procs", "{procs}", "--workers", "1", "--start-ps"]
+    },
+    {
+      "name": "ddqn_hp_tune",
+      "module": "showdown.inference_sim.run_ddqn_hp_tune",
+      "args": ["--seed", "0", "--max-trials", "6", "--steps", "50000",
+               "--opponent", "greedy_joint", "--suite-games", "20",
+               "--parallel-trials", "{gpus}", "--num-envs", "8",
+               "--device", "{device}", "--start-ps"]
+    },
+    {
+      "name": "ddqn_combate",
+      "module": "showdown.rl.ddqn.train",
+      "args": ["--seed", "0", "--opponent", "curriculum", "--start-ps",
+               "--num-envs", "{num_envs}", "--envs-per-server", "4",
+               "--device", "{device}", "--checkpoint-dir", "{run_dir}/ddqn"],
+      "timeout_h": 72
+    },
+    {
+      "name": "ppo_combate",
+      "module": "showdown.rl.ppo.train",
+      "args": ["--seed", "0", "--opponent", "curriculum", "--start-ps",
+               "--num-envs", "{num_envs}", "--envs-per-server", "4",
+               "--device", "{device}", "--checkpoint-dir", "{run_dir}/ppo"],
+      "timeout_h": 72
+    }
+  ]
+}

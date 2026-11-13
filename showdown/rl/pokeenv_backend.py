@@ -114,13 +114,18 @@ class PokeEnvBattleBackend(BattleBackend):
         combat_family: str = 'ddqn',
         preview_checkpoint: Optional[str] = None,
         preview_kind: Optional[str] = None,
+        port: Optional[int] = None,
     ):
         from poke_env.ps_client import LocalhostServerConfiguration
 
-        from showdown.inference_sim.paths import BATTLE_FORMAT
+        from showdown.inference_sim.paths import BATTLE_FORMAT, server_configuration_for_port
         from showdown.rl.frozen_preview import family_preview_for_combat, load_frozen_preview
 
         self.battle_format = battle_format or BATTLE_FORMAT
+        # port: servidor Showdown propio de este entorno (entrenamiento vectorizado).
+        self.port = int(port) if port is not None else None
+        if server_configuration is None and self.port is not None:
+            server_configuration = server_configuration_for_port(self.port)
         self.server_configuration = server_configuration or LocalhostServerConfiguration
         self._our_team_arg = our_team
         self._opp_team_arg = opp_team
@@ -251,13 +256,18 @@ class PokeEnvBattleBackend(BattleBackend):
     def _ensure_ps(self) -> None:
         from showdown.inference_sim.ps_server import ensure_ps, is_ps_up, ps_start_hint
 
-        if not ensure_ps(start=self.start_ps):
+        if self.port is None:
+            from showdown.inference_sim.paths import PS_PORT
+            port = int(PS_PORT)
+        else:
+            port = self.port
+        if not ensure_ps(start=self.start_ps, port=port):
             raise RuntimeError(
-                'Pokémon Showdown no responde en localhost. '
-                f'Arranca: {ps_start_hint()}  o pasa start_ps=True'
+                f'Pokémon Showdown no responde en localhost:{port}. '
+                f'Arranca: {ps_start_hint(port)}  o pasa start_ps=True'
             )
-        if not is_ps_up():
-            raise RuntimeError(f'PS still down after ensure; {ps_start_hint()}')
+        if not is_ps_up(port=port):
+            raise RuntimeError(f'PS still down after ensure; {ps_start_hint(port)}')
 
     def _ensure_players(
         self,

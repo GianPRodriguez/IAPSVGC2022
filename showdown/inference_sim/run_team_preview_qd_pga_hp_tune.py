@@ -37,7 +37,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument('--max-trials', type=int, default=6)
     ap.add_argument('--smoke', action='store_true', default=True)
     ap.add_argument('--no-smoke', dest='smoke', action='store_false')
-    ap.add_argument('--device', default='cpu')
+    ap.add_argument('--device', default='cpu', help='cpu | cuda | auto')
+    ap.add_argument('--parallel-trials', type=int, default=1,
+                    help='Trials simultáneos (uno por GPU, puertos separados). Servidor: 3')
     ap.add_argument('--dry-run', action='store_true')
     args = ap.parse_args(list(argv) if argv is not None else None)
 
@@ -78,6 +80,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         seed=int(args.seed),
         dry_run=bool(args.dry_run),
         frozen=FROZEN,
+        parallel_trials=int(args.parallel_trials),
         criteria_note=(
             'maximize MEAN_SCORE (best_f elite fitness); accept if improves best; '
             'independent of QD combat'

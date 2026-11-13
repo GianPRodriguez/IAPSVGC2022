@@ -45,6 +45,7 @@ import sys
 import time
 from collections import Counter
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from poke_env.ps_client import AccountConfiguration
@@ -807,9 +808,12 @@ async def run_batch(
     player_b: str = 'random',
     workers: int = 2,
     skip_sync: bool = False,
+    shard: Optional[Tuple[int, int]] = None,
+    shard_out: Optional[str] = None,
 ) -> str:
     if n_teams % 2 != 0 or n_teams < 2:
         raise ValueError('--teams debe ser un entero par >= 2')
+    worker_offset = 0
 
     set_chat_quiet(quiet)
     workers = max(1, int(workers))
@@ -858,6 +862,10 @@ async def run_batch(
 
     pool = active_teams()
     pairs: List[Tuple[TeamMeta, TeamMeta]] = disjoint_ab_pairings(n_teams, seed=seed)
+    if shard is not None:
+        k, n_shards = int(shard[0]), int(shard[1])
+        pairs = pairs[k::n_shards]
+        worker_offset = k * max(1, int(workers))
     n_matchups = len(pairs)
     n_bo3 = n_matchups * 2
     state = StateCheckReport()
@@ -1177,7 +1185,7 @@ async def run_batch(
             soundness_report=sound_for_players,
             skip_sync=skip_sync,
             account_configuration=AccountConfiguration(
-                f'{a_nick}{stamp % 10000}w{worker_id}'[:18], None
+                f'{a_nick}{stamp % 10000}w{worker_id + worker_offset}'[:18], None
             ),
             battle_format=format_id,
             server_configuration=cfg,
@@ -1186,7 +1194,7 @@ async def run_batch(
             player_b,
             team=team_b0,
             account_configuration=AccountConfiguration(
-                f'{b_nick}{stamp % 10000}w{worker_id}'[:18], None
+                f'{b_nick}{stamp % 10000}w{worker_id + worker_offset}'[:18], None
             ),
             battle_format=format_id,
             server_configuration=cfg,
@@ -1317,6 +1325,67 @@ async def run_batch(
         all_reward_rows.extend(reward_rows or [])
 
     elapsed = time.perf_counter() - t0
+    if shard_out:
+        _dump_shard_payload(
+            shard_out,
+            {
+                'wins': wins, 'losses': losses, 'errors': errors, 'skips': skips,
+                'pair_a': pair_a_sweeps, 'pair_b': pair_b_sweeps,
+                'pair_draw': pair_draws, 'pair_invalid': pair_invalid,
+                'fail_kinds': dict(fail_kinds), 'pair_outcomes': list(pair_outcomes),
+                'details': list(details), 'state': state, 'sound': sound,
+                'reward_rows': list(all_reward_rows), 'elapsed_s': elapsed,
+                'n_matchups': n_matchups,
+                'joint_diag': _joint_diag_snapshot(player_a, player_b),
+                'divergence': _divergence_snapshot(player_a, player_b),
+            },
+        )
+        return ''
+    return _finalize_batch(
+        n_teams=n_teams, n_bo3=n_bo3, n_matchups=n_matchups, format_id=format_id,
+        pool_n=len(pool), wins=wins, losses=losses, errors=errors, skips=skips,
+        pair_a_sweeps=pair_a_sweeps, pair_b_sweeps=pair_b_sweeps,
+        pair_draws=pair_draws, pair_invalid=pair_invalid, fail_kinds=fail_kinds,
+        pair_outcomes=pair_outcomes, elapsed=elapsed, seed=seed, state=state,
+        sound=sound, details=details, include_details=include_details,
+        flag_audit=flag_audit, player_a=player_a, player_b=player_b,
+        all_reward_rows=all_reward_rows, skip_sync=skip_sync,
+        workers=workers, ports=ports,
+    )
+
+
+def _finalize_batch(
+    *,
+    n_teams: int,
+    n_bo3: int,
+    n_matchups: int,
+    format_id: str,
+    pool_n: int,
+    wins: int,
+    losses: int,
+    errors: int,
+    skips: int,
+    pair_a_sweeps: int,
+    pair_b_sweeps: int,
+    pair_draws: int,
+    pair_invalid: int,
+    fail_kinds: Counter,
+    pair_outcomes: List[int],
+    elapsed: float,
+    seed: Optional[int],
+    state: StateCheckReport,
+    sound: SoundnessReport,
+    details: List[dict],
+    include_details: bool,
+    flag_audit,
+    player_a: str,
+    player_b: str,
+    all_reward_rows: List,
+    skip_sync: bool,
+    workers: int,
+    ports: List[int],
+) -> str:
+    """Reporte, fixplan, diagnósticos y resumen final (común a 1 o K procesos)."""
     analysis_lines: List[str] = []
     divergence_lines: List[str] = []
     try:
@@ -1376,7 +1445,7 @@ async def run_batch(
         n_bo3=n_bo3,
         n_matchups=n_matchups,
         format_id=format_id,
-        pool_n=len(pool),
+        pool_n=pool_n,
         wins=wins,
         losses=losses,
         errors=errors,
@@ -1469,6 +1538,206 @@ async def run_batch(
             print(' | '.join(compact), flush=True)
     return report
 
+def _joint_diag_snapshot(player_a: str, player_b: str):
+    if 'greedy_joint' not in (player_a, player_b):
+        return None
+    try:
+        from showdown.battle_bots.greedy_joint.diag import snapshot
+        return snapshot()
+    except Exception:
+        return None
+
+
+def _divergence_snapshot(player_a: str, player_b: str):
+    if 'expectimax' not in f'{player_a} {player_b}'.lower():
+        return None
+    try:
+        from showdown.battle_bots.expectimax_bayesian.divergence import (
+            snapshot_divergence_stats,
+        )
+        return snapshot_divergence_stats()
+    except Exception:
+        return None
+
+
+def _dump_shard_payload(path: str, payload: Dict[str, Any]) -> None:
+    import pickle
+
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_suffix(p.suffix + '.tmp')
+    with tmp.open('wb') as fh:
+        pickle.dump(payload, fh, protocol=pickle.HIGHEST_PROTOCOL)
+    tmp.replace(p)
+
+
+def run_batch_multiprocess(
+    n_teams: int,
+    *,
+    procs: int,
+    workers_per_proc: int,
+    format_id: str,
+    start_ps: bool,
+    restart_ps: bool,
+    seed: Optional[int],
+    timeout_s: float,
+    include_details: bool,
+    export: bool,
+    quiet: bool,
+    player_a: str,
+    player_b: str,
+    skip_sync: bool,
+    delay_s: float = 0.0,
+    progress_every: int = 5,
+) -> str:
+    """Reparte los matchups en ``procs`` procesos (un núcleo de Python cada uno).
+
+    Los workers de :func:`run_batch` son corrutinas de un solo proceso: solapan
+    la espera de red, pero las decisiones de greedy_joint / expectimax compiten
+    por un único núcleo. Aquí cada proceso recibe ``matchups[k::procs]`` y su
+    propio bloque de puertos Showdown; el padre combina y escribe un único
+    reporte, idéntico al de una corrida de un proceso.
+    """
+    import pickle
+    import random as _random
+    import subprocess as _sp
+    import tempfile
+
+    procs = max(1, int(procs))
+    wpp = max(1, int(workers_per_proc))
+    if seed is None:
+        # Todos los procesos deben generar exactamente los mismos pares.
+        seed = _random.randrange(1, 2**31 - 1)
+    from showdown.inference_sim.paths import PS_PORT
+
+    base = int(PS_PORT)
+    blocks = [[base + k * wpp + j for j in range(wpp)] for k in range(procs)]
+    all_ports = [p for b in blocks for p in b]
+    if not ensure_ps_ports(all_ports, start=start_ps or restart_ps, restart=restart_ps):
+        hints = ', '.join(ps_start_hint(p) for p in all_ports)
+        raise RuntimeError(f'Pokémon Showdown no responde en {all_ports}. Arranca: {hints}')
+    if export:
+        export_teams()
+
+    if 'greedy_joint' in (player_a, player_b):
+        try:
+            from showdown.battle_bots.greedy_joint.diag import reset as reset_joint_diag
+            reset_joint_diag()
+        except Exception:
+            pass
+    if 'expectimax' in f'{player_a} {player_b}'.lower():
+        try:
+            from showdown.battle_bots.expectimax_bayesian.divergence import (
+                reset_divergence_stats,
+            )
+            reset_divergence_stats()
+        except Exception:
+            pass
+
+    n_matchups_total = len(disjoint_ab_pairings(n_teams, seed=seed))
+    procs = min(procs, max(1, n_matchups_total))
+    print(
+        f'BATCH robust (multiproceso) teams={n_teams} matchups={n_matchups_total} '
+        f'bo3={n_matchups_total * 2} procs={procs} workers/proc={wpp} '
+        f'A={player_a} B={player_b} seed={seed} ports={all_ports[:procs * wpp]} '
+        f'timeout_s={timeout_s} skip_sync={int(skip_sync)}',
+        flush=True,
+    )
+    t0 = time.perf_counter()
+    tmpdir = Path(tempfile.mkdtemp(prefix='robust_e2e_shards_'))
+    children = []
+    for k in range(procs):
+        out = tmpdir / f'shard_{k}.pkl'
+        argv = [
+            sys.executable, '-m', 'showdown.inference_sim.run_robust_e2e',
+            '--teams', str(n_teams),
+            '--player-a', player_a, '--player-b', player_b,
+            '--format', format_id, '--seed', str(seed),
+            '--timeout', str(timeout_s), '--workers', str(wpp),
+            '--delay', str(delay_s), '--progress-every', str(progress_every),
+            '--shard', f'{k}/{procs}', '--shard-out', str(out),
+        ]
+        if skip_sync:
+            argv.append('--skip-sync')
+        if include_details:
+            argv.append('--details')
+        if not quiet:
+            argv.append('--verbose')
+        env = dict(os.environ)
+        env['PS_PORTS'] = ','.join(str(p) for p in blocks[k])
+        env.setdefault('PYTHONIOENCODING', 'utf-8')
+        children.append((k, out, _sp.Popen(argv, env=env)))
+
+    failures = []
+    for k, out, proc in children:
+        rc = proc.wait()
+        # rc=1 en un hijo solo significa sync/inferencia NO en su porción: el
+        # reporte combinado lo reflejará. Solo falta el payload si el hijo cayó.
+        if not out.exists():
+            failures.append(f'shard {k} sin resultados (exit={rc})')
+    if failures:
+        raise RuntimeError('; '.join(failures))
+
+    wins = losses = errors = skips = 0
+    pair_a = pair_b = pair_draw = pair_invalid = 0
+    fail_kinds: Counter = Counter()
+    pair_outcomes: List[int] = []
+    details: List[dict] = []
+    all_reward_rows: List = []
+    state = StateCheckReport()
+    sound = SoundnessReport()
+    for k, out, _proc in children:
+        with out.open('rb') as fh:
+            p = pickle.load(fh)
+        wins += p['wins']
+        losses += p['losses']
+        errors += p['errors']
+        skips += p['skips']
+        pair_a += p['pair_a']
+        pair_b += p['pair_b']
+        pair_draw += p['pair_draw']
+        pair_invalid += p['pair_invalid']
+        fail_kinds.update(p['fail_kinds'])
+        pair_outcomes.extend(p['pair_outcomes'])
+        details.extend(p['details'])
+        all_reward_rows.extend(p['reward_rows'])
+        _merge_state_reports(state, p['state'])
+        _merge_sound_reports(sound, p['sound'])
+        if p.get('joint_diag'):
+            from showdown.battle_bots.greedy_joint.diag import merge as merge_joint_diag
+            merge_joint_diag(p['joint_diag'])
+        if p.get('divergence') is not None:
+            from showdown.battle_bots.expectimax_bayesian.divergence import (
+                merge_divergence_stats,
+            )
+            merge_divergence_stats(p['divergence'])
+        try:
+            out.unlink()
+        except OSError:
+            pass
+    try:
+        tmpdir.rmdir()
+    except OSError:
+        pass
+
+    pool = active_teams()
+    used_metas: List[TeamMeta] = []
+    for a, b in disjoint_ab_pairings(n_teams, seed=seed):
+        used_metas.extend([a, b])
+    flag_audit = audit_inference_flags(pool_abilities=collect_pool_abilities(used_metas))
+    return _finalize_batch(
+        n_teams=n_teams, n_bo3=n_matchups_total * 2, n_matchups=n_matchups_total,
+        format_id=format_id, pool_n=len(pool), wins=wins, losses=losses,
+        errors=errors, skips=skips, pair_a_sweeps=pair_a, pair_b_sweeps=pair_b,
+        pair_draws=pair_draw, pair_invalid=pair_invalid, fail_kinds=fail_kinds,
+        pair_outcomes=pair_outcomes, elapsed=time.perf_counter() - t0, seed=seed,
+        state=state, sound=sound, details=details, include_details=include_details,
+        flag_audit=flag_audit, player_a=player_a, player_b=player_b,
+        all_reward_rows=all_reward_rows, skip_sync=skip_sync,
+        workers=procs * wpp, ports=all_ports[:procs * wpp],
+    )
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(
         description=(
@@ -1528,6 +1797,17 @@ def main(argv: Optional[List[str]] = None) -> int:
             'Solo para comparar agentes; no usar para NEED_FIX de sync/inf.'
         ),
     )
+    parser.add_argument(
+        '--procs',
+        type=int,
+        default=1,
+        help=(
+            'Procesos en paralelo (cada uno con --workers corrutinas y su bloque '
+            'de puertos). Servidor: ~24; 0 = automático según núcleos.'
+        ),
+    )
+    parser.add_argument('--shard', default=None, help=argparse.SUPPRESS)
+    parser.add_argument('--shard-out', default=None, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
 
     if args.export_only:
@@ -1562,6 +1842,38 @@ def main(argv: Optional[List[str]] = None) -> int:
         except Exception:
             pass
 
+    from showdown.rl.parallel import default_num_envs, raise_nofile_limit
+
+    raise_nofile_limit()
+    procs = int(args.procs)
+    if procs == 0:
+        procs = default_num_envs()
+    if procs > 1 and not args.shard:
+        run_batch_multiprocess(
+            args.teams,
+            procs=procs,
+            workers_per_proc=max(1, args.workers),
+            format_id=args.format,
+            start_ps=args.start_ps,
+            restart_ps=args.restart_ps,
+            seed=args.seed,
+            timeout_s=timeout_s,
+            include_details=args.details,
+            export=args.export,
+            quiet=quiet,
+            player_a=args.player_a,
+            player_b=args.player_b,
+            skip_sync=bool(args.skip_sync),
+            delay_s=args.delay,
+            progress_every=args.progress_every,
+        )
+        return _exit_code_from_report()
+
+    shard = None
+    if args.shard:
+        k, _, n_sh = str(args.shard).partition('/')
+        shard = (int(k), int(n_sh))
+
     asyncio.run(
         run_batch(
             args.teams,
@@ -1579,9 +1891,16 @@ def main(argv: Optional[List[str]] = None) -> int:
             player_b=args.player_b,
             workers=args.workers,
             skip_sync=bool(args.skip_sync),
+            shard=shard,
+            shard_out=args.shard_out,
         )
     )
+    if args.shard_out:
+        return 0
+    return _exit_code_from_report()
 
+
+def _exit_code_from_report() -> int:
     text = REPORT_PATH.read_text(encoding='utf-8') if REPORT_PATH.exists() else ''
     skip_sync_run = 'skip_sync: YES' in text
     sync_bad = (

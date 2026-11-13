@@ -41,7 +41,9 @@ def run_qd_agent_hp_tune(
     ap.add_argument('--max-trials', type=int, default=6)
     ap.add_argument('--t-total', type=int, default=6_000)
     ap.add_argument('--suite-games', type=int, default=4)
-    ap.add_argument('--device', default='cpu')
+    ap.add_argument('--device', default='cpu', help='cpu | cuda | auto')
+    ap.add_argument('--parallel-trials', type=int, default=1,
+                    help='Trials simultáneos (uno por GPU, puertos separados). Servidor: 3')
     ap.add_argument('--bc-checkpoint', default=None)
     ap.add_argument('--start-ps', action='store_true')
     ap.add_argument('--smoke', action='store_true', default=True)
@@ -90,6 +92,7 @@ def run_qd_agent_hp_tune(
         seed=int(args.seed),
         dry_run=bool(args.dry_run),
         frozen=frozen,
+        parallel_trials=int(args.parallel_trials),
         criteria_note=(
             'maximize MEAN_WR of pi* from offline suite (Cand.1); '
             'accept if improves best; QD-score tracked in train report only'

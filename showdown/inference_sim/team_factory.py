@@ -27,6 +27,8 @@ _MOVE_EXPORT_ALIASES = {
     'mysticfire': 'Mystical Fire',
 }
 
+_REGMC_WARNED = False
+
 
 def canonicalize_species(species: str) -> str:
     """Nombre de especie seguro para export Showdown / poke-env / Champions."""
@@ -359,7 +361,11 @@ def active_teams() -> List[TeamMeta]:
                 print(f'[team_factory] skip Reg M-C invalid: {t.name} ({tip})')
             ok = ps_ok
         except Exception as exc:
-            print(f'[team_factory] WARN Reg M-C validate skipped: {exc!r}')
+            # Una vez por proceso: con N entornos se llamaria en cada reset.
+            global _REGMC_WARNED
+            if not _REGMC_WARNED:
+                _REGMC_WARNED = True
+                print(f'[team_factory] WARN Reg M-C validate skipped: {exc!r}')
 
     if len(ok) < 2:
         raise RuntimeError(

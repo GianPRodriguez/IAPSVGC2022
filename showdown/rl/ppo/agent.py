@@ -195,18 +195,111 @@ class PPOAgent:
         skip_buffer: bool = False,
         trunc_reason: Optional[str] = None,
         bootstrap_value: float = 0.0,
+        env_index: Optional[int] = None,
     ) -> bool:
         self._ensure_torch()
         self.env_steps += 1
-        return self.buffer.add(
+        kwargs = dict(
             obs=obs, a1=a1, a2=a2, logp=logp, reward=reward, value=value,
             terminated=terminated, m1=m1, m2=m2,
             skip_buffer=skip_buffer, trunc_reason=trunc_reason,
             bootstrap_value=bootstrap_value,
         )
+        if env_index is not None and hasattr(self.buffer, 'buffers'):
+            return self.buffer.add(env_index=int(env_index), **kwargs)
+        return self.buffer.add(**kwargs)
 
     def is_rollout_full(self) -> bool:
-        return len(self.buffer) >= self.cfg.rollout_steps
+        if len(self.buffer) >= self.cfg.rollout_steps:
+            return True
+        any_full = getattr(self.buffer, 'any_full', None)
+        return bool(any_full()) if callable(any_full) else False
+
+    # --- entrenamiento vectorizado ----------------------------------------
+
+    def use_vec_buffer(self, num_envs: int) -> None:
+        """Un sub-buffer por entorno (GAE por entorno). ``rollout_steps`` es el total."""
+        from showdown.rl.ppo.buffer import VecRolloutBuffer
+
+        self._ensure_torch()
+        n = max(1, int(num_envs))
+        self.cfg.num_envs = n
+        per_env = max(1, -(-int(self.cfg.rollout_steps) // n))  # ceil
+        self.buffer = VecRolloutBuffer(n, capacity=per_env, obs_dim=OBS_DIM)
+
+    def values_batch(self, obs: np.ndarray) -> np.ndarray:
+        """V(s) para un lote ``[N, OBS_DIM]``."""
+        self._ensure_torch()
+        torch = self._torch
+        obs = np.asarray(obs, dtype=np.float32).reshape(-1, OBS_DIM)
+        if obs.shape[0] == 0:
+            return np.zeros(0, dtype=np.float32)
+        self.net.eval()
+        with torch.no_grad():
+            x = torch.as_tensor(obs, dtype=torch.float32, device=self.device)
+            _z1, _z2, v = self.net(x)
+        return v.detach().float().cpu().numpy().reshape(-1)
+
+    def act_batch(
+        self,
+        obs: np.ndarray,
+        m1: np.ndarray,
+        mask2_fn,
+        *,
+        greedy: bool = False,
+    ):
+        """Versión en lote de :meth:`act` para N entornos.
+
+        ``mask2_fn(a1s) -> [N, 24]`` devuelve la máscara Slot2 condicionada a
+        cada a1 (un viaje de ida y vuelta a los workers por paso).
+        Devuelve ``(a1, a2, logp, value, m2)`` como arrays de longitud N.
+        """
+        self._ensure_torch()
+        torch = self._torch
+        obs = np.asarray(obs, dtype=np.float32).reshape(-1, OBS_DIM)
+        m1 = np.asarray(m1, dtype=np.float32).reshape(-1, SLOT_ACTION_N)
+        n = obs.shape[0]
+        self.net.eval()
+        with torch.no_grad():
+            x = torch.as_tensor(obs, device=self.device)
+            m1_t = torch.as_tensor(m1, device=self.device)
+            h = self.net.features(x)
+            z1, _, v = self.net(x)
+            z1m = self._apply_mask(z1, m1_t)
+            if greedy:
+                a1_t = z1m.argmax(dim=-1)
+            else:
+                a1_t = torch.distributions.Categorical(logits=z1m).sample()
+            a1 = a1_t.cpu().numpy().astype(np.int64)
+            # Legalidad (filas sin acciones legales -> PASS), igual que act().
+            for i in range(n):
+                legal = np.flatnonzero(m1[i] > 0.5)
+                if legal.size == 0:
+                    a1[i] = PASS_ID
+                elif m1[i, a1[i]] <= 0.5:
+                    a1[i] = int(legal[0])
+            m2 = np.asarray(mask2_fn(a1), dtype=np.float32).reshape(n, SLOT_ACTION_N)
+            a1_t = torch.as_tensor(a1, dtype=torch.long, device=self.device)
+            m2_t = torch.as_tensor(m2, device=self.device)
+            z2 = self.net.slot2_logits(h, a1_t)
+            z2m = self._apply_mask(z2, m2_t)
+            if greedy:
+                a2_t = z2m.argmax(dim=-1)
+            else:
+                a2_t = torch.distributions.Categorical(logits=z2m).sample()
+            a2 = a2_t.cpu().numpy().astype(np.int64)
+            for i in range(n):
+                legal = np.flatnonzero(m2[i] > 0.5)
+                if legal.size == 0:
+                    a2[i] = PASS_ID
+                elif m2[i, a2[i]] <= 0.5:
+                    a2[i] = int(legal[0])
+            a2_t = torch.as_tensor(a2, dtype=torch.long, device=self.device)
+            logp1 = torch.distributions.Categorical(logits=z1m).log_prob(a1_t)
+            logp2 = torch.distributions.Categorical(logits=z2m).log_prob(a2_t)
+            logp = (logp1 + logp2).float().cpu().numpy().reshape(-1)
+            value = v.float().cpu().numpy().reshape(-1)
+        return a1, a2, logp, value, m2
 
     def update(self, *, last_value: float = 0.0) -> Dict[str, float]:
         """GAE + K epochs of clipped PPO. Clears buffer afterward."""

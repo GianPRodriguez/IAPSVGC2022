@@ -155,3 +155,26 @@ def dump(path: Optional[Path] = None) -> Path:
     text = format_report()
     out.write_text(text, encoding='utf-8')
     return out
+
+
+def snapshot() -> dict:
+    """Estado acumulado (picklable) para combinar procesos de un E2E repartido."""
+    with _LOCK:
+        return {
+            'turns_win': dict(_TURNS_WIN),
+            'turns_loss': dict(_TURNS_LOSS),
+            'battles_win': int(_BATTLES_WIN),
+            'battles_loss': int(_BATTLES_LOSS),
+        }
+
+
+def merge(snap: Optional[dict]) -> None:
+    """Suma un ``snapshot()`` de otro proceso al acumulado de este."""
+    global _BATTLES_WIN, _BATTLES_LOSS
+    if not snap:
+        return
+    with _LOCK:
+        _TURNS_WIN.update(snap.get('turns_win') or {})
+        _TURNS_LOSS.update(snap.get('turns_loss') or {})
+        _BATTLES_WIN += int(snap.get('battles_win') or 0)
+        _BATTLES_LOSS += int(snap.get('battles_loss') or 0)

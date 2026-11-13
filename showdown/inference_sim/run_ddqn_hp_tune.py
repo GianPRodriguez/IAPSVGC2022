@@ -38,7 +38,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument('--steps', type=int, default=8_000)
     ap.add_argument('--opponent', default='mock')
     ap.add_argument('--suite-games', type=int, default=4)
-    ap.add_argument('--device', default='cpu')
+    ap.add_argument('--device', default='cpu', help='cpu | cuda | auto')
+    ap.add_argument('--parallel-trials', type=int, default=1,
+                    help='Trials simultáneos (uno por GPU, puertos separados). Servidor: 3')
+    ap.add_argument('--num-envs', type=int, default=1,
+                    help='Entornos paralelos por trial (ver showdown.rl.vec_env)')
     ap.add_argument('--start-ps', action='store_true')
     ap.add_argument('--dry-run', action='store_true')
     ap.add_argument('--no-expand-omega', action='store_true')
@@ -55,6 +59,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             '--opponent', args.opponent,
             '--suite-games', str(args.suite_games),
             '--checkpoint-dir', str(trial_dir),
+            '--num-envs', str(args.num_envs),
             '--lr', str(trial.overrides['lr']),
             '--gamma', str(trial.overrides['gamma']),
             '--log-every', '100000',
@@ -82,6 +87,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         seed=int(args.seed),
         dry_run=bool(args.dry_run),
         frozen=FROZEN,
+        parallel_trials=int(args.parallel_trials),
         criteria_note='maximize MEAN_WR from offline suite (Cand.1); accept if improves best',
     )
     return 0

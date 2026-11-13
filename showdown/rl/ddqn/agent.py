@@ -93,6 +93,44 @@ class DDQNAgent:
             return int(self._rng.choice(legal))
         return self.greedy(obs, m)
 
+    def act_batch(
+        self,
+        obs: np.ndarray,
+        masks: np.ndarray,
+        *,
+        epsilon: Optional[float] = None,
+    ) -> np.ndarray:
+        """ε-greedy en lote para N entornos (una sola pasada de la red).
+
+        Misma política que :meth:`act` aplicada fila a fila: warmup/ε → acción
+        legal aleatoria; si no, argmax de Q enmascarado.
+        """
+        self._ensure_torch()
+        torch = self._torch
+        obs = np.asarray(obs, dtype=np.float32).reshape(-1, OBS_DIM)
+        masks = np.asarray(masks, dtype=np.float32).reshape(-1, JOINT_ACTION_N)
+        n = obs.shape[0]
+        eps = self.epsilon if epsilon is None else float(epsilon)
+        explore = (self.env_steps < self.cfg.warmup_steps) or (eps >= 1.0)
+        rand = self._rng.random(n) < eps
+        need_q = (not explore) and bool((~rand).any())
+        q = None
+        if need_q:
+            self.online.eval()
+            with torch.no_grad():
+                x = torch.as_tensor(obs, device=self.device)
+                q = self.online(x).float().cpu().numpy()
+        out = np.zeros(n, dtype=np.int64)
+        for i in range(n):
+            legal = np.flatnonzero(masks[i] > 0.5)
+            if legal.size == 0:
+                out[i] = encode_joint_action(PASS_ID, PASS_ID)
+            elif explore or rand[i] or q is None:
+                out[i] = int(self._rng.choice(legal))
+            else:
+                out[i] = int(np.argmax(apply_q_mask(q[i], masks[i])))
+        return out
+
     def greedy(self, obs: np.ndarray, mask: np.ndarray) -> int:
         self._ensure_torch()
         torch = self._torch

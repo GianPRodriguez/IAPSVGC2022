@@ -290,6 +290,111 @@ def _run_steps(
     return env, int(steps), {'metrics': metrics_last, 'ep_counts': ep_counts}
 
 
+def _run_steps_vec(
+    agent: DDQNAgent,
+    venv,
+    *,
+    steps: int,
+    omega: Sequence[str],
+    expand_omega: bool,
+    weights: Dict[str, float],
+    rng: np.random.Generator,
+    global_step_offset: int,
+    ckpt_dir: Path,
+    heartbeat: TrainHeartbeat,
+    phase_label: str,
+    unlock: str,
+) -> Tuple[int, dict]:
+    """Como :func:`_run_steps` pero con N entornos en paralelo (asíncrono).
+
+    ``steps`` cuenta pasos de entorno totales. Cada transición pasa por
+    ``agent.observe`` (misma razón actualización/dato que con 1 entorno).
+    """
+    n = int(venv.num_envs)
+    obs, masks = venv.set_opponent(unlock)
+    current = [unlock] * n
+
+    def _sample_next() -> Optional[str]:
+        if expand_omega and len(omega) > 1:
+            return sample_from_omega(omega, rng, weights=weights)
+        return None
+
+    pending = [_sample_next() for _ in range(n)]
+    ep_counts: Dict[str, int] = {o: 0 for o in omega}
+    ep_counts[unlock] = ep_counts.get(unlock, 0) + n
+    metrics_last: dict = {}
+    local = 0
+    issued = 0
+    restarts = 0
+    flight: Dict[int, tuple] = {}  # i -> (a_joint, obs, mask)
+    ready = list(range(n))
+
+    while local < int(steps):
+        idx = ready[:max(0, int(steps) - issued)]
+        if idx:
+            a_joint = agent.act_batch(obs[idx], masks[idx], epsilon=None)
+            venv.step_async(
+                idx,
+                [decode_joint_action(int(a)) for a in a_joint],
+                [pending[i] for i in idx],
+            )
+            for k, i in enumerate(idx):
+                flight[i] = (int(a_joint[k]), obs[i].copy(), masks[i].copy())
+            issued += len(idx)
+        if not flight:
+            break
+        ready = []
+        for i, r in venv.step_wait_any():
+            a_i, obs_i, mask_i = flight.pop(i)
+            info = r['info']
+            done = bool(r['terminated'] or r['truncated'])
+            skip = bool(info['skip_buffer'] or info['used_fallback'])
+            s_next = r['final_obs'] if done else r['obs']
+            m_next = mask_i if done else r['mask']
+            train_m = agent.observe(
+                s=obs_i, a=a_i, r=float(r['reward']), s_next=s_next,
+                terminated=bool(r['terminated']), m_next=m_next,
+                skip_buffer=skip, truncated=bool(r['truncated']),
+                opponent_code=opponent_code(current[i]),
+            )
+            if train_m:
+                metrics_last = train_m
+            if r.get('worker_restarted'):
+                restarts += 1
+            if done:
+                current[i] = r.get('next_opponent') or current[i]
+                ep_counts[current[i]] = ep_counts.get(current[i], 0) + 1
+                pending[i] = _sample_next()
+            obs[i] = r['obs']
+            masks[i] = r['mask']
+            local += 1
+            ready.append(i)
+
+        gstep = global_step_offset + local
+        loss = metrics_last.get('loss', float('nan'))
+        heartbeat.log(
+            gstep,
+            phase=phase_label,
+            extras={
+                'envs': n,
+                'opp': unlock,
+                'eps': float(agent.epsilon),
+                'replay': len(agent.replay),
+                'loss': float(loss) if loss == loss else None,
+                'restarts': restarts,
+            },
+        )
+        if heartbeat.should_checkpoint(gstep):
+            agent.save(ckpt_dir / 'last.pt')
+            heartbeat.mark_checkpoint(gstep)
+
+    for i, r in venv.drain():
+        flight.pop(i, None)
+    return int(local), {
+        'metrics': metrics_last, 'ep_counts': ep_counts, 'worker_restarts': restarts,
+    }
+
+
 def run_training(
     *,
     seed: int = 0,
@@ -306,9 +411,18 @@ def run_training(
     smoke: bool = False,
     lr: Optional[float] = None,
     gamma: Optional[float] = None,
+    num_envs: int = 1,
+    envs_per_server: int = 4,
+    base_port: Optional[int] = None,
 ) -> DDQNAgent:
     if not schedule:
         raise ValueError('schedule vacío')
+    from showdown.rl.parallel import describe_resources, raise_nofile_limit, resolve_device
+
+    raise_nofile_limit()
+    device = resolve_device(device)
+    num_envs = max(1, int(num_envs))
+    print(f'[ddqn] recursos: {describe_resources()} device={device} num_envs={num_envs}', flush=True)
 
     weights = merge_weights(weight_overrides)
     cfg = DDQNConfig(seed=seed, device=device)
@@ -338,7 +452,28 @@ def run_training(
         ]
 
     first_opp = expand_sched[0].omega[0]
-    env: Optional[VGCEnv] = _make_env(first_opp, seed=seed, start_ps=start_ps)
+    venv = None
+    env: Optional[VGCEnv] = None
+    if num_envs > 1:
+        from showdown.rl.vec_env import EnvSpec, make_vec_env
+
+        venv = make_vec_env(
+            EnvSpec(
+                opponent=first_opp,
+                account_prefix='Ddqn',
+                combat_family='ddqn',
+                reward=RewardCandidate.DENSE.value,
+                obs_kind='ddqn',
+                mask_kind='joint',
+            ),
+            num_envs=num_envs,
+            seed=seed,
+            envs_per_server=envs_per_server,
+            base_port=base_port,
+            start_ps=start_ps,
+        )
+    else:
+        env = _make_env(first_opp, seed=seed, start_ps=start_ps)
     t_total = schedule_total_steps(expand_sched)
     hb = TrainHeartbeat(
         tag='ddqn',
@@ -348,7 +483,7 @@ def run_training(
     )
 
     try:
-        assert env is not None
+        assert env is not None or venv is not None
         for pi, phase in enumerate(expand_sched):
             probs = omega_sampling_probs(phase.omega, weights=weights)
             mode = 'expand-Omega' if expand_omega else 'exclusive'
@@ -359,6 +494,44 @@ def run_training(
                 f'P={ {k: round(v, 3) for k, v in probs.items()} } ===',
                 flush=True,
             )
+            if venv is not None:
+                if phase.unlock != 'mock':
+                    from showdown.rl.ppo.train import _ensure_vec_servers
+                    _ensure_vec_servers(venv, start_ps=start_ps)
+                done, info = _run_steps_vec(
+                    agent, venv,
+                    steps=phase.steps,
+                    omega=phase.omega,
+                    expand_omega=expand_omega,
+                    weights=weights,
+                    rng=rng,
+                    global_step_offset=global_steps,
+                    ckpt_dir=ckpt_dir,
+                    heartbeat=hb,
+                    phase_label=f'phase={pi}:{phase.unlock}',
+                    unlock=phase.unlock,
+                )
+                global_steps += done
+                phase_log.append({
+                    'index': pi,
+                    'unlock': phase.unlock,
+                    'omega': list(phase.omega),
+                    'steps_planned': phase.steps,
+                    'steps_done': done,
+                    'sampling_probs': probs,
+                    'ep_counts': info.get('ep_counts', {}),
+                    'buf_frac_end': agent.replay.origin_fractions(),
+                    'worker_restarts': info.get('worker_restarts', 0),
+                    'num_envs': num_envs,
+                })
+                agent.save(ckpt_dir / f'phase_{pi}_{phase.unlock}.pt')
+                hb.log(
+                    global_steps,
+                    phase=f'phase={pi}:{phase.unlock}:end',
+                    extras={'replay': len(agent.replay), 'envs': num_envs},
+                    force=True,
+                )
+                continue
             # Ensure unlock foe exists at phase start
             env = _ensure_opponent(env, phase.unlock, seed=seed, start_ps=start_ps)
             env, done, info = _run_steps(
@@ -397,6 +570,11 @@ def run_training(
         agent.save(ckpt_dir / 'final.pt')
         n_suite = resolve_suite_games(suite_games=suite_games, smoke=smoke)
         suite_rows, suite_note = [], ''
+        if n_suite > 0 and env is None and venv is not None:
+            last_opp = expand_sched[-1].unlock
+            venv.close()
+            venv = None
+            env = _make_env(last_opp, seed=seed, start_ps=start_ps)
         if n_suite > 0 and env is not None:
             print(
                 f'[ddqn] offline suite: {n_suite} BO1 × {len(SUITE_FOES)} foes',
@@ -420,6 +598,8 @@ def run_training(
                 'schedule': [asdict(p) for p in schedule],
                 'lr': float(cfg.lr),
                 'gamma': float(cfg.gamma),
+                'num_envs': int(num_envs),
+                'envs_per_server': int(envs_per_server),
             },
             metrics={
                 'env_steps': agent.env_steps,
@@ -479,6 +659,8 @@ def run_training(
             force=True,
         )
     finally:
+        if venv is not None:
+            venv.close()
         if env is not None:
             env.close()
 
@@ -499,7 +681,7 @@ def main(argv: Optional[list] = None) -> int:
         ),
     )
     p.add_argument('--seed', type=int, required=True)
-    p.add_argument('--device', default='cpu')
+    p.add_argument('--device', default='cpu', help='cpu | cuda | cuda:N | auto')
     p.add_argument('--steps', type=int, default=20_000)
     p.add_argument(
         '--opponent', default='mock',
@@ -546,7 +728,16 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--smoke', action='store_true', help='Treat as smoke (suite default 0)')
     p.add_argument('--lr', type=float, default=None, help='Override DDQNConfig.lr')
     p.add_argument('--gamma', type=float, default=None, help='Override DDQNConfig.gamma')
+    p.add_argument('--num-envs', type=int, default=1,
+                   help='Entornos paralelos (procesos). Servidor: ~24; 0 = automático')
+    p.add_argument('--envs-per-server', type=int, default=4,
+                   help='Entornos por servidor Showdown (puertos base-port..)')
+    p.add_argument('--base-port', type=int, default=None,
+                   help='Primer puerto Showdown (default PS_PORT=8000)')
     args = p.parse_args(argv)
+    if args.num_envs == 0:
+        from showdown.rl.parallel import default_num_envs
+        args.num_envs = default_num_envs()
 
     schedule = resolve_schedule(
         opponent=args.opponent,
@@ -580,6 +771,9 @@ def main(argv: Optional[list] = None) -> int:
         smoke=bool(args.smoke),
         lr=args.lr,
         gamma=args.gamma,
+        num_envs=args.num_envs,
+        envs_per_server=args.envs_per_server,
+        base_port=args.base_port,
     )
     return 0
 
