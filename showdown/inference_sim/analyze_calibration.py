@@ -33,9 +33,11 @@ def load(path: Path) -> List[dict]:
             line = line.strip()
             if line:
                 try:
-                    rows.append(json.loads(line))
+                    row = json.loads(line)
                 except json.JSONDecodeError:
                     continue
+                if row.get('kind') != 'speed':  # velocidad: analyze_speed.py
+                    rows.append(row)
     return rows
 
 

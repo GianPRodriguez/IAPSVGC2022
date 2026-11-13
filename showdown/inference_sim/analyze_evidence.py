@@ -37,7 +37,7 @@ def load(path: Path) -> List[dict]:
                 r = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if r.get('profile') and r.get('true_in_groups', True):
+            if r.get('kind') != 'speed' and r.get('profile') and r.get('true_in_groups', True):
                 rows.append(r)
     return rows
 

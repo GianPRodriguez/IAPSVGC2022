@@ -886,6 +886,15 @@ def set_calibration_sink(fn) -> None:
     _CALIBRATION_SINK = fn
 
 
+_SPEED_SINK = None
+
+
+def set_speed_sink(fn) -> None:
+    """Diagnóstico: recibe un dict por cada observación de orden de velocidad."""
+    global _SPEED_SINK
+    _SPEED_SINK = fn
+
+
 # Tolerancia ESTRECHA por movimiento, medida con datos (ver analyze_calibration.py).
 # Solo existe para (movimiento, unidad, quién ataca) cuyo residuo máximo observado
 # es pequeño; el resto de los golpes (y todos los KO) conserva la tolerancia amplia
@@ -1212,6 +1221,34 @@ class TeamStatBeliefs:
     # -- evidencia de velocidad ------------------------------------------- #
 
     def observe_speed_order(self, opponent_pkmn, opponent_ctx: SpeedContext,
+                            user_speed: int, user_ctx: SpeedContext,
+                            opponent_first: bool, trick_room: bool = False) -> bool:
+        sink = _SPEED_SINK
+        if sink is None:
+            return self._observe_speed_order_impl(
+                opponent_pkmn, opponent_ctx, user_speed, user_ctx, opponent_first, trick_room)
+        belief = self.belief_for(opponent_pkmn)
+        before = sorted(belief.candidates['spe']) if belief is not None else None
+        changed = self._observe_speed_order_impl(
+            opponent_pkmn, opponent_ctx, user_speed, user_ctx, opponent_first, trick_room)
+        if belief is not None:
+            try:
+                sink({
+                    'species': belief.species, 'nature': belief.nature,
+                    'base_spe': belief.base_stats.get('spe'),
+                    'before': before, 'after': sorted(belief.candidates['spe']),
+                    'changed': bool(changed), 'opponent_first': bool(opponent_first),
+                    'trick_room': bool(trick_room), 'user_speed': int(user_speed),
+                    'uncertain': bool(opponent_ctx.is_uncertain or user_ctx.is_uncertain),
+                    'opp_item': opponent_ctx.item, 'opp_boost': opponent_ctx.boost,
+                    'opp_ability': opponent_ctx.ability, 'opp_para': opponent_ctx.paralyzed,
+                    'opp_tailwind': opponent_ctx.tailwind,
+                })
+            except Exception:
+                pass
+        return changed
+
+    def _observe_speed_order_impl(self, opponent_pkmn, opponent_ctx: SpeedContext,
                             user_speed: int, user_ctx: SpeedContext,
                             opponent_first: bool, trick_room: bool = False) -> bool:
         """

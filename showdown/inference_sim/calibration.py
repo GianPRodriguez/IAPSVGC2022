@@ -80,6 +80,33 @@ def _profile(ev: Dict[str, Any]) -> Dict[str, Any]:
     return out
 
 
+def _speed_sink(ev: Dict[str, Any]) -> None:
+    """Registra cada observación de orden de velocidad con el SP de Spe verdadero."""
+    meta = _STATE.get('meta')
+    path = _STATE.get('path')
+    if meta is None or not path:
+        return
+    from showdown.inference_sim.soundness import _lookup_truth
+    from teams.team_converter import normalize_name
+
+    true_sp, _final = _lookup_truth(meta, normalize_name(ev['species']))
+    if not true_sp:
+        return
+    tsp = int(true_sp.get('spe', 0))
+    rec = dict(ev)
+    rec.update({'kind': 'speed', 'true_spe_sp': tsp,
+                'true_in_before': tsp in ev['before'] if ev['before'] is not None else None,
+                'true_in_after': tsp in ev['after'],
+                'series': _STATE['series'], 'seq': _STATE['seq'], 'pid': os.getpid()})
+    _STATE['seq'] += 1
+    try:
+        with open(path, 'a', encoding='utf-8') as fh:
+            fh.write(json.dumps(rec) + chr(10))
+    except OSError:
+        pass
+
+
+
 def install(path: Optional[str] = None) -> bool:
     """Instala el registro si hay ruta (argumento o ``PS_CALIB_LOG``). Devuelve si quedó activo."""
     path = path or os.environ.get('PS_CALIB_LOG', '').strip()
@@ -89,6 +116,8 @@ def install(path: Optional[str] = None) -> bool:
 
     _STATE['path'] = str(path)
     set_calibration_sink(_sink)
+    from showdown.stat_inference import set_speed_sink
+    set_speed_sink(_speed_sink)
     return True
 
 
@@ -96,6 +125,8 @@ def uninstall() -> None:
     from showdown.stat_inference import set_calibration_sink
 
     set_calibration_sink(None)
+    from showdown.stat_inference import set_speed_sink
+    set_speed_sink(None)
     _STATE['path'] = None
 
 
