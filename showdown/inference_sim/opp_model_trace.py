@@ -152,6 +152,13 @@ def install(player, path: Optional[str] = None) -> bool:
         for ev in buf:  # la última predicción por conjunto de movimientos (con daño real)
             uniq[frozenset(_norm(n) for n in ev['moves'])] = ev
         state.update(turn=int(getattr(battle, 'turn', 0) or 0), preds=list(uniq.values()))
+        if os.environ.get('PS_OPPMODEL_DEBUG') == '1':
+            try:
+                with open(path + '.dbg', 'a', encoding='utf-8') as fh:
+                    fh.write(json.dumps({'turn': state['turn'], 'n_buf': len(buf), 'n_preds': len(uniq),
+                                         'n_lines': len(getattr(player, '_game_lines', []) or [])}) + chr(10))
+            except OSError:
+                pass
 
     def wrapped(battle):
         _before(battle)  # fija el búfer en el contexto de quien llama (y de su tarea)
