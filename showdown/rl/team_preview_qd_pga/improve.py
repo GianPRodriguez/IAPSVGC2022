@@ -20,22 +20,27 @@ def burn_rollout(
     """Sample IAM episodes; no learning / no replay. Returns count."""
     import torch
     net.eval()
-    n = 0
+    n = int(n_episodes)
+    if n <= 0:
+        return 0
+    obs, infos = env.reset_batch(n)
+    masks = _masks_of(env, infos)
     with torch.no_grad():
-        for _ in range(int(n_episodes)):
-            obs, info = env.reset()
-            mask = info.get('action_mask')
-            if mask is None:
-                mask = env.action_masks()
-            o = torch.as_tensor(obs, dtype=torch.float32, device=device).unsqueeze(0)
-            m = torch.as_tensor(mask, dtype=torch.float32, device=device).unsqueeze(0)
-            logits, _v = net(o)
-            z = apply_mask_logits(logits, m)
-            dist = torch.distributions.Categorical(logits=z)
-            a = int(dist.sample().item())
-            env.step(a)
-            n += 1
+        o = torch.as_tensor(obs, dtype=torch.float32, device=device)
+        m = torch.as_tensor(masks, dtype=torch.float32, device=device)
+        logits, _v = net(o)
+        z = apply_mask_logits(logits, m)
+        acts = torch.distributions.Categorical(logits=z).sample().cpu().numpy()
+    env.step_batch([int(a) for a in acts])
     return n
+
+
+def _masks_of(env: TeamPreviewEnv, infos) -> np.ndarray:
+    out = []
+    for info in infos:
+        mask = info.get('action_mask')
+        out.append(np.asarray(env.action_masks() if mask is None else mask, dtype=np.float32))
+    return np.stack(out) if out else np.zeros((0, 360), dtype=np.float32)
 
 
 def pg_improve(
@@ -65,27 +70,27 @@ def pg_improve(
 
     net.train()
     critic.train()
-    for _ in range(int(n_episodes)):
-        obs, info = env.reset()
-        mask = info.get('action_mask')
-        if mask is None:
-            mask = env.action_masks()
-        o = torch.as_tensor(obs, dtype=torch.float32, device=device).unsqueeze(0)
-        m = torch.as_tensor(mask, dtype=torch.float32, device=device).unsqueeze(0)
+    n_ep = int(n_episodes)
+    if n_ep > 0:
+        # Por lotes: N contextos, una pasada de la red y N BO1 (paralelos si live).
+        obs_b, infos = env.reset_batch(n_ep)
+        masks_b = _masks_of(env, infos)
         with torch.no_grad():
+            o = torch.as_tensor(obs_b, dtype=torch.float32, device=device)
+            m = torch.as_tensor(masks_b, dtype=torch.float32, device=device)
             logits, _ = net(o)
             z = apply_mask_logits(logits, m)
             dist = torch.distributions.Categorical(logits=z)
             a_t = dist.sample()
-            logp = float(dist.log_prob(a_t).item())
-            a = int(a_t.item())
-        _o2, r, term, trunc, _ = env.step(a)
-        assert term or trunc
-        obs_l.append(obs.astype(np.float32))
-        act_l.append(a)
-        logp_l.append(logp)
-        rew_l.append(float(r))
-        mask_l.append(np.asarray(mask, dtype=np.float32))
+            logp_b = dist.log_prob(a_t).cpu().numpy()
+            acts_b = a_t.cpu().numpy()
+        rew_b = env.step_batch([int(a) for a in acts_b])
+        for k in range(n_ep):
+            obs_l.append(obs_b[k].astype(np.float32))
+            act_l.append(int(acts_b[k]))
+            logp_l.append(float(logp_b[k]))
+            rew_l.append(float(rew_b[k]))
+            mask_l.append(masks_b[k])
 
     if not obs_l:
         return {}

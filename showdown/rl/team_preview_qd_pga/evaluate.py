@@ -24,19 +24,21 @@ def evaluate_actor(
     rewards = []
     b1s = []
     b2s = []
-    for _ in range(int(G)):
-        obs, info = env.reset()
-        mask = info.get('action_mask')
-        if mask is None:
-            mask = env.action_masks()
-        a = int(act_fn(obs, mask, greedy=greedy))
-        species = info.get('our_species') or []
-        b1, b2 = preview_bd_from_action(a, species)
-        _o2, r, term, trunc, _i2 = env.step(a)
-        assert term or trunc
-        rewards.append(float(r))
-        b1s.append(b1)
-        b2s.append(b2)
+    n = int(G)
+    if n > 0:
+        # Por lotes: los G BO1 de la evaluación se juegan en paralelo si live.
+        obs, infos = env.reset_batch(n)
+        acts = []
+        for k in range(n):
+            mask = infos[k].get('action_mask')
+            if mask is None:
+                mask = env.action_masks()
+            a = int(act_fn(obs[k], mask, greedy=greedy))
+            b1, b2 = preview_bd_from_action(a, infos[k].get('our_species') or [])
+            acts.append(a)
+            b1s.append(b1)
+            b2s.append(b2)
+        rewards = [float(r) for r in env.step_batch(acts)]
     g = len(rewards)
     f = float(np.mean(rewards)) if g else 0.0
     bd = (float(np.mean(b1s)), float(np.mean(b2s))) if g else (0.0, 0.0)

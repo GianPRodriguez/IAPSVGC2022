@@ -57,8 +57,14 @@ def train(
     device: str = 'cpu',
     lr: Optional[float] = None,
     clip_eps: Optional[float] = None,
+    live: Optional[dict] = None,
 ) -> Archive:
     import torch
+
+    from showdown.rl.parallel import resolve_device
+    from showdown.rl.preview_live import make_preview_env, provenance_meta
+
+    device = resolve_device(device)
 
     b_boot = 64 if smoke else B_BOOT
     t_emit = 16 if smoke else T_EMIT
@@ -72,7 +78,24 @@ def train(
     rng = np.random.default_rng(int(seed))
     torch.manual_seed(int(seed))
     dev = torch.device(device)
-    env = TeamPreviewEnv(seed=seed, backend='mock')
+    env, pool = make_preview_env(seed, live)
+    try:
+        archive = _train_loop(
+            env, dev, rng, b_boot=b_boot, t_emit=t_emit, n_emit=n_emit,
+            n_outer=n_outer, g_fit=g_fit, g_min=g_min, actor_lr=actor_lr,
+            actor_clip=actor_clip,
+        )
+        archive.provenance = provenance_meta(env, pool)
+    finally:
+        if pool is not None:
+            pool.close()
+    return archive
+
+
+def _train_loop(env, dev, rng, *, b_boot, t_emit, n_emit, n_outer, g_fit, g_min,
+                actor_lr, actor_clip) -> Archive:
+    import torch
+
     net = PreviewActorCritic(OBS_DIM).to(dev)
     critic = SharedPreviewCritic(OBS_DIM).to(dev)
     actor_optim = torch.optim.Adam(
@@ -151,13 +174,17 @@ def train_and_save(
     checkpoint_dir: str | Path = 'logs/team_preview_qd_pga_checkpoints',
     lr: Optional[float] = None,
     clip_eps: Optional[float] = None,
+    live: Optional[dict] = None,
 ) -> Archive:
+    from showdown.rl.preview_live import provenance_lines
+
     actor_lr = 3e-4 if lr is None else float(lr)
     actor_clip = 0.2 if clip_eps is None else float(clip_eps)
     arch = train(
         seed=seed, smoke=smoke, device=device,
-        lr=actor_lr, clip_eps=actor_clip,
+        lr=actor_lr, clip_eps=actor_clip, live=live,
     )
+    prov = dict(getattr(arch, 'provenance', None) or {'provenance': 'mock'})
     ckpt_dir = Path(checkpoint_dir)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     archive_pt = arch.save(ckpt_dir / 'archive.pt')
@@ -184,6 +211,7 @@ def train_and_save(
         'note': 'MEAN_SCORE = best_f (elite fitness); independent of QD combat.',
         'archive_pt': str(archive_pt),
         'best_elite_pt': str(best_path) if best_path else None,
+        **prov,
     }
     (ckpt_dir / 'train_meta.json').write_text(
         json.dumps(meta, indent=2) + '\n', encoding='utf-8',
@@ -197,7 +225,8 @@ def train_and_save(
         f'qd_score: {arch.qd_score():.6f}\n'
         f'best_f: {best_f:.6f}\n'
         f'MEAN_SCORE: {score:.6f}\n'
-        f'MEAN_WR: {score:.6f}\n',
+        f'MEAN_WR: {score:.6f}\n'
+        + provenance_lines(prov),
         encoding='utf-8',
     )
     print(f'MEAN_SCORE: {score:.6f}', flush=True)
@@ -208,11 +237,13 @@ def train_and_save(
 def main(argv: Optional[list] = None) -> int:
     p = argparse.ArgumentParser(description='Team Preview QD-PGA')
     p.add_argument('--seed', type=int, required=True)
-    p.add_argument('--device', default='cpu')
+    p.add_argument('--device', default='cpu', help='cpu | cuda | auto')
     p.add_argument('--smoke', action='store_true')
     p.add_argument('--lr', type=float, default=None, help='Override actor/critic Adam lr')
     p.add_argument('--clip-eps', type=float, default=None, help='Override PPO clip_eps')
     p.add_argument('--checkpoint-dir', default='logs/team_preview_qd_pga_checkpoints')
+    from showdown.rl.preview_live import add_live_cli_args, live_options_from_args
+    add_live_cli_args(p)
     args = p.parse_args(argv)
     arch = train_and_save(
         seed=args.seed,
@@ -221,6 +252,7 @@ def main(argv: Optional[list] = None) -> int:
         checkpoint_dir=args.checkpoint_dir,
         lr=args.lr,
         clip_eps=args.clip_eps,
+        live=live_options_from_args(args),
     )
     print(
         f'DONE team_preview_qd_pga cov={arch.coverage():.3f} '
