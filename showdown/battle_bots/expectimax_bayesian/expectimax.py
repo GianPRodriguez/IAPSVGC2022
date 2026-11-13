@@ -151,6 +151,14 @@ def load_expectimax_config(**kwargs: Any) -> 'ExpectimaxConfig':
     known = {f.name for f in fields(ExpectimaxConfig)}
     base = asdict(ExpectimaxConfig())
     file_ov = {k: v for k, v in read_active_overrides().items() if k in known}
+    # Diagnóstico de ablación: EXPECTIMAX_OVERRIDES="opp_policy_control_weight=0.1;opp_policy_greedy_weight=0.9"
+    import os as _os
+    for item in _os.environ.get('EXPECTIMAX_OVERRIDES', '').split(';'):
+        if '=' in item:
+            name, value = (x.strip() for x in item.split('=', 1))
+            if name not in known:
+                raise ValueError(f'EXPECTIMAX_OVERRIDES: campo desconocido {name!r}')
+            file_ov[name] = value
     merged = {**base, **file_ov, **{k: v for k, v in kwargs.items() if k in known}}
     # Coerce types from JSON (bool/int/float/str).
     typed: Dict[str, Any] = {}

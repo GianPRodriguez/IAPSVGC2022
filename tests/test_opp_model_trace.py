@@ -53,3 +53,14 @@ def test_summarize_splits_attacks_and_control():
     assert s['con_prediccion'] == 2 and s['ataques'] == 1 and s['control'] == 1
     assert abs(s['fraccion_real_de_movimientos_de_control'] - 0.5) < 1e-9
     assert abs(s['acierto_top1_en_ataques'] - 1.0) < 1e-9
+
+
+def test_expectimax_env_overrides(monkeypatch):
+    import pytest
+    from showdown.battle_bots.expectimax_bayesian.expectimax import load_expectimax_config
+    monkeypatch.setenv('EXPECTIMAX_OVERRIDES', 'opp_policy_control_weight=0.1;opp_policy_greedy_weight=0.9')
+    cfg = load_expectimax_config()
+    assert abs(cfg.opp_policy_control_weight - 0.1) < 1e-9 and abs(cfg.opp_policy_greedy_weight - 0.9) < 1e-9
+    monkeypatch.setenv('EXPECTIMAX_OVERRIDES', 'no_existe=1')
+    with pytest.raises(ValueError):
+        load_expectimax_config()
