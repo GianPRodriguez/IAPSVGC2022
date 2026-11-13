@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from showdown.inference_sim.paths import POKEMON_SHOWDOWN_ROOT, REPO_ROOT
+from showdown.inference_sim.paths import POKEMON_SHOWDOWN_ROOT, REPO_ROOT, node_executable
 from showdown.inference_sim.team_factory import (
     TeamMeta,
     _JSON_PATH,
@@ -55,7 +55,7 @@ def validate_exports(
         )
     payload = json.dumps(rows, ensure_ascii=False).encode('utf-8')
     proc = subprocess.run(
-        ['node', str(script), format_id],
+        [node_executable(), str(script), format_id],
         input=payload,
         capture_output=True,
         cwd=str(POKEMON_SHOWDOWN_ROOT),

@@ -25,6 +25,11 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+
+def _node_bin() -> str:
+    from showdown.inference_sim.paths import node_executable
+    return node_executable()
+
 _DEFAULT_CALC_ROOT = Path(__file__).resolve().parents[2] / 'damage-calc'
 _TOOLS = Path(__file__).resolve().parent / 'tools'
 _WORKER_JS = _TOOLS / 'calc_worker.js'
@@ -274,7 +279,7 @@ class DamageCalcBridge:
                 env['DAMAGE_CALC_HOST'] = _DEFAULT_HOST
                 env['DAMAGE_CALC_PORT'] = str(_DEFAULT_PORT)
                 self._server_proc = subprocess.Popen(
-                    ['node', str(_SERVER_JS)],
+                    [_node_bin(), str(_SERVER_JS)],
                     stdin=subprocess.DEVNULL,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
@@ -303,7 +308,7 @@ class DamageCalcBridge:
         env['DAMAGE_CALC_DIST'] = str(dist)
         try:
             self._proc = subprocess.Popen(
-                ['node', str(_WORKER_JS)],
+                [_node_bin(), str(_WORKER_JS)],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

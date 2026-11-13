@@ -31,7 +31,9 @@ def ps_start_argv(port: Optional[int] = None) -> List[str]:
     El puerto se pasa por env PSPORT al spawn (varios listeners en paralelo).
     El argv opcionalmente incluye el puerto numérico por compatibilidad CLI.
     """
-    argv = ['node', 'pokemon-showdown', 'start']
+    from showdown.inference_sim.paths import node_executable
+
+    argv = [node_executable(), 'pokemon-showdown', 'start']
     if ps_no_security_enabled():
         argv.append('--no-security')
     if port is not None:

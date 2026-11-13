@@ -404,3 +404,30 @@ def test_train_queue_placeholders_and_dry_run(tmp_path, capsys):
     bad = _write_queue(tmp_path, [{'name': 'b', 'module': 'platform', 'args': ['{nope}']}])
     with pytest.raises(ValueError):
         tq.main([str(bad), '--run-dir', str(run_dir), '--dry-run'])
+
+
+# --------------------------------------------------------------------------- #
+# Node.js fuera del PATH (nvm en sesiones no interactivas)
+# --------------------------------------------------------------------------- #
+
+def test_node_executable_prefers_env_then_path_then_latest_nvm(tmp_path, monkeypatch):
+    import shutil
+
+    from showdown.inference_sim import paths
+
+    monkeypatch.setenv('NODE_BINARY', '/opt/custom/node')
+    assert paths.node_executable() == '/opt/custom/node'
+
+    monkeypatch.delenv('NODE_BINARY')
+    monkeypatch.setattr(shutil, 'which', lambda name: None)
+    for ver in ('v20.1.0', 'v26.13.1', 'v9.9.9'):
+        b = tmp_path / 'versions' / 'node' / ver / 'bin'
+        b.mkdir(parents=True)
+        (b / 'node').write_text('')
+    monkeypatch.setenv('NVM_DIR', str(tmp_path))
+    from pathlib import Path
+
+    assert Path(paths.node_executable()).parts[-3:] == ('v26.13.1', 'bin', 'node')
+
+    monkeypatch.setenv('NVM_DIR', str(tmp_path / 'vacio'))
+    assert paths.node_executable() == 'node'

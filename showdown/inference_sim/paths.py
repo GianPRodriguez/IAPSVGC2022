@@ -13,6 +13,39 @@ POKEMON_SHOWDOWN_ROOT = Path(
 POKE_ENV_ROOT = Path(os.environ.get('POKE_ENV_ROOT', str(GITHUB / 'poke-env')))
 DAMAGE_CALC_ROOT = Path(os.environ.get('DAMAGE_CALC_ROOT', str(GITHUB / 'damage-calc')))
 
+
+def _version_key(p: Path):
+    parts = []
+    for tok in p.name.lstrip('v').split('.'):
+        parts.append(int(tok) if tok.isdigit() else 0)
+    return parts
+
+
+def node_executable() -> str:
+    """Ruta del ejecutable de Node.js.
+
+    Orden: ``NODE_BINARY`` > ``node`` en PATH > la versión más reciente de nvm
+    (``~/.nvm/versions/node/*/bin/node``). nvm solo entra al PATH en shells
+    interactivos (``~/.bashrc``), así que procesos lanzados por SSH, cron o la
+    cola de entrenamiento no lo verían sin este respaldo.
+    """
+    import shutil
+
+    explicit = os.environ.get('NODE_BINARY', '').strip()
+    if explicit:
+        return explicit
+    found = shutil.which('node')
+    if found:
+        return found
+    nvm_dir = Path(os.environ.get('NVM_DIR') or (Path.home() / '.nvm'))
+    candidates = sorted(
+        (d for d in (nvm_dir / 'versions' / 'node').glob('v*') if (d / 'bin' / 'node').is_file()),
+        key=_version_key,
+    )
+    if candidates:
+        return str(candidates[-1] / 'bin' / 'node')
+    return 'node'
+
 BATTLE_FORMAT = os.environ.get(
     'INFERENCE_SIM_FORMAT',
     'gen9championsvgc2026regmc',

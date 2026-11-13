@@ -18,7 +18,9 @@ done
   || fail "pokemon-showdown: ejecutar 'npm install' dentro de pokemon-showdown"
 
 echo "== Node"
-command -v node >/dev/null && pass "node $(node -v)" || fail "node no está en PATH"
+# Igual que el código: NODE_BINARY > PATH > nvm (~/.nvm/versions/node/*).
+NODE_BIN=$(python -c "from showdown.inference_sim.paths import node_executable as n; print(n())" 2>/dev/null || echo node)
+if "$NODE_BIN" -v >/dev/null 2>&1; then pass "node $("$NODE_BIN" -v) ($NODE_BIN)"; else fail "node no encontrado (instalar o definir NODE_BINARY)"; fi
 
 echo "== Python ($(command -v python))"
 python - <<'PY'
