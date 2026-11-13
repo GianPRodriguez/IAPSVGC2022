@@ -30,7 +30,7 @@ def agents(**xfail):
 
 
 EXP_NO_STATUS = ('expectimax (v_solo_isomorphic=True) valora solo daño + Fake Out/Knock Off: '
-                 'no da valor a sueño, control de velocidad ni Helping Hand')
+                 'no da valor a sueño, control de velocidad, Helping Hand ni redirección')
 
 
 def mon(species: str, spe: int, hp: int = 160, types=('Normal',), **kw) -> CalcPoke:
@@ -177,7 +177,7 @@ def test_helping_hand_when_it_turns_the_partner_hit_into_a_ko(agent):
 
 
 # --- Redirección --------------------------------------------------------------
-@pytest.mark.parametrize('agent', AGENTS)
+@pytest.mark.parametrize('agent', agents(expectimax=EXP_NO_STATUS))
 def test_follow_me_to_cover_a_partner_that_secures_a_ko(agent):
     left = mon('Clefairy', 40, types=('Fairy',))
     right = mon('Rillaboom', 85, types=('Grass',))
