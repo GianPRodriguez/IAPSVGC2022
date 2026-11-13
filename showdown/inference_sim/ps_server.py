@@ -37,11 +37,47 @@ def ps_start_argv(port: Optional[int] = None) -> List[str]:
     from showdown.inference_sim.paths import node_executable
 
     argv = [node_executable(), 'pokemon-showdown', 'start']
+    if ps_is_built():
+        # Sin esto el lanzador ejecuta `node build` en cada arranque: con muchos
+        # servidores a la vez son builds concurrentes sobre el mismo dist/.
+        argv.append('--skip-build')
     if ps_no_security_enabled():
         argv.append('--no-security')
     if port is not None:
         argv.append(str(int(port)))
     return argv
+
+
+def ps_is_built() -> bool:
+    return (POKEMON_SHOWDOWN_ROOT / 'dist' / 'server' / 'index.js').is_file()
+
+
+def ensure_ps_build(timeout_s: float = 900.0) -> bool:
+    """Compila pokemon-showdown una vez si falta ``dist/`` (antes de lanzar servidores)."""
+    if ps_is_built():
+        return True
+    from showdown.inference_sim.paths import node_executable
+
+    try:
+        subprocess.run(
+            [node_executable(), 'build'],
+            cwd=str(POKEMON_SHOWDOWN_ROOT),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=timeout_s,
+            check=False,
+        )
+    except Exception:
+        return False
+    return ps_is_built()
+
+
+def _start_parallelism() -> int:
+    raw = os.environ.get('PS_START_PARALLEL', '').strip()
+    try:
+        return max(1, int(raw)) if raw else 8
+    except ValueError:
+        return 8
 
 
 def ps_start_hint(port: Optional[int] = None) -> str:
@@ -232,6 +268,7 @@ def ensure_ps(
         return True
     if not start:
         return False
+    ensure_ps_build()
     _ps_procs[p] = _spawn_ps(p)
     deadline = time.time() + wait_s
     while time.time() < deadline:
@@ -263,15 +300,23 @@ def ensure_ps_ports(
         return True
     if not start:
         return False
-    for p in down:
-        _ps_procs[p] = _spawn_ps(p)
-    deadline = time.time() + wait_s
-    pending = set(down)
-    while pending and time.time() < deadline:
-        pending = {p for p in pending if not is_ps_up(port=p)}
+    ensure_ps_build()
+    # Por tandas (PS_START_PARALLEL, default 8): cada servidor lanza ~10
+    # procesos node; decenas a la vez saturan el arranque.
+    wave = _start_parallelism()
+    for k in range(0, len(down), wave):
+        group = down[k:k + wave]
+        for p in group:
+            _ps_procs[p] = _spawn_ps(p)
+        deadline = time.time() + wait_s
+        pending = set(group)
+        while pending and time.time() < deadline:
+            pending = {p for p in pending if not is_ps_up(port=p)}
+            if pending:
+                time.sleep(0.25)
         if pending:
-            time.sleep(0.25)
-    return not pending
+            return False
+    return True
 
 
 def stop_started_ps(port: Optional[int] = None) -> None:

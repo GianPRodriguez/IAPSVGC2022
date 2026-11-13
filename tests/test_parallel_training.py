@@ -468,8 +468,44 @@ def test_ensure_ps_ports_spawns_all_down_ports_at_once(monkeypatch):
     monkeypatch.setattr(ps_server, '_spawn_ps', fake_spawn)
     monkeypatch.setattr(ps_server, 'is_ps_up', fake_up)
     monkeypatch.setattr(ps_server, '_ps_procs', {})
+    monkeypatch.setattr(ps_server, 'ensure_ps_build', lambda *a, **k: True)
+    monkeypatch.delenv('PS_START_PARALLEL', raising=False)
     assert ps_server.ensure_ps_ports([9001, 9002, 9003], start=True, wait_s=5)
     assert spawned == [9001, 9002, 9003]
+
+
+def test_ensure_ps_ports_starts_in_waves(monkeypatch):
+    from showdown.inference_sim import ps_server
+
+    spawned, up = [], set()
+
+    class _P:
+        pid = 1
+
+        def poll(self):
+            return None
+
+    def fake_spawn(port):
+        spawned.append(port)
+        up.add(port)  # responde en cuanto se lanza
+        return _P()
+
+    monkeypatch.setattr(ps_server, '_spawn_ps', fake_spawn)
+    monkeypatch.setattr(ps_server, 'is_ps_up', lambda host='localhost', port=0, timeout=1.0: port in up)
+    monkeypatch.setattr(ps_server, '_ps_procs', {})
+    monkeypatch.setattr(ps_server, 'ensure_ps_build', lambda *a, **k: True)
+    monkeypatch.setenv('PS_START_PARALLEL', '2')
+    assert ps_server.ensure_ps_ports([9101, 9102, 9103, 9104, 9105], start=True, wait_s=5)
+    assert spawned == [9101, 9102, 9103, 9104, 9105]
+
+
+def test_ps_start_argv_skips_build_when_compiled(monkeypatch):
+    from showdown.inference_sim import ps_server
+
+    monkeypatch.setattr(ps_server, 'ps_is_built', lambda: True)
+    assert '--skip-build' in ps_server.ps_start_argv(9000)
+    monkeypatch.setattr(ps_server, 'ps_is_built', lambda: False)
+    assert '--skip-build' not in ps_server.ps_start_argv(9000)
 
 
 def test_stop_started_ps_kills_each_process_tree(monkeypatch):

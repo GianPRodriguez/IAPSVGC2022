@@ -16,6 +16,21 @@ for d in pokemon-showdown poke-env damage-calc; do
 done
 [ -d "$PARENT/pokemon-showdown/node_modules" ] && pass "pokemon-showdown/node_modules" \
   || fail "pokemon-showdown: ejecutar 'npm install' dentro de pokemon-showdown"
+[ -f "$PARENT/pokemon-showdown/dist/sim/team-validator.js" ] && pass "pokemon-showdown compilado (dist/)" \
+  || fail "pokemon-showdown sin compilar: cd pokemon-showdown && node build"
+# Sin calc/dist el cálculo de daño devuelve None y la inferencia por daño no poda (sin error).
+[ -f "$PARENT/damage-calc/calc/dist/index.js" ] && pass "damage-calc compilado (calc/dist/)" \
+  || fail "damage-calc sin compilar: cd damage-calc/calc && rm -f .tsbuildinfo && npm run compile"
+
+echo "== Versiones fijadas (iguales a la laptop)"
+for pair in "pokemon-showdown 5b01be810" "poke-env 7ff6212" "damage-calc bacbbfc"; do
+  set -- $pair
+  cur=$(git -C "$PARENT/$1" rev-parse --short=12 HEAD 2>/dev/null)
+  case "$cur" in
+    "$2"*) pass "$1 en $2" ;;
+    *) fail "$1 en ${cur:-?} (esperado $2: git -C $PARENT/$1 checkout $2)" ;;
+  esac
+done
 
 echo "== Node"
 # Igual que el código: NODE_BINARY > PATH > nvm (~/.nvm/versions/node/*).
