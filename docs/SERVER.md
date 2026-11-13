@@ -278,6 +278,87 @@ y subestiman el ritmo sostenido.
   azar interno de Showdown (críticos, rolls, empates de velocidad). Dos corridas
   con la misma semilla no dan exactamente el mismo win rate.
 
+## Reproducibilidad y diagnóstico de batallas
+
+**Semilla fija.** Con `--seed N` (o `--battle-seed N`) `run_robust_e2e` arranca los
+servidores con `showdown/tools/ps_seeded_start.js`, que fija la semilla de cada
+batalla de Showdown a partir del contenido (los dos equipos y cuántas veces se ha
+jugado ese emparejamiento), no del orden de llegada. Además se fija
+`PYTHONHASHSEED` en los procesos hijos. Verificado: 40 BO3 idénticos en las 40
+series con 4 procesos, con 2 procesos × 2 workers y con 1 proceso; sin semilla de
+batalla (`--no-battle-seed`) difieren 38 de 40.
+
+- Solo aplica a servidores que arranca la propia corrida. Si el puerto ya estaba
+  ocupado se imprime un aviso (`--restart-ps` lo reinicia con semilla).
+- Expectimax usa plazos de reloj, así que su decisión puede variar con la carga
+  de la máquina; los demás bots y Showdown son deterministas con la semilla.
+- Entrenamiento de RL: la política que aprende depende además del orden en que
+  responden los workers; la semilla de batalla fija el azar de Showdown, no el
+  planificador del sistema operativo.
+
+**Por qué las partidas eran lentas y se colgaban.** Showdown rechazaba órdenes
+inválidas y poke-env repetía la misma orden (el bot es determinista) hasta que
+`random() < 1/1000` aceptaba la orden por defecto. Tres defectos lo provocaban,
+ya corregidos:
+
+1. Doble mega: los bots pedían mega para los dos huecos y Showdown solo admite una
+   por combate (`enforce_single_mega`; la máscara de RL tampoco lo permite).
+2. Cambio forzado de un solo hueco: el otro hueco mandaba `default` en vez de
+   `pass` (también en la máscara de RL).
+3. El guard de salas se tragaba el `/confirmready` de la sala padre del BO3, así
+   que Showdown esperaba 40 s entre juegos. Una corrida de 2 series pasó de 81,9 s
+   a 1,8 s.
+
+Una corrida sana no debe tener `[Invalid choice]`. Para comprobarlo:
+
+```bash
+PS_PLAYER_LOG_LEVEL=25 python -m showdown.inference_sim.run_robust_e2e ... --verbose   | grep -c "Invalid choice"        # debe dar 0
+```
+
+Herramientas de diagnóstico (todas inertes si no se activan):
+
+| Variable | Qué hace |
+|---|---|
+| `PS_PLAYER_LOG_LEVEL=25` | muestra los `\|error\|` que Showdown devuelve a una orden |
+| `PS_DECISION_LOG=<ruta>` | una línea por decisión (turno, huella del estado, orden); para comparar corridas |
+| `PS_SEED_LOG=<archivo>` | una línea por batalla con su semilla (para reproducirla) |
+| `PS_HANG_LOG=<archivo>` | estado de ambos lados de un BO1 de preview colgado |
+| `PS_CALIB_LOG=<archivo>` | residuos del cálculo de daño contra la verdad terreno |
+
+## Calibración de la inferencia por daño
+
+`showdown/inference_sim/calibration.py` registra, en cada observación de daño, la
+distancia entre el rango del cálculo (con los SP verdaderos del rival) y el daño
+que Showdown dibujó. `python -m showdown.inference_sim.analyze_calibration` resume
+las distribuciones y comprueba tolerancias contra datos independientes.
+
+Hallazgos (158 mil observaciones de calibración, 59 mil independientes, semillas
+distintas):
+
+- **Arreglado:** cuando faltaba una stat propia (Pokémon recién entrado) se
+  sustituía por 1, y el cálculo salía 100 veces fuera de escala. Esas
+  observaciones ya no se usan: los `belief_skips` bajan de ~800 a ~150 por cruce
+  sin cambiar decisiones ni soundness.
+- **El 90 % de los golpes coincide exactamente con el cálculo**, pero la cola es
+  pesada y se reparte por casi todos los movimientos (críticos no detectados,
+  objeto desconocido, golpes múltiples, potencia según HP...).
+- **No existe una tolerancia estrecha segura basada en una sola observación.**
+  Se probaron tolerancias por movimiento calculadas con datos: la cota superior
+  descartó el SP verdadero en datos nuevos (6 de 3.624), y la inferior tampoco
+  llega a 0 violaciones en ambos sentidos con ningún piso ni margen probado (hasta
+  piso 10/12 y margen ×3). Por eso **la tolerancia amplia (28 puntos de HP / 32 %)
+  se mantiene**: con tu criterio de podar solo cuando hay certeza, no se
+  recorta.
+- El código para activar una tolerancia por movimiento sigue disponible
+  (`API/JSONs/damage_narrow_tolerance.json`, `DAMAGE_NARROW_TOL_FILE`,
+  `analyze_calibration --emit-moves`) pero **no se distribuye ninguna tabla**.
+  Con una tabla de cota inferior se vieron 31–50 estrechamientos por cada 200 BO3
+  (frente a 1–2) con 0 fallos de soundness, pero a nivel de observación no pasó
+  la validación, así que se dejó apagado.
+- Camino para estrechar de verdad: acumular evidencia de varias observaciones
+  independientes (excluir un SP solo si varias lo contradicen) en lugar de decidir
+  con una sola. Requiere rediseñar la inferencia y medir su riesgo.
+
 ## Versiones de los repos hermanos
 
 Para que los resultados sean comparables, el servidor usa los mismos commits que

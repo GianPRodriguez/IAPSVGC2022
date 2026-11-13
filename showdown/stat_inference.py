@@ -29,6 +29,7 @@ Fuentes de evidencia:
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
@@ -861,6 +862,61 @@ def set_calibration_sink(fn) -> None:
     _CALIBRATION_SINK = fn
 
 
+# Tolerancia ESTRECHA por movimiento, medida con datos (ver analyze_calibration.py).
+# Solo existe para (movimiento, unidad, quién ataca) cuyo residuo máximo observado
+# es pequeño; el resto de los golpes (y todos los KO) conserva la tolerancia amplia
+# de abajo, porque sus mecánicas (potencia según HP, golpes múltiples, objeto
+# desconocido...) no están bien modeladas. DAMAGE_NARROW_TOL=0 la desactiva;
+# DAMAGE_NARROW_TOL_FILE usa otro archivo (p. ej. para validar con datos nuevos).
+_NARROW_TOL_CACHE = None
+
+
+def _narrow_tolerance_table() -> dict:
+    global _NARROW_TOL_CACHE
+    if _NARROW_TOL_CACHE is not None:
+        return _NARROW_TOL_CACHE
+    table: dict = {}
+    if str(os.environ.get('DAMAGE_NARROW_TOL', '1')).strip().lower() not in ('0', 'false', 'no', 'off'):
+        path = os.environ.get('DAMAGE_NARROW_TOL_FILE') or str(
+            Path(__file__).resolve().parents[1] / 'API' / 'JSONs' / 'damage_narrow_tolerance.json'
+        )
+        try:
+            with open(path, encoding='utf-8') as fh:
+                table = (json.load(fh) or {}).get('moves') or {}
+        except (OSError, ValueError):
+            table = {}
+    _NARROW_TOL_CACHE = table
+    return table
+
+
+def reset_narrow_tolerance_cache() -> None:
+    global _NARROW_TOL_CACHE
+    _NARROW_TOL_CACHE = None
+
+
+def narrow_damage_tolerance(
+    move_name: str, *, percent: bool, opponent_is_attacker: bool, is_ko: bool,
+) -> Optional[Tuple[int, Optional[int]]]:
+    """(tol_lo, tol_hi) estrechas para este golpe, o None si debe usar la amplia.
+
+    ``tol_hi`` puede ser None: la cota superior conserva la tolerancia amplia (con
+    datos independientes la cota superior estrecha descartó el SP verdadero).
+    """
+    if is_ko:
+        return None
+    key = ''.join(ch for ch in str(move_name).lower() if ch.isalnum())
+    entry = _narrow_tolerance_table().get(key)
+    if not entry:
+        return None
+    t = (entry.get('pct' if percent else 'abs') or {}).get(
+        'opp_attacks' if opponent_is_attacker else 'opp_defends'
+    )
+    if not t:
+        return None
+    hi = t.get('hi')
+    return int(t['lo']), (None if hi is None else int(hi))
+
+
 _ABS_DAMAGE_TOLERANCE = 28
 _PERCENT_DAMAGE_TOLERANCE = 32
 # Cota superior bilateral en %: margen extra (calc a menudo sobreestima
@@ -874,6 +930,7 @@ _SPEED_COMPARE_MARGIN = 24
 def _rolls_match_absolute(
     min_roll: int, max_roll: int, observed: int, *, is_ko: bool = False,
     bilateral: bool = False,
+    tol_lo: Optional[int] = None, tol_hi: Optional[int] = None,
 ) -> bool:
     """
     Cota inferior (siempre): el SP es viable si el calc PUEDE alcanzar el dano
@@ -884,12 +941,13 @@ def _rolls_match_absolute(
     """
     if observed <= 0:
         return False
-    tol = _ABS_DAMAGE_TOLERANCE
-    if max_roll < max(1, observed - tol):
+    lo = _ABS_DAMAGE_TOLERANCE if tol_lo is None else int(tol_lo)
+    hi = _ABS_DAMAGE_TOLERANCE if tol_hi is None else int(tol_hi)
+    if max_roll < max(1, observed - lo):
         return False
     if bilateral and not is_ko:
         # min_roll no puede quedar por encima del golpe visto.
-        if min_roll > observed + tol:
+        if min_roll > observed + hi:
             return False
     return True
 
@@ -897,16 +955,17 @@ def _rolls_match_absolute(
 def _rolls_match_percent(
     min_roll: int, max_roll: int, max_hp: int, delta_pct: int, *, is_ko: bool = False,
     bilateral: bool = False,
+    tol_lo: Optional[int] = None, tol_hi: Optional[int] = None,
 ) -> bool:
     """Igual que absolute, en franja de % HP del rival."""
     if max_hp <= 0 or delta_pct <= 0:
         return False
-    tol = _PERCENT_DAMAGE_TOLERANCE
-    low = max(1, (delta_pct - tol) * max_hp // 100)
+    lo_tol = _PERCENT_DAMAGE_TOLERANCE if tol_lo is None else int(tol_lo)
+    low = max(1, (delta_pct - lo_tol) * max_hp // 100)
     if max_roll < low:
         return False
     if bilateral and not is_ko:
-        bi_tol = tol + _PERCENT_BILATERAL_EXTRA
+        bi_tol = (_PERCENT_DAMAGE_TOLERANCE + _PERCENT_BILATERAL_EXTRA) if tol_hi is None else int(tol_hi)
         high = min(max_hp, (delta_pct + bi_tol) * max_hp // 100)
         if high < 1:
             high = 1
@@ -1548,10 +1607,17 @@ class TeamStatBeliefs:
         any_calc = False
         # Cota superior solo en contexto limpio, sin KO, y cuando el rival
         # DEFIENDE (atacar con SpA/Atk subestimado expulsaba SP bajos reales).
+        narrow = narrow_damage_tolerance(
+            move_name, percent=bool(damage_is_percent),
+            opponent_is_attacker=bool(opponent_is_attacker), is_ko=bool(is_ko),
+        )
+        t_lo, t_hi = narrow if narrow is not None else (None, None)
         bilateral = (
             bool(ctx.is_clean_for_upper_bound)
             and not is_ko
-            and not opponent_is_attacker
+            # Con tolerancia medida también se usa la cota superior cuando el rival
+            # ataca; sin ella sigue desactivada (calc subestimado expulsaba SP reales).
+            and (not opponent_is_attacker or t_hi is not None)
         )
         for key, rolls in zip(keys_ordered, rolls_list):
             if rolls is None:
@@ -1562,7 +1628,7 @@ class TeamStatBeliefs:
             if damage_is_percent:
                 ok_u = _rolls_match_percent(
                     min_roll, max_roll, hp_val, observed_damage,
-                    is_ko=is_ko, bilateral=bilateral,
+                    is_ko=is_ko, bilateral=bilateral, tol_lo=t_lo, tol_hi=t_hi,
                 )
                 # HP: solo cota inferior. La bilateral sobre % expulsaba HP reales
                 # (p.ej. Delphox SP=11) cuando el calc subestima un poco el golpe.
@@ -1573,7 +1639,7 @@ class TeamStatBeliefs:
             else:
                 ok_u = _rolls_match_absolute(
                     min_roll, max_roll, observed_damage,
-                    is_ko=is_ko, bilateral=bilateral,
+                    is_ko=is_ko, bilateral=bilateral, tol_lo=t_lo, tol_hi=t_hi,
                 )
                 ok_hp = False
             if ok_u:

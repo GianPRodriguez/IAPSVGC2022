@@ -3560,6 +3560,24 @@ def _known_user_stats(pkmn) -> dict:
     }
 
 
+def _own_stats_known(pkmn) -> bool:
+    """True si conocemos las 5 stats de combate de nuestro Pokémon.
+
+    ``_known_user_stats`` sustituye por 1 lo desconocido (p. ej. un Pokémon recién
+    entrado cuya |request| aún no llegó). Con Atk=1 el calc dice que el rival casi
+    no recibe daño, y con Def=1 que recibe cientos de veces más: la observación es
+    inválida y no debe usarse para inferir.
+    """
+    for attr in ('ATK_battle_actual', 'DEF_battle_actual', 'SPA_battle_actual',
+                 'SPD_battle_actual', 'VEL_battle_actual'):
+        try:
+            if int(getattr(pkmn, attr, -1) or -1) <= 1:
+                return False
+        except (TypeError, ValueError):
+            return False
+    return True
+
+
 def _illusion_blocks_damage_inference(pkmn) -> bool:
     """True si el mon es un disfraz Illusion aún opaco (no atribuir a esa especie)."""
     if pkmn is None:
@@ -3836,6 +3854,11 @@ def _maybe_infer_from_damage(battle: Battle, split_msg: list, pkmn, old_hp: int,
 
     user_mon = pkmn if opponent_is_attacker else attacker
     opp_mon = attacker if opponent_is_attacker else pkmn
+    if not _own_stats_known(user_mon):
+        # Observación inválida (stats propias desconocidas): ver _own_stats_known.
+        if not pending.get('is_spread'):
+            battle.pending_damage_ctx = None
+        return
     known_stats = _known_user_stats(user_mon)
 
     battle.stat_beliefs.observe_damage(
