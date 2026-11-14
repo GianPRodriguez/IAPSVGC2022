@@ -624,6 +624,15 @@ class ValidatedBattleMixin:
         reset_sp_limits()
         ordered = self._preview_ordered_team()
         self.iap_battle = bootstrap_battle(ordered, self.opp_team)
+        import os as _os
+        if _os.environ.get('PS_ORACLE_SP_EXPECTIMAX') == '1' and hasattr(self, 'set_opp_ots_sheet'):
+            # Diagnóstico: SP verdaderos del rival SOLO para el jugador expectimax.
+            from showdown.inference_sim.soundness import _lookup_truth as _lt
+            from teams.team_converter import normalize_name as _nn
+            _me = self
+            self.iap_battle.stat_beliefs.oracle_lookup = (
+                lambda sp, _me=_me: _lt(_me.opp_team, _nn(sp))[0]
+            )
         self._sync_role_ids()
         self._bootstrapped = True
         if len(self.protocol_log) < 420:

@@ -225,6 +225,10 @@ class ExpectimaxConfig:
     v_solo_isomorphic: bool = True
     # En modo isomorfo V = ofensa + utilidad VGC; con w>0 resta w*amenaza (daño/KO esperado sobre nosotros).
     v_iso_threat_weight: float = 0.0
+    # Idea 1: sinergias del joint (bonos de Helping Hand, redirección, Tailwind...) sumadas a V isomorfo.
+    v_iso_syn_weight: float = 0.0
+    # Idea 2: crédito de tempo = P(KO al rival) * P(actuamos antes) * amenaza que ese rival nos haría.
+    v_tempo_weight: float = 0.0
     phase2_retarget_only: bool = False
     # Phase1 = greedy_joint (referencia); phase2 elige entre Top-K×Top-K.
     phase1_use_joint: bool = True
@@ -1153,6 +1157,47 @@ async def _opp_dists_oracle_joint(
         out['OL' if tgt == 1 else 'OR'].append((OppAction(move.name, tgt, 'greedy'), 1.0))
         emit_pred([m.name for m in mvs], {(_norm_move(move.name), tgt, 'greedy'): 1.0})
     return out
+
+
+
+def _tempo_credit(
+    left: JointAtom,
+    right: JointAtom,
+    left_atk: Optional[CalcPoke],
+    right_atk: Optional[CalcPoke],
+    world_foes: Sequence[Tuple[int, CalcPoke]],
+    p_ko_foe: Dict[int, float],
+    threat_by_tid: Dict[int, float],
+    *,
+    trick_room: bool,
+    our_tailwind: bool,
+    opp_tailwind: bool,
+    terrain: Optional[str],
+) -> float:
+    """Σ_foe P(KO) · [actuamos antes que él] · amenaza que haría: un KO previo a su turno la anula."""
+    total = 0.0
+    for tid, foe in world_foes:
+        pk = float(p_ko_foe.get(int(tid), 0.0) or 0.0)
+        threat = float(threat_by_tid.get(int(tid), 0.0) or 0.0)
+        if pk <= 0.0 or threat <= 0.0:
+            continue
+        first = False
+        foe_spe = poke_effective_spe(foe, tailwind=opp_tailwind)
+        for atom, atk in ((left, left_atk), (right, right_atk)):
+            if atom is None or atk is None or atom.utility not in ('damage', 'fakeout'):
+                continue
+            if float((atom.damage_pct or {}).get(int(tid), 0.0) or 0.0) <= 0.0:
+                continue
+            if acts_before(
+                poke_effective_spe(atk, tailwind=our_tailwind),
+                move_prio(atom.move_name, ability=atk.ability, terrain=terrain),
+                foe_spe, 0, trick_room=trick_room,
+            ):
+                first = True
+                break
+        if first:
+            total += pk * threat
+    return total
 
 
 
@@ -2238,6 +2283,15 @@ async def best_expectimax_bayesian_action(
                 if bool(cfg.v_solo_isomorphic):
                     # Offense + utilidad VGC (Fake Out deny=amenaza / Knock Off item).
                     v = float(offense) + float(vgc_u) - float(cfg.v_iso_threat_weight) * float(threat)
+                    if float(cfg.v_iso_syn_weight):
+                        v += float(cfg.v_iso_syn_weight) * float(syn)
+                    if float(cfg.v_tempo_weight):
+                        v += float(cfg.v_tempo_weight) * _tempo_credit(
+                            pl, pr, left_atk, right_atk, world_foes, p_ko_foe, threat_by_tid,
+                            trick_room=bool(pos.our_trick_room or pos.opp_trick_room),
+                            our_tailwind=bool(pos.our_tailwind), opp_tailwind=bool(pos.opp_tailwind),
+                            terrain=terrain or ctx.terrain,
+                        )
                 else:
                     v = (
                         offense

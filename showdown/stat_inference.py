@@ -197,8 +197,8 @@ def set_oracle_lookup(fn) -> None:
     _ORACLE_TRUTH['lookup'] = fn
 
 
-def _apply_oracle(belief) -> None:
-    fn = _ORACLE_TRUTH['lookup']
+def _apply_oracle(belief, fn=None) -> None:
+    fn = fn or _ORACLE_TRUTH['lookup']
     if fn is None:
         return
     try:
@@ -1186,6 +1186,8 @@ class TeamStatBeliefs:
 
     def __init__(self):
         self.beliefs: Dict[str, StatBelief] = {}
+        # Diagnóstico: oráculo de SP solo para este jugador (ver PS_ORACLE_SP_EXPECTIMAX).
+        self.oracle_lookup = None
 
     # -- ciclo de vida ---------------------------------------------------- #
 
@@ -1253,7 +1255,7 @@ class TeamStatBeliefs:
         if belief is None:
             belief = StatBelief(species, base_stats, getattr(pkmn, 'nature', None))
             belief.current_forme = forme
-            _apply_oracle(belief)
+            _apply_oracle(belief, getattr(self, 'oracle_lookup', None))
             self.beliefs[species] = belief
         else:
             # Mega/Blade: mismas SP, bases distintas. Cotas hechas con bases viejas
