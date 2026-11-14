@@ -118,7 +118,9 @@ def test_rl_slot_mask_only_pass_for_the_slot_that_does_not_switch():
         can_tera=[False, False],
     )
     forced = pe_slot_mask(battle, 0)
-    assert forced[PASS_ID] == 1.0 and forced[16] == 1.0       # puede cambiar
+    from showdown.rl.constants import SWITCH_BASE
+
+    assert forced[PASS_ID] == 1.0 and forced[SWITCH_BASE] == 1.0  # puede cambiar
     idle = pe_slot_mask(battle, 1)
     assert idle[PASS_ID] == 1.0
     assert idle.sum() == 1.0                                  # solo PASS: sin movimientos ni mega
@@ -191,9 +193,12 @@ def test_rl_mask_blocks_second_mega_after_first_slot_megas():
         can_mega_evolve=[True, True],
         can_tera=[False, False],
     )
-    assert pe_slot_mask(battle, 1)[21] == 1.0                              # sin mega previa
-    assert pe_slot_mask(battle, 1, other=SlotAction('mega'))[21] == 0.0    # el otro ya la usa
-    assert pe_slot_mask(battle, 1, other=SlotAction('move'))[21] == 1.0
+    from showdown.rl.constants import MEGA_BASE
+
+    mega_tackle = MEGA_BASE + 0  # mega + movimiento 0 → rival A
+    assert pe_slot_mask(battle, 1)[mega_tackle] == 1.0                              # sin mega previa
+    assert pe_slot_mask(battle, 1, other=SlotAction('mega'))[mega_tackle] == 0.0    # el otro ya la usa
+    assert pe_slot_mask(battle, 1, other=SlotAction('move'))[mega_tackle] == 1.0
 
 
 def test_rl_joint_order_never_has_two_megas():

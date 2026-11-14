@@ -26,8 +26,11 @@ from showdown.rl.snapshot import (
 
 
 def test_spec_version_and_obs_dim():
+    from showdown.rl.constants import FIELD_DIM, FOE_MOVE_DIM, MON_BLOCK_DIM, MOVE_SLOT_DIM, OBS_VERSION, PAIR_DIM
+
     assert SPEC_VERSION == 'v1.8'
-    assert OBS_DIM == 1024
+    assert OBS_VERSION == 2
+    assert OBS_DIM == 10 * MON_BLOCK_DIM + 8 * MOVE_SLOT_DIM + 8 * FOE_MOVE_DIM + PAIR_DIM + FIELD_DIM
 
 
 def test_reward_sparse_terminal():
@@ -127,7 +130,7 @@ def test_observation_shape():
     backend = MockBattleBackend()
     snap = backend.reset(seed=1)
     obs = build_observation(snap)
-    assert obs.shape == (1024,)
+    assert obs.shape == (OBS_DIM,)
     assert obs.dtype == np.float32
 
 

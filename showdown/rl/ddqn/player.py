@@ -17,6 +17,7 @@ from showdown.rl.observation import build_observation_ddqn
 from showdown.rl.pe_adapter import (
     joint_order_from_spec_actions,
     legal_joint_mask,
+    player_stat_beliefs,
     snapshot_from_battle,
 )
 
@@ -65,7 +66,7 @@ class DDQNPlayer(FamilyPreviewMixin, Player):
     def choose_move(self, battle: AbstractBattle) -> BattleOrder:
         assert isinstance(battle, DoubleBattle)
         try:
-            snap = snapshot_from_battle(battle)
+            snap = snapshot_from_battle(battle, stat_beliefs=player_stat_beliefs(self))
             obs = build_observation_ddqn(snap)
             mask = legal_joint_mask(battle)
             joint = self.agent.act(obs, mask, epsilon=self.epsilon)

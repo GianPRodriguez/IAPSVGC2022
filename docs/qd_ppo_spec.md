@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.5** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.16) |
+| **Versión** | **1.6** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
 | **Estado** | FROZEN; `showdown/rl/qd_ppo/` |
 | **Training** | **Sí**: MAP-Elites serial con PPO como operador de mejora |
 | **Inferencia** | Despliega \(\pi^\*=\arg\max f\) desde `best_elite.pt` |
@@ -54,13 +54,13 @@ una copia con Candidate 2; la evaluación Candidate 1 decide bin y reemplazo.
 ### Red y contenido del archivo
 
 Cada elite guarda el `state_dict` completo del `ActorCritic`: torso
-`1024→512→512`, cabezas auto-regresivas de 24 y value head. No hay parámetros
+`6332→512→512`, cabezas auto-regresivas de 40 y value head. No hay parámetros
 compartidos entre celdas. `archive.pt` conserva el repertorio y
 `best_elite.pt` el máximo fitness desplegable.
 
 ## Observación, acción y máscaras
 
-Reutiliza sin bifurcar la Obs 1024D, acción auto-regresiva e IAM de
+Reutiliza sin bifurcar la ObsSpec v2 (6332D), acción auto-regresiva e IAM de
 [`rl_env_spec.md`](rl_env_spec.md) y [`ppo_spec.md`](ppo_spec.md). Candidate 2
 optimiza pesos; Candidate 1 mide calidad del archivo. BD1 mide agresividad frente
 a status/setup y BD2 hard switches. BD nunca entra en reward ni fitness.
@@ -226,6 +226,7 @@ siendo la suite de \(\pi^\*\), no coverage por sí sola.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.6** | 2026-11-14 | ObsSpec v2 (6332D, OTS completo + estado + historial) y ActionSpec v2 (40 ids por slot: mega como flag de cada movimiento×objetivo; máscara de entrenamiento = `valid_orders`). Checkpoints anteriores incompatibles. |
 | **1.5** | 2026-10-11 | Train/infer bajo Preview QD-PGA congelado (`frozen_preview`). |
 | **1.4** | 2026-10-11 | CLI `--lr/--clip-eps`; tune `run_qd_ppo_hp_tune` + tracking prev→nuevo; independencia vs Preview QD-PGA. |
 | **1.3** | 2026-10-11 | QD/PPO, red, loop, fallos, evaluación, code map y ejemplo ampliados. |

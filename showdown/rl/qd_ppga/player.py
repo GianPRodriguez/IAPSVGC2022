@@ -13,6 +13,7 @@ from showdown.rl.observation import build_observation_ppo
 from showdown.rl.pe_adapter import (
     joint_order_from_spec_actions,
     pe_autoregressive_masks,
+    player_stat_beliefs,
     snapshot_from_battle,
 )
 from showdown.rl.qd_ppga.agent import QDPPGAAgent
@@ -49,7 +50,7 @@ class QDPPGAPlayer(FamilyPreviewMixin, Player):
     def choose_move(self, battle: AbstractBattle) -> BattleOrder:
         assert isinstance(battle, DoubleBattle)
         try:
-            snap = snapshot_from_battle(battle)
+            snap = snapshot_from_battle(battle, stat_beliefs=player_stat_beliefs(self))
             obs = build_observation_ppo(snap)
             m1, _ = pe_autoregressive_masks(battle, slot1_action_id=None)
 

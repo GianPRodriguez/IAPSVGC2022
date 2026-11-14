@@ -165,10 +165,12 @@ def test_episode_tracker_outcomes_and_windows(tmp_path):
     log = MetricsLog(tmp_path / 'm.jsonl', run_meta={'agent': 'test'})
     tr = EpisodeTracker(log, window=10)
     tr.start(0, 'greedy_joint')
-    tr.step(0, actions=(0, 16), reward=0.3, components={'d_faint_opp': 1.0, 'd_hp_opp': 0.6})
+    from showdown.rl.constants import MEGA_BASE, PASS_ID, SWITCH_BASE
+
+    tr.step(0, actions=(0, SWITCH_BASE), reward=0.3, components={'d_faint_opp': 1.0, 'd_hp_opp': 0.6})
     tr.end(0, global_step=1, terminated=True, truncated=False,
            components={'d_win': 1.0}, next_opponent='random')
-    tr.step(0, actions=(21, 20), reward=-1.0, components={'d_faint_self': 1.0})
+    tr.step(0, actions=(MEGA_BASE + 1, PASS_ID), reward=-1.0, components={'d_faint_self': 1.0})
     tr.end(0, global_step=2, terminated=False, truncated=True, trunc_reason='turn_cap')
     s = tr.write_window(2, phase='t', learner={'loss': 0.5})
     log.close()

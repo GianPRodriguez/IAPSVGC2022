@@ -9,13 +9,15 @@ from showdown.format_rules import allow_tera
 from showdown.rl.constants import (
     ILLEGAL_LOGIT,
     JOINT_ACTION_N,
-    MEGA_ID,
+    MEGA_BASE,
+    N_MOVE_ACTIONS,
     N_MOVE_SLOTS,
     N_SWITCH_SLOTS,
     N_TARGETS,
     PASS_ID,
     RESERVED_ID,
     SLOT_ACTION_N,
+    SWITCH_BASE,
     TERA_ID,
 )
 from showdown.rl.snapshot import BattleSnapshot, SlotAction
@@ -25,7 +27,7 @@ __all_slot__ = SLOT_ACTION_N
 
 
 def encode_joint_action(a1: int, a2: int) -> int:
-    """a = 24*a1 + a2 ∈ {0..575}."""
+    """a = SLOT_ACTION_N*a1 + a2 ∈ {0..JOINT_ACTION_N-1} (40·a1 + a2, 1600 ids)."""
     return int(a1) * SLOT_ACTION_N + int(a2)
 
 
@@ -46,33 +48,30 @@ def encode_slot_action(
     kind = (kind or 'pass').lower()
     if kind == 'pass':
         return PASS_ID
-    if kind == 'mega':
-        return MEGA_ID
     if kind == 'tera':
         return TERA_ID
     if kind == 'switch':
-        return 16 + int(max(0, min(N_SWITCH_SLOTS - 1, switch_index)))
-    # move
+        return SWITCH_BASE + int(max(0, min(N_SWITCH_SLOTS - 1, switch_index)))
+    # move (con o sin mega)
     mi = int(max(0, min(N_MOVE_SLOTS - 1, move_index)))
     ti = int(max(0, min(N_TARGETS - 1, target)))
-    return mi * N_TARGETS + ti
+    base = MEGA_BASE if kind == 'mega' else 0
+    return base + mi * N_TARGETS + ti
 
 
 def decode_slot_action(action_id: int) -> SlotAction:
     aid = int(action_id)
     if aid < 0 or aid >= SLOT_ACTION_N:
         return SlotAction(kind='pass', raw_id=PASS_ID)
-    if aid == PASS_ID or aid == RESERVED_ID:
+    if aid == PASS_ID or aid >= RESERVED_ID:
         return SlotAction(kind='pass', raw_id=aid)
-    if aid == MEGA_ID:
-        return SlotAction(kind='mega', move_index=0, target=0, raw_id=aid)
     if aid == TERA_ID:
         return SlotAction(kind='tera', move_index=0, target=0, raw_id=aid)
-    if 16 <= aid <= 19:
-        return SlotAction(kind='switch', switch_index=aid - 16, raw_id=aid)
-    mi = aid // N_TARGETS
-    ti = aid % N_TARGETS
-    return SlotAction(kind='move', move_index=mi, target=ti, raw_id=aid)
+    if SWITCH_BASE <= aid < SWITCH_BASE + N_SWITCH_SLOTS:
+        return SlotAction(kind='switch', switch_index=aid - SWITCH_BASE, raw_id=aid)
+    kind = 'mega' if aid >= MEGA_BASE else 'move'
+    rel = aid - MEGA_BASE if kind == 'mega' else aid
+    return SlotAction(kind=kind, move_index=rel // N_TARGETS, target=rel % N_TARGETS, raw_id=aid)
 
 
 def apply_logit_mask(logits: np.ndarray, mask: np.ndarray) -> np.ndarray:
@@ -111,7 +110,7 @@ def build_slot_mask(
     other_slot_action: Optional[SlotAction] = None,
 ) -> np.ndarray:
     """
-    Build M ∈ {0,1}^24 for one active slot from snapshot legality.
+    Build M ∈ {0,1}^SLOT_ACTION_N for one active slot from snapshot legality.
 
     Source of truth in live env is poke-env valid_orders; this snapshot mask
     is a Spec-compatible approximation for offline / tests / bootstrap.
@@ -135,11 +134,11 @@ def build_slot_mask(
             continue
         if bi in taken_bench:
             continue
-        mask[16 + bi] = 1.0
+        mask[SWITCH_BASE + bi] = 1.0
 
     if force:
         # Only switches (+ pass if no switch — PS may require switch)
-        if not any(mask[16:20] > 0):
+        if not any(mask[SWITCH_BASE:SWITCH_BASE + N_SWITCH_SLOTS] > 0):
             mask[PASS_ID] = 1.0
         return mask
 
@@ -153,8 +152,11 @@ def build_slot_mask(
         for ti in range(N_TARGETS):
             mask[mi * N_TARGETS + ti] = 1.0
 
-    if active.can_mega:
-        mask[MEGA_ID] = 1.0
+    # Mega = flag sobre un movimiento (nunca con cambio); una sola por combate:
+    # si el otro hueco ya eligió mega, este no puede.
+    other_mega = other_slot_action is not None and other_slot_action.kind == 'mega'
+    if active.can_mega and not other_mega:
+        mask[MEGA_BASE:MEGA_BASE + N_MOVE_ACTIONS] = mask[0:N_MOVE_ACTIONS]
     # Reg M-C: Terastallization disabled (id 22 stays illegal).
     if allow_tera(active.can_tera):
         mask[TERA_ID] = 1.0
@@ -204,7 +206,7 @@ def legal_joint_mask_from_slot_masks(
     """
     Build M_joint ∈ {0,1}^576.
 
-    m2_for_a1: callable(a1: int) -> mask(24,) conditioned on slot1 choice.
+    m2_for_a1: callable(a1: int) -> mask(SLOT_ACTION_N,) conditioned on slot1 choice.
     """
     out = np.zeros(JOINT_ACTION_N, dtype=np.float32)
     m1a = np.asarray(m1, dtype=np.float32).reshape(-1)

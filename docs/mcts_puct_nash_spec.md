@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS–PUCT/Nash simultáneo (solo turnos) |
-| **Versión** | **1.5** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.16) |
+| **Versión** | **1.6** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
 | **Estado** | FROZEN; `showdown/rl/mcts_puct_nash/` |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Presupuesto \(N_{\rm sim}\), Top-K, FP; barrido automatizado de sims |
@@ -105,7 +105,7 @@ tuerce \(\sigma\); con más sims la tabla se llena.
    - Actualizar \(n_{ij},W_{ij}\); FP interno (~200 it.) en ancestros.
 4. Tras \(N_{\rm sim}\): FP raíz (~500 it.) → jugar \(\arg\max_i\sigma_i\).
 
-Top-K evita matrices hasta \(576\times576\). Empates de ranking: joint id menor.
+Top-K evita matrices hasta \(1600\times1600\). Empates de ranking: joint id menor.
 
 ### Ciclo de presupuesto
 
@@ -279,6 +279,7 @@ y turno.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.6** | 2026-11-14 | ActionSpec v2 (40 ids por slot, mega como flag de cada movimiento; joint 1600) y máscaras desde `valid_orders`. |
 | **1.5** | 2026-10-11 | Inferencia bajo Preview Nash congelado (`frozen_preview`). |
 | **1.4** | 2026-10-11 | §Q/N por celdas; meseta \(N_{\rm sim}\); CLI sweep; rival/seed/criterio; **tracking** de cambios de N_sim. |
 | **1.3** | 2026-10-11 | Matemática matricial, presupuesto, fallos, code map. |

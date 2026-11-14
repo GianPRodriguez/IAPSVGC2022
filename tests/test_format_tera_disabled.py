@@ -37,7 +37,9 @@ def test_slot_mask_never_enables_tera():
     )
     mask = build_slot_mask(snap, 0)
     assert mask[TERA_ID] == 0.0
-    assert mask.shape == (24,)
+    from showdown.rl.constants import SLOT_ACTION_N
+
+    assert mask.shape == (SLOT_ACTION_N,)
 
 
 def test_helpers_format_ignores_mega_flag_2():

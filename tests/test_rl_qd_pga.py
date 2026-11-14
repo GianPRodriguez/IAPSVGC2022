@@ -69,7 +69,9 @@ def test_mutation_does_not_write_replay_contract():
 
 def test_replay_rejects_skip_and_crash():
     replay = ValueReplay(capacity=16)
-    s = np.zeros(1024, dtype=np.float32)
+    from showdown.rl.constants import OBS_DIM
+
+    s = np.zeros(OBS_DIM, dtype=np.float32)
     assert not replay.add(s=s, r=0.0, s_next=s, terminated=False, skip_buffer=True)
     assert not replay.add(
         s=s, r=0.0, s_next=s, terminated=False, trunc_reason='crash',

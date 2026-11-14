@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.8** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.17) |
+| **Versión** | **1.9** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
 | **Estado** | FROZEN; implementado en `showdown/rl/ddqn/` y `battle_bots/ddqn/` |
 | **Training** | **Sí**: off-policy con replay; entrenamiento live requiere Showdown local |
 | **Inferencia** | `ValidatedDDQNPlayer`, acción greedy legal desde un checkpoint |
@@ -19,7 +19,7 @@ DDQN aprende cuánto conviene cada orden conjunta de los dos Pokémon activos. U
 red *online* elige la mejor continuación y una red *target* la valora. Separar
 esas tareas reduce la sobreestimación del DQN clásico. Es útil como contraste
 basado en valor frente a PPO: usa experiencias antiguas y una salida joint de
-576 valores, en vez de aprender directamente una distribución de acciones.
+1600 valores, en vez de aprender directamente una distribución de acciones.
 
 ## Glosario
 
@@ -51,7 +51,7 @@ basado en valor frente a PPO: usa experiencias antiguas y una salida joint de
    schedule de entrenamiento (`epsilon=None`), así que \(\varepsilon=0\) es greedy
    aunque el agente tenga `env_steps` menor que el warm-up.
 
-La red es `1024→512→512→576` con ReLU. Dueling, PER, n-step y Rainbow están fuera.
+La red es `6332→512→512→1600` con ReLU. Dueling, PER, n-step y Rainbow están fuera.
 
 ### Intuición matemática
 
@@ -70,8 +70,8 @@ cerca de cero y lineal ante errores TD grandes.
 
 ### Arquitectura y flujo tensorial
 
-La observación `float32[1024]` atraviesa dos capas densas de 512 unidades con
-ReLU. La salida contiene 576 escalares, uno por joint; no es una probabilidad
+La observación `float32[6332]` (ObsSpec v2) atraviesa dos capas densas de 512 unidades con
+ReLU. La salida contiene 1600 escalares, uno por joint; no es una probabilidad
 ni usa softmax. `apply_q_mask` vuelve ineligibles los Q de acciones ilegales.
 Online y target son MLP idénticas, pero solo online pertenece a Adam. Después
 de cada gradiente se aplica
@@ -80,15 +80,16 @@ redes y contadores; el replay no se serializa.
 
 ## Observación, acción y máscaras
 
-Se heredan Obs 1024D, Candidate 2, ActionSpec y protocolos L1/L2/L3 de
-[`rl_env_spec.md`](rl_env_spec.md). El segmento belief es cero/prior plano.
+Se heredan ObsSpec v2 (6332D, OTS completo + estado + historial), Candidate 2, ActionSpec v2 y
+protocolos L1/L2/L3 de [`rl_env_spec.md`](rl_env_spec.md). No hay segmento anulado.
 `legal_joint_mask` se deriva de `valid_orders`:
 
 \[
 M(a_1,a_2)=M_1(a_1)M_2(a_2\mid a_1).
 \]
 
-Los ids 0–15 son movimiento×objetivo, 16–19 switch, 20 pass, 21 Mega,
+Los ids 0–15 son movimiento×objetivo, 16–31 mega + movimiento×objetivo (la mega siempre va con
+un movimiento; nunca con cambio), 32–35 switch, 36 pass, 37 Tera,
 22 Tera reservado y 23 reservado. En Reg M-C, Tera está desactivada y el id 22
 siempre queda enmascarado. Ni exploración ni inferencia pueden elegir ilegales.
 
@@ -259,7 +260,7 @@ Pipeline familiar: **`team_preview_ppo` → DDQN**. Código compartido:
 
 ## Limitaciones
 
-- La salida 576 coordina slots, pero es grande y no factoriza estructura.
+- La salida 1600 coordina slots, pero es grande y no factoriza estructura.
 - Replay antiguo puede quedar desalineado con el curriculum.
 - No hay self-play en este contrato ni belief oculto sofisticado.
 - La calidad queda condicionada al simulador, al reward denso y al preview usado.
@@ -270,6 +271,7 @@ Pipeline familiar: **`team_preview_ppo` → DDQN**. Código compartido:
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.9** | 2026-11-14 | ObsSpec v2 (6332D) y ActionSpec v2 (40 ids/slot, mega por movimiento, 1600 joint). Máscara de entrenamiento = `valid_orders` (antes permisiva: pass/objetivos/cambios inválidos → fallback aleatorio y bootstrap sobre Q no entrenados). Replay float16, reserva perezosa y creciente. |
 | **1.8** | 2026-11-14 | \(\varepsilon=0\) explícito siempre greedy (antes caía al warm-up aleatorio con `env_steps` < warm-up); aviso/`DDQN_REQUIRED` sin checkpoint; `train_metrics.jsonl` (episodios, ventanas por rival, learner). Preview familiar con obs OTS v2. |
 | **1.7** | 2026-10-12 | Figuras reales al cerrar tune (`logs/figures/`) + ledger histórico tesis. |
 | **1.6** | 2026-10-11 | Train/infer bajo Preview PPO congelado (`frozen_preview`); fallback `/team 1234`. |

@@ -26,18 +26,41 @@ class Transition:
 
 
 class ReplayBuffer:
+    """Memoria circular. Con obs v2 (≈6k dims) se guarda en float16 y las
+    máscaras en uint8 (≈4,9 GB para 200k transiciones en vez de ≈9,7 GB) y se
+    reserva al primer ``add`` (los jugadores de inferencia no la usan)."""
+
     def __init__(self, capacity: int = 200_000, obs_dim: int = OBS_DIM):
         self.capacity = int(capacity)
         self.obs_dim = int(obs_dim)
-        self._s = np.zeros((self.capacity, self.obs_dim), dtype=np.float32)
-        self._a = np.zeros((self.capacity,), dtype=np.int64)
-        self._r = np.zeros((self.capacity,), dtype=np.float32)
-        self._s2 = np.zeros((self.capacity, self.obs_dim), dtype=np.float32)
-        self._term = np.zeros((self.capacity,), dtype=np.float32)
-        self._m2 = np.zeros((self.capacity, JOINT_ACTION_N), dtype=np.float32)
-        self._opp = np.zeros((self.capacity,), dtype=np.int16)
+        self._allocated = False
         self._n = 0
         self._i = 0
+
+    _FIELDS = ('_s', '_a', '_r', '_s2', '_term', '_m2', '_opp')
+
+    def _alloc(self) -> None:
+        """Reserva perezosa y creciente (×2 hasta ``capacity``): una corrida corta
+        no reserva los ≈5 GB de 200k transiciones con obs v2."""
+        if not self._allocated:
+            self._size = min(self.capacity, 4096)
+            self._s = np.zeros((self._size, self.obs_dim), dtype=np.float16)
+            self._a = np.zeros((self._size,), dtype=np.int64)
+            self._r = np.zeros((self._size,), dtype=np.float32)
+            self._s2 = np.zeros((self._size, self.obs_dim), dtype=np.float16)
+            self._term = np.zeros((self._size,), dtype=np.float32)
+            self._m2 = np.zeros((self._size, JOINT_ACTION_N), dtype=np.uint8)
+            self._opp = np.zeros((self._size,), dtype=np.int16)
+            self._allocated = True
+            return
+        if self._i >= self._size and self._size < self.capacity:
+            new = min(self.capacity, 2 * self._size)
+            for name in self._FIELDS:
+                old = getattr(self, name)
+                arr = np.zeros((new,) + old.shape[1:], dtype=old.dtype)
+                arr[: self._size] = old
+                setattr(self, name, arr)
+            self._size = new
 
     def __len__(self) -> int:
         return self._n
@@ -58,13 +81,14 @@ class ReplayBuffer:
         """Insert transition. Returns False if dropped (L2/L3)."""
         if skip_buffer or truncated:
             return False
+        self._alloc()
         i = self._i
         self._s[i] = np.asarray(s, dtype=np.float32).reshape(self.obs_dim)
         self._a[i] = int(a)
         self._r[i] = float(r)
         self._s2[i] = np.asarray(s_next, dtype=np.float32).reshape(self.obs_dim)
         self._term[i] = 1.0 if terminated else 0.0
-        self._m2[i] = np.asarray(m_next, dtype=np.float32).reshape(JOINT_ACTION_N)
+        self._m2[i] = (np.asarray(m_next, dtype=np.float32).reshape(JOINT_ACTION_N) > 0.5)
         self._opp[i] = int(opponent_code)
         self._i = (i + 1) % self.capacity
         self._n = min(self._n + 1, self.capacity)
@@ -76,18 +100,18 @@ class ReplayBuffer:
         rng = rng or np.random.default_rng()
         idx = rng.integers(0, self._n, size=int(batch_size))
         return (
-            self._s[idx],
+            self._s[idx].astype(np.float32),
             self._a[idx],
             self._r[idx],
-            self._s2[idx],
+            self._s2[idx].astype(np.float32),
             self._term[idx],
-            self._m2[idx],
+            self._m2[idx].astype(np.float32),
             self._opp[idx],
         )
 
     def origin_fractions(self) -> Dict[str, float]:
         """Fraction of stored transitions by opponent tag."""
-        if self._n <= 0:
+        if self._n <= 0 or not self._allocated:
             return {}
         codes = self._opp[: self._n]
         ctr = Counter(int(c) for c in codes.tolist())

@@ -135,8 +135,8 @@ def joint_to_iap_action(joint_id: int, battle) -> tuple:
             to_move = -2 if active_index == 0 else -1
         else:
             to_move = 0
-        move_slot = int(act.move_index) + 1
-        if act.kind in ('mega', 'tera'):
+        move_slot = int(act.move_index) + 1  # mega: el movimiento va en la misma orden
+        if act.kind == 'tera':
             move_slot = 1
             if act.kind == 'tera':
                 mega = 0  # IAP uses separate mega flag; tera via mega=2 in greedy

@@ -11,17 +11,38 @@ REPLAY_CAPACITY = 200_000
 
 
 class ValueReplay:
-    """Stores (s, r, s', terminated) for 1-step TD(0) on shared V_phi."""
+    """Stores (s, r, s', terminated) for 1-step TD(0) on shared V_phi.
+
+    Obs v2 (≈6k dims): float16 y reserva perezosa (ver ddqn/replay.py).
+    """
 
     def __init__(self, capacity: int = REPLAY_CAPACITY, obs_dim: int = OBS_DIM):
         self.capacity = int(capacity)
         self.obs_dim = int(obs_dim)
-        self._s = np.zeros((self.capacity, self.obs_dim), dtype=np.float32)
-        self._r = np.zeros((self.capacity,), dtype=np.float32)
-        self._s2 = np.zeros((self.capacity, self.obs_dim), dtype=np.float32)
-        self._term = np.zeros((self.capacity,), dtype=np.float32)
+        self._allocated = False
         self._n = 0
         self._i = 0
+
+    _FIELDS = ('_s', '_r', '_s2', '_term')
+
+    def _alloc(self) -> None:
+        """Reserva perezosa y creciente (×2 hasta ``capacity``)."""
+        if not self._allocated:
+            self._size = min(self.capacity, 4096)
+            self._s = np.zeros((self._size, self.obs_dim), dtype=np.float16)
+            self._r = np.zeros((self._size,), dtype=np.float32)
+            self._s2 = np.zeros((self._size, self.obs_dim), dtype=np.float16)
+            self._term = np.zeros((self._size,), dtype=np.float32)
+            self._allocated = True
+            return
+        if self._i >= self._size and self._size < self.capacity:
+            new = min(self.capacity, 2 * self._size)
+            for name in self._FIELDS:
+                old = getattr(self, name)
+                arr = np.zeros((new,) + old.shape[1:], dtype=old.dtype)
+                arr[: self._size] = old
+                setattr(self, name, arr)
+            self._size = new
 
     def __len__(self) -> int:
         return int(self._n)
@@ -38,6 +59,7 @@ class ValueReplay:
     ) -> bool:
         if skip_buffer or trunc_reason == 'crash':
             return False
+        self._alloc()
         i = self._i
         self._s[i] = np.asarray(s, dtype=np.float32).reshape(self.obs_dim)
         self._r[i] = float(r)
@@ -57,4 +79,5 @@ class ValueReplay:
             raise ValueError(f'replay too small: {self._n} < {batch_size}')
         rng = rng or np.random.default_rng()
         idx = rng.integers(0, self._n, size=int(batch_size))
-        return self._s[idx], self._r[idx], self._s2[idx], self._term[idx]
+        return (self._s[idx].astype(np.float32), self._r[idx],
+                self._s2[idx].astype(np.float32), self._term[idx])

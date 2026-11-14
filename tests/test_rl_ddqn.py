@@ -10,7 +10,7 @@ from showdown.rl.action_space import (
     encode_joint_action,
     legal_joint_mask,
 )
-from showdown.rl.constants import JOINT_ACTION_N, OBS_DIM, SEG_BELIEF, SEG_SPECIES, SPEC_VERSION
+from showdown.rl.constants import JOINT_ACTION_N, OBS_DIM, SPEC_VERSION
 from showdown.rl.env import MockBattleBackend, VGCEnv
 from showdown.rl.observation import build_observation_ddqn
 from showdown.rl.reward import RewardCandidate
@@ -18,7 +18,7 @@ from showdown.rl.reward import RewardCandidate
 
 def test_spec_version_v14():
     assert SPEC_VERSION == 'v1.8'
-    assert JOINT_ACTION_N == 576
+    assert JOINT_ACTION_N == 1600  # ActionSpec v2: 40 × 40 (mega por movimiento)
 
 
 def test_parse_phases_and_schedule():
@@ -118,20 +118,24 @@ def test_legal_joint_mask_shape_and_pass():
     obs, info = env.reset(seed=0)
     assert env._snap is not None
     m = legal_joint_mask(env._snap)
-    assert m.shape == (576,)
+    assert m.shape == (JOINT_ACTION_N,)
     assert m.dtype == np.float32
     assert np.any(m > 0.5)
     # pass/pass should be legal on fresh mock
     assert m[encode_joint_action(PASS_ID, PASS_ID)] > 0.5
 
 
-def test_obs_ddqn_zeros_belief():
+def test_obs_ddqn_is_full_obs_v2():
+    """v2: DDQN recibe la observación completa (ya no se anula un segmento belief)."""
+    from showdown.rl.observation import build_observation
+
     env = VGCEnv(backend=MockBattleBackend(max_turns=4), reward_candidate=RewardCandidate.DENSE)
     env.reset(seed=1)
     assert env._snap is not None
     obs = build_observation_ddqn(env._snap)
     assert obs.shape == (OBS_DIM,)
-    assert np.allclose(obs[SEG_SPECIES:SEG_SPECIES + SEG_BELIEF], 0.0)
+    assert np.array_equal(obs, build_observation(env._snap))
+    assert np.count_nonzero(obs) > 100
 
 
 def test_skip_buffer_does_not_grow_replay():

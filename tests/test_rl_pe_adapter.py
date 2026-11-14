@@ -90,7 +90,9 @@ def test_pe_masks_pass_and_moves():
     assert m0[PASS_ID] == 1.0
     assert m0[0:4].sum() == 4.0
     _m1, m2 = pe_autoregressive_masks(battle)
-    assert m2[16] == 1.0
+    from showdown.rl.constants import SWITCH_BASE
+
+    assert m2[SWITCH_BASE] == 1.0
 
 
 def test_joint_order_fallback_without_join(monkeypatch):

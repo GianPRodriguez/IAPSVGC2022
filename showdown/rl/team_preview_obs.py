@@ -387,12 +387,17 @@ class PreviewMonFeat:
     moves: Tuple[str, ...] = ()
     stats: Optional[Dict[str, int]] = None
     tera_type: Optional[str] = None  # Tera off en Reg M-C: no se codifica
+    # Rival en combate: SP aún posibles por stat según la inferencia (min, max).
+    # None = sin inferencia → rango completo [0, SP_MAX].
+    sp_bounds: Optional[Dict[str, Tuple[int, int]]] = None
 
     def key(self) -> Tuple:
         st = tuple(int(self.stats[k]) for k in STAT_KEYS) if self.stats else None
+        spb = (tuple((int(self.sp_bounds[k][0]), int(self.sp_bounds[k][1])) if k in self.sp_bounds
+                     else (0, SP_MAX) for k in STAT_KEYS) if self.sp_bounds else None)
         return (
             to_id(self.species), to_id(self.item), to_id(self.ability),
-            to_id(self.nature), tuple(sorted(to_id(m) for m in self.moves if m)), st,
+            to_id(self.nature), tuple(sorted(to_id(m) for m in self.moves if m)), st, spb,
         )
 
 
@@ -690,7 +695,7 @@ def _move_infos(moves: Sequence[str], ability: str, types: Sequence[str]
 
 @lru_cache(maxsize=8192)
 def _profile_cached(key: Tuple) -> _Profile:
-    species, item, ability, nature, moves, exact = key
+    species, item, ability, nature, moves, exact, sp_bounds = key
     ent = species_entry(species)
     if ent is None:
         return _Profile(
@@ -717,12 +722,15 @@ def _profile_cached(key: Tuple) -> _Profile:
             v2 = float(v) + float(base1[k] - base0[k])
             smin[k] = smax[k] = v2
     else:
-        for k in STAT_KEYS:
+        # Rival: stats base de la forma efectiva + naturaleza de la hoja; los SP
+        # ocultos dan un rango, angostado por la inferencia si la hay.
+        for idx_k, k in enumerate(STAT_KEYS):
             nat = _nature_mult(nature, k)
             lo = 0.9 if nat is None else nat
             hi = 1.1 if nat is None else nat
-            smin[k] = float(_stat(base1[k], 0, lo, k))
-            smax[k] = float(_stat(base1[k], SP_MAX, hi, k))
+            sp_lo, sp_hi = sp_bounds[idx_k] if sp_bounds else (0, SP_MAX)
+            smin[k] = float(_stat(base1[k], sp_lo, lo, k))
+            smax[k] = float(_stat(base1[k], sp_hi, hi, k))
 
     ifl, itype = _item_flags(item)
     afl, atype = _ability_flags(eff_ability)

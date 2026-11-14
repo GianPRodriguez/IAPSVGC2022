@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from showdown.rl.action_space import PASS_ID, build_autoregressive_masks
-from showdown.rl.constants import OBS_DIM, SEG_BELIEF, SEG_SPECIES, SLOT_ACTION_N, SPEC_VERSION
+from showdown.rl.constants import OBS_DIM, SLOT_ACTION_N, SPEC_VERSION
 from showdown.rl.env import MockBattleBackend, VGCEnv
 from showdown.rl.observation import build_observation_ppo
 from showdown.rl.reward import RewardCandidate
@@ -51,13 +51,15 @@ def test_trunc_reason_crash_sets_skip_buffer():
     assert abs(float(r)) < 1e-9
 
 
-def test_obs_ppo_zeros_belief():
+def test_obs_ppo_is_full_obs_v2():
+    from showdown.rl.observation import build_observation
+
     env = VGCEnv(backend=MockBattleBackend(max_turns=4), reward_candidate=RewardCandidate.DENSE)
     env.reset(seed=1)
     assert env._snap is not None
     obs = build_observation_ppo(env._snap)
     assert obs.shape == (OBS_DIM,)
-    assert np.allclose(obs[SEG_SPECIES:SEG_SPECIES + SEG_BELIEF], 0.0)
+    assert np.array_equal(obs, build_observation(env._snap))
 
 
 def test_mask_and_logprob_consistency():

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.17** |
+| **Version** | **v1.18** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) — **Mega Evolution yes; Terastallization no** |
@@ -42,7 +42,8 @@
 
 - **Multi-agent auto-regressive double slot:** \(\text{Slot 1} \rightarrow \text{Slot 2}\)
 - Slot 1 choice updates the legal mask for Slot 2 (e.g. switch conflicts, shared targets).
-- **DDQN joint encoding** (see §6.b): \(a = 24\cdot a_1 + a_2 \in \{0,\ldots,575\}\).
+- **DDQN joint encoding** (see §6.b): \(a = 40\cdot a_1 + a_2 \in \{0,\ldots,1599\}\).
+- Slot layout (ActionSpec v2, 40 ids): **0–15** move×target · **16–31** MEGA + move×target (mega is a flag on a move, never on a switch; one per side) · **32–35** switch · **36** pass · **37** tera (reserved/off) · **38–39** reserved.
 
 ### Masking protocol
 
@@ -60,11 +61,14 @@ Source of truth for legality: poke-env / PS `valid_orders` (or equivalent reques
 **intersected** with format kill-switches in `showdown/format_rules.py`.
 
 **Regulation M-C — Terastallization:** the mechanic **does not exist** in this format
-(Mega Evolution does). ActionSpec **retains** slot id **22** for protocol / layout
+(Mega Evolution does). ActionSpec **retains** slot id **37** for protocol / layout
 parity, but \(M[\mathrm{tera}]=0\) always and agents must never emit
 `terastallize` (`TERASTALLIZATION_ENABLED=False`). Obs Tera channels are forced to 0.
 
-Canonical joint helper (DDQN): `legal_joint_mask(battle) -> (576,)` with
+Training and inference use the **same** mask: per-slot ids are kept only if their poke-env order is in
+`battle.valid_orders[slot]` (pass only when legal, valid targets only, no switch when trapped).
+
+Canonical joint helper (DDQN): `legal_joint_mask(battle) -> (1600,)` with
 
 \[
 M_{\mathrm{joint}}(a_1, a_2) = M_1(a_1)\cdot M_2(a_2\mid a_1).
@@ -83,26 +87,27 @@ M_{\mathrm{joint}}(a_1, a_2) = M_1(a_1)\cdot M_2(a_2\mid a_1).
 
 ---
 
-## 3. ObsSpec (1024D Dense Vector)
+## 3. ObsSpec v2 (OTS completo + estado, `OBS_DIM` = 6332)
 
-### Canonical party ordering (strict)
+Principle: the network receives **all** information available at decision time in a learnable form
+(one-hot / normalized magnitudes) — no hashes, no zeroed segments. Implementation:
+`showdown/rl/observation.py` (`obs_layout()` returns the section ranges).
 
-```
-[Self_Active_1, Self_Active_2, Self_Bench_1, Self_Bench_2,
- Foe_Active_1,  Foe_Active_2,  Foe_Bench_1,  Foe_Bench_2]
-```
+| Section | Dims | Content |
+|---------|------|---------|
+| Mon blocks (10) | 10 × 522 | Ours: active a, b, bench0, bench1 (bench order = switch action index). Foe: active a, b, then the rest of its 6-mon sheet (seen first, then by species). **Confirmed not brought** (4 already seen) → block zeroed, excluded from matrices. Each block = **OTS 464** (same encoder as Team Preview: base stats of effective/pre-mega form, stat min/max at L50 — exact for ours, SP range [0,32] or the inference range for the foe — types, mega, item, ability, move semantics, identity one-hots) + **state 58**: present/active/fainted/seen, HP, status (+counter), boosts, 13 volatiles, perish, protect counter, first turn, mega evolved, has item, can mega, SP uncertainty per stat (6), history (turns active, last move recency/kind, choice/encore lock, HP lost last turn, times switched in, moves since switch-in, Fake Out usable), P(brought), excluded |
+| Our move slots | 8 × 81 | Per available move of our actives, in `available_moves` order (= action move index): availability, PP, power by type, utilities (28), category, accuracy, priority, target class, expected damage vs foe a/b/ally, KO expected / **possible** (best case) / **guaranteed** (worst case) vs foe a/b, effectiveness, last used, locked, priority blocked (Psychic Terrain, Armor Tail/Dazzling/Queenly Majesty, Prankster vs Dark), redirected (Storm Drain / Lightning Rod) |
+| Foe move slots | 8 × 43 | Moves on the sheet of foe actives: type, category, power, priority, spread, key utilities, damage / KO / KO possible on our actives, last used, locked |
+| Pair matrices | 72 | Ours (4) × foe (6): best damage us→foe and foe→us (fraction of **current** HP) and effective speed relation (Tailwind, Trick Room, paralysis, boosts, Scarf, weather/Unburden abilities) |
+| Field | 48 | Weather / terrain one-hot + turns, Trick Room, Tailwind, screens (+ turns), gravity, turn, megas used per side, alive/HP totals, seen foe mons, forced switches, last-turn summary per side (Protect, switch, faint, Fake Out, spread), foe brought set fully known |
 
-### Segments
+Damage model (local Python, no Node in `step()`): L50 formula with stats, STAB, types, ability
+immunities, items, boosts, weather, terrain, screens and burn. History comes from the battle protocol
+(`showdown/rl/battle_history.py`). Stat inference ranges (`OBS_STAT_INFERENCE=1`) must be enabled in
+training **and** inference together. Obs dtype for RL buffers: **`float32`** (replays store float16).
 
-| Segment | Dims | Encoding |
-|---------|------|----------|
-| Embeddings & species | 128D | Species IDs / types. **Illusion:** observation uses **OTS ground-truth species**; **action masking / targeting** follows Showdown rules until Illusion is busted |
-| Belief state | 256D | Summarized EV/IV / Spe-tier belief; item/ability as `unknown \| suspected \| confirmed` bits where applicable. **Foe bench (OTS):** team-preview priors for HP/status until combat reveal; unrevealed fields → zeros / priors as specified by encoder. **DDQN v1.2:** belief segment is **zeros / flat priors** (no Expectimax-style hidden-stat inference module) |
-| Active field & physics | 128D | One-hot weather/terrain; Trick Room, Tailwind, screens, gravity; turn counters normalized |
-| Active stats & volatiles | 128D | Stat stages in \([-1.0, 1.0]\); Yawn countdowns; Taunt; Disable; Substitute flags |
-| Move matrix & damage | 384D | Priority, terrain modifiers, grounded flags. **Damage:** local Python heuristic cache only — \(\mathrm{BasePower} \times \mathrm{STAB} \times \mathrm{Effectiveness} \times \mathrm{Weather}\). Failsafe `0.0`. **No Node.js in `step()`** |
-
-**Total:** \(128 + 256 + 128 + 128 + 384 = 1024\). Obs dtype for RL buffers: **`float32`**.
+v1 (1024D) is retired: species/types/items were md5 hashes, the belief segment was zeroed for
+DDQN/PPO, own stats and foe sheets were absent.
 
 ---
 
@@ -172,7 +177,7 @@ BD values clipped / normalized to \([0, 1]\).
 | Algorithm | Active RewardSpec | Architecture / Masking | BDSpec |
 |-----------|-------------------|------------------------|--------|
 | **1. Masked PPO** | Cand. 2 → Cand. 1 | Auto-regressive Slot1→Slot2 + IAM. **Main policy path** | Off (telemetry only) |
-| **2. DDQN (joint)** | Cand. 2 | Joint \(Q(s,(a_1,a_2))\), 576 outs; Double target; soft \(\tau\); \(Q_{\mathrm{illegal}}=-\infty\). **Main value-based path** | Off |
+| **2. DDQN (joint)** | Cand. 2 | Joint \(Q(s,(a_1,a_2))\), 1600 outs; Double target; soft \(\tau\); \(Q_{\mathrm{illegal}}=-\infty\). **Main value-based path** | Off |
 | 2b. BDQN | Cand. 2 | Branching DQN (**ablation / experimental**); \(Q(s,a_{\mathrm{invalid}})=-\infty\) | Off |
 | 2c. IQL | Cand. 2 | Two independent \(Q_i(s,a_i)\) — **ablation only** (breaks coordination) | Off |
 | **3. MCTS + PUCT** | Cand. 1 | Joint legal edges; single-agent open-loop PUCT; S2 sim. **Main open-loop planning path** | Off |
@@ -378,7 +383,7 @@ Contract for the **main policy-gradient** agent. Implementation: `showdown/rl/pp
 | Item | Contract |
 |------|----------|
 | Interaction loop | **Combat only.** One env `step` = one Showdown turn with \((a_1,a_2)\). |
-| Action space | `MultiDiscrete([24, 24])` — Slot1 then Slot2. |
+| Action space | `MultiDiscrete([40, 40])` — Slot1 then Slot2 (ActionSpec v2). |
 | Team Preview | **Outside** the MDP. `/team 1234`. WR conditional on this preview. |
 | Belief in obs | 256D = **zeros / flat priors** (same as DDQN v1.2). |
 | Self-play | **In scope** after heuristic bootstrap (uniform pool; see exclusive spec). |
@@ -388,7 +393,7 @@ Contract for the **main policy-gradient** agent. Implementation: `showdown/rl/pp
 | Item | Contract |
 |------|----------|
 | Factorization | \(\pi(a_1,a_2\mid s)=\pi^{(1)}(a_1\mid s)\,\pi^{(2)}(a_2\mid s,a_1)\) |
-| Slot2 conditioning | Concat shared features with \(\mathrm{onehot}(a_1)\in\mathbb{R}^{24}\) |
+| Slot2 conditioning | Concat shared features with \(\mathrm{onehot}(a_1)\in\mathbb{R}^{40}\) |
 | IAM | \(\mathrm{Softmax}(\mathbf{z}+(1-M)\cdot(-10^{9}))\); same path at collect and train |
 | Mask API | `action_masks(slot1_action_id=...)` from **`valid_orders`** |
 | Entropy | \(H[\pi^{(1)}]+H[\pi^{(2)}\mid a_1]\) with trajectory \(a_1\) |
@@ -423,16 +428,16 @@ Contract for the **main value-based** agent. Implementation target: `showdown/rl
 | Interaction loop | **Combat only** (moves / switches on the active matrix). One env `step` = one Showdown turn with joint action \((a_1,a_2)\). |
 | Team Preview | **Outside** the combat MDP (not a learnable combat action). **Frozen family preview** via `showdown/rl/frozen_preview.py`: DDQN/PPO→`team_preview_ppo`, MCTS*→`team_preview_nash`, QD*→`team_preview_qd_pga`. Train (live) and eval use the **same** frozen preview. Fallback `/team 1234` if checkpoint missing. Reported WR is **conditional** on that preview. |
 | OTS / harness | `ValidatedDDQNPlayer` (poke-env + `ValidatedBattleMixin`): protocol sync + `accept_open_team_sheet=True`. OTS does **not** imply a refined belief encoder in v1.2. |
-| Belief in obs | 256D belief segment = **zeros / flat priors** (no Expectimax SP inference). |
+| Belief in obs | ObsSpec v2: foe stat ranges from OTS (+ optional inference ranges); no zeroed segment. |
 
 ### Action encoding & masking
 
 | Item | Contract |
 |------|----------|
-| Joint id | \(a = 24\cdot a_1 + a_2 \in \{0,\ldots,575\}\), \(a_1,a_2\in\{0,\ldots,23\}\) |
-| Slot layout | Unchanged ActionSpec: 0–15 move×target, 16–19 switch, 20 pass, **21 mega**, **22 tera (reserved/off)**, 23 reserved |
-| Mega / Tera | Id **21** (mega) when `can_mega` / `valid_orders` allow. Id **22** (tera) is **always illegal** under Reg M-C (`format_rules.allow_tera` → false). Decode still recognizes the id for parity but never sets `terastallize=True`. |
-| Mask API | `legal_joint_mask(battle) -> shape (576,) dtype float32/bool`, from **`valid_orders`**. Also expose conditioned `action_masks(slot1_action_id=None) -> (M1, M2)`. |
+| Joint id | \(a = 40\cdot a_1 + a_2 \in \{0,\ldots,1599\}\), \(a_1,a_2\in\{0,\ldots,39\}\) |
+| Slot layout | Slot layout (ActionSpec v2, 40 ids): **0–15** move×target · **16–31** MEGA + move×target (mega is a flag on a move, never on a switch; one per side) · **32–35** switch · **36** pass · **37** tera (reserved/off) · **38–39** reserved |
+| Mega / Tera | Ids **16–31** (mega + move) when `can_mega` / `valid_orders` allow; the agent learns when and with which move. Id **37** (tera) is **always illegal** under Reg M-C (`format_rules.allow_tera` → false). Decode still recognizes the id for parity but never sets `terastallize=True`. |
+| Mask API | `legal_joint_mask(battle) -> shape (1600,) dtype float32/bool`, from **`valid_orders`**. Also expose conditioned `action_masks(slot1_action_id=None) -> (M1, M2)`. |
 | Illegal Q | Before \(\arg\max\) / \(\varepsilon\)-greedy: \(Q(s,a_{\mathrm{illegal}})=-\infty\) (equiv. \(-10^{9}\) addend). |
 | Exploration | \(\varepsilon\)-greedy **uniform over legal** actions only. Never sample \(M=0\). |
 
@@ -457,7 +462,7 @@ r_t + \gamma\, Q_{\theta^-}\big(s',\, \arg\max_{a \in L(s')} Q_{\theta}(s', a)\b
 | Item | Contract |
 |------|----------|
 | Framework | PyTorch (`torch >= 2.0.0`), dependency file **`requirements-rl.txt`** (or install extra `[rl]`). Heuristic bots must run without this extra. |
-| Topology | MLP: \(1024 \xrightarrow{\mathrm{ReLU}} 512 \xrightarrow{\mathrm{ReLU}} 512 \xrightarrow{\mathrm{Linear}} 576\) |
+| Topology | MLP: \(6332 \xrightarrow{\mathrm{ReLU}} 512 \xrightarrow{\mathrm{ReLU}} 512 \xrightarrow{\mathrm{Linear}} 1600\) |
 | Dueling / Noisy / Rainbow | **Off** in v1.2 |
 | Device default | **CPU** (GPU optional; document in train CLI) |
 | Seed | Collector / env seed **must** be CLI-documented and logged |
@@ -636,6 +641,7 @@ con Tera on no es compatible con este benchmark aunque sus dimensiones encajen.
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.18** | 2026-11-14 | **ObsSpec v2** (6332D, §3): full OTS per mon (same encoder as preview), state, history from the protocol, P(brought)/excluded foe mons, move slots aligned with actions (damage, KO possible/guaranteed, priority blocked, redirection, lock), foe move slots, pair matrices, field + last-turn summary. **ActionSpec v2**: 40 ids per slot, mega as a flag on each move×target (16–31), joint 1600. Training mask = inference mask (`valid_orders`). Foe material counts seen mons (unseen = healthy): fixes spurious HP/KO jumps. Own team filtered to the 4 brought. Replays float16 + lazy growth. |
 | **v1.17** | 2026-11-14 | **Team Preview obs v2** (§6.i–k): full Open Team Sheet encoding from the frozen Champions dex snapshot (5676D) replaces 512D species-only obs. Preview checkpoint score = paired `MEAN_WR` on fixed contexts. DDQN: explicit `epsilon=0` is always greedy; `DDQN_REQUIRED`. Training metrics JSONL (`train_metrics.jsonl`) for combat and preview. Combat Obs/Reward/Action unchanged. |
 | **v1.16** | 2026-10-11 | Combat train/infer under **frozen family preview** (`frozen_preview.py`); preview trains persist weights; fallback `/team 1234`. Order: preview → combat. |
 | **v1.15** | 2026-10-11 | Documenta pipelines de Conclusión, pairing familiar de Team Preview, separación training/inferencia y Tera off end-to-end. Índice de lectura: [`SPECS_INDEX.md`](SPECS_INDEX.md). Specs combate enriquecidas (DDQN/PPO v1.4, MCTS/QD v1.3); preview v1.2; heurísticas v1.4. Sin cambio estructural de Obs/Reward/Action/BD. |

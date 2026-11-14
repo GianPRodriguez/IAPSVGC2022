@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.7** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.16) |
+| **Versión** | **1.8** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
 | **Estado** | FROZEN; `showdown/rl/ppo/` y `battle_bots/ppo/` |
 | **Training** | **Sí, parcial**: PPO/curriculum operativos; self-play tiene infraestructura básica, no un rival de checkpoint plenamente cableado |
 | **Inferencia** | `ValidatedPPOPlayer`, greedy masked desde checkpoint |
@@ -15,7 +15,7 @@ Obs, reward, acciones, truncations y Tera off se heredan de
 
 PPO aprende directamente una política. Primero decide la orden del slot 1 y
 después la del slot 2 condicionada a la primera. Esta factorización evita una
-cabeza plana de 576 probabilidades y representa el conflicto entre órdenes. El
+cabeza plana de 1600 probabilidades y representa el conflicto entre órdenes. El
 clip de PPO limita cambios bruscos entre la política que recogió el rollout y la
 que se está optimizando.
 
@@ -44,8 +44,8 @@ que se está optimizando.
    optimizan surrogate clipped, error de valor y entropía.
 8. Se vacía el buffer: PPO no reutiliza replay antiguo.
 
-Red: torso `1024→512→512`, cabeza slot 1 `512→24`, cabeza slot 2
-`[512+onehot(24)]→24` y value `512→1`.
+Red: torso `6332→512→512`, cabeza slot 1 `512→40`, cabeza slot 2
+`[512+onehot(40)]→40` y value `512→1`.
 
 ### Intuición de PPO y GAE
 
@@ -66,8 +66,8 @@ la entropía evita colapsar prematuramente entre las opciones legales.
 
 ### Arquitectura y condicionamiento
 
-El torso compartido comprime 1024 features a un embedding de 512. `policy1`
-produce 24 logits. Tras elegir \(a_1\), su one-hot de 24 posiciones se concatena
+El torso compartido comprime 6332 features a un embedding de 512. `policy1`
+produce 40 logits. Tras elegir \(a_1\), su one-hot de 40 posiciones se concatena
 al embedding: `policy2` puede aprender que una orden para slot 2 deja de ser
 válida o conveniente por la orden del slot 1. `value` produce un escalar.
 
@@ -78,9 +78,9 @@ que ya cambió rompería el ratio PPO.
 
 ## Observación, acción y máscaras
 
-El contrato canónico es [`rl_env_spec.md`](rl_env_spec.md): Obs `float32[1024]`,
-Candidate 2 durante bootstrap y `MultiDiscrete([24,24])`. Los ids son 0–15
-movimiento×objetivo, 16–19 switch, 20 pass, 21 Mega, 22 Tera reservado y 23
+El contrato canónico es [`rl_env_spec.md`](rl_env_spec.md): Obs `float32[6332]` (ObsSpec v2),
+Candidate 2 durante bootstrap y `MultiDiscrete([40,40])`. Los ids son 0–15
+movimiento×objetivo, 16–31 mega + movimiento×objetivo, 32–35 switch, 36 pass, 37 Tera reservado y 38–39
 reservado. Tera está off y su máscara siempre vale cero.
 
 IAM debe ser idéntica en collect y update:
@@ -239,6 +239,7 @@ Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.8** | 2026-11-14 | ObsSpec v2 (6332D, OTS completo + estado + historial) y ActionSpec v2 (40 ids por slot: mega como flag de cada movimiento×objetivo; máscara de entrenamiento = `valid_orders`). Checkpoints anteriores incompatibles. |
 | **1.7** | 2026-10-12 | Figuras reales al cerrar tune + ledger histórico en `logs/figures/`. |
 | **1.6** | 2026-10-11 | Train/infer bajo Preview PPO congelado (`frozen_preview`). |
 | **1.5** | 2026-10-11 | CLI `--lr/--clip-eps`; tune `run_ppo_hp_tune` + tracking; independencia vs Preview PPO. |

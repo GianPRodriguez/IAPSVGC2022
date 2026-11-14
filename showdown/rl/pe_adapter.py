@@ -12,7 +12,15 @@ from showdown.rl.action_space import (
     decode_slot_action,
     legal_joint_mask_from_slot_masks,
 )
-from showdown.rl.constants import JOINT_ACTION_N, N_MOVE_SLOTS, N_SWITCH_SLOTS
+from showdown.rl.constants import (
+    JOINT_ACTION_N,
+    MEGA_BASE,
+    N_MOVE_ACTIONS,
+    N_MOVE_SLOTS,
+    N_SWITCH_SLOTS,
+    SWITCH_BASE,
+    TERA_ID,
+)
 from showdown.rl.snapshot import (
     BattleSnapshot,
     FieldSnapshot,
@@ -126,13 +134,31 @@ def _ability_item(mon) -> Tuple[str, str, str, str]:
     return ab_s, ab_known, it_s, it_known
 
 
-def mon_from_pe(mon, *, is_active: bool, ots_species: str = '') -> Optional[MonSnapshot]:
+def _exact_stats(mon) -> Optional[Dict[str, int]]:
+    """Stats finales del |request| (solo equipo propio)."""
+    st = dict(getattr(mon, 'stats', None) or {})
+    hp = getattr(mon, 'max_hp', None)
+    keys = ('atk', 'def', 'spa', 'spd', 'spe')
+    if not hp or not all(st.get(k) for k in keys):
+        return None
+    return {'hp': int(hp), **{k: int(st[k]) for k in keys}}
+
+
+def mon_from_pe(mon, *, is_active: bool, ots_species: str = '', own: bool = False) -> Optional[MonSnapshot]:
     if mon is None:
         return None
     moves, pps = _moves_and_pp(mon)
     ab, ab_k, it, it_k = _ability_item(mon)
+    if it == 'unknown_item':
+        it, it_k = '', 'unknown'
     sp = _species(mon)
     return MonSnapshot(
+        stats=_exact_stats(mon) if own else None,
+        nature='' if own else str(getattr(mon, 'nature', '') or ''),
+        seen=True if own else bool(getattr(mon, 'revealed', True)),
+        mega_evolved='mega' in _norm(sp),
+        status_counter=int(getattr(mon, 'status_counter', 0) or 0),
+        protect_counter=int(getattr(mon, 'protect_counter', 0) or 0),
         species=sp,
         ots_species=ots_species or sp,
         hp_pct=_hp_pct(mon),
@@ -207,6 +233,11 @@ def _side_from_pe(
     can_mega: Sequence[bool] = (),
     can_tera: Sequence[bool] = (),
     ots_map: Optional[Dict[str, str]] = None,
+    own: bool = False,
+    switch_order: Sequence = (),
+    mega_used: bool = False,
+    keys: Optional[Dict[int, str]] = None,
+    hist=None,
 ) -> SideSnapshot:
     ots_map = ots_map or {}
     active_snaps: List[Optional[MonSnapshot]] = [None, None]
@@ -216,8 +247,10 @@ def _side_from_pe(
             mon,
             is_active=True,
             ots_species=ots_map.get(_norm(_species(mon)), ''),
+            own=own,
         )
         if snap is not None:
+            _apply_history(snap, (keys or {}).get(id(mon)), hist, active=True)
             if i < len(can_mega):
                 snap.can_mega = bool(can_mega[i])
             if i < len(can_tera):
@@ -226,27 +259,123 @@ def _side_from_pe(
                 snap.can_tera = False
         active_snaps[i] = snap
 
-    active_ids = {_norm(_species(m)) for m in actives if m is not None}
-    bench: List[Optional[MonSnapshot]] = []
-    for mon in team_values:
-        if mon is None:
-            continue
-        if _norm(_species(mon)) in active_ids and not getattr(mon, 'fainted', False):
-            # Same species may appear twice; prefer identity
-            if mon in actives:
-                continue
-        if mon in list(actives):
-            continue
-        bench.append(
-            mon_from_pe(
-                mon,
-                is_active=False,
-                ots_species=ots_map.get(_norm(_species(mon)), ''),
-            )
+    non_active = [m for m in team_values if m is not None and m not in list(actives)]
+    if own and switch_order:
+        # Banca propia en el orden de available_switches (= índice de la acción
+        # de cambio), luego el resto (debilitados).
+        first = [m for m in switch_order if m in non_active]
+        non_active = first + [m for m in non_active if m not in first]
+    elif not own:
+        # Rival: primero los ya vistos en combate (la hoja muestra 6, trae 4).
+        non_active = ([m for m in non_active if getattr(m, 'revealed', True)]
+                      + [m for m in non_active if not getattr(m, 'revealed', True)])
+    reserve: List[MonSnapshot] = []
+    for mon in non_active:
+        snap = mon_from_pe(
+            mon,
+            is_active=False,
+            ots_species=ots_map.get(_norm(_species(mon)), ''),
+            own=own,
         )
+        if snap is not None:
+            _apply_history(snap, (keys or {}).get(id(mon)), hist, active=False)
+            reserve.append(snap)
+    bench: List[Optional[MonSnapshot]] = list(reserve[:2])
     while len(bench) < 2:
         bench.append(None)
-    return SideSnapshot(active=active_snaps, bench=bench[:2])
+    return SideSnapshot(active=active_snaps, bench=bench[:2], reserve=reserve,
+                        mega_used=bool(mega_used))
+
+
+def _apply_history(snap: MonSnapshot, key: Optional[str], hist, *, active: bool) -> None:
+    """Historial del protocolo → campos del snapshot (último movimiento, bloqueo…)."""
+    if hist is None or key is None:
+        return
+    h = hist.mon(key)
+    if h is None:
+        return
+    if h.last_move_turn >= 0 and h.last_move:
+        snap.last_move = h.last_move
+        snap.last_move_ago = max(0, int(hist.turn) - int(h.last_move_turn))
+    if active and h.switch_in_turn >= 0:
+        snap.turns_active = max(0, int(hist.turn) - int(h.switch_in_turn))
+    snap.moves_since_switch = int(h.moves_since_switch) if active else 0
+    snap.times_switched_in = int(h.times_switched_in)
+    snap.hp_lost_last_turn = float(hist.hp_lost_last_turn(key))
+    item = _norm(snap.item)
+    vol = {_norm(k) for k in (snap.volatiles or {})}
+    if active and snap.last_move and snap.moves_since_switch > 0 and (
+            item.startswith('choice') or 'encore' in vol):
+        snap.locked_move = snap.last_move
+
+
+def _apply_brought_belief(side: SideSnapshot) -> None:
+    """Rival: la hoja muestra 6 y trae 4. Con k vistos, cada no visto tiene
+    P(traído) = (4−k)/(6−k); con k ≥ 4 los no vistos quedan descartados."""
+    mons = [m for m in list(side.active) + list(side.reserve) if m is not None]
+    k = sum(1 for m in mons if m.seen)
+    unseen = [m for m in mons if not m.seen]
+    for m in unseen:
+        if k >= 4:
+            m.p_brought, m.excluded = 0.0, True
+        else:
+            m.p_brought = (4.0 - k) / max(1.0, 6.0 - k)
+
+
+def _last_turn_summary(hist, our_role: str) -> Dict[str, float]:
+    if hist is None:
+        return {}
+    foe_role = 'p2' if our_role == 'p1' else 'p1'
+    out: Dict[str, float] = {}
+    for side, role in (('our', our_role), ('foe', foe_role)):
+        counts = hist.last_turn.get(role, {}) if hist.last_turn else {}
+        for k in ('protect', 'switch', 'faint', 'fakeout', 'spread'):
+            out[f'{side}_{k}'] = float(counts.get(k, 0.0))
+    return out
+
+
+def stat_inference_enabled() -> bool:
+    """``OBS_STAT_INFERENCE=1`` activa los rangos de SP inferidos en la obs.
+
+    Apagado por defecto: debe activarse en entrenamiento E inferencia a la vez
+    (si la red entrena con rangos completos y en inferencia ve rangos
+    angostados, las entradas cambian de distribución).
+    """
+    import os
+    return os.environ.get('OBS_STAT_INFERENCE', '').strip().lower() in ('1', 'true', 'yes')
+
+
+def player_stat_beliefs(player) -> Optional[object]:
+    """``TeamStatBeliefs`` del espejo IAP del jugador (ValidatedBattleMixin), si existe."""
+    if not stat_inference_enabled():
+        return None
+    iap = getattr(player, 'iap_battle', None)
+    return getattr(iap, 'stat_beliefs', None) if iap is not None else None
+
+
+def sp_bounds_from_beliefs(stat_beliefs, species: str) -> Optional[Dict[str, Tuple[int, int]]]:
+    """SP mínimo/máximo aún posibles por stat para un rival (inferencia por daño/velocidad)."""
+    if stat_beliefs is None or not species:
+        return None
+    try:
+        from showdown.stat_inference import normalize_species
+        table = getattr(stat_beliefs, 'beliefs', None) or {}
+        belief = table.get(normalize_species(species))
+        if belief is None:
+            return None
+        out: Dict[str, Tuple[int, int]] = {}
+        for stat, cands in (belief.candidates or {}).items():
+            if cands:
+                out[str(stat)] = (int(min(cands)), int(max(cands)))
+        return out or None
+    except Exception:
+        return None
+
+
+def _apply_sp_bounds(side: SideSnapshot, stat_beliefs) -> None:
+    for mon in list(side.active) + list(side.reserve):
+        if mon is not None and mon.stats is None:
+            mon.sp_bounds = sp_bounds_from_beliefs(stat_beliefs, mon.display_species())
 
 
 def snapshot_from_battle(
@@ -254,9 +383,23 @@ def snapshot_from_battle(
     *,
     ots_our: Optional[Dict[str, str]] = None,
     ots_foe: Optional[Dict[str, str]] = None,
+    stat_beliefs=None,
 ) -> BattleSnapshot:
     """Build Spec BattleSnapshot from poke-env DoubleBattle."""
-    our_team = list((getattr(battle, 'team', None) or {}).values())
+    team_map = dict(getattr(battle, 'team', None) or {})
+    our_team = list(team_map.values())
+    # poke-env conserva en ``team`` los 6 del request de preview; el |request| del
+    # combate solo trae los 4 elegidos. Filtrar por esos idents evita contar como
+    # banca Pokémon que no se trajeron.
+    try:
+        req_side = (getattr(battle, 'last_request', None) or {}).get('side', {}) or {}
+        idents = {str(p.get('ident')) for p in (req_side.get('pokemon') or []) if p.get('ident')}
+    except Exception:
+        idents = set()
+    if idents and not getattr(battle, 'teampreview', False):
+        kept = [mon for key, mon in team_map.items() if key in idents]
+        if kept:
+            our_team = kept
     foe_team = list((getattr(battle, 'opponent_team', None) or {}).values())
     actives = list(getattr(battle, 'active_pokemon', None) or [None, None])
     foes = list(getattr(battle, 'opponent_active_pokemon', None) or [None, None])
@@ -274,16 +417,49 @@ def snapshot_from_battle(
     if len(force) < 2:
         force = (force[0] if force else False, False)
 
+    avail_moves_raw = list(getattr(battle, 'available_moves', None) or [[], []])
+    avail_sw_raw = list(getattr(battle, 'available_switches', None) or [[], []])
+    avail_moves = tuple(
+        tuple(str(getattr(mv, 'id', '') or '') for mv in (avail_moves_raw[i] if i < len(avail_moves_raw) else []))
+        for i in range(2)
+    )
+    avail_switches = tuple(
+        tuple(_species(m) for m in (avail_sw_raw[i] if i < len(avail_sw_raw) else []))
+        for i in range(2)
+    )
+    switch_order = list(avail_sw_raw[0]) if avail_sw_raw and avail_sw_raw[0] else (
+        list(avail_sw_raw[1]) if len(avail_sw_raw) > 1 else []
+    )
+
+    from showdown.rl.battle_history import history_from_battle
+
+    hist = history_from_battle(battle)
+    our_role = str(getattr(battle, 'player_role', None) or 'p1')
+    keys = {id(m): k for k, m in team_map.items()}
+    keys.update({id(m): k for k, m in (getattr(battle, 'opponent_team', None) or {}).items()})
+    foe_side = _side_from_pe(foes, foe_team, ots_map=ots_foe,
+                             mega_used=bool(getattr(battle, 'opponent_used_mega_evolve', False)),
+                             keys=keys, hist=hist)
+    _apply_brought_belief(foe_side)
+    if stat_beliefs is not None:
+        _apply_sp_bounds(foe_side, stat_beliefs)
+
     return BattleSnapshot(
         turn=int(getattr(battle, 'turn', 0) or 0),
-        our=_side_from_pe(actives, our_team, can_mega=can_mega, can_tera=can_tera, ots_map=ots_our),
-        foe=_side_from_pe(foes, foe_team, ots_map=ots_foe),
+        our=_side_from_pe(actives, our_team, can_mega=can_mega, can_tera=can_tera, ots_map=ots_our,
+                          own=True, switch_order=switch_order,
+                          mega_used=bool(getattr(battle, 'used_mega_evolve', False)),
+                          keys=keys, hist=hist),
+        foe=foe_side,
         field=field_from_pe(battle),
         finished=finished,
         won=bool(won) if won is not None else None,
         tied=tied,
         force_switch=(force[0], force[1]),
         player_id=str(getattr(battle, 'player_role', None) or 'p1'),
+        avail_moves=avail_moves,
+        avail_switches=avail_switches,
+        last_turn=_last_turn_summary(hist, our_role),
     )
 
 
@@ -386,7 +562,7 @@ def pe_slot_mask(battle, slot: int, *, other: Optional[SlotAction] = None) -> np
     for bi in range(min(N_SWITCH_SLOTS, len(switches))):
         if bi in taken:
             continue
-        mask[16 + bi] = 1.0
+        mask[SWITCH_BASE + bi] = 1.0
 
     if force:
         return mask
@@ -398,13 +574,50 @@ def pe_slot_mask(battle, slot: int, *, other: Optional[SlotAction] = None) -> np
 
     can_mega = list(getattr(battle, 'can_mega_evolve', None) or [])
     can_tera = list(getattr(battle, 'can_tera', None) or [])
-    # Una sola mega por combate: si el otro hueco ya la pidió, este no puede.
+    # Mega = flag sobre un movimiento (ids 16–31, mismo movimiento×objetivo);
+    # nunca con un cambio. Una sola por combate: si el otro hueco ya la pidió, no.
     other_mega = other is not None and other.kind == 'mega'
     if slot < len(can_mega) and can_mega[slot] and not other_mega:
-        mask[21] = 1.0
+        mask[MEGA_BASE:MEGA_BASE + N_MOVE_ACTIONS] = mask[0:N_MOVE_ACTIONS]
     if slot < len(can_tera) and allow_tera(bool(can_tera[slot])):
-        mask[22] = 1.0
-    return mask
+        mask[TERA_ID] = 1.0
+    return _filter_by_valid_orders(battle, slot, mask)
+
+
+def _valid_order_strings(battle, slot: int) -> Optional[set]:
+    try:
+        vo = getattr(battle, 'valid_orders', None)
+    except Exception:
+        return None
+    if not vo or slot >= len(vo):
+        return None
+    legal = {str(x) for x in (vo[slot] or [])}
+    return legal or None
+
+
+def _filter_by_valid_orders(battle, slot: int, mask: np.ndarray) -> np.ndarray:
+    """Deja solo los ids cuya orden poke-env está en ``battle.valid_orders[slot]``.
+
+    Sin este filtro la máscara de ENTRENAMIENTO era más permisiva que la de
+    inferencia: ``pass`` siempre, los 4 objetivos para cualquier movimiento y
+    cambios aunque el Pokémon esté atrapado. Showdown rechazaba esas órdenes, el
+    backend las sustituía por una aleatoria (``used_fallback``), la transición se
+    descartaba y el bootstrap de DDQN maximizaba sobre Q de ids nunca entrenados.
+    Si el filtro dejara la máscara vacía (desfase de strings), se conserva la
+    original como defensa.
+    """
+    legal = _valid_order_strings(battle, slot)
+    if legal is None:
+        return mask
+    out = np.zeros_like(mask)
+    for aid in np.flatnonzero(mask > 0.5):
+        try:
+            order = slot_action_to_pe_order(battle, slot, decode_slot_action(int(aid)))
+        except Exception:
+            continue
+        if str(order) in legal:
+            out[int(aid)] = 1.0
+    return out if np.any(out > 0.5) else mask
 
 
 def pe_autoregressive_masks(battle, slot1_action_id: Optional[int] = None) -> Tuple[np.ndarray, np.ndarray]:

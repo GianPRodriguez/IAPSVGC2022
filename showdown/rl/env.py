@@ -193,8 +193,8 @@ class VGCEnv(gym.Env):
     """
     Gymnasium environment for VGC doubles RL (Spec v1.3).
 
-    observation: float32[1024]
-    action: MultiDiscrete([24, 24])  — Slot1 then Slot2 (auto-regressive masks in info)
+    observation: float32[OBS_DIM] (ObsSpec v2)
+    action: MultiDiscrete([SLOT_ACTION_N, SLOT_ACTION_N])  — Slot1 then Slot2 (auto-regressive masks in info)
     info['trunc_reason']: None | 'turn_cap' | 'crash'
     """
 

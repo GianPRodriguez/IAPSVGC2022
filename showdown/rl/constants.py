@@ -3,13 +3,27 @@ from __future__ import annotations
 
 SPEC_VERSION = 'v1.8'
 
-# ObsSpec segments (must sum to OBS_DIM)
-SEG_SPECIES = 128
-SEG_BELIEF = 256
-SEG_FIELD = 128
-SEG_STATS_VOL = 128
-SEG_MOVE_DMG = 384
-OBS_DIM = SEG_SPECIES + SEG_BELIEF + SEG_FIELD + SEG_STATS_VOL + SEG_MOVE_DMG  # 1024
+# ObsSpec v2 (rl_env_spec v1.18): OTS completo + estado. Ver showdown/rl/observation.py.
+# Antes (v1): 1024 = 128 especie + 256 belief + 128 campo + 128 boosts + 384 movimientos,
+# con tipos/especie/item como hash md5 y el segmento belief en cero para DDQN/PPO.
+from showdown.rl.team_preview_obs import MON_DIM as OTS_MON_DIM  # noqa: E402
+
+OBS_VERSION = 2
+N_OUR_MONS = 4  # activos a, b + 2 de banca (orden = índice de cambio)
+N_FOE_MONS = 6  # activos a, b + 4 restantes de su hoja (vistos primero)
+MON_DYN_DIM = 58  # estado (40) + incertidumbre SP (6) + historial y traído (12)
+MOVE_SLOT_DIM = 81  # por movimiento disponible de nuestros activos (alineado con la acción)
+FOE_MOVE_DIM = 43  # por movimiento de la hoja de los activos rivales
+FIELD_DIM = 48
+PAIR_DIM = 3 * N_OUR_MONS * N_FOE_MONS  # daño us→foe, foe→us, velocidad efectiva
+MON_BLOCK_DIM = OTS_MON_DIM + MON_DYN_DIM
+OBS_DIM = (
+    (N_OUR_MONS + N_FOE_MONS) * MON_BLOCK_DIM
+    + 2 * 4 * MOVE_SLOT_DIM
+    + 2 * 4 * FOE_MOVE_DIM
+    + PAIR_DIM
+    + FIELD_DIM
+)
 
 # Canonical party slots
 PARTY_ORDER = (
@@ -36,23 +50,28 @@ R_CLIP_HI = 1.40
 # BD
 BD_MIN_TURNS = 4
 
-# Action space (per slot)
-# 0-15: move i (0-3) × target t (0-3)  [foe_a, foe_b, ally, self/field]
-# 16-19: hard switch bench index 0-3
-# 20: pass
-# 21: mega flag with move0/target0 (compact); prefer mega via info in decode
-# 22: tera flag (ActionSpec reserved). Reg M-C: always masked off —
-#     see showdown.format_rules.TERASTALLIZATION_ENABLED.
-# 23: reserved / default
+# Action space v2 (per slot, rl_env_spec v1.18)
+# 0-15:  move i (0-3) × target t (0-3)  [foe_a, foe_b, ally, self/field]
+# 16-31: MEGA + move i × target t (megaevolucionar SIEMPRE va con un movimiento;
+#        nunca con un cambio). El agente aprende cuándo megaevolucionar y con qué.
+#        (v1: un único id 21 = mega + movimiento 0 → no podía elegir el movimiento.)
+# 32-35: hard switch bench index 0-3
+# 36:    pass
+# 37:    tera (ActionSpec reserved). Reg M-C: always masked off —
+#        see showdown.format_rules.TERASTALLIZATION_ENABLED.
+# 38-39: reserved
 N_MOVE_SLOTS = 4
 N_TARGETS = 4  # foe_a, foe_b, ally, self_or_field
 N_SWITCH_SLOTS = 4
-PASS_ID = 16 + N_SWITCH_SLOTS  # 20
-MEGA_ID = 21
-TERA_ID = 22
-RESERVED_ID = 23
-SLOT_ACTION_N = 24
-JOINT_ACTION_N = SLOT_ACTION_N * SLOT_ACTION_N  # 576 (DDQNSpec)
+N_MOVE_ACTIONS = N_MOVE_SLOTS * N_TARGETS  # 16
+MEGA_BASE = N_MOVE_ACTIONS  # 16
+SWITCH_BASE = MEGA_BASE + N_MOVE_ACTIONS  # 32
+PASS_ID = SWITCH_BASE + N_SWITCH_SLOTS  # 36
+TERA_ID = PASS_ID + 1  # 37
+RESERVED_ID = PASS_ID + 2  # 38
+SLOT_ACTION_N = PASS_ID + 4  # 40
+JOINT_ACTION_N = SLOT_ACTION_N * SLOT_ACTION_N  # 1600 (DDQNSpec)
+MEGA_ID = MEGA_BASE  # compat: primer id mega (mega + movimiento 0 → rival A)
 
 ILLEGAL_LOGIT = -1.0e9
 

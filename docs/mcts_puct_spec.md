@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS+PUCT open-loop (solo turnos) |
-| **Versión** | **1.5** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.16) |
+| **Versión** | **1.6** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
 | **Estado** | FROZEN; `showdown/rl/mcts_puct/` y `battle_bots/mcts_puct/` |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Hiperparámetros de búsqueda (sobre todo \(N_{\rm sim}\)); barrido automatizado |
@@ -136,7 +136,7 @@ de la arista propia (no hay matriz simultánea; eso es MCTS–Nash).
 ## 5. Observación, acción y máscaras
 
 Contrato live: [`rl_env_spec.md`](rl_env_spec.md). La búsqueda usa snapshots, no
-el vector 1024D. Aristas = joints legales; Mega puede ser legal; Tera id 22
+el vector de ObsSpec v2. Aristas = joints legales (ActionSpec v2: mega por movimiento); Tera id 37
 siempre off (Reg M-C). Candidate 1 en hojas.
 
 **No hay Team Preview en este MDP de combate** (MCTS no elige `/team` como
@@ -312,6 +312,7 @@ y turno para reproducir RNG.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.6** | 2026-11-14 | ActionSpec v2 (40 ids por slot, mega como flag de cada movimiento; joint 1600) y máscaras desde `valid_orders`. |
 | **1.5** | 2026-10-11 | Inferencia bajo Preview Nash congelado (`frozen_preview`). |
 | **1.4** | 2026-10-11 | §Q/N pedagógico; meseta \(N_{\rm sim}\); CLI `run_mcts_sims_sweep`; rival/seed/criterio; **tracking** history/progress de cambios de N_sim. |
 | **1.3** | 2026-10-11 | PUCT, lifecycle, fallos, evaluación, code map. |

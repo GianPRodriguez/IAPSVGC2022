@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.5** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.16) |
+| **Versión** | **1.6** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
 | **Estado** | FROZEN; `showdown/rl/qd_pga/` |
 | **Training** | **Sí**: variación híbrida mutación/PPO y crítico compartido |
 | **Inferencia** | `ValidatedQDPGAPlayer` con el mejor elite actor-only |
@@ -58,14 +58,14 @@ sin enseñar al crítico con una política perturbada accidentalmente.
 
 ### Arquitectura
 
-El actor usa el torso PPO `1024→512→512` y cabezas AR 24/24. `actor_state_dict`
+El actor usa el torso PPO `6332→512→512` y cabezas AR 40/40. `actor_state_dict`
 excluye claves `value.*`; cada hijo recibe actor del padre y usa el
 `SharedCritic` separado. Este crítico es un MLP de valor entrenado por TD(0)
 Huber. `best_elite.pt` se guarda en formato de agente para inferencia greedy.
 
 ## Observación, acción y máscaras
 
-Usa Obs 1024D, acción auto-regresiva e IAM de
+Usa ObsSpec v2 (6332D), acción auto-regresiva e IAM de
 [`rl_env_spec.md`](rl_env_spec.md). Candidate 2 alimenta bootstrap, burn y PG;
 Candidate 1 define \(f\). Los BD canónicos ubican el elite y no alteran el
 gradiente. Tanto actor mutado como actor PG aplican máscaras derivadas de
@@ -218,6 +218,7 @@ acompañar cualquier comparación.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.6** | 2026-11-14 | ObsSpec v2 (6332D, OTS completo + estado + historial) y ActionSpec v2 (40 ids por slot: mega como flag de cada movimiento×objetivo; máscara de entrenamiento = `valid_orders`). Checkpoints anteriores incompatibles. |
 | **1.5** | 2026-10-11 | Train/infer bajo Preview QD-PGA congelado (`frozen_preview`). |
 | **1.4** | 2026-10-11 | CLI `--lr/--clip-eps`; tune `run_qd_pga_hp_tune` + tracking prev→nuevo. |
 | **1.3** | 2026-10-11 | Híbrido, arquitectura, loop, tabla, fallos, evaluación, code map y ejemplo. |
