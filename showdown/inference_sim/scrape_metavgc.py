@@ -145,8 +145,40 @@ def parse_team_page(url: str, html: str) -> Optional[dict]:
     }
 
 
+_PAYLOAD_SLUG = re.compile(r'/teams/([a-z0-9][a-z0-9-]*-by-[a-z0-9_.-]+)')
+_FORMAT_ID = re.compile(r'pokemonchampions-reg[a-z0-9]+')
+
+
+def page_format_ids(html: str) -> Set[str]:
+    """Ids de formato que la página declara (p.ej. pokemonchampions-regc)."""
+    return set(_FORMAT_ID.findall(html))
+
+
+def is_reg_mc_page(html: str, slug: str = '') -> bool:
+    """Reg M-C si declara pokemonchampions-regc (y ningún otro), o si el slug lo dice."""
+    ids = page_format_ids(html)
+    if ids:
+        return ids == {'pokemonchampions-regc'}
+    return is_reg_mc_slug(slug)
+
+
+def team_signature(team: dict) -> str:
+    """Huella por contenido: mismos Pokémon, objetos, naturalezas, movimientos y SP = mismo equipo."""
+    mons = []
+    for m in team.get('mons') or []:
+        sp = m.get('sp') or {}
+        mons.append((
+            str(m.get('species', '')).lower(), str(m.get('item', '')).lower(),
+            str(m.get('nature', '')).lower(), tuple(sorted(str(x).lower() for x in m.get('moves') or [])),
+            tuple(sorted((k, int(v)) for k, v in sp.items())),
+        ))
+    return repr(sorted(mons))
+
+
 def team_links_in(html: str) -> List[str]:
     out = []
+    for slug in _PAYLOAD_SLUG.findall(html):
+        out.append(BASE + '/teams/' + slug)
     for path in re.findall(r'href="(/teams/[^"#?]+)"', html):
         if path in ('/teams/finder', '/teams/tournaments', '/teams'):
             continue
@@ -204,6 +236,7 @@ def _seed_urls() -> List[str]:
     seeds = [
         f'{BASE}/teams/featured/regulation-mc',
         f'{BASE}/teams/finder?format=pokemonchampions-regc',
+        f'{BASE}/teams/tournaments',
     ]
     seeds.extend(f'{BASE}/pokemon/{slug}' for slug in pokemon)
     featured_path = Path(__file__).resolve().parent / '_featured_urls.json'
@@ -223,8 +256,10 @@ def collect_and_parse(
     crawl_cap: int = 80,
     *,
     skip_slugs: Optional[Set[str]] = None,
+    skip_signatures: Optional[Set[str]] = None,
 ) -> List[dict]:
     skip = set(skip_slugs or ())
+    content_sigs: Set[str] = set(skip_signatures or ())
     seeds = _seed_urls()
     teams: List[dict] = []
     errors: List[tuple] = []
@@ -252,8 +287,8 @@ def collect_and_parse(
             slug = full.rstrip('/').split('/')[-1]
             if full in seen or slug in skip:
                 continue
-            if '/teams/featured/' in seed:
-                trusted.add(full)
+            if '/teams/featured/' in seed or '/teams/tournaments' in seed or '-by-' in slug:
+                trusted.add(full)  # el formato se verifica con la etiqueta de la propia página
             elif not is_reg_mc_slug(slug):
                 continue
             seen.add(full)
@@ -277,10 +312,17 @@ def collect_and_parse(
             link_slug = full.rstrip('/').split('/')[-1]
             if full in seen or link_slug in skip:
                 continue
-            if not is_reg_mc_slug(link_slug):
+            if '-by-' not in link_slug and not is_reg_mc_slug(link_slug):
                 continue
             seen.add(full)
+            trusted.add(full)
             queue.append(full)
+
+        if not is_reg_mc_page(html, slug):
+            errors.append((url, 'wrong format'))
+            _safe_print(f'SKIP not Reg M-C {slug[:50]}')
+            time.sleep(0.12)
+            continue
 
         team = parse_team_page(url, html)
         if not team:
@@ -299,6 +341,12 @@ def collect_and_parse(
             _safe_print(f'SKIP duplicate url {(team.get("name") or "")[:50]}')
             time.sleep(0.12)
             continue
+        csig = team_signature(team)
+        if csig in content_sigs:
+            _safe_print(f'SKIP duplicate content {(team.get("name") or "")[:50]}')
+            time.sleep(0.12)
+            continue
+        content_sigs.add(csig)
         sigs.add(sig)
         teams.append(team)
         _safe_print(f'OK [{len(teams)}/{want}] {team["name"]}')
@@ -315,7 +363,10 @@ def append_new_teams(want_new: int = 100, crawl_cap: int = 400) -> List[dict]:
     existing = _load_existing()
     have = {t.get('slug') for t in existing if t.get('slug')}
     _safe_print(f'existing={len(existing)} want_new={want_new}')
-    added = collect_and_parse(want_new, crawl_cap=crawl_cap, skip_slugs=have)
+    added = collect_and_parse(
+        want_new, crawl_cap=crawl_cap, skip_slugs=have,
+        skip_signatures={team_signature(t) for t in existing},
+    )
     merged = existing + added
     OUT.write_text(json.dumps(merged, indent=2, ensure_ascii=False), encoding='utf-8')
     _safe_print(f'Done added={len(added)} total={len(merged)} -> {OUT}')
