@@ -168,6 +168,19 @@ python -m showdown.inference_sim.run_robust_e2e --teams 100 --seed 10 \
   un proceso.
 - Tuning de expectimax: `run_expectimax_tune ... --procs 24 --workers 1`.
 - Barrido MCTS: `run_mcts_sims_sweep ... --procs 24`.
+- B por defecto **no** lleva wrapper validated: no infiere SP y calcula daño con
+  las stats que poke-env le da al rival (bases de especie crudas, HP en %). Con
+  `--b-validated` B usa el mismo espejo IAP + inferencia que A (comparaciones simétricas).
+- Valor de la información de SP (diagnóstico): `--sp-info-a` / `--sp-info-b`
+  con `inference` (producción), `oracle` (SP verdaderos del rival) o `none`
+  (OTS + bases, creencias sin estrechar). `--sp-info-b` exige `--b-validated`.
+  El reporte lo registra en la línea `sp_info:`.
+
+```bash
+python -m showdown.inference_sim.run_robust_e2e --teams 300 --procs 28 --seed 8001 --start-ps \
+  --player-a greedy_joint --player-b greedy_joint --b-validated \
+  --sp-info-a oracle --sp-info-b inference
+```
 
 ### Team Preview live (PPO, Nash, QD-PGA)
 

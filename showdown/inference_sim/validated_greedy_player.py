@@ -93,6 +93,41 @@ def _calibration_set_truth(opp_team) -> None:
             pass
 
 
+SP_INFO_MODES = ('inference', 'oracle', 'none')
+
+
+def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
+    """Diagnóstico: cuánta información de Stat Points del rival recibe este jugador.
+
+    - ``inference`` (producción): OTS + bases; los SP se estrechan con daño/velocidad.
+    - ``oracle``: SP verdaderos del rival desde el inicio (inferencia perfecta).
+    - ``none``: OTS + bases; las creencias nunca se estrechan (todo el rango de SP).
+
+    ``opp_team_fn`` devuelve el TeamMeta rival vigente (cambia entre series).
+    """
+    mode = str(mode or 'inference').strip().lower()
+    if mode not in SP_INFO_MODES:
+        raise ValueError(f'sp_info_mode desconocido: {mode!r} (opciones: {SP_INFO_MODES})')
+    beliefs = getattr(iap_battle, 'stat_beliefs', None)
+    if beliefs is None or mode == 'inference':
+        return
+    if mode == 'none':
+        beliefs.inference_off = True
+    else:
+        # Oráculo: la inferencia sigue activa como respaldo si una especie no se
+        # encuentra en la verdad; sobre un SP ya resuelto no cambia nada (narrow
+        # descarta intersecciones vacías).
+        from showdown.inference_sim.soundness import _lookup_truth
+        from showdown.stat_inference import _apply_oracle
+        from teams.team_converter import normalize_name
+
+        beliefs.oracle_lookup = lambda sp: _lookup_truth(opp_team_fn(), normalize_name(sp))[0]
+        # bootstrap_battle ya creó las creencias de los 6 rivales (OTS) antes de que
+        # existiera el oráculo: aplicarlo también a ésas, no solo a las nuevas.
+        for belief in list(beliefs.beliefs.values()):
+            _apply_oracle(belief, beliefs.oracle_lookup)
+
+
 class ValidatedBattleMixin:
     """
     Feed del protocolo a Battle IAP + contraste con poke-env.
@@ -156,6 +191,39 @@ class ValidatedBattleMixin:
                 self.set_opp_ots_sheet(ots_sheet_from_team_meta(opp_team))
         except Exception:
             pass
+
+    # El espejo IAP se recrea en cada juego del BO3 (y sus creencias de SP con él).
+    @property
+    def iap_battle(self):
+        return self.__dict__.get('_iap_battle_obj')
+
+    @iap_battle.setter
+    def iap_battle(self, value) -> None:
+        old = self.__dict__.get('_iap_battle_obj')
+        if old is not None and old is not value:
+            self._log_sp_info_summary(old)
+        self.__dict__['_iap_battle_obj'] = value
+
+    def _log_sp_info_summary(self, iap_battle) -> None:
+        """PS_SP_INFO_DEBUG=1: cuánto sabía este jugador de los SP rivales al descartar el espejo."""
+        import os as _os
+        if _os.environ.get('PS_SP_INFO_DEBUG') != '1':
+            return
+        beliefs = getattr(getattr(iap_battle, 'stat_beliefs', None), 'beliefs', None) or {}
+        sizes = [len(b.candidates[s]) for b in beliefs.values() for s in b.candidates]
+        if not sizes:
+            return
+        resolved = sum(1 for n in sizes if n == 1)
+        narrowed = sum(1 for b in beliefs.values() for s in b.candidates if len(b.candidates[s]) < 33)
+        print(
+            f'[SP-INFO] {self.username} mode={getattr(self, "sp_info_mode", "inference")} '
+            f'turn={getattr(iap_battle, "turn", "?")} mons={len(beliefs)} '
+            f'stats_resueltos={resolved}/{len(sizes)} estrechados={narrowed} '
+            f'cands_medio={sum(sizes) / len(sizes):.1f} '
+            f'obs={sum(b.observations for b in beliefs.values())} '
+            f'descartadas={sum(b.skipped for b in beliefs.values())}',
+            flush=True,
+        )
 
     def reset_for_next_battle(self, user_team: TeamMeta, opp_team: TeamMeta) -> None:
         self.user_team = user_team
@@ -625,14 +693,10 @@ class ValidatedBattleMixin:
         ordered = self._preview_ordered_team()
         self.iap_battle = bootstrap_battle(ordered, self.opp_team)
         import os as _os
+        mode = str(getattr(self, 'sp_info_mode', 'inference') or 'inference').lower()
         if _os.environ.get('PS_ORACLE_SP_EXPECTIMAX') == '1' and hasattr(self, 'set_opp_ots_sheet'):
-            # Diagnóstico: SP verdaderos del rival SOLO para el jugador expectimax.
-            from showdown.inference_sim.soundness import _lookup_truth as _lt
-            from teams.team_converter import normalize_name as _nn
-            _me = self
-            self.iap_battle.stat_beliefs.oracle_lookup = (
-                lambda sp, _me=_me: _lt(_me.opp_team, _nn(sp))[0]
-            )
+            mode = 'oracle'  # Diagnóstico: SP verdaderos SOLO para el jugador expectimax.
+        apply_sp_info_mode(self.iap_battle, mode, lambda: self.opp_team)
         self._sync_role_ids()
         self._bootstrapped = True
         if len(self.protocol_log) < 420:

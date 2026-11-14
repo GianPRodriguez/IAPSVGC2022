@@ -1186,8 +1186,12 @@ class TeamStatBeliefs:
 
     def __init__(self):
         self.beliefs: Dict[str, StatBelief] = {}
-        # Diagnóstico: oráculo de SP solo para este jugador (ver PS_ORACLE_SP_EXPECTIMAX).
+        # Diagnóstico: oráculo de SP solo para este jugador (ver PS_ORACLE_SP_EXPECTIMAX
+        # y el modo ``oracle`` de PS_SP_INFO_A/B en run_robust_e2e).
         self.oracle_lookup = None
+        # Diagnóstico (modo ``none``): no se aprende nada de las observaciones; las
+        # creencias quedan con todo el rango de SP (solo OTS + bases de especie).
+        self.inference_off = False
 
     # -- ciclo de vida ---------------------------------------------------- #
 
@@ -1261,6 +1265,7 @@ class TeamStatBeliefs:
             # Mega/Blade: mismas SP, bases distintas. Cotas hechas con bases viejas
             # (p.ej. Spe 80→100) expulsan el SP verdadero; reabrir esos stats.
             max_sp, _ = sp_limits()
+            reopened = False
             for stat, new_base in base_stats.items():
                 try:
                     old_base = int(belief.base_stats.get(stat) or 0)
@@ -1269,8 +1274,13 @@ class TeamStatBeliefs:
                     continue
                 if old_base > 0 and nb > 0 and old_base != nb:
                     belief.candidates[stat] = set(range(SP_MIN, max_sp + 1))
+                    reopened = True
             belief.base_stats.update(base_stats)
             belief.current_forme = forme
+            if reopened:
+                # El oráculo conoce los SP del Pokemon (no de la forma): tras
+                # megaevolucionar sigue sabiéndolos.
+                _apply_oracle(belief, getattr(self, 'oracle_lookup', None))
         return belief
 
     # -- evidencia de velocidad ------------------------------------------- #
@@ -1278,6 +1288,8 @@ class TeamStatBeliefs:
     def observe_speed_order(self, opponent_pkmn, opponent_ctx: SpeedContext,
                             user_speed: int, user_ctx: SpeedContext,
                             opponent_first: bool, trick_room: bool = False) -> bool:
+        if self.inference_off:
+            return False
         sink = _SPEED_SINK
         if sink is None:
             return self._observe_speed_order_impl(
@@ -1463,6 +1475,8 @@ class TeamStatBeliefs:
         observed_damage: puntos de HP (absolutos) o delta de porcentaje (si damage_is_percent).
         is_ko: el golpe dejo al defensor a 0 HP; el dano observado es cota inferior.
         """
+        if self.inference_off:
+            return False
         if category not in ('p', 's') or observed_damage <= 0:
             return False
         if ctx.is_uncertain:

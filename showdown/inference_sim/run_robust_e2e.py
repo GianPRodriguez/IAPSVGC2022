@@ -76,6 +76,7 @@ from showdown.inference_sim.team_factory import (
 from showdown.inference_sim.validated_greedy_player import (
     PLAYER_A_CHOICES,
     PLAYER_B_CHOICES,
+    SP_INFO_MODES,
     make_opponent_player,
     validated_player_class,
 )
@@ -592,6 +593,8 @@ def _build_report(
         f'bo3_series: {n_bo3}',
         f'seed: {seed if seed is not None else "-"}',
         f'skip_sync: {"YES" if skip_sync else "NO"}',
+        f'sp_info: A={sp_info_mode("A")} B={sp_info_mode("B")} '
+        f'b_validated={"YES" if b_validated() else "NO"}',
         f'elapsed_s: {elapsed_s:.1f}',
         f'bo3_per_s: {bps:.3f}',
         '',
@@ -791,6 +794,27 @@ def _split_round_robin(items: List[Any], n: int) -> List[List[Any]]:
     return buckets
 
 
+def sp_info_mode(side: str) -> str:
+    """Modo de información de SP del rival para el lado A/B (PS_SP_INFO_A/B)."""
+    mode = os.environ.get(f'PS_SP_INFO_{side}', 'inference').strip().lower() or 'inference'
+    if mode not in SP_INFO_MODES:
+        raise ValueError(f'PS_SP_INFO_{side}={mode!r} no válido (opciones: {SP_INFO_MODES})')
+    return mode
+
+
+def b_validated() -> bool:
+    """B con wrapper validated (PS_B_VALIDATED=1). Sin él, B no tiene inferencia de SP:
+    usa las stats que poke-env le da al rival (bases de especie crudas, HP en %)."""
+    return os.environ.get('PS_B_VALIDATED', '') == '1'
+
+
+def _reset_player_b(player_b_pl, tb: TeamMeta, ta: TeamMeta) -> None:
+    if hasattr(player_b_pl, 'reset_for_next_battle') and b_validated():
+        player_b_pl.reset_for_next_battle(tb, ta)
+    else:
+        player_b_pl.update_team(to_showdown_export(tb))
+
+
 async def run_batch(
     n_teams: int,
     *,
@@ -947,7 +971,7 @@ async def run_batch(
             'outcome': 'ok',
         }
         player_a_pl.reset_for_next_battle(ta, tb)
-        player_b_pl.update_team(to_showdown_export(tb))
+        _reset_player_b(player_b_pl, tb, ta)
         # Ambos lados pueden tener cola BO3 sucia tras un timeout previo.
         try:
             from showdown.inference_sim.bo3_runtime import reset_bo3_runtime_state
@@ -979,7 +1003,7 @@ async def run_batch(
                 except Exception:
                     pass
                 player_a_pl.reset_for_next_battle(ta, tb)
-                player_b_pl.update_team(to_showdown_export(tb))
+                _reset_player_b(player_b_pl, tb, ta)
                 try:
                     from showdown.inference_sim.bo3_runtime import (
                         reset_bo3_runtime_state,
@@ -1198,15 +1222,32 @@ async def run_batch(
             battle_format=format_id,
             server_configuration=cfg,
         )
-        player_b_pl = make_opponent_player(
-            player_b,
-            team=team_b0,
-            account_configuration=AccountConfiguration(
-                f'{b_nick}{stamp % 10000}w{worker_id + worker_offset}'[:18], None
-            ),
-            battle_format=format_id,
-            server_configuration=cfg,
+        b_account = AccountConfiguration(
+            f'{b_nick}{stamp % 10000}w{worker_id + worker_offset}'[:18], None
         )
+        if b_validated():
+            # B con el mismo wrapper que A (espejo IAP + creencias de SP propias).
+            # Su contraste de estado va a un reporte aparte: el reporte mide a A.
+            player_b_pl = validated_player_class(player_b)(
+                user_team=team_b0,
+                opp_team=team_a0,
+                state_report=StateCheckReport(),
+                soundness_report=None,
+                skip_sync=skip_sync,
+                account_configuration=b_account,
+                battle_format=format_id,
+                server_configuration=cfg,
+            )
+        else:
+            player_b_pl = make_opponent_player(
+                player_b,
+                team=team_b0,
+                account_configuration=b_account,
+                battle_format=format_id,
+                server_configuration=cfg,
+            )
+        player_a_pl.sp_info_mode = sp_info_mode('A')
+        player_b_pl.sp_info_mode = sp_info_mode('B')
 
         try:
             from showdown.inference_sim import decision_trace
@@ -1840,9 +1881,39 @@ def main(argv: Optional[List[str]] = None) -> int:
         '--no-battle-seed', action='store_true',
         help='No fijar la semilla de batalla (azar de Showdown distinto en cada corrida)',
     )
+    parser.add_argument(
+        '--sp-info-a', choices=list(SP_INFO_MODES), default=None,
+        help=(
+            'Diagnóstico: SP del rival que conoce A. inference (producción), oracle '
+            '(SP verdaderos), none (OTS + bases, sin inferencia). Env: PS_SP_INFO_A'
+        ),
+    )
+    parser.add_argument(
+        '--sp-info-b', choices=list(SP_INFO_MODES), default=None,
+        help='Igual que --sp-info-a para B (requiere --b-validated). Env: PS_SP_INFO_B',
+    )
+    parser.add_argument(
+        '--b-validated', action='store_true',
+        help=(
+            'B también con wrapper validated (espejo IAP + inferencia de SP). Sin esto B '
+            'no infiere SP y usa bases crudas. Env: PS_B_VALIDATED=1'
+        ),
+    )
     parser.add_argument('--shard', default=None, help=argparse.SUPPRESS)
     parser.add_argument('--shard-out', default=None, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
+
+    # Vía entorno para que los procesos hijos (--procs) hereden la configuración.
+    if args.sp_info_a:
+        os.environ['PS_SP_INFO_A'] = args.sp_info_a
+    if args.sp_info_b:
+        os.environ['PS_SP_INFO_B'] = args.sp_info_b
+    if args.b_validated:
+        os.environ['PS_B_VALIDATED'] = '1'
+    sp_info_mode('A')
+    sp_info_mode('B')
+    if sp_info_mode('B') != 'inference' and not b_validated():
+        parser.error('--sp-info-b requiere --b-validated (B sin wrapper no tiene creencias de SP)')
 
     if args.export_only:
         out = export_teams()
