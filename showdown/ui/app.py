@@ -36,7 +36,7 @@ Laboratorio local para **aprender** cómo piensan los agentes de VGC,
 
 Usa el menú de la izquierda:
 
-1. **Aprender** — analogías con el ajedrez, sin jerga técnica  
+1. **Aprender** — cómo funcionan los 11 agentes (A–K), sin jerga técnica  
 2. **Jugar** — pegas tu usuario; el bot te invita a un BO3  
 3. **Laboratorio** — práctica agente vs bots en Showdown  
 4. **Figuras y tune** — SVG de `logs/figures`, pipelines preview→combate, ledger  
@@ -66,7 +66,7 @@ with st.expander('Glosario rápido', expanded=False):
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.subheader('Aprender')
-    st.write('Lee cómo decide cada agente, comparado con el ajedrez.')
+    st.write('Fichas de los 11 agentes (A–K): preview, combate y analogía con el ajedrez.')
 with col2:
     st.subheader('Jugar')
     st.write('Invitación a tu usuario Showdown. Tú juegas; el agente usa el equipo que subas.')
@@ -77,4 +77,4 @@ with col4:
     st.subheader('Figuras y tune')
     st.write('SVG reales de HP tune, pipelines por familia y ledger histórico.')
 
-st.caption('IAPSVGC2022 · Streamlit · v1 + figuras tune (logs/figures)')
+st.caption('IAPSVGC2022 · Streamlit · Aprender v2 (11 agentes) · Jugar/Lab v1 · figuras tune')
