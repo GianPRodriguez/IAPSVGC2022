@@ -1,7 +1,7 @@
 """Tune de hiperparámetros Team Preview Masked PPO (independiente de DDQN/PPO combate).
 
-Entrena con pi_c=greedy_joint (mock backend en train actual). Un solo checkpoint
-se reutiliza en Conclusión para DDQN y PPO combate.
+Entrena con pi_c=greedy_joint (backend mock o live). Un solo checkpoint se
+reutiliza en Conclusión para DDQN y PPO combate.
 
 Ejemplos::
 
@@ -9,7 +9,9 @@ Ejemplos::
   python -m showdown.inference_sim.run_team_preview_ppo_hp_tune --seed 0 --max-trials 6 --smoke --updates 3
 
 Knobs: lr, clip_eps. Tracking en logs/team_preview_ppo_hp_tune_*.
-Score proxy: MEAN_SCORE = -pg_loss (hasta haber suite BO1 dedicada).
+Score: MEAN_WR = WR greedy sobre contextos de evaluación FIJOS (misma semilla en
+todos los trials), pareado contra una línea base (``showdown/rl/preview_eval.py``).
+Antes se usaba -pg_loss, que con ventajas normalizadas no mide la calidad.
 """
 from __future__ import annotations
 
@@ -51,6 +53,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument('--start-ps', action='store_true')
     ap.add_argument('--pilot', default='greedy_joint')
     ap.add_argument('--dry-run', action='store_true')
+    from showdown.rl.preview_eval import add_eval_cli_args
+    add_eval_cli_args(ap)
     args = ap.parse_args(list(argv) if argv is not None else None)
 
     logs = REPO_ROOT / 'logs'
@@ -71,6 +75,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     '--num-workers', str(args.num_workers)])
         if args.start_ps:
             cmd.append('--start-ps')
+        cmd.extend(['--eval-episodes', str(args.eval_episodes),
+                    '--eval-baseline', args.eval_baseline,
+                    '--eval-seed', str(args.eval_seed)])
         return cmd
 
     def parse_score(trial_dir: Path):
@@ -80,8 +87,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             if meta.is_file():
                 import json
                 d = json.loads(meta.read_text(encoding='utf-8'))
-                if 'MEAN_SCORE' in d:
-                    return float(d['MEAN_SCORE'])
+                if d.get('MEAN_WR') is not None:
+                    return float(d['MEAN_WR'])
             return None
         return parse_mean_wr(rep.read_text(encoding='utf-8'))
 
@@ -96,7 +103,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         dry_run=bool(args.dry_run),
         frozen=FROZEN,
         parallel_trials=int(args.parallel_trials),
-        criteria_note='maximize MEAN_SCORE (-pg_loss proxy on mock); accept if improves best',
+        criteria_note=(f'maximize MEAN_WR (greedy, {args.eval_episodes} contextos fijos seed '
+                       f'{args.eval_seed}, baseline {args.eval_baseline}); accept if improves best'),
     )
     return 0
 

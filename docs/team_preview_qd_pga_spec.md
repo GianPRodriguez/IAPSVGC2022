@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|-------|
 | **Documento** | Contrato exclusivo — QD-PGA MAP-Elites solo Team Preview |
-| **Versión** | **1.3** (alineado con `docs/rl_env_spec.md` v1.16 §6.k) |
+| **Versión** | **1.4** (alineado con `docs/rl_env_spec.md` v1.17 §6.k) |
 | **Estado** | **FROZEN** — implementado en `showdown/rl/team_preview_qd_pga/` |
 | **Algoritmo** | Grid MAP-Elites + mutación Gaussiana o mejora PPO-clip (PGA) |
 | **Formato** | Gen 9 VGC **Regulation M-C**, OTS, Mega on, **Tera off** |
@@ -99,7 +99,7 @@ separación convertiría el algoritmo en optimización escalar, no MAP-Elites.
 |----------|----------|
 | Horizonte | \(T=1\), una selección por episodio |
 | Acción | Flat-360 con IAM; cuatro índices distintos |
-| Observación | \(512=210+210+36+56\), compartida con PPO/Nash |
+| Observación | OTS v2 (`OBS_DIM` = 5676), compartida con PPO/Nash (masked PPO spec §4.3) |
 | Recompensa/fitness | Cand. 1; sin Cand. 2 ni \(\Delta HP\) |
 | Piloto | `greedy_joint` congelado |
 | Self-play preview | Off |
@@ -123,7 +123,7 @@ codifica ni se activa.
 
 ### 5.1 Loop, rivales, datos y CLI
 
-Los rollouts PPO guardan `obs[512]`, acción, `old_logp`, Cand. 1 y máscara. La
+Los rollouts PPO guardan `obs[D]`, acción, `old_logp`, Cand. 1 y máscara. La
 ventaja es \(R-V_\phi(s)\), normalizada por batch. El actor usa PPO-clip y
 entropía; el crítico compartido ajusta MSE contra Cand. 1. Los burn rollouts
 solo ejecutan la policy mutada y descartan transiciones.
@@ -212,7 +212,7 @@ y `team_preview_qd_pga_best_hp.json` con `prev_overrides` → `overrides` /
 Hay dos modos legítimos:
 
 1. **Campeón global:** seleccionar \(\pi^\star=\arg\max f\), cargar su actor,
-   construir obs 512D, aplicar IAM, tomar argmax y enviar `/team ####`.
+   construir la obs OTS v2, aplicar IAM, tomar argmax y enviar `/team ####`.
 2. **Elite por estilo:** elegir una celda antes de la serie según el estilo
    deseado y desplegar su actor. La regla de elección debe fijarse antes de ver
    resultados para evitar selección retrospectiva.
@@ -255,6 +255,7 @@ del round-robin. Véase
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.4** | 2026-11-14 | Observación compartida OTS v2 (5676D, hoja completa) en lugar de 512D; los actores del archive crecen en la primera capa. Checkpoints anteriores incompatibles. |
 | **1.3** | 2026-10-11 | `archive.pt` + tune `run_team_preview_qd_pga_hp_tune` + tracking prev→nuevo; `--lr/--clip-eps`. |
 | **1.2** | 2026-10-11 | MAP-Elites, BD, loop, despliegue y familias QD; alineación documental actualizada a rl_env v1.15. |
 | **1.1** | 2026-10-11 | Redacción dual, glosario y límites. |

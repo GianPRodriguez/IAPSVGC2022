@@ -133,9 +133,15 @@ def _lite_info(info: Dict[str, Any], env=None) -> Dict[str, Any]:
             bd_raw = bd.bd_vector()
         except Exception:
             bd_raw = None
+    comp = info.get('reward_components') or {}
     return {
         'skip_buffer': bool(info.get('skip_buffer')),
         'trunc_reason': info.get('trunc_reason'),
+        # Desglose de la recompensa (métricas de tesis: KOs, daño, resultado).
+        'components': {
+            k: float(comp[k]) for k in ('d_win', 'd_loss', 'd_faint_opp', 'd_faint_self', 'd_hp_opp')
+            if isinstance(comp.get(k), (int, float))
+        },
         'used_fallback': bool(isinstance(eng, dict) and eng.get('used_fallback')),
         'episode_return': float(info.get('episode_return', 0.0) or 0.0),
         'turn': int(info.get('turn', 0) or 0),

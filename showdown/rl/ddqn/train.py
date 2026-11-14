@@ -55,6 +55,7 @@ from showdown.rl.ddqn.curriculum import (
 from showdown.rl.env import MockBattleBackend, VGCEnv
 from showdown.rl.observation import build_observation_ddqn
 from showdown.rl.reward import RewardCandidate
+from showdown.rl.train_metrics import EpisodeTracker, MetricsLog
 
 LIVE_OPPONENTS = (
     'random',
@@ -199,6 +200,20 @@ def _ensure_opponent(env: VGCEnv, opponent: str, *, seed: int, start_ps: bool) -
     return _make_env(opponent, seed=seed, start_ps=start_ps)
 
 
+def _learner_snapshot(agent: DDQNAgent, metrics_last: dict) -> dict:
+    """Estado del learner para la ventana de métricas (tesis)."""
+    snap = {k: v for k, v in (metrics_last or {}).items()
+            if k in ('loss', 'mean_q', 'mean_target', 'td_error')}
+    snap.update({
+        'eps': float(agent.epsilon),
+        'env_steps': int(agent.env_steps),
+        'grad_steps': int(agent.grad_steps),
+        'replay_len': len(agent.replay),
+        'replay_frac': agent.replay.origin_fractions(),
+    })
+    return snap
+
+
 def _run_steps(
     agent: DDQNAgent,
     env: VGCEnv,
@@ -214,6 +229,7 @@ def _run_steps(
     phase_label: str,
     seed: int,
     start_ps: bool,
+    tracker: Optional[EpisodeTracker] = None,
 ) -> Tuple[VGCEnv, int, dict]:
     """
     Run ``steps`` interactions.
@@ -236,6 +252,8 @@ def _run_steps(
     opp_code = opponent_code(current)
     ep_counts: Dict[str, int] = {o: 0 for o in omega}
     ep_counts[current] = ep_counts.get(current, 0) + 1
+    if tracker is not None:
+        tracker.start(0, current)
 
     for local in range(1, int(steps) + 1):
         a_joint = agent.act(obs, mask, epsilon=None)
@@ -245,8 +263,13 @@ def _run_steps(
         next_obs = build_observation_ddqn(env._snap)
         skip = bool(info.get('skip_buffer'))
         eng = info.get('engine') or {}
-        if isinstance(eng, dict) and eng.get('used_fallback'):
+        used_fb = bool(isinstance(eng, dict) and eng.get('used_fallback'))
+        if used_fb:
             skip = True
+        if tracker is not None:
+            tracker.step(0, actions=(a1, a2), reward=float(reward),
+                         components=info.get('reward_components'),
+                         used_fallback=used_fb, skipped=skip)
         m_next = _joint_masks(env) if not (terminated or truncated) else mask
         train_m = agent.observe(
             s=obs, a=a_joint, r=float(reward), s_next=next_obs,
@@ -259,6 +282,7 @@ def _run_steps(
         obs, mask = next_obs, m_next
 
         if terminated or truncated:
+            ended_info = info
             if expand_omega and len(omega) > 1:
                 nxt = sample_from_omega(omega, rng, weights=weights)
                 if nxt != current:
@@ -266,6 +290,12 @@ def _run_steps(
                     current = nxt
                 opp_code = opponent_code(current)
                 ep_counts[current] = ep_counts.get(current, 0) + 1
+            if tracker is not None:
+                tracker.end(0, global_step=global_step_offset + local,
+                            terminated=bool(terminated), truncated=bool(truncated),
+                            components=ended_info.get('reward_components'),
+                            trunc_reason=ended_info.get('trunc_reason'),
+                            next_opponent=current)
             obs, info = env.reset()
             assert env._snap is not None
             obs = build_observation_ddqn(env._snap)
@@ -273,16 +303,17 @@ def _run_steps(
 
         gstep = global_step_offset + local
         loss = metrics_last.get('loss', float('nan'))
-        heartbeat.log(
-            gstep,
-            phase=phase_label,
-            extras={
-                'opp': current,
-                'eps': float(agent.epsilon),
-                'replay': len(agent.replay),
-                'loss': float(loss) if loss == loss else None,
-            },
-        )
+        extras = {
+            'opp': current,
+            'eps': float(agent.epsilon),
+            'replay': len(agent.replay),
+            'loss': float(loss) if loss == loss else None,
+        }
+        if tracker is not None and heartbeat.should_log(gstep):
+            tracker.write_window(gstep, phase=phase_label,
+                                 learner=_learner_snapshot(agent, metrics_last))
+            extras.update(tracker.console_extras())
+        heartbeat.log(gstep, phase=phase_label, extras=extras)
         if heartbeat.should_checkpoint(gstep):
             agent.save(ckpt_dir / 'last.pt')
             heartbeat.mark_checkpoint(gstep)
@@ -304,6 +335,7 @@ def _run_steps_vec(
     heartbeat: TrainHeartbeat,
     phase_label: str,
     unlock: str,
+    tracker: Optional[EpisodeTracker] = None,
 ) -> Tuple[int, dict]:
     """Como :func:`_run_steps` pero con N entornos en paralelo (asíncrono).
 
@@ -320,6 +352,9 @@ def _run_steps_vec(
         return None
 
     pending = [_sample_next() for _ in range(n)]
+    if tracker is not None:
+        for i in range(n):
+            tracker.start(i, unlock)
     ep_counts: Dict[str, int] = {o: 0 for o in omega}
     ep_counts[unlock] = ep_counts.get(unlock, 0) + n
     metrics_last: dict = {}
@@ -349,6 +384,10 @@ def _run_steps_vec(
             info = r['info']
             done = bool(r['terminated'] or r['truncated'])
             skip = bool(info['skip_buffer'] or info['used_fallback'])
+            if tracker is not None:
+                tracker.step(i, actions=decode_joint_action(a_i), reward=float(r['reward']),
+                             components=info.get('components'),
+                             used_fallback=bool(info['used_fallback']), skipped=skip)
             s_next = r['final_obs'] if done else r['obs']
             m_next = mask_i if done else r['mask']
             train_m = agent.observe(
@@ -365,6 +404,12 @@ def _run_steps_vec(
                 current[i] = r.get('next_opponent') or current[i]
                 ep_counts[current[i]] = ep_counts.get(current[i], 0) + 1
                 pending[i] = _sample_next()
+                if tracker is not None:
+                    tracker.end(i, global_step=global_step_offset + local + 1,
+                                terminated=bool(r['terminated']), truncated=bool(r['truncated']),
+                                components=info.get('components'),
+                                trunc_reason=info.get('trunc_reason'),
+                                next_opponent=current[i])
             obs[i] = r['obs']
             masks[i] = r['mask']
             local += 1
@@ -372,18 +417,20 @@ def _run_steps_vec(
 
         gstep = global_step_offset + local
         loss = metrics_last.get('loss', float('nan'))
-        heartbeat.log(
-            gstep,
-            phase=phase_label,
-            extras={
-                'envs': n,
-                'opp': unlock,
-                'eps': float(agent.epsilon),
-                'replay': len(agent.replay),
-                'loss': float(loss) if loss == loss else None,
-                'restarts': restarts,
-            },
-        )
+        extras = {
+            'envs': n,
+            'opp': unlock,
+            'eps': float(agent.epsilon),
+            'replay': len(agent.replay),
+            'loss': float(loss) if loss == loss else None,
+            'restarts': restarts,
+        }
+        if tracker is not None and heartbeat.should_log(gstep):
+            tracker.write_window(gstep, phase=phase_label,
+                                 learner=_learner_snapshot(agent, metrics_last),
+                                 worker_restarts=restarts)
+            extras.update(tracker.console_extras())
+        heartbeat.log(gstep, phase=phase_label, extras=extras)
         if heartbeat.should_checkpoint(gstep):
             agent.save(ckpt_dir / 'last.pt')
             heartbeat.mark_checkpoint(gstep)
@@ -482,6 +529,14 @@ def run_training(
         log_every_sec=float(log_every_sec),
     )
 
+    mlog = MetricsLog(ckpt_dir / 'train_metrics.jsonl', run_meta={
+        'agent': 'ddqn', 'seed': seed, 'device': device, 'num_envs': num_envs,
+        'lr': float(cfg.lr), 'gamma': float(cfg.gamma), 'expand_omega': bool(expand_omega),
+        'schedule': [{'unlock': p.unlock, 'steps': p.steps, 'omega': list(p.omega)}
+                     for p in expand_sched],
+    })
+    tracker = EpisodeTracker(mlog, window=200)
+
     try:
         assert env is not None or venv is not None
         for pi, phase in enumerate(expand_sched):
@@ -510,6 +565,7 @@ def run_training(
                     heartbeat=hb,
                     phase_label=f'phase={pi}:{phase.unlock}',
                     unlock=phase.unlock,
+                    tracker=tracker,
                 )
                 global_steps += done
                 phase_log.append({
@@ -525,6 +581,8 @@ def run_training(
                     'num_envs': num_envs,
                 })
                 agent.save(ckpt_dir / f'phase_{pi}_{phase.unlock}.pt')
+                tracker.write_window(global_steps, phase=f'phase={pi}:{phase.unlock}:end',
+                                     learner=_learner_snapshot(agent, info.get('metrics', {})))
                 hb.log(
                     global_steps,
                     phase=f'phase={pi}:{phase.unlock}:end',
@@ -547,6 +605,7 @@ def run_training(
                 phase_label=f'phase={pi}:{phase.unlock}',
                 seed=seed,
                 start_ps=start_ps,
+                tracker=tracker,
             )
             global_steps += done
             phase_log.append({
@@ -560,6 +619,8 @@ def run_training(
                 'buf_frac_end': agent.replay.origin_fractions(),
             })
             agent.save(ckpt_dir / f'phase_{pi}_{phase.unlock}.pt')
+            tracker.write_window(global_steps, phase=f'phase={pi}:{phase.unlock}:end',
+                                 learner=_learner_snapshot(agent, info.get('metrics', {})))
             hb.log(
                 global_steps,
                 phase=f'phase={pi}:{phase.unlock}:end',
@@ -610,6 +671,7 @@ def run_training(
             },
             phases=phase_log,
             artifacts={
+                'train_metrics_jsonl': str(ckpt_dir / 'train_metrics.jsonl'),
                 'final_pt': str(ckpt_dir / 'final.pt'),
                 'train_meta_json': str(ckpt_dir / 'train_meta.json'),
                 'checkpoint_dir': str(ckpt_dir),
@@ -624,6 +686,7 @@ def run_training(
             ],
         )
         write_train_report(ckpt_dir, report)
+        mlog.write('suite', step=global_steps, rows=[asdict(s) for s in suite_rows], note=suite_note)
         meta = {
             'seed': seed,
             'device': device,
@@ -659,6 +722,7 @@ def run_training(
             force=True,
         )
     finally:
+        mlog.close()
         if venv is not None:
             venv.close()
         if env is not None:

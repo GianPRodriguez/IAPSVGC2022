@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.16** |
+| **Version** | **v1.17** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) — **Mega Evolution yes; Terastallization no** |
@@ -181,7 +181,7 @@ BD values clipped / normalized to \([0, 1]\).
 | **6. QD-PGA-MAP-Elites** | Cand. 2 (actor) / Cand. 1 (fitness) | AR IAM + PGA hybrid (mut / PG) + shared \(V_\phi\). **QD PGA path** | **ACTIVE** |
 | **7. QD-PPGA** | Cand. 2 (actor) / Cand. 1 (fitness) | AR IAM + proximal-only PPO + shared \(V_\phi\) + arborescence. **QD PPGA path** | **ACTIVE** |
 | **H. Heuristic baselines** | N/A (no \(R_t\)) | `random` → `greedy_solo` → `greedy_joint` → `expectimax_bayesian`. **Fixed eval / curriculum foes** | Off |
-| **P. Team Preview Masked PPO** | Cand. **1** (terminal) | Flat-360 IAM; obs 512D; \(\pi_c=\)`greedy_joint` frozen. **Preview-only MDP** | Off |
+| **P. Team Preview Masked PPO** | Cand. **1** (terminal) | Flat-360 IAM; obs OTS v2 (5676D); \(\pi_c=\)`greedy_joint` frozen. **Preview-only MDP** | Off |
 
 **Note:** Learned: §6.a/§6.b. Planning: §6.c/§6.d. QD: §6.e–g. Heuristics: §6.h. Preview PPO: §6.i. Preview Nash: §6.j. Preview QD-PGA: §6.k. IQL / BDQN = ablations only.
 
@@ -195,11 +195,11 @@ Exclusive **Team Preview** QD-PGA-MAP-Elites (policy archive). Not combat.
 
 | Item | Contract |
 |------|----------|
-| MDP | Same bandit as §6.i: Flat-360 IAM, obs 512D, Cand. **1**, \(\pi_c=\)`greedy_joint` |
+| MDP | Same bandit as §6.i: Flat-360 IAM, obs OTS v2, Cand. **1**, \(\pi_c=\)`greedy_joint` |
 | Archive | Grid \(10\times10\); **actor-only** elites; deploy \(\pi^\star=\arg\max f\) |
 | BD | Preview-only \(b\in[0,1]^2\): speed-control bias \(b_1\), offense/support \(b_2\) (OTS flags) |
 | Fitness | Mean Cand. 1 over \(G=20\), \(g_{\min}=10\); mosaic 25/25/50 preview baselines |
-| Variation | \(p_{\mathrm{mut}}=0.5\), \(\sigma=0.02\); else PPO-clip \(K=2\) + shared \(V_\phi\) (\(512\)D) |
+| Variation | \(p_{\mathrm{mut}}=0.5\), \(\sigma=0.02\); else PPO-clip \(K=2\) + shared \(V_\phi\) (OTS v2) |
 | Budget | \(B_{\mathrm{boot}}=4096\), \(T_{\mathrm{emit}}=128\), \(n_{\mathrm{emit}}=4\), \(N_{\mathrm{outer}}=256\) (episodes) |
 | Code | `showdown/rl/team_preview_qd_pga/` (+ shared `team_preview_{env,obs,action}.py`) |
 | Eval | 200 BO1; argmax masked |
@@ -215,7 +215,7 @@ Exclusive **Team Preview** Payoff Nash (Value Net + LP). Not combat.
 | Item | Contract |
 |------|----------|
 | Meta-game | Simultaneous zero-sum (Cand. 1 scale): \(A=2\hat M-1\), \(\hat M\in[0,1]^{360\times360}\) |
-| Action / Obs | **Reuse** Flat-360 Lehmer + obs \(512=210+210+36+56\) (same as §6.i) |
+| Action / Obs | **Reuse** Flat-360 Lehmer + obs OTS v2 (same as §6.i) |
 | \(V_\theta\) | Low-rank: trunk MLP → \(\Phi_{\mathrm{row/col}}(h,e_a)\); \(d_a{=}32\), \(d_{\mathrm{lat}}{=}64\) |
 | Solver | **LP HiGHS** primary; Fictitious Play fallback; row-mean softmax last resort |
 | Train | Uniform \((i,j)\) pairs; labels \(r\in\{0,0.5,1\}\); BCE/MSE; \(\pi_c=\)`greedy_joint` frozen |
@@ -238,7 +238,7 @@ Exclusive **Team Preview** agent (not combat `/team 1234`).
 | MDP | Contextual bandit \(T=1\): preview → BO1 with frozen combat |
 | Action | Discrete \(a\in\{0,\ldots,359\}=P(6,4)\); Lehmer bijection; Showdown 1-based `/team` |
 | IAM | Softmax masked; full roster ⇒ \(M=\mathbf{1}_{360}\) (parity + pool\(<6\)) |
-| Obs | \(512=210+210+36+56\); coverage \(M_{ij}\) once; calc/heuristic **only in `reset()`** |
+| Obs | OTS v2, `OBS_DIM`=5676: full own sheet (exact stats), public foe sheet (stat ranges, no SP), mega form, item, ability, moves, identity one-hots; damage us→foe / foe→us and speed matrices once, **only in `reset()`**; foe in canonical order |
 | Reward | Cand. **1**: \(+1/-1/0\) (no \(\Delta\)HP) |
 | \(\pi_c\) | **`greedy_joint`** combat (not greedy preview tipado) |
 | Train | \(N_{\mathrm{prod}}=2048\), \(N_{\mathrm{smoke}}=64\), \(B=128\), \(K=4\), \(\gamma=\lambda=1\), \(c_e=0.02\) |
@@ -578,7 +578,7 @@ No sustituir un preview por otro a mitad de evaluación.
 | Momento | Componentes activos | Mutabilidad |
 |---|---|---|
 | Training de combate | `VGCEnv`, collector, oponentes y DDQN/PPO/QD | Cambian pesos/replay/archivo según algoritmo |
-| Training de preview | Bandit preview 512D y combat policy \(\pi_c\) congelada | Cambia solo el agente de preview |
+| Training de preview | Bandit preview (obs OTS v2) y combat policy \(\pi_c\) congelada | Cambia solo el agente de preview |
 | Inferencia completa | Preview checkpoint seguido por combat player | Todo congelado; sin gradientes ni replay |
 | MCTS en inferencia | Árbol S2 por turno | Cambia el árbol efímero, nunca pesos |
 | Conclusión | 11 pipelines, snapshot y checkpoints fijados | Prohibido reentrenar o cambiar configuración |
@@ -636,6 +636,7 @@ con Tera on no es compatible con este benchmark aunque sus dimensiones encajen.
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.17** | 2026-11-14 | **Team Preview obs v2** (§6.i–k): full Open Team Sheet encoding from the frozen Champions dex snapshot (5676D) replaces 512D species-only obs. Preview checkpoint score = paired `MEAN_WR` on fixed contexts. DDQN: explicit `epsilon=0` is always greedy; `DDQN_REQUIRED`. Training metrics JSONL (`train_metrics.jsonl`) for combat and preview. Combat Obs/Reward/Action unchanged. |
 | **v1.16** | 2026-10-11 | Combat train/infer under **frozen family preview** (`frozen_preview.py`); preview trains persist weights; fallback `/team 1234`. Order: preview → combat. |
 | **v1.15** | 2026-10-11 | Documenta pipelines de Conclusión, pairing familiar de Team Preview, separación training/inferencia y Tera off end-to-end. Índice de lectura: [`SPECS_INDEX.md`](SPECS_INDEX.md). Specs combate enriquecidas (DDQN/PPO v1.4, MCTS/QD v1.3); preview v1.2; heurísticas v1.4. Sin cambio estructural de Obs/Reward/Action/BD. |
 | **v1.14** | 2026-10-11 | **Reg M-C format rule:** Terastallization **off** (`showdown/format_rules.py`); ActionSpec id 22 reserved/masked; Mega remains. Heuristic + RL paths force `can_tera=False` / no `terastallize`. |

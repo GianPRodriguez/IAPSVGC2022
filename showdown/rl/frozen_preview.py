@@ -23,8 +23,10 @@ from showdown.rl.team_preview_action import (
     legal_mask,
 )
 from showdown.rl.team_preview_obs import (
+    PreviewMonFeat,
     PreviewObsBundle,
     encode_preview_obs,
+    mon_feat_from_pokeenv,
     mon_feat_from_species,
 )
 
@@ -73,19 +75,28 @@ def _species_name(mon: Any) -> str:
     return 'unknown'
 
 
+def _pad6(feats: list) -> list:
+    feats = list(feats)[:6]
+    while len(feats) < 6:
+        feats.append(mon_feat_from_species('unknown'))
+    return feats
+
+
 def obs_bundle_from_pokeenv_battle(battle: Any) -> PreviewObsBundle:
+    """Hoja OTS completa desde poke-env.
+
+    Propio: ``teampreview_team`` (teambuilder: item, habilidad, naturaleza, SP,
+    movimientos) en el orden que indexa ``/team``. Rival: ``opponent_team``, que
+    poke-env rellena con la hoja abierta (``showteam``); si aún no llegó, cae a
+    ``teampreview_opponent_team`` (solo especie). El encoder reordena al rival de
+    forma canónica, así que el orden de llegada no importa.
+    """
     our_src = list(getattr(battle, 'teampreview_team', None) or battle.team.values())
-    foe_src = list(
-        getattr(battle, 'teampreview_opponent_team', None)
-        or getattr(battle, 'opponent_team', {}).values()
-    )
-    our = [mon_feat_from_species(_species_name(m)) for m in our_src[:6]]
-    while len(our) < 6:
-        our.append(mon_feat_from_species('unknown'))
-    foe = [mon_feat_from_species(_species_name(m)) for m in foe_src[:6]]
-    while len(foe) < 6:
-        foe.append(mon_feat_from_species('unknown'))
-    return PreviewObsBundle(our=our, foe=foe)
+    foe_ots = list((getattr(battle, 'opponent_team', None) or {}).values())
+    foe_src = foe_ots or list(getattr(battle, 'teampreview_opponent_team', None) or [])
+    our = [mon_feat_from_pokeenv(m, own=True) for m in our_src[:6]]
+    foe = [mon_feat_from_pokeenv(m, own=False) for m in foe_src[:6]]
+    return PreviewObsBundle(our=_pad6(our), foe=_pad6(foe))
 
 
 def mark_selected_in_teampreview(battle: Any, order_1based: Sequence[int]) -> None:
@@ -199,20 +210,34 @@ class FrozenPreviewPolicy:
         our_species: Sequence[str],
         foe_species: Sequence[str],
     ) -> Tuple[int, str]:
-        """Returns (action_id, '/team ####') from species name lists."""
+        """Returns (action_id, '/team ####') from species name lists (sin hoja)."""
+        our = [mon_feat_from_species(str(s)) for s in list(our_species)[:6]]
+        foe = [mon_feat_from_species(str(s)) for s in list(foe_species)[:6]]
+        return self.choose_from_feats(our, foe)
+
+    def choose_from_feats(
+        self,
+        our: Sequence[PreviewMonFeat],
+        foe: Sequence[PreviewMonFeat],
+    ) -> Tuple[int, str]:
+        """Returns (action_id, '/team ####') from full preview features."""
         self._ensure()
         if self._chooser is None:
             return 0, FIXED_EXPORT_ORDER
-        our = [mon_feat_from_species(str(s)) for s in list(our_species)[:6]]
-        foe = [mon_feat_from_species(str(s)) for s in list(foe_species)[:6]]
-        while len(our) < 6:
-            our.append(mon_feat_from_species('unknown'))
-        while len(foe) < 6:
-            foe.append(mon_feat_from_species('unknown'))
-        obs = encode_preview_obs(PreviewObsBundle(our=our, foe=foe))
+        obs = encode_preview_obs(PreviewObsBundle(our=_pad6(our), foe=_pad6(foe)))
         mask = np.asarray(legal_mask(6), dtype=np.float32)
         a = int(self._chooser(obs, mask))
         return a, f'/team {action_to_team_string(a)}'
+
+    def action_tuple_from_feats(
+        self,
+        our: Sequence[PreviewMonFeat],
+        foe: Sequence[PreviewMonFeat],
+    ) -> Tuple[int, ...]:
+        a, _cmd = self.choose_from_feats(our, foe)
+        if self._chooser is None:
+            return FIXED_EXPORT_TUPLE
+        return tuple(i + 1 for i in decode_preview_action(a))
 
     def choose_action(self, battle: Any) -> Tuple[int, str]:
         """Returns (action_id, '/team ####'). Falls back to fixed export."""

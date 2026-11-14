@@ -6,16 +6,29 @@ import json
 from pathlib import Path
 from typing import Optional
 
+from showdown.rl.preview_eval import (
+    DEFAULT_EVAL_SEED,
+    add_eval_cli_args,
+    evaluate_preview_policy,
+    resolve_eval_n,
+)
+from showdown.rl.preview_metrics import formation_stats
 from showdown.rl.team_preview_env import TeamPreviewEnv
+from showdown.rl.team_preview_obs import OBS_DIM, OBS_VERSION
+from showdown.rl.train_metrics import MetricsLog
 from showdown.rl.team_preview_ppo.agent import PreviewPPOAgent, PreviewPPOConfig
 
 
-def collect_rollout(env: TeamPreviewEnv, agent: PreviewPPOAgent, n_episodes: int) -> None:
-    """Rollout por lotes: N contextos, N acciones y N BO1 (en paralelo si live)."""
+def collect_rollout(env: TeamPreviewEnv, agent: PreviewPPOAgent, n_episodes: int) -> dict:
+    """Rollout por lotes: N contextos, N acciones y N BO1 (en paralelo si live).
+
+    Devuelve las métricas de estrategia del lote (``preview_metrics.formation_stats``).
+    """
     n = int(n_episodes)
     if n <= 0:
-        return
+        return {}
     obs, infos = env.reset_batch(n)
+    bundles = [b for (b, _ctx) in env._batch]
     masks = []
     acts, logps, values = [], [], []
     for k in range(n):
@@ -31,6 +44,7 @@ def collect_rollout(env: TeamPreviewEnv, agent: PreviewPPOAgent, n_episodes: int
     for k in range(n):
         agent.buffer.add(obs[k], acts[k], float(rewards[k]), logps[k], values[k], masks[k])
         agent.env_episodes += 1
+    return formation_stats(bundles, acts, rewards)
 
 
 def train(
@@ -43,6 +57,11 @@ def train(
     clip_eps: Optional[float] = None,
     checkpoint_dir: str | Path = 'logs/team_preview_ppo_checkpoints',
     live: Optional[dict] = None,
+    eval_episodes: int = 512,
+    eval_baseline: str = 'fixed',
+    eval_seed: int = DEFAULT_EVAL_SEED,
+    eval_every: int = 5,
+    eval_periodic_episodes: int = 256,
 ) -> PreviewPPOAgent:
     from showdown.rl.parallel import resolve_device
     from showdown.rl.preview_live import make_preview_env, provenance_lines, provenance_meta
@@ -58,29 +77,68 @@ def train(
         cfg.rollout_episodes = n
     agent = PreviewPPOAgent(cfg)
     env, pool = make_preview_env(seed, live)
+    ckpt_dir = Path(checkpoint_dir)
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+    mlog = MetricsLog(ckpt_dir / 'train_metrics.jsonl', run_meta={
+        'agent': 'team_preview_ppo', 'seed': seed, 'device': device, 'smoke': smoke,
+        'updates': updates, 'episodes_per_update': n, 'lr': float(cfg.lr),
+        'clip_eps': float(cfg.clip_eps), 'obs_version': OBS_VERSION, 'obs_dim': OBS_DIM,
+        'backend': env.provenance, 'eval_baseline': eval_baseline, 'eval_seed': eval_seed,
+    })
+    n_periodic = resolve_eval_n(eval_periodic_episodes, smoke=smoke, smoke_n=32)
+    best_wr = -1.0
     last_metrics = {}
+
+    def _greedy(o, m):
+        return agent.act(o, m, greedy=True)[0]
+
     try:
         for u in range(int(updates)):
-            collect_rollout(env, agent, n)
+            strat = collect_rollout(env, agent, n)
             metrics = agent.update()
             last_metrics = metrics
+            mlog.write('update', update=u, episodes=agent.env_episodes,
+                       **{**metrics, **strat})
             print(
                 f'update={u} episodes={agent.env_episodes} '
+                f'wr_rollout={strat.get("rollout_wr", float("nan")):.3f} '
                 f'pg={metrics.get("pg_loss", 0):.4f} '
                 f'v={metrics.get("v_loss", 0):.4f} '
-                f'H={metrics.get("entropy", 0):.4f} '
+                f'H={metrics.get("entropy", 0):.3f} '
+                f'eff_A={metrics.get("effective_actions", 0):.1f} '
+                f'kl={metrics.get("approx_kl", 0):.4f} '
+                f'clip={metrics.get("clip_frac", 0):.3f} '
+                f'ev={metrics.get("explained_var", 0):.3f} '
                 f'backend={env.provenance}',
                 flush=True,
             )
+            last_u = (u + 1) == int(updates)
+            if n_periodic > 0 and eval_every > 0 and ((u + 1) % eval_every == 0) and not last_u:
+                pev = evaluate_preview_policy(env, _greedy, n=n_periodic,
+                                              baseline=eval_baseline, eval_seed=eval_seed)
+                mlog.write('eval', update=u, episodes=agent.env_episodes, final=False, **pev.as_dict())
+                print(f'[eval] update={u} ' + pev.lines().replace('\n', ' | '), flush=True)
+                if pev.mean_wr > best_wr:
+                    best_wr = pev.mean_wr
+                    agent.save(ckpt_dir / 'best.pt')
+        ev = None
+        n_eval = resolve_eval_n(eval_episodes, smoke=smoke)
+        if n_eval > 0:
+            # Score de checkpoint / HP tune: WR pareado sobre contextos fijos
+            # (no -pg_loss: con ventajas normalizadas ronda 0 sin medir calidad).
+            ev = evaluate_preview_policy(
+                env, _greedy, n=n_eval, baseline=eval_baseline, eval_seed=eval_seed,
+            )
+            mlog.write('eval', update=int(updates) - 1, episodes=agent.env_episodes,
+                       final=True, **ev.as_dict())
+            print(ev.lines(), end='', flush=True)
         prov = provenance_meta(env, pool)
+        mlog.write('provenance', **prov)
     finally:
+        mlog.close()
         if pool is not None:
             pool.close()
-    ckpt_dir = Path(checkpoint_dir)
-    ckpt_dir.mkdir(parents=True, exist_ok=True)
-    # Score for HP tune: higher is better → negative pg_loss (proxy when no suite).
     pg = float(last_metrics.get('pg_loss', 0.0) or 0.0)
-    score = -pg
     meta = {
         'seed': seed,
         'device': device,
@@ -88,9 +146,12 @@ def train(
         'updates': updates,
         'lr': float(cfg.lr),
         'clip_eps': float(cfg.clip_eps),
+        'obs_version': OBS_VERSION,
+        'obs_dim': OBS_DIM,
         'last_metrics': {k: float(v) for k, v in last_metrics.items()},
-        'MEAN_SCORE': score,
-        'note': 'MEAN_SCORE = -pg_loss (proxy); live BO1 suite is separate.',
+        'eval': ev.as_dict() if ev else None,
+        'MEAN_WR': ev.mean_wr if ev else None,
+        'note': 'MEAN_WR = WR greedy en contextos de evaluación fijos (pareado vs baseline).',
         **prov,
     }
     (ckpt_dir / 'train_meta.json').write_text(
@@ -102,9 +163,9 @@ def train(
         f'lr: {cfg.lr}\n'
         f'clip_eps: {cfg.clip_eps}\n'
         f'updates: {updates}\n'
+        f'obs: v{OBS_VERSION} dim={OBS_DIM}\n'
         f'pg_loss: {pg:.6f}\n'
-        f'MEAN_SCORE: {score:.6f}\n'
-        f'MEAN_WR: {score:.6f}\n'
+        + (ev.lines() if ev else 'eval: omitida (sin MEAN_WR)\n')
         + provenance_lines(prov),
         encoding='utf-8',
     )
@@ -113,7 +174,6 @@ def train(
     (ckpt_dir / 'train_meta.json').write_text(
         json.dumps(meta, indent=2) + '\n', encoding='utf-8',
     )
-    print(f'MEAN_SCORE: {score:.6f}', flush=True)
     print(f'checkpoint: {final_pt}', flush=True)
     return agent
 
@@ -129,6 +189,11 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--checkpoint-dir', default='logs/team_preview_ppo_checkpoints')
     from showdown.rl.preview_live import add_live_cli_args, live_options_from_args
     add_live_cli_args(p)
+    add_eval_cli_args(p)
+    p.add_argument('--eval-every', type=int, default=5,
+                   help='Evaluación pareada cada N updates (curva de aprendizaje; 0 = solo final)')
+    p.add_argument('--eval-periodic-episodes', type=int, default=256,
+                   help='Contextos de cada evaluación periódica (live: 2 BO1 por contexto)')
     args = p.parse_args(argv)
     train(
         seed=args.seed,
@@ -139,6 +204,11 @@ def main(argv: Optional[list] = None) -> int:
         clip_eps=args.clip_eps,
         checkpoint_dir=args.checkpoint_dir,
         live=live_options_from_args(args),
+        eval_episodes=args.eval_episodes,
+        eval_baseline=args.eval_baseline,
+        eval_seed=args.eval_seed,
+        eval_every=args.eval_every,
+        eval_periodic_episodes=args.eval_periodic_episodes,
     )
     print('DONE team_preview_ppo', flush=True)
     return 0

@@ -77,13 +77,13 @@ def test_pair_label_wr_scale():
     assert r in (0.0, 0.5, 1.0)
 
 
-def test_nash_smoke_train():
+def test_nash_smoke_train(tmp_path):
     torch = pytest.importorskip('torch')
     del torch
     gymnasium = pytest.importorskip('gymnasium')
     del gymnasium
     from showdown.rl.team_preview_nash.train import train
 
-    agent = train(seed=0, smoke=True, updates=1, device='cpu')
+    agent = train(seed=0, smoke=True, updates=1, device="cpu", checkpoint_dir=tmp_path)
     assert agent.env_pairs == 64
     assert agent.update_steps == 1

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|-------|
 | **Documento** | Contrato exclusivo — Payoff Nash solo Team Preview |
-| **Versión** | **1.3** (alineado con `docs/rl_env_spec.md` v1.16 §6.j) |
+| **Versión** | **1.4** (alineado con `docs/rl_env_spec.md` v1.17 §6.j) |
 | **Estado** | **FROZEN** — implementado en `showdown/rl/team_preview_nash/` |
 | **Algoritmo** | Value Net de bajo rango + equilibrio de Nash por LP |
 | **Formato** | Gen 9 VGC **Regulation M-C**, OTS, Mega on, **Tera off** |
@@ -48,7 +48,7 @@ las dos, por separado, implementa el agente completo.
 
 ### 3.1 Aprender la matriz
 
-1. `env.reset()` produce una observación OTS \(s\in\mathbb{R}^{512}\).
+1. `env.reset()` produce una observación OTS \(s\in\mathbb{R}^{D}\) (v2, \(D\)=`OBS_DIM`).
 2. Se muestrean independientemente \(i,j\sim U\{0,\ldots,359\}\).
 3. Ambas selecciones se decodifican a `/team`; el piloto congelado
    `greedy_joint` juega el BO1 y produce Cand. 1.
@@ -56,7 +56,7 @@ las dos, por separado, implementa el agente completo.
    \[
    r=(R+1)/2\in\{0,0.5,1\}.
    \]
-5. Un tronco `512→256→256` genera contexto \(h\). Cada acción tiene embedding
+5. Un tronco `D→256→256` genera contexto \(h\). Cada acción tiene embedding
    de dimensión 32; dos cabezas producen vectores fila/columna de dimensión 64:
    \[
    \hat M_{ij}=\sigma\left(
@@ -109,14 +109,11 @@ La biyección Lehmer y `/team` están en `team_preview_action.py`. La interfaz
 `act(..., mask=...)` renormaliza \(p^\star\) tras eliminar acciones ilegales;
 con pools completos la máscara es toda uno.
 
-### 4.3 Observación compartida 512D
+### 4.3 Observación compartida (OTS v2)
 
-| Bloque | Dimensión | Contenido |
-|--------|-----------|-----------|
-| Equipo propio | 210 | Seis Pokémon × 35 features |
-| Equipo rival | 210 | Mismo encoder OTS |
-| Cobertura \(P_1\to P_2\) | 36 | Una sola matriz, calculada en `reset()` |
-| Contexto | 56 | Clima/terreno cero y padding |
+Observación OTS v2 (`OBS_DIM` = 5676) compartida con PPO/Nash/QD-PGA: ver [`team_preview_masked_ppo_spec.md`](team_preview_masked_ppo_spec.md) §4.3: hoja completa propia (stats exactos), hoja pública rival (stats en
+rango, sin SP), forma mega, item, habilidad, movimientos, identidad y matrices
+de daño en ambos sentidos y de velocidad, calculadas en `reset()`.
 
 Compartir encoder con PPO y QD evita comparar algoritmos sobre información
 distinta. No incluye Stellar/Tera: **Tera está desactivada en Regulation M-C**.
@@ -126,7 +123,7 @@ distinta. No incluye Stellar/Tera: **Tera está desactivada en Regulation M-C**.
 ### 5.1 Loop, datos y CLI
 
 Por update se generan 2048 pares uniformes (64 en smoke). El dataset de cada
-batch es `(obs[512], i, j, r)`. Se baraja y optimiza cuatro épocas en minibatches
+batch es `(obs[D], i, j, r)`. Se baraja y optimiza cuatro épocas en minibatches
 de 128, con BCE suave por defecto.
 
 El muestreo uniforme cubre la matriz sin depender del solver actual. Su coste es
@@ -161,7 +158,7 @@ Para reanudar hacen falta además optimizador y RNG.
 
 | Parámetro | Valor | Propósito | Cómo influye |
 |-----------|-------|-----------|--------------|
-| Tronco | `512→256→256`, ReLU | Codificar contexto OTS | Más capacidad modela matchups, con más riesgo de sobreajuste |
+| Tronco | `D→256→256`, ReLU | Codificar contexto OTS | Más capacidad modela matchups, con más riesgo de sobreajuste |
 | Embedding acción \(d_a\) | `32` | Representar cada formación | Mayor dimensión separa acciones, pero aumenta parámetros |
 | Latente \(d_{\rm lat}\) | `64` | Rango de la factorización | Mayor rango expresa matrices más complejas y cuesta más |
 | Loss | `bce` por defecto; `mse` soportada | Ajustar \(\hat M\) a labels | BCE enfatiza probabilidad; MSE cambia geometría del error |
@@ -206,7 +203,7 @@ python -m showdown.inference_sim.run_team_preview_nash_hp_tune --seed 0 --max-tr
 
 ## 7. Inferencia y despliegue en batalla
 
-1. Codificar ambas OTS en 512D.
+1. Codificar ambas OTS con el encoder v2.
 2. Cargar el Value Net y construir \(\hat M\) por producto low-rank.
 3. Calcular \(A=2\hat M-1\) y resolver \(p^\star,q^\star,v^\star\).
 4. Aplicar máscara y renormalizar.
@@ -249,6 +246,7 @@ El protocolo común está en
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.4** | 2026-11-14 | Observación compartida OTS v2 (5676D, hoja completa) en lugar de 512D; rival en orden canónico. Checkpoints anteriores incompatibles. |
 | **1.3** | 2026-10-11 | `final.pt` + tune `run_team_preview_nash_hp_tune` + tracking prev→nuevo; `--lr`. |
 | **1.2** | 2026-10-11 | Value Net, low-rank, LP, entrenamiento, despliegue y Conclusión; alineación actualizada a rl_env v1.15. |
 | **1.1** | 2026-10-11 | Nombre Payoff Nash, glosario y límites. |

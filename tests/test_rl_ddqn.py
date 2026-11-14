@@ -233,3 +233,51 @@ def test_smoke_mock_env_steps():
             assert env._snap is not None
             obs = build_observation_ddqn(env._snap)
     env.close()
+
+
+def test_epsilon_zero_is_greedy_even_before_warmup():
+    """Inferencia: epsilon=0 no debe caer al warm-up aleatorio (env_steps=0)."""
+    pytest.importorskip('torch')
+    from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
+
+    agent = DDQNAgent(DDQNConfig(seed=0, device='cpu', warmup_steps=5_000))
+    assert agent.env_steps == 0
+    rng = np.random.default_rng(3)
+    for _ in range(20):
+        obs = rng.normal(size=OBS_DIM).astype(np.float32)
+        mask = (rng.random(JOINT_ACTION_N) < 0.3).astype(np.float32)
+        mask[0] = 1.0
+        assert agent.act(obs, mask, epsilon=0.0) == agent.greedy(obs, mask)
+        batch = agent.act_batch(obs[None, :], mask[None, :], epsilon=0.0)
+        assert int(batch[0]) == agent.greedy(obs, mask)
+
+
+def test_schedule_keeps_warmup_random():
+    """Entrenamiento (epsilon=None) sigue explorando uniforme durante warm-up."""
+    pytest.importorskip('torch')
+    from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
+
+    agent = DDQNAgent(DDQNConfig(seed=0, device='cpu', warmup_steps=5_000))
+    obs = np.zeros(OBS_DIM, dtype=np.float32)
+    mask = np.ones(JOINT_ACTION_N, dtype=np.float32)
+    acts = {agent.act(obs, mask, epsilon=None) for _ in range(50)}
+    assert len(acts) > 10
+
+
+def test_player_without_checkpoint_warns_or_raises(monkeypatch):
+    """Sin checkpoint: aviso explícito; con required / DDQN_REQUIRED=1: error."""
+    pytest.importorskip('torch')
+    pytest.importorskip('poke_env')
+    from showdown.rl.ddqn.player import DDQNPlayer
+
+    monkeypatch.delenv('DDQN_CHECKPOINT', raising=False)
+    monkeypatch.delenv('DDQN_REQUIRED', raising=False)
+    with pytest.raises(FileNotFoundError):
+        DDQNPlayer(checkpoint='logs/__no_such_ddqn__.pt', required=True, start_listening=False)
+    monkeypatch.setenv('DDQN_REQUIRED', '1')
+    with pytest.raises(FileNotFoundError):
+        DDQNPlayer(checkpoint='logs/__no_such_ddqn__.pt', start_listening=False)
+    monkeypatch.delenv('DDQN_REQUIRED')
+    with pytest.warns(RuntimeWarning):
+        p = DDQNPlayer(checkpoint='logs/__no_such_ddqn__.pt', start_listening=False)
+    assert p.checkpoint_loaded is False

@@ -1,6 +1,6 @@
 """Gymnasium 1-step Team Preview env (docs/team_preview_masked_ppo_spec.md).
 
-reset() builds 512D obs (+ optional calc cache).
+reset() builds the OTS preview obs (team_preview_obs.OBS_DIM; pair matrices cached).
 step(a) decodes /team, runs frozen combat outcome (mock or live hook), returns Cand.1.
 
 Backends:
@@ -31,6 +31,7 @@ from showdown.rl.team_preview_obs import (
     PreviewMonFeat,
     PreviewObsBundle,
     encode_preview_obs,
+    mon_feat_from_monset,
     mon_feat_from_species,
 )
 
@@ -128,6 +129,8 @@ class TeamPreviewEnv:
             'foe_export': to_showdown_export(foes),
             'our_team': ours.name,
             'foe_team': foes.name,
+            'our_mons': list(ours.mons)[:6],
+            'foe_mons': list(foes.mons)[:6],
         }
 
     def _sample_pools(self) -> Tuple[List[str], List[str]]:
@@ -152,10 +155,13 @@ class TeamPreviewEnv:
         if self.team_source == 'metavgc':
             self._ctx = self._sample_metavgc_context()
             our_n, foe_n = self._ctx['our_names'], self._ctx['foe_names']
+            # OTS: propio completo (SP → stats exactos); rival solo hoja pública.
+            our = [mon_feat_from_monset(m, public_only=False) for m in self._ctx['our_mons']]
+            foe = [mon_feat_from_monset(m, public_only=True) for m in self._ctx['foe_mons']]
         else:
             our_n, foe_n = self._sample_pools()
-        our = [mon_feat_from_species(n) for n in our_n[:6]]
-        foe = [mon_feat_from_species(n) for n in foe_n[:6]]
+            our = [mon_feat_from_species(n) for n in our_n[:6]]
+            foe = [mon_feat_from_species(n) for n in foe_n[:6]]
         while len(our) < 6:
             our.append(mon_feat_from_species(our_n[0] if our_n else 'Pikachu'))
         while len(foe) < 6:
@@ -278,19 +284,33 @@ class TeamPreviewEnv:
     # --- API por lotes --------------------------------------------------------
 
     def _live_rewards(self, items) -> np.ndarray:
-        """items: [(ctx, our_action, foe_action|None)] -> Cand. 1 por BO1 real."""
+        """items: [(ctx, our_action|None, foe_action|None)] -> Cand. 1 por BO1 real.
+
+        ``None`` = ese lado usa el preview propio de π_c.
+        """
         from showdown.rl.preview_live import PreviewMatch
 
         matches = [
             PreviewMatch(
                 our_export=ctx['our_export'],
                 foe_export=ctx['foe_export'],
-                our_order=action_to_team_string(int(a)),
+                our_order=None if a is None else action_to_team_string(int(a)),
                 foe_order=None if b is None else action_to_team_string(int(b)),
             )
             for ctx, a, b in items
         ]
         return np.asarray(self.live_pool.run(matches), dtype=np.float32)
+
+    def reseed(self, seed: int) -> None:
+        """Fija el muestreo de contextos (evaluación sobre contextos idénticos)."""
+        self._rng = np.random.default_rng(int(seed))
+
+    def step_batch_pilot(self) -> np.ndarray:
+        """Cand. 1 si NUESTRO lado usa el preview propio de π_c (solo live)."""
+        if self.live_pool is None:
+            raise RuntimeError('step_batch_pilot requiere backend live (preview propio de π_c)')
+        items = [(ctx, None, None) for (_b, ctx) in self._batch]
+        return self._live_rewards(items)
 
     def reset_batch(self, n: int) -> Tuple[np.ndarray, List[dict]]:
         """N contextos independientes (mismo muestreo que N llamadas a reset)."""

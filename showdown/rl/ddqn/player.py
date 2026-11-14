@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import warnings
 from pathlib import Path
 from typing import Optional
 
@@ -36,6 +37,7 @@ class DDQNPlayer(FamilyPreviewMixin, Player):
         epsilon: float = 0.0,
         preview_checkpoint: Optional[str] = None,
         preview_kind: Optional[str] = None,
+        required: bool = False,
         **kwargs,
     ):
         kwargs.setdefault('accept_open_team_sheet', True)
@@ -44,8 +46,16 @@ class DDQNPlayer(FamilyPreviewMixin, Player):
         self.agent = DDQNAgent(DDQNConfig(device=os.environ.get('DDQN_DEVICE', 'cpu')))
         ckpt = checkpoint or os.environ.get('DDQN_CHECKPOINT') or ''
         self.checkpoint_path = str(ckpt).strip()
+        self.checkpoint_loaded = False
         if self.checkpoint_path and Path(self.checkpoint_path).is_file():
             self.agent.load(self.checkpoint_path)
+            self.checkpoint_loaded = True
+        if not self.checkpoint_loaded:
+            msg = (f'DDQN sin checkpoint (ruta={self.checkpoint_path or "<vacía>"}): '
+                   'jugará con pesos aleatorios de inicialización')
+            if required or os.environ.get('DDQN_REQUIRED', '').strip().lower() in ('1', 'true', 'yes'):
+                raise FileNotFoundError(msg)
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
         self.last_joint: int = 0
         self.init_family_preview(
             preview_checkpoint=preview_checkpoint,

@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.7** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.16) |
+| **Versión** | **1.8** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.17) |
 | **Estado** | FROZEN; implementado en `showdown/rl/ddqn/` y `battle_bots/ddqn/` |
 | **Training** | **Sí**: off-policy con replay; entrenamiento live requiere Showdown local |
 | **Inferencia** | `ValidatedDDQNPlayer`, acción greedy legal desde un checkpoint |
@@ -46,7 +46,10 @@ basado en valor frente a PPO: usa experiencias antiguas y una salida joint de
    \(a^\*=\arg\max_{a\in L(s')}Q_\theta(s',a)\); la target calcula
    \(y=r+\gamma Q_{\theta^-}(s',a^\*)\), o \(y=r\) si terminó.
 7. Se minimiza Huber y se actualiza suavemente la target.
-8. En inferencia se fija \(\varepsilon=0\) y se toma el máximo legal.
+8. En inferencia se fija \(\varepsilon=0\) y se toma el máximo legal. Un
+   \(\varepsilon\) explícito se respeta tal cual: el warm-up aleatorio solo aplica al
+   schedule de entrenamiento (`epsilon=None`), así que \(\varepsilon=0\) es greedy
+   aunque el agente tenga `env_steps` menor que el warm-up.
 
 La red es `1024→512→512→576` con ReLU. Dueling, PER, n-step y Rainbow están fuera.
 
@@ -103,9 +106,24 @@ python -m showdown.rl.ddqn.train --seed 0 --start-ps --expand-omega --phases ran
 ```
 
 `--start-ps` usa el servidor local con `node pokemon-showdown start --no-security`.
-Artefactos: `final.pt`, checkpoints por fase, `train_meta.json` y `reporte.txt`.
+Artefactos: `final.pt`, checkpoints por fase, `train_meta.json`, `reporte.txt` y
+`train_metrics.jsonl`.
 El curriculum por defecto desbloquea random → greedy_solo → greedy_joint →
 expectimax_bayesian; este último puede omitirse con `--no-expectimax`.
+
+### Logs de entrenamiento (tesis)
+
+`train_metrics.jsonl` (`showdown/rl/train_metrics.py`) permite reconstruir la
+curva de aprendizaje y diagnosticar qué ayuda o frena al agente:
+
+| `kind` | Contenido |
+|--------|-----------|
+| `episode` | Rival, resultado (win/loss/tie/turn_cap/crash), retorno, turnos, KOs a favor/en contra, daño infligido, mezcla de acciones (move/switch/mega/pass), fallbacks y transiciones descartadas |
+| `window` | Cada heartbeat y al cerrar cada fase: WR móvil (200 episodios) global y por rival, tasas de empate/tope/crash, retorno, turnos, KOs, mezcla de acciones, tasas de fallback/descarte; learner: loss, TD, Q medio, objetivo medio, \(\varepsilon\), pasos de gradiente, composición del replay |
+| `suite` | Suite offline final |
+
+La consola añade `wr`, `ret`, `ko+`, `ko-` y `wr_<rival>` al heartbeat. Resumen:
+`python -m showdown.rl.train_metrics <dir>/train_metrics.jsonl`.
 
 ### Ciclo de datos y curriculum
 
@@ -200,7 +218,9 @@ pero es ilegal, la máscara impide que sea \(a^\*\).
 
 Training usa Candidate 2, \(\varepsilon>0\), replay, online+target y gradientes.
 Inferencia carga un checkpoint, fija modo evaluación y \(\varepsilon=0\); no
-escribe replay ni actualiza pesos. OTS habilita sincronización del harness, no
+escribe replay ni actualiza pesos. Si el checkpoint no existe, `DDQNPlayer`
+avisa (`RuntimeWarning`) en vez de jugar en silencio con pesos aleatorios; con
+`required=True` o `DDQN_REQUIRED=1` falla (recomendado en runs oficiales). OTS habilita sincronización del harness, no
 añade inferencia bayesiana al belief.
 
 La evaluación durante training diagnostica aprendizaje, composición del replay
@@ -250,6 +270,7 @@ Pipeline familiar: **`team_preview_ppo` → DDQN**. Código compartido:
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.8** | 2026-11-14 | \(\varepsilon=0\) explícito siempre greedy (antes caía al warm-up aleatorio con `env_steps` < warm-up); aviso/`DDQN_REQUIRED` sin checkpoint; `train_metrics.jsonl` (episodios, ventanas por rival, learner). Preview familiar con obs OTS v2. |
 | **1.7** | 2026-10-12 | Figuras reales al cerrar tune (`logs/figures/`) + ledger histórico tesis. |
 | **1.6** | 2026-10-11 | Train/infer bajo Preview PPO congelado (`frozen_preview`); fallback `/team 1234`. |
 | **1.5** | 2026-10-11 | CLI `--lr/--gamma`; tune `run_ddqn_hp_tune` + tracking; independencia vs Preview PPO. |

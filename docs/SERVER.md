@@ -181,6 +181,15 @@ python -m showdown.rl.team_preview_ppo.train --seed 0 --updates 10   --backend l
 
 - `--num-workers 28`: 28 BO1 a la vez, con dos pilotos por worker y 4 workers
   por servidor Showdown. Cada update de PPO juega 2048 BO1.
+- Evaluación: al final y cada `--eval-every 5` updates, WR greedy sobre
+  contextos fijos contra `--eval-baseline fixed|pilot|random` (2 BO1 por
+  contexto; `--eval-episodes 512`, `--eval-periodic-episodes 256`). El tune
+  elige por ese `MEAN_WR`. Mejor checkpoint periódico: `best.pt`.
+- Logs de tesis: `train_metrics.jsonl` en el directorio del run (también en
+  DDQN). Resumen: `python -m showdown.rl.train_metrics <run>/train_metrics.jsonl`.
+- Antes de entrenar previews, medir cuánto importa el preview con este piloto:
+  `python -m showdown.inference_sim.run_preview_value_probe --n 3000 --num-workers 28 --start-ps --out ~/iapsvgc_runs/preview_value_probe.json`
+  (3 brazos × 3000 BO1 ≈ 20–30 min).
 - El agente elige la formación (`/team 1234`) y Showdown la aplica. Está
   verificado que los leads jugados coinciden con el orden pedido, en ambos lados.
 - Contextos: equipos reales del pool MetaVGC Reg M-C, ya validados.

@@ -82,14 +82,23 @@ class DDQNAgent:
         *,
         epsilon: Optional[float] = None,
     ) -> int:
-        """Return joint action id. epsilon=None → schedule; 0 → greedy."""
+        """Return joint action id.
+
+        ``epsilon=None`` → schedule de entrenamiento (incluye warm-up aleatorio).
+        ``epsilon`` explícito → se respeta tal cual, sin warm-up: ``0`` es
+        siempre greedy (inferencia), aunque ``env_steps`` sea menor que warm-up.
+        """
         self._ensure_torch()
         m = np.asarray(mask, dtype=np.float32).reshape(JOINT_ACTION_N)
         legal = np.flatnonzero(m > 0.5)
         if legal.size == 0:
             return encode_joint_action(PASS_ID, PASS_ID)
-        eps = self.epsilon if epsilon is None else float(epsilon)
-        if self.env_steps < self.cfg.warmup_steps or self._rng.random() < eps:
+        if epsilon is None:
+            if self.env_steps < self.cfg.warmup_steps or self._rng.random() < self.epsilon:
+                return int(self._rng.choice(legal))
+            return self.greedy(obs, m)
+        eps = float(epsilon)
+        if eps > 0.0 and self._rng.random() < eps:
             return int(self._rng.choice(legal))
         return self.greedy(obs, m)
 
@@ -111,8 +120,10 @@ class DDQNAgent:
         masks = np.asarray(masks, dtype=np.float32).reshape(-1, JOINT_ACTION_N)
         n = obs.shape[0]
         eps = self.epsilon if epsilon is None else float(epsilon)
-        explore = (self.env_steps < self.cfg.warmup_steps) or (eps >= 1.0)
-        rand = self._rng.random(n) < eps
+        # Warm-up solo con el schedule (epsilon=None); epsilon explícito se respeta.
+        warm = epsilon is None and self.env_steps < self.cfg.warmup_steps
+        explore = warm or (eps >= 1.0)
+        rand = self._rng.random(n) < eps if eps > 0.0 else np.zeros(n, dtype=bool)
         need_q = (not explore) and bool((~rand).any())
         q = None
         if need_q:

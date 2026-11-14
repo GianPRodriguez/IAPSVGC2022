@@ -107,11 +107,28 @@ class PreviewPPOAgent:
         masks = torch.as_tensor(data['masks'], device=self.device)
 
         idx = np.arange(n)
-        metrics = {'pg_loss': 0.0, 'v_loss': 0.0, 'entropy': 0.0, 'n': n}
+        metrics = {'pg_loss': 0.0, 'v_loss': 0.0, 'entropy': 0.0, 'n': n,
+                   'approx_kl': 0.0, 'clip_frac': 0.0}
+        # Diagnóstico pre-update (tesis): ¿V explica el resultado? ¿la política se concentra?
+        rewards = np.asarray(self.buffer.rewards[:n], dtype=np.float64)
+        values_old = np.asarray(self.buffer.values[:n], dtype=np.float64)
+        var_r = float(rewards.var())
+        metrics['explained_var'] = float(1.0 - (rewards - values_old).var() / var_r) if var_r > 1e-12 else 0.0
+        metrics['mean_reward'] = float(rewards.mean())
+        metrics['mean_value'] = float(values_old.mean())
+        with torch.no_grad():
+            lg, _v = self.net(obs)
+            p = torch.softmax(self._apply_mask(lg, masks), dim=-1)
+            metrics['max_prob'] = float(p.max(dim=-1).values.mean().item())
+            h = self._masked_ent(lg, masks)
+            metrics['effective_actions'] = float(torch.exp(h).mean().item())
         batches = 0
+        # Permutación distinta en cada update y época (antes: misma secuencia en
+        # todos los updates porque la semilla no incluía update_steps).
+        shuffle_rng = np.random.default_rng([int(self.cfg.seed), int(self.update_steps)])
         for _ in range(self.cfg.epochs):
             self._torch.manual_seed(self.cfg.seed + self.update_steps + _)
-            np.random.default_rng(self.cfg.seed + _).shuffle(idx)
+            shuffle_rng.shuffle(idx)
             for start in range(0, n, self.cfg.minibatch_size):
                 mb = idx[start: start + self.cfg.minibatch_size]
                 logits, values = self.net(obs[mb])
@@ -135,11 +152,16 @@ class PreviewPPOAgent:
                 metrics['pg_loss'] += float(pg_loss.item())
                 metrics['v_loss'] += float(v_loss.item())
                 metrics['entropy'] += float(ent.item())
+                with torch.no_grad():
+                    log_ratio = logp - old_logp[mb]
+                    metrics['approx_kl'] += float(((ratio - 1.0) - log_ratio).mean().item())
+                    metrics['clip_frac'] += float(
+                        ((ratio - 1.0).abs() > self.cfg.clip_eps).float().mean().item()
+                    )
                 batches += 1
         if batches:
-            metrics['pg_loss'] /= batches
-            metrics['v_loss'] /= batches
-            metrics['entropy'] /= batches
+            for k in ('pg_loss', 'v_loss', 'entropy', 'approx_kl', 'clip_frac'):
+                metrics[k] /= batches
         self.update_steps += 1
         self.buffer.clear()
         return metrics

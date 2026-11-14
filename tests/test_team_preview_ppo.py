@@ -38,7 +38,9 @@ def test_legal_mask_full_and_small_pool():
     assert m4[encode_preview_action((0, 1, 2, 5))] == 0.0
 
 
-def test_obs_dim_512():
+def test_obs_dim_and_layout():
+    from showdown.rl.team_preview_obs import MON_DIM, N_POOL, PAIR_DIM
+
     our = [mon_feat_from_species(n) for n in [
         'Incineroar', 'Flutter Mane', 'Amoonguss', 'Tornadus',
         'Landorus-Therian', 'Rillaboom',
@@ -48,9 +50,9 @@ def test_obs_dim_512():
     ]]
     obs = encode_preview_obs(PreviewObsBundle(our=our, foe=foe))
     assert obs.shape == (OBS_DIM,)
+    assert OBS_DIM == 2 * N_POOL * MON_DIM + PAIR_DIM
     assert obs.dtype == np.float32
-    # ctx weather zeros
-    assert np.allclose(obs[420 + 36: 420 + 36 + 9], 0.0)
+    assert np.isfinite(obs).all()
 
 
 def test_env_smoke_episode():
@@ -60,7 +62,7 @@ def test_env_smoke_episode():
 
     env = TeamPreviewEnv(seed=0, backend='mock')
     obs, info = env.reset()
-    assert obs.shape == (512,)
+    assert obs.shape == (OBS_DIM,)
     assert info['action_mask'].sum() == 360
     a = 0
     _o2, r, term, trunc, info2 = env.step(a)
@@ -69,11 +71,11 @@ def test_env_smoke_episode():
     assert info2['team'] == '1234'
 
 
-def test_ppo_smoke_train():
+def test_ppo_smoke_train(tmp_path):
     torch = pytest.importorskip('torch')
     del torch
     from showdown.rl.team_preview_ppo.train import train
 
-    agent = train(seed=0, smoke=True, updates=1, device='cpu')
+    agent = train(seed=0, smoke=True, updates=1, device="cpu", checkpoint_dir=tmp_path)
     assert agent.env_episodes == 64
     assert agent.update_steps == 1
