@@ -65,6 +65,21 @@ def clean_species(name: str) -> str:
     return n
 
 
+def fix_regional_forme(species: str, ability: str, moves: List[str]) -> str:
+    """MetaVGC nombra a veces solo "Arcanine" / "Ninetales" para las formas regionales.
+
+    Se corrige cuando la habilidad o un movimiento solo existe en la forma regional.
+    """
+    sp = (species or '').strip()
+    ab = (ability or '').strip().lower()
+    mv = {re.sub(r'[^a-z]', '', (m or '').lower()) for m in moves or []}
+    if sp.lower() == 'arcanine' and (ab == 'rock head' or 'headsmash' in mv):
+        return 'Arcanine-Hisui'
+    if sp.lower() == 'ninetales' and ab == 'snow warning':
+        return 'Ninetales-Alola'
+    return sp
+
+
 def extract_mons_from_html(html: str) -> List[dict]:
     blocks = re.findall(
         r'<script type="application/ld\+json">(.*?)</script>', html, flags=re.S
@@ -98,6 +113,9 @@ def extract_mons_from_html(html: str) -> List[dict]:
         # Algunas fichas MetaVGC listan <4 moves en el JSON-LD (p.ej. Archaludon).
         if not name or not item or len(moves) < 1:
             continue
+        name = fix_regional_forme(
+            name, (ability.group(1) if ability else ''), moves,
+        )
         mons.append({
             'species': name,
             'ability': (ability.group(1).strip() if ability else ''),
