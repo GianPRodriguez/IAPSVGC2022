@@ -10184,133 +10184,6 @@
     ]
   },
   {
-    "name": "#3rd - Andres Giovanni Machado at",
-    "source_url": "https://metavgc.com/teams/swampert-mega-golisopod-mega-by-andres-giovanni-machado-at-cusca-champions-weekly-m-c-12-pcvgc-place-3rd",
-    "slug": "swampert-mega-golisopod-mega-by-andres-giovanni-machado-at-cusca-champions-weekly-m-c-12-pcvgc-place-3rd",
-    "mons": [
-      {
-        "species": "Grimmsnarl",
-        "ability": "Prankster",
-        "item": "Light Clay",
-        "nature": "Careful",
-        "moves": [
-          "Parting Shot",
-          "Light Screen",
-          "Reflect",
-          "Spirit Break"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 0,
-          "def": 19,
-          "spa": 0,
-          "spd": 15,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Archaludon",
-        "ability": "Stamina",
-        "item": "Leftovers",
-        "nature": "Modest",
-        "moves": [
-          "Electro Shot",
-          "Snarl",
-          "Dragon Pulse",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 0,
-          "def": 1,
-          "spa": 2,
-          "spd": 20,
-          "spe": 11
-        }
-      },
-      {
-        "species": "Swampert",
-        "ability": "Swift Swim",
-        "item": "Swampertite",
-        "nature": "Jolly",
-        "moves": [
-          "Wave Crash",
-          "Ice Punch",
-          "Earthquake",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 10,
-          "def": 11,
-          "spa": 0,
-          "spd": 13,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Golisopod",
-        "ability": "Tough Claws",
-        "item": "Golisopite",
-        "nature": "Brave",
-        "moves": [
-          "Leech Life",
-          "Iron Head",
-          "Swords Dance",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 32,
-          "def": 2,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Pelipper",
-        "ability": "Drizzle",
-        "item": "Focus Sash",
-        "nature": "Modest",
-        "moves": [
-          "Weather Ball",
-          "Hurricane",
-          "Wide Guard",
-          "Tailwind"
-        ],
-        "sp": {
-          "hp": 31,
-          "atk": 0,
-          "def": 1,
-          "spa": 5,
-          "spd": 18,
-          "spe": 11
-        }
-      },
-      {
-        "species": "Farigiraf",
-        "ability": "Armor Tail",
-        "item": "Sitrus Berry",
-        "nature": "Modest",
-        "moves": [
-          "Trick Room",
-          "Psychic",
-          "Thunderbolt",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 29,
-          "atk": 0,
-          "def": 14,
-          "spa": 0,
-          "spd": 23,
-          "spe": 0
-        }
-      }
-    ]
-  },
-  {
     "name": "#3rd - BrainDamageVGC at BPL MC",
     "source_url": "https://metavgc.com/teams/golisopod-mega-salamence-mega-by-braindamagevgc-at-bpl-mc-kickoff-tournament-place-3rd",
     "slug": "golisopod-mega-salamence-mega-by-braindamagevgc-at-bpl-mc-kickoff-tournament-place-3rd",
@@ -17569,133 +17442,6 @@
     ]
   },
   {
-    "name": "#6th - Robin_VGC at",
-    "source_url": "https://metavgc.com/teams/salamence-mega-floette-mega-by-robin-vgc-at-sitrus-series-champions-mc-50-to-first-75-place-6th",
-    "slug": "salamence-mega-floette-mega-by-robin-vgc-at-sitrus-series-champions-mc-50-to-first-75-place-6th",
-    "mons": [
-      {
-        "species": "Salamence",
-        "ability": "Aerilate",
-        "item": "Salamencite",
-        "nature": "Jolly",
-        "moves": [
-          "Double-Edge",
-          "Dragon Dance",
-          "Roost",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Floette-Eternal",
-        "ability": "Fairy Aura",
-        "item": "Floettite",
-        "nature": "Modest",
-        "moves": [
-          "Moonblast",
-          "Dazzling Gleam",
-          "Calm Mind",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 0,
-          "def": 0,
-          "spa": 32,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Sneasler",
-        "ability": "Poison Touch",
-        "item": "Focus Sash",
-        "nature": "Jolly",
-        "moves": [
-          "Poison Jab",
-          "Close Combat",
-          "Coaching",
-          "Fake Out"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Kingambit",
-        "ability": "Defiant",
-        "item": "Life Orb",
-        "nature": "Adamant",
-        "moves": [
-          "Kowtow Cleave",
-          "Swords Dance",
-          "Sucker Punch",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 32,
-          "def": 2,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Incineroar",
-        "ability": "Intimidate",
-        "item": "Sitrus Berry",
-        "nature": "Careful",
-        "moves": [
-          "Flare Blitz",
-          "Parting Shot",
-          "Helping Hand",
-          "Fake Out"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 2,
-          "def": 0,
-          "spa": 0,
-          "spd": 32,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Sinistcha",
-        "ability": "Hospitality",
-        "item": "Colbur Berry",
-        "nature": "Bold",
-        "moves": [
-          "Matcha Gotcha",
-          "Rage Powder",
-          "Trick Room",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 2,
-          "def": 32,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      }
-    ]
-  },
-  {
     "name": "#6th - jobushobus at Tenki's Cart Weekly",
     "source_url": "https://metavgc.com/teams/salamence-mega-arcanine-hisui-by-jobushobus-at-tenki-s-cart-weekly-117-reg-m-c-place-6th",
     "slug": "salamence-mega-arcanine-hisui-by-jobushobus-at-tenki-s-cart-weekly-117-reg-m-c-place-6th",
@@ -20629,133 +20375,6 @@
     ]
   },
   {
-    "name": "#69th - Jhinting at Tenki's Cart",
-    "source_url": "https://metavgc.com/teams/salamence-mega-raichu-mega-y-by-jhinting-at-tenki-s-cart-weekly-117-reg-m-c-place-69th",
-    "slug": "salamence-mega-raichu-mega-y-by-jhinting-at-tenki-s-cart-weekly-117-reg-m-c-place-69th",
-    "mons": [
-      {
-        "species": "Salamence",
-        "ability": "Aerilate",
-        "item": "Salamencite",
-        "nature": "Timid",
-        "moves": [
-          "Protect",
-          "Hyper Voice",
-          "Draco Meteor",
-          "Flamethrower"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 0,
-          "def": 0,
-          "spa": 32,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Incineroar",
-        "ability": "Intimidate",
-        "item": "Rocky Helmet",
-        "nature": "Impish",
-        "moves": [
-          "Fake Out",
-          "Flare Blitz",
-          "Throat Chop",
-          "Parting Shot"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 2,
-          "def": 32,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Rillaboom",
-        "ability": "Grassy Surge",
-        "item": "Miracle Seed",
-        "nature": "Adamant",
-        "moves": [
-          "Fake Out",
-          "Wood Hammer",
-          "U-turn",
-          "Grassy Glide"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 5,
-          "def": 0,
-          "spa": 0,
-          "spd": 29,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Raichu",
-        "ability": "No Guard",
-        "item": "Raichunite Y",
-        "nature": "Timid",
-        "moves": [
-          "Zap Cannon",
-          "Focus Blast",
-          "Protect",
-          "Encore"
-        ],
-        "sp": {
-          "hp": 9,
-          "atk": 0,
-          "def": 0,
-          "spa": 32,
-          "spd": 0,
-          "spe": 25
-        }
-      },
-      {
-        "species": "Farigiraf",
-        "ability": "Armor Tail",
-        "item": "Sitrus Berry",
-        "nature": "Modest",
-        "moves": [
-          "Psychic",
-          "Thunderbolt",
-          "Trick Room",
-          "Helping Hand"
-        ],
-        "sp": {
-          "hp": 29,
-          "atk": 0,
-          "def": 14,
-          "spa": 0,
-          "spd": 23,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Sneasler",
-        "ability": "Unburden",
-        "item": "Grassy Seed",
-        "nature": "Adamant",
-        "moves": [
-          "Close Combat",
-          "Dire Claw",
-          "Protect",
-          "Acrobatics"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      }
-    ]
-  },
-  {
     "name": "#9th - AndreVGC at CHAMPIONS REG.",
     "source_url": "https://metavgc.com/teams/floette-mega-dragonite-mega-by-andrevgc-at-champions-reg-m-c-crown-fight-bo3-tour-85-place-9th",
     "slug": "floette-mega-dragonite-mega-by-andrevgc-at-champions-reg-m-c-crown-fight-bo3-tour-85-place-9th",
@@ -21392,134 +21011,6 @@
     ]
   },
   {
-    "name": "#36th - Holasoy at Meeklosh's Fight",
-    "source_url": "https://metavgc.com/teams/aerodactyl-mega-lucario-by-holasoy-at-meeklosh-s-fight-night-friday-reg-m-c-place-36th",
-    "slug": "aerodactyl-mega-lucario-by-holasoy-at-meeklosh-s-fight-night-friday-reg-m-c-place-36th",
-    "mons": [
-      {
-        "species": "Lucario",
-        "ability": "Inner Focus",
-        "item": "Lucarionite Z",
-        "nature": "Timid",
-        "moves": [
-          "Calm Mind",
-          "Detect",
-          "Flash Cannon",
-          "Aura Sphere"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 0,
-          "def": 0,
-          "spa": 32,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Incineroar",
-        "ability": "Intimidate",
-        "item": "Sitrus Berry",
-        "nature": "Careful",
-        "moves": [
-          "Fake Out",
-          "Parting Shot",
-          "Flare Blitz",
-          "Throat Chop"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 2,
-          "def": 0,
-          "spa": 0,
-          "spd": 32,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Rillaboom",
-        "ability": "Grassy Surge",
-        "item": "Miracle Seed",
-        "nature": "Adamant",
-        "moves": [
-          "Wood Hammer",
-          "Fake Out",
-          "Grassy Glide",
-          "High Horsepower"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 5,
-          "def": 0,
-          "spa": 0,
-          "spd": 29,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Sylveon",
-        "ability": "Pixilate",
-        "item": "Fairy Feather",
-        "nature": "Modest",
-        "moves": [
-          "Hyper Voice",
-          "Hyper Beam",
-          "Quick Attack",
-          "Detect"
-        ],
-        "sp": {
-          "hp": 9,
-          "atk": 0,
-          "def": 22,
-          "spa": 20,
-          "spd": 0,
-          "spe": 15
-        }
-      },
-      {
-        "species": "Aerodactyl",
-        "ability": "Tough Claws",
-        "item": "Aerodactylite",
-        "nature": "Jolly",
-        "moves": [
-          "Rock Slide",
-          "Dual Wingbeat",
-          "Tailwind",
-          "Ice Fang"
-        ],
-        "sp": {
-          "hp": 16,
-          "atk": 18,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Basculegion",
-        "ability": "Adaptability",
-        "item": "Life Orb",
-        "nature": "Adamant",
-        "moves": [
-          "Wave Crash",
-          "Aqua Jet",
-          "Last Respects",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 13,
-          "atk": 32,
-          "def": 4,
-          "spa": 0,
-          "spd": 3,
-          "spe": 14
-        },
-        "gender": "M"
-      }
-    ]
-  },
-  {
     "name": "#87th - Emarex at Tenki's Cart Weekly",
     "source_url": "https://metavgc.com/teams/aerodactyl-mega-lucario-by-emarex-at-tenki-s-cart-weekly-117-reg-m-c-place-87th",
     "slug": "aerodactyl-mega-lucario-by-emarex-at-tenki-s-cart-weekly-117-reg-m-c-place-87th",
@@ -21641,134 +21132,6 @@
           "atk": 18,
           "def": 0,
           "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      }
-    ]
-  },
-  {
-    "name": "#35th - agreed1 at Intimidators",
-    "source_url": "https://metavgc.com/teams/salamence-mega-lucario-by-agreed1-at-intimidators-champions-challenge-42-reg-m-c-place-35th",
-    "slug": "salamence-mega-lucario-by-agreed1-at-intimidators-champions-challenge-42-reg-m-c-place-35th",
-    "mons": [
-      {
-        "species": "Lucario",
-        "ability": "steadfast",
-        "item": "Lucarionite Z",
-        "nature": "modest",
-        "moves": [
-          "Flash Cannon",
-          "Aura Sphere",
-          "Terrain Pulse",
-          "Detect"
-        ],
-        "sp": {
-          "hp": 10,
-          "atk": 0,
-          "def": 0,
-          "spa": 32,
-          "spd": 0,
-          "spe": 24
-        }
-      },
-      {
-        "species": "Indeedee-F",
-        "ability": "Psychic Surge",
-        "item": "Colbur Berry",
-        "nature": "bold",
-        "moves": [
-          "Trick Room",
-          "Dazzling Gleam",
-          "Follow Me",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 2,
-          "def": 32,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Rillaboom",
-        "ability": "Grassy Surge",
-        "item": "Occa Berry",
-        "nature": "adamant",
-        "moves": [
-          "Fake Out",
-          "Grassy Glide",
-          "Wood Hammer",
-          "U-turn"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 5,
-          "def": 0,
-          "spa": 0,
-          "spd": 29,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Basculegion",
-        "ability": "Adaptability",
-        "item": "Choice Scarf",
-        "nature": "adamant",
-        "moves": [
-          "Aqua Jet",
-          "Wave Crash",
-          "Last Respects",
-          "Flip Turn"
-        ],
-        "sp": {
-          "hp": 13,
-          "atk": 32,
-          "def": 4,
-          "spa": 0,
-          "spd": 3,
-          "spe": 14
-        },
-        "gender": "M"
-      },
-      {
-        "species": "Incineroar",
-        "ability": "Intimidate",
-        "item": "Sitrus Berry",
-        "nature": "careful",
-        "moves": [
-          "Fake Out",
-          "Parting Shot",
-          "Flare Blitz",
-          "Close Combat"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 2,
-          "def": 0,
-          "spa": 0,
-          "spd": 32,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Salamence-Mega",
-        "ability": "Aerilate",
-        "item": "Salamencite",
-        "nature": "timid",
-        "moves": [
-          "Tailwind",
-          "Hyper Voice",
-          "Draco Meteor",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 0,
-          "def": 0,
-          "spa": 32,
           "spd": 0,
           "spe": 32
         }
@@ -22031,390 +21394,6 @@
     ]
   },
   {
-    "name": "#15th - ShadowBTL at",
-    "source_url": "https://metavgc.com/teams/baxcalibur-mega-ninetales-alola-by-shadowbtl-at-intimidators-champions-challenge-42-reg-m-c-place-15th",
-    "slug": "baxcalibur-mega-ninetales-alola-by-shadowbtl-at-intimidators-champions-challenge-42-reg-m-c-place-15th",
-    "mons": [
-      {
-        "species": "Baxcalibur",
-        "ability": "Thermal Exchange",
-        "item": "Baxcalibrite",
-        "nature": "Adamant",
-        "moves": [
-          "Glaive Rush",
-          "Ice Shard",
-          "Swords Dance",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Ninetales-Alola",
-        "ability": "Snow Warning",
-        "item": "Light Clay",
-        "nature": "Timid",
-        "moves": [
-          "Aurora Veil",
-          "Blizzard",
-          "Moonblast",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 1,
-          "atk": 0,
-          "def": 1,
-          "spa": 32,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Sneasler",
-        "ability": "Unburden",
-        "item": "Grassy Seed",
-        "nature": "Adamant",
-        "moves": [
-          "Close Combat",
-          "Dire Claw",
-          "Coaching",
-          "Fake Out"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Basculegion",
-        "ability": "Adaptability",
-        "item": "Mystic Water",
-        "nature": "Jolly",
-        "moves": [
-          "Last Respects",
-          "Aqua Jet",
-          "Wave Crash",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        },
-        "gender": "M"
-      },
-      {
-        "species": "Rillaboom",
-        "ability": "Grassy Surge",
-        "item": "Miracle Seed",
-        "nature": "Adamant",
-        "moves": [
-          "Fake Out",
-          "Grassy Glide",
-          "Wood Hammer",
-          "High Horsepower"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 5,
-          "def": 0,
-          "spa": 0,
-          "spd": 29,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Incineroar",
-        "ability": "Intimidate",
-        "item": "Sitrus Berry",
-        "nature": "Impish",
-        "moves": [
-          "Fake Out",
-          "Flare Blitz",
-          "Darkest Lariat",
-          "Parting Shot"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 2,
-          "def": 32,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      }
-    ]
-  },
-  {
-    "name": "#24th - Neilo at SNT Reg M-C",
-    "source_url": "https://metavgc.com/teams/baxcalibur-mega-ninetales-alola-by-neilo-at-snt-reg-m-c-tour-1-place-24th",
-    "slug": "baxcalibur-mega-ninetales-alola-by-neilo-at-snt-reg-m-c-tour-1-place-24th",
-    "mons": [
-      {
-        "species": "Baxcalibur",
-        "ability": "Thermal Exchange",
-        "item": "Baxcalibrite",
-        "nature": "Adamant",
-        "moves": [
-          "Glaive Rush",
-          "Ice Shard",
-          "Swords Dance",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Ninetales-Alola",
-        "ability": "Snow Warning",
-        "item": "Light Clay",
-        "nature": "Timid",
-        "moves": [
-          "Aurora Veil",
-          "Blizzard",
-          "Moonblast",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 1,
-          "atk": 0,
-          "def": 1,
-          "spa": 32,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Sneasler",
-        "ability": "Unburden",
-        "item": "Grassy Seed",
-        "nature": "Adamant",
-        "moves": [
-          "Close Combat",
-          "Dire Claw",
-          "Coaching",
-          "Fake Out"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Basculegion",
-        "ability": "Adaptability",
-        "item": "Mystic Water",
-        "nature": "Jolly",
-        "moves": [
-          "Last Respects",
-          "Aqua Jet",
-          "Wave Crash",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        },
-        "gender": "M"
-      },
-      {
-        "species": "Rillaboom",
-        "ability": "Grassy Surge",
-        "item": "Miracle Seed",
-        "nature": "Adamant",
-        "moves": [
-          "Fake Out",
-          "Grassy Glide",
-          "Wood Hammer",
-          "High Horsepower"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 5,
-          "def": 0,
-          "spa": 0,
-          "spd": 29,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Incineroar",
-        "ability": "Intimidate",
-        "item": "Sitrus Berry",
-        "nature": "Impish",
-        "moves": [
-          "Fake Out",
-          "Flare Blitz",
-          "Darkest Lariat",
-          "Parting Shot"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 2,
-          "def": 32,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      }
-    ]
-  },
-  {
-    "name": "#79th - PapaRott at Talon's FIGHT CLUB",
-    "source_url": "https://metavgc.com/teams/baxcalibur-mega-lucario-by-paparott-at-talon-s-fight-club-101-pokemon-champions-reg-m-c-place-79th",
-    "slug": "baxcalibur-mega-lucario-by-paparott-at-talon-s-fight-club-101-pokemon-champions-reg-m-c-place-79th",
-    "mons": [
-      {
-        "species": "Lucario",
-        "ability": "Inner Focus",
-        "item": "Lucarionite Z",
-        "nature": "Modest",
-        "moves": [
-          "Vacuum Wave",
-          "Terrain Pulse",
-          "Steel Beam",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 10,
-          "atk": 0,
-          "def": 0,
-          "spa": 32,
-          "spd": 0,
-          "spe": 24
-        }
-      },
-      {
-        "species": "Basculegion",
-        "ability": "Adaptability",
-        "item": "Life Orb",
-        "nature": "Adamant",
-        "moves": [
-          "Aqua Jet",
-          "Wave Crash",
-          "Last Respects",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 13,
-          "atk": 32,
-          "def": 4,
-          "spa": 0,
-          "spd": 3,
-          "spe": 14
-        },
-        "gender": "M"
-      },
-      {
-        "species": "Baxcalibur",
-        "ability": "Thermal Exchange",
-        "item": "Baxcalibrite",
-        "nature": "Adamant",
-        "moves": [
-          "Ice Shard",
-          "Glaive Rush",
-          "Icicle Crash",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Incineroar",
-        "ability": "Intimidate",
-        "item": "Chople Berry",
-        "nature": "Adamant",
-        "moves": [
-          "Fake Out",
-          "Flare Blitz",
-          "Darkest Lariat",
-          "Parting Shot"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 32,
-          "def": 2,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Rillaboom",
-        "ability": "Grassy Surge",
-        "item": "Terrain Extender",
-        "nature": "Adamant",
-        "moves": [
-          "Fake Out",
-          "Wood Hammer",
-          "High Horsepower",
-          "U-turn"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 5,
-          "def": 0,
-          "spa": 0,
-          "spd": 29,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Sneasler",
-        "ability": "Unburden",
-        "item": "Grassy Seed",
-        "nature": "Jolly",
-        "moves": [
-          "Fake Out",
-          "Close Combat",
-          "Dire Claw",
-          "Feint"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      }
-    ]
-  },
-  {
     "name": "#94th - llydmc07 at Talon's FIGHT CLUB",
     "source_url": "https://metavgc.com/teams/baxcalibur-mega-lucario-by-llydmc07-at-talon-s-fight-club-101-pokemon-champions-reg-m-c-place-94th",
     "slug": "baxcalibur-mega-lucario-by-llydmc07-at-talon-s-fight-club-101-pokemon-champions-reg-m-c-place-94th",
@@ -22530,133 +21509,6 @@
           "Close Combat",
           "Dire Claw",
           "Feint"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      }
-    ]
-  },
-  {
-    "name": "#13th - Grookeygreninja at",
-    "source_url": "https://metavgc.com/teams/salamence-mega-charizard-mega-y-by-grookeygreninja-at-london-corviknights-vgc-weekly-tour-12-reg-m-c-place-13th",
-    "slug": "salamence-mega-charizard-mega-y-by-grookeygreninja-at-london-corviknights-vgc-weekly-tour-12-reg-m-c-place-13th",
-    "mons": [
-      {
-        "species": "Salamence",
-        "ability": "Aerilate",
-        "item": "Salamencite",
-        "nature": "Hasty",
-        "moves": [
-          "Hyper Voice",
-          "Tailwind",
-          "Double-Edge",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 0,
-          "def": 32,
-          "spa": 32,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Charizard",
-        "ability": "Drought",
-        "item": "Charizardite Y",
-        "nature": "Modest",
-        "moves": [
-          "Heat Wave",
-          "Weather Ball",
-          "Ancient Power",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 0,
-          "def": 0,
-          "spa": 32,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Rillaboom",
-        "ability": "Grassy Surge",
-        "item": "Sitrus Berry",
-        "nature": "Adamant",
-        "moves": [
-          "Fake Out",
-          "Wood Hammer",
-          "Grassy Glide",
-          "U-turn"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 5,
-          "def": 0,
-          "spa": 0,
-          "spd": 29,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Kingambit",
-        "ability": "Defiant",
-        "item": "Life Orb",
-        "nature": "Adamant",
-        "moves": [
-          "Kowtow Cleave",
-          "Iron Head",
-          "Sucker Punch",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 32,
-          "def": 2,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Sylveon",
-        "ability": "Pixilate",
-        "item": "Fairy Feather",
-        "nature": "Modest",
-        "moves": [
-          "Hyper Beam",
-          "Hyper Voice",
-          "Quick Attack",
-          "Detect"
-        ],
-        "sp": {
-          "hp": 9,
-          "atk": 0,
-          "def": 22,
-          "spa": 20,
-          "spd": 0,
-          "spe": 15
-        }
-      },
-      {
-        "species": "Sneasler",
-        "ability": "Unburden",
-        "item": "Grassy Seed",
-        "nature": "Adamant",
-        "moves": [
-          "Fake Out",
-          "Close Combat",
-          "Dire Claw",
-          "Protect"
         ],
         "sp": {
           "hp": 2,
@@ -24069,262 +22921,6 @@
     ]
   },
   {
-    "name": "#18th - mugiwaraLux at Talon's",
-    "source_url": "https://metavgc.com/teams/golisopod-mega-gardevoir-mega-by-mugiwaralux-at-talon-s-fight-club-101-pokemon-champions-reg-m-c-place-18th",
-    "slug": "golisopod-mega-gardevoir-mega-by-mugiwaralux-at-talon-s-fight-club-101-pokemon-champions-reg-m-c-place-18th",
-    "mons": [
-      {
-        "species": "Golisopod-Mega",
-        "ability": "Tough Claws",
-        "item": "Golisopite",
-        "nature": "Adamant",
-        "moves": [
-          "Protect",
-          "Swords Dance",
-          "Iron Head",
-          "Leech Life"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 32,
-          "def": 2,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Indeedee-F",
-        "ability": "Psychic Surge",
-        "item": "Colbur Berry",
-        "nature": "Calm",
-        "moves": [
-          "Follow Me",
-          "Helping Hand",
-          "Trick Room",
-          "Psychic"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 2,
-          "def": 32,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Sneasler",
-        "ability": "Unburden",
-        "item": "Psychic Seed",
-        "nature": "Adamant",
-        "moves": [
-          "Protect",
-          "Close Combat",
-          "Dire Claw",
-          "Rock Slide"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Pelipper",
-        "ability": "Drizzle",
-        "item": "Focus Sash",
-        "nature": "Modest",
-        "moves": [
-          "Protect",
-          "Tailwind",
-          "Weather Ball",
-          "Hurricane"
-        ],
-        "sp": {
-          "hp": 31,
-          "atk": 0,
-          "def": 1,
-          "spa": 5,
-          "spd": 18,
-          "spe": 11
-        }
-      },
-      {
-        "species": "Gardevoir-Mega",
-        "ability": "Pixilate",
-        "item": "Gardevoirite",
-        "nature": "Modest",
-        "moves": [
-          "Protect",
-          "Expanding Force",
-          "Hyper Voice",
-          "Trick Room"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 0,
-          "def": 22,
-          "spa": 6,
-          "spd": 1,
-          "spe": 5
-        }
-      },
-      {
-        "species": "Basculegion",
-        "ability": "Adaptability",
-        "item": "Choice Scarf",
-        "nature": "Jolly",
-        "moves": [
-          "Flip Turn",
-          "Wave Crash",
-          "Last Respects",
-          "Aqua Jet"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        },
-        "gender": "M"
-      }
-    ]
-  },
-  {
-    "name": "#20th - emanuele12340 at Reg M-C",
-    "source_url": "https://metavgc.com/teams/golisopod-mega-gardevoir-mega-by-emanuele12340-at-reg-m-c-qualifier-for-rookideevgc-grand-tourney-place-20th",
-    "slug": "golisopod-mega-gardevoir-mega-by-emanuele12340-at-reg-m-c-qualifier-for-rookideevgc-grand-tourney-place-20th",
-    "mons": [
-      {
-        "species": "Golisopod-Mega",
-        "ability": "Tough Claws",
-        "item": "Golisopite",
-        "nature": "Adamant",
-        "moves": [
-          "Swords Dance",
-          "Protect",
-          "Leech Life",
-          "Iron Head"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 32,
-          "def": 2,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Gardevoir-Mega",
-        "ability": "Pixilate",
-        "item": "Gardevoirite",
-        "nature": "Modest",
-        "moves": [
-          "Expanding Force",
-          "Trick Room",
-          "Protect",
-          "Hyper Voice"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 0,
-          "def": 22,
-          "spa": 6,
-          "spd": 1,
-          "spe": 5
-        }
-      },
-      {
-        "species": "Indeedee-F",
-        "ability": "Psychic Surge",
-        "item": "Colbur Berry",
-        "nature": "Calm",
-        "moves": [
-          "Trick Room",
-          "Helping Hand",
-          "Follow Me",
-          "Psychic"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 2,
-          "def": 32,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Basculegion",
-        "ability": "Adaptability",
-        "item": "Choice Scarf",
-        "nature": "Jolly",
-        "moves": [
-          "Flip Turn",
-          "Wave Crash",
-          "Last Respects",
-          "Aqua Jet"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        },
-        "gender": "M"
-      },
-      {
-        "species": "Pelipper",
-        "ability": "Drizzle",
-        "item": "Focus Sash",
-        "nature": "Modest",
-        "moves": [
-          "Hurricane",
-          "Tailwind",
-          "Protect",
-          "Weather Ball"
-        ],
-        "sp": {
-          "hp": 31,
-          "atk": 0,
-          "def": 1,
-          "spa": 5,
-          "spd": 18,
-          "spe": 11
-        }
-      },
-      {
-        "species": "Sneasler",
-        "ability": "Unburden",
-        "item": "Psychic Seed",
-        "nature": "Adamant",
-        "moves": [
-          "Protect",
-          "Close Combat",
-          "Dire Claw",
-          "Rock Slide"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      }
-    ]
-  },
-  {
     "name": "#22nd - DARKTUGA at Intimidators",
     "source_url": "https://metavgc.com/teams/gardevoir-mega-golisopod-mega-by-darktuga-at-intimidators-champions-challenge-42-reg-m-c-place-22nd",
     "slug": "gardevoir-mega-golisopod-mega-by-darktuga-at-intimidators-champions-challenge-42-reg-m-c-place-22nd",
@@ -24449,134 +23045,6 @@
           "spd": 0,
           "spe": 32
         }
-      }
-    ]
-  },
-  {
-    "name": "#32nd - Claudia S at CHAMPIONS",
-    "source_url": "https://metavgc.com/teams/gardevoir-mega-golisopod-mega-by-claudia-s-at-champions-reg-m-c-crown-fight-bo3-tour-85-place-32nd",
-    "slug": "gardevoir-mega-golisopod-mega-by-claudia-s-at-champions-reg-m-c-crown-fight-bo3-tour-85-place-32nd",
-    "mons": [
-      {
-        "species": "Gardevoir-Mega",
-        "ability": "Pixilate",
-        "item": "Gardevoirite",
-        "nature": "Modest",
-        "moves": [
-          "Hyper Voice",
-          "Expanding Force",
-          "Trick Room",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 0,
-          "def": 22,
-          "spa": 6,
-          "spd": 1,
-          "spe": 5
-        }
-      },
-      {
-        "species": "Indeedee-F",
-        "ability": "Psychic Surge",
-        "item": "Colbur Berry",
-        "nature": "Calm",
-        "moves": [
-          "Psychic",
-          "Trick Room",
-          "Helping Hand",
-          "Follow Me"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 2,
-          "def": 32,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Sneasler",
-        "ability": "Unburden",
-        "item": "Psychic Seed",
-        "nature": "Adamant",
-        "moves": [
-          "Close Combat",
-          "Dire Claw",
-          "Rock Slide",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        }
-      },
-      {
-        "species": "Pelipper",
-        "ability": "Drizzle",
-        "item": "Focus Sash",
-        "nature": "Modest",
-        "moves": [
-          "Hurricane",
-          "Weather Ball",
-          "Tailwind",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 31,
-          "atk": 0,
-          "def": 1,
-          "spa": 5,
-          "spd": 18,
-          "spe": 11
-        }
-      },
-      {
-        "species": "Golisopod-Mega",
-        "ability": "Tough Claws",
-        "item": "Golisopite",
-        "nature": "Adamant",
-        "moves": [
-          "Iron Head",
-          "Leech Life",
-          "Swords Dance",
-          "Protect"
-        ],
-        "sp": {
-          "hp": 32,
-          "atk": 32,
-          "def": 2,
-          "spa": 0,
-          "spd": 0,
-          "spe": 0
-        }
-      },
-      {
-        "species": "Basculegion",
-        "ability": "Adaptability",
-        "item": "Choice Scarf",
-        "nature": "Jolly",
-        "moves": [
-          "Wave Crash",
-          "Flip Turn",
-          "Aqua Jet",
-          "Last Respects"
-        ],
-        "sp": {
-          "hp": 2,
-          "atk": 32,
-          "def": 0,
-          "spa": 0,
-          "spd": 0,
-          "spe": 32
-        },
-        "gender": "M"
       }
     ]
   },
@@ -38202,6 +36670,1531 @@
           "spd": 32,
           "spe": 0
         }
+      }
+    ]
+  },
+  {
+    "name": "#83rd - TheGreatestDad at Tuesday Throwdowns #3 (Top Cut, $50 for",
+    "source_url": "https://metavgc.com/teams/swampert-mega-golisopod-mega-by-thegreatestdad-at-tuesday-throwdowns-3-top-cut-50-for-1st",
+    "slug": "swampert-mega-golisopod-mega-by-thegreatestdad-at-tuesday-throwdowns-3-top-cut-50-for-1st",
+    "mons": [
+      {
+        "species": "Swampert",
+        "ability": "Torrent",
+        "item": "Swampertite",
+        "nature": "Adamant",
+        "moves": [
+          "Wave Crash",
+          "High Horsepower",
+          "Protect",
+          "Ice Punch"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Grimmsnarl",
+        "ability": "Prankster",
+        "item": "Light Clay",
+        "nature": "Careful",
+        "moves": [
+          "Spirit Break",
+          "Reflect",
+          "Light Screen",
+          "Parting Shot"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 17,
+          "spa": 0,
+          "spd": 15,
+          "spe": 2
+        }
+      },
+      {
+        "species": "Farigiraf",
+        "ability": "Armor Tail",
+        "item": "Sitrus Berry",
+        "nature": "Bold",
+        "moves": [
+          "Psychic",
+          "Trick Room",
+          "Protect",
+          "Roar"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 21,
+          "spa": 0,
+          "spd": 14,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Pelipper",
+        "ability": "Drizzle",
+        "item": "Focus Sash",
+        "nature": "Timid",
+        "moves": [
+          "Hurricane",
+          "Weather Ball",
+          "Tailwind",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 2,
+          "atk": 0,
+          "def": 0,
+          "spa": 32,
+          "spd": 0,
+          "spe": 32
+        }
+      },
+      {
+        "species": "Golisopod",
+        "ability": "Emergency Exit",
+        "item": "Golisopite",
+        "nature": "Brave",
+        "moves": [
+          "Leech Life",
+          "Drill Run",
+          "Iron Head",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Archaludon",
+        "ability": "Stamina",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "moves": [
+          "Electro Shot",
+          "Dragon Pulse",
+          "Snarl",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 1,
+          "spa": 5,
+          "spd": 29,
+          "spe": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "#91st - Francesco Magurno at 2027 Gdansk Pokémon VGC Regional",
+    "source_url": "https://metavgc.com/teams/swampert-mega-golisopod-mega-by-francesco-magurno-at-2027-gdansk-pokemon-vgc-regional-championships",
+    "slug": "swampert-mega-golisopod-mega-by-francesco-magurno-at-2027-gdansk-pokemon-vgc-regional-championships",
+    "mons": [
+      {
+        "species": "Swampert",
+        "ability": "Torrent",
+        "item": "Swampertite",
+        "nature": "Adamant",
+        "moves": [
+          "Wave Crash",
+          "High Horsepower",
+          "Protect",
+          "Ice Punch"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Grimmsnarl",
+        "ability": "Prankster",
+        "item": "Light Clay",
+        "nature": "Careful",
+        "moves": [
+          "Spirit Break",
+          "Reflect",
+          "Light Screen",
+          "Parting Shot"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 17,
+          "spa": 0,
+          "spd": 15,
+          "spe": 2
+        }
+      },
+      {
+        "species": "Farigiraf",
+        "ability": "Armor Tail",
+        "item": "Sitrus Berry",
+        "nature": "Bold",
+        "moves": [
+          "Psychic",
+          "Trick Room",
+          "Protect",
+          "Roar"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 21,
+          "spa": 0,
+          "spd": 14,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Pelipper",
+        "ability": "Drizzle",
+        "item": "Focus Sash",
+        "nature": "Timid",
+        "moves": [
+          "Hurricane",
+          "Weather Ball",
+          "Tailwind",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 2,
+          "atk": 0,
+          "def": 0,
+          "spa": 32,
+          "spd": 0,
+          "spe": 32
+        }
+      },
+      {
+        "species": "Golisopod",
+        "ability": "Emergency Exit",
+        "item": "Golisopite",
+        "nature": "Adamant",
+        "moves": [
+          "Leech Life",
+          "Drill Run",
+          "Iron Head",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Archaludon",
+        "ability": "Stamina",
+        "item": "Leftovers",
+        "nature": "Calm",
+        "moves": [
+          "Electro Shot",
+          "Dragon Pulse",
+          "Snarl",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 1,
+          "spa": 2,
+          "spd": 20,
+          "spe": 11
+        }
+      }
+    ]
+  },
+  {
+    "name": "#194th - Sebastian Amigon at 2027 Puebla Pokémon VGC Regional",
+    "source_url": "https://metavgc.com/teams/swampert-mega-golisopod-mega-by-sebastian-amigon-at-2027-puebla-pokemon-vgc-regional-championships",
+    "slug": "swampert-mega-golisopod-mega-by-sebastian-amigon-at-2027-puebla-pokemon-vgc-regional-championships",
+    "mons": [
+      {
+        "species": "Archaludon",
+        "ability": "Stamina",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "moves": [
+          "Dragon Pulse",
+          "Electro Shot",
+          "Snarl",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 27,
+          "atk": 0,
+          "def": 5,
+          "spa": 5,
+          "spd": 10,
+          "spe": 19
+        }
+      },
+      {
+        "species": "Pelipper",
+        "ability": "Drizzle",
+        "item": "Focus Sash",
+        "nature": "Timid",
+        "moves": [
+          "Weather Ball",
+          "Hurricane",
+          "Wide Guard",
+          "Tailwind"
+        ],
+        "sp": {
+          "hp": 2,
+          "atk": 0,
+          "def": 0,
+          "spa": 32,
+          "spd": 0,
+          "spe": 32
+        }
+      },
+      {
+        "species": "Swampert",
+        "ability": "Torrent",
+        "item": "Swampertite",
+        "nature": "Adamant",
+        "moves": [
+          "Wave Crash",
+          "Earthquake",
+          "Ice Punch",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Farigiraf",
+        "ability": "Armor Tail",
+        "item": "Sitrus Berry",
+        "nature": "Relaxed",
+        "moves": [
+          "Psychic",
+          "Trick Room",
+          "Helping Hand",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 30,
+          "atk": 0,
+          "def": 21,
+          "spa": 0,
+          "spd": 15,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Golisopod",
+        "ability": "Emergency Exit",
+        "item": "Golisopite",
+        "nature": "Brave",
+        "moves": [
+          "Leech Life",
+          "Iron Head",
+          "Liquidation",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Grimmsnarl",
+        "ability": "Prankster",
+        "item": "Light Clay",
+        "nature": "Careful",
+        "moves": [
+          "Parting Shot",
+          "Light Screen",
+          "Reflect",
+          "Spirit Break"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 17,
+          "spa": 0,
+          "spd": 15,
+          "spe": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "#47th - JadeLiberte at Amyverse VGC Champions Arena #15 Cash Prize!",
+    "source_url": "https://metavgc.com/teams/swampert-mega-golisopod-mega-by-jadeliberte-at-amyverse-vgc-champions-arena-15-cash-prize",
+    "slug": "swampert-mega-golisopod-mega-by-jadeliberte-at-amyverse-vgc-champions-arena-15-cash-prize",
+    "mons": [
+      {
+        "species": "Swampert",
+        "ability": "Swift Swim",
+        "item": "Swampertite",
+        "nature": "Adamant",
+        "moves": [
+          "Wave Crash",
+          "Earthquake",
+          "Ice Punch",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Golisopod",
+        "ability": "Emergency Exit",
+        "item": "Golisopite",
+        "nature": "Adamant",
+        "moves": [
+          "Leech Life",
+          "Iron Head",
+          "Sucker Punch",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Grimmsnarl",
+        "ability": "Prankster",
+        "item": "Light Clay",
+        "nature": "Careful",
+        "moves": [
+          "Reflect",
+          "Parting Shot",
+          "Light Screen",
+          "Spirit Break"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 17,
+          "spa": 0,
+          "spd": 15,
+          "spe": 2
+        }
+      },
+      {
+        "species": "Pelipper",
+        "ability": "Drizzle",
+        "item": "Life Orb",
+        "nature": "Bold",
+        "moves": [
+          "Weather Ball",
+          "Hurricane",
+          "Wide Guard",
+          "Muddy Water"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 0,
+          "spa": 0,
+          "spd": 25,
+          "spe": 10
+        }
+      },
+      {
+        "species": "Archaludon",
+        "ability": "Stamina",
+        "item": "Leftovers",
+        "nature": "Calm",
+        "moves": [
+          "Dragon Pulse",
+          "Electro Shot",
+          "Snarl",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 1,
+          "spa": 2,
+          "spd": 20,
+          "spe": 11
+        }
+      },
+      {
+        "species": "Farigiraf",
+        "ability": "Armor Tail",
+        "item": "Sitrus Berry",
+        "nature": "Bold",
+        "moves": [
+          "Trick Room",
+          "Protect",
+          "Ally Switch",
+          "Helping Hand"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 21,
+          "spa": 0,
+          "spd": 14,
+          "spe": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "#26th - JadeLiberte at VGC Trainer School; champions M/C #5 |",
+    "source_url": "https://metavgc.com/teams/swampert-mega-golisopod-mega-by-jadeliberte-at-vgc-trainer-school-champions-m-c-5",
+    "slug": "swampert-mega-golisopod-mega-by-jadeliberte-at-vgc-trainer-school-champions-m-c-5",
+    "mons": [
+      {
+        "species": "Swampert",
+        "ability": "Swift Swim",
+        "item": "Swampertite",
+        "nature": "Adamant",
+        "moves": [
+          "Wave Crash",
+          "Earthquake",
+          "Ice Punch",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Golisopod",
+        "ability": "Emergency Exit",
+        "item": "Golisopite",
+        "nature": "Adamant",
+        "moves": [
+          "Leech Life",
+          "Iron Head",
+          "Sucker Punch",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Grimmsnarl",
+        "ability": "Prankster",
+        "item": "Light Clay",
+        "nature": "Careful",
+        "moves": [
+          "Reflect",
+          "Parting Shot",
+          "Light Screen",
+          "Spirit Break"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 17,
+          "spa": 0,
+          "spd": 15,
+          "spe": 2
+        }
+      },
+      {
+        "species": "Pelipper",
+        "ability": "Drizzle",
+        "item": "Life Orb",
+        "nature": "Bold",
+        "moves": [
+          "Weather Ball",
+          "Hurricane",
+          "Wide Guard",
+          "Muddy Water"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 0,
+          "spa": 0,
+          "spd": 25,
+          "spe": 10
+        }
+      },
+      {
+        "species": "Archaludon",
+        "ability": "Stamina",
+        "item": "Leftovers",
+        "nature": "Bold",
+        "moves": [
+          "Dragon Pulse",
+          "Electro Shot",
+          "Aura Sphere",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 1,
+          "spa": 5,
+          "spd": 29,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Farigiraf",
+        "ability": "Armor Tail",
+        "item": "Sitrus Berry",
+        "nature": "Bold",
+        "moves": [
+          "Trick Room",
+          "Protect",
+          "Ally Switch",
+          "Helping Hand"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 21,
+          "spa": 0,
+          "spd": 14,
+          "spe": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "#739th - Matteo Mecca at 2027 Nice Pokémon VGC Regional",
+    "source_url": "https://metavgc.com/teams/golisopod-mega-swampert-mega-by-matteo-mecca-at-2027-nice-pokemon-vgc-regional-championships",
+    "slug": "golisopod-mega-swampert-mega-by-matteo-mecca-at-2027-nice-pokemon-vgc-regional-championships",
+    "mons": [
+      {
+        "species": "Archaludon",
+        "ability": "Stamina",
+        "item": "Leftovers",
+        "nature": "Calm",
+        "moves": [
+          "Electro Shot",
+          "Flash Cannon",
+          "Snarl",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 1,
+          "spa": 2,
+          "spd": 20,
+          "spe": 11
+        }
+      },
+      {
+        "species": "Golisopod",
+        "ability": "Emergency Exit",
+        "item": "Golisopite",
+        "nature": "Adamant",
+        "moves": [
+          "Protect",
+          "Drill Run",
+          "Iron Head",
+          "Leech Life"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Pelipper",
+        "ability": "Drizzle",
+        "item": "Damp Rock",
+        "nature": "Modest",
+        "moves": [
+          "Tailwind",
+          "Hurricane",
+          "Weather Ball",
+          "Wide Guard"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 1,
+          "spa": 5,
+          "spd": 18,
+          "spe": 11
+        }
+      },
+      {
+        "species": "Grimmsnarl",
+        "ability": "Prankster",
+        "item": "Light Clay",
+        "nature": "Impish",
+        "moves": [
+          "Spirit Break",
+          "Parting Shot",
+          "Light Screen",
+          "Reflect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 22,
+          "spa": 0,
+          "spd": 10,
+          "spe": 2
+        }
+      },
+      {
+        "species": "Farigiraf",
+        "ability": "Armor Tail",
+        "item": "Sitrus Berry",
+        "nature": "Bold",
+        "moves": [
+          "Trick Room",
+          "Helping Hand",
+          "Psychic",
+          "Thunderbolt"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 21,
+          "spa": 0,
+          "spd": 14,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Swampert",
+        "ability": "Swift Swim",
+        "item": "Swampertite",
+        "nature": "Adamant",
+        "moves": [
+          "Earthquake",
+          "Wave Crash",
+          "Ice Punch",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "#548th - Jack Armbruster at 2027 Louisville Pokémon VGC Regional",
+    "source_url": "https://metavgc.com/teams/golisopod-mega-swampert-mega-by-jack-armbruster-at-2027-louisville-pokemon-vgc-regional-championships",
+    "slug": "golisopod-mega-swampert-mega-by-jack-armbruster-at-2027-louisville-pokemon-vgc-regional-championships",
+    "mons": [
+      {
+        "species": "Pelipper",
+        "ability": "Drizzle",
+        "item": "Focus Sash",
+        "nature": "Modest",
+        "moves": [
+          "Wide Guard",
+          "Tailwind",
+          "Weather Ball",
+          "Hurricane"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 1,
+          "spa": 5,
+          "spd": 18,
+          "spe": 11
+        }
+      },
+      {
+        "species": "Golisopod",
+        "ability": "Emergency Exit",
+        "item": "Golisopite",
+        "nature": "Adamant",
+        "moves": [
+          "Protect",
+          "Iron Head",
+          "Leech Life",
+          "Sucker Punch"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Grimmsnarl",
+        "ability": "Prankster",
+        "item": "Light Clay",
+        "nature": "Careful",
+        "moves": [
+          "Light Screen",
+          "Reflect",
+          "Parting Shot",
+          "Spirit Break"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 17,
+          "spa": 0,
+          "spd": 15,
+          "spe": 2
+        }
+      },
+      {
+        "species": "Archaludon",
+        "ability": "Stamina",
+        "item": "Leftovers",
+        "nature": "Modest",
+        "moves": [
+          "Protect",
+          "Electro Shot",
+          "Flash Cannon",
+          "Dragon Pulse"
+        ],
+        "sp": {
+          "hp": 27,
+          "atk": 0,
+          "def": 5,
+          "spa": 5,
+          "spd": 10,
+          "spe": 19
+        }
+      },
+      {
+        "species": "Farigiraf",
+        "ability": "Armor Tail",
+        "item": "Sitrus Berry",
+        "nature": "Quiet",
+        "moves": [
+          "Trick Room",
+          "Helping Hand",
+          "Psychic",
+          "Thunderbolt"
+        ],
+        "sp": {
+          "hp": 29,
+          "atk": 0,
+          "def": 21,
+          "spa": 0,
+          "spd": 16,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Swampert",
+        "ability": "Swift Swim",
+        "item": "Swampertite",
+        "nature": "Adamant",
+        "moves": [
+          "Protect",
+          "Wave Crash",
+          "Earthquake",
+          "Ice Punch"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "#37th - Gus_0Z at [100€ prize] The Grim Cup #1 Reg M-C | MetaVGC",
+    "source_url": "https://metavgc.com/teams/swampert-mega-golisopod-mega-by-gus-0z-at-100-prize-the-grim-cup-1-reg-m-c",
+    "slug": "swampert-mega-golisopod-mega-by-gus-0z-at-100-prize-the-grim-cup-1-reg-m-c",
+    "mons": [
+      {
+        "species": "Archaludon",
+        "ability": "Stamina",
+        "item": "Leftovers",
+        "nature": "Calm",
+        "moves": [
+          "Electro Shot",
+          "Dragon Pulse",
+          "Snarl",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 1,
+          "spa": 2,
+          "spd": 20,
+          "spe": 11
+        }
+      },
+      {
+        "species": "Swampert",
+        "ability": "Swift Swim",
+        "item": "Swampertite",
+        "nature": "Adamant",
+        "moves": [
+          "Wave Crash",
+          "High Horsepower",
+          "Ice Punch",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 26,
+          "atk": 24,
+          "def": 3,
+          "spa": 0,
+          "spd": 0,
+          "spe": 13
+        }
+      },
+      {
+        "species": "Grimmsnarl",
+        "ability": "Prankster",
+        "item": "Light Clay",
+        "nature": "Sassy",
+        "moves": [
+          "Reflect",
+          "Light Screen",
+          "Parting Shot",
+          "Spirit Break"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 19,
+          "spa": 0,
+          "spd": 15,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Pelipper",
+        "ability": "Drizzle",
+        "item": "Focus Sash",
+        "nature": "Modest",
+        "moves": [
+          "Weather Ball",
+          "Hurricane",
+          "Tailwind",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 1,
+          "spa": 5,
+          "spd": 18,
+          "spe": 11
+        }
+      },
+      {
+        "species": "Golisopod",
+        "ability": "Emergency Exit",
+        "item": "Golisopite",
+        "nature": "Adamant",
+        "moves": [
+          "Iron Head",
+          "Leech Life",
+          "Drill Run",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 0,
+          "spa": 0,
+          "spd": 0,
+          "spe": 2
+        }
+      },
+      {
+        "species": "Farigiraf",
+        "ability": "Armor Tail",
+        "item": "Sitrus Berry",
+        "nature": "Bold",
+        "moves": [
+          "Expanding Force",
+          "Thunderbolt",
+          "Protect",
+          "Trick Room"
+        ],
+        "sp": {
+          "hp": 25,
+          "atk": 0,
+          "def": 26,
+          "spa": 0,
+          "spd": 15,
+          "spe": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "#14th - Light7 at Intimidators Champions Challenge #54 REG M-C |",
+    "source_url": "https://metavgc.com/teams/gengar-mega-sneasler-by-light7-at-intimidators-champions-challenge-54-reg-m-c",
+    "slug": "gengar-mega-sneasler-by-light7-at-intimidators-champions-challenge-54-reg-m-c",
+    "mons": [
+      {
+        "species": "Gengar",
+        "ability": "Cursed Body",
+        "item": "Gengarite",
+        "nature": "Modest",
+        "moves": [
+          "Shadow Ball",
+          "Sludge Bomb",
+          "Protect",
+          "Perish Song"
+        ],
+        "sp": {
+          "hp": 20,
+          "atk": 0,
+          "def": 4,
+          "spa": 10,
+          "spd": 0,
+          "spe": 32
+        }
+      },
+      {
+        "species": "Sneasler",
+        "ability": "Unburden",
+        "item": "Grassy Seed",
+        "nature": "Adamant",
+        "moves": [
+          "Dire Claw",
+          "Rock Slide",
+          "Protect",
+          "Close Combat"
+        ],
+        "sp": {
+          "hp": 0,
+          "atk": 32,
+          "def": 0,
+          "spa": 0,
+          "spd": 2,
+          "spe": 32
+        }
+      },
+      {
+        "species": "Kingambit",
+        "ability": "Defiant",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "moves": [
+          "Kowtow Cleave",
+          "Swords Dance",
+          "Sucker Punch",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 0,
+          "spa": 0,
+          "spd": 2,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Hippowdon",
+        "ability": "Sand Stream",
+        "item": "Leftovers",
+        "nature": "Careful",
+        "moves": [
+          "High Horsepower",
+          "Stone Edge",
+          "Yawn",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 2,
+          "atk": 0,
+          "def": 32,
+          "spa": 0,
+          "spd": 32,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Incineroar",
+        "ability": "Intimidate",
+        "item": "Chople Berry",
+        "nature": "Sassy",
+        "moves": [
+          "Flare Blitz",
+          "Parting Shot",
+          "Fake Out",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 13,
+          "spa": 0,
+          "spd": 21,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Rillaboom",
+        "ability": "Grassy Surge",
+        "item": "Occa Berry",
+        "nature": "Brave",
+        "moves": [
+          "Grassy Glide",
+          "U-turn",
+          "Fake Out",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 2,
+          "spa": 0,
+          "spd": 0,
+          "spe": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "#11th - Duckoooo at biffpipp’s Battle Frontier - CHAMPS M-C TOUR #4",
+    "source_url": "https://metavgc.com/teams/gengar-mega-hippowdon-by-duckoooo-at-biffpipp-s-battle-frontier-champs-m-c-tour-4",
+    "slug": "gengar-mega-hippowdon-by-duckoooo-at-biffpipp-s-battle-frontier-champs-m-c-tour-4",
+    "mons": [
+      {
+        "species": "Hippowdon",
+        "ability": "Sand Stream",
+        "item": "Leftovers",
+        "nature": "Sassy",
+        "moves": [
+          "High Horsepower",
+          "Stone Edge",
+          "Protect",
+          "Yawn"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 18,
+          "spa": 0,
+          "spd": 16,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Gengar",
+        "ability": "Cursed Body",
+        "item": "Gengarite",
+        "nature": "Modest",
+        "moves": [
+          "Shadow Ball",
+          "Sludge Bomb",
+          "Perish Song",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 20,
+          "atk": 0,
+          "def": 4,
+          "spa": 10,
+          "spd": 0,
+          "spe": 32
+        }
+      },
+      {
+        "species": "Sneasler",
+        "ability": "Unburden",
+        "item": "White Herb",
+        "nature": "Adamant",
+        "moves": [
+          "Dire Claw",
+          "Fake Out",
+          "Close Combat",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 0,
+          "atk": 32,
+          "def": 0,
+          "spa": 0,
+          "spd": 2,
+          "spe": 32
+        }
+      },
+      {
+        "species": "Kingambit",
+        "ability": "Defiant",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "moves": [
+          "Kowtow Cleave",
+          "Sucker Punch",
+          "Swords Dance",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 0,
+          "spa": 0,
+          "spd": 2,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Incineroar",
+        "ability": "Intimidate",
+        "item": "Chople Berry",
+        "nature": "Sassy",
+        "moves": [
+          "Flare Blitz",
+          "Fake Out",
+          "Parting Shot",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 13,
+          "spa": 0,
+          "spd": 21,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Rillaboom",
+        "ability": "Grassy Surge",
+        "item": "Eject Button",
+        "nature": "Careful",
+        "moves": [
+          "Grassy Glide",
+          "Fake Out",
+          "Protect",
+          "U-turn"
+        ],
+        "sp": {
+          "hp": 0,
+          "atk": 32,
+          "def": 0,
+          "spa": 0,
+          "spd": 2,
+          "spe": 32
+        }
+      }
+    ]
+  },
+  {
+    "name": "#136th - Alessandro Gulino at 2027 Frankfurt Pokémon VGC Regional",
+    "source_url": "https://metavgc.com/teams/golisopod-mega-swampert-mega-by-alessandro-gulino-at-2027-frankfurt-pokemon-vgc-regional-championships",
+    "slug": "golisopod-mega-swampert-mega-by-alessandro-gulino-at-2027-frankfurt-pokemon-vgc-regional-championships",
+    "mons": [
+      {
+        "species": "Golisopod",
+        "ability": "Tough Claws",
+        "item": "Golisopite",
+        "nature": "Brave",
+        "moves": [
+          "Protect",
+          "Drill Run",
+          "Iron Head",
+          "Leech Life"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 0,
+          "spa": 0,
+          "spd": 0,
+          "spe": 2
+        }
+      },
+      {
+        "species": "Grimmsnarl",
+        "ability": "Prankster",
+        "item": "Light Clay",
+        "nature": "Careful",
+        "moves": [
+          "Reflect",
+          "Light Screen",
+          "Spirit Break",
+          "Parting Shot"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 19,
+          "spa": 0,
+          "spd": 15,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Pelipper",
+        "ability": "Drizzle",
+        "item": "Focus Sash",
+        "nature": "Timid",
+        "moves": [
+          "Hurricane",
+          "Weather Ball",
+          "Tailwind",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 31,
+          "atk": 0,
+          "def": 0,
+          "spa": 0,
+          "spd": 25,
+          "spe": 10
+        }
+      },
+      {
+        "species": "Archaludon",
+        "ability": "Stamina",
+        "item": "Leftovers",
+        "nature": "Calm",
+        "moves": [
+          "Electro Shot",
+          "Snarl",
+          "Dragon Pulse",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 0,
+          "def": 1,
+          "spa": 2,
+          "spd": 20,
+          "spe": 11
+        }
+      },
+      {
+        "species": "Swampert",
+        "ability": "Swift Swim",
+        "item": "Swampertite",
+        "nature": "Adamant",
+        "moves": [
+          "Wave Crash",
+          "Earthquake",
+          "Ice Punch",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 26,
+          "atk": 24,
+          "def": 3,
+          "spa": 0,
+          "spd": 0,
+          "spe": 13
+        }
+      },
+      {
+        "species": "Farigiraf",
+        "ability": "Armor Tail",
+        "item": "Sitrus Berry",
+        "nature": "Bold",
+        "moves": [
+          "Helping Hand",
+          "Twin Beam",
+          "Trick Room",
+          "Thunderbolt"
+        ],
+        "sp": {
+          "hp": 25,
+          "atk": 0,
+          "def": 26,
+          "spa": 0,
+          "spd": 15,
+          "spe": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "#3rd - BlazeKick at Talon's FIGHT CLUB #110 POKEMON CHAMPIONS REG",
+    "source_url": "https://metavgc.com/teams/froslass-mega-dragonite-mega-by-blazekick-at-talon-s-fight-club-110-pokemon-champions-reg-m-c",
+    "slug": "froslass-mega-dragonite-mega-by-blazekick-at-talon-s-fight-club-110-pokemon-champions-reg-m-c",
+    "mons": [
+      {
+        "species": "Sneasler",
+        "ability": "Unburden",
+        "item": "White Herb",
+        "nature": "Adamant",
+        "moves": [
+          "Quick Guard",
+          "Fake Out",
+          "Dire Claw",
+          "Close Combat"
+        ],
+        "sp": {
+          "hp": 0,
+          "atk": 32,
+          "def": 0,
+          "spa": 0,
+          "spd": 2,
+          "spe": 32
+        }
+      },
+      {
+        "species": "Froslass",
+        "ability": "Cursed Body",
+        "item": "Froslassite",
+        "nature": "Timid",
+        "moves": [
+          "Blizzard",
+          "Shadow Ball",
+          "Aurora Veil",
+          "Protect"
+        ],
+        "sp": {
+          "hp": 25,
+          "atk": 0,
+          "def": 0,
+          "spa": 0,
+          "spd": 26,
+          "spe": 15
+        }
+      },
+      {
+        "species": "Dragonite",
+        "ability": "Inner Focus",
+        "item": "Dragoninite",
+        "nature": "Modest",
+        "moves": [
+          "Protect",
+          "Tailwind",
+          "Heat Wave",
+          "Dragon Pulse"
+        ],
+        "sp": {
+          "hp": 2,
+          "atk": 0,
+          "def": 0,
+          "spa": 32,
+          "spd": 0,
+          "spe": 32
+        }
+      },
+      {
+        "species": "Kingambit",
+        "ability": "Defiant",
+        "item": "Life Orb",
+        "nature": "Adamant",
+        "moves": [
+          "Protect",
+          "Swords Dance",
+          "Sucker Punch",
+          "Kowtow Cleave"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 0,
+          "spa": 0,
+          "spd": 2,
+          "spe": 0
+        }
+      },
+      {
+        "species": "Blaziken",
+        "ability": "Speed Boost",
+        "item": "Focus Sash",
+        "nature": "Adamant",
+        "moves": [
+          "Detect",
+          "Flare Blitz",
+          "Close Combat",
+          "Coaching"
+        ],
+        "sp": {
+          "hp": 32,
+          "atk": 32,
+          "def": 0,
+          "spa": 0,
+          "spd": 0,
+          "spe": 2
+        }
+      },
+      {
+        "species": "Basculegion",
+        "ability": "Adaptability",
+        "item": "Choice Scarf",
+        "nature": "Jolly",
+        "moves": [
+          "Aqua Jet",
+          "Flip Turn",
+          "Last Respects",
+          "Wave Crash"
+        ],
+        "sp": {
+          "hp": 0,
+          "atk": 32,
+          "def": 0,
+          "spa": 0,
+          "spd": 2,
+          "spe": 32
+        },
+        "gender": "M"
       }
     ]
   }

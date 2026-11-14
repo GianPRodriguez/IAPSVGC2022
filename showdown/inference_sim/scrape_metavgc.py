@@ -230,6 +230,21 @@ def _safe_print(msg: str) -> None:
         print(msg.encode('ascii', 'replace').decode('ascii'), flush=True)
 
 
+def sitemap_team_urls() -> List[str]:
+    """URLs de equipos del sitemap público (robots.txt lo permite), Reg M-C primero."""
+    try:
+        xml = fetch(BASE + '/sitemap.xml')
+    except Exception as exc:
+        _safe_print(f'sitemap fail {exc}')
+        return []
+    urls = re.findall(r'<loc>([^<]+)</loc>', xml)
+    teams = [u for u in urls if '/teams/' in u and '-by-' in u.rsplit('/', 1)[-1]
+             and '/pt/' not in u and '/es/' not in u]
+    likely = [u for u in teams if is_reg_mc_slug(u.rsplit('/', 1)[-1])]
+    rest = [u for u in teams if u not in set(likely)]
+    return likely + rest
+
+
 def _load_existing() -> List[dict]:
     if not OUT.is_file():
         return []
@@ -257,6 +272,15 @@ def _seed_urls() -> List[str]:
         f'{BASE}/teams/tournaments',
     ]
     seeds.extend(f'{BASE}/pokemon/{slug}' for slug in pokemon)
+    # Más semillas: una página por cada especie que ya aparece en el pool (y su forma mega).
+    known = set(pokemon)
+    for team in _load_existing():
+        for mon in team.get('mons') or []:
+            base = re.sub(r'[^a-z0-9]+', '-', str(mon.get('species', '')).lower()).strip('-')
+            for slug in (base, base + '-mega'):
+                if base and slug not in known:
+                    known.add(slug)
+                    seeds.append(f'{BASE}/pokemon/{slug}')
     featured_path = Path(__file__).resolve().parent / '_featured_urls.json'
     if featured_path.is_file():
         try:
@@ -312,6 +336,15 @@ def collect_and_parse(
             seen.add(full)
             queue.append(full)
 
+    if len(queue) < max(want * 3, 60):  # semillas agotadas: descubrir por el sitemap
+        for full in sitemap_team_urls():
+            slug = full.rstrip('/').split('/')[-1]
+            if full in seen or slug in skip:
+                continue
+            seen.add(full)
+            trusted.add(full)
+            queue.append(full)
+    _safe_print(f'seeds={len(seeds)} queued_after_seeds={len(queue)}')
     visited = 0
     while queue and len(teams) < want and visited < crawl_cap:
         url = queue.pop(0)
