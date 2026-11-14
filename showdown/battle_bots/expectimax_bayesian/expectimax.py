@@ -214,6 +214,8 @@ class ExpectimaxConfig:
     opp_policy_use_real_damage: bool = True
     opp_policy_split_targets: bool = False
     opp_policy_mirror_solo: bool = False
+    # DIAGNÓSTICO (techo): el rival = lo que haría greedy_joint en su lugar (probabilidad 1).
+    opp_policy_oracle_joint: bool = False
     # Slots de movimiento distintos por rival (sin esto, los dos rivales se pisan el daño por slot).
     opp_policy_unique_slots: bool = True
     # Fake Out rival: solo en su primer turno en campo; entonces masa ~p (si puede afectar).
@@ -1097,6 +1099,61 @@ def _opp_dists_greedy_mirror(
     return out
 
 
+async def _opp_dists_oracle_joint(
+    opp_moves_by_tag: Dict[str, List[MoveOption]],
+    world_foes: Sequence[Tuple[int, CalcPoke]],
+    *,
+    left_atk: Optional[CalcPoke],
+    right_atk: Optional[CalcPoke],
+    ctx: FieldContext,
+) -> Optional[Dict[str, List[Tuple[OppAction, float]]]]:
+    """π_opp oráculo: ejecuta greedy_joint con los papeles invertidos (rivales = atacantes).
+
+    Solo diagnóstico: mide cuánto ganaría expectimax con un modelo perfecto de un rival joint.
+    """
+    from dataclasses import replace as _replace
+    from showdown.battle_bots.move_mechanics.status_effects import move_entry
+
+    if len(world_foes) < 1 or (left_atk is None and right_atk is None):
+        return None
+
+    def _typed(moves: Sequence[MoveOption]) -> List[MoveOption]:
+        out: List[MoveOption] = []
+        for m in moves:
+            entry = move_entry(m.name)
+            out.append(MoveOption(
+                slot=m.slot, name=m.name,
+                target_type=str(entry.get('target') or 'normal'),
+                category=str(entry.get('category') or 'Physical'),
+            ))
+        return out
+
+    f1 = world_foes[0][1]
+    f2 = world_foes[1][1] if len(world_foes) > 1 else None
+    mv1 = _typed(opp_moves_by_tag.get('F1') or [])
+    mv2 = _typed(opp_moves_by_tag.get('F2') or [])
+    ours = [(t, p) for t, p in ((1, left_atk), (2, right_atk)) if p is not None]
+    mctx = _replace(ctx, tailwind=ctx.opp_tailwind, opp_tailwind=ctx.tailwind,
+                    reflect=False, light_screen=False, aurora_veil=False)
+    bl, br, _score = await best_joint_double_action(
+        f1, f2, mv1, mv2 if f2 is not None else [], ours, field_ctx=mctx,
+    )
+    out: Dict[str, List[Tuple[OppAction, float]]] = {'OL': [], 'OR': []}
+    for action, mvs in ((bl, mv1), (br, mv2)):
+        if action is None:
+            continue
+        move = next((m for m in mvs if m.slot == action.move_slot), None)
+        if move is None:
+            continue
+        tgt = int(action.target or 0)
+        if tgt not in (1, 2):
+            continue
+        out['OL' if tgt == 1 else 'OR'].append((OppAction(move.name, tgt, 'greedy'), 1.0))
+        emit_pred([m.name for m in mvs], {(_norm_move(move.name), tgt, 'greedy'): 1.0})
+    return out
+
+
+
 def _rebuild_opp_dists_from_hits(
     opp_moves: Sequence[MoveOption],
     opp_hit_map: Dict[Tuple[str, str, str], Optional[Tuple[int, int]]],
@@ -1899,7 +1956,18 @@ async def best_expectimax_bayesian_action(
                 opp_hit_map[key] = gated
 
             # Estructura: π_opp tras calc (espejo solo o mezcla legacy).
-            if bool(cfg.opp_policy_mirror_solo):
+            opp_dists = None
+            if bool(cfg.opp_policy_oracle_joint):
+                try:
+                    opp_dists = await _opp_dists_oracle_joint(
+                        opp_moves_by_tag, world_foes, left_atk=left_atk, right_atk=right_atk, ctx=world_ctx,
+                    )
+                except Exception as exc:
+                    meta.errors.append(f'oracle_joint:{exc!r}')
+                    opp_dists = None
+            if opp_dists is not None:
+                pass
+            elif bool(cfg.opp_policy_mirror_solo):
                 opp_dists = _opp_dists_greedy_mirror(
                     opp_moves_by_tag,
                     opp_hit_map,
