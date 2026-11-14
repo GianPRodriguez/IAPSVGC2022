@@ -1885,7 +1885,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         '--sp-info-a', choices=list(SP_INFO_MODES), default=None,
         help=(
             'Diagnóstico: SP del rival que conoce A. inference (producción), oracle '
-            '(SP verdaderos), none (OTS + bases, sin inferencia). Env: PS_SP_INFO_A'
+            '(SP verdaderos), oracle_spe (solo Spe verdadera), none (OTS + bases, sin '
+            'inferencia). Env: PS_SP_INFO_A'
         ),
     )
     parser.add_argument(

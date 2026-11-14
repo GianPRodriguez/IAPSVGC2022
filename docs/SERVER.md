@@ -172,7 +172,8 @@ python -m showdown.inference_sim.run_robust_e2e --teams 100 --seed 10 \
   las stats que poke-env le da al rival (bases de especie crudas, HP en %). Con
   `--b-validated` B usa el mismo espejo IAP + inferencia que A (comparaciones simétricas).
 - Valor de la información de SP (diagnóstico): `--sp-info-a` / `--sp-info-b`
-  con `inference` (producción), `oracle` (SP verdaderos del rival) o `none`
+  con `inference` (producción), `oracle` (SP verdaderos del rival), `oracle_spe`
+  (solo la Spe verdadera) o `none`
   (OTS + bases, creencias sin estrechar). `--sp-info-b` exige `--b-validated`.
   El reporte lo registra en la línea `sp_info:`.
 

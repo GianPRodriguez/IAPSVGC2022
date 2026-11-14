@@ -48,7 +48,7 @@ def test_inference_mode_is_production_noop():
 def test_unknown_mode_is_rejected():
     with pytest.raises(ValueError):
         apply_sp_info_mode(_iap(si.TeamStatBeliefs()), 'perfect', lambda: None)
-    assert set(SP_INFO_MODES) == {'inference', 'oracle', 'none'}
+    assert set(SP_INFO_MODES) == {'inference', 'oracle', 'oracle_spe', 'none'}
 
 
 def test_none_mode_never_narrows_speed():
@@ -108,3 +108,15 @@ def test_oracle_mode_applies_to_beliefs_created_before_it(monkeypatch):
     assert len(pre.candidates['atk']) > 1
     apply_sp_info_mode(_iap(beliefs), 'oracle', lambda: object())
     assert all(pre.candidates[s] == {TRUE_SP[s]} for s in si.STAT_KEYS)
+
+
+def test_oracle_spe_mode_only_resolves_speed(monkeypatch):
+    si.reset_sp_limits()
+    from showdown.inference_sim import soundness
+
+    monkeypatch.setattr(soundness, '_lookup_truth', lambda team, sid: (dict(TRUE_SP), {}))
+    beliefs = si.TeamStatBeliefs()
+    apply_sp_info_mode(_iap(beliefs), 'oracle_spe', lambda: object())
+    belief = beliefs.belief_for(_salamence())
+    assert belief.candidates['spe'] == {TRUE_SP['spe']}
+    assert all(len(belief.candidates[s]) > 1 for s in si.STAT_KEYS if s != 'spe')

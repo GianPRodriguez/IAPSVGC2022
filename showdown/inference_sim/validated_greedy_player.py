@@ -93,7 +93,7 @@ def _calibration_set_truth(opp_team) -> None:
             pass
 
 
-SP_INFO_MODES = ('inference', 'oracle', 'none')
+SP_INFO_MODES = ('inference', 'oracle', 'oracle_spe', 'none')
 
 
 def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
@@ -101,6 +101,7 @@ def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
 
     - ``inference`` (producción): OTS + bases; los SP se estrechan con daño/velocidad.
     - ``oracle``: SP verdaderos del rival desde el inicio (inferencia perfecta).
+    - ``oracle_spe``: solo el SP de Velocidad verdadero; el resto como en producción.
     - ``none``: OTS + bases; las creencias nunca se estrechan (todo el rango de SP).
 
     ``opp_team_fn`` devuelve el TeamMeta rival vigente (cambia entre series).
@@ -121,7 +122,15 @@ def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
         from showdown.stat_inference import _apply_oracle
         from teams.team_converter import normalize_name
 
-        beliefs.oracle_lookup = lambda sp: _lookup_truth(opp_team_fn(), normalize_name(sp))[0]
+        keep = ('spe',) if mode == 'oracle_spe' else None
+
+        def _lookup(sp):
+            truth = _lookup_truth(opp_team_fn(), normalize_name(sp))[0]
+            if truth and keep:
+                truth = {k: v for k, v in truth.items() if k in keep}
+            return truth
+
+        beliefs.oracle_lookup = _lookup
         # bootstrap_battle ya creó las creencias de los 6 rivales (OTS) antes de que
         # existiera el oráculo: aplicarlo también a ésas, no solo a las nuevas.
         for belief in list(beliefs.beliefs.values()):
