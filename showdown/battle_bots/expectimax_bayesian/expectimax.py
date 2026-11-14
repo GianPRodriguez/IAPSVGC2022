@@ -223,6 +223,8 @@ class ExpectimaxConfig:
     opp_policy_fakeout_first_p: float = 0.7
     # V anclada a offense (EV de daño = chance abstraction C).
     v_solo_isomorphic: bool = True
+    # En modo isomorfo V = ofensa + utilidad VGC; con w>0 resta w*amenaza (daño/KO esperado sobre nosotros).
+    v_iso_threat_weight: float = 0.0
     phase2_retarget_only: bool = False
     # Phase1 = greedy_joint (referencia); phase2 elige entre Top-K×Top-K.
     phase1_use_joint: bool = True
@@ -2235,7 +2237,7 @@ async def best_expectimax_bayesian_action(
                 )
                 if bool(cfg.v_solo_isomorphic):
                     # Offense + utilidad VGC (Fake Out deny=amenaza / Knock Off item).
-                    v = float(offense) + float(vgc_u)
+                    v = float(offense) + float(vgc_u) - float(cfg.v_iso_threat_weight) * float(threat)
                 else:
                     v = (
                         offense
