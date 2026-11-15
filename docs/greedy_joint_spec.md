@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Greedy-Joint** |
-| **Versión** | **1.4** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.3) |
+| **Versión** | **1.5** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.3) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/greedy_joint/`** |
 | **Algoritmo** | Greedy joint: \(\arg\max_{(a_1,a_2)} S(a_1,a_2)\) en horizonte \(T=1\) |
 | **Rol** | Rival heurístico **principal** (curriculum avanzado, suite WR, ancla Expectimax / MCTS rollout) |
@@ -65,7 +65,7 @@ pitar el árbitro.
 |------|----------|
 | Horizonte | \(T=1\) (1-ply) |
 | Espacio | Producto de átomos legales por lado (moves; ver abajo) |
-| Switches voluntarios en joint | **Prohibidos** en `best_joint_double_action` |
+| Switches voluntarios en joint | **Prohibidos** en `best_joint_double_action`. Única excepción (v1.5, alineada con Solo): un lado sin acción jugable (sin moves o sin acción puntuada) cambia al primer banco libre en el player poke-env |
 | Force switch | Fuera del producto; manejado en `main` / poke-env como Solo |
 | Aprendizaje | **Ninguno** |
 | Preview | **Igual que Solo** (tipado+BST; sin roles Expectimax) |
@@ -228,6 +228,7 @@ propio. Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.5** | 2026-11-14 | Alineación con Solo: lado sin acción jugable → primer banco disponible (sin repetir el banco del otro lado; sin banco → default). Antes: `DefaultBattleOrder`. No es switch táctico; impacto esperado ≈ 0 (caso raro: Showdown suele ofrecer Struggle/recharge). Test `test_joint_no_action_fallback_switches_like_solo`. |
 | **1.4** | 2026-10-11 | Estructura dual-audience; utilidades explicadas; entrenamiento y Conclusión. Semántica intacta. |
 | **1.3** | 2026-10-11 | Redacción dual (glosario, refs, preview vs combate). Semántica intacta. |
 | **1.2** | 2026-10-11 | **Reg M-C:** Tera **off**; Mega ON. Alineado `rl_env` v1.14. |
@@ -236,4 +237,4 @@ propio. Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 ---
 
-*Fin del contrato Greedy-Joint v1.4.*
+*Fin del contrato Greedy-Joint v1.5.*

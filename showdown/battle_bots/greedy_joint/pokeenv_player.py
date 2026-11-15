@@ -250,12 +250,28 @@ def _field_context_from_pe(battle: DoubleBattle) -> FieldContext:
     )
 
 
+def no_action_fallback_order(battle, side: int, used_switches: list) -> SingleBattleOrder:
+    """Lado activo sin acción jugable (sin moves o sin acción puntuada).
+
+    Igual que Greedy-Solo: cambio forzado de facto al primer banco disponible.
+    No repite un banco ya elegido por el otro lado este turno (Showdown rechaza
+    dos switches al mismo Pokémon); sin banco libre → acción por defecto.
+    """
+    avail = battle.available_switches[side] if len(battle.available_switches) > side else []
+    for sw in avail or []:
+        if sw not in used_switches:
+            used_switches.append(sw)
+            return SingleBattleOrder(sw)
+    return DefaultBattleOrder()
+
+
 class GreedyJointPlayer(StaleRoomGuardMixin, Player):
     """
     Greedy-Joint (poke-env):
       - Team Preview: cobertura tipada + BST
       - Combate: 1-ply sobre A1×A2 (daño combinado + redirect + utilidades)
-      - Switches solo en force_switch (nunca voluntarios)
+      - Switches en force_switch; sin switch voluntario táctico. Excepción
+        alineada con Solo: lado sin acción jugable → primer banco disponible.
     """
 
     def __init__(self, *args, **kwargs):
@@ -406,7 +422,10 @@ class GreedyJointPlayer(StaleRoomGuardMixin, Player):
         except Exception:
             pass
 
-        # Greedy-Joint: no voluntary switches (0%). Only force_switch path above.
+        # Greedy-Joint: sin switch voluntario táctico. Única excepción (alineada con
+        # Greedy-Solo): lado sin acción jugable → cambio forzado de facto.
+        used_switches: list = []
+
         def to_order(
             mon: Optional[Pokemon],
             moves: Sequence[Move],
@@ -417,8 +436,8 @@ class GreedyJointPlayer(StaleRoomGuardMixin, Player):
             if mon is None or mon.fainted:
                 return PassBattleOrder()
             if action is None or not moves:
-                # Prefer Default/Pass over voluntary switch (1-ply has no switch value).
-                return DefaultBattleOrder()
+                side = 0 if mon is left_mon else 1
+                return no_action_fallback_order(battle, side, used_switches)
             move = moves[action.move_slot - 1] if 0 < action.move_slot <= len(moves) else moves[0]
             targets = battle.get_possible_showdown_targets(move, mon)
             target = action.target if action.target in targets else (targets[0] if targets else 0)

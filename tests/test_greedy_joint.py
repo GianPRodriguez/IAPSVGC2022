@@ -929,3 +929,23 @@ def test_robust_player_factories():
     assert opponent_player_class('greedy_joint') is GreedyJointPlayer
     assert issubclass(ValidatedGreedyJointPlayer, GreedyJointPlayer)
     assert issubclass(ValidatedGreedyPlayer, GreedyDamagePlayer)
+
+
+def test_joint_no_action_fallback_switches_like_solo():
+    """Lado sin acción jugable → primer banco libre (alineado con Greedy-Solo)."""
+    from types import SimpleNamespace
+    from poke_env.player.battle_order import DefaultBattleOrder, SingleBattleOrder
+    from showdown.battle_bots.greedy_joint.pokeenv_player import no_action_fallback_order
+
+    a, b = object(), object()
+    battle = SimpleNamespace(available_switches=[[a, b], [a, b]])
+    used: list = []
+    o1 = no_action_fallback_order(battle, 0, used)
+    o2 = no_action_fallback_order(battle, 1, used)
+    assert isinstance(o1, SingleBattleOrder) and o1.order is a
+    # El otro lado no repite el mismo banco (Showdown lo rechazaría).
+    assert isinstance(o2, SingleBattleOrder) and o2.order is b
+    # Sin banco libre → acción por defecto.
+    assert isinstance(no_action_fallback_order(battle, 0, used), DefaultBattleOrder)
+    empty = SimpleNamespace(available_switches=[[], []])
+    assert isinstance(no_action_fallback_order(empty, 1, []), DefaultBattleOrder)

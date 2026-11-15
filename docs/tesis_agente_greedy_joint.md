@@ -227,6 +227,8 @@ function GREEDY_JOINT_TURN(state):
 
 Solo en `force_switch`. **No** hay switch voluntario (comentario explícito en el player): el horizonte 1-ply no asigna valor de cambio de posición.
 
+Excepción alineada con Greedy-Solo (2026-11-14, spec v1.5): si un lado activo no tiene acción jugable (lista de moves vacía o ninguna acción puntuada), el player envía un cambio al primer banco disponible, sin repetir el banco elegido por el otro lado; sin banco libre usa la acción por defecto. Es un cambio forzado de facto, no táctico: el 1-ply sigue sin asignar valor al cambio y el caso es raro, porque Showdown suele ofrecer Struggle o `recharge`.
+
 ---
 
 ## 7. Team Preview y calc de daño
