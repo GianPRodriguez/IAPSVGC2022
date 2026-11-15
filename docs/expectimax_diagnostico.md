@@ -365,6 +365,42 @@ exploración daba +0,48 pts. **C no empeora a joint y lo mejora un poco, más co
 expectimax que contra sí mismo.** Eso, sumado al sesgo de selección (53,5 % en exploración
 frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada.
 
+## Techos después de la confirmación (exploratorio, semillas 9101–9117)
+
+¿Qué limita a v1.9: la información de SP o el modelo del rival? Todas las corridas contra
+joint v1.8 (opción C), commit a6d706c, 17 semillas × 300 BO3, McNemar pareado contra BASE.
+
+| Config | Qué cambia | Tasa | IC 95 % (cluster) | Frente a BASE | p |
+|---|---|---|---|---|---|
+| BASE | v1.9 por defecto | 52,24 % | [51,02; 53,41] | — | — |
+| SPOR | oráculo de SP completo | 52,63 % | [51,54; 53,74] | +0,30 pts (308 frente a 293) | 0,57 |
+| SPSPE | solo la Velocidad verdadera | 52,32 % | [51,17; 53,48] | +0,10 pts (92 frente a 87) | 0,77 |
+| OJ | modelo del rival = lo que haría joint (oráculo de política, `opp_policy_oracle_joint`) | 51,75 % | [50,62; 52,89] | −0,57 pts (289 frente a 317) | 0,27 |
+| OJT1 | OJ + amenaza 0,1 | 52,42 % | [51,24; 53,58] | +0,08 pts | 0,91 |
+| OJT3 | OJ + amenaza 0,3 | 52,19 % | [50,99; 53,35] | +0,08 pts | 0,92 |
+| T1 | amenaza 0,1 con el modelo actual | 51,67 % | [50,45; 52,85] | −0,62 pts (96 frente a 127) | 0,044 |
+
+OJT1 frente a OJ: +0,69 pts (p = 0,067); OJT3 frente a OJ: +0,59 pts (p = 0,23). El oráculo
+de política no dio errores (0 registros `oracle_joint:`).
+
+**Lectura:**
+
+1. **La información de SP no limita a expectimax.** El oráculo completo da +0,3 pts y la
+   Velocidad sola +0,1, ambos no significativos. El +1,17 de S2 en C1 parece ruido; juntando
+   los dos bloques, el valor de los SP exactos queda en ≲ 0,7 pts. **Actualizar los pesos de
+   los mundos (por orden de turno o por daño observado) tiene un techo de ~0: descartado.**
+2. **El modelo del rival tampoco.** Incluso prediciendo sin error la jugada de joint, el
+   agente no mejora: con la amenaza en 0, V casi no usa el modelo del rival (lo mismo que se
+   vio el 14-11 con 49,5 frente a 49,7). Con la amenaza activada sobre el modelo perfecto
+   (OJT1/OJT3) solo vuelve al nivel de BASE; con el modelo actual, la amenaza resta
+   (T1: −0,6 pts, como en la Fase 2a). **Mejorar el modelo del rival: descartado.**
+3. **El límite está en el diseño 1-ply con V a mano** (ofensa + utilidad + tempo, un turno
+   de horizonte). Mejorar más pide otro horizonte (profundidad 2, MCTS; agentes propios) o
+   una función de valor aprendida, que es lo que aportan los agentes RL.
+
+**Decisión:** expectimax queda congelado en v1.9. Los techos se reportan como evidencia de
+que el agente está en el límite de su diseño.
+
 ## Plan
 
 | Fase | Contenido | Estado |
