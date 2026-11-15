@@ -236,6 +236,10 @@ class ExpectimaxConfig:
     # Diversidad (rivales de entrenamiento): tras la puerta, muestreo uniforme entre los
     # pares con V >= V(elegido) − margen. 0 = determinista (por defecto).
     tie_sample_margin: float = 0.0
+    # Diversidad, alternativa: sorteo de casi-empates en la FASE 1 (joint) con el puntaje de
+    # joint (tie_margin de best_joint_double_action). Medido: tie_sample_margin cuesta ~−7 pts
+    # incluso con margen 2 (V tiene muchos empates que el orden de los pares desempata bien).
+    phase1_tie_margin: float = 0.0
     # V anclada a offense (EV de daño = chance abstraction C).
     v_solo_isomorphic: bool = True
     # En modo isomorfo V = ofensa + utilidad VGC; con w>0 resta w*amenaza (daño/KO esperado sobre nosotros).
@@ -292,6 +296,8 @@ class ExpectimaxMeta:
     phase2_gated: bool = False  # True si phase2 se rechazó por el gate
     tie_cands: int = 1  # candidatos del muestreo de casi-empates (tie_sample_margin > 0)
     tie_changed: bool = False  # el muestreo eligió un par distinto del que se iba a jugar
+    p1_tie_cands: int = 1  # ídem en la fase 1 (phase1_tie_margin)
+    p1_tie_changed: bool = False
     phase1_v: float = 0.0  # V bayesiana del par phase1 (mismo espacio que phase2)
     phase2_v: float = 0.0
     # Diagnostic: chosen ≠ greedy_solo factored
@@ -1766,7 +1772,11 @@ async def best_expectimax_bayesian_action(
                 can_tera_left=can_tera_left, can_tera_right=can_tera_right,
                 tera_left=tera_left, tera_right=tera_right,
                 field_ctx=ctx,
+                tie_margin=float(cfg.phase1_tie_margin),
             )
+            if float(cfg.phase1_tie_margin) > 0.0:
+                from showdown.battle_bots.greedy_joint import joint as _joint_mod
+                meta.p1_tie_cands, meta.p1_tie_changed = _joint_mod.LAST_TIE
         else:
             fb_l, fb_r, fb_score = await best_double_action(
                 left_attacker, right_attacker, left_moves, right_moves, foes,
@@ -2612,8 +2622,10 @@ def _log_divergence(
                 'agent': 'expectimax_bayesian',
                 'same_joint': p1 == p2,
                 'same_solo': p2 == pair_sig(solo_l, solo_r),
-                'tie_cands': int(meta.tie_cands),
-                'tie_changed': bool(meta.tie_changed),
+                # Con phase1_tie_margin, "joint" es la fase 1 ya sorteada; el sorteo solo
+                # cambia lo jugado si se juega la fase 1 (puerta cerrada).
+                'tie_cands': int(max(meta.tie_cands, meta.p1_tie_cands)),
+                'tie_changed': bool(meta.tie_changed or (meta.used_fallback and meta.p1_tie_changed)),
             })
     except Exception:
         pass

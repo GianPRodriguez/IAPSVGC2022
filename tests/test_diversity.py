@@ -150,3 +150,26 @@ def test_joint_tie_changed_only_with_several_candidates():
         assert any(flags) and not all(flags)
     finally:
         set_damage_range_override(None)
+
+
+def test_expectimax_phase1_tie_margin():
+    import asyncio
+    from showdown.battle_bots.expectimax_bayesian.expectimax import (
+        ExpectimaxConfig, best_expectimax_bayesian_action)
+    from showdown.damage_calc_bridge import set_damage_range_override
+    assert ExpectimaxConfig().phase1_tie_margin == 0.0
+    set_damage_range_override(_fake_batch)
+    try:
+        left, right, lm, rm, foes = _fixture()
+        cfg = ExpectimaxConfig(deadline_ms=5000.0, phase1_budget_ms=2000.0, phase2_end_ms=4800.0,
+                               k_profiles=2, max_worlds=2, phase1_tie_margin=1e9)
+        changed = []
+        for _ in range(20):
+            bl, br, _u, meta = asyncio.run(best_expectimax_bayesian_action(
+                left, right, lm, rm, foes, config=cfg))
+            assert bl is not None and br is not None and not meta.errors, meta.errors
+            assert meta.p1_tie_cands > 1
+            changed.append(meta.p1_tie_changed)
+        assert any(changed)
+    finally:
+        set_damage_range_override(None)

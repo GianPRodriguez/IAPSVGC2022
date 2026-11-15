@@ -48,6 +48,7 @@ debería dar variedad con un costo pequeño en fuerza.
 | Agente | Parámetro (0 = determinista, por defecto) | Unidades | Qué hace |
 |---|---|---|---|
 | greedy_joint | `PS_JOINT_TIE_MARGIN` (`tie_margin` de `best_joint_double_action`) | puntaje de par de joint (% de daño + bonos) | muestreo uniforme entre los pares con puntaje ≥ mejor − margen |
+| expectimax (alternativa) | `phase1_tie_margin` (`EXPECTIMAX_OVERRIDES`) | puntaje de par de joint | sorteo en la fase 1 (joint) de expectimax; cambia lo jugado solo cuando la puerta se cierra |
 | expectimax | `tie_sample_margin` (`EXPECTIMAX_OVERRIDES`) | V del par (ofensa + utilidad + tempo) | **después de la puerta**, muestreo uniforme entre los pares con V en [V(jugado) − margen, V(jugado)] |
 
 En expectimax no se consideran los pares con V mayor que el jugado: son los que la puerta
@@ -76,6 +77,35 @@ Una variante sirve como rival de entrenamiento si gana variedad (% de decisiones
 distinta de la determinista) sin perder fuerza de forma apreciable (por ejemplo, menos de
 1 punto, con TOST si hace falta).
 
-## Resultados
+## Resultados (15-11-2026, semillas 9101–9117, exploratorio)
 
-Pendiente.
+Commit 8de1b3b. Joint contra solo y expectimax contra joint v1.8 (opción C).
+
+| Config | Tasa | Frente a la determinista (McNemar) | Decisiones con > 1 candidato | Lectura |
+|---|---|---|---|---|
+| DJ0: joint determinista | 52,29 % | — | 0 % | joint juega **lo mismo que solo en 35,6 %** de las decisiones (distinto en 64 %) |
+| DJ3: joint, margen 3 | 52,39 % | +0,18 pts, p = 0,57 | 13,9 % (2,3 cand.) | **sin costo** |
+| DJ8: joint, margen 8 | 52,23 % | −0,10 pts, p = 0,83 | 24,6 % (2,6 cand.) | **sin costo** |
+| DE2: expectimax, margen 2 (5 semillas) | 46,43 % | **−7,14 pts**, p = 2·10⁻⁹ | 61,1 % (3,4 cand.) | jugada distinta en 38 %; muy caro |
+| DE10: expectimax, margen 10 | 45,52 % | **−6,65 pts**, p = 10⁻²⁵ | 64,2 % (3,9 cand.) | jugada distinta en 41 %; muy caro |
+
+DE25 se canceló (DE10 ya era −7 pts); DE2 se cortó en 5 semillas y DE5 se canceló porque
+el resultado ya era claro.
+
+El % de "jugada distinta" de DJ3/DJ8 en esta corrida está mal (83 %): el contador de joint
+comparaba por identidad de objeto. Se corrigió en d9798b2 (el juego no cambia) y se repite
+la medición (DJ3b/DJ8b).
+
+**Desacuerdo entre los tres (deterministas):** joint/solo 64 %, expectimax/joint ~41 %,
+expectimax/solo ~70 %.
+
+**Por qué el sorteo en expectimax es tan caro:** con margen 2 ya hay varios candidatos en el
+61 % de las decisiones, es decir, la V de expectimax tiene muchos **empates casi exactos**.
+El desempate determinista (el orden de los pares, que viene del ranking de la fase 1 tipo
+joint) lleva información real, y sortear la destruye. Cuando la puerta se cierra (~60 % de
+los turnos) se jugaba la elección de joint, y el sorteo la cambiaba por otro par con V igual
+pero peor según el puntaje de joint.
+
+**Alternativa (`phase1_tie_margin`, 0 = off):** sortear en la fase 1 de expectimax con el
+puntaje de joint (el mismo `tie_margin` que no cuesta nada en joint). Solo cambia lo jugado
+cuando se juega la fase 1. Pendiente de medir (DEP3/DEP8).
