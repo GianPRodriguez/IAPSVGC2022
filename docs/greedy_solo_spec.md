@@ -154,6 +154,11 @@ iteración `itertools` (tras empate de \(S\) y BST). Expectimax añade
 ---
 
 
+> **Nota (2026-11-15):** desde expectimax v1.7, Expectimax-Bayesian usa este mismo preview
+> (tipado + BST). Su preview de roles restaba −3,8 pts; ver
+> [`expectimax_diagnostico.md`](expectimax_diagnostico.md). Greedy-Solo, Greedy-Joint y
+> Expectimax eligen los mismos 4 y los mismos leads.
+
 ## 5. Combate / turnos
 
 ### 5.1 Función central

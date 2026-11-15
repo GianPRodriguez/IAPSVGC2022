@@ -86,6 +86,35 @@ roles fallan porque se asignan **por especie**, con listas fijas, y no por los m
 del team sheet. Un Pokémon de una especie "de rol" entra aunque no lleve ese movimiento, o
 desplaza a otro con mejor encaje de tipos.
 
+### Opción 2: roles leídos de los movimientos del team sheet (sobre greedy)
+
+El bono solo cuenta si el Pokémon lleva de verdad el movimiento (Follow Me/Rage Powder,
+Tailwind, Trick Room, Icy Wind/Electroweb/Thunder Wave…, Fake Out).
+
+| Preview (combate joint en ambos lados) | Victorias | Tasa | Diferencia con greedy |
+|---|---|---|---|
+| greedy + roles por movimiento al 10 % | 2472/5100 | 48,5 % | −1,5 (IC 47,1–49,8) |
+| greedy + roles por movimiento al 25 % | 2430/5100 | 47,6 % | −2,4 |
+| greedy + roles por especie al 25 % | 2436/5100 | 47,8 % | −2,2 |
+
+**Los roles restan aunque se lean de los movimientos reales**, y más cuanto mayor es su
+peso. El problema no era la lista por especie. El bono desplaza a Pokémon con mejor encaje
+de tipos, y ni joint ni expectimax explotan esos roles lo suficiente para compensarlo: en
+la V de expectimax, las utilidades de soporte tienen peso 0 o casi 0. **La opción 2 queda
+descartada.**
+
+### Corrección aplicada (v1.7)
+
+El preview de expectimax ahora es **tipado + BST de Greedy** (α=β=1, γ=0,01, sin roles ni
+calidad de lead). En 1200 enfrentamientos al azar del pool elige exactamente lo mismo que
+greedy_solo/greedy_joint (1200/1200: mismos 4 y mismos leads). Por lo tanto **B, C y D
+comparten el mismo preview**, y cualquier diferencia entre ellos viene solo del combate.
+
+| Confirmación (semillas 9101–9117, contra joint validado) | Victorias | Tasa |
+|---|---|---|
+| Expectimax v1.7 completo (preview propio = tipado + BST) | V17_PENDIENTE | |
+| Referencia: combate expectimax con `--preview-a greedy` (Fase 0c) | 2695/5100 | 52,8 % |
+
 - Los roles son la principal causa identificada.
 - Los leads no son el problema. Tampoco lo es que greedy herede los leads del diseñador:
   la hoja sola da 44,6 %.
@@ -96,9 +125,9 @@ desplaza a otro con mejor encaje de tipos.
 | Fase | Contenido | Estado |
 |---|---|---|
 | 0 | Línea base, A frente a B frente a oráculo, factorial preview × combate | **hecha** |
-| Preview | Diagnóstico y corrección del preview de roles | **opción 1 aplicada (v1.7)**: preview = tipado + BST. La opción 2 (roles por movimientos del team sheet, al 10 % y al 25 % sobre greedy) está en prueba |
+| Preview | Diagnóstico y corrección del preview de roles | **hecha.** Opción 1 aplicada (v1.7): preview = tipado + BST, idéntico al de greedy. Opción 2 (roles por movimientos) descartada: −1,5 / −2,4 |
 | 1 | Diagnóstico sin cambiar el agente: acierto del modelo del rival por cada rival, escala de la amenaza frente a la ofensa, aporte de cada término de V, uso y resultado de la puerta | pendiente |
-| 2 | Una mejora por corrida, **con el preview fijo** (greedy en ambos lados): Protect condicional en el modelo del rival, calibración de la amenaza, cambios voluntarios que nunca se eligen. La actualización bayesiana de los mundos tiene prioridad baja, porque el oráculo no aporta | pendiente |
+| 2 | Una mejora por corrida, con el preview fijo (desde v1.7 es el preview por defecto de expectimax, así que no hace falta forzarlo): Protect condicional en el modelo del rival, calibración de la amenaza, cambios voluntarios que nunca se eligen. La actualización bayesiana de los mundos tiene prioridad baja, porque el oráculo no aporta | pendiente |
 | 3 | Combinar lo que pase y reajustar la puerta; confirmar con semillas nuevas (contra joint, solo y random); **volver a medir A contra los oráculos** con la versión final (si el oráculo pasa a aportar, se reactiva la actualización bayesiana); documentar | pendiente |
 
 Decisión pendiente: **A por defecto en expectimax**. Da el mismo resultado en la mitad del

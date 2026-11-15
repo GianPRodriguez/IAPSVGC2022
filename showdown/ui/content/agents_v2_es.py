@@ -66,11 +66,13 @@ PREVIEWS: Dict[str, Dict[str, str]] = {
         'entrena': 'No',
     },
     'expectimax_bayesian': {
-        'nombre': 'Preview por tipos + roles',
+        # Histórico (≤ v1.6). Desde v1.7 Expectimax usa el preview por tipos (greedy_solo).
+        'nombre': 'Preview por tipos + roles (descartado)',
         'como': (
-            'Como el preview por tipos, pero además premia roles de campo que se '
-            'reconocen por especie (Tailwind, Trick Room, Fake Out, redirección) y '
-            'la calidad de los dos leads. Es algo más defensivo.'
+            'Versión anterior del preview de Expectimax: además de los tipos premiaba '
+            'roles de campo (Tailwind, Trick Room, Fake Out, redirección) y la calidad '
+            'de los leads. Se descartó porque en las pruebas elegía peores equipos '
+            '(−3,8 puntos frente al preview por tipos).'
         ),
         'entrena': 'No',
     },
@@ -182,7 +184,7 @@ AGENTS_V2: Dict[str, Dict[str, object]] = {
         'id': 'expectimax_bayesian',
         'nombre': 'Expectimax',
         'familia': 'heuristica',
-        'preview': 'expectimax_bayesian',
+        'preview': 'greedy_solo',
         'combate': 'Expectimax bayesiano',
         'subtitulo': 'Revisar las mejores ideas bajo incertidumbre',
         'analogia': (
@@ -192,7 +194,8 @@ AGENTS_V2: Dict[str, Dict[str, object]] = {
         'como_juega': (
             'Toma las mejores parejas de jugadas del greedy en pareja y las '
             're-evalúa promediando el azar (rangos de daño, precisión), los sets '
-            'posibles del rival y cómo podría responder.'
+            'posibles del rival y cómo podría responder. Comparte el preview por '
+            'tipos de los agentes B y C, así que su diferencia está solo en el combate.'
         ),
         'entrena': 'No (solo se ajustan sus parámetros)',
         'velocidad': 'Lento',

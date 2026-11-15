@@ -43,7 +43,7 @@ está en [`rl_env_spec.md`](rl_env_spec.md). La evaluación final está en
 | `team_preview_ppo` | `ddqn`, `ppo` |
 | `team_preview_nash` | `mcts_puct`, `mcts_puct_nash` |
 | `team_preview_qd_pga` | `qd_ppo`, `qd_pga`, `qd_ppga` |
-| Preview propio §3 | `random`, `greedy_solo`, `greedy_joint`, `expectimax_bayesian` |
+| Preview propio §3 | `random`, `greedy_solo`, `greedy_joint`, `expectimax_bayesian` (desde expectimax v1.7, B/C/D comparten el preview por tipos + BST; el de roles se descartó por medición, ver `expectimax_diagnostico.md`) |
 
 ## Convención de tablas de parámetros
 
