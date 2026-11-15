@@ -164,7 +164,8 @@ def test_no_tailwind_when_the_team_already_outspeeds_everything(agent):
 
 
 # --- Helping Hand ------------------------------------------------------------
-@pytest.mark.parametrize('agent', agents(expectimax=EXP_NO_STATUS))
+# C235 (gate 'beat' + tempo): expectimax conserva la jugada de joint cuando no la supera.
+@pytest.mark.parametrize('agent', AGENTS)
 def test_helping_hand_when_it_turns_the_partner_hit_into_a_ko(agent):
     left = mon('Indeedee-F', 70, types=('Psychic', 'Normal'))
     right = mon('Rillaboom', 85, types=('Grass',))
@@ -177,7 +178,7 @@ def test_helping_hand_when_it_turns_the_partner_hit_into_a_ko(agent):
 
 
 # --- Redirección --------------------------------------------------------------
-@pytest.mark.parametrize('agent', agents(expectimax=EXP_NO_STATUS))
+@pytest.mark.parametrize('agent', AGENTS)
 def test_follow_me_to_cover_a_partner_that_secures_a_ko(agent):
     left = mon('Clefairy', 40, types=('Fairy',))
     right = mon('Rillaboom', 85, types=('Grass',))
