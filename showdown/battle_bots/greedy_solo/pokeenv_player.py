@@ -247,6 +247,21 @@ def _field_context_from_pe(battle: DoubleBattle) -> FieldContext:
     )
 
 
+def no_action_fallback_order(battle, side: int, used_switches: list) -> SingleBattleOrder:
+    """Lado activo sin acción jugable (sin moves o sin acción puntuada).
+
+    Cambio forzado de facto al primer banco disponible (compartido Solo/Joint).
+    No repite un banco ya elegido por el otro lado este turno (Showdown rechaza
+    dos switches al mismo Pokémon); sin banco libre → acción por defecto.
+    """
+    avail = battle.available_switches[side] if len(battle.available_switches) > side else []
+    for sw in avail or []:
+        if sw not in used_switches:
+            used_switches.append(sw)
+            return SingleBattleOrder(sw)
+    return DefaultBattleOrder()
+
+
 class GreedyDamagePlayer(StaleRoomGuardMixin, Player):
     """
     Player A del baseline:
@@ -388,6 +403,8 @@ class GreedyDamagePlayer(StaleRoomGuardMixin, Player):
         if not any_positive_damage([best_l, best_r]) and not foes:
             return self.choose_random_doubles_move(battle)
 
+        used_switches: list = []
+
         def to_order(
             mon: Optional[Pokemon],
             moves: Sequence[Move],
@@ -398,11 +415,10 @@ class GreedyDamagePlayer(StaleRoomGuardMixin, Player):
             if mon is None or mon.fainted:
                 return PassBattleOrder()
             if action is None or not moves:
-                if battle.available_switches[0 if mon is left_mon else 1]:
-                    # Sin moves: switch forzado de facto
-                    sw = battle.available_switches[0 if mon is left_mon else 1][0]
-                    return SingleBattleOrder(sw)
-                return DefaultBattleOrder()
+                # Sin acción jugable: switch forzado de facto (sin repetir banco).
+                return no_action_fallback_order(
+                    battle, 0 if mon is left_mon else 1, used_switches,
+                )
             move = moves[action.move_slot - 1] if 0 < action.move_slot <= len(moves) else moves[0]
             targets = battle.get_possible_showdown_targets(move, mon)
             target = action.target if action.target in targets else (targets[0] if targets else 0)

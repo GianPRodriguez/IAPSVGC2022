@@ -228,7 +228,7 @@ propio. Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
-| **1.5** | 2026-11-14 | Alineación con Solo: lado sin acción jugable → primer banco disponible (sin repetir el banco del otro lado; sin banco → default). Antes: `DefaultBattleOrder`. No es switch táctico; impacto esperado ≈ 0 (caso raro: Showdown suele ofrecer Struggle/recharge). Test `test_joint_no_action_fallback_switches_like_solo`. |
+| **1.5** | 2026-11-14 | Alineación con Solo: lado sin acción jugable → primer banco disponible (sin repetir el banco del otro lado; sin banco → default). Antes: `DefaultBattleOrder`. No es switch táctico; impacto esperado ≈ 0 (caso raro: Showdown suele ofrecer Struggle/recharge). Helper compartido `greedy_solo.pokeenv_player.no_action_fallback_order` (Solo v1.5). Test `test_no_action_fallback_shared_by_solo_and_joint`. |
 | **1.4** | 2026-10-11 | Estructura dual-audience; utilidades explicadas; entrenamiento y Conclusión. Semántica intacta. |
 | **1.3** | 2026-10-11 | Redacción dual (glosario, refs, preview vs combate). Semántica intacta. |
 | **1.2** | 2026-10-11 | **Reg M-C:** Tera **off**; Mega ON. Alineado `rl_env` v1.14. |

@@ -30,6 +30,7 @@ from showdown.battle_bots.greedy_solo.greedy import (
     best_forced_switch_slot,
     types_from_species,
 )
+from showdown.battle_bots.greedy_solo.pokeenv_player import no_action_fallback_order
 from showdown.battle_bots.greedy_joint.joint import best_joint_double_action
 from showdown.battle_bots.greedy_joint import diag as joint_diag
 from showdown.battle_bots.greedy_joint.diag import record_battle
@@ -248,21 +249,6 @@ def _field_context_from_pe(battle: DoubleBattle) -> FieldContext:
         is_tablets_of_ruin=_has_abi('tabletsofruin'),
         is_vessel_of_ruin=_has_abi('vesselofruin'),
     )
-
-
-def no_action_fallback_order(battle, side: int, used_switches: list) -> SingleBattleOrder:
-    """Lado activo sin acción jugable (sin moves o sin acción puntuada).
-
-    Igual que Greedy-Solo: cambio forzado de facto al primer banco disponible.
-    No repite un banco ya elegido por el otro lado este turno (Showdown rechaza
-    dos switches al mismo Pokémon); sin banco libre → acción por defecto.
-    """
-    avail = battle.available_switches[side] if len(battle.available_switches) > side else []
-    for sw in avail or []:
-        if sw not in used_switches:
-            used_switches.append(sw)
-            return SingleBattleOrder(sw)
-    return DefaultBattleOrder()
 
 
 class GreedyJointPlayer(StaleRoomGuardMixin, Player):

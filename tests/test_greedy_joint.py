@@ -931,11 +931,14 @@ def test_robust_player_factories():
     assert issubclass(ValidatedGreedyPlayer, GreedyDamagePlayer)
 
 
-def test_joint_no_action_fallback_switches_like_solo():
-    """Lado sin acción jugable → primer banco libre (alineado con Greedy-Solo)."""
+def test_no_action_fallback_shared_by_solo_and_joint():
+    """Lado sin acción jugable → primer banco libre, sin repetir (Solo y Joint)."""
     from types import SimpleNamespace
     from poke_env.player.battle_order import DefaultBattleOrder, SingleBattleOrder
-    from showdown.battle_bots.greedy_joint.pokeenv_player import no_action_fallback_order
+    from showdown.battle_bots.greedy_solo.pokeenv_player import no_action_fallback_order
+    from showdown.battle_bots.greedy_joint import pokeenv_player as joint_pe
+
+    assert joint_pe.no_action_fallback_order is no_action_fallback_order
 
     a, b = object(), object()
     battle = SimpleNamespace(available_switches=[[a, b], [a, b]])

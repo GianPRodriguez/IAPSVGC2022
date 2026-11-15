@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Greedy-Solo** |
-| **Versión** | **1.4** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.2) |
+| **Versión** | **1.5** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.2) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/greedy_solo/`** |
 | **Algoritmo** | Greedy factored: \(\arg\max_{a_i} s_i\) por activo + calc de daño |
 | **Rol** | Primer escalón “inteligente” de la escalera; curriculum early RL |
@@ -197,6 +197,8 @@ Reglas cualitativas congeladas:
 
 `best_forced_switch_slot`: elige banco vivo por matchup tipado / supervivencia (no uniforme).
 
+Lado sin acción jugable (sin moves o sin acción puntuada): cambio forzado de facto al primer banco disponible vía `no_action_fallback_order`, **sin repetir** el banco elegido por el otro lado ese turno (v1.5); sin banco libre → acción por defecto. Compartido con Greedy-Joint.
+
 ### 5.4 Belief (`apply_belief_stats`)
 
 | Situación | Stats usadas |
@@ -285,6 +287,7 @@ Combina **preview Greedy-Solo + combate Greedy-Solo**. Id canónico:
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.5** | 2026-11-14 | Fallback sin acción jugable extraído a `no_action_fallback_order` (compartido con Joint v1.5): ya no envía dos switches al mismo banco si ambos lados caen en el caso (Showdown rechazaba la orden). Sin otro cambio de política. Test `test_no_action_fallback_shared_by_solo_and_joint`. |
 | **1.4** | 2026-10-11 | Estructura dual-audience, tablas de propósito/influencia, entrenamiento y Conclusión. Semántica intacta. |
 | **1.3** | 2026-10-11 | Redacción dual (glosario preview/combate, refs). Semántica intacta. |
 | **1.2** | 2026-10-11 | **Reg M-C:** Terastallization **off** (non-goal); Mega sigue default ON. Kill-switch `format_rules.allow_tera`. |
@@ -293,4 +296,4 @@ Combina **preview Greedy-Solo + combate Greedy-Solo**. Id canónico:
 
 ---
 
-*Fin del contrato Greedy-Solo v1.4.*
+*Fin del contrato Greedy-Solo v1.5.*

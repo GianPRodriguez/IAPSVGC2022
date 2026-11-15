@@ -350,6 +350,8 @@ Los dos primeros del orden salen de *lead*; los otros dos a banca.
 
 Cuando un activo es debilitado (u otras causas de `force_switch`), el agente elige el reservista que maximiza un score de **matchup tipológico** frente a los tipos rivales activos (`best_forced_switch_slot` + `matchup_vs_actives`).
 
+Caso aparte (2026-11-14, spec v1.5): si un activo no tiene acción jugable, el agente cambia al primer banco disponible sin repetir el elegido por el otro lado ese turno; sin banco libre usa la acción por defecto. Greedy-Joint comparte esta regla.
+
 Los **switches voluntarios** en medio de turno se desincentivan: si hay daño positivo disponible, se ataca; la política privilegiada es ofensiva miope.
 
 ---
