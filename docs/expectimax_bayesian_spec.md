@@ -357,7 +357,8 @@ Checklist de reproducibilidad:
 2. Dump de `ExpectimaxConfig` efectiva (+ overrides).
 3. \(N\), BO1/BO3, seeds/teams.
 4. No usar \(V\) en \(R_t\).
-5. B validado (predeterminado; línea `b_validated=YES` del reporte). Resultados previos con B crudo favorecen a A ~2 pts: p. ej. expectimax base 50,3 % vs joint crudo pero 47,7 % vs joint validado.
+5. B validado (predeterminado; línea `b_validated=YES` del reporte).
+6. Para atribuir la ventaja entre preview y combate, diseño factorial con `--preview-a/b` (`own`/`greedy`/`expectimax`): preview y combate se evalúan en conjunto y por separado. Resultados previos con B crudo favorecen a A ~2 pts: p. ej. expectimax base 50,3 % vs joint crudo pero 47,7 % vs joint validado.
 
 ---
 

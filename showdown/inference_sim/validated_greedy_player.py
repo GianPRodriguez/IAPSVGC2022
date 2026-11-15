@@ -149,6 +149,24 @@ def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
             _apply_oracle(belief, beliefs.oracle_lookup)
 
 
+# Preview independiente del combate (análisis factorial preview × combate).
+# own = el preview propio del agente; greedy = tipado+BST (Greedy-Solo/Joint);
+# expectimax = roles + calidad de leads (Expectimax-Bayesian).
+PREVIEW_CHOICES = ('own', 'greedy', 'expectimax')
+
+
+def preview_function(kind: Optional[str]):
+    """Función teampreview(self, battle) del preview pedido; None = el propio del agente."""
+    key = str(kind or 'own').strip().lower().replace('-', '_')
+    if key not in PREVIEW_CHOICES:
+        raise ValueError(f'preview desconocido: {kind!r} (opciones: {PREVIEW_CHOICES})')
+    if key == 'own':
+        return None
+    if key == 'greedy':
+        return GreedyDamagePlayer.teampreview
+    return ExpectimaxBayesianPlayer.teampreview
+
+
 def apply_prior_leave_one_out(iap_battle, opp_team) -> bool:
     """Prior meta sin el equipo rival (leave-one-out). PS_PRIOR_LOO=0 lo desactiva.
 
@@ -178,6 +196,14 @@ class ValidatedBattleMixin:
     # Modo de información de SP si nadie fija ``sp_info_mode`` (None = usar este).
     default_sp_info_mode = 'inference'
     sp_info_mode = None
+    # Preview forzado (PREVIEW_CHOICES); None/'own' = el preview propio del agente.
+    preview_override = None
+
+    def teampreview(self, battle):
+        fn = preview_function(getattr(self, 'preview_override', None))
+        if fn is not None:
+            return fn(self, battle)
+        return super().teampreview(battle)
 
     def effective_sp_info_mode(self) -> str:
         mode = getattr(self, 'sp_info_mode', None) or self.default_sp_info_mode

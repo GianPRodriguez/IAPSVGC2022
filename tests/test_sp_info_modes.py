@@ -186,3 +186,47 @@ def test_spe_extreme_modes_fix_speed_only(mode, expected):
     assert all(len(pre.candidates[s]) == 33 for s in si.STAT_KEYS if s != 'spe')
     mega = Pokemon('salamence-mega', -1, True, 'salamencite', 'aerilate', None, None, None, None, 'jolly')
     assert beliefs.belief_for(mega).candidates['spe'] == {expected}
+
+
+def test_preview_override_maps_to_heuristic_previews():
+    from showdown.battle_bots.expectimax_bayesian.pokeenv_player import ExpectimaxBayesianPlayer
+    from showdown.battle_bots.greedy_solo.pokeenv_player import GreedyDamagePlayer
+    from showdown.inference_sim.validated_greedy_player import PREVIEW_CHOICES, preview_function
+
+    assert set(PREVIEW_CHOICES) == {'own', 'greedy', 'expectimax'}
+    assert preview_function(None) is None and preview_function('own') is None
+    assert preview_function('greedy') is GreedyDamagePlayer.teampreview
+    assert preview_function('expectimax') is ExpectimaxBayesianPlayer.teampreview
+    with pytest.raises(ValueError):
+        preview_function('nash')
+
+
+def test_validated_player_uses_preview_override_independent_of_combat(monkeypatch):
+    """El combate sigue siendo el del agente; solo el preview cambia."""
+    from showdown.inference_sim import validated_greedy_player as vgp
+
+    calls = []
+    monkeypatch.setattr(vgp.ExpectimaxBayesianPlayer, 'teampreview',
+                        lambda self, battle: calls.append('expectimax') or '/team 1234')
+    monkeypatch.setattr(vgp.GreedyJointPlayer, 'teampreview',
+                        lambda self, battle: calls.append('own_joint') or '/team 5612')
+    p = vgp.ValidatedGreedyJointPlayer.__new__(vgp.ValidatedGreedyJointPlayer)
+    assert p.teampreview(None) == '/team 5612'          # propio (joint)
+    p.preview_override = 'expectimax'
+    assert p.teampreview(None) == '/team 1234'          # preview de expectimax
+    assert type(p).choose_move is vgp.ValidatedGreedyJointPlayer.choose_move  # combate intacto
+    assert calls == ['own_joint', 'expectimax']
+
+
+def test_robust_e2e_preview_choice_env(monkeypatch):
+    from showdown.inference_sim import run_robust_e2e as r
+
+    monkeypatch.delenv('PS_PREVIEW_A', raising=False)
+    assert r.preview_choice('A') is None
+    monkeypatch.setenv('PS_PREVIEW_A', 'own')
+    assert r.preview_choice('A') is None
+    monkeypatch.setenv('PS_PREVIEW_A', 'expectimax')
+    assert r.preview_choice('A') == 'expectimax'
+    monkeypatch.setenv('PS_PREVIEW_B', 'bad')
+    with pytest.raises(ValueError):
+        r.preview_choice('B')

@@ -76,6 +76,7 @@ from showdown.inference_sim.team_factory import (
 from showdown.inference_sim.validated_greedy_player import (
     PLAYER_A_CHOICES,
     PLAYER_B_CHOICES,
+    PREVIEW_CHOICES,
     SP_INFO_MODES,
     ValidatedBattleMixin,
     make_opponent_player,
@@ -597,6 +598,7 @@ def _build_report(
         f'sp_info: A={effective_sp_info_label("A", player_a)} '
         f'B={effective_sp_info_label("B", player_b)} '
         f'b_validated={"YES" if b_validated(player_b) else "NO"}',
+        f'preview: A={preview_choice("A") or "own"} B={preview_choice("B") or "own"}',
         f'elapsed_s: {elapsed_s:.1f}',
         f'bo3_per_s: {bps:.3f}',
         '',
@@ -808,6 +810,16 @@ def effective_sp_info_label(side: str, kind: str) -> str:
     except Exception:
         default = 'inference'
     return f'{default}(default)'
+
+
+def preview_choice(side: str) -> Optional[str]:
+    """Preview forzado para el lado A/B (PS_PREVIEW_A/B); None = el propio del agente."""
+    mode = os.environ.get(f'PS_PREVIEW_{side}', '').strip().lower().replace('-', '_')
+    if not mode or mode == 'own':
+        return None
+    if mode not in PREVIEW_CHOICES:
+        raise ValueError(f'PS_PREVIEW_{side}={mode!r} no válido (opciones: {PREVIEW_CHOICES})')
+    return mode
 
 
 def sp_info_mode(side: str) -> Optional[str]:
@@ -1275,6 +1287,8 @@ async def run_batch(
             )
         player_a_pl.sp_info_mode = sp_info_mode('A')
         player_b_pl.sp_info_mode = sp_info_mode('B')
+        player_a_pl.preview_override = preview_choice('A')
+        player_b_pl.preview_override = preview_choice('B')
 
         try:
             from showdown.inference_sim import decision_trace
@@ -1934,6 +1948,18 @@ def main(argv: Optional[List[str]] = None) -> int:
             'solo para reproducir corridas antiguas (favorece a A ~2 pts). Env: PS_B_VALIDATED=0'
         ),
     )
+    parser.add_argument(
+        '--preview-a', choices=list(PREVIEW_CHOICES), default=None,
+        help=(
+            'Preview de A independiente de su combate (análisis preview × combate): '
+            'own (el propio, defecto), greedy (tipado+BST de Solo/Joint), expectimax '
+            '(roles + leads). Env: PS_PREVIEW_A'
+        ),
+    )
+    parser.add_argument(
+        '--preview-b', choices=list(PREVIEW_CHOICES), default=None,
+        help='Igual que --preview-a para B (no admite --b-raw ni B random). Env: PS_PREVIEW_B',
+    )
     parser.add_argument('--shard', default=None, help=argparse.SUPPRESS)
     parser.add_argument('--shard-out', default=None, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
@@ -1947,6 +1973,13 @@ def main(argv: Optional[List[str]] = None) -> int:
         os.environ['PS_B_VALIDATED'] = '0'
     elif args.b_validated:
         os.environ['PS_B_VALIDATED'] = '1'
+    if args.preview_a:
+        os.environ['PS_PREVIEW_A'] = args.preview_a
+    if args.preview_b:
+        os.environ['PS_PREVIEW_B'] = args.preview_b
+    preview_choice('A')
+    if preview_choice('B') is not None and not b_validated(args.player_b):
+        parser.error('--preview-b requiere B validated (no con --b-raw ni B random)')
     sp_info_mode('A')
     sp_info_mode('B')
     if sp_info_mode('B') is not None and not b_validated(args.player_b):
