@@ -237,6 +237,11 @@ class ExpectimaxConfig:
     v_iso_threat_weight: float = 0.0
     # Idea 1: sinergias del joint (bonos de Helping Hand, redirección, Tailwind...) sumadas a V isomorfo.
     v_iso_syn_weight: float = 0.0
+    # Fase 2c (2026-11-15): en modo isomorfo, switch_v (preservación, posición, entrada,
+    # castigo al entrante, cambio libre tras KO) no entraba en V, así que un cambio
+    # voluntario nunca podía ganar. Con w>0, V += w*switch_v. Requiere además
+    # enable_voluntary_switch=True y max_switch_hybrids>0. 0 = comportamiento anterior.
+    v_iso_switch_weight: float = 0.0
     # Idea 2: crédito de tempo = P(KO al rival) * P(actuamos antes) * amenaza que ese rival nos haría.
     # C235: 1.0 (antes 0.0).
     v_tempo_weight: float = 1.0
@@ -2338,6 +2343,8 @@ async def best_expectimax_bayesian_action(
                     v = float(offense) + float(vgc_u) - float(cfg.v_iso_threat_weight) * float(threat)
                     if float(cfg.v_iso_syn_weight):
                         v += float(cfg.v_iso_syn_weight) * float(syn)
+                    if float(cfg.v_iso_switch_weight):
+                        v += float(cfg.v_iso_switch_weight) * float(switch_v)
                     if float(cfg.v_tempo_weight) or _vterms is not None:
                         tempo_c = float(_tempo_credit(
                             pl, pr, left_atk, right_atk, world_foes, p_ko_foe, threat_by_tid,

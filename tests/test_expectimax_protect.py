@@ -19,3 +19,17 @@ def test_foe_protect_probability_conditional():
     foe2 = CalcPoke(species='incineroar', protect_counter=1)
     assert foe_protect_probability(foe2, ['Protect'], 0.8, cfg) == 0.0
     assert foe_protect_probability(foe, ['Protect'], 0.8, ExpectimaxConfig()) == 0.0  # off por defecto
+
+
+def test_iso_switch_weight_default_off_and_overridable(monkeypatch):
+    """Fase 2c: switch_v entra en V isomorfo solo con v_iso_switch_weight > 0."""
+    from showdown.battle_bots.expectimax_bayesian.expectimax import (
+        ExpectimaxConfig, load_expectimax_config,
+    )
+
+    assert ExpectimaxConfig().v_iso_switch_weight == 0.0
+    monkeypatch.setenv('EXPECTIMAX_OVERRIDES',
+                       'enable_voluntary_switch=1;max_switch_hybrids=8;v_iso_switch_weight=1.0')
+    cfg = load_expectimax_config()
+    assert cfg.enable_voluntary_switch is True and cfg.max_switch_hybrids == 8
+    assert cfg.v_iso_switch_weight == 1.0
