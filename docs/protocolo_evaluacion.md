@@ -145,10 +145,24 @@ Secundarias (p sin ajustar, C1):
 
 **Diagnóstico exploratorio (agregado tras ver H1 C1, no confirmatorio):** expectimax v1.9
 contra joint con la regla anterior (`--sp-info-b none`) en C1 = **52,22 %** [51,12; 53,36],
-15/17 semillas. McNemar frente a H1 C1: +2,33 pts (595 frente a 479), p = 0,0004. Es decir,
-**la opción C hizo a joint ~2,3 pts más fuerte contra expectimax**; esa es la causa principal
-del empate en H1. El resto de la caída (53,5 % en exploración frente a 52,2 % en C1 contra
-el mismo joint) es el sesgo de selección que el protocolo esperaba.
+15/17 semillas. McNemar frente a H1 C1: +2,33 pts (595 frente a 479), p = 0,0004.
+
+**Réplica en C2** (misma corrida, semillas 9301–9317): contra joint con la regla anterior,
+**51,90 %** [50,72; 53,07], 14/17 semillas; McNemar frente a H1 C2: **+0,32 pts** (517 frente
+a 501), p = 0,64. El efecto grande de C1 **no se replica**.
+
+| Bloque | expectimax contra joint `none` | contra joint `meta` (H1) | Efecto de C en joint (McNemar) |
+|---|---|---|---|
+| C1 | 52,22 % | 49,71 % | +2,33 pts (p = 0,0004) |
+| C2 | 51,90 % | 51,62 % | +0,32 pts (p = 0,64) |
+| C1+C2 | ≈ 52,1 % | 50,67 % | **+1,33 pts** (1112 frente a 980; p = 0,004) |
+
+Lectura (exploratoria): contra el joint con la regla anterior, expectimax gana ~52 % de forma
+estable en los dos bloques. La opción C fortalece a joint contra expectimax en ~1,3 pts en
+promedio, con mucha variación entre bloques (C1 probablemente sobrestima). En espejo, la
+exploración daba +0,48 pts. **C no empeora a joint y lo mejora un poco, más contra
+expectimax que contra sí mismo.** Eso, sumado al sesgo de selección (53,5 % en exploración
+frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada.
 
 **Escalera confirmada:** expectimax > solo y joint > solo (estadística, ventajas pequeñas).
 **No confirmada:** expectimax > joint. Ninguna comparación alcanza el umbral práctico.
@@ -165,5 +179,5 @@ el mismo joint) es el sesgo de selección que el protocolo esperaba.
 | Fecha | Cambio |
 |---|---|
 | 2026-11-15 | Versión inicial: exploración/confirmación, pruebas, regla de decisión, hipótesis H1–H3 y S1–S3. |
-| 2026-11-15 | Resultados de la confirmación (§5.1): H2 y H3 confirmadas con ventaja pequeña; H1 sin diferencia demostrada. Diagnóstico exploratorio: la opción C fortaleció a joint contra expectimax (+2,3 pts). |
+| 2026-11-15 | Resultados de la confirmación (§5.1): H2 y H3 confirmadas con ventaja pequeña; H1 sin diferencia demostrada. Diagnóstico exploratorio: la opción C fortalece a joint contra expectimax (+2,3 pts en C1, +0,3 en C2; +1,3 en conjunto). |
 | 2026-11-15 | Se agregan los dos niveles de afirmación (umbral práctico provisional: límite inferior del IC ≥ 55 % en BO3), TOST y la sección de agentes con aprendizaje. |
