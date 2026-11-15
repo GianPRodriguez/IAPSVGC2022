@@ -149,6 +149,26 @@ def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
             _apply_oracle(belief, beliefs.oracle_lookup)
 
 
+def apply_prior_leave_one_out(iap_battle, opp_team) -> bool:
+    """Prior meta sin el equipo rival (leave-one-out). PS_PRIOR_LOO=0 lo desactiva.
+
+    El compendio MetaVGC del prior es el mismo pool de equipos de la evaluación: sin
+    esto el prior incluye el set verdadero del rival. Solo quita información; el agente
+    no recibe nada del equipo rival. Devuelve True si quedó aplicado.
+    """
+    import os as _os
+    beliefs = getattr(iap_battle, 'stat_beliefs', None)
+    if beliefs is None or opp_team is None:
+        return False
+    if _os.environ.get('PS_PRIOR_LOO', '1').strip().lower() in ('0', 'false', 'no', 'off'):
+        beliefs.set_prior_exclusion(None)
+        return False
+    from showdown.meta_sp_prior import exclusion_from_team
+
+    beliefs.set_prior_exclusion(exclusion_from_team(opp_team))
+    return True
+
+
 class ValidatedBattleMixin:
     """
     Feed del protocolo a Battle IAP + contraste con poke-env.
@@ -726,6 +746,7 @@ class ValidatedBattleMixin:
         if _os.environ.get('PS_ORACLE_SP_EXPECTIMAX') == '1' and hasattr(self, 'set_opp_ots_sheet'):
             mode = 'oracle'  # Diagnóstico: SP verdaderos SOLO para el jugador expectimax.
         apply_sp_info_mode(self.iap_battle, mode, lambda: self.opp_team)
+        apply_prior_leave_one_out(self.iap_battle, self.opp_team)
         self._sync_role_ids()
         self._bootstrapped = True
         if len(self.protocol_log) < 420:

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Greedy-Solo** |
-| **Versión** | **1.6** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.2) |
+| **Versión** | **1.7** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.2) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/greedy_solo/`** |
 | **Algoritmo** | Greedy factored: \(\arg\max_{a_i} s_i\) por activo + calc de daño |
 | **Rol** | Primer escalón “inteligente” de la escalera; curriculum early RL |
@@ -290,6 +290,7 @@ Combina **preview Greedy-Solo + combate Greedy-Solo**. Id canónico:
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.7** | 2026-11-14 | **Prior meta leave-one-out** en evaluación (wrapper validated): el prior de Spe ignora los sets del equipo rival (mismo pool que el compendio). Spe exacta del prior 95,3 % → 91,7 %. `PS_PRIOR_LOO=0` lo desactiva. Tests `tests/test_prior_leave_one_out.py`. |
 | **1.6** | 2026-11-14 | **Inferencia de SP apagada por defecto** (`default_sp_info_mode='none'`, modo A): misma decisión que con inferencia (0 estrechamientos en partida, juegos idénticos) a ~mitad de costo. Tabla §5.4 corregida (Spe abierta = prior meta, no max). `run_robust_e2e` sin `--sp-info-*` usa el predeterminado del agente; reporte `sp_info: A=none(default)`. Tests `test_greedy_agents_default_to_no_inference`, `test_robust_e2e_unset_mode_means_agent_default`. |
 | **1.5** | 2026-11-14 | Fallback sin acción jugable extraído a `no_action_fallback_order` (compartido con Joint v1.5): ya no envía dos switches al mismo banco si ambos lados caen en el caso (Showdown rechazaba la orden). Sin otro cambio de política. Test `test_no_action_fallback_shared_by_solo_and_joint`. |
 | **1.4** | 2026-10-11 | Estructura dual-audience, tablas de propósito/influencia, entrenamiento y Conclusión. Semántica intacta. |
@@ -300,4 +301,4 @@ Combina **preview Greedy-Solo + combate Greedy-Solo**. Id canónico:
 
 ---
 
-*Fin del contrato Greedy-Solo v1.6.*
+*Fin del contrato Greedy-Solo v1.7.*

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Greedy-Joint** |
-| **Versión** | **1.6** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.3) |
+| **Versión** | **1.7** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.3) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/greedy_joint/`** |
 | **Algoritmo** | Greedy joint: \(\arg\max_{(a_1,a_2)} S(a_1,a_2)\) en horizonte \(T=1\) |
 | **Rol** | Rival heurístico **principal** (curriculum avanzado, suite WR, ancla Expectimax / MCTS rollout) |
@@ -230,6 +230,7 @@ propio. Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.7** | 2026-11-14 | Prior meta leave-one-out en evaluación, igual que Solo v1.7. |
 | **1.6** | 2026-11-14 | **Inferencia de SP apagada por defecto** (modo A, `default_sp_info_mode='none'`), igual que Solo v1.6: juegos idénticos a B (452/900) a ~mitad de costo. B disponible con `--sp-info-a inference`. |
 | **1.5** | 2026-11-14 | Alineación con Solo: lado sin acción jugable → primer banco disponible (sin repetir el banco del otro lado; sin banco → default). Antes: `DefaultBattleOrder`. No es switch táctico; impacto esperado ≈ 0 (caso raro: Showdown suele ofrecer Struggle/recharge). Helper compartido `greedy_solo.pokeenv_player.no_action_fallback_order` (Solo v1.5). Test `test_no_action_fallback_shared_by_solo_and_joint`. |
 | **1.4** | 2026-10-11 | Estructura dual-audience; utilidades explicadas; entrenamiento y Conclusión. Semántica intacta. |
@@ -240,4 +241,4 @@ propio. Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 ---
 
-*Fin del contrato Greedy-Joint v1.6.*
+*Fin del contrato Greedy-Joint v1.7.*

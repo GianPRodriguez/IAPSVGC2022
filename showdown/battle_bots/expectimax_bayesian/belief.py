@@ -8,7 +8,7 @@ Champions usa Stat Points, no EV/IV clásicos.
 from __future__ import annotations
 
 import json
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Set, Tuple
@@ -152,6 +152,7 @@ def sample_belief_node(
     k: int = 6,
     base_stats: Optional[Dict[str, int]] = None,
     ots: Optional['OpponentPublicOTS'] = None,
+    exclude=None,
 ) -> BeliefNode:
     """
     Construye BeliefNode con hasta k perfiles.
@@ -188,8 +189,19 @@ def sample_belief_node(
     cands = candidates or {key: set(range(0, 33)) for key in STAT_KEYS}
 
     scored: List[OpponentProfile] = []
+    # Leave-one-out: descontar los sets del equipo rival (exclude de meta_sp_prior).
+    remaining = Counter({k: v for k, v in (exclude or {}).items() if k[0] == sid})
     for mon, count in _index.get(sid, []):
         sp = mon.get('sp') or {}
+        if remaining:
+            key = (sid, _norm(mon.get('nature')) or 'serious',
+                   tuple(int(sp.get(s, 0) or 0) for s in STAT_KEYS))
+            take = min(int(count), int(remaining.get(key, 0)))
+            if take:
+                remaining[key] -= take
+                count = int(count) - take
+            if count <= 0:
+                continue
         if not _compatible(sp, cands):
             continue
         mon_nat = _norm(mon.get('nature')) or 'serious'
@@ -262,6 +274,7 @@ def sample_belief_node(
                 species=sid,
                 nature=nid or 'serious',
                 candidates=cands,
+                exclude=exclude,
             )
         except Exception:
             picked = {
@@ -453,6 +466,7 @@ def belief_nodes_for_foes(
             k=k,
             base_stats=base_stats,
             ots=ots,
+            exclude=getattr(beliefs, 'prior_exclude', None),
         )
     return out
 

@@ -97,10 +97,29 @@ def prior_sample_count() -> int:
     return _sample_count
 
 
+# Leave-one-out: (species_id, nature_id, sp_tuple) -> nº de copias a descontar.
+# El harness de evaluación lo arma con el equipo rival (que también está en el
+# compendio) para que el prior no "vea" el set verdadero. Ver docs/SERVER.md.
+PriorExclusion = Counter
+
+
+def exclusion_from_team(team) -> PriorExclusion:
+    """Exclusión leave-one-out a partir de un TeamMeta (o cualquier obj con .mons)."""
+    out: PriorExclusion = Counter()
+    for mon in (getattr(team, 'mons', None) or []):
+        sid = _norm(getattr(mon, 'species', None))
+        if not sid:
+            continue
+        nid = _norm(getattr(mon, 'nature', None)) or 'serious'
+        out[(sid, nid, _sp_tuple(getattr(mon, 'sp', None) or {}))] += 1
+    return out
+
+
 def _compatible_spreads(
     species: str,
     nature: str,
     candidates: Dict[str, Set[int]],
+    exclude: Optional[PriorExclusion] = None,
 ) -> List[Tuple[Tuple[int, ...], int]]:
     """Spreads observados (species, nature) que caben en todos los sets candidatos."""
     load_meta_sp_prior()
@@ -109,6 +128,10 @@ def _compatible_spreads(
         return []
     out: List[Tuple[Tuple[int, ...], int]] = []
     for tup, count in counter.items():
+        if exclude:
+            count -= int(exclude.get((species, nature, tup), 0))
+            if count <= 0:
+                continue
         ok = True
         for i, stat in enumerate(STAT_KEYS):
             allowed = candidates.get(stat)
@@ -136,8 +159,12 @@ def _mode_in_set(counter: Counter, allowed: Sequence[int]) -> Optional[int]:
     return best_sp
 
 
-def _marginal_for(species: str, nature: str, stat: str) -> Counter:
+def _marginal_for(
+    species: str, nature: str, stat: str, exclude: Optional[PriorExclusion] = None,
+) -> Counter:
     load_meta_sp_prior()
+    if exclude:
+        return _marginal_excluding(species, nature, stat, exclude)
     by_nat = _marginal_index.get(species, {}).get(nature, {}).get(stat)
     if by_nat:
         return by_nat
@@ -147,6 +174,30 @@ def _marginal_for(species: str, nature: str, stat: str) -> Counter:
     return _global_marginal.get(stat) or Counter()
 
 
+def _marginal_excluding(
+    species: str, nature: str, stat: str, exclude: PriorExclusion,
+) -> Counter:
+    """Como _marginal_for pero descontando los sets excluidos en cada nivel de respaldo."""
+    i = STAT_KEYS.index(stat)
+    levels = (
+        (_marginal_index.get(species, {}).get(nature, {}).get(stat),
+         lambda s, n: s == species and n == nature),
+        (_species_marginal.get(species, {}).get(stat), lambda s, n: s == species),
+        (_global_marginal.get(stat), lambda s, n: True),
+    )
+    for base, match in levels:
+        if not base:
+            continue
+        ctr = Counter(base)
+        for (s, n, tup), k in exclude.items():
+            if match(s, n):
+                ctr[tup[i]] -= int(k)
+        ctr = +ctr
+        if ctr:
+            return ctr
+    return Counter()
+
+
 def pick_sp_from_candidates(
     *,
     species: Optional[str],
@@ -154,6 +205,7 @@ def pick_sp_from_candidates(
     candidates: Iterable[int],
     stat: str,
     all_candidates: Optional[Dict[str, Set[int]]] = None,
+    exclude: Optional[PriorExclusion] = None,
 ) -> Optional[int]:
     """
     Elige un SP entre candidates según el prior meta.
@@ -174,12 +226,12 @@ def pick_sp_from_candidates(
         return None
 
     if all_candidates is not None and sid:
-        joint = _compatible_spreads(sid, nid, all_candidates)
+        joint = _compatible_spreads(sid, nid, all_candidates, exclude)
         if joint:
             idx = STAT_KEYS.index(stat)
             return int(joint[0][0][idx])
 
-    picked = _mode_in_set(_marginal_for(sid, nid, stat), allowed)
+    picked = _mode_in_set(_marginal_for(sid, nid, stat, exclude), allowed)
     return picked
 
 
@@ -188,15 +240,19 @@ def preferred_sp_map(
     species: Optional[str],
     nature: Optional[str],
     candidates: Dict[str, Set[int]],
+    exclude: Optional[PriorExclusion] = None,
 ) -> Dict[str, int]:
-    """SP preferidos por stat (joint si cabe; si no, marginal + mediana fallback)."""
+    """SP preferidos por stat (joint si cabe; si no, marginal + mediana fallback).
+
+    exclude: leave-one-out (sets del equipo rival que no deben contar en el prior).
+    """
     sid = _norm(species)
     nid = _norm(nature) or 'serious'
     load_meta_sp_prior()
     out: Dict[str, int] = {}
 
     if sid and _sample_count > 0:
-        joint = _compatible_spreads(sid, nid, candidates)
+        joint = _compatible_spreads(sid, nid, candidates, exclude)
         if joint:
             tup = joint[0][0]
             return {stat: int(tup[i]) for i, stat in enumerate(STAT_KEYS)}
@@ -211,6 +267,7 @@ def preferred_sp_map(
             candidates=cands,
             stat=stat,
             all_candidates=None,
+            exclude=exclude,
         )
         if picked is None:
             picked = cands[len(cands) // 2]

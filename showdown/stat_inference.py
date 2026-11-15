@@ -228,6 +228,8 @@ class StatBelief:
         }
         self.observations = 0
         self.skipped = 0
+        # Leave-one-out del prior meta (lo fija el harness; None = prior completo).
+        self.prior_exclude = None
 
     # -- consultas -------------------------------------------------------- #
 
@@ -278,6 +280,7 @@ class StatBelief:
                 species=self.species,
                 nature=self.nature,
                 candidates=self.candidates,
+                exclude=getattr(self, 'prior_exclude', None),
             )
             if stat in picked and picked[stat] in self.candidates.get(stat, set()):
                 return int(picked[stat])
@@ -299,6 +302,7 @@ class StatBelief:
                 species=self.species,
                 nature=self.nature,
                 candidates=self.candidates,
+                exclude=getattr(self, 'prior_exclude', None),
             )
         except Exception:
             pref = {}
@@ -1189,6 +1193,8 @@ class TeamStatBeliefs:
         # Diagnóstico: oráculo de SP solo para este jugador (ver PS_ORACLE_SP_EXPECTIMAX
         # y el modo ``oracle`` de PS_SP_INFO_A/B en run_robust_e2e).
         self.oracle_lookup = None
+        # Leave-one-out del prior meta para todas las creencias (ver set_prior_exclusion).
+        self.prior_exclude = None
         # Diagnóstico (modo ``none``): no se aprende nada de las observaciones; las
         # creencias quedan con todo el rango de SP (solo OTS + bases de especie).
         self.inference_off = False
@@ -1259,6 +1265,7 @@ class TeamStatBeliefs:
         if belief is None:
             belief = StatBelief(species, base_stats, getattr(pkmn, 'nature', None))
             belief.current_forme = forme
+            belief.prior_exclude = getattr(self, 'prior_exclude', None)
             _apply_oracle(belief, getattr(self, 'oracle_lookup', None))
             self.beliefs[species] = belief
         else:
@@ -1284,6 +1291,12 @@ class TeamStatBeliefs:
         return belief
 
     # -- evidencia de velocidad ------------------------------------------- #
+
+    def set_prior_exclusion(self, exclude) -> None:
+        """Leave-one-out: el prior meta ignora estos sets (también en creencias ya creadas)."""
+        self.prior_exclude = exclude or None
+        for belief in self.beliefs.values():
+            belief.prior_exclude = self.prior_exclude
 
     def observe_speed_order(self, opponent_pkmn, opponent_ctx: SpeedContext,
                             user_speed: int, user_ctx: SpeedContext,
