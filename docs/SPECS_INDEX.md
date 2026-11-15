@@ -9,6 +9,8 @@ está en [`rl_env_spec.md`](rl_env_spec.md). La evaluación final está en
 
 1. **Formato y reglas** — Reg M-C, Mega on, Tera off → `rl_env_spec.md` §formato / Tera.
 2. **Qué ve y qué recibe el agente** — observación, acciones, recompensa → `rl_env_spec.md`.
+   Fundamento teórico de la representación (obs OTS, acciones v2, máscaras, codificador
+   estructurado, simetrías) → [`tesis_representacion_rl.md`](tesis_representacion_rl.md).
 3. **Baselines sin aprendizaje** — Random → Greedy-Solo → Greedy-Joint → Expectimax.
 4. **Team Preview aprendido** — Masked PPO → Payoff Nash → QD-PGA (solo formación).
 5. **Combate aprendido / planificado** — DDQN, PPO, MCTS, MCTS–Nash, QD-*.
