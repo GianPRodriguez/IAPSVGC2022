@@ -96,7 +96,7 @@ desplaza a otro con mejor encaje de tipos.
 | Fase | Contenido | Estado |
 |---|---|---|
 | 0 | Línea base, A frente a B frente a oráculo, factorial preview × combate | **hecha** |
-| Preview | Diagnóstico y corrección del preview de roles | en curso |
+| Preview | Diagnóstico y corrección del preview de roles | **opción 1 aplicada (v1.7)**: preview = tipado + BST. La opción 2 (roles por movimientos del team sheet, al 10 % y al 25 % sobre greedy) está en prueba |
 | 1 | Diagnóstico sin cambiar el agente: acierto del modelo del rival por cada rival, escala de la amenaza frente a la ofensa, aporte de cada término de V, uso y resultado de la puerta | pendiente |
 | 2 | Una mejora por corrida, **con el preview fijo** (greedy en ambos lados): Protect condicional en el modelo del rival, calibración de la amenaza, cambios voluntarios que nunca se eligen. La actualización bayesiana de los mundos tiene prioridad baja, porque el oráculo no aporta | pendiente |
 | 3 | Combinar lo que pase y reajustar la puerta; confirmar con semillas nuevas (contra joint, solo y random); **volver a medir A contra los oráculos** con la versión final (si el oráculo pasa a aportar, se reactiva la actualización bayesiana); documentar | pendiente |

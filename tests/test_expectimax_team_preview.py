@@ -16,11 +16,15 @@ def _mons(names: list[str]) -> list[PreviewMon]:
     return [mon_from_species(i, n) for i, n in enumerate(names, start=1)]
 
 
+L = tp.LEGACY_PREVIEW_KW  # preview de roles hasta v1.6 (variante expectimax_legacy)
+
+
 def test_preview_constants_match_spec():
-    assert tp.PREVIEW_ALPHA == 1.05
-    assert tp.PREVIEW_BETA == 1.25
-    assert tp.PREVIEW_GAMMA == 0.008
-    assert tp.LEAD_QUALITY_WEIGHT == 0.45
+    # v1.7: por defecto = tipado + BST de Greedy, sin roles ni calidad de lead.
+    assert (tp.PREVIEW_ALPHA, tp.PREVIEW_BETA, tp.PREVIEW_GAMMA) == (1.0, 1.0, 0.01)
+    assert tp.ROLE_WEIGHT == 0.0 and tp.LEAD_QUALITY_WEIGHT == 0.0
+    assert (tp.LEGACY_PREVIEW_ALPHA, tp.LEGACY_PREVIEW_BETA, tp.LEGACY_PREVIEW_GAMMA) == (1.05, 1.25, 0.008)
+    assert tp.LEGACY_LEAD_QUALITY_WEIGHT == 0.45
     assert tp.ROLE_BONUS_REDIRECT == 28.0
     assert tp.ROLE_BONUS_TAILWIND == 32.0
     assert tp.ROLE_BONUS_TRICK_ROOM == 26.0
@@ -63,17 +67,14 @@ def test_score_formula_decomposition():
     ])
     foes = _mons(['Kyogre', 'Groudon', 'Incineroar', 'Pikachu', 'Mew', 'Jigglypuff'])
 
-    scored, meta = tp.best_expectimax_preview_with_meta(our, foes)
+    scored, meta = tp.best_expectimax_preview_with_meta(our, foes, **L)
     by_idx = {m.index: m for m in our}
     ordered = [by_idx[i] for i in scored.order]
     leads = ordered[:2]
-    base = score_combination(
-        ordered, foes,
-        alpha=tp.PREVIEW_ALPHA, beta=tp.PREVIEW_BETA, gamma=tp.PREVIEW_GAMMA,
-    )
+    base = score_combination(ordered, foes, alpha=L['alpha'], beta=L['beta'], gamma=L['gamma'])
     role = tp._role_bonus(ordered)
     lead_q = tp._lead_quality(leads, foes)
-    expected = base.score + role + tp.LEAD_QUALITY_WEIGHT * lead_q
+    expected = base.score + role + L['lead_weight'] * lead_q
     assert abs(scored.score - expected) < 1e-6
     assert meta.chosen is not None
     assert meta.why_lines
@@ -92,8 +93,8 @@ def test_roles_prefer_support_over_four_attackers():
     foes = _mons([
         'Kyogre', 'Groudon', 'Zacian', 'Miraidon', 'Koraidon', 'Terapagos',
     ])
-    s_sup, _ = tp.best_expectimax_preview_with_meta(support, foes)
-    s_atk, _ = tp.best_expectimax_preview_with_meta(attackers, foes)
+    s_sup, _ = tp.best_expectimax_preview_with_meta(support, foes, **L)
+    s_atk, _ = tp.best_expectimax_preview_with_meta(attackers, foes, **L)
     role_sup = tp._role_bonus([m for m in support if m.index in s_sup.order])
     role_atk = tp._role_bonus([m for m in attackers if m.index in s_atk.order])
     assert role_sup > role_atk
@@ -130,17 +131,14 @@ def test_differs_from_greedy_on_role_heavy_pool():
         'Calyrex-Shadow', 'Urshifu-Rapid-Strike', 'Raging Bolt',
         'Ogerpon-Wellspring', 'Farigiraf', 'Landorus-Therian',
     ])
-    exp, _ = tp.best_expectimax_preview_with_meta(our, foes)
+    exp, _ = tp.best_expectimax_preview_with_meta(our, foes, **L)
     gre = best_team_preview_order(our, foes)
     # No se exige orden distinto siempre, pero el score Expectimax debe incluir roles.
     ordered = [m for m in our if m.index in exp.order]
     assert tp._role_bonus(ordered) > 0
     # Pesos distintos ⇒ score base greedy ≠ fórmula expectimax aunque el orden coincida.
     base_g = score_combination(ordered, foes, alpha=1.0, beta=1.0, gamma=0.01)
-    base_e = score_combination(
-        ordered, foes,
-        alpha=tp.PREVIEW_ALPHA, beta=tp.PREVIEW_BETA, gamma=tp.PREVIEW_GAMMA,
-    )
+    base_e = score_combination(ordered, foes, alpha=L['alpha'], beta=L['beta'], gamma=L['gamma'])
     assert abs(base_g.score - base_e.score) > 1e-9 or exp.order != gre.order
 
 
@@ -157,3 +155,29 @@ def test_indeedee_f_normalizes_to_redirect_and_tr():
     assert 'indeedeef' in tp.TRICK_ROOM_SPECIES
     m = mon_from_species(1, 'Indeedee-F')
     assert tp._nid(m.name) == 'indeedeef'
+
+
+def test_default_preview_equals_greedy_typing_bst():
+    """v1.7: el preview por defecto elige exactamente lo mismo que Greedy (tipado + BST)."""
+    import random
+    from showdown.inference_sim.team_factory import active_teams
+
+    rng = random.Random(7)
+    teams = active_teams()
+    for _ in range(40):
+        a, b = rng.sample(teams, 2)
+        our = [mon_from_species(i + 1, m.species) for i, m in enumerate(a.mons)]
+        foes = [mon_from_species(i + 1, m.species) for i, m in enumerate(b.mons)]
+        exp, _ = tp.best_expectimax_preview_with_meta(our, foes)
+        assert exp.order == best_team_preview_order(our, foes).order
+
+
+def test_move_roles_only_count_real_moves():
+    """Opción 2: el bono de rol por movimientos ignora la especie."""
+    mons = _mons(['Incineroar', 'Tornadus', 'Chi-Yu', 'Flutter Mane'])
+    none = {1: {'flareblitz', 'knockoff'}, 2: {'bleakwindstorm'}, 3: set(), 4: set()}
+    assert tp._role_bonus_from_moves(mons, none) == 0.0  # especies "de rol" sin el movimiento
+    real = {1: {'fakeout'}, 2: {'tailwind'}, 3: set(), 4: set()}
+    assert tp._role_bonus_from_moves(mons, real) == (
+        tp.ROLE_BONUS_FAKE_OUT + tp.ROLE_BONUS_TAILWIND + tp.ROLE_DIVERSITY_BONUS
+    )

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import Counter
-from typing import List, Optional, Type
+from typing import Dict, List, Optional, Type
 
 from poke_env.battle import AbstractBattle, DoubleBattle
 from poke_env.player import Player
@@ -160,6 +160,10 @@ PREVIEW_CHOICES = (
     'sheet',               # los 4 primeros de la hoja, en su orden (prior del diseñador)
     'expectimax_typing',   # solo pesos de tipado/BST de expectimax (sin roles ni lead)
     'greedy_roles25',      # greedy (α=β=1, γ=0.01) + bonos de rol al 25 %
+    'expectimax_legacy',   # preview de expectimax hasta v1.6 (roles por especie + lead)
+    # Opción 2: roles leídos de los MOVIMIENTOS del team sheet propio, sobre greedy.
+    'greedy_moveroles10',
+    'greedy_moveroles25',
 )
 
 
@@ -175,7 +179,10 @@ def _heuristic_preview(self, battle, order_fn) -> str:
            enumerate(battle.teampreview_team or list(battle.team.values()), start=1)]
     foe_src = battle.teampreview_opponent_team or list(battle.opponent_team.values())
     foes = [mon_from_species(i, _species_name(m)) for i, m in enumerate(foe_src, start=1)]
-    order = tuple(order_fn(our, foes))
+    if getattr(order_fn, 'uses_moves', False):
+        order = tuple(order_fn(our, foes, role_moves=_own_role_moves(self, battle)))
+    else:
+        order = tuple(order_fn(our, foes))
     selected = set(order)
     for i, mon in enumerate(battle.teampreview_team or [], start=1):
         try:
@@ -186,16 +193,41 @@ def _heuristic_preview(self, battle, order_fn) -> str:
     return f'/team {self.last_preview_order}'
 
 
-def _expectimax_variant_order(role_weight: float, lead_weight: Optional[float], weights=None):
-    def fn(our, foes):
+_LEGACY_W = dict(alpha=1.05, beta=1.25, gamma=0.008)  # pesos de expectimax ≤ v1.6
+_GREEDY_W = dict(alpha=1.0, beta=1.0, gamma=0.01)
+
+
+def _expectimax_variant_order(role_weight: float, lead_weight: Optional[float], weights=None,
+                              move_roles: bool = False):
+    def fn(our, foes, role_moves=None):
         from showdown.battle_bots.expectimax_bayesian import team_preview as ep
-        lw = ep.LEAD_QUALITY_WEIGHT if lead_weight is None else lead_weight
+        lw = ep.LEGACY_LEAD_QUALITY_WEIGHT if lead_weight is None else lead_weight
         kw = dict(weights or {})
+        if move_roles:
+            kw['role_moves'] = role_moves or {}
         scored, _ = ep.best_expectimax_preview_with_meta(
             our, foes, role_weight=role_weight, lead_weight=lw, **kw,
         )
         return scored.order
+    fn.uses_moves = move_roles
     return fn
+
+
+def _own_role_moves(self, battle) -> Dict[int, set]:
+    """Índice 1-based (orden de teampreview) → ids de movimientos propios del team sheet."""
+    out: Dict[int, set] = {}
+    team = getattr(self, 'user_team', None)
+    mons = list(getattr(team, 'mons', None) or [])
+    for i, m in enumerate(mons, start=1):
+        out[i] = {normalize_move_id(x) for x in (getattr(m, 'moves', None) or [])}
+    if not out:
+        for i, mon in enumerate(battle.teampreview_team or [], start=1):
+            out[i] = {normalize_move_id(x) for x in (getattr(mon, 'moves', None) or {})}
+    return out
+
+
+def normalize_move_id(name) -> str:
+    return ''.join(ch for ch in str(name or '').lower() if ch.isalnum())
 
 
 def _sheet_order(our, foes):
@@ -203,12 +235,15 @@ def _sheet_order(our, foes):
 
 
 _PREVIEW_VARIANTS = {
-    'expectimax_noroles': _expectimax_variant_order(0.0, None),
-    'expectimax_nolead': _expectimax_variant_order(1.0, 0.0),
+    # Variantes del diagnóstico: relativas al preview legacy (≤ v1.6), pesos explícitos.
+    'expectimax_noroles': _expectimax_variant_order(0.0, None, weights=_LEGACY_W),
+    'expectimax_nolead': _expectimax_variant_order(1.0, 0.0, weights=_LEGACY_W),
     'sheet': _sheet_order,
-    'expectimax_typing': _expectimax_variant_order(0.0, 0.0),
-    'greedy_roles25': _expectimax_variant_order(
-        0.25, 0.0, weights=dict(alpha=1.0, beta=1.0, gamma=0.01)),
+    'expectimax_typing': _expectimax_variant_order(0.0, 0.0, weights=_LEGACY_W),
+    'greedy_roles25': _expectimax_variant_order(0.25, 0.0, weights=_GREEDY_W),
+    'expectimax_legacy': _expectimax_variant_order(1.0, None, weights=_LEGACY_W),
+    'greedy_moveroles10': _expectimax_variant_order(0.10, 0.0, weights=_GREEDY_W, move_roles=True),
+    'greedy_moveroles25': _expectimax_variant_order(0.25, 0.0, weights=_GREEDY_W, move_roles=True),
 }
 
 

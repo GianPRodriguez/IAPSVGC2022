@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Expectimax-Bayesian** |
-| **Versión** | **1.6** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.4) |
+| **Versión** | **1.7** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.4) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/expectimax_bayesian/`** |
 | **Algoritmo** | Expectimax 1-ply bayesiano anytime; filtro Greedy-Joint Top-K×Top-K; gate vs phase1 |
 | **Rol** | Techo heurístico de la escalera; fuente BC; oponente de suite WR |
@@ -103,6 +103,15 @@ significa esperanza sobre azar, no minimización del peor caso.
 
 Módulo: `showdown/battle_bots/expectimax_bayesian/team_preview.py`.  
 Entradas IAP / poke-env: `main.py` / `pokeenv_player.py` → `best_expectimax_preview_with_meta`.
+
+> **v1.7 (2026-11-15): el preview por defecto es tipado + BST de Greedy** (α=β=1, γ=0,01,
+> `ROLE_WEIGHT=0`, `LEAD_QUALITY_WEIGHT=0`), con las mismas elecciones que Greedy-Solo/Joint.
+> En el diseño factorial preview × combate, el preview de roles (§4.1–4.6) restaba
+> **−3,8 pts** con combate joint (roles 1,6–2,2; calidad de lead 0,3–1,3; pesos ~0,9). Ningún
+> componente mejoraba sobre tipado + BST. Con este preview, el combate de expectimax da
+> **52,8 %** contra joint validado (antes 49,7 %). Las secciones §4.1–4.6 describen el preview
+> **legacy**, que se conserva en `LEGACY_PREVIEW_KW` y como `--preview-a expectimax_legacy`.
+> Diagnóstico completo en [`expectimax_diagnostico.md`](expectimax_diagnostico.md).
 
 ### 4.1 Intuición
 
@@ -422,6 +431,7 @@ Checklist de reproducibilidad:
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.7** | 2026-11-15 | **Preview = tipado + BST de Greedy.** El diseño factorial (`--preview-a/b`) separó preview y combate: el combate de expectimax supera al de joint (+2,8; 52,8 % con preview greedy) y su preview de roles resta (−3,8; 46,2 % con combate joint). La atribución: roles 1,6–2,2 (también al 25 %), calidad de lead 0,3–1,3, pesos ~0,9 n.s. Preview legacy en `LEGACY_PREVIEW_KW`. Arreglo del desempate por punto flotante en el ranking (redondeo a 1e-9). Roles por movimientos del team sheet (`role_moves`, opción 2) disponibles para experimentar (`greedy_moveroles10/25`). |
 | **1.6** | 2026-11-14 | **Mundos sin filtración (leave-one-out):** `sample_belief_node` descuenta los sets del equipo rival del compendio MetaVGC (mismo pool que la evaluación) vía `TeamStatBeliefs.prior_exclude`, que fija el wrapper validated en cada juego; el fallback `preferred_sp_map` también. Antes el set real del rival estaba entre los 4 repartos más frecuentes de su especie en ~97 % de los casos (LOO ~92 %). `PS_PRIOR_LOO=0` lo desactiva. Resultados previos de expectimax pueden estar levemente inflados. |
 | **1.5** | 2026-11-14 | **Versión estable C235:** `v_tempo_weight` 0→1.0, gate `indifference`→`beat` margin 80→40, `soft_ko_bonus` 1000→250, `k_profiles` 2→4, `max_worlds` 4→12. Servidor, pool 300 teams, 5100 BO3/config, IC emparejado por semilla: cribado (7001–7017) +0.7 n.s.; confirmación con semillas nuevas (8001–8017) vs greedy_joint sin inferencia de SP 52.5% vs 50.3% (+2.3 [+0.7, +3.9]); combinado 52.4% vs 50.9% (10 200 BO3). Vs joint validado (`PS_B_VALIDATED=1`) 48.3% vs 47.7% (+0.6 n.s.). Base vs greedy_solo 49.6%, vs random 99.7%. Ideas por separado ≈0 o peores; techo del diseño alcanzado. |
 | **1.4** | 2026-10-11 | Estructura dual-audience; búsqueda/belief y propósito de knobs; entrenamiento y Conclusión. Semántica intacta. |

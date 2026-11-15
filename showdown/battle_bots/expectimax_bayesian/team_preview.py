@@ -15,11 +15,25 @@ from showdown.battle_bots.greedy_solo.team_preview import (
 )
 from teams.team_converter import normalize_name
 
-# --- Pesos tipado/BST (≠ greedy α=β=1, γ=0.01) ---
-PREVIEW_ALPHA: float = 1.05
-PREVIEW_BETA: float = 1.25
-PREVIEW_GAMMA: float = 0.008
-LEAD_QUALITY_WEIGHT: float = 0.45
+# --- v1.7 (2026-11-15): por defecto = tipado + BST de Greedy (α=β=1, γ=0.01), sin
+# bonos de rol ni calidad de lead. Diagnóstico en docs/expectimax_diagnostico.md: con
+# combate joint el preview de roles costaba −3,8 pts (roles 1,6–2,2; lead 0,3–1,3;
+# pesos ~0,9) y ningún componente mejoraba sobre tipado+BST. El preview anterior queda
+# como LEGACY_PREVIEW_KW (variante --preview-a expectimax_legacy).
+PREVIEW_ALPHA: float = 1.0
+PREVIEW_BETA: float = 1.0
+PREVIEW_GAMMA: float = 0.01
+ROLE_WEIGHT: float = 0.0
+LEAD_QUALITY_WEIGHT: float = 0.0
+
+LEGACY_PREVIEW_ALPHA: float = 1.05
+LEGACY_PREVIEW_BETA: float = 1.25
+LEGACY_PREVIEW_GAMMA: float = 0.008
+LEGACY_LEAD_QUALITY_WEIGHT: float = 0.45
+LEGACY_PREVIEW_KW = dict(
+    alpha=LEGACY_PREVIEW_ALPHA, beta=LEGACY_PREVIEW_BETA, gamma=LEGACY_PREVIEW_GAMMA,
+    role_weight=1.0, lead_weight=LEGACY_LEAD_QUALITY_WEIGHT,
+)
 LEAD_DEF_SCALE: float = 1.35
 LEAD_OFF_SCALE: float = 1.15
 LEAD_ROLE_BONUS: float = 10.0
@@ -90,6 +104,44 @@ def _role_bonus(mons: Sequence[PreviewMon]) -> float:
         s += ROLE_BONUS_FAKE_OUT
     buckets = role_bucket_flags(ids)
     if sum(1 for v in buckets.values() if v) >= 2:
+        s += ROLE_DIVERSITY_BONUS
+    return s
+
+
+# Roles por MOVIMIENTOS del team sheet propio (opción 2 del diagnóstico): el bono solo
+# cuenta si el Pokémon lleva de verdad el movimiento, no por pertenecer a una especie.
+ROLE_MOVES: Dict[str, Set[str]] = {
+    'redirect': frozenset({'followme', 'ragepowder'}),
+    'tailwind': frozenset({'tailwind'}),
+    'trick_room': frozenset({'trickroom'}),
+    'speed_control': frozenset({'icywind', 'electroweb', 'thunderwave', 'scaryface',
+                                'bulldoze', 'rocktomb'}),
+    'fake_out': frozenset({'fakeout'}),
+}
+_ROLE_MOVE_BONUS = {
+    'redirect': ROLE_BONUS_REDIRECT,
+    'tailwind': ROLE_BONUS_TAILWIND,
+    'trick_room': ROLE_BONUS_TRICK_ROOM,
+    'speed_control': ROLE_BONUS_SPEED_CONTROL,
+    'fake_out': ROLE_BONUS_FAKE_OUT,
+}
+
+
+def _role_bonus_from_moves(mons: Sequence[PreviewMon], role_moves: Dict[int, Set[str]]) -> float:
+    """Como _role_bonus pero con los movimientos reales (role_moves: índice → ids de moves)."""
+    present = set()
+    for m in mons:
+        mv = role_moves.get(int(m.index)) or set()
+        for role, ids in ROLE_MOVES.items():
+            if mv & ids:
+                present.add(role)
+    s = sum(_ROLE_MOVE_BONUS[r] for r in present)
+    buckets = (
+        'redirect' in present,
+        'tailwind' in present or 'trick_room' in present,
+        'speed_control' in present or 'fake_out' in present,
+    )
+    if sum(buckets) >= 2:
         s += ROLE_DIVERSITY_BONUS
     return s
 
@@ -172,8 +224,9 @@ def best_expectimax_preview_with_meta(
     beta: float = PREVIEW_BETA,
     gamma: float = PREVIEW_GAMMA,
     top_report: int = 8,
-    role_weight: float = 1.0,
+    role_weight: float = ROLE_WEIGHT,
     lead_weight: float = LEAD_QUALITY_WEIGHT,
+    role_moves: Optional[Dict[int, Set[str]]] = None,
 ) -> Tuple[PreviewScore, PreviewDecisionMeta]:
     """
     Exhaustivo C(6,4)×C(4,2) — no hay Top-K.
@@ -200,7 +253,12 @@ def best_expectimax_preview_with_meta(
     # (total, PreviewScore, role, lead_q, role_tags, lead_names)
     for combo in itertools.combinations(pool, 4):
         combo_list = list(combo)
-        role = float(role_weight) * _role_bonus(combo_list) if role_weight else 0.0
+        if not role_weight:
+            role = 0.0
+        elif role_moves is not None:
+            role = float(role_weight) * _role_bonus_from_moves(combo_list, role_moves)
+        else:
+            role = float(role_weight) * _role_bonus(combo_list)
         tags = _role_tags(combo_list)
         meta.n_combos_4 += 1
         for lead in itertools.combinations(combo_list, 2):
@@ -223,7 +281,9 @@ def best_expectimax_preview_with_meta(
                 total, ps, role, lead_q, tags, _short_names(list(lead)),
             ))
 
-    ranked.sort(key=lambda t: (-t[0], -t[1].bst))
+    # Redondeo: el orden de suma de off/def cambia el total en ~1e-15 y, sin tolerancia,
+    # rompía empates exactos (p. ej. leads en el orden de la hoja). Sort estable.
+    ranked.sort(key=lambda t: (-round(t[0], 9), -t[1].bst))
     meta.n_scored = len(ranked)
     best = ranked[0][1]
     meta.chosen = best
@@ -248,8 +308,8 @@ def best_expectimax_preview_with_meta(
     why: List[str] = [
         f'criterio: exhaustivo C(6,4)xC(4,2) = {meta.n_scored} ordenes '
         f'(no Top-K); alpha={alpha} beta={beta} gamma={gamma}',
-        f'score = alpha*off + beta*def + gamma*BST + roles + '
-        f'{LEAD_QUALITY_WEIGHT}*leadQ',
+        f'score = alpha*off + beta*def + gamma*BST + {role_weight}*roles + '
+        f'{lead_weight}*leadQ',
         f'elegido S={ranked[0][0]:.1f}  roles={ranked[0][4]}(+{ranked[0][2]:.0f})  '
         f'leadQ={ranked[0][3]:.0f}  off={best.offensive:.0f} def={best.defensive:.0f} '
         f'bst={best.bst:.0f}',

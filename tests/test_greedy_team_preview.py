@@ -110,8 +110,12 @@ def test_lead_preference_ignored():
     assert a.order == b.order
 
 
-def test_weights_differ_from_expectimax_defaults():
+def test_weights_match_expectimax_defaults_v17():
+    """Expectimax v1.7 adoptó el tipado+BST de Greedy (diagnóstico 2026-11-15)."""
     from showdown.battle_bots.expectimax_bayesian import team_preview as etp
-    assert (PREVIEW_ALPHA, PREVIEW_BETA, PREVIEW_GAMMA) != (
+    assert (PREVIEW_ALPHA, PREVIEW_BETA, PREVIEW_GAMMA) == (
         etp.PREVIEW_ALPHA, etp.PREVIEW_BETA, etp.PREVIEW_GAMMA,
+    )
+    assert (PREVIEW_ALPHA, PREVIEW_BETA, PREVIEW_GAMMA) != (
+        etp.LEGACY_PREVIEW_ALPHA, etp.LEGACY_PREVIEW_BETA, etp.LEGACY_PREVIEW_GAMMA,
     )
