@@ -249,5 +249,8 @@ def test_preview_diagnostic_variants():
     nr = ep.best_expectimax_preview_with_meta(us, fo, role_weight=0.0)[0].order
     assert tuple(vgp._PREVIEW_VARIANTS['expectimax_noroles'](us, fo)) == tuple(nr)
     assert best_team_preview_order(us, fo).order  # greedy intacto
-    for k in ('expectimax_noroles', 'expectimax_nolead', 'sheet'):
+    # Sin roles ni lead y con pesos greedy, la variante reproduce exactamente a greedy.
+    same = vgp._expectimax_variant_order(0.0, 0.0, weights=dict(alpha=1.0, beta=1.0, gamma=0.01))(us, fo)
+    assert set(same) == set(best_team_preview_order(us, fo).order)
+    for k in ('expectimax_noroles', 'expectimax_nolead', 'sheet', 'expectimax_typing', 'greedy_roles25'):
         assert callable(vgp.preview_function(k))

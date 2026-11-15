@@ -158,6 +158,8 @@ PREVIEW_CHOICES = (
     'expectimax_noroles',  # sin bonos de rol (tipado + BST + calidad de lead)
     'expectimax_nolead',   # sin calidad de lead (leads = orden de la hoja, como greedy)
     'sheet',               # los 4 primeros de la hoja, en su orden (prior del diseñador)
+    'expectimax_typing',   # solo pesos de tipado/BST de expectimax (sin roles ni lead)
+    'greedy_roles25',      # greedy (α=β=1, γ=0.01) + bonos de rol al 25 %
 )
 
 
@@ -184,12 +186,13 @@ def _heuristic_preview(self, battle, order_fn) -> str:
     return f'/team {self.last_preview_order}'
 
 
-def _expectimax_variant_order(role_weight: float, lead_weight: Optional[float]):
+def _expectimax_variant_order(role_weight: float, lead_weight: Optional[float], weights=None):
     def fn(our, foes):
         from showdown.battle_bots.expectimax_bayesian import team_preview as ep
         lw = ep.LEAD_QUALITY_WEIGHT if lead_weight is None else lead_weight
+        kw = dict(weights or {})
         scored, _ = ep.best_expectimax_preview_with_meta(
-            our, foes, role_weight=role_weight, lead_weight=lw,
+            our, foes, role_weight=role_weight, lead_weight=lw, **kw,
         )
         return scored.order
     return fn
@@ -203,6 +206,9 @@ _PREVIEW_VARIANTS = {
     'expectimax_noroles': _expectimax_variant_order(0.0, None),
     'expectimax_nolead': _expectimax_variant_order(1.0, 0.0),
     'sheet': _sheet_order,
+    'expectimax_typing': _expectimax_variant_order(0.0, 0.0),
+    'greedy_roles25': _expectimax_variant_order(
+        0.25, 0.0, weights=dict(alpha=1.0, beta=1.0, gamma=0.01)),
 }
 
 
