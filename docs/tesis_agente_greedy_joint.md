@@ -237,7 +237,7 @@ Idénticos en espíritu a *Greedy-Solo*:
 
 - Preview: cobertura ofensiva/defensiva + \(\gamma\cdot\mathrm{BST}\) (`team_preview.py` compartido).
 - Daño: batch `@smogon/calc`; Mega pendiente aplicada en el atacante si `can_mega`.
-- Creencia de stats rival opcional vía `apply_belief_stats`; por defecto sin inferencia (v1.6, ver tesis Greedy-Solo §7.3): SP 32 en HP/Atk/Def/SpA/SpD y prior meta en Spe.
+- Creencia de stats rival opcional vía `apply_belief_stats`; por defecto sin inferencia. Desde v1.8 (opción C): los 6 stats rivales al reparto más frecuente del prior meta leave-one-out (antes: SP 32 en HP/Atk/Def/SpA/SpD y prior meta en Spe). Ver tesis Greedy-Solo §7.3.
 
 ---
 

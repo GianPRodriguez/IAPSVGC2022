@@ -313,6 +313,21 @@ prueba t pareada por semilla (16 gl; |t| ≥ 2,12 es significativo).
 **Candidata a v1.9:** v1.8 + `enable_voluntary_switch=True`, `max_switch_hybrids=8`,
 `v_iso_switch_weight=0.25`, con todo lo demás sin cambios.
 
+### Opción C: los 6 stats del meta como valor puntual (semillas 9101–9117)
+
+| Agente | C contra la versión actual (McNemar) | p | Lectura |
+|---|---|---|---|
+| greedy_joint | +0,48 pts (495 frente a 471 series discordantes) | 0,46 | igual |
+| greedy_solo | +0,76 pts (186 frente a 148) | 0,043 (0,086 con Holm) | igual o levemente mejor |
+| expectimax v1.9 candidata | −0,20 pts (301 frente a 311) | 0,72 | igual (53,4 % contra joint) |
+
+**Decisión (15-11-2026):** C por defecto en greedy_solo y greedy_joint (specs v1.8), por
+coherencia (reparto real que respeta los 66 SP) y porque no empeora. **Expectimax mantiene
+sus mundos bayesianos:** C los reduce a un solo reparto, rinde igual y quitaría lo que hace
+"bayesiano" al agente.
+
+**Congelada como v1.9 por defecto** (commit de esta fecha) para la confirmación.
+
 ## Plan
 
 | Fase | Contenido | Estado |

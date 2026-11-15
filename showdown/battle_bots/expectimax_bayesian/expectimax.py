@@ -194,8 +194,10 @@ class ExpectimaxConfig:
     # C235: 250 (antes SOFT_KO_BONUS=1000). La constante del módulo chance no cambia.
     soft_ko_bonus: float = 250.0
     # Cuevas: off (A/B seed10 teams40: volOn scale=0.25 empeoró pair 50%→33%).
-    enable_voluntary_switch: bool = False
-    max_switch_hybrids: int = 0
+    # v1.9 (2026-11-15): cambios voluntarios activos (Fase 2c: +0,65 pts, McNemar p=0,001,
+    # tras arreglar switch_v en V isomorfo y las opciones de cambio en el lado atrapado).
+    enable_voluntary_switch: bool = True
+    max_switch_hybrids: int = 8
     enable_niche_pairs: bool = False
     loss_weight: float = 650.0
     save_weight: float = 0.0
@@ -241,7 +243,7 @@ class ExpectimaxConfig:
     # castigo al entrante, cambio libre tras KO) no entraba en V, así que un cambio
     # voluntario nunca podía ganar. Con w>0, V += w*switch_v. Requiere además
     # enable_voluntary_switch=True y max_switch_hybrids>0. 0 = comportamiento anterior.
-    v_iso_switch_weight: float = 0.0
+    v_iso_switch_weight: float = 0.25
     # Fase 2c: costo de cambiar. switch_cost se resta por cada cambio (tempo perdido);
     # switch_recent_penalty se resta si el que sale acaba de entrar o si el que entra
     # salió hace <= 2 turnos (evita bucles de cambio). 0 = sin costo (anterior).

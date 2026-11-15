@@ -1064,15 +1064,17 @@ class ValidatedBattleMixin:
 
 
 class ValidatedGreedyPlayer(ValidatedBattleMixin, GreedyDamagePlayer):
-    """Greedy-Solo + espejo IAP / sync / OTS. Inferencia de SP apagada por defecto."""
+    """Greedy-Solo + espejo IAP / sync / OTS. Sin inferencia; los 6 stats rivales al reparto
+    más frecuente del prior meta leave-one-out (opción C, spec v1.8)."""
 
-    default_sp_info_mode = 'none'
+    default_sp_info_mode = 'meta'
 
 
 class ValidatedGreedyJointPlayer(ValidatedBattleMixin, GreedyJointPlayer):
-    """Greedy-Joint + espejo IAP / sync / OTS. Inferencia de SP apagada por defecto."""
+    """Greedy-Joint + espejo IAP / sync / OTS. Sin inferencia; los 6 stats rivales al reparto
+    más frecuente del prior meta leave-one-out (opción C, spec v1.8)."""
 
-    default_sp_info_mode = 'none'
+    default_sp_info_mode = 'meta'
 
 
 class ValidatedExpectimaxBayesianPlayer(ValidatedBattleMixin, ExpectimaxBayesianPlayer):

@@ -188,8 +188,9 @@ python -m showdown.inference_sim.run_robust_e2e --teams 100 --seed 10 \
   (OTS + bases, creencias sin estrechar). `--sp-info-b` no admite `--b-raw` ni B `random`.
   El reporte lo registra en la línea `sp_info:`.
 - Sin `--sp-info-*` cada agente usa su predeterminado: **greedy_solo / greedy_joint =
-  `none`** (inferencia apagada desde specs v1.6: mismas decisiones, ~mitad de tiempo);
-  expectimax_bayesian también `none` desde su spec v1.8; el resto = `inference`. Para validar soundness de la inferencia con greedy hay que
+  `meta`** desde specs v1.8 (opción C: sin inferencia, los 6 stats rivales al reparto
+  más frecuente del prior leave-one-out); expectimax_bayesian = `none` (sin inferencia,
+  mundos bayesianos del meta) desde su spec v1.8; el resto = `inference`. Para validar soundness de la inferencia con greedy hay que
   forzar `--sp-info-a inference` (con `none` no hay podas que validar).
 
 ```bash

@@ -123,7 +123,7 @@ def test_oracle_spe_mode_only_resolves_speed(monkeypatch):
 
 
 def test_greedy_agents_default_to_no_inference():
-    """Solo y Joint usan A (inferencia apagada) salvo que se fuerce otro modo."""
+    """Solo y Joint usan C ('meta', sin inferencia) salvo que se fuerce otro modo; expectimax A."""
     from showdown.inference_sim.validated_greedy_player import (
         ValidatedExpectimaxBayesianPlayer,
         ValidatedGreedyJointPlayer,
@@ -132,11 +132,11 @@ def test_greedy_agents_default_to_no_inference():
 
     for cls in (ValidatedGreedyPlayer, ValidatedGreedyJointPlayer):
         p = cls.__new__(cls)
-        assert p.effective_sp_info_mode() == 'none'
+        assert p.effective_sp_info_mode() == 'meta'
         p.sp_info_mode = 'inference'  # forzado (p. ej. --sp-info-a inference)
         assert p.effective_sp_info_mode() == 'inference'
         p.sp_info_mode = None
-        assert p.effective_sp_info_mode() == 'none'
+        assert p.effective_sp_info_mode() == 'meta'
     # Expectimax v1.8: también A por defecto.
     ex = ValidatedExpectimaxBayesianPlayer.__new__(ValidatedExpectimaxBayesianPlayer)
     assert ex.effective_sp_info_mode() == 'none'
@@ -149,12 +149,12 @@ def test_robust_e2e_unset_mode_means_agent_default(monkeypatch):
     monkeypatch.delenv('PS_SP_INFO_B', raising=False)
     monkeypatch.delenv('PS_B_VALIDATED', raising=False)
     assert r.sp_info_mode('A') is None
-    assert r.effective_sp_info_label('A', 'greedy_joint') == 'none(default)'
-    assert r.effective_sp_info_label('A', 'greedy_solo') == 'none(default)'
+    assert r.effective_sp_info_label('A', 'greedy_joint') == 'meta(default)'
+    assert r.effective_sp_info_label('A', 'greedy_solo') == 'meta(default)'
     assert r.effective_sp_info_label('A', 'expectimax_bayesian') == 'none(default)'
     assert r.effective_sp_info_label('A', 'ddqn') == 'inference(default)'
     # B validated por defecto: mismo predeterminado que su agente.
-    assert r.effective_sp_info_label('B', 'greedy_joint') == 'none(default)'
+    assert r.effective_sp_info_label('B', 'greedy_joint') == 'meta(default)'
     assert r.effective_sp_info_label('B', 'random') == 'n/a(sin wrapper)'
     monkeypatch.setenv('PS_B_VALIDATED', '0')  # --b-raw
     assert r.effective_sp_info_label('B', 'greedy_joint') == 'n/a(sin wrapper)'

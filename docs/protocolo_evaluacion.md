@@ -95,6 +95,8 @@ Los agentes entrenados tienen fuentes de variación que los heurísticos no tien
 
 ## 4. Hipótesis pre-registradas (fijadas el 15-11-2026, antes de medir)
 
+**Versiones congeladas (15-11-2026):** greedy_solo y greedy_joint v1.8 (opción C por defecto) y expectimax v1.9 (cambios voluntarios al 25 %, mundos bayesianos, modo `none`).
+
 **Versión congelada de expectimax para la Fase 3:** v1.8 + los cambios que pasen la
 exploración (cambios voluntarios al 25 % y lo que salga de los bloques 1–3). Se congela como
 **v1.9 por defecto** en un commit antes de la confirmación.

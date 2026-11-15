@@ -22,12 +22,13 @@ def test_foe_protect_probability_conditional():
 
 
 def test_iso_switch_weight_default_off_and_overridable(monkeypatch):
-    """Fase 2c: switch_v entra en V isomorfo solo con v_iso_switch_weight > 0."""
+    """Fase 2c: switch_v entra en V isomorfo con v_iso_switch_weight (v1.9: 0,25 por defecto)."""
     from showdown.battle_bots.expectimax_bayesian.expectimax import (
         ExpectimaxConfig, load_expectimax_config,
     )
 
-    assert ExpectimaxConfig().v_iso_switch_weight == 0.0
+    d = ExpectimaxConfig()
+    assert d.v_iso_switch_weight == 0.25 and d.enable_voluntary_switch is True and d.max_switch_hybrids == 8
     monkeypatch.setenv('EXPECTIMAX_OVERRIDES',
                        'enable_voluntary_switch=1;max_switch_hybrids=8;v_iso_switch_weight=1.0')
     cfg = load_expectimax_config()

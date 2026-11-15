@@ -105,6 +105,14 @@ Este resultado es coherente con la estructura actual de expectimax:
 - la búsqueda está anclada a joint: Top-K y una puerta con margen de 40;
 - sus mundos promedian repartos del meta que ya se parecen a la verdad.
 
+## 6. Opción C: los 6 stats del meta como valor puntual
+
+En vez de SP 32 en HP/Atk/Def/SpA/SpD y el prior solo en Spe, se fija el reparto completo
+más frecuente del prior leave-one-out (modo `meta`). Semillas 9101–9117, McNemar contra la
+regla anterior: joint +0,48 pts (p = 0,46), solo +0,76 pts (p = 0,043; 0,086 con Holm),
+expectimax −0,20 pts (p = 0,72) frente a sus mundos bayesianos. **Desde las specs v1.8, Solo y
+Joint usan C por defecto.** Expectimax mantiene sus mundos.
+
 ## Conclusiones
 
 1. **"La información exacta impacta, pero poco": se confirma.** Con los SP verdaderos, la
