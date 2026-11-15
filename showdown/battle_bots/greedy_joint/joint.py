@@ -1721,6 +1721,10 @@ def _strip_mega(atom: JointAtom) -> JointAtom:
     )
 
 
+# Última decisión con tie_margin > 0: (n_candidatos, ¿se eligió un par distinto del argmax?).
+LAST_TIE: Tuple[int, bool] = (1, False)
+
+
 async def best_joint_double_action(
     left_attacker: Optional[CalcPoke],
     right_attacker: Optional[CalcPoke],
@@ -1737,8 +1741,15 @@ async def best_joint_double_action(
     tera_left: Optional[str] = None,
     tera_right: Optional[str] = None,
     field_ctx: Optional[FieldContext] = None,
+    tie_margin: float = 0.0,
 ) -> Tuple[Optional[ScoredAction], Optional[ScoredAction], float]:
-    """1-ply joint argmax over A1 x A2 (moves only; no voluntary switches)."""
+    """1-ply joint argmax over A1 x A2 (moves only; no voluntary switches).
+
+    tie_margin > 0: muestrea al azar entre los pares con puntaje >= mejor − tie_margin
+    (variante estocástica para rivales de entrenamiento; 0 = determinista).
+    """
+    global LAST_TIE
+    LAST_TIE = (1, False)
     ctx = field_ctx or FieldContext(weather=weather, terrain=terrain)
     left_atk = apply_pending_mega(left_attacker) if (left_attacker and can_mega_left) else left_attacker
     right_atk = apply_pending_mega(right_attacker) if (right_attacker and can_mega_right) else right_attacker
@@ -1852,6 +1863,7 @@ async def best_joint_double_action(
 
     best_score = float('-inf')
     best_pair: Optional[Tuple[JointAtom, JointAtom]] = None
+    scored_pairs: List[Tuple[float, Tuple[JointAtom, JointAtom]]] = []
     for a1 in left_atoms:
         for a2 in right_atoms:
             pair_l, pair_r = a1, a2
@@ -1870,11 +1882,23 @@ async def best_joint_double_action(
                 threat_left=threat_left,
                 threat_right=threat_right,
             )
+            if tie_margin > 0:
+                scored_pairs.append((s, (pair_l, pair_r)))
             if s > best_score:
                 best_score = s
                 best_pair = (pair_l, pair_r)
 
     assert best_pair is not None
+    if tie_margin > 0:
+        # Diversidad (opcional): muestreo uniforme entre pares a menos de tie_margin del mejor.
+        from showdown.battle_bots.diversity_log import sample_near_ties
+        picked, n_cands = sample_near_ties(scored_pairs, float(tie_margin))
+        if picked is not None and picked is not best_pair:
+            best_score = next(s for s, p in scored_pairs if p is picked)
+            best_pair = picked
+            LAST_TIE = (n_cands, True)
+        else:
+            LAST_TIE = (n_cands, False)
     bl, br = best_pair
     note_turn_kind(classify_pair(bl, br))
     return _atom_to_scored(bl), _atom_to_scored(br), best_score

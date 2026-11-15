@@ -26,6 +26,11 @@ selección. Medir con semillas nuevas da una estimación de la ventaja sin ese s
   comparten el preview de tipado + BST, así que las diferencias entre ellos son de combate.
 - **Trazabilidad:** commit, comando, semillas y logs por semilla archivados. El reporte de
   `run_robust_e2e` registra `sp_info`, `b_validated` y `preview`.
+- **`inf_ok=NO` con la opción C es esperado.** El chequeo de inferencia del reporte comprueba
+  que la creencia del lado A contenga los SP reales. Con `meta` la creencia es un valor
+  puntual (el reparto más frecuente del prior), que no acierta en ~26 % de los Pokémon, así
+  que el chequeo falla por diseño (p. ej. H2: `fail_bo3_inf=6304`, `NEED_FIX=YES`). No
+  afecta al juego ni a la validez de la corrida.
 
 ## 3. Pruebas estadísticas
 

@@ -12,6 +12,9 @@ está en [`rl_env_spec.md`](rl_env_spec.md). La evaluación final está en
    Fundamento teórico de la representación (obs OTS, acciones v2, máscaras, codificador
    estructurado, simetrías) → [`tesis_representacion_rl.md`](tesis_representacion_rl.md).
 3. **Baselines sin aprendizaje** — Random → Greedy-Solo → Greedy-Joint → Expectimax.
+   Cómo se afirma "A > B" → [`protocolo_evaluacion.md`](protocolo_evaluacion.md); variedad
+   de juego de los baselines como rivales de entrenamiento →
+   [`diversidad_baselines.md`](diversidad_baselines.md).
 4. **Team Preview aprendido** — Masked PPO → Payoff Nash → QD-PGA (solo formación).
 5. **Combate aprendido / planificado** — DDQN, PPO, MCTS, MCTS–Nash, QD-*.
 6. **Conclusión** — 11 pipelines (preview + turnos) en un round-robin fijo.

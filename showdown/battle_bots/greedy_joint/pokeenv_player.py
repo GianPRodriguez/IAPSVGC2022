@@ -41,7 +41,33 @@ from showdown.battle_bots.greedy_solo.team_preview import (
 )
 from showdown.inference_sim.stale_room_guard import StaleRoomGuardMixin
 
+from showdown.battle_bots import diversity_log
+from showdown.battle_bots.greedy_joint import joint as _joint_mod
+
 _MOVES_PATH = Path(__file__).resolve().parents[3] / 'API' / 'JSONs' / 'moves.json'
+
+
+def _joint_tie_margin() -> float:
+    """``PS_JOINT_TIE_MARGIN``: margen de casi-empate para la variante estocástica (0 = off)."""
+    import os
+    try:
+        return max(0.0, float(os.environ.get('PS_JOINT_TIE_MARGIN', '0') or 0.0))
+    except ValueError:
+        return 0.0
+
+
+async def _log_joint_diversity(best_l, best_r, *args, **kwargs) -> None:
+    """Traza de diversidad: ¿joint juega lo mismo que greedy_solo en este estado?"""
+    from showdown.battle_bots.expectimax_bayesian.divergence import pair_sig
+    from showdown.battle_bots.greedy_solo.greedy import best_double_action
+    n_cands, changed = _joint_mod.LAST_TIE
+    try:
+        solo_l, solo_r, _ = await best_double_action(*args, **kwargs)
+        same_solo = pair_sig(best_l, best_r) == pair_sig(solo_l, solo_r)
+    except Exception:
+        same_solo = None
+    diversity_log.write({'agent': 'greedy_joint', 'same_solo': same_solo,
+                         'tie_cands': int(n_cands), 'tie_changed': bool(changed)})
 
 
 @lru_cache(maxsize=1)
@@ -399,8 +425,17 @@ class GreedyJointPlayer(StaleRoomGuardMixin, Player):
             can_tera_left=can_tera_l, can_tera_right=can_tera_r,
             tera_left=tera_l, tera_right=tera_r,
             field_ctx=field_ctx,
+            tie_margin=_joint_tie_margin(),
         )
         self.last_decision_score = total
+        if diversity_log.enabled():
+            await _log_joint_diversity(
+                best_l, best_r, left_calc, right_calc, left_opts, right_opts, foes,
+                weather=weather, terrain=terrain,
+                can_mega_left=can_mega_l, can_mega_right=can_mega_r,
+                can_tera_left=can_tera_l, can_tera_right=can_tera_r,
+                tera_left=tera_l, tera_right=tera_r, field_ctx=field_ctx,
+            )
         try:
             # Leer del módulo (no importar LAST_KIND por valor: se reasigna en note_turn_kind).
             kind = str(getattr(joint_diag, 'LAST_KIND', None) or 'none')

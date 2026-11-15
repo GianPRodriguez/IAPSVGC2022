@@ -233,6 +233,9 @@ class ExpectimaxConfig:
     # Fake Out rival: solo en su primer turno en campo; entonces masa ~p (si puede afectar).
     opp_policy_fakeout_rule: bool = True
     opp_policy_fakeout_first_p: float = 0.7
+    # Diversidad (rivales de entrenamiento): tras la puerta, muestreo uniforme entre los
+    # pares con V >= V(elegido) − margen. 0 = determinista (por defecto).
+    tie_sample_margin: float = 0.0
     # V anclada a offense (EV de daño = chance abstraction C).
     v_solo_isomorphic: bool = True
     # En modo isomorfo V = ofensa + utilidad VGC; con w>0 resta w*amenaza (daño/KO esperado sobre nosotros).
@@ -287,6 +290,8 @@ class ExpectimaxMeta:
     phase1_utility: float = 0.0
     phase2_utility: float = 0.0
     phase2_gated: bool = False  # True si phase2 se rechazó por el gate
+    tie_cands: int = 1  # candidatos del muestreo de casi-empates (tie_sample_margin > 0)
+    tie_changed: bool = False  # el muestreo eligió un par distinto del que se iba a jugar
     phase1_v: float = 0.0  # V bayesiana del par phase1 (mismo espacio que phase2)
     phase2_v: float = 0.0
     # Diagnostic: chosen ≠ greedy_solo factored
@@ -2481,6 +2486,36 @@ async def best_expectimax_bayesian_action(
                 meta.phase = 'phase1+gated'
                 meta.phase2_utility = float(best_mean)
                 meta.used_fallback = True
+            if float(cfg.tie_sample_margin) > 0.0:
+                ref_v = float(best_mean) if accept_p2 else p1_v
+                if ref_v is not None:
+                    from showdown.battle_bots.diversity_log import sample_near_ties
+                    chosen_key = best_key if accept_p2 else None
+                    by_key: Dict[Tuple, Tuple[JointAtom, JointAtom]] = {}
+                    for pl, pr in pairs:
+                        by_key.setdefault(_pair_key(pl, pr), (pl, pr))
+                    scored = [(utilities[k].mean, k) for k in by_key
+                              if k in utilities and utilities[k].samples > 0]
+                    picked, n_c = sample_near_ties(
+                        [(v, k) for v, k in scored if v <= float(ref_v) + 1e-9],
+                        float(cfg.tie_sample_margin),
+                    ) if scored else (None, 0)
+                    meta.tie_cands = int(n_c)
+                    # El argmax de la lista filtrada puede no ser el elegido por la puerta:
+                    # solo se cambia si el muestreo cae en un par distinto del jugado.
+                    if picked is not None and n_c > 1:
+                        pl, pr = by_key[picked]
+                        same_as_played = (picked == chosen_key) if accept_p2 else (
+                            _scored_matches_atom(phase1_l, pl) and _scored_matches_atom(phase1_r, pr))
+                        if not same_as_played:
+                            m = float(utilities[picked].mean)
+                            best_l = _scored_from_atom(pl, m, foes)
+                            best_r = _scored_from_atom(pr, m, foes)
+                            best_u = m
+                            meta.utility = m
+                            meta.used_fallback = False
+                            meta.phase = 'phase2+tie'
+                            meta.tie_changed = True
             if _vterms:
                 _write_vterms(_vterms, pairs, best_key, phase1_l, phase1_r, p1_v, best_mean,
                               bool(accept_p2), cfg)
@@ -2568,5 +2603,17 @@ def _log_divergence(
             joint_u=float(meta.utility),
             solo_u=float(meta.solo_utility),
         )
+    except Exception:
+        pass
+    try:
+        from showdown.battle_bots import diversity_log
+        if diversity_log.enabled():
+            diversity_log.write({
+                'agent': 'expectimax_bayesian',
+                'same_joint': p1 == p2,
+                'same_solo': p2 == pair_sig(solo_l, solo_r),
+                'tie_cands': int(meta.tie_cands),
+                'tie_changed': bool(meta.tie_changed),
+            })
     except Exception:
         pass
