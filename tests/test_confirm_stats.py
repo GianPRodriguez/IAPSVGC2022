@@ -42,3 +42,17 @@ def test_holm():
     out = cs.holm([0.01, 0.04, 0.03])
     assert [round(a, 3) for _, a, _ in out] == [0.03, 0.06, 0.06]
     assert [rej for *_, rej in out] == [True, False, False]
+
+
+def test_team_names_with_pipe(tmp_path):
+    rows = [('WIN', 'T1 at Cup; champions M/C #5 |', '#5th - Other')]
+    s = cs.parse_series([_log(tmp_path, 'X_9201.log', rows)])
+    assert len(s) == 1 and s[0][3] == 1.0
+
+
+def test_truncated_second_team(tmp_path):
+    p = tmp_path / 'X_9201.log'
+    p.write_text('[1/2] LOSS g1:t4L c2=-1 | W=0 L=1 E=0 S=0 sync=OK inf=OK | #2nd - Long Team Name vs\n',
+                 encoding='utf-8')
+    s = cs.parse_series([str(p)])
+    assert len(s) == 1 and s[0][1] == '#2nd - Long Team Name' and s[0][3] == 0.0

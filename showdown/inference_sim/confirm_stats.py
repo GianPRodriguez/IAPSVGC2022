@@ -24,7 +24,7 @@ import re
 from collections import defaultdict
 from typing import Dict, List, Sequence, Tuple
 
-_LINE = re.compile(r'^\[\d+/\d+\]\s+(WIN|LOSS|DRAW)\b.*\|\s*(.+?)\s+vs\s+(.+?)\s*$')
+_LINE = re.compile(r'^\[\d+/\d+\]\s+(WIN|LOSS|DRAW)\b')
 _SEED = re.compile(r'seed=(\d+)')
 
 Series = Tuple[str, str, str, float]  # (semilla, equipo_a, equipo_b, resultado 1/0/0.5)
@@ -44,11 +44,22 @@ def parse_series(paths: Sequence[str]) -> List[Series]:
                     ms = _SEED.search(line)
                     if ms:
                         seed = ms.group(1)
-                mm = _LINE.match(line.rstrip('\n'))
+                line = line.rstrip('\n')
+                mm = _LINE.match(line)
                 if not mm:
                     continue
+                # "[k/n] RES ... | W=.. L=.. ... | equipoA vs equipoB": los nombres pueden
+                # contener '|', así que solo se corta en los dos primeros separadores.
+                parts = line.split(' | ', 2)
+                if len(parts) < 3:
+                    continue
+                # El log trunca la línea: a veces el segundo nombre queda vacío ("... vs").
+                ms = re.search(r'\svs(\s|$)', parts[2])
+                if not ms:
+                    continue
+                team_a, team_b = parts[2][:ms.start()], parts[2][ms.end():]
                 res = {'WIN': 1.0, 'LOSS': 0.0, 'DRAW': 0.5}[mm.group(1)]
-                out.append((seed or '?', mm.group(2).strip(), mm.group(3).strip(), res))
+                out.append((seed or '?', team_a.strip(), team_b.strip(), res))
     return out
 
 
