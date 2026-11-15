@@ -285,6 +285,34 @@ peso 1 se pierde la mejora porque cambia de más. Es la primera mejora de la Fas
 la prueba. **Elegido para los bloques siguientes: 0,25** (empata con 0,5 y cambia menos).
 Debe confirmarse con semillas nuevas en la Fase 3.
 
+### Bloques 1–3: reajuste sobre v1.8 + cambios voluntarios (0,25)
+
+La referencia es v1.8 con cambios voluntarios al 25 %: **2728/5100 = 53,5 %**. Se aplica la
+prueba t pareada por semilla (16 gl; |t| ≥ 2,12 es significativo).
+
+| Bloque | Cambio | Victorias | t | Lectura |
+|---|---|---|---|---|
+| 1 | margen de la puerta 0 | 2655 | −2,43 | peor |
+| 1 | margen 20 | 2719 | −0,60 | igual |
+| 1 | margen 80 | 2679 | −3,74 | peor |
+| 1 | puerta apagada | 2655 | −2,43 | peor (equivale a margen 0) |
+| 1 | `soft_ko_bonus` 150 | 2737 | +0,65 | igual |
+| 1 | `soft_ko_bonus` 400 | 2713 | −1,11 | igual |
+| 1 | tempo 0,5 | 2692 | −3,77 | peor |
+| 1 | tempo 1,5 | 2725 | −0,35 | igual |
+| 2 | tope de 3 s (misma cobertura) | 2728 | 0 | **idéntico en las 17 semillas**: la búsqueda termina antes de 1,6 s |
+| 3 | `switch_cost` 40 | 2717 | −2,18 | levemente peor |
+| 3 | `switch_recent_penalty` 150 | 2720 | −1,93 | igual / levemente peor |
+
+**Conclusiones:**
+- Los valores de C235 (margen 40, `soft_ko_bonus` 250, tempo 1,0) siguen siendo los
+  adecuados después de corregir el preview.
+- Más tiempo de cálculo no cambia ninguna decisión.
+- Encarecer los cambios voluntarios no ayuda, porque no había bucle de cambios.
+
+**Candidata a v1.9:** v1.8 + `enable_voluntary_switch=True`, `max_switch_hybrids=8`,
+`v_iso_switch_weight=0.25`, con todo lo demás sin cambios.
+
 ## Plan
 
 | Fase | Contenido | Estado |
