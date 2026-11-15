@@ -196,7 +196,25 @@ demasiado.
   la hoja sola da 44,6 %.
 - Lo que aporta greedy es **su elección de 4 por tipos + BST** (+5,4 sobre la hoja).
 
-## Plan
+## Fase 2: mejoras de combate (v1.8, semillas 9101–9117, contra joint validado)
+
+Línea base: expectimax v1.8 (preview tipado + BST, modo A) = **2695/5100 = 52,8 %**.
+
+### 2a: amenaza con pesos pequeños (`v_iso_threat_weight`)
+
+| Peso | Victorias | Tasa | Diferencia con la base |
+|---|---|---|---|
+| 0 (base) | 2695/5100 | 52,8 % | — |
+| 0,05 | 2694/5100 | 52,8 % | −1 |
+| 0,1 | 2697/5100 | 52,9 % | +2 |
+| 0,2 | 2675/5100 | 52,5 % | −20 (−0,4) |
+| 0,5 (medido con v1.6) | | | −3,4 |
+| 1,0 (medido con v1.6) | | | −5,0 |
+
+**Calibrar la amenaza no aporta.** Con pesos chicos cambia entre el 12 % y el 17 % de las
+decisiones, pero sin mejora neta. Desde 0,2 empieza a empeorar, y lo hace de forma
+monótona. Se mantiene en **0**.
+
 
 | Fase | Contenido | Estado |
 |---|---|---|
