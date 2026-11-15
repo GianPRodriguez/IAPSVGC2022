@@ -63,6 +63,8 @@ class CalcPoke:
     is_helping_hand: bool = False
     is_charged: bool = False
     is_protected: bool = False
+    # Turnos seguidos usando Protect (poke-env); >0 → repetirlo puede fallar.
+    protect_counter: int = 0
     has_substitute: bool = False
     is_redirecting: bool = False
     allies_fainted: int = 0

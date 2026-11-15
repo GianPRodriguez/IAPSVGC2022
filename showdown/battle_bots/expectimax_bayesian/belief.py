@@ -373,6 +373,7 @@ def profile_to_calc(
         is_helping_hand=base.is_helping_hand,
         is_charged=base.is_charged,
         is_protected=base.is_protected,
+        protect_counter=int(getattr(base, 'protect_counter', 0) or 0),
         has_substitute=base.has_substitute,
         is_redirecting=base.is_redirecting,
         allies_fainted=base.allies_fainted,

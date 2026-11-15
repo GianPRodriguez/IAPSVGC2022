@@ -181,3 +181,4 @@ def test_move_roles_only_count_real_moves():
     assert tp._role_bonus_from_moves(mons, real) == (
         tp.ROLE_BONUS_FAKE_OUT + tp.ROLE_BONUS_TAILWIND + tp.ROLE_DIVERSITY_BONUS
     )
+

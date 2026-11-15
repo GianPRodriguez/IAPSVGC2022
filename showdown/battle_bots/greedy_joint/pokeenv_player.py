@@ -138,6 +138,7 @@ def _poke_to_calc(mon: Pokemon) -> CalcPoke:
         is_terastallized=is_tera,
         is_helping_hand='HELPINGHAND' in effects,
         is_charged='CHARGE' in effects,
+        protect_counter=int(getattr(mon, 'protect_counter', 0) or 0),
         is_protected=bool(effects & {
             'PROTECT', 'DETECT', 'SPIKYSHIELD', 'BANEFULBUNKER', 'KINGSSHIELD',
             'OBSTRUCT', 'SILKTRAP', 'BURNINGBULWARK', 'MAXGUARD',

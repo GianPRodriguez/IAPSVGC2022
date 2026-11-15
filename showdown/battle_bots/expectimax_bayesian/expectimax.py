@@ -213,6 +213,13 @@ class ExpectimaxConfig:
     entry_ability_weight: float = 1.0
     opp_policy_greedy_weight: float = 1.0
     opp_policy_control_weight: float = 0.0
+    # Fase 2b (2026-11-15): Protect condicional del rival en la OFENSA. La ofensa contra
+    # cada rival se multiplica por (1 - p), con p = opp_protect_base si el rival lleva un
+    # movimiento de protección en su team sheet y no lo usó el turno anterior; si nuestro
+    # par le da P(KO) >= opp_protect_ko_threshold, p = opp_protect_threat. 0 = off.
+    opp_protect_base: float = 0.0
+    opp_protect_threat: float = 0.0
+    opp_protect_ko_threshold: float = 0.5
     opp_policy_switch_weight: float = 0.0
     opp_policy_use_real_damage: bool = True
     opp_policy_split_targets: bool = False
@@ -761,6 +768,30 @@ def _atom_ranges_on_foe(
     return None
 
 
+_PROTECT_FAMILY = frozenset({
+    'protect', 'detect', 'spikyshield', 'banefulbunker', 'kingsshield', 'obstruct',
+    'silktrap', 'burningbulwark',
+})
+
+
+def foe_protect_probability(
+    foe: CalcPoke, known_moves: Sequence[str], p_ko: float, cfg: 'ExpectimaxConfig',
+) -> float:
+    """P(el rival usa Protect este turno) para descontar nuestra ofensa (Fase 2b)."""
+    base = float(getattr(cfg, 'opp_protect_base', 0.0) or 0.0)
+    threat = float(getattr(cfg, 'opp_protect_threat', 0.0) or 0.0)
+    if base <= 0.0 and threat <= 0.0:
+        return 0.0
+    if int(getattr(foe, 'protect_counter', 0) or 0) > 0:
+        return 0.0  # acaba de protegerse: repetirlo suele fallar
+    moves = {_norm_move(m) for m in (known_moves or ())}
+    if not (moves & _PROTECT_FAMILY):
+        return 0.0
+    if float(p_ko) >= float(getattr(cfg, 'opp_protect_ko_threshold', 0.5)):
+        return max(base, threat)
+    return base
+
+
 def _our_pair_offense_detail(
     left: JointAtom,
     right: JointAtom,
@@ -768,6 +799,7 @@ def _our_pair_offense_detail(
     hit_map: Dict[Tuple[str, int, int, int], Optional[Tuple[int, int]]],
     *,
     soft_ko_bonus: float,
+    protect_p=None,
 ) -> Tuple[float, float, Dict[int, float], Dict[str, float]]:
     """
     Returns offense, mean_foe_hp_after, p_ko_by_foe_tid, offense_share_by_side.
@@ -802,6 +834,12 @@ def _our_pair_offense_detail(
         pk = combined_p_ko(ranges, cur_hp)
         pct = 100.0 * e_dmg / float(max_hp) if max_hp else 0.0
         part = min(pct, remain) + pk * soft_ko_bonus
+        if protect_p is not None:
+            # Expectativa sobre el Protect del rival: si se protege, este par no le hace nada.
+            p_prot = float(protect_p(tid, foe, pk))
+            if p_prot > 0.0:
+                part *= (1.0 - p_prot)
+                pk *= (1.0 - p_prot)
         score += part
         p_ko_foe[tid] = pk
         foe_remain += remain * (1.0 - pk)
@@ -1847,6 +1885,11 @@ async def best_expectimax_bayesian_action(
             )
 
         reserve_by_slot = {int(r.slot): r for r in reserve_list}
+        # Fase 2b: P(Protect) por rival (None si la opción está apagada).
+        _protect_p = None
+        if float(cfg.opp_protect_base) > 0.0 or float(cfg.opp_protect_threat) > 0.0:
+            _protect_p = lambda tid, foe, pk: foe_protect_probability(
+                foe, known_moves.get(int(tid)) or (), pk, cfg)
         # Diagnóstico Fase 1 (PS_VTERMS_LOG): medias por par de cada término de V.
         _vterms = {} if os.environ.get('PS_VTERMS_LOG') else None
 
@@ -2052,6 +2095,7 @@ async def best_expectimax_bayesian_action(
 
                 offense, foe_hp, p_ko_foe, share = _our_pair_offense_detail(
                     pl, pr, world_foes, hit_map, soft_ko_bonus=cfg.soft_ko_bonus,
+                    protect_p=_protect_p,
                 )
                 threat, p_ko_side, _pct_side = _opp_threat_detail(
                     left_atk, right_atk, pl, pr, opp_hit_map, opp_dists,
