@@ -33,3 +33,15 @@ def test_iso_switch_weight_default_off_and_overridable(monkeypatch):
     cfg = load_expectimax_config()
     assert cfg.enable_voluntary_switch is True and cfg.max_switch_hybrids == 8
     assert cfg.v_iso_switch_weight == 1.0
+
+
+def test_switch_cost_knobs_default_off():
+    """Fase 2c: costo de cambio y penalización anti-rebote, apagados por defecto."""
+    from showdown.battle_bots.expectimax_bayesian.expectimax import ExpectimaxConfig, ReserveOption
+    from showdown.battle_bots.greedy_solo.greedy import CalcPoke
+
+    cfg = ExpectimaxConfig()
+    assert cfg.switch_cost == 0.0 and cfg.switch_recent_penalty == 0.0
+    r = ReserveOption(slot=3, poke=CalcPoke(species='incineroar'))
+    assert r.recently_out is False
+    assert ReserveOption(slot=3, poke=CalcPoke(species='incineroar'), recently_out=True).recently_out

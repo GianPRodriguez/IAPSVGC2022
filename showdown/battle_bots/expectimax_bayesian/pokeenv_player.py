@@ -311,7 +311,12 @@ class ExpectimaxBayesianPlayer(GreedyJointPlayer):
                     str(t.name).capitalize() if hasattr(t, 'name') else str(t)
                     for t in (mon.types or []) if t
                 ) or types_from_species(_species_name(mon))
-                reserves.append(ReserveOption(slot=slot, poke=_poke_to_calc(mon), types=types))
+                recent = getattr(self, '_recent_switch_out', {}).get(
+                    str(getattr(battle, 'battle_tag', '')), {})
+                sp = _species_name(mon)
+                recently_out = sp in recent and int(battle.turn or 0) - int(recent[sp]) <= 2
+                reserves.append(ReserveOption(slot=slot, poke=_poke_to_calc(mon), types=types,
+                                              recently_out=bool(recently_out)))
                 switch_by_slot[slot] = mon
                 slot += 1
 
@@ -349,6 +354,13 @@ class ExpectimaxBayesianPlayer(GreedyJointPlayer):
             if action is not None and getattr(action, 'kind', 'move') == 'switch':
                 target = switch_by_slot.get(int(action.move_slot))
                 _log_voluntary_switch(battle, mon, target)
+                # Memoria anti-rebote: quién salió por cambio voluntario y en qué turno.
+                if not hasattr(self, '_recent_switch_out'):
+                    self._recent_switch_out = {}
+                tag = str(getattr(battle, 'battle_tag', ''))
+                if len(self._recent_switch_out) > 64:
+                    self._recent_switch_out.clear()
+                self._recent_switch_out.setdefault(tag, {})[_species_name(mon)] = int(battle.turn or 0)
                 if target is not None:
                     return SingleBattleOrder(target)
                 switches = []

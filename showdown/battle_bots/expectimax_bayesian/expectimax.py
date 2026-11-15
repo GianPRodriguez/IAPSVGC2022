@@ -242,6 +242,11 @@ class ExpectimaxConfig:
     # voluntario nunca podía ganar. Con w>0, V += w*switch_v. Requiere además
     # enable_voluntary_switch=True y max_switch_hybrids>0. 0 = comportamiento anterior.
     v_iso_switch_weight: float = 0.0
+    # Fase 2c: costo de cambiar. switch_cost se resta por cada cambio (tempo perdido);
+    # switch_recent_penalty se resta si el que sale acaba de entrar o si el que entra
+    # salió hace <= 2 turnos (evita bucles de cambio). 0 = sin costo (anterior).
+    switch_cost: float = 0.0
+    switch_recent_penalty: float = 0.0
     # Idea 2: crédito de tempo = P(KO al rival) * P(actuamos antes) * amenaza que ese rival nos haría.
     # C235: 1.0 (antes 0.0).
     v_tempo_weight: float = 1.0
@@ -300,6 +305,8 @@ class ReserveOption:
     slot: int  # 3 o 4 (IAP) / índice poke-env mapeado
     poke: CalcPoke
     types: Tuple[Optional[str], ...] = ()
+    # Salió por cambio voluntario hace <= 2 turnos (anti-rebote, Fase 2c).
+    recently_out: bool = False
 
 
 def _elapsed_ms(t0: float) -> float:
@@ -2164,6 +2171,13 @@ async def best_expectimax_bayesian_action(
                     res = reserve_by_slot.get(int(atom.move_slot))
                     if res is None:
                         continue
+                    switch_v -= float(cfg.switch_cost)
+                    if float(cfg.switch_recent_penalty):
+                        leaving = left_atk if side_key == 'OL' else right_atk
+                        if bool(getattr(res, 'recently_out', False)) or bool(
+                            getattr(leaving, 'just_switched', False)
+                        ):
+                            switch_v -= float(cfg.switch_recent_penalty)
                     stay_pk = float(p_ko_side.get(side_key, 0.0))
                     active_types = ()
                     if side_key == 'OL' and left_atk is not None:
