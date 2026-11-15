@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.18** |
+| **Version** | **v1.19** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) — **Mega Evolution yes; Terastallization no** |
@@ -641,6 +641,7 @@ con Tera on no es compatible con este benchmark aunque sus dimensiones encajen.
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.19** | 2026-11-14 | **Heuristic foes validated** in live training (`PokeEnvBattleBackend`): greedy_solo / greedy_joint / expectimax_bayesian run with the validated wrapper (IAP mirror, opponent OTS, their default SP mode, leave-one-out meta prior), the same information as in `run_robust_e2e`, so "beating joint" means the same in every thesis experiment. Before, foes were raw poke-env players (opponent stats = raw species bases, HP in %), ~2 pts weaker (validated vs raw joint 52.3%, 5100 BO3). `PS_RL_FOE_VALIDATED=0` restores raw foes; teams given as export strings (no TeamMeta) also fall back to raw. Obs/Reward/Action unchanged; RL results vs heuristics before this change are not comparable. |
 | **v1.18** | 2026-11-14 | **ObsSpec v2** (6332D, §3): full OTS per mon (same encoder as preview), state, history from the protocol, P(brought)/excluded foe mons, move slots aligned with actions (damage, KO possible/guaranteed, priority blocked, redirection, lock), foe move slots, pair matrices, field + last-turn summary. **ActionSpec v2**: 40 ids per slot, mega as a flag on each move×target (16–31), joint 1600. Training mask = inference mask (`valid_orders`). Foe material counts seen mons (unseen = healthy): fixes spurious HP/KO jumps. Own team filtered to the 4 brought. Replays float16 + lazy growth. |
 | **v1.17** | 2026-11-14 | **Team Preview obs v2** (§6.i–k): full Open Team Sheet encoding from the frozen Champions dex snapshot (5676D) replaces 512D species-only obs. Preview checkpoint score = paired `MEAN_WR` on fixed contexts. DDQN: explicit `epsilon=0` is always greedy; `DDQN_REQUIRED`. Training metrics JSONL (`train_metrics.jsonl`) for combat and preview. Combat Obs/Reward/Action unchanged. |
 | **v1.16** | 2026-10-11 | Combat train/infer under **frozen family preview** (`frozen_preview.py`); preview trains persist weights; fallback `/team 1234`. Order: preview → combat. |

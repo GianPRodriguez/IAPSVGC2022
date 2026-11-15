@@ -30,8 +30,15 @@ def _team_export(team: Optional[TeamLike]) -> Optional[str]:
     return to_showdown_export(team)
 
 
-def _default_teams(seed: Optional[int] = None) -> Tuple[str, str]:
-    from showdown.inference_sim.team_factory import active_teams, to_showdown_export
+def _team_meta(team: Optional[TeamLike]):
+    """TeamMeta si el equipo vino como objeto (no export str); None si no se conoce."""
+    if team is None or isinstance(team, str):
+        return None
+    return team if hasattr(team, 'mons') else None
+
+
+def _default_team_metas(seed: Optional[int] = None):
+    from showdown.inference_sim.team_factory import active_teams
 
     pool = list(active_teams())
     if len(pool) < 2:
@@ -40,7 +47,27 @@ def _default_teams(seed: Optional[int] = None) -> Tuple[str, str]:
     i, j = int(rng.integers(0, len(pool))), int(rng.integers(0, len(pool) - 1))
     if j >= i:
         j += 1
-    return to_showdown_export(pool[i]), to_showdown_export(pool[j])
+    return pool[i], pool[j]
+
+
+def _default_teams(seed: Optional[int] = None) -> Tuple[str, str]:
+    from showdown.inference_sim.team_factory import to_showdown_export
+
+    a, b = _default_team_metas(seed)
+    return to_showdown_export(a), to_showdown_export(b)
+
+
+# Rivales heurísticos con wrapper validated (espejo IAP + OTS + prior leave-one-out),
+# igual que en run_robust_e2e: "ganarle a joint" significa lo mismo en toda la tesis.
+VALIDATED_FOES = ('greedy_solo', 'greedy_joint', 'expectimax_bayesian')
+
+
+def foe_validated(kind: str) -> bool:
+    """True si el rival `kind` va validated (PS_RL_FOE_VALIDATED=0 → rival crudo antiguo)."""
+    import os
+    if os.environ.get('PS_RL_FOE_VALIDATED', '1').strip().lower() in ('0', 'false', 'no', 'off'):
+        return False
+    return str(kind or '').strip().lower().replace('-', '_') in VALIDATED_FOES
 
 
 LIVE_OPPONENTS = (
@@ -59,9 +86,32 @@ def _make_foe_player(
     team: str,
     server_configuration,
     log_level: int,
+    foe_meta=None,
+    agent_meta=None,
 ):
-    """Build poke-env opponent Player for RL live training."""
+    """Build poke-env opponent Player for RL live training.
+
+    Con ``foe_meta`` (equipo del rival) y ``agent_meta`` (equipo del agente RL) como
+    TeamMeta, los heurísticos van con wrapper validated: misma información que en
+    run_robust_e2e (OTS del rival, SP según su modo por defecto, prior leave-one-out).
+    Sin TeamMeta (equipos como export str) se usa el rival crudo: stats del rival =
+    bases de especie y HP en % (pierde ~2 pts solo por información).
+    """
     key = str(kind or 'random').strip().lower().replace('-', '_')
+    if foe_validated(key) and foe_meta is not None and agent_meta is not None:
+        from showdown.inference_sim.battle_state_check import StateCheckReport
+        from showdown.inference_sim.validated_greedy_player import validated_player_class
+
+        return validated_player_class(key)(
+            user_team=foe_meta,
+            opp_team=agent_meta,
+            state_report=StateCheckReport(),
+            soundness_report=None,
+            account_configuration=account_configuration,
+            battle_format=battle_format,
+            server_configuration=server_configuration,
+            log_level=log_level,
+        )
     kwargs = dict(
         account_configuration=account_configuration,
         battle_format=battle_format,
@@ -278,13 +328,18 @@ class PokeEnvBattleBackend(BattleBackend):
         from poke_env.environment.env import _EnvPlayer
         from poke_env.ps_client import AccountConfiguration
 
+        our_meta = _team_meta(self._our_team_arg)
+        opp_meta = _team_meta(self._opp_team_arg)
         our = _team_export(self._our_team_arg)
         opp = _team_export(self._opp_team_arg)
         if our is None or opp is None:
-            d0, d1 = _default_teams(seed=seed)
-            our = our or d0
-            opp = opp or d1
+            d0, d1 = _default_team_metas(seed=seed)
+            if our is None:
+                our, our_meta = _team_export(d0), d0
+            if opp is None:
+                opp, opp_meta = _team_export(d1), d1
         self._cached_opp_export = opp
+        foe_kw = dict(foe_meta=opp_meta, agent_meta=our_meta)
 
         self._uid += 1
         stamp = int(time.time()) % 100000
@@ -315,10 +370,11 @@ class PokeEnvBattleBackend(BattleBackend):
                 team=opp,
                 server_configuration=self.server_configuration,
                 log_level=self.log_level,
+                **foe_kw,
             )
         else:
             self._agent.update_team(our)
-            if self._foe is None or force_new_foe:
+            if self._foe is None or force_new_foe or self._foe_needs_rebuild(**foe_kw):
                 self._stop_player(self._foe)
                 self._foe = _make_foe_player(
                     self._opponent,
@@ -327,9 +383,10 @@ class PokeEnvBattleBackend(BattleBackend):
                     team=opp,
                     server_configuration=self.server_configuration,
                     log_level=self.log_level,
+                    **foe_kw,
                 )
             else:
-                self._foe.update_team(opp)
+                self._update_foe_team(opp, **foe_kw)
             # Drain queues
             while not self._agent.battle_queue.empty():
                 try:
@@ -342,6 +399,22 @@ class PokeEnvBattleBackend(BattleBackend):
                 except Exception:
                     break
             self._agent.battle = None
+
+    def _update_foe_team(self, opp: str, *, foe_meta=None, agent_meta=None) -> None:
+        """Nuevo episodio: el rival validated reinicia su espejo con ambos equipos."""
+        from showdown.inference_sim.validated_greedy_player import ValidatedBattleMixin
+
+        if isinstance(self._foe, ValidatedBattleMixin):
+            self._foe.reset_for_next_battle(foe_meta, agent_meta)
+            return
+        self._foe.update_team(opp)
+
+    def _foe_needs_rebuild(self, *, foe_meta=None, agent_meta=None) -> bool:
+        """El tipo de rival (validated / crudo) debe coincidir con los equipos disponibles."""
+        from showdown.inference_sim.validated_greedy_player import ValidatedBattleMixin
+
+        want = foe_validated(self._opponent) and foe_meta is not None and agent_meta is not None
+        return isinstance(self._foe, ValidatedBattleMixin) != want
 
     def _stop_player(self, pl) -> None:
         if pl is None:

@@ -173,6 +173,7 @@ python -m showdown.inference_sim.run_robust_e2e --teams 100 --seed 10 \
   información. `random` siempre va crudo (no calcula daño). `--b-validated` se mantiene
   por compatibilidad y no cambia nada.
 - **Prior meta leave-one-out (desde 2026-11-14, por defecto)**: el prior de SP (`meta_sp_prior`, usado por greedy en Spe y por las creencias) y los mundos de expectimax (`belief.py`) se construyen con `metavgc_regmc_teams.json`, el mismo pool de equipos de la evaluación. El wrapper validated descuenta los sets del equipo rival en cada juego (`apply_prior_leave_one_out`); el agente no recibe información nueva, solo se le quita la del rival. Efecto medido sobre los 1800 sets: Spe exacta 95,3 % → 91,7 % (error medio 1,25 SP), reparto completo 80,1 % → 74,2 %. `PS_PRIOR_LOO=0` restaura el prior completo (solo para reproducir corridas antiguas).
+- **Rivales del entrenamiento RL validados (rl_env_spec v1.19)**: en `PokeEnvBattleBackend`, greedy_solo / greedy_joint / expectimax_bayesian usan el mismo wrapper validated que en `run_robust_e2e` (antes eran jugadores poke-env crudos, ~2 pts más débiles). `PS_RL_FOE_VALIDATED=0` restaura el rival crudo. Resultados RL vs heurísticos previos no son comparables.
 - `--b-raw` (env `PS_B_VALIDATED=0`) reproduce el B antiguo: stats del rival = bases de
   especie crudas como stats finales y HP en %. Ese B pierde ~2 pts solo por información
   (joint validado vs joint crudo: 52,3 %, 5100 BO3, IC 50,9–53,7). **Resultados previos al
