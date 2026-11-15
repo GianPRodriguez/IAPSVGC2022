@@ -6,6 +6,7 @@ Arquitectura C: daño = EV (expected_damage), sin ramificar rolls.
 from __future__ import annotations
 
 import json
+import os
 import time
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
@@ -1695,6 +1696,7 @@ async def best_expectimax_bayesian_action(
     t0 = time.perf_counter()
     known_moves = foe_known_moves or {}
     calc_deadline = t0 + (float(cfg.phase2_end_ms) / 1000.0)
+    _vterms = None  # diagnóstico PS_VTERMS_LOG (se activa al puntuar mundos)
 
     # --- Phase 1: greedy floor (joint por defecto = filtro A) ---
     try:
@@ -1845,6 +1847,8 @@ async def best_expectimax_bayesian_action(
             )
 
         reserve_by_slot = {int(r.slot): r for r in reserve_list}
+        # Diagnóstico Fase 1 (PS_VTERMS_LOG): medias por par de cada término de V.
+        _vterms = {} if os.environ.get('PS_VTERMS_LOG') else None
 
         for world_profiles, p_world in worlds:
             if _elapsed_ms(t0) >= cfg.phase2_end_ms:
@@ -2284,18 +2288,20 @@ async def best_expectimax_bayesian_action(
                     threat_by_tid=threat_by_tid,
                     fakeout_fails_by_tid=fo_fails,
                 )
+                tempo_c = 0.0
                 if bool(cfg.v_solo_isomorphic):
                     # Offense + utilidad VGC (Fake Out deny=amenaza / Knock Off item).
                     v = float(offense) + float(vgc_u) - float(cfg.v_iso_threat_weight) * float(threat)
                     if float(cfg.v_iso_syn_weight):
                         v += float(cfg.v_iso_syn_weight) * float(syn)
-                    if float(cfg.v_tempo_weight):
-                        v += float(cfg.v_tempo_weight) * _tempo_credit(
+                    if float(cfg.v_tempo_weight) or _vterms is not None:
+                        tempo_c = float(_tempo_credit(
                             pl, pr, left_atk, right_atk, world_foes, p_ko_foe, threat_by_tid,
                             trick_room=bool(pos.our_trick_room or pos.opp_trick_room),
                             our_tailwind=bool(pos.our_tailwind), opp_tailwind=bool(pos.opp_tailwind),
                             terrain=terrain or ctx.terrain,
-                        )
+                        ))
+                        v += float(cfg.v_tempo_weight) * tempo_c
                 else:
                     v = (
                         offense
@@ -2310,6 +2316,15 @@ async def best_expectimax_bayesian_action(
                     )
 
                 utilities[_pair_key(pl, pr)].add(v, weight=p_world)
+                if _vterms is not None:
+                    acc = _vterms.setdefault(_pair_key(pl, pr), [0.0] * 6)
+                    w = float(p_world)
+                    acc[0] += w * float(offense)
+                    acc[1] += w * float(vgc_u)
+                    acc[2] += w * float(tempo_c)
+                    acc[3] += w * float(threat)
+                    acc[4] += w * float(syn)
+                    acc[5] += w
 
             meta.pairs_scored = len(utilities)
 
@@ -2397,12 +2412,53 @@ async def best_expectimax_bayesian_action(
                 meta.phase = 'phase1+gated'
                 meta.phase2_utility = float(best_mean)
                 meta.used_fallback = True
+            if _vterms:
+                _write_vterms(_vterms, pairs, best_key, phase1_l, phase1_r, p1_v, best_mean,
+                              bool(accept_p2), cfg)
 
     except Exception as exc:
         meta.errors.append(f'phase2:{exc!r}')
 
     _finalize_decision()
     return best_l, best_r, best_u, meta
+
+
+def _write_vterms(vterms, pairs, best_key, phase1_l, phase1_r, p1_v, best_mean,
+                  accepted: bool, cfg) -> None:
+    """Fase 1: una línea JSON por decisión con las medias de cada término de V por par.
+
+    off = daño esperado + P(KO)·bonus; vgc = Fake Out/Knock Off; tempo = crédito de
+    tempo (sin ponderar); threat = amenaza del rival sobre nosotros (sin ponderar;
+    hoy peso 0); syn = sinergias. Archivo: $PS_VTERMS_LOG.<pid> (append).
+    """
+    try:
+        rows = []
+        for pl, pr in pairs:
+            key = _pair_key(pl, pr)
+            acc = vterms.get(key)
+            if not acc or acc[5] <= 0:
+                continue
+            w = acc[5]
+            rows.append({
+                'off': round(acc[0] / w, 2), 'vgc': round(acc[1] / w, 2),
+                'tempo': round(acc[2] / w, 2), 'threat': round(acc[3] / w, 2),
+                'syn': round(acc[4] / w, 2),
+                'p1': bool(_scored_matches_atom(phase1_l, pl) and _scored_matches_atom(phase1_r, pr)),
+                'best': key == best_key,
+                'kinds': [str(pl.utility), str(pr.utility)],
+            })
+        rec = {
+            'pairs': rows, 'accepted': accepted,
+            'p1_v': None if p1_v is None else round(float(p1_v), 2),
+            'best_v': round(float(best_mean), 2),
+            'w_tempo': float(cfg.v_tempo_weight), 'w_threat': float(cfg.v_iso_threat_weight),
+            'margin': float(cfg.phase2_gate_margin),
+        }
+        path = f"{os.environ['PS_VTERMS_LOG']}.{os.getpid()}"
+        with open(path, 'a', encoding='utf-8') as fh:
+            fh.write(json.dumps(rec) + '\n')
+    except Exception:
+        pass
 
 
 def _log_divergence(
