@@ -48,7 +48,7 @@ def test_inference_mode_is_production_noop():
 def test_unknown_mode_is_rejected():
     with pytest.raises(ValueError):
         apply_sp_info_mode(_iap(si.TeamStatBeliefs()), 'perfect', lambda: None)
-    assert set(SP_INFO_MODES) == {'inference', 'oracle', 'oracle_spe', 'none'}
+    assert set(SP_INFO_MODES) == {'inference', 'oracle', 'oracle_spe', 'none', 'spe_min', 'spe_max'}
 
 
 def test_none_mode_never_narrows_speed():
@@ -172,3 +172,17 @@ def test_b_validated_by_default_and_b_raw_opt_out(monkeypatch):
     assert r.b_validated('expectimax_bayesian') is True
     monkeypatch.setenv('PS_B_VALIDATED', '0')  # --b-raw
     assert r.b_validated('greedy_joint') is False
+
+
+@pytest.mark.parametrize('mode,expected', [('spe_min', 0), ('spe_max', 32)])
+def test_spe_extreme_modes_fix_speed_only(mode, expected):
+    """spe_min/spe_max: Spe rival fija en el extremo (también tras mega), resto como A."""
+    si.reset_sp_limits()
+    beliefs = si.TeamStatBeliefs()
+    pre = beliefs.belief_for(_salamence())  # creada antes del modo (como bootstrap)
+    apply_sp_info_mode(_iap(beliefs), mode, lambda: None)
+    assert beliefs.inference_off is True
+    assert pre.candidates['spe'] == {expected}
+    assert all(len(pre.candidates[s]) == 33 for s in si.STAT_KEYS if s != 'spe')
+    mega = Pokemon('salamence-mega', -1, True, 'salamencite', 'aerilate', None, None, None, None, 'jolly')
+    assert beliefs.belief_for(mega).candidates['spe'] == {expected}

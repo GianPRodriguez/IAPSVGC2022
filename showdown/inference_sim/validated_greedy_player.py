@@ -93,7 +93,7 @@ def _calibration_set_truth(opp_team) -> None:
             pass
 
 
-SP_INFO_MODES = ('inference', 'oracle', 'oracle_spe', 'none')
+SP_INFO_MODES = ('inference', 'oracle', 'oracle_spe', 'none', 'spe_min', 'spe_max')
 
 
 def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
@@ -105,6 +105,8 @@ def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
     - ``none``: OTS + bases; las creencias nunca se estrechan (todo el rango de SP).
       Predeterminado de greedy_solo / greedy_joint (``default_sp_info_mode``): en
       partida la inferencia no estrecha nada y cuesta ~2x tiempo (ver specs v1.6).
+    - ``spe_min`` / ``spe_max``: como ``none`` pero la Spe de todos los rivales fija
+      en SP 0 / SP máx (diagnóstico: ¿importa la Spe rival a la decisión?).
 
     ``opp_team_fn`` devuelve el TeamMeta rival vigente (cambia entre series).
     """
@@ -116,6 +118,14 @@ def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
         return
     if mode == 'none':
         beliefs.inference_off = True
+    elif mode in ('spe_min', 'spe_max'):
+        from showdown.stat_inference import SP_MIN, _apply_oracle, sp_limits
+
+        beliefs.inference_off = True
+        fixed = {'spe': int(SP_MIN if mode == 'spe_min' else sp_limits()[0])}
+        beliefs.oracle_lookup = lambda _species: dict(fixed)
+        for belief in list(beliefs.beliefs.values()):
+            _apply_oracle(belief, beliefs.oracle_lookup)
     else:
         # Oráculo: la inferencia sigue activa como respaldo si una especie no se
         # encuentra en la verdad; sobre un SP ya resuelto no cambia nada (narrow

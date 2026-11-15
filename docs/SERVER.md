@@ -180,7 +180,8 @@ python -m showdown.inference_sim.run_robust_e2e --teams 100 --seed 10 \
   `b_validated=YES/NO`.
 - Valor de la información de SP (diagnóstico): `--sp-info-a` / `--sp-info-b`
   con `inference` (producción), `oracle` (SP verdaderos del rival), `oracle_spe`
-  (solo la Spe verdadera) o `none`
+  (solo la Spe verdadera), `none`, o `spe_min` / `spe_max` (como `none` pero Spe rival
+  fija en SP 0 / SP 32: ¿importa la Spe rival?)
   (OTS + bases, creencias sin estrechar). `--sp-info-b` no admite `--b-raw` ni B `random`.
   El reporte lo registra en la línea `sp_info:`.
 - Sin `--sp-info-*` cada agente usa su predeterminado: **greedy_solo / greedy_joint =
