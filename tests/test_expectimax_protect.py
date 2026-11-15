@@ -45,3 +45,20 @@ def test_switch_cost_knobs_default_off():
     r = ReserveOption(slot=3, poke=CalcPoke(species='incineroar'))
     assert r.recently_out is False
     assert ReserveOption(slot=3, poke=CalcPoke(species='incineroar'), recently_out=True).recently_out
+
+
+def test_switch_sides_respect_trapping():
+    """Fase 2c: un lado atrapado (o quizá atrapado) no recibe opciones de cambio voluntario."""
+    from types import SimpleNamespace
+    from showdown.battle_bots.expectimax_bayesian.pokeenv_player import _switch_sides
+
+    a, b = object(), object()
+    free = SimpleNamespace(available_switches=[[a, b], [a, b]], trapped=[False, False],
+                           maybe_trapped=[False, False])
+    assert _switch_sides(free) == (True, True)
+    left_trapped = SimpleNamespace(available_switches=[[], [a, b]], trapped=[True, False],
+                                   maybe_trapped=[False, False])
+    assert _switch_sides(left_trapped) == (False, True)
+    maybe = SimpleNamespace(available_switches=[[a, b], [a, b]], trapped=[False, False],
+                            maybe_trapped=[False, True])
+    assert _switch_sides(maybe) == (True, False)

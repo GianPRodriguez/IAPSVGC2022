@@ -1729,6 +1729,7 @@ async def best_expectimax_bayesian_action(
     foe_known_moves: Optional[Dict[int, Sequence[str]]] = None,
     reserves: Optional[Sequence[ReserveOption]] = None,
     ots_sheet: Optional[Dict[str, object]] = None,
+    switch_sides: Tuple[bool, bool] = (True, True),
 ) -> Tuple[Optional[ScoredAction], Optional[ScoredAction], float, ExpectimaxMeta]:
     """Anytime Bayesian expectimax 1-ply; nunca falla sin acción (fallback joint).
 
@@ -1847,9 +1848,10 @@ async def best_expectimax_bayesian_action(
         if cfg.enable_voluntary_switch and reserve_list:
             for res in reserve_list[:4]:
                 sw = _switch_atom(res.slot)
-                if left_attacker is not None:
+                # Solo el lado que puede cambiar (no atrapado; ver switch_sides).
+                if left_attacker is not None and switch_sides[0]:
                     switch_left.append(sw)
-                if right_attacker is not None:
+                if right_attacker is not None and switch_sides[1]:
                     switch_right.append(sw)
 
         left_atk = apply_pending_mega(left_attacker) if (left_attacker and can_mega_left) else left_attacker

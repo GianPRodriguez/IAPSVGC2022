@@ -90,6 +90,23 @@ def _pe_known_moves(mon: Pokemon) -> Tuple[str, ...]:
     return tuple(out)
 
 
+def _switch_sides(battle) -> Tuple[bool, bool]:
+    """Qué lado puede cambiar voluntariamente: con cambios disponibles y sin atrapamiento.
+
+    poke-env vacía available_switches[i] solo si el lado está atrapado de forma conocida;
+    con maybe_trapped (p. ej. Shadow Tag sin revelar) los lista igual y Showdown rechaza
+    el cambio. La lista de reservas se arma con ambos lados, así que sin esto el lado
+    atrapado recibía opciones de cambio → bucle de órdenes inválidas (Fase 2c).
+    """
+    out = []
+    for i in range(2):
+        avail = battle.available_switches[i] if i < len(battle.available_switches) else []
+        trapped = bool((getattr(battle, 'trapped', None) or [False, False])[i])
+        maybe = bool((getattr(battle, 'maybe_trapped', None) or [False, False])[i])
+        out.append(bool(avail) and not trapped and not maybe)
+    return out[0], out[1]
+
+
 def _log_voluntary_switch(battle, out_mon, in_mon) -> None:
     """Diagnóstico Fase 2c (PS_SWITCH_LOG): una línea por cambio voluntario elegido."""
     import json as _json
@@ -337,6 +354,7 @@ class ExpectimaxBayesianPlayer(GreedyJointPlayer):
             foe_known_moves=foe_known,
             reserves=reserves,
             ots_sheet=getattr(self, 'opp_ots_sheet', None) or {},
+            switch_sides=_switch_sides(battle),
         )
         self.last_decision_score = total
         self.last_expectimax_meta = emeta
@@ -353,6 +371,11 @@ class ExpectimaxBayesianPlayer(GreedyJointPlayer):
                 return PassBattleOrder()
             if action is not None and getattr(action, 'kind', 'move') == 'switch':
                 target = switch_by_slot.get(int(action.move_slot))
+                idx_side = 0 if mon is left_mon else 1
+                side_avail = (battle.available_switches[idx_side]
+                              if idx_side < len(battle.available_switches) else [])
+                if target is not None and target not in side_avail:
+                    target = None  # ese lado no puede cambiar a ese Pokémon
                 _log_voluntary_switch(battle, mon, target)
                 # Memoria anti-rebote: quién salió por cambio voluntario y en qué turno.
                 if not hasattr(self, '_recent_switch_out'):
