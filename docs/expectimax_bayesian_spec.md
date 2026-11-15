@@ -347,7 +347,7 @@ canónico: `expectimax_bayesian`, con combat y preview homónimos, grupo
 | Suite offline WR | **Obligatorio**; 200 BO1 |
 | Curriculum PPO | Fase opcional / peso bajo en \(\Omega\) |
 | BC | Replays internos preferidos (junto a Joint) |
-| Robust E2E | `--player-a expectimax_bayesian` (validated) |
+| Robust E2E | `--player-a expectimax_bayesian` (validated); el rival B también va validated por defecto (2026-11-14). Toda comparación de expectimax se hace contra B validado; `--b-raw` solo para reproducir corridas antiguas |
 | Tune | `python -m showdown.inference_sim.run_expectimax_tune` |
 | Snapshot config | `config_history` + logs E2E |
 
@@ -357,6 +357,7 @@ Checklist de reproducibilidad:
 2. Dump de `ExpectimaxConfig` efectiva (+ overrides).
 3. \(N\), BO1/BO3, seeds/teams.
 4. No usar \(V\) en \(R_t\).
+5. B validado (predeterminado; línea `b_validated=YES` del reporte). Resultados previos con B crudo favorecen a A ~2 pts: p. ej. expectimax base 50,3 % vs joint crudo pero 47,7 % vs joint validado.
 
 ---
 

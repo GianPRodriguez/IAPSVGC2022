@@ -151,6 +151,24 @@ def test_robust_e2e_unset_mode_means_agent_default(monkeypatch):
     assert r.effective_sp_info_label('A', 'greedy_joint') == 'none(default)'
     assert r.effective_sp_info_label('A', 'greedy_solo') == 'none(default)'
     assert r.effective_sp_info_label('A', 'expectimax_bayesian') == 'inference(default)'
+    # B validated por defecto: mismo predeterminado que su agente.
+    assert r.effective_sp_info_label('B', 'greedy_joint') == 'none(default)'
+    assert r.effective_sp_info_label('B', 'random') == 'n/a(sin wrapper)'
+    monkeypatch.setenv('PS_B_VALIDATED', '0')  # --b-raw
     assert r.effective_sp_info_label('B', 'greedy_joint') == 'n/a(sin wrapper)'
+    monkeypatch.delenv('PS_B_VALIDATED')
     monkeypatch.setenv('PS_SP_INFO_A', 'inference')
     assert r.effective_sp_info_label('A', 'greedy_joint') == 'inference'
+
+
+def test_b_validated_by_default_and_b_raw_opt_out(monkeypatch):
+    from showdown.inference_sim import run_robust_e2e as r
+
+    monkeypatch.delenv('PS_B_VALIDATED', raising=False)
+    for kind in ('greedy_solo', 'greedy_joint', 'expectimax_bayesian', 'ddqn', None):
+        assert r.b_validated(kind) is True
+    assert r.b_validated('random') is False  # random no tiene versión validated
+    monkeypatch.setenv('PS_B_VALIDATED', '1')  # --b-validated (compatibilidad)
+    assert r.b_validated('expectimax_bayesian') is True
+    monkeypatch.setenv('PS_B_VALIDATED', '0')  # --b-raw
+    assert r.b_validated('greedy_joint') is False

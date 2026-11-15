@@ -168,13 +168,20 @@ python -m showdown.inference_sim.run_robust_e2e --teams 100 --seed 10 \
   un proceso.
 - Tuning de expectimax: `run_expectimax_tune ... --procs 24 --workers 1`.
 - Barrido MCTS: `run_mcts_sims_sweep ... --procs 24`.
-- B por defecto **no** lleva wrapper validated: no infiere SP y calcula daño con
-  las stats que poke-env le da al rival (bases de especie crudas, HP en %). Con
-  `--b-validated` B usa el mismo espejo IAP + inferencia que A (comparaciones simétricas).
+- **B validado por defecto (desde 2026-11-14)**: B usa el mismo wrapper que A (espejo
+  IAP, OTS del rival, manejo de SP según su agente), así que ambos lados tienen la misma
+  información. `random` siempre va crudo (no calcula daño). `--b-validated` se mantiene
+  por compatibilidad y no cambia nada.
+- `--b-raw` (env `PS_B_VALIDATED=0`) reproduce el B antiguo: stats del rival = bases de
+  especie crudas como stats finales y HP en %. Ese B pierde ~2 pts solo por información
+  (joint validado vs joint crudo: 52,3 %, 5100 BO3, IC 50,9–53,7). **Resultados previos al
+  cambio con B crudo no son comparables** con los nuevos: favorecían a A (p. ej. expectimax
+  base 50,3 % vs joint crudo, 47,7 % vs joint validado). El reporte lo registra en
+  `b_validated=YES/NO`.
 - Valor de la información de SP (diagnóstico): `--sp-info-a` / `--sp-info-b`
   con `inference` (producción), `oracle` (SP verdaderos del rival), `oracle_spe`
   (solo la Spe verdadera) o `none`
-  (OTS + bases, creencias sin estrechar). `--sp-info-b` exige `--b-validated`.
+  (OTS + bases, creencias sin estrechar). `--sp-info-b` no admite `--b-raw` ni B `random`.
   El reporte lo registra en la línea `sp_info:`.
 - Sin `--sp-info-*` cada agente usa su predeterminado: **greedy_solo / greedy_joint =
   `none`** (inferencia apagada desde specs v1.6: mismas decisiones, ~mitad de tiempo);
@@ -183,7 +190,7 @@ python -m showdown.inference_sim.run_robust_e2e --teams 100 --seed 10 \
 
 ```bash
 python -m showdown.inference_sim.run_robust_e2e --teams 300 --procs 28 --seed 8001 --start-ps \
-  --player-a greedy_joint --player-b greedy_joint --b-validated \
+  --player-a greedy_joint --player-b greedy_joint \
   --sp-info-a oracle --sp-info-b inference
 ```
 

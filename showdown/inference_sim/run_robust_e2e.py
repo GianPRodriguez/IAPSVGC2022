@@ -77,6 +77,7 @@ from showdown.inference_sim.validated_greedy_player import (
     PLAYER_A_CHOICES,
     PLAYER_B_CHOICES,
     SP_INFO_MODES,
+    ValidatedBattleMixin,
     make_opponent_player,
     validated_player_class,
 )
@@ -595,7 +596,7 @@ def _build_report(
         f'skip_sync: {"YES" if skip_sync else "NO"}',
         f'sp_info: A={effective_sp_info_label("A", player_a)} '
         f'B={effective_sp_info_label("B", player_b)} '
-        f'b_validated={"YES" if b_validated() else "NO"}',
+        f'b_validated={"YES" if b_validated(player_b) else "NO"}',
         f'elapsed_s: {elapsed_s:.1f}',
         f'bo3_per_s: {bps:.3f}',
         '',
@@ -800,7 +801,7 @@ def effective_sp_info_label(side: str, kind: str) -> str:
     forced = sp_info_mode(side)
     if forced:
         return forced
-    if side == 'B' and not b_validated():
+    if side == 'B' and not b_validated(kind):
         return 'n/a(sin wrapper)'
     try:
         default = getattr(validated_player_class(kind), 'default_sp_info_mode', 'inference')
@@ -819,14 +820,23 @@ def sp_info_mode(side: str) -> Optional[str]:
     return mode
 
 
-def b_validated() -> bool:
-    """B con wrapper validated (PS_B_VALIDATED=1). Sin él, B no tiene inferencia de SP:
-    usa las stats que poke-env le da al rival (bases de especie crudas, HP en %)."""
-    return os.environ.get('PS_B_VALIDATED', '') == '1'
+def b_validated(kind: Optional[str] = None) -> bool:
+    """B con wrapper validated (por defecto desde 2026-11-14): misma información que A.
+
+    ``--b-raw`` / ``PS_B_VALIDATED=0`` → B crudo: usa las stats que poke-env le da al
+    rival (bases de especie como stats finales, HP en %), lo que le cuesta ~2 pts
+    (joint validado vs joint crudo 52,3 %, 5100 BO3). ``random`` siempre va crudo
+    (no calcula daño y no tiene versión validated).
+    """
+    if os.environ.get('PS_B_VALIDATED', '').strip() == '0':
+        return False
+    if kind is not None and str(kind).strip().lower().replace('-', '_') == 'random':
+        return False
+    return True
 
 
 def _reset_player_b(player_b_pl, tb: TeamMeta, ta: TeamMeta) -> None:
-    if hasattr(player_b_pl, 'reset_for_next_battle') and b_validated():
+    if isinstance(player_b_pl, ValidatedBattleMixin):
         player_b_pl.reset_for_next_battle(tb, ta)
     else:
         player_b_pl.update_team(to_showdown_export(tb))
@@ -1242,7 +1252,7 @@ async def run_batch(
         b_account = AccountConfiguration(
             f'{b_nick}{stamp % 10000}w{worker_id + worker_offset}'[:18], None
         )
-        if b_validated():
+        if b_validated(player_b):
             # B con el mismo wrapper que A (espejo IAP + creencias de SP propias).
             # Su contraste de estado va a un reporte aparte: el reporte mide a A.
             player_b_pl = validated_player_class(player_b)(
@@ -1910,13 +1920,18 @@ def main(argv: Optional[List[str]] = None) -> int:
     )
     parser.add_argument(
         '--sp-info-b', choices=list(SP_INFO_MODES), default=None,
-        help='Igual que --sp-info-a para B (requiere --b-validated). Env: PS_SP_INFO_B',
+        help='Igual que --sp-info-a para B (no admite --b-raw ni B random). Env: PS_SP_INFO_B',
     )
-    parser.add_argument(
+    b_mode = parser.add_mutually_exclusive_group()
+    b_mode.add_argument(
         '--b-validated', action='store_true',
+        help='(Predeterminado; se mantiene por compatibilidad) B con wrapper validated.',
+    )
+    b_mode.add_argument(
+        '--b-raw', action='store_true',
         help=(
-            'B también con wrapper validated (espejo IAP + inferencia de SP). Sin esto B '
-            'no infiere SP y usa bases crudas. Env: PS_B_VALIDATED=1'
+            'B sin wrapper validated: stats del rival = bases de especie crudas y HP en %%; '
+            'solo para reproducir corridas antiguas (favorece a A ~2 pts). Env: PS_B_VALIDATED=0'
         ),
     )
     parser.add_argument('--shard', default=None, help=argparse.SUPPRESS)
@@ -1928,12 +1943,14 @@ def main(argv: Optional[List[str]] = None) -> int:
         os.environ['PS_SP_INFO_A'] = args.sp_info_a
     if args.sp_info_b:
         os.environ['PS_SP_INFO_B'] = args.sp_info_b
-    if args.b_validated:
+    if args.b_raw:
+        os.environ['PS_B_VALIDATED'] = '0'
+    elif args.b_validated:
         os.environ['PS_B_VALIDATED'] = '1'
     sp_info_mode('A')
     sp_info_mode('B')
-    if sp_info_mode('B') is not None and not b_validated():
-        parser.error('--sp-info-b requiere --b-validated (B sin wrapper no tiene creencias de SP)')
+    if sp_info_mode('B') is not None and not b_validated(args.player_b):
+        parser.error('--sp-info-b requiere B validated (no con --b-raw ni B random)')
 
     if args.export_only:
         out = export_teams()
