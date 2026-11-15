@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Greedy-Solo** |
-| **Versión** | **1.5** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.2) |
+| **Versión** | **1.6** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.2) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/greedy_solo/`** |
 | **Algoritmo** | Greedy factored: \(\arg\max_{a_i} s_i\) por activo + calc de daño |
 | **Rol** | Primer escalón “inteligente” de la escalera; curriculum early RL |
@@ -203,10 +203,13 @@ Lado sin acción jugable (sin moves o sin acción puntuada): cambio forzado de f
 
 | Situación | Stats usadas |
 |-----------|--------------|
-| Belief estrecho / resuelto | Point-estimate |
-| Bulk (HP/Def/SpD) abierto | Extremo **alto** (rival más duro) |
-| Ofensa (Atk/SpA/Spe) abierta | Extremo **alto** (más amenaza) |
+| Belief estrecho / resuelto | Point-estimate (prior meta / mediana) |
+| Bulk (HP/Def/SpD) abierto | Extremo **alto**: SP 32 (rival más duro) |
+| Ofensa (Atk/SpA) abierta | Extremo **alto**: SP 32 (más amenaza) |
+| Spe abierta | Point-estimate del prior meta (`_SPE_OPEN_POINT_ESTIMATE`) |
 | Sin belief | Stats del estado Battle / defaults |
+
+**Modo de información de SP (v1.6): por defecto `none` ("A", inferencia apagada).** El wrapper validated (`ValidatedGreedyPlayer` / `ValidatedGreedyJointPlayer`, `default_sp_info_mode = 'none'`) crea las creencias desde el OTS pero no las estrecha: todos los stats quedan con el rango 0–32, así que HP/Atk/Def/SpA/SpD van a SP 32 y Spe al prior meta. Motivo (medido 2026-11-14, servidor, semillas pareadas): con la inferencia encendida ("B") se estrecharon 0/10140 stats en 2813 observaciones; joint A vs B dio juegos idénticos (452/900 en ambos, mismas victorias por semilla) y B cuesta ~2x tiempo (55–64 s vs 31–35 s por semilla de 300 BO3). Ni el oráculo de SP mejora significativamente (joint 50,3 %, solo 50,9 %, 5100 BO3). B sigue disponible: `sp_info_mode='inference'` o `run_robust_e2e --sp-info-a inference` (necesario para validar soundness de la inferencia con greedy). Advertencia: el prior meta se construye con los mismos 300 equipos del pool de evaluación (filtración: acierta la Spe verdadera en 95,3 %); pendiente prior leave-one-out.
 
 ---
 
@@ -287,6 +290,7 @@ Combina **preview Greedy-Solo + combate Greedy-Solo**. Id canónico:
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.6** | 2026-11-14 | **Inferencia de SP apagada por defecto** (`default_sp_info_mode='none'`, modo A): misma decisión que con inferencia (0 estrechamientos en partida, juegos idénticos) a ~mitad de costo. Tabla §5.4 corregida (Spe abierta = prior meta, no max). `run_robust_e2e` sin `--sp-info-*` usa el predeterminado del agente; reporte `sp_info: A=none(default)`. Tests `test_greedy_agents_default_to_no_inference`, `test_robust_e2e_unset_mode_means_agent_default`. |
 | **1.5** | 2026-11-14 | Fallback sin acción jugable extraído a `no_action_fallback_order` (compartido con Joint v1.5): ya no envía dos switches al mismo banco si ambos lados caen en el caso (Showdown rechazaba la orden). Sin otro cambio de política. Test `test_no_action_fallback_shared_by_solo_and_joint`. |
 | **1.4** | 2026-10-11 | Estructura dual-audience, tablas de propósito/influencia, entrenamiento y Conclusión. Semántica intacta. |
 | **1.3** | 2026-10-11 | Redacción dual (glosario preview/combate, refs). Semántica intacta. |
@@ -296,4 +300,4 @@ Combina **preview Greedy-Solo + combate Greedy-Solo**. Id canónico:
 
 ---
 
-*Fin del contrato Greedy-Solo v1.5.*
+*Fin del contrato Greedy-Solo v1.6.*

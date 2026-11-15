@@ -103,6 +103,8 @@ def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
     - ``oracle``: SP verdaderos del rival desde el inicio (inferencia perfecta).
     - ``oracle_spe``: solo el SP de Velocidad verdadero; el resto como en producción.
     - ``none``: OTS + bases; las creencias nunca se estrechan (todo el rango de SP).
+      Predeterminado de greedy_solo / greedy_joint (``default_sp_info_mode``): en
+      partida la inferencia no estrecha nada y cuesta ~2x tiempo (ver specs v1.6).
 
     ``opp_team_fn`` devuelve el TeamMeta rival vigente (cambia entre series).
     """
@@ -142,6 +144,14 @@ class ValidatedBattleMixin:
     Feed del protocolo a Battle IAP + contraste con poke-env.
     Opcionalmente valida soundness de Stat Points vs OTS (ground truth).
     """
+
+    # Modo de información de SP si nadie fija ``sp_info_mode`` (None = usar este).
+    default_sp_info_mode = 'inference'
+    sp_info_mode = None
+
+    def effective_sp_info_mode(self) -> str:
+        mode = getattr(self, 'sp_info_mode', None) or self.default_sp_info_mode
+        return str(mode).strip().lower()
 
     def __init__(
         self,
@@ -225,7 +235,7 @@ class ValidatedBattleMixin:
         resolved = sum(1 for n in sizes if n == 1)
         narrowed = sum(1 for b in beliefs.values() for s in b.candidates if len(b.candidates[s]) < 33)
         print(
-            f'[SP-INFO] {self.username} mode={getattr(self, "sp_info_mode", "inference")} '
+            f'[SP-INFO] {self.username} mode={self.effective_sp_info_mode()} '
             f'turn={getattr(iap_battle, "turn", "?")} mons={len(beliefs)} '
             f'stats_resueltos={resolved}/{len(sizes)} estrechados={narrowed} '
             f'cands_medio={sum(sizes) / len(sizes):.1f} '
@@ -702,7 +712,7 @@ class ValidatedBattleMixin:
         ordered = self._preview_ordered_team()
         self.iap_battle = bootstrap_battle(ordered, self.opp_team)
         import os as _os
-        mode = str(getattr(self, 'sp_info_mode', 'inference') or 'inference').lower()
+        mode = self.effective_sp_info_mode()
         if _os.environ.get('PS_ORACLE_SP_EXPECTIMAX') == '1' and hasattr(self, 'set_opp_ots_sheet'):
             mode = 'oracle'  # Diagnóstico: SP verdaderos SOLO para el jugador expectimax.
         apply_sp_info_mode(self.iap_battle, mode, lambda: self.opp_team)
@@ -882,11 +892,15 @@ class ValidatedBattleMixin:
 
 
 class ValidatedGreedyPlayer(ValidatedBattleMixin, GreedyDamagePlayer):
-    """Greedy-Solo + espejo IAP / sync / OTS."""
+    """Greedy-Solo + espejo IAP / sync / OTS. Inferencia de SP apagada por defecto."""
+
+    default_sp_info_mode = 'none'
 
 
 class ValidatedGreedyJointPlayer(ValidatedBattleMixin, GreedyJointPlayer):
-    """Greedy-Joint + espejo IAP / sync / OTS."""
+    """Greedy-Joint + espejo IAP / sync / OTS. Inferencia de SP apagada por defecto."""
+
+    default_sp_info_mode = 'none'
 
 
 class ValidatedExpectimaxBayesianPlayer(ValidatedBattleMixin, ExpectimaxBayesianPlayer):

@@ -120,3 +120,37 @@ def test_oracle_spe_mode_only_resolves_speed(monkeypatch):
     belief = beliefs.belief_for(_salamence())
     assert belief.candidates['spe'] == {TRUE_SP['spe']}
     assert all(len(belief.candidates[s]) > 1 for s in si.STAT_KEYS if s != 'spe')
+
+
+def test_greedy_agents_default_to_no_inference():
+    """Solo y Joint usan A (inferencia apagada) salvo que se fuerce otro modo."""
+    from showdown.inference_sim.validated_greedy_player import (
+        ValidatedExpectimaxBayesianPlayer,
+        ValidatedGreedyJointPlayer,
+        ValidatedGreedyPlayer,
+    )
+
+    for cls in (ValidatedGreedyPlayer, ValidatedGreedyJointPlayer):
+        p = cls.__new__(cls)
+        assert p.effective_sp_info_mode() == 'none'
+        p.sp_info_mode = 'inference'  # forzado (p. ej. --sp-info-a inference)
+        assert p.effective_sp_info_mode() == 'inference'
+        p.sp_info_mode = None
+        assert p.effective_sp_info_mode() == 'none'
+    ex = ValidatedExpectimaxBayesianPlayer.__new__(ValidatedExpectimaxBayesianPlayer)
+    assert ex.effective_sp_info_mode() == 'inference'
+
+
+def test_robust_e2e_unset_mode_means_agent_default(monkeypatch):
+    from showdown.inference_sim import run_robust_e2e as r
+
+    monkeypatch.delenv('PS_SP_INFO_A', raising=False)
+    monkeypatch.delenv('PS_SP_INFO_B', raising=False)
+    monkeypatch.delenv('PS_B_VALIDATED', raising=False)
+    assert r.sp_info_mode('A') is None
+    assert r.effective_sp_info_label('A', 'greedy_joint') == 'none(default)'
+    assert r.effective_sp_info_label('A', 'greedy_solo') == 'none(default)'
+    assert r.effective_sp_info_label('A', 'expectimax_bayesian') == 'inference(default)'
+    assert r.effective_sp_info_label('B', 'greedy_joint') == 'n/a(sin wrapper)'
+    monkeypatch.setenv('PS_SP_INFO_A', 'inference')
+    assert r.effective_sp_info_label('A', 'greedy_joint') == 'inference'

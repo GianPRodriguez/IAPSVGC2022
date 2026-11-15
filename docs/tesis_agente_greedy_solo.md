@@ -322,6 +322,8 @@ El rango \([d_{\min}, d_{\max}]\) captura la **varianza del roll** de daño (tí
 
 Así el greedy evita “KOs falsos” por subestimar la defensa rival, sin inflar Spe rival en las carreras.
 
+**Configuración por defecto (2026-11-14, spec v1.6): inferencia apagada.** En el pipeline actual la inferencia de SP no estrecha ningún stat durante la partida (0 de 10 140 en 2813 observaciones), porque sus salvaguardas descartan casi toda poda; con o sin ella el agente toma exactamente las mismas decisiones (juegos idénticos con semillas pareadas) y con ella cada evaluación tarda cerca del doble. Por eso Greedy-Solo y Greedy-Joint usan por defecto las creencias sin estrechar: SP 32 en HP/Atk/Def/SpA/SpD (estimación puntual pesimista por stat, análoga al criterio de Wald pero sin respetar el presupuesto de 66 SP) y el prior meta en Spe. Incluso con los SP verdaderos del rival (oráculo) la mejora no es significativa (50,3 % joint, 50,9 % solo en 5100 BO3). Limitación: el prior meta se calcula sobre el mismo conjunto de equipos usado en la evaluación, por lo que la Spe estimada coincide con la verdadera en el 95 % de los casos; un prior *leave-one-out* queda como trabajo pendiente.
+
 ---
 
 ## 8. Team Preview (antes del combate)

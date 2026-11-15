@@ -593,7 +593,8 @@ def _build_report(
         f'bo3_series: {n_bo3}',
         f'seed: {seed if seed is not None else "-"}',
         f'skip_sync: {"YES" if skip_sync else "NO"}',
-        f'sp_info: A={sp_info_mode("A")} B={sp_info_mode("B")} '
+        f'sp_info: A={effective_sp_info_label("A", player_a)} '
+        f'B={effective_sp_info_label("B", player_b)} '
         f'b_validated={"YES" if b_validated() else "NO"}',
         f'elapsed_s: {elapsed_s:.1f}',
         f'bo3_per_s: {bps:.3f}',
@@ -794,9 +795,25 @@ def _split_round_robin(items: List[Any], n: int) -> List[List[Any]]:
     return buckets
 
 
-def sp_info_mode(side: str) -> str:
-    """Modo de información de SP del rival para el lado A/B (PS_SP_INFO_A/B)."""
-    mode = os.environ.get(f'PS_SP_INFO_{side}', 'inference').strip().lower() or 'inference'
+def effective_sp_info_label(side: str, kind: str) -> str:
+    """Modo efectivo para el reporte: forzado por CLI/env o el predeterminado del agente."""
+    forced = sp_info_mode(side)
+    if forced:
+        return forced
+    if side == 'B' and not b_validated():
+        return 'n/a(sin wrapper)'
+    try:
+        default = getattr(validated_player_class(kind), 'default_sp_info_mode', 'inference')
+    except Exception:
+        default = 'inference'
+    return f'{default}(default)'
+
+
+def sp_info_mode(side: str) -> Optional[str]:
+    """Modo de SP del rival forzado para el lado A/B (PS_SP_INFO_A/B); None = el del agente."""
+    mode = os.environ.get(f'PS_SP_INFO_{side}', '').strip().lower()
+    if not mode:
+        return None
     if mode not in SP_INFO_MODES:
         raise ValueError(f'PS_SP_INFO_{side}={mode!r} no válido (opciones: {SP_INFO_MODES})')
     return mode
@@ -1884,9 +1901,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument(
         '--sp-info-a', choices=list(SP_INFO_MODES), default=None,
         help=(
-            'Diagnóstico: SP del rival que conoce A. inference (producción), oracle '
-            '(SP verdaderos), oracle_spe (solo Spe verdadera), none (OTS + bases, sin '
-            'inferencia). Env: PS_SP_INFO_A'
+            'SP del rival que conoce A (sin flag: el predeterminado del agente; '
+            'greedy_solo/greedy_joint = none, resto = inference). inference (motor de '
+            'inferencia), oracle (SP verdaderos), oracle_spe (solo Spe verdadera), none '
+            '(OTS + bases, sin inferencia). Para validar soundness de la inferencia con '
+            'greedy usar --sp-info-a inference. Env: PS_SP_INFO_A'
         ),
     )
     parser.add_argument(
@@ -1913,7 +1932,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         os.environ['PS_B_VALIDATED'] = '1'
     sp_info_mode('A')
     sp_info_mode('B')
-    if sp_info_mode('B') != 'inference' and not b_validated():
+    if sp_info_mode('B') is not None and not b_validated():
         parser.error('--sp-info-b requiere --b-validated (B sin wrapper no tiene creencias de SP)')
 
     if args.export_only:

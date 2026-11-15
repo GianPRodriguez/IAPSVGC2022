@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Greedy-Joint** |
-| **Versión** | **1.5** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.3) |
+| **Versión** | **1.6** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.3) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/greedy_joint/`** |
 | **Algoritmo** | Greedy joint: \(\arg\max_{(a_1,a_2)} S(a_1,a_2)\) en horizonte \(T=1\) |
 | **Rol** | Rival heurístico **principal** (curriculum avanzado, suite WR, ancla Expectimax / MCTS rollout) |
@@ -147,7 +147,9 @@ Clasificación de utility (`_utility_kind`): Protect-family, Follow Me / Rage Po
 
 ### 5.5 Belief
 
-Misma `apply_belief_stats` que Solo cuando el harness provee creencias.
+Misma `apply_belief_stats` que Solo cuando el harness provee creencias (ver Solo §5.4).
+
+**Modo de información de SP (v1.6): por defecto `none` ("A", inferencia apagada).** El wrapper validated (`ValidatedGreedyPlayer` / `ValidatedGreedyJointPlayer`, `default_sp_info_mode = 'none'`) crea las creencias desde el OTS pero no las estrecha: todos los stats quedan con el rango 0–32, así que HP/Atk/Def/SpA/SpD van a SP 32 y Spe al prior meta. Motivo (medido 2026-11-14, servidor, semillas pareadas): con la inferencia encendida ("B") se estrecharon 0/10140 stats en 2813 observaciones; joint A vs B dio juegos idénticos (452/900 en ambos, mismas victorias por semilla) y B cuesta ~2x tiempo (55–64 s vs 31–35 s por semilla de 300 BO3). Ni el oráculo de SP mejora significativamente (joint 50,3 %, solo 50,9 %, 5100 BO3). B sigue disponible: `sp_info_mode='inference'` o `run_robust_e2e --sp-info-a inference` (necesario para validar soundness de la inferencia con greedy). Advertencia: el prior meta se construye con los mismos 300 equipos del pool de evaluación (filtración: acierta la Spe verdadera en 95,3 %); pendiente prior leave-one-out.
 
 ---
 
@@ -228,6 +230,7 @@ propio. Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.6** | 2026-11-14 | **Inferencia de SP apagada por defecto** (modo A, `default_sp_info_mode='none'`), igual que Solo v1.6: juegos idénticos a B (452/900) a ~mitad de costo. B disponible con `--sp-info-a inference`. |
 | **1.5** | 2026-11-14 | Alineación con Solo: lado sin acción jugable → primer banco disponible (sin repetir el banco del otro lado; sin banco → default). Antes: `DefaultBattleOrder`. No es switch táctico; impacto esperado ≈ 0 (caso raro: Showdown suele ofrecer Struggle/recharge). Helper compartido `greedy_solo.pokeenv_player.no_action_fallback_order` (Solo v1.5). Test `test_no_action_fallback_shared_by_solo_and_joint`. |
 | **1.4** | 2026-10-11 | Estructura dual-audience; utilidades explicadas; entrenamiento y Conclusión. Semántica intacta. |
 | **1.3** | 2026-10-11 | Redacción dual (glosario, refs, preview vs combate). Semántica intacta. |
@@ -237,4 +240,4 @@ propio. Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 ---
 
-*Fin del contrato Greedy-Joint v1.5.*
+*Fin del contrato Greedy-Joint v1.6.*
