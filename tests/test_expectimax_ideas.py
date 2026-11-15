@@ -36,7 +36,25 @@ def test_tempo_credit_respects_trick_room_and_tailwind():
 
 def test_new_config_flags_default_to_off():
     cfg = ExpectimaxConfig()
-    assert cfg.v_iso_syn_weight == 0.0 and cfg.v_tempo_weight == 0.0 and cfg.v_iso_threat_weight == 0.0
+    assert cfg.v_iso_syn_weight == 0.0 and cfg.v_iso_threat_weight == 0.0
+
+
+def test_stable_c235_defaults():
+    # Versión estable confirmada en el servidor (semillas 8001-8017, +2.3 pts vs base).
+    cfg = ExpectimaxConfig()
+    assert cfg.v_tempo_weight == 1.0
+    assert cfg.phase2_gate_enabled and cfg.phase2_gate_mode == 'beat'
+    assert cfg.phase2_gate_margin == 40.0
+    assert cfg.soft_ko_bonus == 250.0
+    assert cfg.k_profiles == 4 and cfg.max_worlds == 12
+
+
+def test_c235_survives_load_without_overrides(monkeypatch):
+    from showdown.battle_bots.expectimax_bayesian.expectimax import load_expectimax_config
+    monkeypatch.delenv('EXPECTIMAX_OVERRIDES', raising=False)
+    cfg = load_expectimax_config()
+    assert (cfg.v_tempo_weight, cfg.phase2_gate_mode, cfg.phase2_gate_margin,
+            cfg.soft_ko_bonus, cfg.k_profiles, cfg.max_worlds) == (1.0, 'beat', 40.0, 250.0, 4, 12)
 
 
 def test_per_player_sp_oracle_only_affects_that_beliefs_object():

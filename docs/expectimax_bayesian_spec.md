@@ -270,11 +270,11 @@ Campos del dataclass (efectivos = defaults + `ACTIVE_OVERRIDES.json` + kwargs):
 | `deadline_ms` | 1600.0 | Acotar latencia total | Al vencer, activa salida/fallback anytime |
 | `phase1_budget_ms` | 80.0 | Reservar tiempo al ancla Joint | Limita generación y ranking inicial |
 | `phase2_end_ms` | 1520.0 | Marcar fin de reevaluación | Deja margen antes del deadline total |
-| `k_profiles` | 2 | Limitar perfiles de belief | Más perfiles ampliarían diversidad y costo |
-| `max_worlds` | 4 | Acotar mundos bayesianos | Trunca hipótesis evaluadas |
+| `k_profiles` | 4 | Limitar perfiles de belief | C235 (antes 2); más perfiles = más diversidad y costo |
+| `max_worlds` | 12 | Acotar mundos bayesianos | C235 (antes 4); trunca hipótesis evaluadas |
 | `topk_per_side` | 7 | Filtrar átomos por activo | Define el ancho Top-K×Top-K |
 | `max_our_pairs` | 49 | Acotar pares propios | Limita evaluaciones phase2 |
-| `soft_ko_bonus` | 1000.0 | Valorar probabilidad de KO | Hace que KO esperado domine chip ordinario |
+| `soft_ko_bonus` | 250.0 | Valorar probabilidad de KO | C235 (antes 1000); KO esperado pesa sin aplastar el daño |
 | `enable_voluntary_switch` | False | Mantener búsqueda default en moves | Excluye híbridos con cambio voluntario |
 | `max_switch_hybrids` | 0 | Limitar híbridos move/switch | Cero elimina esos candidatos |
 | `enable_niche_pairs` | False | Controlar expansión especializada | No añade pares fuera del filtro normal |
@@ -299,13 +299,16 @@ Campos del dataclass (efectivos = defaults + `ACTIVE_OVERRIDES.json` + kwargs):
 | `opp_policy_split_targets` | False | Controlar diversidad de targets | No fuerza reparto de foco |
 | `opp_policy_mirror_solo` | False | Controlar isomorfismo con Solo | Usa política rival propia |
 | `v_solo_isomorphic` | True | Mantener escala compatible | Alinea evaluación individual cuando aplica |
+| `v_iso_threat_weight` | 0.0 | Restar amenaza rival en V isomorfo | w=0.1/0.5/1.0 empeoran (−1.3/−3.4/−5.0 pts) |
+| `v_iso_syn_weight` | 0.0 | Sumar sinergias del Joint | w=0.5/1.0 empeoran (−7/−8 pts) |
+| `v_tempo_weight` | 1.0 | Crédito de tempo: P(KO)·P(actuar antes)·amenaza del rival | C235 (antes 0.0) |
 | `phase2_retarget_only` | False | Restringir cambios a target | False permite variar el par completo |
 | `phase1_use_joint` | True | Elegir ancla robusta | Los candidatos base vienen de Joint |
 | `use_topk_abstraction` | True | Reducir espacio | Solo phase2 de candidatos filtrados |
 | `phase2_gate_enabled` | True | Proteger contra regresión | Phase2 debe superar el criterio |
-| `phase2_gate_mode` | `'indifference'` | Tolerar casi-empates | Acepta phase2 dentro de \(\varepsilon\) |
-| `phase2_gate_margin` | 80.0 | Umbral del modo `beat` | Solo influye al seleccionar ese modo |
-| `phase2_indifference_eps` | 40.0 | Tolerancia activa | Admite \(V_{bayes}\ge V_{p1}-40\) |
+| `phase2_gate_mode` | `'beat'` | Exigir mejora sobre Joint | C235 (antes `'indifference'`) |
+| `phase2_gate_margin` | 40.0 | Umbral del modo `beat` | C235 (antes 80); exige \(V_{bayes}\ge V_{p1}+40\) |
+| `phase2_indifference_eps` | 40.0 | Tolerancia del modo `indifference` | Solo influye al seleccionar ese modo |
 | `phase2_max_delta_v` | 0.0 | Acotar delta adicional | No concede margen extra |
 | `enable_phase2` | True | Activar Expectimax | False degradaría a phase1 |
 | `phase2_surgical_only` | False | Restringir reevaluación | False permite toda cobertura Top-K |
@@ -315,8 +318,8 @@ Campos del dataclass (efectivos = defaults + `ACTIVE_OVERRIDES.json` + kwargs):
 
 | Modo | Semántica |
 |------|-----------|
-| `'beat'` | Exigir \(V_{\mathrm{bayes}} \ge V_{p1} + \mathrm{margin}\) |
-| **`'indifference'` (activo)** | Aceptar si \(V_{\mathrm{bayes}} \ge V_{p1} - \varepsilon\) con \(\varepsilon=40\) |
+| **`'beat'` (activo, C235)** | Exigir \(V_{\mathrm{bayes}} \ge V_{p1} + \mathrm{margin}\) con margin = 40 |
+| `'indifference'` | Aceptar si \(V_{\mathrm{bayes}} \ge V_{p1} - \varepsilon\) con \(\varepsilon=40\) |
 | `'off'` | Argmax libre de phase2 |
 
 Diseño: no divergir a peor bajo ruido de estimación; Joint sigue siendo ancla.
@@ -417,6 +420,7 @@ Checklist de reproducibilidad:
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.5** | 2026-11-14 | **Versión estable C235:** `v_tempo_weight` 0→1.0, gate `indifference`→`beat` margin 80→40, `soft_ko_bonus` 1000→250, `k_profiles` 2→4, `max_worlds` 4→12. Servidor, pool 300 teams, 5100 BO3/config, IC emparejado por semilla: cribado (7001–7017) +0.7 n.s.; confirmación con semillas nuevas (8001–8017) vs greedy_joint sin inferencia de SP 52.5% vs 50.3% (+2.3 [+0.7, +3.9]); combinado 52.4% vs 50.9% (10 200 BO3). Vs joint validado (`PS_B_VALIDATED=1`) 48.3% vs 47.7% (+0.6 n.s.). Base vs greedy_solo 49.6%, vs random 99.7%. Ideas por separado ≈0 o peores; techo del diseño alcanzado. |
 | **1.4** | 2026-10-11 | Estructura dual-audience; búsqueda/belief y propósito de knobs; entrenamiento y Conclusión. Semántica intacta. |
 | **1.3** | 2026-10-11 | Redacción dual (glosario preview/combate, refs Ballard/AIMA). Semántica intacta. |
 | **1.2** | 2026-10-11 | **Reg M-C:** Tera **off** (non-goal de formato); Mega sin cambio. |
@@ -425,4 +429,4 @@ Checklist de reproducibilidad:
 
 ---
 
-*Fin del contrato Expectimax-Bayesian v1.4.*
+*Fin del contrato Expectimax-Bayesian v1.5.*

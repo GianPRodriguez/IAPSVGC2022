@@ -1956,3 +1956,70 @@ enable_phase2: True
 phase2_surgical_only: False
 switch_v_scale: 0.65
 ```
+
+## 2026-11-15 — Version estable C235: tempo 1.0, gate beat margin 40, soft_ko 250, k_profiles 4, max_worlds 12
+
+- **UTC:** `2026-11-15T01:15:14.444634+00:00`
+- **Resultado / contexto:** Servidor pool 300, 5100 BO3: confirmacion semillas 8001-8017 vs joint 52.5% vs 50.3% (+2.3 [+0.7,+3.9]); vs joint validado 48.3% vs 47.7% (n.s.)
+- **Cambios:**
+  - `k_profiles`: 2 → 4
+  - `max_worlds`: 4 → 12
+  - `phase2_gate_margin`: 80.0 → 40.0
+  - `phase2_gate_mode`: 'indifference' → 'beat'
+  - `soft_ko_bonus`: 1000.0 → 250.0
+  - `v_tempo_weight`: 0.0 → 1.0
+  - (valores "antes" = defaults del commit 0bf9976; la herramienta compara contra el último snapshot registrado)
+
+```
+--- expectimax_config ---
+deadline_ms: 1600.0
+phase1_budget_ms: 80.0
+phase2_end_ms: 1520.0
+k_profiles: 4
+max_worlds: 12
+topk_per_side: 7
+max_our_pairs: 49
+soft_ko_bonus: 250.0
+enable_voluntary_switch: False
+max_switch_hybrids: 0
+enable_niche_pairs: False
+loss_weight: 650.0
+save_weight: 0.0
+chip_soft_cap: 30.0
+switch_min_stay_p_ko: 0.5
+overkill_waste_weight: 140.0
+ko_free_switch_bonus: 55.0
+entry_punish_weight: 1.15
+threat_weight: 0.0
+hp_rel_weight: 0.15
+syn_weight: 0.0
+condemned_chip_discount: 0.8
+condemned_lasting_boost: 1.35
+threat_relief_weight: 1.0
+entry_ability_weight: 1.0
+opp_policy_greedy_weight: 1.0
+opp_policy_control_weight: 0.0
+opp_policy_switch_weight: 0.0
+opp_policy_use_real_damage: True
+opp_policy_split_targets: False
+opp_policy_mirror_solo: False
+opp_policy_oracle_joint: False
+opp_policy_unique_slots: True
+opp_policy_fakeout_rule: True
+opp_policy_fakeout_first_p: 0.7
+v_solo_isomorphic: True
+v_iso_threat_weight: 0.0
+v_iso_syn_weight: 0.0
+v_tempo_weight: 1.0
+phase2_retarget_only: False
+phase1_use_joint: True
+use_topk_abstraction: True
+phase2_gate_enabled: True
+phase2_gate_mode: 'beat'
+phase2_gate_margin: 40.0
+phase2_indifference_eps: 40.0
+phase2_max_delta_v: 0.0
+enable_phase2: True
+phase2_surgical_only: False
+switch_v_scale: 0.65
+```

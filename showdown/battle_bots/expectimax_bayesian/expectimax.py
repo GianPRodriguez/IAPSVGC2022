@@ -184,12 +184,14 @@ class ExpectimaxConfig:
     deadline_ms: float = 1600.0
     phase1_budget_ms: float = 80.0
     phase2_end_ms: float = 1520.0
-    k_profiles: int = 2
-    max_worlds: int = 4
+    # Versión estable C235 (2026-11-14): 4 perfiles / 12 mundos (antes 2 / 4).
+    k_profiles: int = 4
+    max_worlds: int = 12
     # Top-K por daño greedy → K×K; FO entra si rank≤K (75% ≈ K=7).
     topk_per_side: int = 7
     max_our_pairs: int = 49
-    soft_ko_bonus: float = SOFT_KO_BONUS
+    # C235: 250 (antes SOFT_KO_BONUS=1000). La constante del módulo chance no cambia.
+    soft_ko_bonus: float = 250.0
     # Cuevas: off (A/B seed10 teams40: volOn scale=0.25 empeoró pair 50%→33%).
     enable_voluntary_switch: bool = False
     max_switch_hybrids: int = 0
@@ -228,7 +230,8 @@ class ExpectimaxConfig:
     # Idea 1: sinergias del joint (bonos de Helping Hand, redirección, Tailwind...) sumadas a V isomorfo.
     v_iso_syn_weight: float = 0.0
     # Idea 2: crédito de tempo = P(KO al rival) * P(actuamos antes) * amenaza que ese rival nos haría.
-    v_tempo_weight: float = 0.0
+    # C235: 1.0 (antes 0.0).
+    v_tempo_weight: float = 1.0
     phase2_retarget_only: bool = False
     # Phase1 = greedy_joint (referencia); phase2 elige entre Top-K×Top-K.
     phase1_use_joint: bool = True
@@ -237,8 +240,9 @@ class ExpectimaxConfig:
     # 'beat': exigir V_bayes >= V_p1 + margin (ancla a joint; div~0).
     # 'indifference': aceptar si V_bayes >= V_p1 - eps (diverge sin exigir mejora).
     # 'off': phase2 argmax libre (gate_enabled puede quedar True y se ignora).
-    phase2_gate_mode: str = 'indifference'
-    phase2_gate_margin: float = 80.0
+    # C235: 'beat' con margen 40 (antes 'indifference', margen 80).
+    phase2_gate_mode: str = 'beat'
+    phase2_gate_margin: float = 40.0
     phase2_indifference_eps: float = 40.0
     # 0 = off. Antes 320 cortaba Fake Out con deny≈soft_KO (delta~700+).
     # La seguridad queda en indifference (no aceptar V << phase1).
