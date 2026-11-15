@@ -398,6 +398,13 @@ de política no dio errores (0 registros `oracle_joint:`).
    de horizonte). Mejorar más pide otro horizonte (profundidad 2, MCTS; agentes propios) o
    una función de valor aprendida, que es lo que aportan los agentes RL.
 
+**Frecuencia de cambios voluntarios en v1.9** (`PS_SWITCH_LOG`, semillas 9101–9103, 1800
+juegos contra joint): **182 cambios voluntarios, 0,10 por juego** (5,3 turnos de media).
+Los juegos con algún cambio están entre 34 y 182 (2–10 %): el log identifica los juegos por
+`battle_tag`, que se repite entre los 56 servidores de Showdown, así que el reparto por
+juego y el % de rebotes (6,6 %) no son fiables. Con tan pocos cambios se entiende que v1.9
+frente a v1.8 dé +0,04 pts en C1 (S1).
+
 **Decisión:** expectimax queda congelado en v1.9. Los techos se reportan como evidencia de
 que el agente está en el límite de su diseño.
 
