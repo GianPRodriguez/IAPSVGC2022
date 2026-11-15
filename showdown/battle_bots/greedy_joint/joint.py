@@ -1864,6 +1864,7 @@ async def best_joint_double_action(
     best_score = float('-inf')
     best_pair: Optional[Tuple[JointAtom, JointAtom]] = None
     scored_pairs: List[Tuple[float, Tuple[JointAtom, JointAtom]]] = []
+    best_idx = -1
     for a1 in left_atoms:
         for a2 in right_atoms:
             pair_l, pair_r = a1, a2
@@ -1887,15 +1888,17 @@ async def best_joint_double_action(
             if s > best_score:
                 best_score = s
                 best_pair = (pair_l, pair_r)
+                best_idx = len(scored_pairs) - 1
 
     assert best_pair is not None
     if tie_margin > 0:
         # Diversidad (opcional): muestreo uniforme entre pares a menos de tie_margin del mejor.
+        # Se muestrea por índice: "cambió" = se eligió un par distinto del argmax.
         from showdown.battle_bots.diversity_log import sample_near_ties
-        picked, n_cands = sample_near_ties(scored_pairs, float(tie_margin))
-        if picked is not None and picked is not best_pair:
-            best_score = next(s for s, p in scored_pairs if p is picked)
-            best_pair = picked
+        picked_i, n_cands = sample_near_ties(
+            [(s, i) for i, (s, _p) in enumerate(scored_pairs)], float(tie_margin))
+        if picked_i is not None and picked_i != best_idx:
+            best_score, best_pair = scored_pairs[picked_i]
             LAST_TIE = (n_cands, True)
         else:
             LAST_TIE = (n_cands, False)

@@ -118,3 +118,35 @@ def test_expectimax_tie_sampling_runs():
         assert len(seen) > 1
     finally:
         set_damage_range_override(None)
+
+
+def test_joint_tie_changed_only_with_several_candidates():
+    """'cambió' exige más de un candidato y un par distinto del argmax (antes se comparaba por identidad)."""
+    import asyncio
+    from showdown.battle_bots.greedy_joint import joint
+    from showdown.damage_calc_bridge import set_damage_range_override
+
+    def uneven(reqs):  # daños distintos: con margen chico hay un solo candidato
+        return [(10 + 7 * i, 12 + 7 * i) for i, _ in enumerate(reqs)]
+
+    set_damage_range_override(uneven)
+    try:
+        args = _fixture()
+        for _ in range(10):
+            asyncio.run(joint.best_joint_double_action(*args, tie_margin=1e-6))
+            n, changed = joint.LAST_TIE
+            assert not changed or n > 1
+            assert n == 1 and not changed
+    finally:
+        set_damage_range_override(None)
+    set_damage_range_override(_fake_batch)
+    try:
+        flags = []
+        for _ in range(40):
+            asyncio.run(joint.best_joint_double_action(*_fixture(), tie_margin=1e9))
+            n, changed = joint.LAST_TIE
+            assert n > 1
+            flags.append(changed)
+        assert any(flags) and not all(flags)
+    finally:
+        set_damage_range_override(None)
