@@ -152,7 +152,58 @@ def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
 # Preview independiente del combate (análisis factorial preview × combate).
 # own = el preview propio del agente; greedy = tipado+BST (Greedy-Solo/Joint);
 # expectimax = roles + calidad de leads (Expectimax-Bayesian).
-PREVIEW_CHOICES = ('own', 'greedy', 'expectimax')
+PREVIEW_CHOICES = (
+    'own', 'greedy', 'expectimax',
+    # Diagnóstico del preview de expectimax (2026-11-15):
+    'expectimax_noroles',  # sin bonos de rol (tipado + BST + calidad de lead)
+    'expectimax_nolead',   # sin calidad de lead (leads = orden de la hoja, como greedy)
+    'sheet',               # los 4 primeros de la hoja, en su orden (prior del diseñador)
+)
+
+
+def _heuristic_preview(self, battle, order_fn) -> str:
+    """teampreview genérico: order_fn(our, foes) -> orden 1-based de 4 (leads primero)."""
+    from showdown.battle_bots.greedy_solo.pokeenv_player import _species_name
+    from showdown.battle_bots.greedy_solo.team_preview import (
+        mon_from_species,
+        order_to_team_string,
+    )
+
+    our = [mon_from_species(i, _species_name(m)) for i, m in
+           enumerate(battle.teampreview_team or list(battle.team.values()), start=1)]
+    foe_src = battle.teampreview_opponent_team or list(battle.opponent_team.values())
+    foes = [mon_from_species(i, _species_name(m)) for i, m in enumerate(foe_src, start=1)]
+    order = tuple(order_fn(our, foes))
+    selected = set(order)
+    for i, mon in enumerate(battle.teampreview_team or [], start=1):
+        try:
+            mon._selected_in_teampreview = i in selected
+        except Exception:
+            pass
+    self.last_preview_order = order_to_team_string(order)
+    return f'/team {self.last_preview_order}'
+
+
+def _expectimax_variant_order(role_weight: float, lead_weight: Optional[float]):
+    def fn(our, foes):
+        from showdown.battle_bots.expectimax_bayesian import team_preview as ep
+        lw = ep.LEAD_QUALITY_WEIGHT if lead_weight is None else lead_weight
+        scored, _ = ep.best_expectimax_preview_with_meta(
+            our, foes, role_weight=role_weight, lead_weight=lw,
+        )
+        return scored.order
+    return fn
+
+
+def _sheet_order(our, foes):
+    return [m.index for m in our][:4] or [1, 2, 3, 4]
+
+
+_PREVIEW_VARIANTS = {
+    'expectimax_noroles': _expectimax_variant_order(0.0, None),
+    'expectimax_nolead': _expectimax_variant_order(1.0, 0.0),
+    'sheet': _sheet_order,
+}
 
 
 def preview_function(kind: Optional[str]):
@@ -164,7 +215,10 @@ def preview_function(kind: Optional[str]):
         return None
     if key == 'greedy':
         return GreedyDamagePlayer.teampreview
-    return ExpectimaxBayesianPlayer.teampreview
+    if key == 'expectimax':
+        return ExpectimaxBayesianPlayer.teampreview
+    order_fn = _PREVIEW_VARIANTS[key]
+    return lambda self, battle: _heuristic_preview(self, battle, order_fn)
 
 
 def apply_prior_leave_one_out(iap_battle, opp_team) -> bool:

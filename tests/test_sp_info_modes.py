@@ -193,7 +193,7 @@ def test_preview_override_maps_to_heuristic_previews():
     from showdown.battle_bots.greedy_solo.pokeenv_player import GreedyDamagePlayer
     from showdown.inference_sim.validated_greedy_player import PREVIEW_CHOICES, preview_function
 
-    assert set(PREVIEW_CHOICES) == {'own', 'greedy', 'expectimax'}
+    assert {'own', 'greedy', 'expectimax'} <= set(PREVIEW_CHOICES)
     assert preview_function(None) is None and preview_function('own') is None
     assert preview_function('greedy') is GreedyDamagePlayer.teampreview
     assert preview_function('expectimax') is ExpectimaxBayesianPlayer.teampreview
@@ -230,3 +230,24 @@ def test_robust_e2e_preview_choice_env(monkeypatch):
     monkeypatch.setenv('PS_PREVIEW_B', 'bad')
     with pytest.raises(ValueError):
         r.preview_choice('B')
+
+
+def test_preview_diagnostic_variants():
+    """Variantes: sin roles / sin calidad de lead / orden de la hoja."""
+    import random
+    from showdown.inference_sim.team_factory import active_teams
+    from showdown.battle_bots.greedy_solo.team_preview import mon_from_species, best_team_preview_order
+    from showdown.battle_bots.expectimax_bayesian import team_preview as ep
+    from showdown.inference_sim import validated_greedy_player as vgp
+
+    a, b = random.Random(3).sample(active_teams(), 2)
+    us = [mon_from_species(i + 1, m.species) for i, m in enumerate(a.mons)]
+    fo = [mon_from_species(i + 1, m.species) for i, m in enumerate(b.mons)]
+    assert vgp._sheet_order(us, fo) == [1, 2, 3, 4]
+    nolead = vgp._PREVIEW_VARIANTS['expectimax_nolead'](us, fo)
+    assert list(nolead[:2]) == sorted(nolead)[:2]  # leads = orden de la hoja (como greedy)
+    nr = ep.best_expectimax_preview_with_meta(us, fo, role_weight=0.0)[0].order
+    assert tuple(vgp._PREVIEW_VARIANTS['expectimax_noroles'](us, fo)) == tuple(nr)
+    assert best_team_preview_order(us, fo).order  # greedy intacto
+    for k in ('expectimax_noroles', 'expectimax_nolead', 'sheet'):
+        assert callable(vgp.preview_function(k))

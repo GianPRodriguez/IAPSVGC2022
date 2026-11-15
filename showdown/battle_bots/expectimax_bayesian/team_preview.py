@@ -172,6 +172,8 @@ def best_expectimax_preview_with_meta(
     beta: float = PREVIEW_BETA,
     gamma: float = PREVIEW_GAMMA,
     top_report: int = 8,
+    role_weight: float = 1.0,
+    lead_weight: float = LEAD_QUALITY_WEIGHT,
 ) -> Tuple[PreviewScore, PreviewDecisionMeta]:
     """
     Exhaustivo C(6,4)×C(4,2) — no hay Top-K.
@@ -198,7 +200,7 @@ def best_expectimax_preview_with_meta(
     # (total, PreviewScore, role, lead_q, role_tags, lead_names)
     for combo in itertools.combinations(pool, 4):
         combo_list = list(combo)
-        role = _role_bonus(combo_list)
+        role = float(role_weight) * _role_bonus(combo_list) if role_weight else 0.0
         tags = _role_tags(combo_list)
         meta.n_combos_4 += 1
         for lead in itertools.combinations(combo_list, 2):
@@ -208,8 +210,8 @@ def best_expectimax_preview_with_meta(
             base = score_combination(
                 ordered, foe_mons, alpha=alpha, beta=beta, gamma=gamma,
             )
-            lead_q = _lead_quality(list(lead), foe_mons)
-            total = base.score + role + LEAD_QUALITY_WEIGHT * lead_q
+            lead_q = _lead_quality(list(lead), foe_mons) if lead_weight else 0.0
+            total = base.score + role + float(lead_weight) * lead_q
             ps = PreviewScore(
                 order=base.order,
                 offensive=base.offensive,
