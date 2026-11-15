@@ -216,6 +216,36 @@ decisiones, pero sin mejora neta. Desde 0,2 empieza a empeorar, y lo hace de for
 monótona. Se mantiene en **0**.
 
 
+### 2b: Protect condicional del rival en la ofensa
+
+Al implementarlo apareció un hueco: **la ofensa no descontaba el Protect del rival.** Se
+agregó la opción de multiplicar la ofensa contra cada rival por (1 − p), con p > 0 solo si
+el rival lleva un movimiento de protección y no lo usó el turno anterior, y p más alta si
+nuestro par le da P(KO) ≥ 0,5 (`opp_protect_base` / `opp_protect_threat`).
+
+| p base / p con amenaza de KO | Victorias | Tasa | Diferencia con la base |
+|---|---|---|---|
+| 0 / 0 (base) | 2695/5100 | 52,8 % | — |
+| 0,08 / 0,25 | 2648/5100 | 51,9 % | −47 (−0,9) |
+| 0,12 / 0,40 | 2625/5100 | 51,5 % | −70 (−1,4) |
+
+**Empeora, y más cuanto mayor es p.** Descontar la ofensa por un posible Protect lleva a
+evitar al rival más peligroso o a repartir el daño. Coincide con la Fase 1: los rivales
+usan control solo en el 4 % de sus jugadas. **Descartado.** El código queda apagado por
+defecto (p = 0).
+
+### 2c: cambios voluntarios (en curso)
+
+**Causa de que nunca se eligieran:** en el modo de valoración por defecto
+(`v_solo_isomorphic`), el valor de cambiar (`switch_v`: preservación, posición, habilidad de
+entrada, castigo al entrante, cambio libre tras KO) se calculaba pero no se sumaba a V. Un
+par con cambio solo aportaba el daño del compañero y nunca podía ganar. Por eso, en
+experimentos anteriores, variar `switch_v_scale` daba juegos idénticos. Corregido con
+`v_iso_switch_weight` (0 por defecto). Se mide con `enable_voluntary_switch=1` y
+`max_switch_hybrids=8`.
+
+## Plan
+
 | Fase | Contenido | Estado |
 |---|---|---|
 | 0 | Línea base, A frente a B frente a oráculo, factorial preview × combate | **hecha** |
