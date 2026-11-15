@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|-------|
 | **Documento** | Contrato exclusivo — Payoff Nash solo Team Preview |
-| **Versión** | **1.4** (alineado con `docs/rl_env_spec.md` v1.17 §6.j) |
+| **Versión** | **1.5** (alineado con `docs/rl_env_spec.md` v1.20 §6.j) |
 | **Estado** | **FROZEN** — implementado en `showdown/rl/team_preview_nash/` |
 | **Algoritmo** | Value Net de bajo rango + equilibrio de Nash por LP |
 | **Formato** | Gen 9 VGC **Regulation M-C**, OTS, Mega on, **Tera off** |
@@ -158,7 +158,7 @@ Para reanudar hacen falta además optimizador y RNG.
 
 | Parámetro | Valor | Propósito | Cómo influye |
 |-----------|-------|-----------|--------------|
-| Tronco | `D→256→256`, ReLU | Codificar contexto OTS | Más capacidad modela matchups, con más riesgo de sobreajuste |
+| Tronco | `codificador(D→876)→256→256`, ReLU (rl_env_spec §3.c) | Codificar contexto OTS | Más capacidad modela matchups, con más riesgo de sobreajuste |
 | Embedding acción \(d_a\) | `32` | Representar cada formación | Mayor dimensión separa acciones, pero aumenta parámetros |
 | Latente \(d_{\rm lat}\) | `64` | Rango de la factorización | Mayor rango expresa matrices más complejas y cuesta más |
 | Loss | `bce` por defecto; `mse` soportada | Ajustar \(\hat M\) a labels | BCE enfatiza probabilidad; MSE cambia geometría del error |
@@ -246,6 +246,7 @@ El protocolo común está en
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.5** | 2026-11-15 | Codificador estructurado compartido (rl_env_spec §3.c): mismo sub-MLP `464→128→64` para los 12 Pokémon + matrices crudas → 876 → tronco 256 (1,58M → 0,42M parámetros). `RL_OBS_ENCODER=flat` restaura el MLP plano. Checkpoints anteriores incompatibles. |
 | **1.4** | 2026-11-14 | Observación compartida OTS v2 (5676D, hoja completa) en lugar de 512D; rival en orden canónico. Checkpoints anteriores incompatibles. |
 | **1.3** | 2026-10-11 | `final.pt` + tune `run_team_preview_nash_hp_tune` + tracking prev→nuevo; `--lr`. |
 | **1.2** | 2026-10-11 | Value Net, low-rank, LP, entrenamiento, despliegue y Conclusión; alineación actualizada a rl_env v1.15. |

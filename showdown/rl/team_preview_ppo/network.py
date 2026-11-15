@@ -6,21 +6,24 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from showdown.rl.constants import ILLEGAL_LOGIT
+from showdown.rl.encoders import preview_encoder
 from showdown.rl.team_preview_action import N_ACTIONS
 from showdown.rl.team_preview_obs import OBS_DIM
 
 
 class PreviewActorCritic(nn.Module):
-    def __init__(self, obs_dim: int = OBS_DIM, n_actions: int = N_ACTIONS):
+    def __init__(self, obs_dim: int = OBS_DIM, n_actions: int = N_ACTIONS,
+                 encoder: str | None = None):
         super().__init__()
         self.n_actions = int(n_actions)
-        self.fc1 = nn.Linear(obs_dim, 256)
+        self.encoder = preview_encoder(obs_dim, encoder)
+        self.fc1 = nn.Linear(self.encoder.out_dim, 256)
         self.fc2 = nn.Linear(256, 256)
         self.policy = nn.Linear(256, n_actions)
         self.value = nn.Linear(256, 1)
 
     def forward(self, obs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        h = F.relu(self.fc1(obs))
+        h = F.relu(self.fc1(self.encoder(obs)))
         h = F.relu(self.fc2(h))
         return self.policy(h), self.value(h).squeeze(-1)
 

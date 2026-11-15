@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|-------|
 | **Documento** | Contrato exclusivo — QD-PGA MAP-Elites solo Team Preview |
-| **Versión** | **1.4** (alineado con `docs/rl_env_spec.md` v1.17 §6.k) |
+| **Versión** | **1.5** (alineado con `docs/rl_env_spec.md` v1.20 §6.k) |
 | **Estado** | **FROZEN** — implementado en `showdown/rl/team_preview_qd_pga/` |
 | **Algoritmo** | Grid MAP-Elites + mutación Gaussiana o mejora PPO-clip (PGA) |
 | **Formato** | Gen 9 VGC **Regulation M-C**, OTS, Mega on, **Tera off** |
@@ -99,7 +99,7 @@ separación convertiría el algoritmo en optimización escalar, no MAP-Elites.
 |----------|----------|
 | Horizonte | \(T=1\), una selección por episodio |
 | Acción | Flat-360 con IAM; cuatro índices distintos |
-| Observación | OTS v2 (`OBS_DIM` = 5676), compartida con PPO/Nash (masked PPO spec §4.3) |
+| Observación | OTS v2 (`OBS_DIM` = 5676), compartida con PPO/Nash (masked PPO spec §4.3); codificador estructurado (rl_env_spec §3.c) |
 | Recompensa/fitness | Cand. 1; sin Cand. 2 ni \(\Delta HP\) |
 | Piloto | `greedy_joint` congelado |
 | Self-play preview | Off |
@@ -255,6 +255,7 @@ del round-robin. Véase
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.5** | 2026-11-15 | Codificador estructurado compartido (rl_env_spec §3.c): mismo sub-MLP `464→128→64` para los 12 Pokémon + matrices crudas → 876 → tronco 256; el codificador es parte del actor del archivo. `RL_OBS_ENCODER=flat` restaura el MLP plano. Checkpoints anteriores incompatibles. |
 | **1.4** | 2026-11-14 | Observación compartida OTS v2 (5676D, hoja completa) en lugar de 512D; los actores del archive crecen en la primera capa. Checkpoints anteriores incompatibles. |
 | **1.3** | 2026-10-11 | `archive.pt` + tune `run_team_preview_qd_pga_hp_tune` + tracking prev→nuevo; `--lr/--clip-eps`. |
 | **1.2** | 2026-10-11 | MAP-Elites, BD, loop, despliegue y familias QD; alineación documental actualizada a rl_env v1.15. |

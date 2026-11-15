@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.19** |
+| **Version** | **v1.20** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) — **Mega Evolution yes; Terastallization no** |
@@ -44,6 +44,7 @@
 - Slot 1 choice updates the legal mask for Slot 2 (e.g. switch conflicts, shared targets).
 - **DDQN joint encoding** (see §6.b): \(a = 40\cdot a_1 + a_2 \in \{0,\ldots,1599\}\).
 - Slot layout (ActionSpec v2, 40 ids): **0–15** move×target · **16–31** MEGA + move×target (mega is a flag on a move, never on a switch; one per side) · **32–35** switch · **36** pass · **37** tera (reserved/off) · **38–39** reserved.
+- Targets are **relative to the slot**: 0/1 = foe a/b (Showdown 1/2), 2 = ally (Showdown −2 for slot 0, −1 for slot 1), 3 = no target (0), or self for `adjacentAllyOrSelf` moves.
 
 ### Masking protocol
 
@@ -108,6 +109,40 @@ training **and** inference together. Obs dtype for RL buffers: **`float32`** (re
 
 v1 (1024D) is retired: species/types/items were md5 hashes, the belief segment was zeroed for
 DDQN/PPO, own stats and foe sheets were absent.
+
+### 3.c Structured encoder (shared per-block weights)
+
+A flat MLP learns separate weights for "the same mon in block 1" and "in block 3". All RL networks
+that read an obs (DDQN, PPO, QD-PPO/PGA/PPGA actors and critics; preview PPO, Nash, QD-PGA) start
+with `showdown/rl/encoders.py`: the **same** sub-MLP is applied to every block of a group and the
+embeddings are concatenated **in order** (position is kept: actions are positional).
+
+| Obs | Groups (shared MLP per group) | Raw | Output |
+|-----|-------------------------------|-----|--------|
+| Combat (6332) | 10 mons `522→128→64` · 8 own moves `81→64→32` · 8 foe moves `43→64→32` | pairs + field (120) | 1272 |
+| Preview (5676) | 12 mons (own + foe) `464→128→64` | pair matrices (108) | 876 |
+
+The torso/heads after the encoder are unchanged (`→512→512` combat, `→256→256` preview).
+Parameters: DDQN 4.33M → 1.82M, PPO 3.55M → 1.05M, preview PPO 1.61M → 0.45M, Nash 1.58M → 0.42M.
+`RL_OBS_ENCODER=flat` restores the flat MLP (thesis ablation); checkpoints of one architecture do
+not load into the other.
+
+### 3.d Symmetry augmentation
+
+Left/right position does not change the mechanics in doubles, and the order of our 2 reserves only
+fixes the switch index. The group Z2³ (`showdown/rl/symmetry.py`, 8 commuting involutions) maps an
+obs/action to an equivalent one: **σ_o** swap our actives (and slot 1 ↔ slot 2 of the action),
+**σ_f** swap foe actives (target 0 ↔ 1 in move and mega ids), **σ_b** swap our reserves
+(switch 32 ↔ 33; only when both are present and alive). The permutations are verified against the
+obs builder on mirrored battles (`tests/test_rl_symmetry.py`).
+
+| Learner | Use |
+|---------|-----|
+| DDQN | Each sampled transition: random element on (s, a) and an independent one on (s′, m′). Exact (Q invariant). |
+| QD-PGA/PPGA shared critic | Independent random element on s and s′ in the TD update. Exact. |
+| PPO / QD-PPO / QD-PGA/PPGA actors | DrAC-style consistency: `sym_coef·(log π(g·a|g·s) − log π(a|s)ᵀ)²` (ᵀ = stop-grad, `sym_coef`=0.1) + value loss on g·s with the same return (PPO). Permuted samples are not used as on-policy data. σ_o only on rows where a1 is neither mega nor switch (then m2 is exactly the unconditional slot-2 mask). |
+
+Logged: `sym_frac_our/foe/bench`, `sym_pi_loss`, `sym_v_loss`. `RL_SYM_AUG=0` disables it (ablation).
 
 ---
 
@@ -462,7 +497,7 @@ r_t + \gamma\, Q_{\theta^-}\big(s',\, \arg\max_{a \in L(s')} Q_{\theta}(s', a)\b
 | Item | Contract |
 |------|----------|
 | Framework | PyTorch (`torch >= 2.0.0`), dependency file **`requirements-rl.txt`** (or install extra `[rl]`). Heuristic bots must run without this extra. |
-| Topology | MLP: \(6332 \xrightarrow{\mathrm{ReLU}} 512 \xrightarrow{\mathrm{ReLU}} 512 \xrightarrow{\mathrm{Linear}} 1600\) |
+| Topology | Structured encoder (§3.c) \(6332 \to 1272\), then MLP: \(1272 \xrightarrow{\mathrm{ReLU}} 512 \xrightarrow{\mathrm{ReLU}} 512 \xrightarrow{\mathrm{Linear}} 1600\) (`RL_OBS_ENCODER=flat`: \(6332\to512\to512\to1600\)) |
 | Dueling / Noisy / Rainbow | **Off** in v1.2 |
 | Device default | **CPU** (GPU optional; document in train CLI) |
 | Seed | Collector / env seed **must** be CLI-documented and logged |
@@ -641,6 +676,7 @@ con Tera on no es compatible con este benchmark aunque sus dimensiones encajen.
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.20** | 2026-11-15 | **Structured encoder** (§3.c) in all RL networks: one shared sub-MLP per block type (mon / own move / foe move; preview mon), embeddings concatenated in order → 1272 (combat) / 876 (preview) instead of the raw 6332 / 5676; 2.4–3.8× fewer parameters. **Symmetry augmentation** (§3.d): Z2³ (our a/b, foe a/b, reserves) on DDQN replay and critics (exact) and as a consistency loss for PPO-family actors. **Fix** ally target of slot 0: it was sent as Showdown −1 (itself), so slot 0 could never target its ally; now −2 (slot 1 keeps −1). `RL_OBS_ENCODER=flat` / `RL_SYM_AUG=0` for ablations. Checkpoints before this change are incompatible. |
 | **v1.19** | 2026-11-14 | **Heuristic foes validated** in live training (`PokeEnvBattleBackend`): greedy_solo / greedy_joint / expectimax_bayesian run with the validated wrapper (IAP mirror, opponent OTS, their default SP mode, leave-one-out meta prior), the same information as in `run_robust_e2e`, so "beating joint" means the same in every thesis experiment. Before, foes were raw poke-env players (opponent stats = raw species bases, HP in %), ~2 pts weaker (validated vs raw joint 52.3%, 5100 BO3). `PS_RL_FOE_VALIDATED=0` restores raw foes; teams given as export strings (no TeamMeta) also fall back to raw. Obs/Reward/Action unchanged; RL results vs heuristics before this change are not comparable. |
 | **v1.18** | 2026-11-14 | **ObsSpec v2** (6332D, §3): full OTS per mon (same encoder as preview), state, history from the protocol, P(brought)/excluded foe mons, move slots aligned with actions (damage, KO possible/guaranteed, priority blocked, redirection, lock), foe move slots, pair matrices, field + last-turn summary. **ActionSpec v2**: 40 ids per slot, mega as a flag on each move×target (16–31), joint 1600. Training mask = inference mask (`valid_orders`). Foe material counts seen mons (unseen = healthy): fixes spurious HP/KO jumps. Own team filtered to the 4 brought. Replays float16 + lazy growth. |
 | **v1.17** | 2026-11-14 | **Team Preview obs v2** (§6.i–k): full Open Team Sheet encoding from the frozen Champions dex snapshot (5676D) replaces 512D species-only obs. Preview checkpoint score = paired `MEAN_WR` on fixed contexts. DDQN: explicit `epsilon=0` is always greedy; `DDQN_REQUIRED`. Training metrics JSONL (`train_metrics.jsonl`) for combat and preview. Combat Obs/Reward/Action unchanged. |

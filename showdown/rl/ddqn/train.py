@@ -203,7 +203,7 @@ def _ensure_opponent(env: VGCEnv, opponent: str, *, seed: int, start_ps: bool) -
 def _learner_snapshot(agent: DDQNAgent, metrics_last: dict) -> dict:
     """Estado del learner para la ventana de métricas (tesis)."""
     snap = {k: v for k, v in (metrics_last or {}).items()
-            if k in ('loss', 'mean_q', 'mean_target', 'td_error')}
+            if k in ('loss', 'mean_q', 'mean_target', 'td_error') or k.startswith('sym_')}
     snap.update({
         'eps': float(agent.epsilon),
         'env_steps': int(agent.env_steps),

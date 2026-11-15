@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.6** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
+| **Versión** | **1.7** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
 | **Estado** | FROZEN; `showdown/rl/qd_pga/` |
 | **Training** | **Sí**: variación híbrida mutación/PPO y crítico compartido |
 | **Inferencia** | `ValidatedQDPGAPlayer` con el mejor elite actor-only |
@@ -58,7 +58,7 @@ sin enseñar al crítico con una política perturbada accidentalmente.
 
 ### Arquitectura
 
-El actor usa el torso PPO `6332→512→512` y cabezas AR 40/40. `actor_state_dict`
+El actor usa el codificador estructurado y el torso PPO `1272→512→512` y cabezas AR 40/40. `actor_state_dict`
 excluye claves `value.*`; cada hijo recibe actor del padre y usa el
 `SharedCritic` separado. Este crítico es un MLP de valor entrenado por TD(0)
 Huber. `best_elite.pt` se guarda en formato de agente para inferencia greedy.
@@ -218,6 +218,7 @@ acompañar cualquier comparación.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.7** | 2026-11-15 | Codificador estructurado (rl_env_spec §3.c) dentro del actor; consistencia por simetría (§3.d) en las actualizaciones PPO del actor y aumentación exacta en el TD del crítico compartido; la mutación gaussiana también perturba el codificador. Objetivo aliado del slot 0 corregido. Checkpoints/archivos anteriores incompatibles. |
 | **1.6** | 2026-11-14 | ObsSpec v2 (6332D, OTS completo + estado + historial) y ActionSpec v2 (40 ids por slot: mega como flag de cada movimiento×objetivo; máscara de entrenamiento = `valid_orders`). Checkpoints anteriores incompatibles. |
 | **1.5** | 2026-10-11 | Train/infer bajo Preview QD-PGA congelado (`frozen_preview`). |
 | **1.4** | 2026-10-11 | CLI `--lr/--clip-eps`; tune `run_qd_pga_hp_tune` + tracking prev→nuevo. |

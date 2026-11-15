@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.9** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
+| **Versión** | **1.10** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
 | **Estado** | FROZEN; implementado en `showdown/rl/ddqn/` y `battle_bots/ddqn/` |
 | **Training** | **Sí**: off-policy con replay; entrenamiento live requiere Showdown local |
 | **Inferencia** | `ValidatedDDQNPlayer`, acción greedy legal desde un checkpoint |
@@ -51,7 +51,9 @@ basado en valor frente a PPO: usa experiencias antiguas y una salida joint de
    schedule de entrenamiento (`epsilon=None`), así que \(\varepsilon=0\) es greedy
    aunque el agente tenga `env_steps` menor que el warm-up.
 
-La red es `6332→512→512→1600` con ReLU. Dueling, PER, n-step y Rainbow están fuera.
+La red es `codificador estructurado (6332→1272) → 512 → 512 → 1600` con ReLU
+([`rl_env_spec.md`](rl_env_spec.md) §3.c; `RL_OBS_ENCODER=flat` restaura `6332→512→512→1600`).
+Cada transición muestreada del replay se aumenta por simetría (§3.d). Dueling, PER, n-step y Rainbow están fuera.
 
 ### Intuición matemática
 
@@ -271,6 +273,7 @@ Pipeline familiar: **`team_preview_ppo` → DDQN**. Código compartido:
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.10** | 2026-11-15 | Codificador estructurado (rl_env_spec §3.c): mismo sub-MLP por Pokémon/movimiento → 1272 → 512 → 512 → 1600 (4,33M → 1,82M parámetros). Replay aumentado por simetría (§3.d: a/b propio, a/b rival, reservas; exacto). Objetivo aliado del slot 0 corregido (−2). `RL_OBS_ENCODER=flat`, `RL_SYM_AUG=0`. Checkpoints anteriores incompatibles. |
 | **1.9** | 2026-11-14 | ObsSpec v2 (6332D) y ActionSpec v2 (40 ids/slot, mega por movimiento, 1600 joint). Máscara de entrenamiento = `valid_orders` (antes permisiva: pass/objetivos/cambios inválidos → fallback aleatorio y bootstrap sobre Q no entrenados). Replay float16, reserva perezosa y creciente. |
 | **1.8** | 2026-11-14 | \(\varepsilon=0\) explícito siempre greedy (antes caía al warm-up aleatorio con `env_steps` < warm-up); aviso/`DDQN_REQUIRED` sin checkpoint; `train_metrics.jsonl` (episodios, ventanas por rival, learner). Preview familiar con obs OTS v2. |
 | **1.7** | 2026-10-12 | Figuras reales al cerrar tune (`logs/figures/`) + ledger histórico tesis. |

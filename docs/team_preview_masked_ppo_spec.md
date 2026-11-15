@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|-------|
 | **Documento** | Contrato exclusivo — Masked PPO solo Team Preview |
-| **Versión** | **1.5** (alineado con `docs/rl_env_spec.md` v1.17 §6.i) |
+| **Versión** | **1.6** (alineado con `docs/rl_env_spec.md` v1.20 §6.i) |
 | **Estado** | **FROZEN** — implementado en `showdown/rl/team_preview_ppo/` |
 | **Algoritmo** | PPO + Invalid Action Masking (IAM), acción Flat-360 |
 | **Formato** | Gen 9 VGC **Regulation M-C**, OTS, Mega on, **Tera off** |
@@ -198,7 +198,7 @@ El CLI escribe `final.pt`, `best.pt` (mejor evaluación periódica),
 
 | Parámetro | Valor | Propósito | Cómo influye |
 |-----------|-------|-----------|--------------|
-| Red | `D→256→256→(360,1)`, ReLU (\(D\)=`OBS_DIM`) | Representación compartida de policy/value | Más capacidad modela interacciones OTS, con riesgo de sobreajuste |
+| Red | `codificador(D→876)→256→256→(360,1)`, ReLU (\(D\)=`OBS_DIM`; codificador: rl_env_spec §3.c) | Representación compartida de policy/value | Más capacidad modela interacciones OTS, con riesgo de sobreajuste |
 | \(\gamma\) | `1.0` | Descuento | En \(T=1\), conserva toda la recompensa |
 | \(\lambda\) GAE | `1.0` | Construir ventaja | En este bandit usa el retorno terminal |
 | \(\epsilon_{\rm clip}\) | `0.2` | Limitar cambios PPO | Menor valor hace updates más conservadores |
@@ -288,6 +288,7 @@ métricas en [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.6** | 2026-11-15 | Codificador estructurado compartido (rl_env_spec §3.c): mismo sub-MLP `464→128→64` para los 12 Pokémon + matrices crudas → 876 → tronco 256 (1,61M → 0,45M parámetros). `RL_OBS_ENCODER=flat` restaura el MLP plano. Checkpoints anteriores incompatibles. |
 | **1.5** | 2026-11-14 | Observación v2 con OTS completo (5676D: stats exactos/rango, mega, item, habilidad, movimientos, identidad y matrices daño/velocidad) desde el dex Champions congelado; rival en orden canónico. Score de checkpoint/tune = `MEAN_WR` pareado sobre contextos fijos (antes `-pg_loss`). Evaluación periódica + `best.pt`. `train_metrics.jsonl` (diagnóstico PPO y estrategia por rol). Barajado de minibatches distinto por update. Probe `run_preview_value_probe`. |
 | **1.4** | 2026-10-11 | Persiste `final.pt`; consumido por DDQN/PPO vía `frozen_preview`. |
 | **1.3** | 2026-10-11 | Tune `run_team_preview_ppo_hp_tune` + tracking; CLI lr/clip; independencia vs combate DDQN/PPO. |

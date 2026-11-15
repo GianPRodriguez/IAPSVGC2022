@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.8** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
+| **Versión** | **1.9** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
 | **Estado** | FROZEN; `showdown/rl/ppo/` y `battle_bots/ppo/` |
 | **Training** | **Sí, parcial**: PPO/curriculum operativos; self-play tiene infraestructura básica, no un rival de checkpoint plenamente cableado |
 | **Inferencia** | `ValidatedPPOPlayer`, greedy masked desde checkpoint |
@@ -44,7 +44,7 @@ que se está optimizando.
    optimizan surrogate clipped, error de valor y entropía.
 8. Se vacía el buffer: PPO no reutiliza replay antiguo.
 
-Red: torso `6332→512→512`, cabeza slot 1 `512→40`, cabeza slot 2
+Red: codificador estructurado `6332→1272` ([`rl_env_spec.md`](rl_env_spec.md) §3.c), torso `1272→512→512`, cabeza slot 1 `512→40`, cabeza slot 2
 `[512+onehot(40)]→40` y value `512→1`.
 
 ### Intuición de PPO y GAE
@@ -66,7 +66,10 @@ la entropía evita colapsar prematuramente entre las opciones legales.
 
 ### Arquitectura y condicionamiento
 
-El torso compartido comprime 6332 features a un embedding de 512. `policy1`
+El codificador aplica el mismo sub-MLP a cada Pokémon (522→128→64) y a cada movimiento
+(81→64→32; rival 43→64→32); el torso compartido comprime esos 1272 features a un embedding de 512.
+Cada minibatch suma `sym_coef·(log π(g·a|g·s) − log π(a|s)ᵀ)²` y la pérdida de valor sobre `g·s`
+(simetrías a/b propio, a/b rival y reservas, §3.d). `policy1`
 produce 40 logits. Tras elegir \(a_1\), su one-hot de 40 posiciones se concatena
 al embedding: `policy2` puede aprender que una orden para slot 2 deja de ser
 válida o conveniente por la orden del slot 1. `value` produce un escalar.
@@ -239,6 +242,7 @@ Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.9** | 2026-11-15 | Codificador estructurado (rl_env_spec §3.c) antes del torso (3,55M → 1,05M parámetros). Pérdida de consistencia por simetría estilo DrAC (§3.d): `sym_coef`=0,1 sobre log π(g·a|g·s) y valor sobre g·s; métricas `sym_*`. Objetivo aliado del slot 0 corregido. Checkpoints anteriores incompatibles. |
 | **1.8** | 2026-11-14 | ObsSpec v2 (6332D, OTS completo + estado + historial) y ActionSpec v2 (40 ids por slot: mega como flag de cada movimiento×objetivo; máscara de entrenamiento = `valid_orders`). Checkpoints anteriores incompatibles. |
 | **1.7** | 2026-10-12 | Figuras reales al cerrar tune + ledger histórico en `logs/figures/`. |
 | **1.6** | 2026-10-11 | Train/infer bajo Preview PPO congelado (`frozen_preview`). |

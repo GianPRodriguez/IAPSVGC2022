@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS+PUCT open-loop (solo turnos) |
-| **Versión** | **1.6** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
+| **Versión** | **1.7** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
 | **Estado** | FROZEN; `showdown/rl/mcts_puct/` y `battle_bots/mcts_puct/` |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Hiperparámetros de búsqueda (sobre todo \(N_{\rm sim}\)); barrido automatizado |
@@ -312,6 +312,7 @@ y turno para reproducir RNG.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.7** | 2026-11-15 | Objetivo aliado del slot 0 corregido en el adaptador de órdenes (−2; antes −1 = sí mismo, rechazado por Showdown). Sin cambios de obs. |
 | **1.6** | 2026-11-14 | ActionSpec v2 (40 ids por slot, mega como flag de cada movimiento; joint 1600) y máscaras desde `valid_orders`. |
 | **1.5** | 2026-10-11 | Inferencia bajo Preview Nash congelado (`frozen_preview`). |
 | **1.4** | 2026-10-11 | §Q/N pedagógico; meseta \(N_{\rm sim}\); CLI `run_mcts_sims_sweep`; rival/seed/criterio; **tracking** history/progress de cambios de N_sim. |

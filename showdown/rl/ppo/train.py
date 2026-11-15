@@ -243,6 +243,7 @@ def _collect_and_update(
                 'kl': metrics_last.get('approx_kl'),
                 'clip': metrics_last.get('clip_fraction'),
                 'ent': metrics_last.get('entropy'),
+                'sym_pi': metrics_last.get('sym_pi_loss'),
                 'pool': len(pool) if pool else 0,
             },
         )
@@ -382,6 +383,7 @@ def _collect_and_update_vec(
                 'kl': metrics_last.get('approx_kl'),
                 'clip': metrics_last.get('clip_fraction'),
                 'ent': metrics_last.get('entropy'),
+                'sym_pi': metrics_last.get('sym_pi_loss'),
                 'restarts': restarts,
             },
         )

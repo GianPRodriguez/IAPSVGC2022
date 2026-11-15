@@ -217,6 +217,7 @@ def _ppo_actor_epochs(agent: PPOAgent, buf, *, k_pg: int) -> dict:
     ent_coef = agent.cfg.ent_coef
     clip_fracs = []
     losses = []
+    sym_acc: dict = {}
     # Actor params only
     actor_params = [p for n, p in agent.net.named_parameters() if not n.startswith('value.')]
     agent.net.train()
@@ -237,6 +238,12 @@ def _ppo_actor_epochs(agent: PPOAgent, buf, *, k_pg: int) -> dict:
             policy_loss = -torch_mod.min(surr1, surr2).mean()
             entropy = ent.mean()
             loss = policy_loss - ent_coef * entropy
+            # Consistencia por simetría solo en el actor (el valor es el crítico compartido).
+            sym_pi, _sym_v, s_stats = agent.symmetry_terms(batch, logp, None)
+            if sym_pi is not None:
+                loss = loss + float(agent.cfg.sym_coef) * sym_pi
+            for k, val in s_stats.items():
+                sym_acc.setdefault(k, []).append(val)
             agent.optim.zero_grad(set_to_none=True)
             loss.backward()
             torch_mod.nn.utils.clip_grad_norm_(actor_params, agent.cfg.grad_clip)
@@ -253,10 +260,12 @@ def _ppo_actor_epochs(agent: PPOAgent, buf, *, k_pg: int) -> dict:
                 losses.append(float(loss.item()))
     agent.update_steps += 1
     buf.clear()
-    return {
+    out = {
         'policy_loss': float(np.mean(losses)) if losses else float('nan'),
         'clip_fraction': float(np.mean(clip_fracs)) if clip_fracs else 0.0,
     }
+    out.update({k: float(np.mean(v)) for k, v in sym_acc.items() if v})
+    return out
 
 
 def pg_improve(

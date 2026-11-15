@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS–PUCT/Nash simultáneo (solo turnos) |
-| **Versión** | **1.6** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
+| **Versión** | **1.7** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
 | **Estado** | FROZEN; `showdown/rl/mcts_puct_nash/` |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Presupuesto \(N_{\rm sim}\), Top-K, FP; barrido automatizado de sims |
@@ -279,6 +279,7 @@ y turno.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.7** | 2026-11-15 | Objetivo aliado del slot 0 corregido en el adaptador de órdenes (−2; antes −1 = sí mismo, rechazado por Showdown). Sin cambios de obs. |
 | **1.6** | 2026-11-14 | ActionSpec v2 (40 ids por slot, mega como flag de cada movimiento; joint 1600) y máscaras desde `valid_orders`. |
 | **1.5** | 2026-10-11 | Inferencia bajo Preview Nash congelado (`frozen_preview`). |
 | **1.4** | 2026-10-11 | §Q/N por celdas; meseta \(N_{\rm sim}\); CLI sweep; rival/seed/criterio; **tracking** de cambios de N_sim. |

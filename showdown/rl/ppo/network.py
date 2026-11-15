@@ -6,24 +6,28 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from showdown.rl.constants import ILLEGAL_LOGIT, OBS_DIM, SLOT_ACTION_N
+from showdown.rl.encoders import combat_encoder
 
 
 class ActorCritic(nn.Module):
     """
-    Shared torso 1024→512→512, Slot1 head 24, Slot2 head on [h; onehot(a1)], V(s).
+    Codificador estructurado → torso 512→512, Slot1 head 40,
+    Slot2 head on [h; onehot(a1)], V(s).
     """
 
-    def __init__(self, obs_dim: int = OBS_DIM, n_actions: int = SLOT_ACTION_N):
+    def __init__(self, obs_dim: int = OBS_DIM, n_actions: int = SLOT_ACTION_N,
+                 encoder: str | None = None):
         super().__init__()
         self.n_actions = int(n_actions)
-        self.fc1 = nn.Linear(obs_dim, 512)
+        self.encoder = combat_encoder(obs_dim, encoder)
+        self.fc1 = nn.Linear(self.encoder.out_dim, 512)
         self.fc2 = nn.Linear(512, 512)
         self.policy1 = nn.Linear(512, n_actions)
         self.policy2 = nn.Linear(512 + n_actions, n_actions)
         self.value = nn.Linear(512, 1)
 
     def features(self, obs: torch.Tensor) -> torch.Tensor:
-        h = F.relu(self.fc1(obs))
+        h = F.relu(self.fc1(self.encoder(obs)))
         return F.relu(self.fc2(h))
 
     def forward(

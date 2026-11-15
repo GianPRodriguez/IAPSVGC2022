@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.6** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
+| **Versión** | **1.7** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
 | **Estado** | FROZEN; `showdown/rl/qd_ppo/` |
 | **Training** | **Sí**: MAP-Elites serial con PPO como operador de mejora |
 | **Inferencia** | Despliega \(\pi^\*=\arg\max f\) desde `best_elite.pt` |
@@ -54,7 +54,7 @@ una copia con Candidate 2; la evaluación Candidate 1 decide bin y reemplazo.
 ### Red y contenido del archivo
 
 Cada elite guarda el `state_dict` completo del `ActorCritic`: torso
-`6332→512→512`, cabezas auto-regresivas de 40 y value head. No hay parámetros
+codificador estructurado + `1272→512→512`, cabezas auto-regresivas de 40 y value head. No hay parámetros
 compartidos entre celdas. `archive.pt` conserva el repertorio y
 `best_elite.pt` el máximo fitness desplegable.
 
@@ -226,6 +226,7 @@ siendo la suite de \(\pi^\*\), no coverage por sí sola.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.7** | 2026-11-15 | Codificador estructurado (rl_env_spec §3.c) dentro del actor; consistencia por simetría (§3.d) en las actualizaciones PPO del actor (vía `PPOAgent.update`). Objetivo aliado del slot 0 corregido. Checkpoints/archivos anteriores incompatibles. |
 | **1.6** | 2026-11-14 | ObsSpec v2 (6332D, OTS completo + estado + historial) y ActionSpec v2 (40 ids por slot: mega como flag de cada movimiento×objetivo; máscara de entrenamiento = `valid_orders`). Checkpoints anteriores incompatibles. |
 | **1.5** | 2026-10-11 | Train/infer bajo Preview QD-PGA congelado (`frozen_preview`). |
 | **1.4** | 2026-10-11 | CLI `--lr/--clip-eps`; tune `run_qd_ppo_hp_tune` + tracking prev→nuevo; independencia vs Preview QD-PGA. |

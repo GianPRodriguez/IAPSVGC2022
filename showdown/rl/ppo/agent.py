@@ -26,6 +26,13 @@ class PPOConfig:
     grad_clip: float = 0.5
     device: str = 'cpu'
     seed: int = 0
+    # Consistencia por simetría (showdown/rl/symmetry.py, estilo DrAC): en cada
+    # minibatch se permuta la obs y la acción con un elemento aleatorio del grupo
+    # y se agrega sym_coef·(logπ(g·a|g·s) − logπ(a|s)ᵀ)² (ᵀ = sin gradiente) y la
+    # pérdida de valor sobre g·s con el mismo retorno. PPO no puede usar las
+    # muestras permutadas como datos on-policy (la acción no se muestreó de π(·|g·s)).
+    sym_coef: float = 0.1
+    sym_value: bool = True
 
 
 class PPOAgent:
@@ -180,6 +187,38 @@ class PPOAgent:
         ent = self._masked_ent(z1, m1) + self._masked_ent(z2, m2)
         return logp, ent, v, z1m
 
+    def symmetry_terms(self, batch: Dict[str, np.ndarray], logp: 'torch.Tensor',
+                       ret: Optional['torch.Tensor'] = None):
+        """Pérdidas de consistencia (política, valor) sobre el minibatch permutado.
+
+        Devuelve ``(pi_loss, v_loss, stats)``; ``(None, None, {})`` si está apagado.
+        """
+        from showdown.rl import symmetry as SYM
+
+        obs_np = np.asarray(batch['obs'])
+        if (self.cfg.sym_coef <= 0.0 and not self.cfg.sym_value) or \
+                obs_np.shape[-1] != OBS_DIM or not SYM.sym_aug_enabled(True):
+            return None, None, {}
+        torch = self._torch
+        aug = SYM.ppo_symmetry_batch(obs_np, batch['a1'], batch['a2'], batch['m1'],
+                                     batch['m2'], self._rng)
+        dev = self.device
+        o = torch.as_tensor(aug['obs'], dtype=torch.float32, device=dev)
+        a1 = torch.as_tensor(aug['a1'], dtype=torch.long, device=dev)
+        a2 = torch.as_tensor(aug['a2'], dtype=torch.long, device=dev)
+        m1 = torch.as_tensor(aug['m1'], dtype=torch.float32, device=dev)
+        m2 = torch.as_tensor(aug['m2'], dtype=torch.float32, device=dev)
+        logp_g, _ent, v_g, _ = self.evaluate_actions(o, a1, a2, m1, m2)
+        pi_loss = ((logp_g - logp.detach()) ** 2).mean()
+        v_loss = None
+        if self.cfg.sym_value and ret is not None:
+            v_loss = self._F.mse_loss(v_g, ret)
+        stats = SYM.element_stats(aug['g'])
+        stats['sym_pi_loss'] = float(pi_loss.item())
+        if v_loss is not None:
+            stats['sym_v_loss'] = float(v_loss.item())
+        return pi_loss, v_loss, stats
+
     def observe(
         self,
         *,
@@ -318,6 +357,7 @@ class PPOAgent:
         approx_kls = []
         entropies = []
         losses = []
+        sym_acc: Dict[str, list] = {}
         self.net.train()
         for _ in range(int(self.cfg.epochs)):
             for batch in self.buffer.minibatches(self.cfg.minibatch_size, self._rng):
@@ -344,6 +384,13 @@ class PPOAgent:
                     + self.cfg.vf_coef * value_loss
                     - self.cfg.ent_coef * entropy
                 )
+                sym_pi, sym_v, s_stats = self.symmetry_terms(batch, logp, ret)
+                if sym_pi is not None:
+                    loss = loss + float(self.cfg.sym_coef) * sym_pi
+                if sym_v is not None:
+                    loss = loss + self.cfg.vf_coef * sym_v
+                for k, val in s_stats.items():
+                    sym_acc.setdefault(k, []).append(val)
                 self.optim.zero_grad(set_to_none=True)
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.net.parameters(), self.cfg.grad_clip)
@@ -368,13 +415,15 @@ class PPOAgent:
             else float(1.0 - np.var(y_true - y_pred) / var_y)
         )
         self.buffer.clear()
-        return {
+        out = {
             'loss': float(np.mean(losses)) if losses else float('nan'),
             'clip_fraction': float(np.mean(clip_fracs)) if clip_fracs else 0.0,
             'approx_kl': float(np.mean(approx_kls)) if approx_kls else 0.0,
             'entropy': float(np.mean(entropies)) if entropies else 0.0,
             'explained_variance': expl,
         }
+        out.update({k: float(np.mean(v)) for k, v in sym_acc.items() if v})
+        return out
 
     def save(self, path: Path | str) -> Path:
         self._ensure_torch()

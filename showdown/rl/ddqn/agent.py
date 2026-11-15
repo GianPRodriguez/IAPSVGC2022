@@ -31,6 +31,11 @@ class DDQNConfig:
     eps_decay_steps: int = 500_000
     device: str = 'cpu'
     seed: int = 0
+    # Aumentación por simetría (showdown/rl/symmetry.py): a cada transición
+    # muestreada se le aplica un elemento aleatorio del grupo a/b propio, a/b
+    # rival y reservas, a (s, a) y otro independiente a (s', m'). Exacto: Q es
+    # invariante. RL_SYM_AUG=0 lo apaga.
+    sym_aug: bool = True
 
 
 class DDQNAgent:
@@ -188,6 +193,16 @@ class DDQNAgent:
         from showdown.rl.ddqn.replay import ReplayBuffer
 
         s, a, r, s2, term, m2, opp = self.replay.sample(self.cfg.batch_size, self._rng)
+        sym_stats: Dict[str, float] = {}
+        if s.shape[1] == OBS_DIM:
+            from showdown.rl import symmetry as SYM
+
+            if SYM.sym_aug_enabled(self.cfg.sym_aug):
+                g = SYM.sample_elements(s, self._rng)
+                s, a = SYM.augment_obs(s, g), SYM.augment_joint(a, g)
+                h = SYM.sample_elements(s2, self._rng)
+                s2, m2 = SYM.augment_obs(s2, h), SYM.augment_joint_mask(m2, h)
+                sym_stats = SYM.element_stats(g)
         s_t = torch.as_tensor(s, dtype=torch.float32, device=self.device)
         a_t = torch.as_tensor(a, dtype=torch.int64, device=self.device)
         r_t = torch.as_tensor(r, dtype=torch.float32, device=self.device)
@@ -223,6 +238,7 @@ class DDQNAgent:
             'td_error': float((q_sa - y).abs().mean().item()),
             'eps': self.epsilon,
         }
+        out.update(sym_stats)
         for name, frac in batch_frac.items():
             out[f'batch_frac_{name}'] = float(frac)
         for name, frac in buf_frac.items():

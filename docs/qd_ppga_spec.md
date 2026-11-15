@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.6** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.18) |
+| **Versión** | **1.7** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
 | **Estado** | FROZEN; `showdown/rl/qd_ppga/` |
 | **Training** | **Sí**: emits PPO-only con crítico compartido y padres por arborescencia |
 | **Inferencia** | `ValidatedQDPPGAPlayer` con el mejor elite actor-only |
@@ -57,7 +57,7 @@ de selección, no una restricción matemática.
 
 ### Arquitectura proximal-only
 
-Los elites guardan solo el actor PPO: torso `6332→512→512` y cabezas AR 40/40.
+Los elites guardan solo el actor PPO: codificador estructurado y torso `1272→512→512` y cabezas AR 40/40.
 El value head se excluye del archivo. Un `SharedCritic` separado aporta valores
 a todos los hijos y aprende TD(0) desde replay. Cada hijo se deriva por PPO
 clipped; `P_MUT=0.0` se verifica con una aserción y no existe fallback genético.
@@ -217,6 +217,7 @@ El metadata de cada elite conserva el modo de padre para auditoría.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.7** | 2026-11-15 | Codificador estructurado (rl_env_spec §3.c) dentro del actor; consistencia por simetría (§3.d) en las actualizaciones PPO del actor y aumentación exacta en el TD del crítico compartido. Objetivo aliado del slot 0 corregido. Checkpoints/archivos anteriores incompatibles. |
 | **1.6** | 2026-11-14 | ObsSpec v2 (6332D, OTS completo + estado + historial) y ActionSpec v2 (40 ids por slot: mega como flag de cada movimiento×objetivo; máscara de entrenamiento = `valid_orders`). Checkpoints anteriores incompatibles. |
 | **1.5** | 2026-10-11 | Train/infer bajo Preview QD-PGA congelado (`frozen_preview`). |
 | **1.4** | 2026-10-11 | CLI `--lr/--clip-eps`; tune `run_qd_ppga_hp_tune` + tracking prev→nuevo. |

@@ -31,7 +31,29 @@ from showdown.rl.snapshot import (
 
 # Spec target index → poke-env move_target
 # Spec: 0 foe_a, 1 foe_b, 2 ally, 3 self/field
-_SPEC_TARGET_TO_PE = {0: 1, 1: 2, 2: -1, 3: 0}
+_SPEC_TARGET_TO_PE = {0: 1, 1: 2, 2: -1, 3: 0}  # legado; usar spec_target_to_pe
+
+
+def spec_target_to_pe(slot: int, target: int, move=None) -> int:
+    """Objetivo Spec → posición Showdown, **relativa al slot**.
+
+    0/1 = rival a/b (1/2). 2 = aliado: −2 para el slot 0 y −1 para el slot 1
+    (antes era −1 fijo: el slot 0 "apuntaba al aliado" con su propia posición,
+    Showdown lo rechazaba y el slot 0 nunca podía apuntar a su aliado). 3 = sin
+    objetivo (0), salvo movimientos ``adjacentAllyOrSelf`` → la propia posición.
+    """
+    t = int(target)
+    if t == 0:
+        return 1
+    if t == 1:
+        return 2
+    self_pos, ally_pos = (-1, -2) if int(slot) == 0 else (-2, -1)
+    if t == 2:
+        return ally_pos
+    tgt = getattr(getattr(move, 'target', None), 'name', '') if move is not None else ''
+    if str(tgt).upper() == 'ADJACENT_ALLY_OR_SELF':
+        return self_pos
+    return 0
 
 
 def _norm(s: str) -> str:
@@ -496,7 +518,7 @@ def slot_action_to_pe_order(battle, slot: int, act: SlotAction):
         return PassBattleOrder()
     mi = int(max(0, min(len(moves) - 1, act.move_index)))
     move = moves[mi]
-    target = _SPEC_TARGET_TO_PE.get(int(act.target), 1)
+    target = spec_target_to_pe(slot, int(act.target), move)
     return _create_order(
         move,
         move_target=target,

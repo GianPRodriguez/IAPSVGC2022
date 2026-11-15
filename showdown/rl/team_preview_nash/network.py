@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from showdown.rl.encoders import preview_encoder
 from showdown.rl.team_preview_action import N_ACTIONS
 from showdown.rl.team_preview_obs import OBS_DIM
 
@@ -25,13 +26,16 @@ class LowRankPayoffNet(nn.Module):
         n_actions: int = N_ACTIONS,
         d_a: int = D_ACTION,
         d_lat: int = D_LAT,
+        encoder: str | None = None,
     ):
         super().__init__()
         self.n_actions = int(n_actions)
         self.d_a = int(d_a)
         self.d_lat = int(d_lat)
+        enc = preview_encoder(obs_dim, encoder)
         self.trunk = nn.Sequential(
-            nn.Linear(obs_dim, TRUNK_H),
+            enc,
+            nn.Linear(enc.out_dim, TRUNK_H),
             nn.ReLU(),
             nn.Linear(TRUNK_H, TRUNK_H),
             nn.ReLU(),

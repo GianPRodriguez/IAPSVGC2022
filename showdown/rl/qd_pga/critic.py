@@ -20,7 +20,9 @@ class SharedCritic:
         vf_coef: float = 0.5,
         device: str = 'cpu',
         obs_dim: int = OBS_DIM,
+        sym_aug: bool = True,
     ):
+        self.sym_aug = bool(sym_aug)
         self.lr = float(lr)
         self.gamma = float(gamma)
         self.vf_coef = float(vf_coef)
@@ -44,15 +46,18 @@ class SharedCritic:
         device = torch.device(self.device_name)
         self.device = device
 
+        from showdown.rl.encoders import combat_encoder
+
         class _Critic(nn.Module):
             def __init__(self, obs_dim: int):
                 super().__init__()
-                self.fc1 = nn.Linear(obs_dim, 512)
+                self.encoder = combat_encoder(obs_dim)
+                self.fc1 = nn.Linear(self.encoder.out_dim, 512)
                 self.fc2 = nn.Linear(512, 512)
                 self.value = nn.Linear(512, 1)
 
             def forward(self, obs: torch.Tensor) -> torch.Tensor:
-                h = F.relu(self.fc1(obs))
+                h = F.relu(self.fc1(self.encoder(obs)))
                 h = F.relu(self.fc2(h))
                 return self.value(h).squeeze(-1)
 
@@ -96,6 +101,13 @@ class SharedCritic:
         self.net.train()
         for _ in range(int(n_updates)):
             s, r, s2, term = replay.sample(batch_size, rng)
+            if self.sym_aug and np.asarray(s).shape[-1] == OBS_DIM:
+                from showdown.rl import symmetry as SYM
+
+                if SYM.sym_aug_enabled(True):
+                    # V invariante: elemento independiente para s y s'.
+                    s = SYM.augment_obs(s, SYM.sample_elements(s, rng))
+                    s2 = SYM.augment_obs(s2, SYM.sample_elements(s2, rng))
             s_t = torch.as_tensor(s, dtype=torch.float32, device=self.device)
             r_t = torch.as_tensor(r, dtype=torch.float32, device=self.device)
             s2_t = torch.as_tensor(s2, dtype=torch.float32, device=self.device)

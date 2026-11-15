@@ -1,17 +1,22 @@
-"""MLP Q-network 1024→512→512→576 (DDQNSpec)."""
+"""Q-network: codificador estructurado → 512 → 512 → 1600 (DDQNSpec v1.10)."""
 from __future__ import annotations
+
+from typing import Optional
 
 import torch
 import torch.nn as nn
 
 from showdown.rl.constants import JOINT_ACTION_N, OBS_DIM
+from showdown.rl.encoders import combat_encoder
 
 
 class QNetwork(nn.Module):
-    def __init__(self, obs_dim: int = OBS_DIM, n_actions: int = JOINT_ACTION_N):
+    def __init__(self, obs_dim: int = OBS_DIM, n_actions: int = JOINT_ACTION_N,
+                 encoder: Optional[str] = None):
         super().__init__()
+        self.encoder = combat_encoder(obs_dim, encoder)
         self.net = nn.Sequential(
-            nn.Linear(obs_dim, 512),
+            nn.Linear(self.encoder.out_dim, 512),
             nn.ReLU(),
             nn.Linear(512, 512),
             nn.ReLU(),
@@ -19,7 +24,7 @@ class QNetwork(nn.Module):
         )
 
     def forward(self, obs: torch.Tensor) -> torch.Tensor:
-        return self.net(obs)
+        return self.net(self.encoder(obs))
 
 
 @torch.no_grad()
