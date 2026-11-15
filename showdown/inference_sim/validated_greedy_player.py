@@ -93,7 +93,7 @@ def _calibration_set_truth(opp_team) -> None:
             pass
 
 
-SP_INFO_MODES = ('inference', 'oracle', 'oracle_spe', 'none', 'spe_min', 'spe_max')
+SP_INFO_MODES = ('inference', 'oracle', 'oracle_spe', 'none', 'spe_min', 'spe_max', 'meta')
 
 
 def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
@@ -107,6 +107,9 @@ def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
       partida la inferencia no estrecha nada y cuesta ~2x tiempo (ver specs v1.6).
     - ``spe_min`` / ``spe_max``: como ``none`` pero la Spe de todos los rivales fija
       en SP 0 / SP máx (diagnóstico: ¿importa la Spe rival a la decisión?).
+    - ``meta`` ("opción C"): como ``none`` pero los 6 stats de cada rival fijos al reparto
+      más frecuente del prior meta (leave-one-out si está activo), que respeta el
+      presupuesto de 66 SP, en vez de SP 32 en HP/Atk/Def/SpA/SpD + prior en Spe.
 
     ``opp_team_fn`` devuelve el TeamMeta rival vigente (cambia entre series).
     """
@@ -118,6 +121,22 @@ def apply_sp_info_mode(iap_battle, mode: str, opp_team_fn) -> None:
         return
     if mode == 'none':
         beliefs.inference_off = True
+    elif mode == 'meta':
+        from showdown.meta_sp_prior import preferred_sp_map
+        from showdown.stat_inference import SP_MIN, STAT_KEYS, _apply_oracle, sp_limits
+
+        beliefs.inference_off = True
+        full = {s: set(range(SP_MIN, sp_limits()[0] + 1)) for s in STAT_KEYS}
+
+        def _meta_lookup(belief):
+            return preferred_sp_map(
+                species=belief.species, nature=belief.nature, candidates=full,
+                exclude=getattr(beliefs, 'prior_exclude', None),
+            )
+        _meta_lookup.wants_belief = True
+        beliefs.oracle_lookup = _meta_lookup
+        for belief in list(beliefs.beliefs.values()):
+            _apply_oracle(belief, beliefs.oracle_lookup)
     elif mode in ('spe_min', 'spe_max'):
         from showdown.stat_inference import SP_MIN, _apply_oracle, sp_limits
 
@@ -866,8 +885,9 @@ class ValidatedBattleMixin:
         mode = self.effective_sp_info_mode()
         if _os.environ.get('PS_ORACLE_SP_EXPECTIMAX') == '1' and hasattr(self, 'set_opp_ots_sheet'):
             mode = 'oracle'  # Diagnóstico: SP verdaderos SOLO para el jugador expectimax.
-        apply_sp_info_mode(self.iap_battle, mode, lambda: self.opp_team)
+        # Primero la exclusión leave-one-out: el modo 'meta' la usa al fijar los stats.
         apply_prior_leave_one_out(self.iap_battle, self.opp_team)
+        apply_sp_info_mode(self.iap_battle, mode, lambda: self.opp_team)
         self._sync_role_ids()
         self._bootstrapped = True
         if len(self.protocol_log) < 420:

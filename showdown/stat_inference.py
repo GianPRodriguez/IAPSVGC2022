@@ -202,7 +202,8 @@ def _apply_oracle(belief, fn=None) -> None:
     if fn is None:
         return
     try:
-        sp = fn(belief.species)
+        # Algunos lookups (modo 'meta') necesitan la creencia completa (naturaleza, exclusión).
+        sp = fn(belief) if getattr(fn, 'wants_belief', False) else fn(belief.species)
     except Exception:
         return
     if not sp:

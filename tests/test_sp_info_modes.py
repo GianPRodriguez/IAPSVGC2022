@@ -48,7 +48,7 @@ def test_inference_mode_is_production_noop():
 def test_unknown_mode_is_rejected():
     with pytest.raises(ValueError):
         apply_sp_info_mode(_iap(si.TeamStatBeliefs()), 'perfect', lambda: None)
-    assert set(SP_INFO_MODES) == {'inference', 'oracle', 'oracle_spe', 'none', 'spe_min', 'spe_max'}
+    assert set(SP_INFO_MODES) == {'inference', 'oracle', 'oracle_spe', 'none', 'spe_min', 'spe_max', 'meta'}
 
 
 def test_none_mode_never_narrows_speed():
@@ -256,3 +256,27 @@ def test_preview_diagnostic_variants():
     assert set(same) == set(best_team_preview_order(us, fo).order)
     for k in ('expectimax_noroles', 'expectimax_nolead', 'sheet', 'expectimax_typing', 'greedy_roles25'):
         assert callable(vgp.preview_function(k))
+
+
+def test_meta_mode_fixes_all_six_stats_to_loo_prior_spread():
+    """Opción C: los 6 stats fijos al reparto del prior (con leave-one-out) y también tras mega."""
+    from showdown import meta_sp_prior as msp
+    from showdown.inference_sim.validated_greedy_player import apply_prior_leave_one_out
+
+    si.reset_sp_limits()
+    beliefs = si.TeamStatBeliefs()
+    iap = _iap(beliefs)
+    pre = beliefs.belief_for(_salamence())  # creada antes (como en bootstrap)
+    team = SimpleNamespace(mons=[SimpleNamespace(species='Salamence', nature='Jolly',
+                                                 sp={'hp': 0, 'atk': 32, 'def': 0, 'spa': 0,
+                                                     'spd': 2, 'spe': 32})])
+    apply_prior_leave_one_out(iap, team)
+    apply_sp_info_mode(iap, 'meta', lambda: team)
+    assert beliefs.inference_off is True
+    full = {s: set(range(33)) for s in si.STAT_KEYS}
+    want = msp.preferred_sp_map(species=pre.species, nature=pre.nature, candidates=full,
+                                exclude=beliefs.prior_exclude)
+    assert all(pre.candidates[s] == {want[s]} for s in si.STAT_KEYS)
+    assert sum(want.values()) <= 66 + 2  # reparto real del meta, no SP 32 en cinco stats
+    mega = Pokemon('salamence-mega', -1, True, 'salamencite', 'aerilate', None, None, None, None, 'jolly')
+    assert all(len(beliefs.belief_for(mega).candidates[s]) == 1 for s in si.STAT_KEYS)
