@@ -328,6 +328,29 @@ sus mundos bayesianos:** C los reduce a un solo reparto, rinde igual y quitaría
 
 **Congelada como v1.9 por defecto** (commit de esta fecha) para la confirmación.
 
+## Fase 3: confirmación (bloques C1 = 9201–9217 y C2 = 9301–9317, commit a6d706c)
+
+| Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
+|---|---|---|---|---|---|---|---|
+| H1 expectimax v1.9 > joint v1.8 (C1+C2) | 5119 / 10103 | 50,67 % | [49,82; 51,51] | 0,18 | 0,18 | 23/34 | **Sin diferencia demostrada** (C1 49,71 %, C2 51,62 %: tampoco hay consistencia) |
+| H2 joint v1.8 > solo v1.8 (C1) | 2609 / 5054 | 51,62 % | [50,53; 52,74] | 0,022 | 0,044 | 12/17 | **Superioridad estadística, ventaja pequeña (+1,6 pts)**; no práctica (límite inferior < 55 %) |
+| H3 expectimax v1.9 > solo v1.8 (C1) | 2677 / 5049 | 53,02 % | [51,83; 54,18] | 1,9·10⁻⁵ | 5,6·10⁻⁵ | 16/17 | **Superioridad estadística, ventaja pequeña (+3,0 pts)**; no práctica |
+
+Secundarias (p sin ajustar, C1):
+
+| Id | Resultado | Lectura |
+|---|---|---|
+| S1 v1.9 frente a v1.8, ambos contra joint | McNemar +0,04 pts (84 frente a 82 discordantes), p = 0,94 | La ganancia de la Fase 2c (+0,82 pts en exploración) **no se replica** |
+| S2 oráculo frente a v1.9, ambos contra joint | McNemar +1,17 pts (384 frente a 326), p = 0,032 | Contra lo esperado, **el oráculo de SP sí aporta algo** (secundaria, sin ajustar) |
+| S3 v1.9 frente a random | 99,78 %, 17/17 semillas | Control de cordura correcto |
+
+**Diagnóstico exploratorio (agregado tras ver H1 C1, no confirmatorio):** expectimax v1.9
+contra joint con la regla anterior (`--sp-info-b none`) en C1 = **52,22 %** [51,12; 53,36],
+15/17 semillas. McNemar frente a H1 C1: +2,33 pts (595 frente a 479), p = 0,0004. Es decir,
+**la opción C hizo a joint ~2,3 pts más fuerte contra expectimax**; esa es la causa principal
+del empate en H1. El resto de la caída (53,5 % en exploración frente a 52,2 % en C1 contra
+el mismo joint) es el sesgo de selección que el protocolo esperaba.
+
 ## Plan
 
 | Fase | Contenido | Estado |
@@ -335,8 +358,8 @@ sus mundos bayesianos:** C los reduce a un solo reparto, rinde igual y quitaría
 | 0 | Línea base, A frente a B frente a oráculo, factorial preview × combate | **hecha** |
 | Preview | Diagnóstico y corrección del preview de roles | **hecha.** Opción 1 aplicada (v1.7): preview = tipado + BST, idéntico al de greedy. Opción 2 (roles por movimientos) descartada: −1,5 / −2,4 |
 | 1 | Diagnóstico sin cambiar el agente: acierto del modelo del rival por cada rival, escala de la amenaza frente a la ofensa, aporte de cada término de V, uso y resultado de la puerta | **hecha** (ver arriba). Además: A por defecto (v1.8) |
-| 2 | Una mejora por corrida, con el preview fijo (desde v1.7 es el preview por defecto de expectimax, así que no hace falta forzarlo): Protect condicional en el modelo del rival, calibración de la amenaza, cambios voluntarios que nunca se eligen. La actualización bayesiana de los mundos tiene prioridad baja, porque el oráculo no aporta | pendiente |
-| 3 | Combinar lo que pase y reajustar la puerta; confirmar con semillas nuevas (contra joint, solo y random); **volver a medir A contra los oráculos** con la versión final (si el oráculo pasa a aportar, se reactiva la actualización bayesiana); documentar | pendiente |
+| 2 | Una mejora por corrida, con el preview fijo (desde v1.7 es el preview por defecto de expectimax, así que no hace falta forzarlo): Protect condicional en el modelo del rival, calibración de la amenaza, cambios voluntarios que nunca se eligen. La actualización bayesiana de los mundos tiene prioridad baja, porque el oráculo no aporta | **hecha** (v1.9: cambios voluntarios; el resto no ayudó) |
+| 3 | Combinar lo que pase y reajustar la puerta; confirmar con semillas nuevas (contra joint, solo y random); **volver a medir A contra los oráculos** con la versión final (si el oráculo pasa a aportar, se reactiva la actualización bayesiana); documentar | **hecha** (ver Fase 3): H1 sin diferencia, H3 confirmada; S2 sugiere que el oráculo aporta +1,2 pts |
 
 
 ## Reproducir

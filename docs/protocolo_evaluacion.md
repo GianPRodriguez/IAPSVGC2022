@@ -127,6 +127,32 @@ etiquetan como secundarias):
 Cada afirmación lleva su alcance: "en Reg M-C, con el pool MetaVGC de 300 equipos e
 información simétrica".
 
+### 5.1 Resultados de la confirmación (15-11-2026, commit a6d706c)
+
+| Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
+|---|---|---|---|---|---|---|---|
+| H1 expectimax v1.9 > joint v1.8 (C1+C2) | 5119 / 10103 | 50,67 % | [49,82; 51,51] | 0,18 | 0,18 | 23/34 | **Sin diferencia demostrada** (C1 49,71 %, C2 51,62 %: tampoco hay consistencia) |
+| H2 joint v1.8 > solo v1.8 (C1) | 2609 / 5054 | 51,62 % | [50,53; 52,74] | 0,022 | 0,044 | 12/17 | **Superioridad estadística, ventaja pequeña (+1,6 pts)**; no práctica (límite inferior < 55 %) |
+| H3 expectimax v1.9 > solo v1.8 (C1) | 2677 / 5049 | 53,02 % | [51,83; 54,18] | 1,9·10⁻⁵ | 5,6·10⁻⁵ | 16/17 | **Superioridad estadística, ventaja pequeña (+3,0 pts)**; no práctica |
+
+Secundarias (p sin ajustar, C1):
+
+| Id | Resultado | Lectura |
+|---|---|---|
+| S1 v1.9 frente a v1.8, ambos contra joint | McNemar +0,04 pts (84 frente a 82 discordantes), p = 0,94 | La ganancia de la Fase 2c (+0,82 pts en exploración) **no se replica** |
+| S2 oráculo frente a v1.9, ambos contra joint | McNemar +1,17 pts (384 frente a 326), p = 0,032 | Contra lo esperado, **el oráculo de SP sí aporta algo** (secundaria, sin ajustar) |
+| S3 v1.9 frente a random | 99,78 %, 17/17 semillas | Control de cordura correcto |
+
+**Diagnóstico exploratorio (agregado tras ver H1 C1, no confirmatorio):** expectimax v1.9
+contra joint con la regla anterior (`--sp-info-b none`) en C1 = **52,22 %** [51,12; 53,36],
+15/17 semillas. McNemar frente a H1 C1: +2,33 pts (595 frente a 479), p = 0,0004. Es decir,
+**la opción C hizo a joint ~2,3 pts más fuerte contra expectimax**; esa es la causa principal
+del empate en H1. El resto de la caída (53,5 % en exploración frente a 52,2 % en C1 contra
+el mismo joint) es el sesgo de selección que el protocolo esperaba.
+
+**Escalera confirmada:** expectimax > solo y joint > solo (estadística, ventajas pequeñas).
+**No confirmada:** expectimax > joint. Ninguna comparación alcanza el umbral práctico.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -139,4 +165,5 @@ información simétrica".
 | Fecha | Cambio |
 |---|---|
 | 2026-11-15 | Versión inicial: exploración/confirmación, pruebas, regla de decisión, hipótesis H1–H3 y S1–S3. |
+| 2026-11-15 | Resultados de la confirmación (§5.1): H2 y H3 confirmadas con ventaja pequeña; H1 sin diferencia demostrada. Diagnóstico exploratorio: la opción C fortaleció a joint contra expectimax (+2,3 pts). |
 | 2026-11-15 | Se agregan los dos niveles de afirmación (umbral práctico provisional: límite inferior del IC ≥ 55 % en BO3), TOST y la sección de agentes con aprendizaje. |
