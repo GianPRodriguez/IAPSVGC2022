@@ -90,6 +90,26 @@ def _pe_known_moves(mon: Pokemon) -> Tuple[str, ...]:
     return tuple(out)
 
 
+def _log_voluntary_switch(battle, out_mon, in_mon) -> None:
+    """Diagnóstico Fase 2c (PS_SWITCH_LOG): una línea por cambio voluntario elegido."""
+    import json as _json
+    import os as _os
+    path = _os.environ.get('PS_SWITCH_LOG')
+    if not path:
+        return
+    try:
+        rec = {
+            'tag': str(getattr(battle, 'battle_tag', '')),
+            'turn': int(getattr(battle, 'turn', 0) or 0),
+            'out': _species_name(out_mon) if out_mon is not None else None,
+            'in': _species_name(in_mon) if in_mon is not None else None,
+        }
+        with open(f'{path}.{_os.getpid()}', 'a', encoding='utf-8') as fh:
+            fh.write(_json.dumps(rec) + chr(10))
+    except Exception:
+        pass
+
+
 class ExpectimaxBayesianPlayer(GreedyJointPlayer):
     """
     Expectimax bayesiano 1-ply (anytime):
@@ -328,6 +348,7 @@ class ExpectimaxBayesianPlayer(GreedyJointPlayer):
                 return PassBattleOrder()
             if action is not None and getattr(action, 'kind', 'move') == 'switch':
                 target = switch_by_slot.get(int(action.move_slot))
+                _log_voluntary_switch(battle, mon, target)
                 if target is not None:
                     return SingleBattleOrder(target)
                 switches = []
