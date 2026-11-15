@@ -234,7 +234,7 @@ evitar al rival más peligroso o a repartir el daño. Coincide con la Fase 1: lo
 usan control solo en el 4 % de sus jugadas. **Descartado.** El código queda apagado por
 defecto (p = 0).
 
-### 2c: cambios voluntarios (en curso)
+### 2c: cambios voluntarios
 
 **Causa de que nunca se eligieran:** en el modo de valoración por defecto
 (`v_solo_isomorphic`), el valor de cambiar (`switch_v`: preservación, posición, habilidad de
@@ -269,6 +269,21 @@ Comprobación (semilla 9101, `switch_v` 50 %): 34,7 s, 0 rechazos, 168/300 victo
 
 También quedaron disponibles `switch_cost` y `switch_recent_penalty` (costo de tempo y
 anti-rebote, en 0 por defecto) por si los cambios resultan excesivos.
+
+**Medición con el arreglo** (17 semillas, contra joint validado; prueba t pareada contra la
+base v1.8, que da 2695):
+
+| `v_iso_switch_weight` (con `enable_voluntary_switch=1`, `max_switch_hybrids=8`) | Victorias | Tasa | Diferencia | IC 95 % pareado | t |
+|---|---|---|---|---|---|
+| 0 (base, sin cambios voluntarios) | 2695/5100 | 52,8 % | — | — | — |
+| **0,25** | 2728/5100 | **53,5 %** | **+33** | +0,17..+1,12 pts | 2,89 |
+| **0,5** | 2728/5100 | **53,5 %** | **+33** | +0,19..+1,10 pts | 3,01 |
+| 1,0 | 2692/5100 | 52,8 % | −3 | — | −0,12 |
+
+**Los cambios voluntarios mejoran (+0,65 puntos, significativo) con un peso moderado**; con
+peso 1 se pierde la mejora porque cambia de más. Es la primera mejora de la Fase 2 que pasa
+la prueba. **Elegido para los bloques siguientes: 0,25** (empata con 0,5 y cambia menos).
+Debe confirmarse con semillas nuevas en la Fase 3.
 
 ## Plan
 
