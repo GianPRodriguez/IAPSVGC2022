@@ -244,6 +244,32 @@ experimentos anteriores, variar `switch_v_scale` daba juegos idénticos. Corregi
 `v_iso_switch_weight` (0 por defecto). Se mide con `enable_voluntary_switch=1` y
 `max_switch_hybrids=8`.
 
+**Segundo problema, encontrado al medir:** con `switch_v` activo, cada semilla tardaba
+~370 s en vez de ~31 s. Se cortó la corrida y se agregaron trazas (`PS_SWITCH_LOG` +
+`analyze_switches`):
+
+| Semilla 9101 | Base v1.8 | `switch_v` 25 % | `switch_v` 50 % |
+|---|---|---|---|
+| Turnos medios por juego | 5,2 | 5,2 | 5,4 |
+| Juegos con algún cambio voluntario | 0 | — | 12 de 600 |
+| Decisiones de cambio registradas | 0 | — | 12 395 |
+| Rebotes (vuelve quien salió hace ≤ 2 turnos) | — | 0,2 % | 8,3 % |
+
+No era un bucle de cambios en el juego, sino un **bucle de órdenes rechazadas**. Miles de
+decisiones se acumulaban en el mismo turno de unos pocos juegos. Con
+`PS_PLAYER_LOG_LEVEL=25`, Showdown respondía 6069 veces `[Invalid choice] Can't switch:
+The active Pokémon is trapped`.
+
+**Causa:** las reservas se armaban uniendo las listas de cambio de los dos lados, y ambos
+Pokémon recibían opciones de cambio aunque uno estuviera atrapado (poke-env vacía la lista
+solo del lado atrapado). **Arreglo (`4a8c012`):** `switch_sides` limita los cambios al lado
+con cambios disponibles y sin `trapped`/`maybe_trapped`, y el player valida el objetivo.
+Comprobación (semilla 9101, `switch_v` 50 %): 34,7 s, 0 rechazos, 168/300 victorias (base
+164), 116 cambios voluntarios.
+
+También quedaron disponibles `switch_cost` y `switch_recent_penalty` (costo de tempo y
+anti-rebote, en 0 por defecto) por si los cambios resultan excesivos.
+
 ## Plan
 
 | Fase | Contenido | Estado |
