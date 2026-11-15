@@ -137,8 +137,9 @@ def test_greedy_agents_default_to_no_inference():
         assert p.effective_sp_info_mode() == 'inference'
         p.sp_info_mode = None
         assert p.effective_sp_info_mode() == 'none'
+    # Expectimax v1.8: también A por defecto.
     ex = ValidatedExpectimaxBayesianPlayer.__new__(ValidatedExpectimaxBayesianPlayer)
-    assert ex.effective_sp_info_mode() == 'inference'
+    assert ex.effective_sp_info_mode() == 'none'
 
 
 def test_robust_e2e_unset_mode_means_agent_default(monkeypatch):
@@ -150,7 +151,8 @@ def test_robust_e2e_unset_mode_means_agent_default(monkeypatch):
     assert r.sp_info_mode('A') is None
     assert r.effective_sp_info_label('A', 'greedy_joint') == 'none(default)'
     assert r.effective_sp_info_label('A', 'greedy_solo') == 'none(default)'
-    assert r.effective_sp_info_label('A', 'expectimax_bayesian') == 'inference(default)'
+    assert r.effective_sp_info_label('A', 'expectimax_bayesian') == 'none(default)'
+    assert r.effective_sp_info_label('A', 'ddqn') == 'inference(default)'
     # B validated por defecto: mismo predeterminado que su agente.
     assert r.effective_sp_info_label('B', 'greedy_joint') == 'none(default)'
     assert r.effective_sp_info_label('B', 'random') == 'n/a(sin wrapper)'

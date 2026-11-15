@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | **Contrato exclusivo de implementación — Expectimax-Bayesian** |
-| **Versión** | **1.7** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.4) |
+| **Versión** | **1.8** (alineado con `docs/rl_env_spec.md` **v1.15** §6.h.4) |
 | **Estado** | **FROZEN — implementado en `showdown/battle_bots/expectimax_bayesian/`** |
 | **Algoritmo** | Expectimax 1-ply bayesiano anytime; filtro Greedy-Joint Top-K×Top-K; gate vs phase1 |
 | **Rol** | Techo heurístico de la escalera; fuente BC; oponente de suite WR |
@@ -434,6 +434,7 @@ Checklist de reproducibilidad:
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.8** | 2026-11-15 | **Inferencia de SP apagada por defecto (modo A)**, como en Greedy-Solo/Joint (`ValidatedExpectimaxBayesianPlayer.default_sp_info_mode='none'`). Con v1.7 contra joint validado: A 2695/5100 = B 2695/5100, con juegos idénticos en las 17 semillas y la mitad de tiempo; el oráculo completo da 2722/5100 = 53,4 % (+0,5, IC pareado aprox. −0,3..+1,3, no significativo). Los mundos siguen usando el prior leave-one-out. Traza de diagnóstico `PS_VTERMS_LOG` + `analyze_vterms` (Fase 1, sin efecto en las decisiones). `--sp-info-a inference` reactiva B. |
 | **1.7** | 2026-11-15 | **Preview = tipado + BST de Greedy.** El diseño factorial (`--preview-a/b`) separó preview y combate: el combate de expectimax supera al de joint (+2,8; 52,8 % con preview greedy) y su preview de roles resta (−3,8; 46,2 % con combate joint). La atribución: roles 1,6–2,2 (también al 25 %), calidad de lead 0,3–1,3, pesos ~0,9 n.s. Preview legacy en `LEGACY_PREVIEW_KW`. Arreglo del desempate por punto flotante en el ranking (redondeo a 1e-9). Opción 2 probada y **descartada**: roles leídos de los movimientos del team sheet sobre greedy restan −1,5 (10 %) y −2,4 (25 %); el código (`role_moves`, `greedy_moveroles10/25`) queda solo para reproducir. Con v1.7 el preview de expectimax elige lo mismo que Greedy-Solo/Joint (1200/1200 enfrentamientos): B, C y D comparten preview. **Confirmación:** expectimax v1.7 completo contra joint validado da 2695/5100 = 52,8 % (IC 51,5–54,2), con victorias por semilla idénticas a las del factorial con preview greedy (antes 49,7 %). |
 | **1.6** | 2026-11-14 | **Mundos sin filtración (leave-one-out):** `sample_belief_node` descuenta los sets del equipo rival del compendio MetaVGC (mismo pool que la evaluación) vía `TeamStatBeliefs.prior_exclude`, que fija el wrapper validated en cada juego; el fallback `preferred_sp_map` también. Antes el set real del rival estaba entre los 4 repartos más frecuentes de su especie en ~97 % de los casos (LOO ~92 %). `PS_PRIOR_LOO=0` lo desactiva. Resultados previos de expectimax pueden estar levemente inflados. |
 | **1.5** | 2026-11-14 | **Versión estable C235:** `v_tempo_weight` 0→1.0, gate `indifference`→`beat` margin 80→40, `soft_ko_bonus` 1000→250, `k_profiles` 2→4, `max_worlds` 4→12. Servidor, pool 300 teams, 5100 BO3/config, IC emparejado por semilla: cribado (7001–7017) +0.7 n.s.; confirmación con semillas nuevas (8001–8017) vs greedy_joint sin inferencia de SP 52.5% vs 50.3% (+2.3 [+0.7, +3.9]); combinado 52.4% vs 50.9% (10 200 BO3). Vs joint validado (`PS_B_VALIDATED=1`) 48.3% vs 47.7% (+0.6 n.s.). Base vs greedy_solo 49.6%, vs random 99.7%. Ideas por separado ≈0 o peores; techo del diseño alcanzado. |

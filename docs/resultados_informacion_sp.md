@@ -95,6 +95,10 @@ casos, por lo que la filtración era pequeña y las conclusiones de §2 se manti
 | Oráculo completo | 2558/5100 | 50,2 % | +0,4, no significativo |
 | Oráculo de Velocidad | 2549/5100 | 50,0 % | +0,25, no significativo; cambia algunas decisiones |
 
+Con el preview corregido (v1.7, 52,8 % contra joint validado), el resultado se repite: A y B
+dan 2695/5100 con juegos idénticos, y el oráculo completo da 2722/5100 = 53,4 % (+0,5, no
+significativo). **Desde la v1.8, expectimax usa A por defecto.**
+
 Este resultado es coherente con la estructura actual de expectimax:
 
 - su V depende casi solo de la ofensa propia, y el daño recibido tiene peso 0;
@@ -118,7 +122,7 @@ Este resultado es coherente con la estructura actual de expectimax:
    - Prior leave-one-out (v1.7).
    - B validado por defecto en `run_robust_e2e`.
    - Rivales validados en el entrenamiento RL (`rl_env_spec` v1.19).
-   - Pendiente: A por defecto en expectimax.
+   - A por defecto en expectimax (spec v1.8).
 6. **Limitación de diseño.** El supuesto de SP 32 en 5 stats describe un rival imposible
    (160 SP con un presupuesto de 66). Los oráculos muestran que eso no cuesta partidas
    medibles a ninguno de los tres agentes.

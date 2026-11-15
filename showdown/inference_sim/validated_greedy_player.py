@@ -1056,7 +1056,10 @@ class ValidatedGreedyJointPlayer(ValidatedBattleMixin, GreedyJointPlayer):
 
 
 class ValidatedExpectimaxBayesianPlayer(ValidatedBattleMixin, ExpectimaxBayesianPlayer):
-    """Expectimax-Bayesian + espejo IAP / sync / OTS."""
+    """Expectimax-Bayesian + espejo IAP / sync / OTS. Inferencia de SP apagada por defecto
+    (spec v1.8): juegos idénticos con o sin inferencia y la mitad de tiempo."""
+
+    default_sp_info_mode = 'none'
 
 
 def _ddqn_player_classes():

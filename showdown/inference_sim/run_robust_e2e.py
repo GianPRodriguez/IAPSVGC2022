@@ -1926,7 +1926,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         '--sp-info-a', choices=list(SP_INFO_MODES), default=None,
         help=(
             'SP del rival que conoce A (sin flag: el predeterminado del agente; '
-            'greedy_solo/greedy_joint = none, resto = inference). inference (motor de '
+            'greedy_solo/greedy_joint/expectimax = none, resto = inference). inference (motor de '
             'inferencia), oracle (SP verdaderos), oracle_spe (solo Spe verdadera), none '
             '(OTS + bases, sin inferencia). Para validar soundness de la inferencia con '
             'greedy usar --sp-info-a inference. Env: PS_SP_INFO_A'

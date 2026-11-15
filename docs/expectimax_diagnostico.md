@@ -119,6 +119,78 @@ Las victorias por semilla de v1.7 son **idénticas** a las de la Fase 0c con `--
 (164, 142, 154, …), lo que confirma que el preview es el mismo. **Expectimax v1.7 supera a
 joint validado por +2,8 puntos** (antes 49,7 %), una diferencia significativa.
 
+## Información de SP con v1.7 (semillas 9101–9117, contra joint validado)
+
+| Configuración | Victorias | Tasa | Lectura |
+|---|---|---|---|
+| v1.7 con inferencia (B) | 2695/5100 | 52,8 % | |
+| v1.7 sin inferencia (A) | 2695/5100 | 52,8 % | **juegos idénticos** en las 17 semillas, la mitad de tiempo |
+| v1.7 con oráculo completo | 2722/5100 | 53,4 % | +0,5 (IC pareado aprox. −0,3..+1,3), no significativo |
+
+**Decisión (spec v1.8): A por defecto**, como en los dos greedy.
+
+## Fase 1: diagnóstico sin cambiar el agente (v1.7, semillas 9101–9103)
+
+Son 9390 decisiones de expectimax contra joint validado, medidas con `PS_VTERMS_LOG`,
+`PS_OPPMODEL_LOG` y `expectimax_divergence`.
+
+### Modelo del rival (5953 movimientos observados, emparejados con la predicción de cada rival)
+
+| Medida | Valor |
+|---|---|
+| Acierto top-1 del movimiento | 30,4 % (ataques 31,6 %) |
+| Acierto top-1 de movimiento y objetivo | 21,6 % |
+| p media asignada al movimiento real | 0,262 (uniforme: 0,194) |
+| Movimientos de control reales (Protect, etc.) | 4,0 % |
+| **Masa predicha para control y cambios** | **0** |
+
+El modelo es mejor que el azar, pero débil. Sus probabilidades están razonablemente
+calibradas en las franjas altas (p ≥ 0,5: acierto ≥ 94 %). **Nunca predice Protect ni
+movimientos de control**, aunque son el 4 % de las jugadas reales.
+
+### Términos de V (9390 decisiones, hasta 49 pares cada una)
+
+| Término | Media en todos los pares | Rango medio **dentro** de cada decisión (lo que decide) | Peso actual |
+|---|---|---|---|
+| Ofensa (daño esperado + P(KO)·250) | 201 | **356** | 1 |
+| Amenaza recibida | 139 | **172** | **0** |
+| Tempo | 31 | 109 | 1 |
+| Sinergia | 32 | 76 | 0 |
+| Utilidad VGC (Fake Out/Knock Off) | 7 | 28 | 1 |
+
+**Contrafactual de la amenaza** (% de decisiones en que cambia el mejor par si V resta
+w·amenaza):
+
+| w | 0,05 | 0,1 | 0,2 | 0,3 | 0,5 | 1,0 |
+|---|---|---|---|---|---|---|
+| Decisiones que cambian | 12,0 % | 14,0 % | 16,8 % | 19,2 % | 22,5 % | 29,4 % |
+
+La amenaza tiene una escala comparable a la ofensa: varía la mitad entre pares. Con
+w = 0,05 ya cambia el 12 % de las decisiones, lo que indica **muchos casi-empates de V**
+entre los mejores pares. Con w = 0,5 y w = 1 (−3,4 y −5 puntos medidos antes) cambiaba
+demasiado.
+
+### Puerta (phase2 frente a joint)
+
+| Medida | Valor |
+|---|---|
+| El mejor par de phase2 coincide con el de joint | 35,3 % |
+| Phase2 aceptado (siempre distinto de joint) | 41,1 % |
+| Phase2 prefiere otro par pero la puerta lo rechaza (margen 40) | ~23,6 % |
+| V(mejor) − V(joint) | media 100, sd 157 |
+| Tipos de acción en el mejor par | daño 16055, estado 2433, speed 100, Helping Hand 88, **Protect 78**, carga 14, redirección 12 |
+
+### Qué implica para la Fase 2
+
+1. **Protect condicional en el modelo del rival:** justificado, porque hoy la masa de
+   control es 0.
+2. **Calibración de la amenaza:** probar pesos pequeños (0,05–0,2), que cambian entre el
+   12 % y el 17 % de las decisiones, frente a los que ya se midieron como dañinos (≥ 0,5).
+3. **Puerta:** rechaza ~24 % de las preferencias de phase2. Se reajusta en la Fase 3,
+   después de las mejoras.
+4. **Expectimax casi nunca elige Protect** (78 de 18 780 acciones): es coherente con que
+   la amenaza tenga peso 0. Se revisa junto con la calibración.
+
 - Los roles son la principal causa identificada.
 - Los leads no son el problema. Tampoco lo es que greedy herede los leads del diseñador:
   la hoja sola da 44,6 %.
@@ -130,12 +202,10 @@ joint validado por +2,8 puntos** (antes 49,7 %), una diferencia significativa.
 |---|---|---|
 | 0 | Línea base, A frente a B frente a oráculo, factorial preview × combate | **hecha** |
 | Preview | Diagnóstico y corrección del preview de roles | **hecha.** Opción 1 aplicada (v1.7): preview = tipado + BST, idéntico al de greedy. Opción 2 (roles por movimientos) descartada: −1,5 / −2,4 |
-| 1 | Diagnóstico sin cambiar el agente: acierto del modelo del rival por cada rival, escala de la amenaza frente a la ofensa, aporte de cada término de V, uso y resultado de la puerta | pendiente |
+| 1 | Diagnóstico sin cambiar el agente: acierto del modelo del rival por cada rival, escala de la amenaza frente a la ofensa, aporte de cada término de V, uso y resultado de la puerta | **hecha** (ver arriba). Además: A por defecto (v1.8) |
 | 2 | Una mejora por corrida, con el preview fijo (desde v1.7 es el preview por defecto de expectimax, así que no hace falta forzarlo): Protect condicional en el modelo del rival, calibración de la amenaza, cambios voluntarios que nunca se eligen. La actualización bayesiana de los mundos tiene prioridad baja, porque el oráculo no aporta | pendiente |
 | 3 | Combinar lo que pase y reajustar la puerta; confirmar con semillas nuevas (contra joint, solo y random); **volver a medir A contra los oráculos** con la versión final (si el oráculo pasa a aportar, se reactiva la actualización bayesiana); documentar | pendiente |
 
-Decisión pendiente: **A por defecto en expectimax**. Da el mismo resultado en la mitad del
-tiempo.
 
 ## Reproducir
 
