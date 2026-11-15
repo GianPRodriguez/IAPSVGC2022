@@ -112,8 +112,12 @@ comparten el mismo preview**, y cualquier diferencia entre ellos viene solo del 
 
 | Confirmación (semillas 9101–9117, contra joint validado) | Victorias | Tasa |
 |---|---|---|
-| Expectimax v1.7 completo (preview propio = tipado + BST) | V17_PENDIENTE | |
+| Expectimax v1.7 completo (preview propio = tipado + BST) | 2695/5100 | **52,8 %** (IC 51,5–54,2) |
 | Referencia: combate expectimax con `--preview-a greedy` (Fase 0c) | 2695/5100 | 52,8 % |
+
+Las victorias por semilla de v1.7 son **idénticas** a las de la Fase 0c con `--preview-a greedy`
+(164, 142, 154, …), lo que confirma que el preview es el mismo. **Expectimax v1.7 supera a
+joint validado por +2,8 puntos** (antes 49,7 %), una diferencia significativa.
 
 - Los roles son la principal causa identificada.
 - Los leads no son el problema. Tampoco lo es que greedy herede los leads del diseñador:
