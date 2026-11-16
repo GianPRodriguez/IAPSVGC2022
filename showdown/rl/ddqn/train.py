@@ -571,6 +571,9 @@ def run_training(
     eval_every: int = 250_000,
     eval_games: int = 50,
     resume: str = '',
+    layer_norm: bool = False,
+    train_freq: Optional[int] = None,
+    batch_size: Optional[int] = None,
     num_envs: int = 1,
     envs_per_server: int = 4,
     base_port: Optional[int] = None,
@@ -595,6 +598,11 @@ def run_training(
         cfg.lr = float(lr)
     if gamma is not None:
         cfg.gamma = float(gamma)
+    cfg.layer_norm = bool(layer_norm)
+    if train_freq is not None:
+        cfg.train_freq = int(train_freq)
+    if batch_size is not None:
+        cfg.batch_size = int(batch_size)
     if target_update_every is not None:
         cfg.target_update_every = int(target_update_every)
     if target_clip is not None:
@@ -665,6 +673,9 @@ def run_training(
     mlog = MetricsLog(ckpt_dir / 'train_metrics.jsonl', run_meta={
         'agent': 'ddqn', 'seed': seed, 'device': device, 'num_envs': num_envs,
         'lr': float(cfg.lr), 'gamma': float(cfg.gamma), 'expand_omega': bool(expand_omega),
+        'target_clip': float(cfg.target_clip), 'target_update_every': int(cfg.target_update_every),
+        'layer_norm': bool(cfg.layer_norm), 'train_freq': int(cfg.train_freq),
+        'batch_size': int(cfg.batch_size), 'agent_team': _AGENT_TEAM,
         'schedule': [{'unlock': p.unlock, 'steps': p.steps, 'omega': list(p.omega)}
                      for p in expand_sched],
     })
@@ -952,6 +963,9 @@ def main(argv: Optional[list] = None) -> int:
                    help='Validación sin exploración cada N pasos con rivales deterministas; guarda best.pt (0 = off)')
     p.add_argument('--eval-games', type=int, default=50,
                    help='Partidas BO1 por rival en cada validación (4 rivales)')
+    p.add_argument('--layer-norm', action='store_true', help='LayerNorm tras el codificador (punto 7)')
+    p.add_argument('--train-freq', type=int, default=None, help='Pasos de entorno por paso de gradiente (defecto 4)')
+    p.add_argument('--batch-size', type=int, default=None, help='Lote del aprendiz (defecto 256)')
     p.add_argument('--resume', default='',
                    help='Reanudar desde un checkpoint (p. ej. <dir>/last.pt); el replay se rellena')
     p.add_argument('--target-clip', type=float, default=None,
@@ -1011,6 +1025,9 @@ def main(argv: Optional[list] = None) -> int:
         eval_every=args.eval_every,
         eval_games=args.eval_games,
         resume=args.resume,
+        layer_norm=bool(args.layer_norm),
+        train_freq=args.train_freq,
+        batch_size=args.batch_size,
         num_envs=args.num_envs,
         envs_per_server=args.envs_per_server,
         base_port=args.base_port,

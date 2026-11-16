@@ -48,6 +48,8 @@ class DDQNConfig:
     # recompensa DENSE van de -1,6 a +1,8; pilotos A/B: Q calibrado y 36,7 % frente a 25,3 %.
     target_update_every: int = 0
     target_clip: float = 2.0
+    # LayerNorm tras el codificador (punto 7 del checklist; se evalúa en el tuning).
+    layer_norm: bool = False
 
 
 class DDQNAgent:
@@ -84,8 +86,8 @@ class DDQNAgent:
         self._copy_weights = copy_weights
         device = torch.device(self.cfg.device)
         self.device = device
-        self.online = QNetwork().to(device)
-        self.target = QNetwork().to(device)
+        self.online = QNetwork(layer_norm=bool(self.cfg.layer_norm)).to(device)
+        self.target = QNetwork(layer_norm=bool(self.cfg.layer_norm)).to(device)
         copy_weights(self.online, self.target)
         self.target.eval()
         self.optim = torch.optim.Adam(self.online.parameters(), lr=self.cfg.lr)
@@ -321,6 +323,10 @@ class DDQNAgent:
             for k, v in payload['config'].items():
                 if hasattr(self.cfg, k):
                     setattr(self.cfg, k, v)
+        if bool(getattr(self.online, 'layer_norm', False)) != bool(self.cfg.layer_norm):
+            # el checkpoint usa otra arquitectura (con/sin LayerNorm): reconstruir las redes
+            self.online = None
+            self._ensure_torch()
         self.online.load_state_dict(payload['online'])
         self.target.load_state_dict(payload.get('target', payload['online']))
         self.env_steps = int(payload.get('env_steps', 0))

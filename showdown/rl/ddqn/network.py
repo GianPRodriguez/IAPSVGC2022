@@ -12,9 +12,13 @@ from showdown.rl.encoders import combat_encoder
 
 class QNetwork(nn.Module):
     def __init__(self, obs_dim: int = OBS_DIM, n_actions: int = JOINT_ACTION_N,
-                 encoder: Optional[str] = None):
+                 encoder: Optional[str] = None, layer_norm: bool = False):
         super().__init__()
         self.encoder = combat_encoder(obs_dim, encoder)
+        # Punto 7 del checklist: LayerNorm tras el codificador (se concatenan embeddings ReLU
+        # con segmentos crudos de otra escala). Apagado por defecto.
+        self.layer_norm = bool(layer_norm)
+        self.norm = nn.LayerNorm(self.encoder.out_dim) if self.layer_norm else nn.Identity()
         self.net = nn.Sequential(
             nn.Linear(self.encoder.out_dim, 512),
             nn.ReLU(),
@@ -24,7 +28,7 @@ class QNetwork(nn.Module):
         )
 
     def forward(self, obs: torch.Tensor) -> torch.Tensor:
-        return self.net(self.encoder(obs))
+        return self.net(self.norm(self.encoder(obs)))
 
 
 @torch.no_grad()
