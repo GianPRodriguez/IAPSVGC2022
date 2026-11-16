@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.11** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.22) |
+| **Versión** | **1.12** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.23) |
 | **Estado** | FROZEN; implementado en `showdown/rl/ddqn/` y `battle_bots/ddqn/` |
 | **Training** | **Sí**: off-policy con replay; entrenamiento live requiere Showdown local |
 | **Inferencia** | `ValidatedDDQNPlayer`, acción greedy legal desde un checkpoint |
@@ -273,6 +273,7 @@ Pipeline familiar: **`team_preview_ppo` → DDQN**. Código compartido:
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.12** | 2026-11-15 | Máscaras de cambio forzado según la regla de Showdown (rl_env_spec v1.23): eliminan ~2,7 % de pasos que caían a una orden al azar (la transición guardaba una acción no ejecutada). Validación en vivo (`showdown.rl.live_validation`): paridad entrenamiento/inferencia, alineación, historial y simetrías sin diferencias en 902 pasos reales. |
 | **1.11** | 2026-11-15 | Correcciones previas al entrenamiento oficial (rl_env_spec v1.21–v1.22): rivales de entrenamiento con sorteo entre casi-empates (joint margen 8, expectimax fase 1 margen 3; `PS_RL_FOE_TIE=0` los vuelve deterministas); orden estable del resto del rival por especie (cambia la semántica de la obs: checkpoints anteriores no comparables); mock con snapshot nuevo por paso; `DDQNPlayer` cuenta y registra excepciones (`decision_stats`, `PS_RL_STRICT=1` las propaga) en vez de jugar la orden por defecto en silencio. |
 | **1.10** | 2026-11-15 | Codificador estructurado (rl_env_spec §3.c): mismo sub-MLP por Pokémon/movimiento → 1272 → 512 → 512 → 1600 (4,33M → 1,82M parámetros). Replay aumentado por simetría (§3.d: a/b propio, a/b rival, reservas; exacto). Objetivo aliado del slot 0 corregido (−2). `RL_OBS_ENCODER=flat`, `RL_SYM_AUG=0`. Checkpoints anteriores incompatibles. |
 | **1.9** | 2026-11-14 | ObsSpec v2 (6332D) y ActionSpec v2 (40 ids/slot, mega por movimiento, 1600 joint). Máscara de entrenamiento = `valid_orders` (antes permisiva: pass/objetivos/cambios inválidos → fallback aleatorio y bootstrap sobre Q no entrenados). Replay float16, reserva perezosa y creciente. |
