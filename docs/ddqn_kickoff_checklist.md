@@ -188,6 +188,69 @@ Lectura:
 **Decisión (16-11-2026):** C por defecto (`target_clip=2.0`, ddqn_spec 1.15). B queda como
 opción apagada; la combinación B+C puede probarse en el tuning (punto 9).
 
+### Mini kick-off de 1M pasos (tercera cola, 16-11-2026, commit 5b43e8f)
+
+Currículo completo (random → solo → joint → expectimax), lr 1e-4, lote 256, preview v2
+(`preview_v2_ent005`), equipo fijo, semilla 0. Validación sin exploración cada 250k pasos,
+50 partidas por rival, **con equipos rivales del grupo `train`**.
+
+| Paso | Media | random | solo | joint | expectimax |
+|---|---|---|---|---|---|
+| 250k | 35,0 % | 66 % | 24 % | 26 % | 24 % |
+| 500k | 61,5 % | 76 % | 64 % | 54 % | 52 % |
+| 750k | 79,5 % | 84 % | 82 % | 86 % | 66 % |
+| 1M | 85,0 % | 88 % | 88 % | 88 % | 76 % |
+
+Q medio final 1,05; error TD 0,120. Antes (400k pasos, preview v1) lo mejor era 38 %.
+
+### Generalización a equipos rivales no vistos (cuarta cola, commit f61f16d)
+
+`best.pt` del mini kick-off (paso 1M), 100 partidas por rival, rivales con equipos de cada grupo:
+
+| Rival | Equipos `train` | Equipos `eval` | Diferencia |
+|---|---|---|---|
+| random | 91 % | 90 % | −1 |
+| greedy_solo | 87 % | 38 % | −49 |
+| greedy_joint | 87 % | 36 % | −51 |
+| expectimax_bayesian | 72 % | 36 % | −36 |
+| **total** | **84,2 %** | **50,0 %** | **−34,2** |
+
+Lectura:
+
+- **El agente memoriza los equipos rivales de entrenamiento.** Contra los heurísticos con
+  equipos que nunca vio, gana alrededor de 37 % (por debajo de 50 %). Contra random no cambia:
+  ahí no hace falta conocer al rival.
+- Es justo lo que la separación 200/100 (punto 11) debía detectar. Sin ella, el 85 % se habría
+  leído como dominio sobre los heurísticos.
+- **La validación periódica también usa equipos `train`.** Por eso `best.pt` se elige con una
+  medida que premia la memorización. Opciones (pendiente de decisión): validar con un subgrupo
+  reservado de `train` que no se use para entrenar, o más diversidad de rivales.
+- Alcance: una semilla y un checkpoint. La caída es tan grande (unos 50 puntos contra solo y
+  joint, con ±7 de error por celda) que no se explica por ruido.
+
+### Verificación del preview v2 (quinta cola, commit 98599da)
+
+`preview_v2_ent005/best.pt` frente al preview heurístico del piloto; combate greedy_joint en
+ambos lados; 512 contextos pareados por fila.
+
+| Rivales | Preview v2 | Heurístico | Diferencia (± EE) |
+|---|---|---|---|
+| equipos `train` | 95,3 % | 61,7 % | +33,6 (± 2,3) |
+| equipos `eval` | 67,6 % | 57,0 % | +10,5 (± 2,7) |
+| formación fija (la más frecuente, siempre), `train` | 74,2 % | 63,9 % | +10,4 (± 2,9) |
+
+Formaciones distintas elegidas: 18 (`train`) y 17 (`eval`). La más frecuente (28 % en
+`train`) es Gholdengo, Staraptor, Arcanine-Hisui y Primarina.
+
+Lectura:
+
+- **El 96,7 % era sobre todo memorización.** Con equipos no vistos la ventaja baja de +34 a
+  +10,5 puntos. Sigue siendo positiva y clara (unos 4 errores estándar).
+- **La ventaja en equipos no vistos equivale a jugar siempre una buena formación.** Fija, la
+  formación más frecuente da +10,4 contra rivales `train`, igual que el preview adaptativo
+  contra `eval`. Por ahora no hay evidencia de que adapte la elección a rivales que no conoce.
+- La cola 7 (D4) repite la prueba con expectimax en el combate.
+
 ## D. Metodología
 
 | # | Punto | Estado |
@@ -195,6 +258,7 @@ opción apagada; la combinación B+C puede probarse en el tuning (punto 9).
 | 11 | ¿Equipos de entrenamiento = equipos de evaluación? Si sí, se mediría memorización; reservar equipos solo para evaluar | **hecho** (decisión del usuario: 200 para entrenar, 100 para evaluar; rl_env_spec v1.24). Verificado: el entrenamiento usaba los mismos 300 equipos que la evaluación. Separación por grupos de clones (mismas 6 especies) y estratificada; RL y previews en `train`, Conclusión en `eval` (78 equipos), prior y mundos desde `train`. Ver `protocolo_evaluacion.md` §2b |
 | 12 | Ablación codificador × simetría (≥ 3 semillas, evaluación pareada) | pendiente |
 | — | Suite completa en el servidor con los commits desde dbb188b | **hecho**: 651 pasan, 1 falla, 1 omitido, 6 xfail en 1627cc0. La falla era un test con el orden anterior del rival; actualizado al contrato v1.22 en 925b47a y verificado en el servidor |
+| — | Suite completa (cuarta cola, f61f16d) | 712 pasan, 1 falla: `test_vectorized_training_smoke_mock[ddqn]`. La validación periódica (nueva por defecto) intentaba levantar Showdown en una corrida solo con `mock`; PPO tenía el mismo problema. Corregido en 31babfe y 8b8517d: la validación se desactiva cuando el calendario solo usa rivales offline. Los 77 tests relacionados pasan en el servidor. Falta repetir la suite completa cuando terminen las colas |
 
 ## Prerrequisitos del pipeline E
 
