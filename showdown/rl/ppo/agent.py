@@ -434,6 +434,7 @@ class PPOAgent:
             'net': self.net.state_dict(),
             'env_steps': self.env_steps,
             'update_steps': self.update_steps,
+            'optim': self.optim.state_dict() if self.optim is not None else None,
         }
         self._torch.save(payload, path)
         return path
@@ -454,6 +455,11 @@ class PPOAgent:
         self.net.load_state_dict(payload[key])
         self.env_steps = int(payload.get('env_steps', 0))
         self.update_steps = int(payload.get('update_steps', 0))
+        if payload.get('optim') and self.optim is not None:
+            try:
+                self.optim.load_state_dict(payload['optim'])
+            except (ValueError, KeyError):
+                pass
 
     def load_bc_weights(self, path: Path | str) -> None:
         """Load actor–critic from BC checkpoint; switch to post-BC LR."""

@@ -173,6 +173,7 @@ def _collect_and_update(
     reward_mode: str,
     self_play: bool,
     pool: Optional[SelfPlayPool],
+    eval_hook=None,
 ) -> Tuple[VGCEnv, int, dict]:
     current = getattr(getattr(env, 'backend', None), 'opponent', None) or (
         omega[-1] if omega else 'mock'
@@ -261,6 +262,8 @@ def _collect_and_update(
         if heartbeat.should_checkpoint(gstep):
             agent.save(ckpt_dir / 'last.pt')
             heartbeat.mark_checkpoint(gstep)
+        if eval_hook is not None:
+            eval_hook(gstep, metrics_last)
 
     return env, int(local_done), {'metrics': metrics_last, 'ep_counts': ep_counts}
 
@@ -279,6 +282,7 @@ def _collect_and_update_vec(
     heartbeat: TrainHeartbeat,
     phase_label: str,
     unlock: str,
+    eval_hook=None,
 ) -> Tuple[int, dict]:
     """Igual que :func:`_collect_and_update` pero con N entornos en paralelo.
 
@@ -401,12 +405,103 @@ def _collect_and_update_vec(
         if heartbeat.should_checkpoint(gstep):
             agent.save(ckpt_dir / 'last.pt')
             heartbeat.mark_checkpoint(gstep)
+        if eval_hook is not None:
+            eval_hook(gstep, metrics_last)
 
     if flight:
         _absorb(venv.drain())
     return int(local_done), {
         'metrics': metrics_last, 'ep_counts': ep_counts, 'worker_restarts': restarts,
     }
+
+
+# --------------------------------------------------------------------------- #
+# Validación periódica, mejor checkpoint y métricas (ppo_spec; como DDQN, protocolo §3c)
+# --------------------------------------------------------------------------- #
+VAL_FOES: Tuple[str, ...] = ('random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian')
+VAL_SEED = 900_000
+VAL_PORT_OFFSET = 100
+
+
+def _make_ppo_eval_env(*, start_ps: bool, port: Optional[int]) -> VGCEnv:
+    """Entorno de validación: rivales deterministas (sin sorteo), equipo fijo del agente."""
+    from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
+    our_team = None
+    if _AGENT_TEAM:
+        from showdown.inference_sim.team_factory import load_team_file
+        our_team = load_team_file(_AGENT_TEAM)
+    backend = PokeEnvBattleBackend(
+        opponent=VAL_FOES[0], start_ps=start_ps, port=port, account_prefix='PpoVal',
+        combat_family='ppo', our_team=our_team, foe_tie=False,
+    )
+    return VGCEnv(reward_candidate=RewardCandidate.SPARSE, backend=backend, max_episode_turns=40)
+
+
+class _PPOValidator:
+    """Cada ``every`` pasos: validación sin exploración contra los 4 heurísticos -> ``best.pt``.
+
+    También registra en ``train_metrics.jsonl`` las métricas del aprendiz (pérdida, KL, recorte,
+    entropía, simetría) cada ``log_every`` pasos, para las curvas de la tesis.
+    """
+
+    def __init__(self, agent, ckpt_dir: Path, mlog, *, every: int, games: int, start_ps: bool,
+                 port: Optional[int], log_every: int = 10_000):
+        self.agent, self.ckpt_dir, self.mlog = agent, Path(ckpt_dir), mlog
+        self.every, self.games = int(every), int(games)
+        self.start_ps, self.port = bool(start_ps), port
+        self.next = self.every
+        self.log_every, self.next_log = int(log_every), int(log_every)
+        self.best: Optional[dict] = None
+        self.history: List[dict] = []
+        self.env: Optional[VGCEnv] = None
+
+    @property
+    def enabled(self) -> bool:
+        return self.every > 0 and self.games > 0
+
+    def hook(self, gstep: int, metrics: Optional[dict] = None) -> None:
+        if metrics and gstep >= self.next_log:
+            while self.next_log <= gstep:
+                self.next_log += self.log_every
+            self.mlog.write('update', step=int(gstep),
+                            **{k: float(v) for k, v in metrics.items() if isinstance(v, (int, float))})
+        if self.enabled and gstep >= self.next:
+            while self.next <= gstep:
+                self.next += self.every
+            self.run(gstep)
+
+    def run(self, gstep: int) -> Optional[dict]:
+        if not self.enabled:
+            return None
+        import time as _time
+        if self.env is None:
+            self.env = _make_ppo_eval_env(start_ps=self.start_ps, port=self.port)
+        t0 = _time.time()
+        rows, _note = run_suite_ppo_act(self.agent, self.env, foes=VAL_FOES, n_games=self.games,
+                                        seed=VAL_SEED)
+        mean = float(np.mean([r.win_rate for r in rows])) if rows else float('nan')
+        rec = {'step': int(gstep), 'mean_wr': mean, 'games_per_foe': self.games,
+               'rows': [dict(vars(r)) for r in rows], 'sec': round(_time.time() - t0, 1)}
+        self.history.append(rec)
+        self.mlog.write('eval', **rec)
+        self.agent.save(self.ckpt_dir / f'step_{int(gstep)}.pt')
+        improved = self.best is None or mean > float(self.best['mean_wr'])
+        if improved:
+            self.best = rec
+            self.agent.save(self.ckpt_dir / 'best.pt')
+            (self.ckpt_dir / 'best.json').write_text(json.dumps(rec, indent=1), encoding='utf-8')
+        by = ' '.join(f'{r.foe[:6]}={r.win_rate:.2f}' for r in rows)
+        print(f'[ppo] validación paso {gstep}: media={mean:.3f} | {by} | {rec["sec"]}s'
+              f'{" | NUEVO MEJOR -> best.pt" if improved else ""}', flush=True)
+        return rec
+
+    def close(self) -> None:
+        if self.env is not None:
+            try:
+                self.env.close()
+            except Exception:
+                pass
+            self.env = None
 
 
 def run_training(
@@ -433,6 +528,9 @@ def run_training(
     envs_per_server: int = 4,
     base_port: Optional[int] = None,
     agent_team: str = DEFAULT_AGENT_TEAM,
+    eval_every: int = 250_000,
+    eval_games: int = 50,
+    resume: str = '',
 ) -> PPOAgent:
     if not schedule and not self_play:
         raise ValueError('schedule vacío')
@@ -458,7 +556,12 @@ def run_training(
     if clip_eps is not None:
         cfg.clip_eps = float(clip_eps)
     agent = PPOAgent(cfg)
-    if bc_checkpoint:
+    resume_skip = 0
+    if resume:
+        agent.load(resume, map_location=str(device))
+        resume_skip = int(agent.env_steps)
+        print(f'[ppo] reanudando desde {resume}: {resume_skip} pasos hechos', flush=True)
+    if bc_checkpoint and not resume:
         agent.load_bc_weights(bc_checkpoint)
         print(f'[ppo] loaded BC checkpoint {bc_checkpoint} lr={agent.cfg.lr_post_bc}')
 
@@ -530,10 +633,30 @@ def run_training(
         log_every=int(log_every),
         log_every_sec=float(log_every_sec),
     )
+    from showdown.rl.train_metrics import MetricsLog
+    mlog = MetricsLog(ckpt_dir / 'train_metrics.jsonl', run_meta={
+        'agent': 'ppo', 'seed': seed, 'device': device, 'num_envs': num_envs, 'lr': float(cfg.lr),
+        'clip_eps': float(cfg.clip_eps), 'agent_team': _AGENT_TEAM, 'resume': resume or '',
+        'schedule': [{'unlock': p.unlock, 'steps': p.steps, 'omega': list(p.omega)} for p in expand_sched],
+    })
+    from showdown.inference_sim.paths import PS_PORT as _PS_PORT
+    validator = _PPOValidator(agent, ckpt_dir, mlog, every=eval_every, games=eval_games,
+                              start_ps=start_ps, port=(base_port or int(_PS_PORT)) + VAL_PORT_OFFSET)
+    if resume_skip:
+        validator.next = (resume_skip // max(1, validator.every) + 1) * max(1, validator.every)
 
     try:
         assert env is not None or venv is not None
         for pi, phase in enumerate(expand_sched):
+            phase_steps = int(phase.steps)
+            if resume_skip >= phase_steps:
+                resume_skip -= phase_steps
+                global_steps += phase_steps
+                print(f'[ppo] fase {pi + 1} ya completada antes de reanudar ({phase.unlock})', flush=True)
+                continue
+            global_steps += resume_skip
+            phase_steps -= resume_skip
+            resume_skip = 0
             probs = omega_sampling_probs(phase.omega, weights=weights)
             mode = 'self-play' if self_play else (
                 'expand-Omega' if expand_omega else 'exclusive'
@@ -550,7 +673,7 @@ def run_training(
                     _ensure_vec_servers(venv, start_ps=start_ps)
                 done, info = _collect_and_update_vec(
                     agent, venv,
-                    steps=phase.steps,
+                    steps=phase_steps,
                     omega=phase.omega,
                     expand_omega=expand_omega and not self_play,
                     weights=weights,
@@ -560,6 +683,7 @@ def run_training(
                     heartbeat=hb,
                     phase_label=f'phase={pi}:{phase.unlock}',
                     unlock=phase.unlock,
+                    eval_hook=validator.hook,
                 )
                 global_steps += done
                 phase_log.append({
@@ -585,7 +709,7 @@ def run_training(
             )
             env, done, info = _collect_and_update(
                 agent, env,
-                steps=phase.steps,
+                steps=phase_steps,
                 omega=phase.omega,
                 expand_omega=expand_omega and not self_play,
                 weights=weights,
@@ -599,6 +723,7 @@ def run_training(
                 reward_mode=reward_mode,
                 self_play=self_play,
                 pool=pool,
+                eval_hook=validator.hook,
             )
             global_steps += done
             if pool is not None:
@@ -621,6 +746,9 @@ def run_training(
             )
 
         agent.save(ckpt_dir / 'final.pt')
+        if validator.enabled and (not validator.history or validator.history[-1]['step'] != global_steps):
+            validator.run(global_steps)
+        validator.close()
         n_suite = resolve_suite_games(suite_games=suite_games, smoke=smoke)
         suite_rows, suite_note = [], ''
         if n_suite > 0 and env is None and venv is not None:
@@ -764,6 +892,10 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--smoke', action='store_true', help='Treat as smoke (suite default 0)')
     p.add_argument('--lr', type=float, default=None, help='Override PPOConfig.lr')
     p.add_argument('--clip-eps', type=float, default=None, help='Override PPOConfig.clip_eps')
+    p.add_argument('--eval-every', type=int, default=250_000,
+                   help='Validación sin exploración cada N pasos (rivales deterministas); guarda best.pt (0 = off)')
+    p.add_argument('--eval-games', type=int, default=50, help='Partidas BO1 por rival en cada validación')
+    p.add_argument('--resume', default='', help='Reanudar desde un checkpoint (p. ej. <dir>/last.pt)')
     p.add_argument('--agent-team', default=DEFAULT_AGENT_TEAM,
                    help='Equipo fijo del agente (default: showdown/rl/data/ddqn_team.txt); "pool" = sorteo')
     p.add_argument('--num-envs', type=int, default=1,
@@ -830,6 +962,9 @@ def main(argv: Optional[list] = None) -> int:
         envs_per_server=args.envs_per_server,
         base_port=args.base_port,
         agent_team='' if str(args.agent_team).lower() in ('pool', 'none', '') else args.agent_team,
+        eval_every=args.eval_every,
+        eval_games=args.eval_games,
+        resume=args.resume,
     )
     return 0
 

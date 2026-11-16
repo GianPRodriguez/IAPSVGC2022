@@ -224,7 +224,7 @@ class Validation:
 
     # ------------------------------------------------------------------ run
     def run(self, *, foes, episodes: int, port: int, seed: int, max_steps: int = 60,
-            agent_team: str = '') -> None:
+            agent_team: str = '', mask_kind: str = 'joint') -> None:
         from showdown.rl.action_space import decode_joint_action, decode_slot_action
         from showdown.rl.env import VGCEnv
         from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
@@ -263,9 +263,12 @@ class Validation:
                             self.c['foe_not_validated'] += 1
                     for _ in range(max_steps):
                         jm = self.check_step(env, foe)
-                        legal = np.flatnonzero(jm)
-                        joint = int(rng.choice(legal)) if legal.size else 0
-                        a1, a2 = decode_joint_action(joint)
+                        if mask_kind == 'slot':
+                            a1, a2 = self._slot_actions(env, jm, rng)
+                        else:
+                            legal = np.flatnonzero(jm)
+                            joint = int(rng.choice(legal)) if legal.size else 0
+                            a1, a2 = decode_joint_action(joint)
                         vo = getattr(env.backend._battle, 'valid_orders', None) or []
                         pre_valid = [[str(o) for o in (side or [])][:12] for side in vo[:2]]
                         _obs, _r, term, trunc, info = env.step((a1, a2))
@@ -286,6 +289,36 @@ class Validation:
                             break
             finally:
                 env.close()
+
+    def _slot_actions(self, env, jm: np.ndarray, rng) -> tuple:
+        """Como PPO: hueco 1 con su máscara, hueco 2 con la máscara condicionada al hueco 1.
+
+        Comprueba que la máscara del hueco 2 no quede vacía, que el par elegido sea legal en la
+        máscara conjunta (la de DDQN / inferencia) y que la máscara del jugador PPO de inferencia
+        (``pe_autoregressive_masks`` sobre la batalla) coincida con la del entorno.
+        """
+        from showdown.rl.action_space import encode_joint_action
+        from showdown.rl.pe_adapter import pe_autoregressive_masks
+        battle = env.backend._battle
+        m1, _ = env.backend.action_masks(slot1_action_id=None)
+        l1 = np.flatnonzero(np.asarray(m1) > 0.5)
+        a1 = int(rng.choice(l1)) if l1.size else 0
+        _, m2 = env.backend.action_masks(slot1_action_id=a1)
+        l2 = np.flatnonzero(np.asarray(m2) > 0.5)
+        self.c['slot_checks'] += 1
+        if not l1.size or not l2.size:
+            self.c['slot_mask_empty'] += 1
+            self._ex('slot_mask_empty', {'turn': env._snap.turn, 'l1': int(l1.size), 'l2': int(l2.size)})
+        a2 = int(rng.choice(l2)) if l2.size else 0
+        if not bool(np.asarray(jm, dtype=bool)[encode_joint_action(a1, a2)]):
+            self.c['slot_vs_joint_bad'] += 1
+            self._ex('slot_vs_joint_bad', {'a1': a1, 'a2': a2, 'turn': env._snap.turn})
+        p1, _ = pe_autoregressive_masks(battle, slot1_action_id=None)
+        _, p2 = pe_autoregressive_masks(battle, slot1_action_id=a1)
+        if not (np.array_equal(np.asarray(p1) > 0.5, np.asarray(m1) > 0.5)
+                and np.array_equal(np.asarray(p2) > 0.5, np.asarray(m2) > 0.5)):
+            self.c['slot_train_vs_infer'] += 1
+        return a1, a2
 
     def report(self) -> Dict[str, Any]:
         def stats(v):
@@ -314,10 +347,13 @@ def main(argv=None) -> int:
     ap.add_argument('--device', default='cpu')
     ap.add_argument('--out', default='logs/live_validation.json')
     ap.add_argument('--agent-team', default='', help='archivo de equipo fijo del agente')
+    ap.add_argument('--mask-kind', choices=('joint', 'slot'), default='joint',
+                    help='joint = como DDQN; slot = como PPO (hueco 2 condicionado al hueco 1)')
     args = ap.parse_args(argv)
     v = Validation(device=args.device)
     v.run(foes=[f.strip() for f in args.foes.split(',') if f.strip()],
-          episodes=args.episodes, port=args.port, seed=args.seed, agent_team=args.agent_team)
+          episodes=args.episodes, port=args.port, seed=args.seed, agent_team=args.agent_team,
+          mask_kind=args.mask_kind)
     rep = v.report()
     with open(args.out, 'w', encoding='utf-8') as fh:
         json.dump(rep, fh, indent=2, default=str)

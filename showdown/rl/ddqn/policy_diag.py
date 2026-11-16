@@ -63,7 +63,7 @@ def classify(battle, slot: int, act, mask_slot: np.ndarray) -> str:
 
 
 def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
-        preview_checkpoint: str = '') -> Dict[str, object]:
+        preview_checkpoint: str = '', agent_kind: str = 'ddqn') -> Dict[str, object]:
     from showdown.inference_sim.team_factory import load_team_file
     from showdown.rl.action_space import decode_joint_action, decode_slot_action
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
@@ -75,8 +75,13 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
     from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
     from showdown.rl.reward import RewardCandidate
 
-    print('[diag] ' + configure_preview('ddqn', checkpoint=preview_checkpoint or None), flush=True)
-    agent = DDQNAgent(DDQNConfig(device='cpu', replay_device='cpu', replay_capacity=64))
+    print('[diag] ' + configure_preview(agent_kind, checkpoint=preview_checkpoint or None), flush=True)
+    if agent_kind == 'ppo':
+        from showdown.rl.observation import build_observation_ppo
+        from showdown.rl.ppo.agent import PPOAgent, PPOConfig
+        agent = PPOAgent(PPOConfig(device='cpu'))
+    else:
+        agent = DDQNAgent(DDQNConfig(device='cpu', replay_device='cpu', replay_capacity=64))
     agent.load(checkpoint, map_location='cpu')
     our_team = load_team_file(agent_team) if agent_team else None
     by_foe: Dict[str, Counter] = defaultdict(Counter)
@@ -91,9 +96,16 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                 info = {}
                 for _ in range(80):
                     battle = env.backend._battle
-                    obs = build_observation_ddqn(env._snap)
-                    a = agent.act(obs, _joint_masks(env), epsilon=0.0)
-                    a1, a2 = decode_joint_action(int(a))
+                    if agent_kind == 'ppo':
+                        obs = build_observation_ppo(env._snap)
+                        p1, _ = pe_autoregressive_masks(battle, slot1_action_id=None)
+                        a1, a2, _lp, _v = agent.act(
+                            obs, p1, lambda x, _b=battle: pe_autoregressive_masks(_b, slot1_action_id=int(x))[1],
+                            greedy=True)
+                    else:
+                        obs = build_observation_ddqn(env._snap)
+                        a = agent.act(obs, _joint_masks(env), epsilon=0.0)
+                        a1, a2 = decode_joint_action(int(a))
                     m1, _ = pe_autoregressive_masks(battle, slot1_action_id=None)
                     _, m2 = pe_autoregressive_masks(battle, slot1_action_id=int(a1))
                     for slot, (aid, m) in enumerate(((a1, m1), (a2, m2))):
@@ -143,9 +155,11 @@ def main(argv=None) -> int:
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--agent-team', default='showdown/rl/data/ddqn_team.txt')
     ap.add_argument('--out', default='logs/policy_diag.json')
+    ap.add_argument('--agent', choices=('ddqn', 'ppo'), default='ddqn')
     args = ap.parse_args(argv)
     rep = run(checkpoint=args.checkpoint, games=args.games, port=args.port, seed=args.seed,
-              agent_team=args.agent_team, preview_checkpoint=args.preview_checkpoint)
+              agent_team=args.agent_team, preview_checkpoint=args.preview_checkpoint,
+              agent_kind=args.agent)
     with open(args.out, 'w', encoding='utf-8') as fh:
         json.dump(rep, fh, indent=1)
     print(format_table(rep))
