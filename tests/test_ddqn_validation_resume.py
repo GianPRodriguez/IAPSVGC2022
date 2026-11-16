@@ -86,3 +86,5 @@ def test_resume_continues_the_schedule(tmp_path):
                         suite_games=0, eval_every=0, agent_team='',
                         resume=str(tmp_path / 'a' / 'final.pt'))
     assert ag.env_steps == 300
+    rep = json.loads((tmp_path / 'a' / 'reporte.json').read_text(encoding='utf-8'))
+    assert rep['global_steps'] == 300   # el contador global también incluye lo ya hecho

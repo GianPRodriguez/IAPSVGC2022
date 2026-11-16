@@ -568,8 +568,8 @@ def run_training(
     gamma: Optional[float] = None,
     target_update_every: Optional[int] = None,
     target_clip: Optional[float] = None,
-    eval_every: int = 500_000,
-    eval_games: int = 40,
+    eval_every: int = 250_000,
+    eval_games: int = 50,
     resume: str = '',
     num_envs: int = 1,
     envs_per_server: int = 4,
@@ -684,6 +684,7 @@ def run_training(
                 global_steps += phase_steps
                 print(f'[ddqn] fase {pi + 1} ya completada antes de reanudar ({phase.unlock})', flush=True)
                 continue
+            global_steps += resume_skip  # parte de esta fase ya hecha antes de reanudar
             phase_steps -= resume_skip
             resume_skip = 0
             probs = omega_sampling_probs(phase.omega, weights=weights)
@@ -947,9 +948,9 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--gamma', type=float, default=None, help='Override DDQNConfig.gamma')
     p.add_argument('--target-update-every', type=int, default=None,
                    help='Copia dura de la red objetivo cada N pasos de gradiente (0 = suave con tau; defecto 0)')
-    p.add_argument('--eval-every', type=int, default=500_000,
+    p.add_argument('--eval-every', type=int, default=250_000,
                    help='Validación sin exploración cada N pasos con rivales deterministas; guarda best.pt (0 = off)')
-    p.add_argument('--eval-games', type=int, default=40,
+    p.add_argument('--eval-games', type=int, default=50,
                    help='Partidas BO1 por rival en cada validación (4 rivales)')
     p.add_argument('--resume', default='',
                    help='Reanudar desde un checkpoint (p. ej. <dir>/last.pt); el replay se rellena')
