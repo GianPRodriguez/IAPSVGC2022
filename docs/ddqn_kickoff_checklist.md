@@ -251,6 +251,14 @@ Lectura:
   contra `eval`. Por ahora no hay evidencia de que adapte la elección a rivales que no conoce.
 - La cola 7 (D4) repite la prueba con expectimax en el combate.
 
+### Respuesta a la memorización (octava cola, 16-11-2026)
+
+Implementado (apagado por defecto): validación reservada (`val`, 30 equipos de `train` no
+entrenados), subconjuntos de equipos para una curva de escala y equipos rivales sintéticos
+por recombinación (2 000 variantes de equipos reales, validadas). La octava cola compara con
+y sin sintéticos (2 semillas) y 50 / 100 / 170 equipos. Diseño, análisis de los sintéticos y
+criterios de lectura fijados de antemano: [`memorizacion_equipos.md`](memorizacion_equipos.md).
+
 ## D. Metodología
 
 | # | Punto | Estado |

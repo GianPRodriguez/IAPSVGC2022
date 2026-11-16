@@ -73,6 +73,11 @@ Consecuencias:
   todos los agentes, heurísticos incluidos, se miden sobre `eval` con el prior de `train`.
 - **Medida de memorización.** La diferencia entre la tasa de un agente RL en `train` y en
   `eval` (mismas condiciones) estima cuánto de su rendimiento depende de equipos vistos.
+- **Validación reservada (16-11-2026).** Con `RL_HOLDOUT_VAL=1`, `train` se divide en `fit`
+  (170, entrenamiento) y `val` (30, elección del checkpoint), con el mismo método (grupos de
+  clones, estratificación). Motivo: el primer mini kick-off de DDQN ganó 84 % con equipos
+  `train` y 50 % con `eval`, y elegir el checkpoint con equipos de entrenamiento premia esa
+  memorización. `eval` no cambia. Ver [`memorizacion_equipos.md`](memorizacion_equipos.md).
 - El vocabulario de identidad del preview (especies, ítems, movimientos) se construyó con
   los 300 equipos. Solo define índices, no estadísticas; una especie que solo aparece en
   `eval` tiene un embedding sin entrenar.
@@ -133,7 +138,7 @@ Los agentes entrenados tienen fuentes de variación que los heurísticos no tien
    la afirmación es el **método**, no un agente entrenado: se reporta la media entre
    semillas de entrenamiento con su IC entre semillas, además del IC por partidas.
 2. **Elección del checkpoint con validación aparte.** El checkpoint se elige con semillas o
-   equipos de validación (del grupo `train`, §2b), nunca con los bloques de confirmación
+   equipos de validación (subgrupo `val` de `train`, no usado para entrenar, §2b), nunca con los bloques de confirmación
    (C1/C2) ni con los equipos de `eval`.
 3. **Evaluación fuera de distribución.** Además del rival con el que entrenó, se evalúa
    contra rivales y equipos no vistos, para descartar que solo explote a su rival de
@@ -244,3 +249,4 @@ frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada
 | 2026-11-15 | **Separación de equipos 200/100 (§2b):** por grupos de clones (mismas 6 especies) y estratificada por especies; RL y previews entrenan en `train`, la Conclusión se mide en `eval`, y el prior de SP y los mundos de expectimax salen de `train`. |
 | 2026-11-15 | Resultados de la confirmación (§5.1): H2 y H3 confirmadas con ventaja pequeña; H1 sin diferencia demostrada. Diagnóstico exploratorio: la opción C fortalece a joint contra expectimax (+2,3 pts en C1, +0,3 en C2; +1,3 en conjunto). |
 | 2026-11-15 | Se agregan los dos niveles de afirmación (umbral práctico provisional: límite inferior del IC ≥ 55 % en BO3), TOST y la sección de agentes con aprendizaje. |
+| 2026-11-16 | **Validación reservada (§2b):** subgrupo `val` (30 equipos de `train`, grupos de clones) para elegir checkpoints; `fit` (170) para entrenar. Motivo: memorización medida (84 % con equipos `train` frente a 50 % con `eval`). Ver `memorizacion_equipos.md`. |

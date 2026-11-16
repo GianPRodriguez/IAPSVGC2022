@@ -17,7 +17,8 @@ está en [`rl_env_spec.md`](rl_env_spec.md). La evaluación final está en
    [`diversidad_baselines.md`](diversidad_baselines.md).
 4. **Team Preview aprendido** — Masked PPO → Payoff Nash → QD-PGA (solo formación).
 5. **Combate aprendido / planificado** — DDQN, PPO, MCTS, MCTS–Nash, QD-*.
-   Antes de entrenar DDQN → [`ddqn_kickoff_checklist.md`](ddqn_kickoff_checklist.md).
+   Antes de entrenar DDQN → [`ddqn_kickoff_checklist.md`](ddqn_kickoff_checklist.md). Memorización de equipos rivales y equipos sintéticos →
+   [`memorizacion_equipos.md`](memorizacion_equipos.md).
 6. **Conclusión** — 11 pipelines (preview + turnos) en un round-robin fijo.
 
 ## Mapa rápido
