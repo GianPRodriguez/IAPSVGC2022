@@ -155,7 +155,12 @@ la evaluación: casi todas las piezas conocidas en otra combinación.
   subconjuntos anidados, sintéticos solo en entrenamiento, cláusulas, sets completos,
   determinismo) y `tests/test_kickoff_summary8.py`. Todos pasan en el servidor.
 - Prueba en vivo: 4 000 pasos con 100 % de rivales sintéticos y validación con `val`: sin
-  reinicios ni errores, y la validación usó solo equipos de `val`. Diagnóstico: con
+  reinicios ni errores, y la validación usó solo equipos de `val`.
+- **Espejo de los rivales con equipos sintéticos:** los heurísticos comparan cada turno su
+  estado interno con poke-env (`battle_state_check`, registrado desde rl_env_spec v1.27). En
+  dos pruebas cortas (DDQN y PPO, greedy_joint y expectimax, 100 % sintéticos): unas 430
+  partidas por prueba, 1 800 revisiones cada una, **0 discrepancias y 0 errores**. La octava
+  cola lo registra en todas sus corridas. Diagnóstico: con
   sintéticos activos, 12 de 12 rivales fueron sintéticos; con `val` y `eval`, 12 de 12 del
   grupo correcto.
 
