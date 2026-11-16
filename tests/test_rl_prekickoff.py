@@ -159,8 +159,8 @@ def test_live_validation_mirror_matches_symmetry(g):
     assert build_observation(s) is not None and s.our.active[0].hp_pct == 41.0  # no muta el original
 
 
-def test_last_turn_moves_skips_called_moves():
-    from showdown.rl.live_validation import _last_turn_moves
+def test_last_moves_skips_called_moves_and_counts_turns():
+    from showdown.rl.live_validation import _last_moves
 
     class B:
         _replay_data = [
@@ -169,5 +169,6 @@ def test_last_turn_moves_skips_called_moves():
             ['', 'move', 'p2b: Oranguru', 'Instruct', 'p2a: Garchomp'],
             ['', 'move', 'p2a: Garchomp', 'Earthquake', '', '[from]move: Instruct'],
             ['', 'turn', '2'],
+            ['', 'move', 'p2b: Oranguru', 'Psychic', 'p1a: Incineroar'],  # antes de un cambio forzado
         ]
-    assert _last_turn_moves(B()) == [('p1: Incineroar', 'fakeout'), ('p2: Oranguru', 'instruct')]
+    assert _last_moves(B()) == {'p1: Incineroar': ('fakeout', 1), 'p2: Oranguru': ('psychic', 0)}

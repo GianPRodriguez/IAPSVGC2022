@@ -57,21 +57,27 @@ def mirror_snapshot(s, g: int):
     return s
 
 
-def _last_turn_moves(battle) -> List[tuple]:
-    """(clave 'p1: Nombre', id del movimiento) elegidos en el último turno completo."""
+def _last_moves(battle) -> Dict[str, tuple]:
+    """Último movimiento elegido por cada Pokémon según el protocolo crudo.
+
+    Devuelve ``{clave 'p1: Nombre': (id del movimiento, turnos desde entonces)}``. Incluye
+    los movimientos posteriores al último ``|turn|`` (pasos de cambio forzado tras un KO).
+    Los movimientos llamados (``[from]``: Instruct, Dancer…) no cuentan.
+    """
     from showdown.rl.battle_history import _id, ident_key
-    msgs = list(getattr(battle, '_replay_data', None) or [])
-    turn_idx = [i for i, m in enumerate(msgs) if len(m) > 2 and m[1] == 'turn']
-    if len(turn_idx) < 2:
-        return []
-    a, b = turn_idx[-2], turn_idx[-1]
-    out = []
-    for m in msgs[a + 1:b]:
-        if len(m) > 3 and m[1] == 'move' and not any(str(p).startswith('[from]') for p in m[4:]):
+    turn = 0
+    last: Dict[str, tuple] = {}
+    for m in list(getattr(battle, '_replay_data', None) or []):
+        if len(m) > 2 and m[1] == 'turn':
+            try:
+                turn = int(m[2])
+            except ValueError:
+                pass
+        elif len(m) > 3 and m[1] == 'move' and not any(str(p).startswith('[from]') for p in m[4:]):
             k = ident_key(m[2])
             if k:
-                out.append((k, _id(m[3])))
-    return out
+                last[k] = (_id(m[3]), turn)
+    return {k: (mid, turn - t) for k, (mid, t) in last.items()}
 
 
 def _active_slot_of(battle, key: str):
@@ -180,8 +186,8 @@ class Validation:
                     self.c['align_bad'] += 1
                     self._ex('align_bad', {'slot': s, 'k': k, 'obs': mid, 'orden': got})
 
-        # historial: movimientos del último turno → last_move del Pokémon activo
-        for key, mid in _last_turn_moves(battle):
+        # historial: último movimiento de cada Pokémon activo (protocolo crudo) → obs
+        for key, (mid, ago) in _last_moves(battle).items():
             where = _active_slot_of(battle, key)
             if where is None:
                 continue
@@ -190,10 +196,11 @@ class Validation:
             if mon is None:
                 continue
             self.c['history_checks'] += 1
-            if mon.last_move != mid or mon.last_move_ago not in (0, 1):
+            if mon.last_move != mid or mon.last_move_ago != ago:
                 self.c['history_bad'] += 1
-                self._ex('history_bad', {'key': key, 'protocolo': mid, 'obs': mon.last_move,
-                                         'hace': mon.last_move_ago, 'turn': snap.turn})
+                self._ex('history_bad', {'key': key, 'protocolo': mid, 'hace_protocolo': ago,
+                                         'obs': mon.last_move, 'hace_obs': mon.last_move_ago,
+                                         'turn': snap.turn})
 
         # simetrías con el combate real
         for g in range(1, SYM.N_ELEMENTS):
