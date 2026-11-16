@@ -153,9 +153,37 @@ legales toma el ruido como valor, y con actualización suave del objetivo (τ = 
 objetivo es casi igual a la online, así que Double DQN apenas corrige el sesgo. Se descartó
 que el fin de episodio no se marque en el replay (se marca bien).
 
-Siguiente paso: pilotos A/B cortos (misma semilla y presupuesto) con correcciones estándar
-que no cambian el diseño: copia dura del objetivo cada N pasos de gradiente, objetivo
-acotado al rango real de retornos, y comparar calibración de Q y tasa de victorias.
+### Pilotos A/B contra la sobreestimación de Q (16-11-2026, commit ff313a7)
+
+Misma configuración y presupuesto que el piloto A (400k pasos, semilla 0). Opciones nuevas
+en `DDQNConfig`, apagadas por defecto: `target_update_every` (copia dura del objetivo cada N
+pasos de gradiente) y `target_clip` (objetivo acotado a [−c, c]).
+
+| | A: original (τ = 0,005) | B: copia dura cada 2 000 | **C: objetivo acotado a [−2, 2]** |
+|---|---|---|---|
+| Q medio en 280k / final | 5,60 / 3,38 | 1,34 / 1,01 | 1,26 / 0,88 |
+| Error TD final | 0,54 | 0,18 | 0,15 |
+| Pérdida final | 0,26 | 0,03 | 0,03 |
+| Eval. sin exploración: random | 60 % | 57 % | **72 %** |
+| Eval.: greedy_joint | 7 % | 13 % | **19 %** |
+| Eval.: expectimax | 9 % | 11 % | **19 %** |
+| Eval.: promedio (300 partidas) | 25,3 % | 27,0 % | **36,7 %** |
+| Con exploración, último tramo: random / solo | 0,604 / 0,067 | 0,541 / 0,090 | 0,644 / 0,114 |
+| Pasos/s (servidor compartido) | ~295 | 262 | 214 |
+
+Lectura:
+
+- **B y C eliminan la sobreestimación:** Q queda dentro del rango real de retornos (≤ 1,8)
+  y el error TD baja a un tercio.
+- **C rinde claramente mejor.** En las 300 partidas de evaluación gana 110 frente a 76 de A
+  (z ≈ 3); contra joint, 19 frente a 7. B calibra igual pero rinde parecido a A.
+- **Alcance:** una sola semilla de entrenamiento y 100 partidas por rival. Es una elección
+  exploratoria de configuración antes del kick-off, no una afirmación de la tesis (protocolo
+  §3c: los métodos se comparan con 3–5 semillas).
+- La diferencia de velocidad es carga del servidor, no del cambio (el recorte es una
+  operación trivial en la GPU).
+- El límite 2,0 sale del diseño de la recompensa: los retornos observados van de −1,6 a +1,8.
+  Si la recompensa cambia, el límite debe revisarse.
 
 ## D. Metodología
 
