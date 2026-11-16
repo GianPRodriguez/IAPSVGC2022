@@ -108,4 +108,35 @@ pero peor según el puntaje de joint.
 
 **Alternativa (`phase1_tie_margin`, 0 = off):** sortear en la fase 1 de expectimax con el
 puntaje de joint (el mismo `tie_margin` que no cuesta nada en joint). Solo cambia lo jugado
-cuando se juega la fase 1. Pendiente de medir (DEP3/DEP8).
+cuando se juega la fase 1.
+
+### Medición final (contadores corregidos: d9798b2 y 0298e26)
+
+| Config | Rival | Tasa | Frente a la determinista (McNemar) | Casi-empates | Jugada distinta de la determinista |
+|---|---|---|---|---|---|
+| DJ0: joint determinista | solo | 52,29 % | — | 0 % | 0 % |
+| DJ3b: joint, `PS_JOINT_TIE_MARGIN=3` | solo | 51,99 % | −0,22 pts (82 frente a 93), p = 0,45 | 13,5 % (2,3 cand.) | **7,3 %** |
+| DJ8b: joint, `PS_JOINT_TIE_MARGIN=8` | solo | 52,03 % | −0,20 pts (174 frente a 184), p = 0,63 | 24,2 % (2,6 cand.) | **13,8 %** |
+| BASE: expectimax determinista | joint | 52,24 % | — | — | — |
+| DEP3: expectimax, `phase1_tie_margin=3` | joint | 52,10 % | −0,06 pts (63 frente a 66), p = 0,86 | 14,6 % (2,3 cand.) | **4,2 %** |
+| DEP8: expectimax, `phase1_tie_margin=8` | joint | 51,69 % | −0,54 pts (90 frente a 117), p = 0,07 | 25,6 % (2,7 cand.) | **7,4 %** |
+| DE2/DE10: expectimax, `tie_sample_margin` | joint | 46,4 / 45,5 % | −7,1 / −6,7 pts | 61 / 64 % | 38 / 41 % |
+
+En DEP, "jugada distinta" cuenta solo los turnos en que se juega la fase 1 (puerta cerrada).
+
+## Recomendación para los rivales del entrenamiento RL
+
+| Rival | Configuración | Variedad (jugada distinta) | Costo medido |
+|---|---|---|---|
+| greedy_joint | `PS_JOINT_TIE_MARGIN=8` | ~14 % de las decisiones | −0,2 pts, no significativo |
+| expectimax | `EXPECTIMAX_OVERRIDES=phase1_tie_margin=3` | ~4 % | −0,06 pts, nulo |
+| greedy_solo | determinista (sin opción de sorteo) | — | — |
+
+Además, usar **los tres en el pool**: deterministas difieren entre sí en 41–70 % de las
+decisiones con fuerza parecida (1–3 puntos), y esa es la mayor fuente de variedad. El sorteo
+agrega variedad *dentro* de cada rival, para que ante el mismo estado no responda siempre
+igual. **No usar `tie_sample_margin`** en expectimax.
+
+Pendientes antes de entrenar: llevar estos parámetros a la configuración de rivales de
+`rl_env_spec` (hoy por defecto son deterministas) y, si se quiere afirmar "sin costo" de
+forma formal, una prueba TOST (protocolo §3b) con δ = 1 punto.
