@@ -206,8 +206,7 @@ def main(argv=None) -> int:
         data['val'] = make_val_split(teams, data, n_val=args.make_val)
         data['val_criterion'] = (f'{args.make_val} equipos de train por grupos de clones; mismo criterio de '
                                  'balance (semillas 0..499)')
-        SPLIT_PATH.write_text(json.dumps(data, indent=1, ensure_ascii=False) + '
-', encoding='utf-8')
+        SPLIT_PATH.write_text(json.dumps(data, indent=1, ensure_ascii=False) + '\n', encoding='utf-8')
         _load.cache_clear()
         print(f'OK val={len(data["val"])} fit={len(set(data["train"]) - set(data["val"]))}')
         tr_fit = {'train': sorted(set(data['train']) - set(data['val'])), 'eval': data['val']}

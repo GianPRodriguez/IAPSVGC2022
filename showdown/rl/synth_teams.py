@@ -216,7 +216,7 @@ def main(argv=None) -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({'seed': args.seed, 'weights': list(weights), 'base_split': 'fit',
                                'validated': not args.no_validate, 'n': len(rows), 'teams': rows},
-                              ensure_ascii=False, indent=0) + '\n', encoding='utf-8')
+                              ensure_ascii=False, separators=(',', ':')) + '\n', encoding='utf-8')
     rep = report(fit, val, ev, teams, meta, rejected, attempts)
     if args.report_out:
         Path(args.report_out).write_text(rep, encoding='utf-8')
