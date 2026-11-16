@@ -32,6 +32,51 @@ selección. Medir con semillas nuevas da una estimación de la ventaja sin ese s
   que el chequeo falla por diseño (p. ej. H2: `fail_bo3_inf=6304`, `NEED_FIX=YES`). No
   afecta al juego ni a la validez de la corrida.
 
+## 2b. Separación de equipos: 200 para entrenar, 100 para evaluar
+
+Decisión del 15-11-2026 (checklist DDQN, punto 11). Si un agente RL entrena con los mismos
+equipos con que se evalúa, la evaluación mide en parte memorización: en 2M pasos ve cada
+equipo rival ~800 veces, puede aprender respuestas específicas por equipo y aprende de
+hecho sus SP reales, información que los heurísticos no tienen (prior leave-one-out).
+
+| Grupo | Equipos | Uso |
+|---|---|---|
+| `train` | 200 (109 combinaciones de especies) | Entrenamiento de todos los agentes RL y previews; base del "meta conocido" (prior de SP y mundos de expectimax) |
+| `eval` | 100 (58 combinaciones de especies; 79 únicos por especie + ítem) | Solo la evaluación final (Conclusión). Ningún agente los ve antes |
+
+Cómo se hizo la separación (`showdown/inference_sim/team_split.py`, archivo congelado
+`team_split.json`):
+
+- **Por grupos de clones.** El pool repite arquetipos: 300 equipos, pero solo 167
+  combinaciones distintas de 6 especies (la más común aparece 17 veces). Todos los equipos
+  con las mismas 6 especies van al mismo grupo, así que **ningún equipo de evaluación
+  comparte sus 6 especies con uno de entrenamiento**. (Un primer sorteo equipo por equipo
+  dejaba ~18 equipos de evaluación con un clon en entrenamiento.)
+- **Estratificada por especies.** Entre 500 semillas se eligió la de menor desbalance en la
+  frecuencia de las 15 especies más usadas (semilla 237). El criterio solo mira la
+  composición de los equipos, no resultados de juego. Diferencias: ≤ 5 puntos en casi
+  todas; las mayores, Sneasler (55 % frente a 45 %) e Incineroar (40 % frente a 31 %).
+
+Qué usa cada parte (`PS_TEAM_SPLIT=all|train|eval`):
+
+| Componente | Grupo |
+|---|---|
+| Entrenamiento RL (`PokeEnvBattleBackend`) y previews | `train` por defecto |
+| Prior de SP y mundos de expectimax | `train` siempre que haya separación (`train` o `eval`); con `all`, los 300 + leave-one-out |
+| Conclusión (`run_conclusion_e2e`) | `eval`: snapshot de 78 equipos (los únicos, en número par) |
+| `run_robust_e2e` | `all` por defecto (como se midieron los baselines); `--team-split train|eval` |
+
+Consecuencias:
+
+- **La escalera de heurísticos ya confirmada (§5.1) se midió con los 300 equipos.** Sigue
+  siendo válida: los heurísticos no aprenden, así que no hay memorización. En la Conclusión
+  todos los agentes, heurísticos incluidos, se miden sobre `eval` con el prior de `train`.
+- **Medida de memorización.** La diferencia entre la tasa de un agente RL en `train` y en
+  `eval` (mismas condiciones) estima cuánto de su rendimiento depende de equipos vistos.
+- El vocabulario de identidad del preview (especies, ítems, movimientos) se construyó con
+  los 300 equipos. Solo define índices, no estadísticas; una especie que solo aparece en
+  `eval` tiene un embedding sin entrenar.
+
 ## 3. Pruebas estadísticas
 
 | Pregunta | Diseño | Prueba | Herramienta |
@@ -88,10 +133,12 @@ Los agentes entrenados tienen fuentes de variación que los heurísticos no tien
    la afirmación es el **método**, no un agente entrenado: se reporta la media entre
    semillas de entrenamiento con su IC entre semillas, además del IC por partidas.
 2. **Elección del checkpoint con validación aparte.** El checkpoint se elige con semillas o
-   equipos de validación, nunca con los bloques de confirmación (C1/C2).
+   equipos de validación (del grupo `train`, §2b), nunca con los bloques de confirmación
+   (C1/C2) ni con los equipos de `eval`.
 3. **Evaluación fuera de distribución.** Además del rival con el que entrenó, se evalúa
    contra rivales y equipos no vistos, para descartar que solo explote a su rival de
-   entrenamiento.
+   entrenamiento. Los equipos no vistos son el grupo `eval` (§2b); la diferencia entre
+   `train` y `eval` mide la memorización.
 4. **Preview frente a combate.** Los pipelines RL usan su propio preview (p. ej. E = preview
    PPO + DDQN). La ventaja se descompone con el diseño factorial de `--preview-a/b`, como se
    hizo con expectimax.
@@ -194,5 +241,6 @@ frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada
 | Fecha | Cambio |
 |---|---|
 | 2026-11-15 | Versión inicial: exploración/confirmación, pruebas, regla de decisión, hipótesis H1–H3 y S1–S3. |
+| 2026-11-15 | **Separación de equipos 200/100 (§2b):** por grupos de clones (mismas 6 especies) y estratificada por especies; RL y previews entrenan en `train`, la Conclusión se mide en `eval`, y el prior de SP y los mundos de expectimax salen de `train`. |
 | 2026-11-15 | Resultados de la confirmación (§5.1): H2 y H3 confirmadas con ventaja pequeña; H1 sin diferencia demostrada. Diagnóstico exploratorio: la opción C fortalece a joint contra expectimax (+2,3 pts en C1, +0,3 en C2; +1,3 en conjunto). |
 | 2026-11-15 | Se agregan los dos niveles de afirmación (umbral práctico provisional: límite inferior del IC ≥ 55 % en BO3), TOST y la sección de agentes con aprendizaje. |

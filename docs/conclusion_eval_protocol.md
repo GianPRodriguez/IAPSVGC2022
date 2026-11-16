@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|--------|
 | **Documento** | Contrato de la eval final de la tesis (preview + turnos) |
-| **Versión** | **1.2** |
+| **Versión** | **1.3** |
 | **Estado** | **FROZEN — diseño**; harness `showdown.inference_sim.run_conclusion_e2e` |
 | **Formato** | Champions **Reg M-C**, Mega **on**, Tera **off** |
 | **Code** | `showdown/inference_sim/conclusion_eval/`, `run_conclusion_e2e.py` |
@@ -21,7 +21,7 @@
 En investigación es fácil confundir “mejoró el preview” con “mejoró el bot”.
 Este protocolo fija:
 
-1. Los **mismos** 250 equipos (corte final).
+1. Los **mismos** 78 equipos de evaluación (grupo `eval`, nunca vistos al entrenar).
 2. Los **mismos** 100 emparejamientos de equipos para todos los cruces.
 3. Un **swap** de lados para que un equipo naturalmente fuerte no favorezca
    siempre al mismo agente.
@@ -91,13 +91,14 @@ Al arrancar el harness se cargan esos artefactos y **no** se actualizan.
 
 | Parámetro | Valor | Propósito | Cómo influye |
 |-----------|------:|-----------|--------------|
-| `snapshot_n` | 250 | Meta representativo al corte | Menos equipos → menos diversidad; más → más costo de curación |
-| Pool A / B | 125 / 125 | Disjuntos | Evita que ambos usen el mismo paste |
+| `snapshot_n` | 78 | Equipos de evaluación (`team_split` `eval`: 100; 79 únicos por especie + ítem; par) | Solo equipos que ningún agente vio al entrenar; ninguno comparte sus 6 especies con uno de entrenamiento |
+| Pool A / B | 39 / 39 | Disjuntos | Evita que ambos usen el mismo paste |
+| Prior de SP / mundos | grupo `train` (200) | "Meta conocido" | Los heurísticos no ven los repartos de los equipos de evaluación |
 | Dedup | por species+items | Quitar clones | Reduce sesgo a stacks repetidos |
 | Seed | permanente (ej. 42) | Reproducibilidad | Cambiarla rehace A/B y pares |
 | Crecimiento repo | **off** durante Conclusión | Estabilidad | Añadir equipos a mitad rompería el freeze |
 
-Pasos: corte final → legales Reg M-C → dedup → sample 250 con seed → split A/B →
+Pasos: grupo `eval` → legales Reg M-C → dedup → sample 78 con seed → split A/B →
 persistir `logs/conclusion_eval/snapshot.json`.
 
 ---
@@ -196,7 +197,7 @@ PS local: `node pokemon-showdown start --no-security` (vía `--start-ps`).
 | Artefacto | Rol |
 |-----------|-----|
 | `pipelines.json` | Lista canónica de los 11 |
-| `snapshot.json` | 250 equipos, A/B, 100 pares |
+| `snapshot.json` | 78 equipos de `eval`, A/B, 100 pares |
 | `progress.json` | Avance crash-safe |
 | `results.json` | Cruces + ranking machine-readable |
 | `report.txt` | Tabla de Conclusión |
@@ -217,6 +218,7 @@ Tests de protocolo (sin PS): `tests/test_conclusion_eval.py`.
 
 | Versión | Notas |
 |---------|--------|
+| **1.3** | **Equipos de evaluación separados** (2026-11-15): el snapshot sale de los 100 equipos de `eval` (78 tras dedup, par), que ningún agente RL ve al entrenar; el prior de SP y los mundos de expectimax salen de los 200 de `train`. Antes: 250 del pool completo. Ver `protocolo_evaluacion.md` §2b. |
 | **1.2** | Preview familiar cableado en players (`frozen_preview` + `preview_checkpoint`); orden preview→combat |
 | **1.1** | Redacción dual-audience; tablas propósito/influencia; entrenamiento = no; enlace SPECS_INDEX |
 | **1.0** | Diseño inicial + harness |

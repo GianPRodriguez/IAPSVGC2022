@@ -99,7 +99,7 @@ Lectura:
 
 | # | Punto | Estado |
 |---|---|---|
-| 11 | ¿Equipos de entrenamiento = equipos de evaluación? Si sí, se mediría memorización; reservar equipos solo para evaluar | sin verificar; decisión del usuario |
+| 11 | ¿Equipos de entrenamiento = equipos de evaluación? Si sí, se mediría memorización; reservar equipos solo para evaluar | **hecho** (decisión del usuario: 200 para entrenar, 100 para evaluar; rl_env_spec v1.24). Verificado: el entrenamiento usaba los mismos 300 equipos que la evaluación. Separación por grupos de clones (mismas 6 especies) y estratificada; RL y previews en `train`, Conclusión en `eval` (78 equipos), prior y mundos desde `train`. Ver `protocolo_evaluacion.md` §2b |
 | 12 | Ablación codificador × simetría (≥ 3 semillas, evaluación pareada) | pendiente |
 | — | Suite completa en el servidor con los commits desde dbb188b | **hecho**: 651 pasan, 1 falla, 1 omitido, 6 xfail en 1627cc0. La falla era un test con el orden anterior del rival; actualizado al contrato v1.22 en 925b47a y verificado en el servidor |
 
