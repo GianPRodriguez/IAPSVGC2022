@@ -143,3 +143,31 @@ def test_ddqn_player_strict_mode_propagates(monkeypatch):
     monkeypatch.setattr(mod, 'player_stat_beliefs', lambda _p: None)
     with pytest.raises(RuntimeError):
         mod.DDQNPlayer.choose_move(_bare_ddqn_player(), _double_battle())
+
+
+# --------------------------------------------------------------------------- B
+@pytest.mark.parametrize('g', range(1, 8))
+def test_live_validation_mirror_matches_symmetry(g):
+    """El espejado de la validación en vivo coincide con la permutación de la obs."""
+    from showdown.rl import symmetry as SYM
+    from showdown.rl.live_validation import mirror_snapshot
+    from tests.test_rl_symmetry import _asym_snap
+    s = _asym_snap()
+    base = build_observation(s)
+    perm = SYM.augment_obs(base[None], np.array([g]))[0]
+    assert np.allclose(perm, build_observation(mirror_snapshot(s, g)), atol=1e-6)
+    assert build_observation(s) is not None and s.our.active[0].hp_pct == 41.0  # no muta el original
+
+
+def test_last_turn_moves_skips_called_moves():
+    from showdown.rl.live_validation import _last_turn_moves
+
+    class B:
+        _replay_data = [
+            ['', 'turn', '1'],
+            ['', 'move', 'p1a: Incineroar', 'Fake Out', 'p2a: Garchomp'],
+            ['', 'move', 'p2b: Oranguru', 'Instruct', 'p2a: Garchomp'],
+            ['', 'move', 'p2a: Garchomp', 'Earthquake', '', '[from]move: Instruct'],
+            ['', 'turn', '2'],
+        ]
+    assert _last_turn_moves(B()) == [('p1: Incineroar', 'fakeout'), ('p2: Oranguru', 'instruct')]
