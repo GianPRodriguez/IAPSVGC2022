@@ -74,7 +74,6 @@ def action_kind(slot_action_id: int) -> str:
     return kind if kind in ACTION_KINDS else 'pass'
 
 
-@dataclass
 class FoeStateTally:
     """Contraste de estado de los rivales heurísticos (``battle_state_check``) durante el entrenamiento.
 
@@ -127,6 +126,7 @@ class FoeStateTally:
 FOE_STATE = FoeStateTally()
 
 
+@dataclass
 class _EpAcc:
     opponent: str
     ret: float = 0.0
