@@ -1838,6 +1838,9 @@ async def best_joint_double_action(
         if right_atk and right_moves else []
     )
 
+    # Se reinicia aquí, después del último await: si otro agente del mismo proceso (p. ej. la
+    # fase 1 de expectimax) usó la función mientras esta esperaba, no se lee su resultado.
+    LAST_TIE = (1, False)
     if not left_atoms and not right_atoms:
         note_turn_kind('none')
         return None, None, 0.0
