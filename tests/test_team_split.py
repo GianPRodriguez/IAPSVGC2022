@@ -27,12 +27,32 @@ def test_split_covers_the_json_pool():
 
 
 def test_split_is_reproducible():
+    class M:
+        def __init__(self, s):
+            self.species = s
+
     class T:
-        def __init__(self, k):
+        def __init__(self, k, species):
             self.source_url, self.name = k, k
-    teams = [T(f'u{i}') for i in range(30)]
+            self.mons = [M(s) for s in species]
+    teams = [T(f'u{i}', [f'mon{i}', 'Incineroar']) for i in range(30)]
     a, b = TS.make_split(teams, n_train=20), TS.make_split(list(reversed(teams)), n_train=20)
     assert a == b and len(a['train']) == 20 and len(a['eval']) == 10
+
+
+def test_clones_stay_in_the_same_split():
+    """Equipos con las mismas 6 especies nunca quedan repartidos entre train y eval."""
+    raw = json.loads((TS.SPLIT_PATH.parent / 'metavgc_regmc_teams.json').read_text(encoding='utf-8'))
+    d = _data()
+    tr, ev = set(d['train']), set(d['eval'])
+    from showdown.inference_sim.team_factory import canonicalize_species
+
+    def key(t):
+        return '|'.join(sorted(''.join(c for c in canonicalize_species(m['species']).lower() if c.isalnum())
+                               for m in t['mons']))
+    g_tr = {key(t) for t in raw if TS.team_key(t) in tr}
+    g_ev = {key(t) for t in raw if TS.team_key(t) in ev}
+    assert g_tr and g_ev and not (g_tr & g_ev)
 
 
 def test_env_selects_split(monkeypatch):
@@ -72,4 +92,4 @@ def test_rl_backend_defaults_to_train(monkeypatch):
 def test_conclusion_uses_eval_teams():
     from showdown.inference_sim.conclusion_eval.constants import (
         CONCLUSION_TEAM_SPLIT, DEFAULT_SNAPSHOT_N)
-    assert CONCLUSION_TEAM_SPLIT == 'eval' and DEFAULT_SNAPSHOT_N == 100
+    assert CONCLUSION_TEAM_SPLIT == 'eval' and DEFAULT_SNAPSHOT_N == 78 and DEFAULT_SNAPSHOT_N % 2 == 0

@@ -76,11 +76,75 @@ def filter_teams(teams: Iterable, which: Optional[str] = None) -> List:
     return teams if keys is None else [t for t in teams if team_key(t) in keys]
 
 
+def clone_key(team) -> str:
+    """Grupo de "clones": equipos con las mismas 6 especies (cambian ítems, SP o movimientos).
+
+    El pool repite arquetipos (300 equipos, 167 combinaciones de especies; la más común
+    aparece 17 veces). Si un clon quedara en train y otro en eval, el de evaluación no
+    sería realmente "no visto", así que la separación se sortea por grupo.
+    """
+    mons = team.get('mons') if isinstance(team, dict) else getattr(team, 'mons', [])
+    names = []
+    for m in mons or []:
+        sp = m.get('species') if isinstance(m, dict) else getattr(m, 'species', '')
+        names.append(''.join(ch for ch in str(sp or '').lower() if ch.isalnum()))
+    return '|'.join(sorted(names))
+
+
 def make_split(teams: List, *, seed: int = SPLIT_SEED, n_train: int = N_TRAIN) -> Dict[str, List[str]]:
-    keys = sorted({team_key(t) for t in teams})
+    """Sortea grupos de clones completos hasta juntar ``len(teams) - n_train`` en eval."""
+    groups: Dict[str, List[str]] = {}
+    for t in teams:
+        groups.setdefault(clone_key(t), []).append(team_key(t))
+    order = sorted(groups)
     rng = random.Random(int(seed))
-    rng.shuffle(keys)
-    return {'seed': seed, 'train': sorted(keys[:n_train]), 'eval': sorted(keys[n_train:])}
+    rng.shuffle(order)
+    n_eval = len({team_key(t) for t in teams}) - int(n_train)
+    ev: List[str] = []
+    for g in order:
+        members = sorted(set(groups[g]))
+        if len(ev) + len(members) <= n_eval:
+            ev.extend(members)
+        if len(ev) == n_eval:
+            break
+    ev_set = set(ev)
+    train = sorted({team_key(t) for t in teams} - ev_set)
+    return {'seed': seed, 'group_by': 'species', 'train': train, 'eval': sorted(ev_set)}
+
+
+def imbalance(teams: List, split: Dict[str, List[str]], top: int = 15) -> float:
+    """Suma de |% en train − % en eval| de las ``top`` especies más usadas (menor = mejor)."""
+    tr, ev = set(split['train']), set(split['eval'])
+    c_tr, c_ev = Counter(), Counter()
+    for t in teams:
+        sp = {m.species for m in t.mons}
+        (c_tr if team_key(t) in tr else c_ev).update(sp)
+    n_tr, n_ev = max(1, len(tr)), max(1, len(ev))
+    return sum(abs(100 * c_tr[s] / n_tr - 100 * c_ev[s] / n_ev)
+               for s, _ in (c_tr + c_ev).most_common(top))
+
+
+def make_balanced_split(teams: List, *, seeds: Iterable[int] = range(500),
+                        n_train: int = N_TRAIN) -> Dict[str, List[str]]:
+    """Entre varias semillas, la separación por grupos con menor desbalance de especies.
+
+    El criterio solo mira la composición de los equipos (no resultados de juego): es una
+    estratificación, fijada antes de entrenar o evaluar nada con la separación.
+    """
+    best, best_score = None, float('inf')
+    n_all = len({team_key(t) for t in teams})
+    for seed in seeds:
+        sp = make_split(teams, seed=seed, n_train=n_train)
+        if len(sp['eval']) != n_all - n_train:
+            continue
+        score = imbalance(teams, sp)
+        if score < best_score:
+            best, best_score = sp, score
+    if best is None:
+        raise RuntimeError('ninguna semilla dio el tamaño pedido')
+    best['criterion'] = 'min sum |train% - eval%| top-15 species, seeds 0..499'
+    best['imbalance'] = round(best_score, 2)
+    return best
 
 
 def balance_report(teams: List, split: Dict[str, List[str]], top: int = 15) -> str:
@@ -112,7 +176,7 @@ def main(argv=None) -> int:
     os.environ['PS_TEAM_SPLIT'] = 'all'
     teams = active_teams()
     if args.make:
-        split = make_split(teams)
+        split = make_balanced_split(teams)
         SPLIT_PATH.write_text(json.dumps(split, indent=1, ensure_ascii=False) + '\n', encoding='utf-8')
         _load.cache_clear()
         print(f'OK {SPLIT_PATH.name}: train={len(split["train"])} eval={len(split["eval"])}')

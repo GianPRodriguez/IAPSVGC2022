@@ -6,8 +6,10 @@ from pathlib import Path
 from showdown.inference_sim.paths import REPO_ROOT
 
 CROSS_EPS = 0.025
-# Conclusión: los 100 equipos de evaluación (team_split 'eval'), nunca vistos al entrenar.
-DEFAULT_SNAPSHOT_N = 100
+# Conclusión: equipos de evaluación (team_split 'eval': 100, nunca vistos al entrenar ni
+# con las mismas 6 especies que uno de entrenamiento). Tras quitar duplicados de especie+ítem
+# quedan 79; el snapshot usa 78 (par: mitades A/B de 39).
+DEFAULT_SNAPSHOT_N = 78
 CONCLUSION_TEAM_SPLIT = 'eval'
 DEFAULT_N_PAIRS = 100
 # 100 AB + 100 BA
