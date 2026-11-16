@@ -376,6 +376,16 @@ por recombinación (2 000 variantes de equipos reales, validadas). La octava col
 y sin sintéticos (2 semillas) y 50 / 100 / 170 equipos. Diseño, análisis de los sintéticos y
 criterios de lectura fijados de antemano: [`memorizacion_equipos.md`](memorizacion_equipos.md).
 
+**Resultados (16-11-2026, §5 de ese documento):** contra equipos `eval` (3 heurísticos),
+F170 38,7 / 34,0 %, SY50 39,0 / 34,0 % (semillas 0 / 1), S50 36,3 %, S100 33,3 %.
+Los sintéticos no cumplen el criterio de adopción (+0,15 puntos de media; se pedían más de 8)
+y la cantidad de equipos reales no cambia la generalización. La validación con `val`
+coincide con `eval` (~40 % contra heurísticos), así que sí sirve para elegir checkpoints.
+Incluso contra equipos `eval` que comparten 5 de 6 especies con uno de entrenamiento gana
+~40 %, frente a 80–84 % con los propios: memoriza equipos concretos, no combinaciones de
+especies. Espejo de los rivales: 0 discrepancias en ~2,3 M revisiones. Pendiente: decisión
+del usuario sobre sintéticos y validación reservada.
+
 ### Validación en vivo con los valores por defecto nuevos (décima cola, 16-11-2026)
 
 Control antes del kick-off: la máscara de daño al aliado nunca se validó en vivo como valor

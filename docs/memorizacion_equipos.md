@@ -1,6 +1,6 @@
 # Memorización de los equipos rivales y cómo reducirla
 
-Estado: **diseño e implementación hechos (16-11-2026); resultados pendientes de la octava cola.**
+Estado: **octava cola terminada (16-11-2026). Los sintéticos no cumplen el criterio de adopción; la cantidad de equipos reales no cambia la generalización.** Decisión del usuario pendiente.
 Relacionado: [`protocolo_evaluacion.md`](protocolo_evaluacion.md) §2b (separación de equipos),
 [`ddqn_kickoff_checklist.md`](ddqn_kickoff_checklist.md), [`equipos_sinteticos_analisis.md`](equipos_sinteticos_analisis.md).
 
@@ -201,6 +201,78 @@ Script: `scripts/server/kickoff_queue8.sh`; resumen: `showdown/rl/ddqn/kickoff_s
 de la tesis (protocolo §3c: los métodos se comparan con 3–5 semillas). La curva de escala
 tiene una semilla por punto; diferencias de menos de ~8 puntos son ruido.
 
-## 5. Resultados
+## 5. Resultados (octava cola, commit 9727278, 16-11-2026)
 
-Pendiente (octava cola).
+Resumen completo en el servidor: `~/iapsvgc_runs/kickoff8/kickoff_summary8.md`. Los
+diagnósticos usan el `best.pt` de cada corrida (elegido con `val`), 100 partidas por rival y
+grupo, sin exploración. "Propios" = los equipos con que entrenó esa corrida.
+
+### 5.1 Brecha entre equipos propios y `eval` (3 heurísticos, 300 partidas por grupo)
+
+| Corrida | Propios | `eval` | Brecha | `best.pt` (paso) |
+|---|---|---|---|---|
+| D0: mini kick-off anterior (200 de `train`) | 83,0 % | 35,3 % | −47,7 | — |
+| S50 (50 equipos), semilla 0 | 83,7 % | 36,3 % | −47,3 | 750k |
+| S100 (100 equipos), semilla 0 | 86,3 % | 33,3 % | −53,0 | 1M |
+| F170 (170 equipos), semilla 0 | 80,0 % | 38,7 % | −41,3 | 750k |
+| F170, semilla 1 | 84,3 % | 34,0 % | −50,3 | 1M |
+| SY50 (170 + 50 % sintéticos), semilla 0 | 71,0 % | 39,0 % | −32,0 | 1M |
+| SY50, semilla 1 | 72,0 % | 34,0 % | −38,0 | 750k |
+
+Error estándar de la brecha: ± 3,4–3,8 puntos; de cada cifra de `eval`: ± 2,8.
+
+### 5.2 Respuestas a las preguntas fijadas de antemano
+
+1. **¿Los sintéticos reducen la memorización? No en lo que importa.** Contra `eval`, SY50
+   frente a F170: +0,3 (semilla 0) y 0,0 (semilla 1). El criterio era más de ~8 puntos en
+   ambas semillas: **no se cumple**. La brecha baja (−32/−38 frente a −41/−50) solo porque el
+   agente gana menos contra los equipos reales con que entrenó (71–72 % frente a 80–84 %): los
+   sintéticos diluyen la exposición a los equipos reales sin mejorar contra los no vistos. En
+   `val` el mejor punto de SY50 es algo mayor (60,5 / 60,5 % frente a 56,5 / 58,0 %; incluye
+   random), una diferencia del orden del ruido con 30 equipos.
+2. **¿Más equipos reales ayudan? No.** Contra `eval`: 50 equipos 36,3 %, 100 equipos 33,3 %,
+   170 equipos 38,7 / 34,0 %. No hay tendencia y las diferencias son del tamaño de la
+   variación entre semillas (F170: 4,7 puntos entre semilla 0 y 1). Ampliar el pool real no
+   resolvería el problema, como anticipaba el usuario (el metajuego varía poco).
+3. **¿Gana más contra equipos `eval` parecidos? Apenas.** Victorias por especies en común con
+   el equipo de entrenamiento más parecido (3 heurísticos):
+
+| Corrida | ≤ 2 | 3 | 4 | 5 |
+|---|---|---|---|---|
+| F170, semilla 0 | 33 % (n=12) | 34 % (n=41) | 39 % (n=90) | 40 % (n=157) |
+| F170, semilla 1 | 25 % (n=12) | 27 % (n=41) | 32 % (n=90) | 38 % (n=157) |
+| S50, semilla 0 | 41 % (n=39) | 35 % (n=40) | 36 % (n=85) | 35 % (n=136) |
+| S100, semilla 0 | 37 % (n=30) | 14 % (n=43) | 32 % (n=74) | 39 % (n=153) |
+
+   F170 sube algo con el parecido, pero incluso contra equipos que comparten 5 de 6 especies
+   gana ~40 %, frente a 80–84 % contra los propios. **Lo que memoriza no son combinaciones de
+   especies sino los equipos concretos** (sets, objetos y, probablemente, la elección del
+   preview, que también se entrenó con los equipos de `train`).
+4. **¿La validación reservada elige mejor?** No se puede responder del todo: la cola
+   diagnosticó solo el `best.pt` (no el último checkpoint). Sí se ve que `val` sigue la
+   realidad: sus cifras contra los heurísticos (p. ej. F170 semilla 0 a 1M: 38 / 52 / 30 %,
+   media 40 %) coinciden con `eval` (38,7 %), mientras la validación anterior con equipos de
+   entrenamiento marcaba ~85 %. En F170 semilla 0 `val` tocó techo en 750k (56,5 %) y bajó a
+   52,0 % en 1M; en las otras corridas el máximo cae entre 750k y 1M.
+
+### 5.3 Otras observaciones
+
+- **Espejo de los rivales:** unas 333 000 revisiones por corrida, **0 discrepancias y 0
+  errores**, también con 50 % de rivales sintéticos.
+- **Tiempo:** los sintéticos no hacen más lento el entrenamiento (SY50: 43–47 min por 1M
+  pasos; el resto 46–48 min).
+
+### 5.4 Conclusión para el kick-off
+
+- Sintéticos: **no adoptarlos** con este diseño (criterio no cumplido); queda como resultado
+  negativo documentado.
+- Pool real: **no ampliarlo**; la cantidad no es el cuello de botella.
+- Validación reservada: **recomendada**, porque es la única que mide lo que importa y no
+  cuesta rendimiento.
+- La memorización sigue abierta. Hipótesis para después del kick-off: el preview v2
+  (entrenado con los equipos de `train`) explicaría parte de la brecha (séptima cola: +27,7
+  con `train` frente a +17,2 con `eval`); reentrenarlo con `fit` (opción D) lo aclararía.
+  Otras vías (no implementadas): regularización (dropout, menos capacidad), entrenar contra
+  rivales que juegan con equipos aleatorios del pool de sets, o mezclar sets por especie.
+
+Decisiones del usuario pendientes: sintéticos y validación reservada para el kick-off.
