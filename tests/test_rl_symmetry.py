@@ -183,7 +183,16 @@ def test_same_mon_in_any_block_gets_the_same_embedding():
     assert torch.allclose(out[0, 0:g.out], e[0, 2 * g.out:3 * g.out])
 
 
-def test_ddqn_and_ppo_updates_run_with_symmetry():
+def test_symmetry_off_by_default(monkeypatch):
+    from showdown.rl.symmetry import sym_aug_enabled
+    monkeypatch.delenv('RL_SYM_AUG', raising=False)
+    assert not sym_aug_enabled(True)
+    monkeypatch.setenv('RL_SYM_AUG', '1')
+    assert sym_aug_enabled(True) and not sym_aug_enabled(False)
+
+
+def test_ddqn_and_ppo_updates_run_with_symmetry(monkeypatch):
+    monkeypatch.setenv('RL_SYM_AUG', '1')  # apagada por defecto desde el 16-11-2026
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
     from showdown.rl.ppo.agent import PPOAgent, PPOConfig
 
