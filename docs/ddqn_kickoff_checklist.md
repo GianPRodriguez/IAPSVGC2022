@@ -386,6 +386,16 @@ Incluso contra equipos `eval` que comparten 5 de 6 especies con uno de entrenami
 especies. Espejo de los rivales: 0 discrepancias en ~2,3 M revisiones. Pendiente: decisión
 del usuario sobre sintéticos y validación reservada.
 
+### PPO con equipos `train` frente a `eval` y suite completa (novena cola, commit 7c7a11e)
+
+- Pilotos de PPO (400k) contra los 3 heurísticos: con simetría 89,0 % (`train`) frente a
+  **80,0 %** (`eval`); sin simetría 90,3 % frente a **74,0 %**. DDQN (mini kick-off 1M):
+  83,0 % frente a 35,3 %. **PPO generaliza mucho mejor**; la memorización es propia de DDQN, no
+  del preview ni de los equipos. Con `eval`, la simetría da +6 puntos en PPO (una semilla): la
+  decisión de apagarla se tomó con validaciones sobre equipos de entrenamiento y merece
+  revisarse. Detalle: [`memorizacion_equipos.md`](memorizacion_equipos.md) §6.
+- Suite completa: **744 passed, 1 skipped, 6 xfailed** (3 min, `OMP_NUM_THREADS=4`).
+
 ### Validación en vivo con los valores por defecto nuevos (décima cola, 16-11-2026)
 
 Control antes del kick-off: la máscara de daño al aliado nunca se validó en vivo como valor

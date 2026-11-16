@@ -1,6 +1,6 @@
 # Memorización de los equipos rivales y cómo reducirla
 
-Estado: **octava cola terminada (16-11-2026). Los sintéticos no cumplen el criterio de adopción; la cantidad de equipos reales no cambia la generalización.** Decisión del usuario pendiente.
+Estado: **octava cola terminada (16-11-2026). Los sintéticos no cumplen el criterio de adopción; la cantidad de equipos reales no cambia la generalización.** PPO (novena cola, §6) generaliza mucho mejor que DDQN. Decisión del usuario pendiente.
 Relacionado: [`protocolo_evaluacion.md`](protocolo_evaluacion.md) §2b (separación de equipos),
 [`ddqn_kickoff_checklist.md`](ddqn_kickoff_checklist.md), [`equipos_sinteticos_analisis.md`](equipos_sinteticos_analisis.md).
 
@@ -276,3 +276,44 @@ Error estándar de la brecha: ± 3,4–3,8 puntos; de cada cifra de `eval`: ± 2
   rivales que juegan con equipos aleatorios del pool de sets, o mezclar sets por especie.
 
 Decisiones del usuario pendientes: sintéticos y validación reservada para el kick-off.
+
+## 6. PPO frente a DDQN (novena cola, commit 7c7a11e, 16-11-2026)
+
+Mismo diagnóstico con los dos pilotos de PPO (400k pasos: random 150k y greedy_solo 250k;
+preview v2; equipo fijo; entrenados con equipos de `train` y sin la máscara del aliado, que el
+diagnóstico también apaga). 100 partidas por rival y grupo, sin exploración. Resumen en el
+servidor: `~/iapsvgc_runs/kickoff9/kickoff_summary9.md`.
+
+| Agente | Rival | Equipos `train` | Equipos `eval` | Diferencia |
+|---|---|---|---|---|
+| PPO con simetría | greedy_solo | 97 % | 90 % | −7 |
+| | greedy_joint | 89 % | 76 % | −13 |
+| | expectimax | 81 % | 74 % | −7 |
+| | **3 heurísticos** | **89,0 %** | **80,0 %** | **−9,0 (± 2,9)** |
+| PPO sin simetría | greedy_solo | 95 % | 77 % | −18 |
+| | greedy_joint | 96 % | 72 % | −24 |
+| | expectimax | 80 % | 73 % | −7 |
+| | **3 heurísticos** | **90,3 %** | **74,0 %** | **−16,3 (± 3,1)** |
+| DDQN, mini kick-off 1M (D0, §5) | **3 heurísticos** | **83,0 %** | **35,3 %** | **−47,7 (± 3,5)** |
+
+Contra random ambos PPO ganan 99–100 % con cualquier grupo.
+
+**Lectura:**
+
+1. **PPO generaliza mucho mejor que DDQN.** Contra equipos no vistos gana 74–80 % frente a
+   ~35 % de DDQN (unos 40 puntos, ~10 errores estándar), con menos pasos (400k frente a 1M) y
+   sin haber entrenado nunca contra greedy_joint ni expectimax (74 % contra expectimax con
+   equipos `eval`). La memorización de §5 no es del montaje común (preview, equipos,
+   observación): PPO usa el mismo preview v2, los mismos equipos y la misma observación.
+   Apunta a DDQN: aprende un valor Q por cada una de las ~1 600 acciones conjuntas, lo que le
+   permite ajustar respuestas a equipos concretos; PPO aprende una política por hueco.
+   Factores no separados: PPO entrenó menos pasos y sin las fases joint/expectimax (menos
+   tiempo para memorizar), y una semilla por piloto.
+2. **La simetría podría ayudar a generalizar en PPO.** Con equipos `train` no cambia (89,0
+   frente a 90,3 %), pero con `eval` da +6 puntos (80,0 frente a 74,0 %; z ≈ 1,4) y la brecha
+   baja a la mitad (−9 frente a −16). Una semilla, no concluyente. **Importante:** la decisión
+   de apagar la simetría por defecto (rl_env_spec v1.28) se tomó con validaciones sobre equipos
+   de entrenamiento, que miden memorización. Merece revisarse con equipos `eval` o `val`.
+3. **Para el benchmark:** la diferencia DDQN–PPO en equipos no vistos es exactamente lo que
+   la evaluación final (Conclusión, grupo `eval`) debe capturar. La validación con equipos de
+   entrenamiento la ocultaba (DDQN 85 % frente a PPO 92 %).
