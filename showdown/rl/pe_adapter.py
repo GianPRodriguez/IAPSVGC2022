@@ -624,7 +624,49 @@ def pe_slot_mask(battle, slot: int, *, other: Optional[SlotAction] = None) -> np
         mask[MEGA_BASE:MEGA_BASE + N_MOVE_ACTIONS] = mask[0:N_MOVE_ACTIONS]
     if slot < len(can_tera) and allow_tera(bool(can_tera[slot])):
         mask[TERA_ID] = 1.0
-    return _filter_by_valid_orders(battle, slot, mask)
+    return _filter_ally_damage(battle, slot, _filter_by_valid_orders(battle, slot, mask))
+
+
+# Habilidad del aliado → tipos que absorbe o que lo benefician al recibirlos: apuntarle un
+# ataque de ese tipo puede ser una jugada real (p. ej. Lightning Rod, Justified).
+_ALLY_ABSORB = {
+    'lightningrod': {'electric'}, 'voltabsorb': {'electric'}, 'motordrive': {'electric'},
+    'stormdrain': {'water'}, 'waterabsorb': {'water'}, 'dryskin': {'water'},
+    'flashfire': {'fire'}, 'wellbakedbody': {'fire'}, 'sapsipper': {'grass'},
+    'eartheater': {'ground'}, 'justified': {'dark'},
+}
+# Movimientos con poder base que sobre el aliado ayudan en vez de dañar.
+_ALLY_OK_MOVES = {'pollenpuff'}
+
+
+def _filter_ally_damage(battle, slot: int, mask: np.ndarray) -> np.ndarray:
+    """``RL_MASK_ALLY_DAMAGE=1``: quita los ATAQUES DE DAÑO dirigidos al propio aliado.
+
+    Se siguen permitiendo los movimientos de estado sobre el aliado (Helping Hand, Coaching,
+    Decorate…), los que tienen poder base pero ayudan al aliado (Pollen Puff lo cura) y los
+    ataques de un tipo que la habilidad del aliado absorbe o aprovecha (Lightning Rod, Storm
+    Drain, Justified…), para que con otros equipos el agente pueda aprender esas sinergias.
+    Apagado por defecto.
+    """
+    import os
+    if os.environ.get('RL_MASK_ALLY_DAMAGE', '').strip().lower() not in ('1', 'true', 'yes', 'on'):
+        return mask
+    moves = list(battle.available_moves[slot]) if slot < len(getattr(battle, 'available_moves', [])) else []
+    actives = list(getattr(battle, 'active_pokemon', None) or [])
+    ally = actives[1 - slot] if len(actives) == 2 else None
+    ally_ab = _norm(getattr(ally, 'ability', '') or '') if ally is not None else ''
+    absorbs = _ALLY_ABSORB.get(ally_ab, set())
+    out = mask.copy()
+    for mi, move in enumerate(moves[:N_MOVE_SLOTS]):
+        damaging = float(getattr(move, 'base_power', 0) or 0) > 0
+        if not damaging or _norm(getattr(move, 'id', '')) in _ALLY_OK_MOVES:
+            continue
+        mtype = _norm(getattr(getattr(move, 'type', None), 'name', '') or '')
+        if '*' in absorbs or mtype in absorbs:
+            continue
+        for base in (0, MEGA_BASE):
+            out[base + mi * 4 + 2] = 0.0  # objetivo 2 = aliado
+    return out if np.any(out > 0.5) else mask
 
 
 def _valid_order_strings(battle, slot: int) -> Optional[set]:

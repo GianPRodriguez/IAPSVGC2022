@@ -29,6 +29,14 @@ class RewardResult:
     components: Optional[dict] = None
 
 
+def _hp_self_weight() -> float:
+    import os
+    try:
+        return max(0.0, float(os.environ.get('RL_REWARD_HP_SELF', '0') or 0.0))
+    except ValueError:
+        return 0.0
+
+
 def _clip(r: float) -> float:
     return max(R_CLIP_LO, min(R_CLIP_HI, float(r)))
 
@@ -60,6 +68,12 @@ def compute_reward(
     d_faint_self = float(cur_our.faint_count - prev_our.faint_count)
     # HP% drop on foe team is positive reward progress (opp lost HP).
     d_hp_opp = float(prev_foe.hp_pct_total - cur_foe.hp_pct_total) / 100.0
+    # Variante simétrica (diagnóstico 16-11-2026): la recompensa densa no castigaba los PS
+    # perdidos por NUESTRO equipo (solo los KO propios), así que dañar al propio aliado salía
+    # gratis. RL_REWARD_HP_SELF=<k> resta k·W_HP por cada 100 % de PS propios perdidos.
+    # 0 (por defecto) = recompensa del contrato actual.
+    d_hp_self = float(prev_our.hp_pct_total - cur_our.hp_pct_total) / 100.0
+    hp_self_k = _hp_self_weight()
 
     d_win = 0.0
     d_loss = 0.0
@@ -96,6 +110,7 @@ def compute_reward(
         + W_FAINT * d_faint_opp
         - W_FAINT * d_faint_self
         + W_HP * d_hp_opp
+        - hp_self_k * W_HP * d_hp_self
     )
     if finished and (tied or won is None) and d_win == 0.0 and d_loss == 0.0:
         r += C2_TIE_PENALTY
@@ -108,6 +123,7 @@ def compute_reward(
             'd_faint_opp': d_faint_opp,
             'd_faint_self': d_faint_self,
             'd_hp_opp': d_hp_opp,
+            'd_hp_self': d_hp_self,
             'candidate': candidate.value,
         },
     )

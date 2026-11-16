@@ -49,6 +49,8 @@ def main(argv=None) -> int:
     ap.add_argument('--start-ps', action='store_true')
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--out-dir', default='logs/preview_check')
+    ap.add_argument('--pilot', default='greedy_joint', help='combate de ambos lados (greedy_joint | expectimax_bayesian)')
+    ap.add_argument('--skip-replays', action='store_true')
     args = ap.parse_args(argv)
 
     from showdown.inference_sim.team_factory import load_team_file
@@ -62,8 +64,8 @@ def main(argv=None) -> int:
     agent = _agent(args.checkpoint)
     greedy = lambda o, m: int(agent.act(o, m, greedy=True)[0])
     live = {'backend': 'live', 'num_workers': args.num_workers, 'envs_per_server': args.envs_per_server,
-            'base_port': None, 'start_ps': args.start_ps, 'pilot': 'greedy_joint', 'max_turns': 40}
-    rep = {'checkpoint': args.checkpoint, 'n': args.n}
+            'base_port': None, 'start_ps': args.start_ps, 'pilot': args.pilot, 'max_turns': 40}
+    rep = {'checkpoint': args.checkpoint, 'n': args.n, 'pilot': args.pilot}
 
     # 1. train frente a eval, y frecuencia de formaciones
     top = None
@@ -93,6 +95,11 @@ def main(argv=None) -> int:
                 pool.close()
 
     # 3. replays de unas pocas batallas (preview y heurístico, mismos contextos)
+    if args.skip_replays:
+        (out / 'preview_check.json').write_text(json.dumps(rep, indent=1, ensure_ascii=False, default=str),
+                                                encoding='utf-8')
+        print(json.dumps(rep, indent=1, ensure_ascii=False, default=str))
+        return 0
     os.environ['PS_TEAM_SPLIT'] = 'train'
     os.environ['PS_PREVIEW_SAVE_REPLAYS'] = str(out / 'replays')
     env, pool = make_preview_env(args.seed, {**live, 'num_workers': min(4, args.num_workers)})
