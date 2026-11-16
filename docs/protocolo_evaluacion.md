@@ -97,6 +97,10 @@ Los agentes entrenados tienen fuentes de variación que los heurísticos no tien
    hizo con expectimax.
 5. **Información simétrica.** Los rivales heurísticos del entrenamiento y de la evaluación
    van validados (`rl_env_spec` v1.19 y `run_robust_e2e` por defecto).
+6. **Rivales variados en el entrenamiento, deterministas en la evaluación.** En el
+   entrenamiento, joint y expectimax sortean entre casi-empates (`rl_env_spec` v1.21, costo
+   medido ~0); la evaluación usa las versiones deterministas congeladas
+   (`docs/diversidad_baselines.md`).
 
 ## 4. Hipótesis pre-registradas (fijadas el 15-11-2026, antes de medir)
 

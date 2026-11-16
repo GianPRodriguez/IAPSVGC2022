@@ -70,6 +70,39 @@ def foe_validated(kind: str) -> bool:
     return str(kind or '').strip().lower().replace('-', '_') in VALIDATED_FOES
 
 
+# Rivales de ENTRENAMIENTO con sorteo entre casi-empates (docs/diversidad_baselines.md):
+# misma fuerza medida (costo ~0) pero sin responder siempre igual al mismo estado.
+# Solo afecta a los rivales vivos del entorno RL; la evaluación (run_robust_e2e,
+# round-robin de la Conclusión) usa las versiones deterministas.
+FOE_TIE_MARGINS = {
+    'greedy_joint': ('tie_margin', 8.0),             # ~14 % de jugadas distintas, -0,2 pts n.s.
+    'expectimax_bayesian': ('phase1_tie_margin', 3.0),  # ~4 %, -0,06 pts
+}
+
+
+def foe_tie_enabled() -> bool:
+    """Sorteo en los rivales de entrenamiento (por defecto sí; PS_RL_FOE_TIE=0 lo apaga)."""
+    import os
+    return os.environ.get('PS_RL_FOE_TIE', '1').strip().lower() not in ('0', 'false', 'no', 'off')
+
+
+def apply_foe_tie(player, kind: str) -> bool:
+    """Activa el sorteo de casi-empates en la instancia ``player`` (no toca variables globales)."""
+    key = str(kind or '').strip().lower().replace('-', '_')
+    spec = FOE_TIE_MARGINS.get(key)
+    if spec is None:
+        return False
+    field_name, margin = spec
+    if key == 'greedy_joint':
+        player.tie_margin = float(margin)
+        return True
+    from dataclasses import replace
+    from showdown.battle_bots.expectimax_bayesian.expectimax import load_expectimax_config
+    cfg = getattr(player, 'expectimax_config', None) or load_expectimax_config()
+    player.expectimax_config = replace(cfg, **{field_name: float(margin)})
+    return True
+
+
 LIVE_OPPONENTS = (
     'random',
     'greedy_solo',
@@ -79,6 +112,29 @@ LIVE_OPPONENTS = (
 
 
 def _make_foe_player(
+    kind: str,
+    *,
+    account_configuration,
+    battle_format: str,
+    team: str,
+    server_configuration,
+    log_level: int,
+    foe_meta=None,
+    agent_meta=None,
+    tie: Optional[bool] = None,
+):
+    """Build poke-env opponent Player for RL live training (con sorteo, ver ``apply_foe_tie``)."""
+    player = _build_foe_player(
+        kind, account_configuration=account_configuration, battle_format=battle_format,
+        team=team, server_configuration=server_configuration, log_level=log_level,
+        foe_meta=foe_meta, agent_meta=agent_meta,
+    )
+    if foe_tie_enabled() if tie is None else bool(tie):
+        apply_foe_tie(player, kind)
+    return player
+
+
+def _build_foe_player(
     kind: str,
     *,
     account_configuration,

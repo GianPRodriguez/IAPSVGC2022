@@ -230,7 +230,7 @@ propio. Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
-| **1.8.1** | 2026-11-15 | **Opcional, sin cambio por defecto:** `tie_margin` en `best_joint_double_action` (`PS_JOINT_TIE_MARGIN`, 0 = determinista) muestrea al azar entre los pares con puntaje ≥ mejor − margen, para usar joint como rival de entrenamiento con variedad. `PS_DIVERSITY_LOG` registra por decisión si joint juega lo mismo que greedy_solo. Ver `docs/diversidad_baselines.md`. |
+| **1.8.1** | 2026-11-15 | **Opcional, sin cambio por defecto:** `tie_margin` en `best_joint_double_action` (`PS_JOINT_TIE_MARGIN`, 0 = determinista) muestrea al azar entre los pares con puntaje ≥ mejor − margen, para usar joint como rival de entrenamiento con variedad. `PS_DIVERSITY_LOG` registra por decisión si joint juega lo mismo que greedy_solo. También por instancia: `GreedyJointPlayer.tie_margin` (lo usa el entorno RL, rl_env_spec v1.21, con margen 8: ~14 % de jugadas distintas, −0,2 pts n.s.). Ver `docs/diversidad_baselines.md`. |
 | **1.8** | 2026-11-15 | **Opción C por defecto**, igual que Solo v1.8: los 6 stats rivales al reparto más frecuente del prior meta leave-one-out. Joint: +0,48 pts frente a la regla anterior (McNemar, p = 0,46). Regla anterior: `--sp-info-a none`. |
 | **1.7** | 2026-11-14 | Prior meta leave-one-out en evaluación, igual que Solo v1.7. |
 | **1.6** | 2026-11-14 | **Inferencia de SP apagada por defecto** (modo A, `default_sp_info_mode='none'`), igual que Solo v1.6: juegos idénticos a B (452/900) a ~mitad de costo. B disponible con `--sp-info-a inference`. |

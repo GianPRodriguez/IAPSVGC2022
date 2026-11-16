@@ -137,6 +137,20 @@ decisiones con fuerza parecida (1–3 puntos), y esa es la mayor fuente de varie
 agrega variedad *dentro* de cada rival, para que ante el mismo estado no responda siempre
 igual. **No usar `tie_sample_margin`** en expectimax.
 
-Pendientes antes de entrenar: llevar estos parámetros a la configuración de rivales de
-`rl_env_spec` (hoy por defecto son deterministas) y, si se quiere afirmar "sin costo" de
-forma formal, una prueba TOST (protocolo §3b) con δ = 1 punto.
+**Aplicado (15-11-2026, rl_env_spec v1.21):** los rivales vivos del entorno RL
+(`PokeEnvBattleBackend`) usan por defecto joint con margen 8 y expectimax con
+`phase1_tie_margin=3`. Se fija por instancia (`apply_foe_tie`), así que no afecta a otros
+jugadores del mismo proceso. `PS_RL_FOE_TIE=0` vuelve a los rivales deterministas.
+
+| Uso | Rivales |
+|---|---|
+| Entrenamiento RL (`PokeEnvBattleBackend`) | **con sorteo** (por defecto) |
+| Evaluación: `run_robust_e2e`, confirmación, round-robin de la Conclusión | **deterministas** (greedy v1.8, expectimax v1.9) |
+| Validación dentro del entrenamiento (sobre `PokeEnvBattleBackend`) | con sorteo, salvo `PS_RL_FOE_TIE=0` |
+
+Así el agente entrena contra rivales variados y se evalúa contra las mismas versiones con
+las que se midió la escalera (protocolo §3c, evaluación fuera de la distribución de
+entrenamiento).
+
+Pendiente opcional: una prueba TOST (protocolo §3b) con δ = 1 punto para afirmar "sin
+costo" de forma formal.

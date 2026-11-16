@@ -287,6 +287,9 @@ class GreedyJointPlayer(StaleRoomGuardMixin, Player):
         alineada con Solo: lado sin acción jugable → primer banco disponible.
     """
 
+    # Margen de casi-empate por instancia (rivales de entrenamiento RL); None = PS_JOINT_TIE_MARGIN.
+    tie_margin: Optional[float] = None
+
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('server_configuration', LocalhostServerConfiguration)
         kwargs.setdefault('accept_open_team_sheet', True)
@@ -425,7 +428,8 @@ class GreedyJointPlayer(StaleRoomGuardMixin, Player):
             can_tera_left=can_tera_l, can_tera_right=can_tera_r,
             tera_left=tera_l, tera_right=tera_r,
             field_ctx=field_ctx,
-            tie_margin=_joint_tie_margin(),
+            tie_margin=(float(self.tie_margin) if self.tie_margin is not None
+                        else _joint_tie_margin()),
         )
         self.last_decision_score = total
         if diversity_log.enabled():
