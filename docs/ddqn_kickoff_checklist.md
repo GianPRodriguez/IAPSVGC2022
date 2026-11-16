@@ -419,6 +419,17 @@ simetría apagada, validación reservada, sin sintéticos), semillas 0 y 1. C: 2
 `final.pt` (`eval`), para ver si `val` elige mejor que el último checkpoint. Script:
 `scripts/server/kickoff_queue11.sh`. Resultados: pendientes.
 
+### PPO de 1M pasos y nueva evaluación de la simetría (duodécima cola, 16-11-2026)
+
+Aprobado por el usuario, junto con la decisión del punto 7: **PPO empieza desde cero** (sin
+`--bc-checkpoint`); la clonación de comportamiento queda solo como posible comparación. Cuatro
+corridas de PPO de 1M pasos con la configuración final y el currículo completo, con y sin
+simetría (`RL_SYM_AUG=1`), semillas 0 y 1, medidas con `eval`. Preguntas: ¿PPO mantiene la
+generalización de los pilotos (74–80 % con `eval`) con joint y expectimax? ¿La simetría mejora la
+generalización? (La decisión de apagarla se tomó con validaciones sobre equipos de entrenamiento.)
+Script: `scripts/server/kickoff_queue12.sh`; corre después de la undécima cola. Resultados:
+pendientes.
+
 ## D. Metodología
 
 | # | Punto | Estado |
