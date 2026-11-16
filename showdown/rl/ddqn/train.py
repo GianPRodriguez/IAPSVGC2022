@@ -811,6 +811,10 @@ def run_training(
         if validator.enabled and (not validator.history or validator.history[-1]['step'] != global_steps):
             validator.run(global_steps)  # el mejor checkpoint también considera la política final
         validator.close()
+        from showdown.rl.train_metrics import FOE_STATE
+        _fs = FOE_STATE.flush()  # último tramo + total de la corrida (contraste de estado del rival)
+        mlog.write('foe_state', step=int(global_steps), **_fs)
+        print(f"[ddqn] contraste de estado del rival: {_fs['total']}", flush=True)
         n_suite = resolve_suite_games(suite_games=suite_games, smoke=smoke)
         suite_rows, suite_note = [], ''
         if n_suite > 0 and env is None and venv is not None:
