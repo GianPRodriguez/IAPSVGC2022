@@ -118,6 +118,13 @@ class _MatchRunner:
             max_concurrent_battles=1,
             log_level=40,
         )
+        # Diagnóstico: PS_PREVIEW_SAVE_REPLAYS=<dir> guarda el replay HTML de cada batalla
+        # (poke-env ``save_replays``). Sin la variable no cambia nada.
+        import os as _os
+        _rep = _os.environ.get('PS_PREVIEW_SAVE_REPLAYS', '').strip()
+        if _rep:
+            _os.makedirs(_rep, exist_ok=True)
+            common['save_replays'] = _rep
         # Equipo inicial cualquiera: se reemplaza en cada trabajo.
         from showdown.inference_sim.team_factory import active_teams, to_showdown_export
         from showdown.rl.pokeenv_backend import rl_team_split
