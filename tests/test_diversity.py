@@ -140,15 +140,19 @@ def test_joint_tie_changed_only_with_several_candidates():
     finally:
         set_damage_range_override(None)
     set_damage_range_override(_fake_batch)
+    from showdown.battle_bots import diversity_log
+    saved_rng = diversity_log.TIE_RNG
+    diversity_log.TIE_RNG = random.Random(0)  # determinista: con ~16 candidatos, P(cambia) ≈ 15/16
     try:
         flags = []
-        for _ in range(40):
+        for _ in range(200):
             asyncio.run(joint.best_joint_double_action(*_fixture(), tie_margin=1e9))
             n, changed = joint.LAST_TIE
             assert n > 1
             flags.append(changed)
         assert any(flags) and not all(flags)
     finally:
+        diversity_log.TIE_RNG = saved_rng
         set_damage_range_override(None)
 
 
