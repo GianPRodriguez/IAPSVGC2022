@@ -681,6 +681,11 @@ def run_training(
     })
     tracker = EpisodeTracker(mlog, window=200)
     val_port = (base_port or _default_ps_port()) + VAL_PORT_OFFSET
+    offline_only = all(o in OFFLINE_OPPONENTS for p in expand_sched for o in p.omega)
+    if offline_only and eval_every > 0:
+        # La validación juega contra rivales heurísticos en Showdown: no aplica a corridas solo con mock.
+        print('[ddqn] validación desactivada: el calendario solo usa rivales offline (mock)', flush=True)
+        eval_every = 0
     validator = _Validator(agent, ckpt_dir, mlog, every=eval_every, games=eval_games,
                            start_ps=start_ps, port=val_port)
     if resume_skip:
