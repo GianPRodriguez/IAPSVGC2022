@@ -120,7 +120,9 @@ def test_rl_slot_mask_only_pass_for_the_slot_that_does_not_switch():
     forced = pe_slot_mask(battle, 0)
     from showdown.rl.constants import SWITCH_BASE
 
-    assert forced[PASS_ID] == 1.0 and forced[SWITCH_BASE] == 1.0  # puede cambiar
+    # Showdown (sim/side.ts, forcedPassesLeft = forzados − reemplazos): con un reemplazo
+    # disponible, el hueco forzado DEBE cambiar; pasar da "Can't pass: You need to switch in".
+    assert forced[SWITCH_BASE] == 1.0 and forced[PASS_ID] == 0.0
     idle = pe_slot_mask(battle, 1)
     assert idle[PASS_ID] == 1.0
     assert idle.sum() == 1.0                                  # solo PASS: sin movimientos ni mega
