@@ -365,7 +365,8 @@ Lectura:
   Absorb, Justified, etc.). Bloquea otras jugadas de daño al aliado que a veces son legítimas,
   como activar la Weakness Policy del aliado. Los ataques en área que golpean al aliado no se
   bloquean.
-- Decisión pendiente del usuario: adoptar la máscara por defecto (DDQN y PPO).
+- **Decisión del usuario (16-11-2026):** máscara activa por defecto en DDQN y PPO
+  (rl_env_spec v1.28); simetría apagada por defecto.
 
 ### Respuesta a la memorización (octava cola, 16-11-2026)
 
@@ -374,6 +375,15 @@ entrenados), subconjuntos de equipos para una curva de escala y equipos rivales 
 por recombinación (2 000 variantes de equipos reales, validadas). La octava cola compara con
 y sin sintéticos (2 semillas) y 50 / 100 / 170 equipos. Diseño, análisis de los sintéticos y
 criterios de lectura fijados de antemano: [`memorizacion_equipos.md`](memorizacion_equipos.md).
+
+### Validación en vivo con los valores por defecto nuevos (décima cola, 16-11-2026)
+
+Control antes del kick-off: la máscara de daño al aliado nunca se validó en vivo como valor
+por defecto. Se repite la validación en vivo (punto B) con máscaras conjuntas (DDQN) y por
+hueco (PPO), 25 episodios por rival, sin variables de entorno. `live_validation` cuenta además
+en cuántos pasos la máscara del aliado quita acciones y comprueba que nunca agrega ninguna.
+Script: `scripts/server/kickoff_queue10.sh`; corre después de la novena cola. Resultados:
+pendientes.
 
 ## D. Metodología
 

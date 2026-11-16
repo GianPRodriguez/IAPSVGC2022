@@ -146,6 +146,26 @@ class Validation:
             only_i = int((im & ~jm).sum()) if jm.shape == im.shape else -1
             self._ex('mask_train_vs_infer', {'turn': snap.turn, 'solo_entrenamiento': only_t,
                                              'solo_inferencia': only_i})
+        # máscara de daño al aliado (rl_env_spec v1.28): ¿cuántas acciones quita en vivo?
+        # La máscara sin filtro tiene que contener a la filtrada (el filtro solo quita).
+        import os
+        prev = os.environ.get('RL_MASK_ALLY_DAMAGE')
+        os.environ['RL_MASK_ALLY_DAMAGE'] = '0'
+        try:
+            raw = np.asarray(legal_joint_mask(battle), dtype=bool)
+        finally:
+            if prev is None:
+                os.environ.pop('RL_MASK_ALLY_DAMAGE', None)
+            else:
+                os.environ['RL_MASK_ALLY_DAMAGE'] = prev
+        if raw.shape == jm.shape:
+            self.c['ally_mask_checks'] += 1
+            removed = int((raw & ~jm).sum())
+            if removed:
+                self.c['ally_mask_steps'] += 1
+                self.c['ally_mask_removed'] += removed
+            if (jm & ~raw).any():
+                self.c['ally_mask_added'] += 1  # nunca debería ocurrir
 
         # paridad de la obs (entorno frente a jugador de inferencia)
         t0 = time.perf_counter()
