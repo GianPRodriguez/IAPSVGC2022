@@ -402,8 +402,14 @@ Control antes del kick-off: la máscara de daño al aliado nunca se validó en v
 por defecto. Se repite la validación en vivo (punto B) con máscaras conjuntas (DDQN) y por
 hueco (PPO), 25 episodios por rival, sin variables de entorno. `live_validation` cuenta además
 en cuántos pasos la máscara del aliado quita acciones y comprueba que nunca agrega ninguna.
-Script: `scripts/server/kickoff_queue10.sh`; corre después de la novena cola. Resultados:
-pendientes.
+Script: `scripts/server/kickoff_queue10.sh`.
+
+**Resultados (commit 05f5883, 16-11-2026): todo en 0.** DDQN (conjuntas): 794 pasos, 100
+episodios; PPO (por hueco): 813 pasos, 100 episodios. 0 caídas, 0 máscaras vacías (conjuntas ni
+por hueco), entrenamiento = inferencia en ambas, 0 fallbacks, 0 diferencias de paridad de la obs,
+alineación, historial y simetrías, equipo fijo en 100 de 100. La máscara del aliado actúa en el
+80 % de los pasos (633 de 794; ~52 acciones conjuntas quitadas por paso) y nunca agrega acciones.
+Costo: snapshot + obs 1,8 ms, forward 0,4–0,5 ms (medianas).
 
 ### Ensayo general y duración del kick-off (undécima cola, 16-11-2026)
 
