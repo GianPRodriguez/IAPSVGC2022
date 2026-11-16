@@ -218,7 +218,7 @@ class Validation:
 
     # ------------------------------------------------------------------ run
     def run(self, *, foes, episodes: int, port: int, seed: int, max_steps: int = 60) -> None:
-        from showdown.rl.action_space import decode_joint_action
+        from showdown.rl.action_space import decode_joint_action, decode_slot_action
         from showdown.rl.env import VGCEnv
         from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
         from showdown.rl.reward import RewardCandidate
@@ -240,10 +240,19 @@ class Validation:
                         legal = np.flatnonzero(jm)
                         joint = int(rng.choice(legal)) if legal.size else 0
                         a1, a2 = decode_joint_action(joint)
+                        vo = getattr(env.backend._battle, 'valid_orders', None) or []
+                        pre_valid = [[str(o) for o in (side or [])][:12] for side in vo[:2]]
                         _obs, _r, term, trunc, info = env.step((a1, a2))
                         eng = info.get('engine') or {}
                         if isinstance(eng, dict) and eng.get('used_fallback'):
                             self.c['order_fallbacks'] += 1
+                            self.by_foe[foe]['order_fallbacks'] += 1
+                            self._ex('order_fallback', {
+                                'a1': repr(decode_slot_action(a1)), 'a2': repr(decode_slot_action(a2)),
+                                'orden_enviada': eng.get('order'), 'turn': info.get('turn'),
+                                'force_switch': list(env._snap.force_switch or ()) if env._snap else None,
+                                'valid_orders': pre_valid,
+                            }, n=10)
                         if info.get('trunc_reason') == 'crash':
                             self.c['crashes'] += 1
                             self._ex('crash', info.get('error'))
