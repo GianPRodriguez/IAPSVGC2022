@@ -242,13 +242,18 @@ def test_preview_diagnostic_variants():
     from showdown.battle_bots.expectimax_bayesian import team_preview as ep
     from showdown.inference_sim import validated_greedy_player as vgp
 
-    a, b = random.Random(3).sample(active_teams(), 2)
+    a, b = random.Random(3).sample(active_teams('all'), 2)
     us = [mon_from_species(i + 1, m.species) for i, m in enumerate(a.mons)]
     fo = [mon_from_species(i + 1, m.species) for i, m in enumerate(b.mons)]
     assert vgp._sheet_order(us, fo) == [1, 2, 3, 4]
     nolead = vgp._PREVIEW_VARIANTS['expectimax_nolead'](us, fo)
     assert list(nolead[:2]) == sorted(nolead)[:2]  # leads = orden de la hoja (como greedy)
-    nr = ep.best_expectimax_preview_with_meta(us, fo, role_weight=0.0)[0].order
+    # La variante "sin roles" usa los pesos y el peso de lead LEGACY: la llamada directa
+    # equivalente los pasa explícitos (con los de v1.7 por defecto solo coincidía por azar
+    # para algunos pares de equipos).
+    nr = ep.best_expectimax_preview_with_meta(
+        us, fo, role_weight=0.0, lead_weight=ep.LEGACY_LEAD_QUALITY_WEIGHT, **vgp._LEGACY_W,
+    )[0].order
     assert tuple(vgp._PREVIEW_VARIANTS['expectimax_noroles'](us, fo)) == tuple(nr)
     assert best_team_preview_order(us, fo).order  # greedy intacto
     # Sin roles ni lead y con pesos greedy, la variante reproduce exactamente a greedy.
