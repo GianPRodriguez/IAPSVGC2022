@@ -305,6 +305,68 @@ mejor era 0,400, así que reemplazó `best.pt` por uno peor. Afectaba a DDQN y P
 tests en `tests/test_resume_keeps_best.py`. Falta repetir la prueba en vivo: la limpieza de
 servidores de la séptima cola cortó el primer intento.
 
+### Ataques al aliado, cambios voluntarios y preview (séptima cola, commit 5786d82)
+
+Diagnósticos sin exploración, rivales deterministas, equipos `train`, 25 partidas por rival
+(50 en D3). "Ataque al aliado" = movimiento de daño dirigido al propio aliado.
+
+**D1. ¿Bajan con el entrenamiento?** Sí, pero no desaparecen.
+
+| Checkpoint | Ataque al aliado | Cambio voluntario | Protect | Victorias |
+|---|---|---|---|---|
+| lr 1e-4, 400k (preview v1) | 6,4 % | 6,6 % | 11,5 % | 49 % |
+| mini kick-off 250k (preview v2) | 3,0 % | 5,2 % | 9,6 % | 76 % |
+| mini kick-off 500k | 2,9 % | 5,8 % | 10,6 % | 78 % |
+| mini kick-off 750k | 2,4 % | 5,6 % | 9,7 % | 83 % |
+| mini kick-off 1M | 2,3 % | 4,5 % | 9,3 % | 82 % |
+
+**D2. ¿Influye la simetría?** (ablación de 400k pasos, 3 semillas por variante.) En los
+ataques al aliado, apenas: 7,3 / 7,8 / 8,3 % con simetría frente a 7,1 / 7,1 / 7,5 % sin ella.
+En victorias, en este diagnóstico, **sin simetría gana más en las 3 semillas**: 37 / 39 / 38 %
+frente a 30 / 28 / 25 % (unos +10 puntos; 100 partidas por checkpoint). A 1M pasos (quinta
+cola) la diferencia fue al revés y pequeña (85 % con frente a 81 % sin). Conclusión: la
+simetría no da una ventaja consistente.
+
+**D3. ¿Es el preview?** Con el mismo DDQN, preview v1: 7,7 % de ataques al aliado y 41 % de
+victorias; preview v2: 6,2 % y 42 %. El preview no explica los ataques al aliado.
+
+**D4. Preview v2 con expectimax en el combate** (pareado con el preview heurístico):
+
+| Rivales | Preview v2 | Heurístico | Diferencia (± EE) |
+|---|---|---|---|
+| equipos `train` | 78,9 % | 51,2 % | +27,7 (± 4,0) |
+| equipos `eval` | 65,2 % | 48,0 % | +17,2 (± 4,0) |
+| formación fija | 56,6 % | 55,5 % | +1,2 (± 4,4) |
+
+Con expectimax en el combate, el preview v2 **sí** generaliza a equipos no vistos (+17,2) y
+la formación fija no sirve (+1,2). Con greedy_joint pasaba al revés (formación fija +10,4,
+igual que el preview en `eval`). El preview aprendió a adaptar la elección al rival, y esa
+adaptación rinde con un combate más fuerte.
+
+**P5 / P6. Pilotos A/B** (configuración de T0_base: lr 3e-4, preview v1, 400k pasos, una
+semilla):
+
+| Corrida | Ataque al aliado | Cambio voluntario | Victorias (diagnóstico, 100) | Validación final (200) |
+|---|---|---|---|---|
+| T0_base (referencia) | 6,6 % | 6,7 % | 28 % | 30,0 % (random 72, solo 16, joint 10, expectimax 22) |
+| P5: recompensa simétrica (`RL_REWARD_HP_SELF=1`) | 7,4 % | 6,3 % | 35 % | 31,0 % (70, 18, 16, 20) |
+| P6: máscara de daño al aliado (`RL_MASK_ALLY_DAMAGE=1`) | **0,0 %** | 7,9 % | **47 %** | **44,0 %** (88, 40, 24, 24) |
+
+Lectura:
+
+- **P5 no sirve:** penalizar la pérdida de HP propia no reduce los ataques al aliado y apenas
+  cambia el rendimiento.
+- **P6 rinde claramente mejor:** +14 puntos en la validación (z ≈ 3) y +19 en el diagnóstico.
+  Sin ataques al aliado por construcción, el agente no desperdicia exploración ni turnos en
+  ellos. Los cambios voluntarios no cambian.
+- **Alcance:** una semilla, exploratorio (protocolo §3c).
+- **Límite de la máscara:** permite los movimientos de estado (Helping Hand y similares),
+  Pollen Puff y los movimientos que el aliado absorbe por habilidad (Lightning Rod, Water
+  Absorb, Justified, etc.). Bloquea otras jugadas de daño al aliado que a veces son legítimas,
+  como activar la Weakness Policy del aliado. Los ataques en área que golpean al aliado no se
+  bloquean.
+- Decisión pendiente del usuario: adoptar la máscara por defecto (DDQN y PPO).
+
 ### Respuesta a la memorización (octava cola, 16-11-2026)
 
 Implementado (apagado por defecto): validación reservada (`val`, 30 equipos de `train` no
