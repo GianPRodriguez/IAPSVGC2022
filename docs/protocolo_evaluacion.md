@@ -183,6 +183,12 @@ frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada
 - Expectimax trabaja con un tope de tiempo de pared por decisión. Los resultados dependen
   de la carga del servidor; se usan siempre `--procs 28` y 2 workers.
 
+- **Hoja abierta en ~5 % de los equipos (corregido el 15-11-2026, db6d4de).** 14 equipos del
+  pool exportaban nombres de especie no oficiales (`Garchomp Mega Z`, `Kommo-O`, `Mr-Mime`,
+  `Rotom Wash`); poke-env no los emparejaba al leer `|showteam|` y la hoja abierta de esas
+  batallas quedaba sin procesar. Afecta por igual a ambos lados en las corridas anteriores
+  (confirmación, techos, diversidad); no se espera que cambie las conclusiones.
+
 ## Registro de cambios del protocolo
 
 | Fecha | Cambio |
