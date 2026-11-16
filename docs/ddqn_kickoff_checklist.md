@@ -251,6 +251,28 @@ Lectura:
   contra `eval`. Por ahora no hay evidencia de que adapte la elección a rivales que no conoce.
 - La cola 7 (D4) repite la prueba con expectimax en el combate.
 
+### Simetría a 1M pasos (quinta cola, commit 98599da)
+
+Misma configuración que el mini kick-off (DDQN) y que el piloto de PPO de la cola 2; solo
+cambia `RL_SYM_AUG`. Una semilla por variante. **Rivales con equipos `train`** (la medida
+que premia memorizar; ver la sección anterior).
+
+| | Con simetría | Sin simetría | Diferencia |
+|---|---|---|---|
+| DDQN 1M, validación (200 partidas) | 85,0 % | 81,0 % (random 92, solo 78, joint 88, expectimax 66) | +4,0 (EE ≈ 3,8) |
+| PPO 400k, suite (300 partidas: random, joint, expectimax) | 92,0 % | 90,7 % | +1,3 (EE ≈ 2,3) |
+| Pasos/s PPO | 394 | 384 | |
+
+Lectura:
+
+- **La simetría no muestra efecto demostrable** en ninguno de los dos métodos, igual que en la
+  ablación de 400k pasos. Las curvas de DDQN son casi iguales en todos los puntos (250k: 35
+  frente a 32; 500k: 61,5 frente a 62,5; 750k: 79,5 frente a 76).
+- Decisión pendiente del usuario: mantenerla (no cuesta velocidad apreciable) o apagarla.
+- **PPO a 400k pasos (92 %) supera claramente a DDQN a 400k (38 %)**, aun sin haber
+  entrenado contra joint ni expectimax (fases random y solo). Falta comprobar con equipos
+  `eval` cuánto de eso es memorización, como se hizo con DDQN.
+
 ### Respuesta a la memorización (octava cola, 16-11-2026)
 
 Implementado (apagado por defecto): validación reservada (`val`, 30 equipos de `train` no
