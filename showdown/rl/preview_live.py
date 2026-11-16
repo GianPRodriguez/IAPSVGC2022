@@ -120,7 +120,8 @@ class _MatchRunner:
         )
         # Equipo inicial cualquiera: se reemplaza en cada trabajo.
         from showdown.inference_sim.team_factory import active_teams, to_showdown_export
-        t0 = to_showdown_export(active_teams()[0])
+        from showdown.rl.pokeenv_backend import rl_team_split
+        t0 = to_showdown_export(active_teams(rl_team_split())[0])  # prior/mundos del grupo train
         self.us = cls(account_configuration=AccountConfiguration(f'PvA{worker_id}x{stamp}'[:18], None),
                       team=t0, **common)
         self.foe = cls(account_configuration=AccountConfiguration(f'PvB{worker_id}x{stamp}'[:18], None),

@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from showdown.inference_sim.conclusion_eval.constants import (
     DEFAULT_N_PAIRS,
+    CONCLUSION_TEAM_SPLIT,
     DEFAULT_SNAPSHOT_N,
     SNAPSHOT_PATH,
 )
@@ -106,7 +107,7 @@ def build_snapshot(
     teams: Optional[Sequence[TeamMeta]] = None,
 ) -> EvalSnapshot:
     """Corte final: N equipos, A/B disjuntos, n_pairs sin reemplazo (misma seed)."""
-    pool = dedupe_teams(list(teams) if teams is not None else active_teams())
+    pool = dedupe_teams(list(teams) if teams is not None else active_teams(CONCLUSION_TEAM_SPLIT))
     if len(pool) < snapshot_n:
         raise RuntimeError(
             f'Snapshot necesita {snapshot_n} equipos únicos; hay {len(pool)}. '
@@ -170,7 +171,7 @@ def resolve_teams_by_name(
     pool: Optional[Sequence[TeamMeta]] = None,
 ) -> Dict[str, TeamMeta]:
     """Mapa name → TeamMeta desde el pool activo (nombres del snapshot)."""
-    teams = list(pool) if pool is not None else active_teams()
+    teams = list(pool) if pool is not None else active_teams(CONCLUSION_TEAM_SPLIT)
     by_name: Dict[str, TeamMeta] = {}
     for t in teams:
         by_name.setdefault(t.name, t)

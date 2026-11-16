@@ -405,6 +405,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument('--verbose', action='store_true')
     args = ap.parse_args(argv)
 
+    # Conclusión = equipos de evaluación (nunca vistos al entrenar); el prior de SP y los
+    # mundos de expectimax salen de los 200 de entrenamiento (team_split.prior_split).
+    import os
+    from showdown.inference_sim.conclusion_eval.constants import CONCLUSION_TEAM_SPLIT
+    os.environ.setdefault('PS_TEAM_SPLIT', CONCLUSION_TEAM_SPLIT)
+
     if args.write_pipelines:
         path = save_pipelines(DEFAULT_PIPELINES)
         print(f'Wrote pipelines -> {path}', flush=True)

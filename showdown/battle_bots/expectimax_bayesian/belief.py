@@ -27,6 +27,7 @@ _JSON_PATH = (
 _MetaBag = List[Tuple[dict, int]]
 _index: Dict[str, _MetaBag] = {}
 _loaded_path: Optional[Path] = None
+_loaded_split: Optional[str] = None
 
 
 def _norm(s: Optional[str]) -> str:
@@ -34,12 +35,18 @@ def _norm(s: Optional[str]) -> str:
 
 
 def _load_meta(path: Optional[Path] = None, *, force: bool = False) -> int:
-    global _index, _loaded_path
+    global _index, _loaded_path, _loaded_split
     p = Path(path) if path is not None else _JSON_PATH
-    if not force and _loaded_path == p and _index:
+    from showdown.inference_sim.team_split import prior_split, split_keys, team_key
+    split = prior_split() if path is None else 'all'
+    if not force and _loaded_path == p and _loaded_split == split and _index:
         return sum(len(v) for v in _index.values())
     _index = defaultdict(list)
     _loaded_path = p
+    _loaded_split = split
+    # Mundos bayesianos del "meta conocido": con separación de equipos, solo los 200 de
+    # entrenamiento (team_split.prior_split); con 'all', los 300 (+ leave-one-out).
+    allowed = split_keys(split)
     if not p.is_file():
         return 0
     try:
@@ -51,6 +58,8 @@ def _load_meta(path: Optional[Path] = None, *, force: bool = False) -> int:
     # Dedup exact mons per species with counts
     buckets: Dict[str, Dict[Tuple, int]] = defaultdict(lambda: defaultdict(int))
     for team in raw:
+        if allowed is not None and team_key(team) not in allowed:
+            continue
         for mon in (team.get('mons') or []):
             species = _norm(mon.get('species'))
             if not species:

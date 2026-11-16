@@ -37,10 +37,21 @@ def _team_meta(team: Optional[TeamLike]):
     return team if hasattr(team, 'mons') else None
 
 
+def rl_team_split() -> str:
+    """Grupo de equipos del entrenamiento RL: ``train`` (200) salvo que PS_TEAM_SPLIT diga otra cosa.
+
+    Lo fija en el entorno del proceso para que el prior de SP y los mundos de expectimax de
+    los rivales salgan del mismo grupo (``team_split.prior_split``).
+    """
+    import os
+    os.environ.setdefault('PS_TEAM_SPLIT', 'train')
+    return os.environ['PS_TEAM_SPLIT']
+
+
 def _default_team_metas(seed: Optional[int] = None):
     from showdown.inference_sim.team_factory import active_teams
 
-    pool = list(active_teams())
+    pool = list(active_teams(rl_team_split()))
     if len(pool) < 2:
         raise RuntimeError('Need ≥2 teams in MetaVGC pool for live RL backend')
     rng = np.random.default_rng(seed)

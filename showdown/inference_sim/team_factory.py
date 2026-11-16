@@ -342,7 +342,17 @@ def load_scraped_teams(path: Optional[Path] = None) -> List[TeamMeta]:
     return out
 
 
-def active_teams() -> List[TeamMeta]:
+def active_teams(split: Optional[str] = None) -> List[TeamMeta]:
+    """Pool válido de Reg M-C, filtrado por grupo (``PS_TEAM_SPLIT`` o ``split``).
+
+    ``all`` (por defecto) = los 300; ``train`` / ``eval`` = la separación fija 200/100 de
+    ``team_split.json`` (los entornos RL usan ``train``; la Conclusión, ``eval``).
+    """
+    from showdown.inference_sim.team_split import filter_teams
+    return filter_teams(_active_teams_all(), split)
+
+
+def _active_teams_all() -> List[TeamMeta]:
     scraped = load_scraped_teams()
     pool = scraped if len(scraped) >= 2 else list(METAVGC_TEAMS)
     ok: List[TeamMeta] = []

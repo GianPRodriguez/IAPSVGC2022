@@ -6,7 +6,9 @@ from pathlib import Path
 from showdown.inference_sim.paths import REPO_ROOT
 
 CROSS_EPS = 0.025
-DEFAULT_SNAPSHOT_N = 250
+# Conclusión: los 100 equipos de evaluación (team_split 'eval'), nunca vistos al entrenar.
+DEFAULT_SNAPSHOT_N = 100
+CONCLUSION_TEAM_SPLIT = 'eval'
 DEFAULT_N_PAIRS = 100
 # 100 AB + 100 BA
 BATTLES_PER_CROSS = 2 * DEFAULT_N_PAIRS

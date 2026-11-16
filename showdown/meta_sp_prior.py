@@ -29,6 +29,7 @@ _marginal_index: _MarginalIndex = {}
 _species_marginal: Dict[str, Dict[str, Counter]] = {}
 _global_marginal: Dict[str, Counter] = {k: Counter() for k in STAT_KEYS}
 _sample_count: int = 0
+_loaded_split: Optional[str] = None
 
 
 def _norm(s: Optional[str]) -> str:
@@ -52,17 +53,24 @@ def _reset_indexes() -> None:
 
 def load_meta_sp_prior(path: Optional[Path] = None, *, force: bool = False) -> int:
     """Carga/recarga el JSON MetaVGC. Devuelve nº de mons indexados."""
-    global _loaded_path, _sample_count
+    global _loaded_path, _sample_count, _loaded_split
     p = Path(path) if path is not None else _JSON_PATH
+    from showdown.inference_sim.team_split import prior_split, split_keys
+    split = prior_split() if path is None else 'all'
     if (
         not force
         and _loaded_path is not None
         and _loaded_path == p
+        and _loaded_split == split
         and _sample_count > 0
     ):
         return _sample_count
     _reset_indexes()
     _loaded_path = p
+    _loaded_split = split
+    # Con separación de equipos (PS_TEAM_SPLIT=train|eval) el prior es el "meta conocido":
+    # solo los 200 equipos de entrenamiento. Con 'all', los 300 (+ leave-one-out).
+    allowed = split_keys(split)
     if not p.is_file():
         return 0
     try:
@@ -72,8 +80,11 @@ def load_meta_sp_prior(path: Optional[Path] = None, *, force: bool = False) -> i
     if not isinstance(raw, list):
         return 0
 
+    from showdown.inference_sim.team_split import team_key
     n = 0
     for team in raw:
+        if allowed is not None and team_key(team) not in allowed:
+            continue
         for mon in (team.get('mons') or []):
             species = _norm(mon.get('species'))
             nature = _norm(mon.get('nature')) or 'serious'

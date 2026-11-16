@@ -111,7 +111,8 @@ class TeamPreviewEnv:
     def _metavgc_teams(self):
         if self._teams is None:
             from showdown.inference_sim.team_factory import active_teams
-            self._teams = list(active_teams())
+            from showdown.rl.pokeenv_backend import rl_team_split
+            self._teams = list(active_teams(rl_team_split()))  # 200 de entrenamiento
             if len(self._teams) < 2:
                 raise RuntimeError('se necesitan >= 2 equipos MetaVGC para preview live')
         return self._teams

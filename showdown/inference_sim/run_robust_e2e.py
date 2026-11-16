@@ -599,6 +599,7 @@ def _build_report(
         f'B={effective_sp_info_label("B", player_b)} '
         f'b_validated={"YES" if b_validated(player_b) else "NO"}',
         f'preview: A={preview_choice("A") or "own"} B={preview_choice("B") or "own"}',
+        f'team_split: {os.environ.get("PS_TEAM_SPLIT", "all") or "all"}',
         f'elapsed_s: {elapsed_s:.1f}',
         f'bo3_per_s: {bps:.3f}',
         '',
@@ -1960,11 +1961,21 @@ def main(argv: Optional[List[str]] = None) -> int:
         '--preview-b', choices=list(PREVIEW_CHOICES), default=None,
         help='Igual que --preview-a para B (no admite --b-raw ni B random). Env: PS_PREVIEW_B',
     )
+    parser.add_argument(
+        '--team-split', choices=['all', 'train', 'eval'], default=None,
+        help=(
+            'Grupo de equipos: all (300, defecto; con el que se midieron los baselines), '
+            'train (200) o eval (100, evaluación final). Con train/eval el prior de SP y '
+            'los mundos de expectimax salen solo de train. Env: PS_TEAM_SPLIT'
+        ),
+    )
     parser.add_argument('--shard', default=None, help=argparse.SUPPRESS)
     parser.add_argument('--shard-out', default=None, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
 
     # Vía entorno para que los procesos hijos (--procs) hereden la configuración.
+    if args.team_split:
+        os.environ['PS_TEAM_SPLIT'] = args.team_split
     if args.sp_info_a:
         os.environ['PS_SP_INFO_A'] = args.sp_info_a
     if args.sp_info_b:
