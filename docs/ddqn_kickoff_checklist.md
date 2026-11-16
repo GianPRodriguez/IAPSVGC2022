@@ -122,6 +122,41 @@ Una primera versión del contador de especies marcaba 80 desajustes falsos
 Pendiente de decidir: cómo evalúa la Conclusión al pipeline E con un equipo fijo (mismos
 pares de equipos y lados intercambiados para todos los demás).
 
+### Piloto de aprendizaje (15-11-2026, commit 0476a4c)
+
+Configuración oficial (equipo fijo, 32 × 4, replay en GPU, rivales del grupo `train`,
+modo estricto): 150k pasos contra random y 250k con random + solo (Ω creciente), 22,7 min
+(~295 pasos/s de media con el servidor compartido). ε baja de 1 a 0,24 (decaimiento en 500k).
+
+**Evaluación final sin exploración** (100 partidas BO1 por rival) frente a la línea base sin
+entrenar:
+
+| Rival | Sin entrenar | Tras 400k pasos | ¿Entrenó contra él? |
+|---|---|---|---|
+| random | 46 % | **60 %** | sí |
+| greedy_joint | 0,5 % | **7 %** | no |
+| expectimax | 1 % | **9 %** | no |
+
+**Curva con exploración** (victorias por tramo): contra random 0,455 → 0,604; contra solo
+0,012 → 0,067. **El agente aprende**, y mejora también contra rivales que no vio (joint y
+expectimax), aunque sigue muy lejos de ellos con el 20 % del presupuesto previsto.
+
+**Recompensa:** separa perfecto victoria de derrota (umbral 0,14 clasifica el 100 % de los
+episodios; victorias +1,35..+1,8, derrotas −1,6..−0,96). Sin fallbacks, descartes ni truncados.
+
+**Problema: sobreestimación de Q.** El retorno real de un estado no puede pasar de ~1,8,
+pero el Q medio de las acciones tomadas sube hasta 5,6 (paso 280k) y termina en 3,4; el
+error TD pasa de 0,26 a 0,54–0,65 y la pérdida de 0,06 a 0,25–0,33. Al entrar solo (retornos
+negativos) Q **subió** en vez de bajar. No diverge (baja al final, cuando la política mejora),
+pero los valores no siguen la realidad. Causa probable: el máximo sobre cientos de pares
+legales toma el ruido como valor, y con actualización suave del objetivo (τ = 0,005) la red
+objetivo es casi igual a la online, así que Double DQN apenas corrige el sesgo. Se descartó
+que el fin de episodio no se marque en el replay (se marca bien).
+
+Siguiente paso: pilotos A/B cortos (misma semilla y presupuesto) con correcciones estándar
+que no cambian el diseño: copia dura del objetivo cada N pasos de gradiente, objetivo
+acotado al rango real de retornos, y comparar calibración de Q y tasa de victorias.
+
 ## D. Metodología
 
 | # | Punto | Estado |
