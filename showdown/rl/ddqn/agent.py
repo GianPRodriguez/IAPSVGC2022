@@ -44,9 +44,10 @@ class DDQNConfig:
     # target_update_every > 0: copia dura de la red objetivo cada N pasos de gradiente en vez
     # de la actualización suave con tau (separa más objetivo y online para Double DQN).
     # target_clip > 0: el objetivo y se acota a [-target_clip, target_clip] (rango real de
-    # retornos). 0 = desactivado (comportamiento anterior).
+    # retornos). 0 = desactivado. Por defecto 2,0 desde ddqn_spec 1.15: los retornos de la
+    # recompensa DENSE van de -1,6 a +1,8; pilotos A/B: Q calibrado y 36,7 % frente a 25,3 %.
     target_update_every: int = 0
-    target_clip: float = 0.0
+    target_clip: float = 2.0
 
 
 class DDQNAgent:

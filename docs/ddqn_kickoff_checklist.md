@@ -185,6 +185,9 @@ Lectura:
 - El límite 2,0 sale del diseño de la recompensa: los retornos observados van de −1,6 a +1,8.
   Si la recompensa cambia, el límite debe revisarse.
 
+**Decisión (16-11-2026):** C por defecto (`target_clip=2.0`, ddqn_spec 1.15). B queda como
+opción apagada; la combinación B+C puede probarse en el tuning (punto 9).
+
 ## D. Metodología
 
 | # | Punto | Estado |

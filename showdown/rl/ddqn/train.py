@@ -469,8 +469,8 @@ def run_training(
     smoke: bool = False,
     lr: Optional[float] = None,
     gamma: Optional[float] = None,
-    target_update_every: int = 0,
-    target_clip: float = 0.0,
+    target_update_every: Optional[int] = None,
+    target_clip: Optional[float] = None,
     num_envs: int = 1,
     envs_per_server: int = 4,
     base_port: Optional[int] = None,
@@ -495,8 +495,10 @@ def run_training(
         cfg.lr = float(lr)
     if gamma is not None:
         cfg.gamma = float(gamma)
-    cfg.target_update_every = int(target_update_every or 0)
-    cfg.target_clip = float(target_clip or 0.0)
+    if target_update_every is not None:
+        cfg.target_update_every = int(target_update_every)
+    if target_clip is not None:
+        cfg.target_clip = float(target_clip)
     if cfg.target_update_every or cfg.target_clip:
         print(f'[ddqn] objetivo: copia dura cada {cfg.target_update_every} pasos de gradiente '
               f'| clip={cfg.target_clip}', flush=True)
@@ -816,10 +818,10 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--smoke', action='store_true', help='Treat as smoke (suite default 0)')
     p.add_argument('--lr', type=float, default=None, help='Override DDQNConfig.lr')
     p.add_argument('--gamma', type=float, default=None, help='Override DDQNConfig.gamma')
-    p.add_argument('--target-update-every', type=int, default=0,
-                   help='Copia dura de la red objetivo cada N pasos de gradiente (0 = suave con tau)')
-    p.add_argument('--target-clip', type=float, default=0.0,
-                   help='Acota el objetivo y a [-c, c] (0 = sin acotar)')
+    p.add_argument('--target-update-every', type=int, default=None,
+                   help='Copia dura de la red objetivo cada N pasos de gradiente (0 = suave con tau; defecto 0)')
+    p.add_argument('--target-clip', type=float, default=None,
+                   help='Acota el objetivo y a [-c, c] (0 = sin acotar; defecto 2.0, ddqn_spec 1.15)')
     p.add_argument('--num-envs', type=int, default=1,
                    help='Entornos paralelos (procesos). Servidor: ~24; 0 = automático')
     p.add_argument('--envs-per-server', type=int, default=4,

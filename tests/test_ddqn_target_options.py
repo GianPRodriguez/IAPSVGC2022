@@ -29,9 +29,16 @@ def _same(a, b):
     return all(torch.equal(x, y) for x, y in zip(a.parameters(), b.parameters()))
 
 
-def test_defaults_keep_previous_behaviour():
+def test_defaults():
+    """ddqn_spec 1.15: objetivo acotado a [-2, 2] por defecto; actualización suave (tau)."""
     cfg = DDQNConfig()
-    assert cfg.target_update_every == 0 and cfg.target_clip == 0.0
+    assert cfg.target_update_every == 0 and cfg.target_clip == 2.0
+
+
+def test_cli_does_not_override_default_clip():
+    import inspect
+    from showdown.rl.ddqn import train as T
+    assert inspect.signature(T.run_training).parameters['target_clip'].default is None
 
 
 def test_hard_update_copies_only_every_n_steps():
@@ -45,7 +52,7 @@ def test_hard_update_copies_only_every_n_steps():
 
 
 def test_soft_update_moves_target_every_step():
-    ag = _agent()
+    ag = _agent(target_clip=0.0)
     before = [p.detach().clone() for p in ag.target.parameters()]
     ag.learn()
     assert any(not torch.equal(b, p) for b, p in zip(before, ag.target.parameters()))
