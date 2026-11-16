@@ -22,8 +22,11 @@ con que entrenó. Con equipos que nunca vio (grupo `eval`) el resultado es otro:
 
 El preview v2 muestra lo mismo: +33,6 puntos sobre el preview heurístico con equipos
 `train` y +10,5 con equipos `eval`. Además, +10,5 es lo mismo que se obtiene jugando
-siempre la formación más frecuente (+10,4), así que no hay evidencia de que adapte la
-elección a rivales que no conoce.
+siempre la formación más frecuente (+10,4), así que, con greedy_joint en el combate, no hay
+evidencia de que adapte la elección a rivales que no conoce. **Con expectimax en el combate
+(séptima cola) sí la hay:** +27,7 con equipos `train`, +17,2 con `eval` y solo +1,2 con la
+formación fija. El preview memoriza en parte (pierde 10 puntos con equipos no vistos), pero
+también aprendió a adaptar la elección al rival.
 
 **Por qué esto es memorización y no ruido.** La caída contra solo y joint es de unos 50
 puntos, con unos ±7 puntos de error por celda. Contra random no cambia, porque ganarle no
