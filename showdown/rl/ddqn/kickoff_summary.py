@@ -121,7 +121,7 @@ def section_tuning(d: Path) -> List[str]:
            '| Config | Media final | random | solo | joint | expectimax | Mejor media (paso) | Q medio | Error TD | Pasos/s |',
            '|---|---|---|---|---|---|---|---|---|---|']
     best = None
-    for ck in sorted((d / 'tune').glob('*')):
+    for ck in sorted(p for p in (d / 'tune').glob('*') if p.is_dir()):
         ev = _evals(ck)
         if not ev:
             out.append(f'| {ck.name} | sin datos | | | | | | | | |')
@@ -144,7 +144,7 @@ def section_ablation(d: Path) -> List[str]:
     out = ['## 6. Ablación codificador × simetría (400k pasos, 3 semillas)', '',
            '| Celda | Semillas | Media final (± desv. entre semillas) | Por semilla |', '|---|---|---|---|']
     cells: Dict[str, List[float]] = {}
-    for ck in sorted((d / 'ablation').glob('*')):
+    for ck in sorted(p for p in (d / 'ablation').glob('*') if p.is_dir()):
         ev = _evals(ck)
         if not ev:
             continue
