@@ -42,6 +42,10 @@ class EnvSpec:
     mask_kind: str = 'slot'
     mock_max_turns: int = 40
     extra: Dict[str, Any] = field(default_factory=dict)
+    # Equipo fijo del agente (ruta a un archivo en formato export); '' = sortear del pool.
+    # Se carga como TeamMeta dentro del worker: los rivales validados necesitan el
+    # TeamMeta del agente (OTS); con un texto suelto caerían al rival crudo (~2 pts más débil).
+    agent_team: str = ''
 
     def with_opponent(self, opponent: str) -> 'EnvSpec':
         return replace(self, opponent=str(opponent))
@@ -59,12 +63,17 @@ def make_env(spec: EnvSpec):
         backend = MockBattleBackend(max_turns=int(spec.mock_max_turns))
     else:
         from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
+        our_team = None
+        if spec.agent_team:
+            from showdown.inference_sim.team_factory import load_team_file
+            our_team = load_team_file(spec.agent_team)
         backend = PokeEnvBattleBackend(
             opponent=spec.opponent,
             start_ps=bool(spec.start_ps),
             account_prefix=spec.account_prefix,
             combat_family=spec.combat_family,
             port=spec.port,
+            our_team=our_team,
         )
     return VGCEnv(
         reward_candidate=RewardCandidate(spec.reward),

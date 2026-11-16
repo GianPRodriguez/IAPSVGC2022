@@ -107,6 +107,7 @@ class Validation:
         self.parity_bad: Counter = Counter()   # segmento → nº de pasos con diferencia
         self.examples: Dict[str, List[Any]] = defaultdict(list)
         self.by_foe: Dict[str, Counter] = defaultdict(Counter)
+        self._foe_team_names: Dict[str, set] = {}
 
     def _ex(self, kind: str, item: Any, n: int = 5) -> None:
         if len(self.examples[kind]) < n:
@@ -217,17 +218,24 @@ class Validation:
         return jm
 
     # ------------------------------------------------------------------ run
-    def run(self, *, foes, episodes: int, port: int, seed: int, max_steps: int = 60) -> None:
+    def run(self, *, foes, episodes: int, port: int, seed: int, max_steps: int = 60,
+            agent_team: str = '') -> None:
         from showdown.rl.action_space import decode_joint_action, decode_slot_action
         from showdown.rl.env import VGCEnv
         from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
         from showdown.rl.reward import RewardCandidate
 
         rng = np.random.default_rng(seed)
+        our_team, team_species = None, set()
+        if agent_team:
+            from showdown.inference_sim.team_factory import load_team_file
+            from teams.team_converter import normalize_name
+            our_team = load_team_file(agent_team)
+            team_species = {normalize_name(m.species) for m in our_team.mons}
         for foe in foes:
             backend = PokeEnvBattleBackend(opponent=foe, start_ps=True, port=port,
                                            account_prefix=f'Val{foe[:4].title()}',
-                                           combat_family='ddqn')
+                                           combat_family='ddqn', our_team=our_team)
             env = VGCEnv(reward_candidate=RewardCandidate.DENSE, backend=backend,
                          max_episode_turns=40)
             try:
@@ -235,6 +243,21 @@ class Validation:
                     env.reset(seed=int(seed) + 1000 * ep)
                     self.c['episodes'] += 1
                     self.by_foe[foe]['episodes'] += 1
+                    # Equipos de este episodio (para comprobar que el rival cambia en cada reinicio)
+                    self._foe_team_names.setdefault(foe, set()).add(
+                        getattr(getattr(env.backend._foe, 'user_team', None), 'name', '?'))
+                    if team_species:
+                        from teams.team_converter import normalize_name
+                        ours = [m for m in (env._snap.our.active + env._snap.our.bench
+                                            + list(env._snap.our.reserve)) if m is not None]
+                        names = {normalize_name(m.display_species()) for m in ours}
+                        self.c['agent_team_checks'] += 1
+                        if not names <= team_species:
+                            self.c['agent_team_mismatch'] += 1
+                            self._ex('agent_team_mismatch', sorted(names - team_species))
+                        # el rival debe ser el validado (no el crudo): necesita el TeamMeta del agente
+                        if foe != 'random' and getattr(env.backend._foe, 'user_team', None) is None:
+                            self.c['foe_not_validated'] += 1
                     for _ in range(max_steps):
                         jm = self.check_step(env, foe)
                         legal = np.flatnonzero(jm)
@@ -271,6 +294,7 @@ class Validation:
         return {
             'counts': dict(self.c),
             'by_foe': {k: dict(v) for k, v in self.by_foe.items()},
+            'distinct_foe_teams': {k: len(v) for k, v in self._foe_team_names.items()},
             'ms': {k: stats(v) for k, v in self.ms.items()},
             'parity_segments': dict(self.parity_bad),
             'symmetry_bad': {f'g{g}:{seg}': n for (g, seg), n in sorted(self.sym_bad.items())},
@@ -286,10 +310,11 @@ def main(argv=None) -> int:
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--device', default='cpu')
     ap.add_argument('--out', default='logs/live_validation.json')
+    ap.add_argument('--agent-team', default='', help='archivo de equipo fijo del agente')
     args = ap.parse_args(argv)
     v = Validation(device=args.device)
     v.run(foes=[f.strip() for f in args.foes.split(',') if f.strip()],
-          episodes=args.episodes, port=args.port, seed=args.seed)
+          episodes=args.episodes, port=args.port, seed=args.seed, agent_team=args.agent_team)
     rep = v.report()
     with open(args.out, 'w', encoding='utf-8') as fh:
         json.dump(rep, fh, indent=2, default=str)

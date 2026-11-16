@@ -324,6 +324,60 @@ def team_passes_item_clause(meta: TeamMeta) -> bool:
     return True
 
 
+_EXPORT_STAT = {'hp': 'hp', 'atk': 'atk', 'def': 'def', 'spa': 'spa', 'spd': 'spd', 'spe': 'spe'}
+SP_BUDGET = 66  # Champions: 66 Stat Points por Pokémon (la línea "EVs:" del export son SP)
+
+
+def team_from_export(text: str, *, name: str = 'export', source_url: str = '') -> 'TeamMeta':
+    """Equipo en formato export de Showdown (el mismo que ``to_showdown_export``) → ``TeamMeta``.
+
+    La línea ``EVs:`` son Stat Points (Champions). Valida lo que el entorno da por hecho:
+    6 Pokémon, ≤ 66 SP por Pokémon (≤ 32 por stat) y 4 movimientos.
+    """
+    mons: List[MonSet] = []
+    for block in re.split(r'\n\s*\n', text.strip()):
+        lines = [ln.strip() for ln in block.splitlines() if ln.strip()]
+        if not lines:
+            continue
+        head = lines[0]
+        species, _, item = head.partition(' @ ')
+        species = re.sub(r'\s*\((?:M|F)\)\s*$', '', species).strip()
+        ability = nature = ''
+        sp = {k: 0 for k in STAT_KEYS}
+        moves: List[str] = []
+        for ln in lines[1:]:
+            low = ln.lower()
+            if low.startswith('ability:'):
+                ability = ln.split(':', 1)[1].strip()
+            elif low.startswith('evs:'):
+                for part in ln.split(':', 1)[1].split('/'):
+                    val, _, label = part.strip().partition(' ')
+                    key = _EXPORT_STAT.get(label.strip().lower())
+                    if key is None:
+                        raise ValueError(f'{name}: stat desconocido en {ln!r}')
+                    sp[key] = int(val)
+            elif low.endswith(' nature'):
+                nature = ln[: -len(' nature')].strip()
+            elif ln.startswith('- '):
+                moves.append(ln[2:].strip())
+        if not (species and item and ability and nature):
+            raise ValueError(f'{name}: bloque incompleto: {head!r}')
+        if len(moves) != 4:
+            raise ValueError(f'{name}: {species} tiene {len(moves)} movimientos (se esperan 4)')
+        if sum(sp.values()) > SP_BUDGET or max(sp.values()) > 32:
+            raise ValueError(f'{name}: {species} SP inválidos {sp} (≤ {SP_BUDGET} en total, ≤ 32 por stat)')
+        mons.append(MonSet(species, item.strip(), ability, nature, moves, sp))
+    if len(mons) != 6:
+        raise ValueError(f'{name}: se esperan 6 Pokémon, hay {len(mons)}')
+    return TeamMeta(name=name, source_url=source_url, mons=mons)
+
+
+def load_team_file(path) -> 'TeamMeta':
+    """Lee un equipo fijo desde un archivo de texto en formato export."""
+    p = Path(path)
+    return team_from_export(p.read_text(encoding='utf-8'), name=p.stem, source_url=f'file:{p.name}')
+
+
 def load_scraped_teams(path: Optional[Path] = None) -> List[TeamMeta]:
     p = path or _JSON_PATH
     if not p.is_file():

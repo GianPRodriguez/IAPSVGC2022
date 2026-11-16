@@ -165,16 +165,27 @@ def _joint_masks(env: VGCEnv):
     return legal_joint_mask(env._snap)
 
 
+# Equipo fijo de DDQN (ddqn_spec 1.14): el agente juega SIEMPRE con este equipo; los rivales
+# sortean los suyos del grupo `train`. '' = el equipo del agente también se sortea del pool.
+DEFAULT_AGENT_TEAM = str(Path(__file__).resolve().parents[1] / 'data' / 'ddqn_team.txt')
+_AGENT_TEAM = ''  # lo fija run_training (los sitios que crean un entorno suelto lo leen)
+
+
 def _make_env(opponent: str, *, seed: int, start_ps: bool) -> VGCEnv:
     if opponent == 'mock':
         backend = MockBattleBackend(max_turns=40)
     else:
         from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
+        our_team = None
+        if _AGENT_TEAM:
+            from showdown.inference_sim.team_factory import load_team_file
+            our_team = load_team_file(_AGENT_TEAM)
         backend = PokeEnvBattleBackend(
             opponent=opponent,
             start_ps=start_ps,
             account_prefix=f'Ddqn{opponent[:4].title()}',
             combat_family='ddqn',
+            our_team=our_team,
         )
     return VGCEnv(
         reward_candidate=RewardCandidate.DENSE,
@@ -461,9 +472,14 @@ def run_training(
     num_envs: int = 1,
     envs_per_server: int = 4,
     base_port: Optional[int] = None,
+    agent_team: str = DEFAULT_AGENT_TEAM,
 ) -> DDQNAgent:
     if not schedule:
         raise ValueError('schedule vacío')
+    global _AGENT_TEAM
+    _AGENT_TEAM = str(agent_team or '')
+    if _AGENT_TEAM:
+        print(f'[ddqn] equipo fijo del agente: {_AGENT_TEAM}', flush=True)
     from showdown.rl.parallel import describe_resources, raise_nofile_limit, resolve_device
 
     raise_nofile_limit()
@@ -512,6 +528,7 @@ def run_training(
                 reward=RewardCandidate.DENSE.value,
                 obs_kind='ddqn',
                 mask_kind='joint',
+                agent_team=_AGENT_TEAM,
             ),
             num_envs=num_envs,
             seed=seed,
@@ -798,6 +815,9 @@ def main(argv: Optional[list] = None) -> int:
                    help='Entornos por servidor Showdown (puertos base-port..)')
     p.add_argument('--base-port', type=int, default=None,
                    help='Primer puerto Showdown (default PS_PORT=8000)')
+    p.add_argument('--agent-team', default=DEFAULT_AGENT_TEAM,
+                   help='Equipo fijo del agente (archivo en formato export; default: '
+                        'showdown/rl/data/ddqn_team.txt). "pool" = sortearlo del grupo train')
     from showdown.rl.frozen_preview import add_preview_cli_args, configure_preview
     add_preview_cli_args(p)
     args = p.parse_args(argv)
@@ -842,6 +862,7 @@ def main(argv: Optional[list] = None) -> int:
         num_envs=args.num_envs,
         envs_per_server=args.envs_per_server,
         base_port=args.base_port,
+        agent_team='' if str(args.agent_team).lower() in ('pool', 'none', '') else args.agent_team,
     )
     return 0
 
