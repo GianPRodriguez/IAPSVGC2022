@@ -103,6 +103,22 @@ Lectura:
 reinicio** (`--agent-team pool`). Verificado: 66 SP por Pokémon, legal en Reg M-C, el equipo
 llega como `TeamMeta` (rivales validados), el rival cambia casi en cada reinicio.
 
+Verificación en el servidor (15-11-2026, commits 66002cf–0730087):
+
+| Comprobación | Resultado |
+|---|---|
+| Suite completa | 679 pasan, 1 omitido, 6 xfail (0 fallos) |
+| Tests del equipo fijo, pre-kickoff, separación y SP | 55 de 55 |
+| Validación en vivo con el equipo fijo (32 episodios, 231 pasos, modo estricto) | el agente juega con el equipo en 32/32 episodios; rivales validados; 0 fallbacks de orden; paridad, alineación, historial y simetrías sin diferencias |
+| Equipos distintos del rival en 8 reinicios | solo, joint y expectimax: 8 de 8 (cambia en cada reinicio); random: 1 (sin OTS, no se identifica) |
+| Entrenamiento corto (6 000 pasos, 32 × 4, modo estricto) | 0 excepciones, 0 reinicios de workers, 0 fallbacks en 769 episodios; 209 pasos/s con el servidor cargado; el replay respeta los pesos del currículo (random 39 %, solo 25 %, joint 24 %, expectimax 11 %) |
+
+Línea base del agente sin entrenar (ε ≈ 0,99, es decir, jugadas al azar) con el equipo fijo:
+46 % contra random, 1,7 % contra solo, 0,5 % contra joint, 1 % contra expectimax; ~6,5
+turnos por partida contra los heurísticos. Es la referencia para el piloto de aprendizaje.
+Una primera versión del contador de especies marcaba 80 desajustes falsos
+("Arcanine-Hisui" frente a "arcaninehisui"); corregido en 0730087.
+
 Pendiente de decidir: cómo evalúa la Conclusión al pipeline E con un equipo fijo (mismos
 pares de equipos y lados intercambiados para todos los demás).
 
