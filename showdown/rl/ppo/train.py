@@ -85,6 +85,12 @@ def _reward_candidate(mode: str, *, self_play: bool, anneal_frac: float) -> Rewa
     return RewardCandidate.DENSE
 
 
+# Equipo fijo de PPO (ppo_spec, indicación del usuario 16-11-2026): el mismo de DDQN hasta que
+# se indique sortearlo por reinicio. '' = sorteo del grupo `train`.
+DEFAULT_AGENT_TEAM = str(Path(__file__).resolve().parents[1] / 'data' / 'ddqn_team.txt')
+_AGENT_TEAM = ''
+
+
 def _make_env(
     opponent: str,
     *,
@@ -96,11 +102,16 @@ def _make_env(
         backend = MockBattleBackend(max_turns=40)
     else:
         from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
+        our_team = None
+        if _AGENT_TEAM:
+            from showdown.inference_sim.team_factory import load_team_file
+            our_team = load_team_file(_AGENT_TEAM)
         backend = PokeEnvBattleBackend(
             opponent=opponent,
             start_ps=start_ps,
             account_prefix=f'Ppo{opponent[:4].title()}',
             combat_family='ppo',
+            our_team=our_team,
         )
     return VGCEnv(
         reward_candidate=reward,
@@ -421,9 +432,14 @@ def run_training(
     num_envs: int = 1,
     envs_per_server: int = 4,
     base_port: Optional[int] = None,
+    agent_team: str = DEFAULT_AGENT_TEAM,
 ) -> PPOAgent:
     if not schedule and not self_play:
         raise ValueError('schedule vacío')
+    global _AGENT_TEAM
+    _AGENT_TEAM = str(agent_team or '')
+    if _AGENT_TEAM:
+        print(f'[ppo] equipo fijo del agente: {_AGENT_TEAM}', flush=True)
     from showdown.rl.parallel import describe_resources, raise_nofile_limit, resolve_device
 
     raise_nofile_limit()
@@ -494,6 +510,7 @@ def run_training(
                 reward=reward.value,
                 obs_kind='ppo',
                 mask_kind='slot',
+                agent_team=_AGENT_TEAM,
             ),
             num_envs=num_envs,
             seed=seed,
@@ -747,6 +764,8 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--smoke', action='store_true', help='Treat as smoke (suite default 0)')
     p.add_argument('--lr', type=float, default=None, help='Override PPOConfig.lr')
     p.add_argument('--clip-eps', type=float, default=None, help='Override PPOConfig.clip_eps')
+    p.add_argument('--agent-team', default=DEFAULT_AGENT_TEAM,
+                   help='Equipo fijo del agente (default: showdown/rl/data/ddqn_team.txt); "pool" = sorteo')
     p.add_argument('--num-envs', type=int, default=1,
                    help='Entornos paralelos (procesos). Servidor: ~24; 0 = automático')
     p.add_argument('--envs-per-server', type=int, default=4,
@@ -810,6 +829,7 @@ def main(argv: Optional[list] = None) -> int:
         num_envs=args.num_envs,
         envs_per_server=args.envs_per_server,
         base_port=args.base_port,
+        agent_team='' if str(args.agent_team).lower() in ('pool', 'none', '') else args.agent_team,
     )
     return 0
 

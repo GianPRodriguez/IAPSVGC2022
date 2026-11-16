@@ -26,6 +26,8 @@ class PreviewPPOConfig:
     grad_clip: float = 0.5
     device: str = 'cpu'
     seed: int = 0
+    # 90 formaciones canónicas en vez de 360 órdenes (team_preview_action.canonical_mask).
+    canonical: bool = False
 
 
 class PreviewPPOAgent:
@@ -57,13 +59,24 @@ class PreviewPPOAgent:
             ) from exc
         self._torch = torch
         self._F = F
-        self._apply_mask = apply_mask_logits
+        self._apply_mask_raw = apply_mask_logits
+        self._canon = None
         self._masked_ent = masked_entropy
         device = torch.device(self.cfg.device)
         self.device = device
         self.net = PreviewActorCritic(OBS_DIM, N_ACTIONS).to(device)
         self.optim = torch.optim.Adam(self.net.parameters(), lr=self.cfg.lr)
         self.buffer = PreviewRolloutBuffer(self.cfg.rollout_episodes, OBS_DIM)
+
+    def _masked_logits(self, logits, m):
+        """Máscara legal (y canónica si ``cfg.canonical``; se lee en cada llamada, así que un
+        checkpoint cargado con ``canonical=True`` también la aplica en inferencia)."""
+        if bool(self.cfg.canonical):
+            if self._canon is None or self._canon.device != m.device:
+                from showdown.rl.team_preview_action import canonical_mask
+                self._canon = self._torch.as_tensor(canonical_mask(), dtype=m.dtype, device=m.device)
+            m = m * self._canon
+        return self._apply_mask_raw(logits, m)
 
     def act(
         self,
@@ -78,7 +91,7 @@ class PreviewPPOAgent:
             o = torch.as_tensor(obs, dtype=torch.float32, device=self.device).unsqueeze(0)
             m = torch.as_tensor(mask, dtype=torch.float32, device=self.device).unsqueeze(0)
             logits, value = self.net(o)
-            z = self._apply_mask(logits, m)
+            z = self._masked_logits(logits, m)
             if greedy:
                 a = int(torch.argmax(z, dim=-1).item())
             else:
@@ -118,7 +131,7 @@ class PreviewPPOAgent:
         metrics['mean_value'] = float(values_old.mean())
         with torch.no_grad():
             lg, _v = self.net(obs)
-            p = torch.softmax(self._apply_mask(lg, masks), dim=-1)
+            p = torch.softmax(self._masked_logits(lg, masks), dim=-1)
             metrics['max_prob'] = float(p.max(dim=-1).values.mean().item())
             h = self._masked_ent(lg, masks)
             metrics['effective_actions'] = float(torch.exp(h).mean().item())
@@ -132,7 +145,7 @@ class PreviewPPOAgent:
             for start in range(0, n, self.cfg.minibatch_size):
                 mb = idx[start: start + self.cfg.minibatch_size]
                 logits, values = self.net(obs[mb])
-                z = self._apply_mask(logits, masks[mb])
+                z = self._masked_logits(logits, masks[mb])
                 dist = torch.distributions.Categorical(logits=z)
                 logp = dist.log_prob(actions[mb])
                 ratio = torch.exp(logp - old_logp[mb])

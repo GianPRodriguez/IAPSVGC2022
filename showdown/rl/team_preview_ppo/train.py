@@ -56,6 +56,8 @@ def train(
     lr: Optional[float] = None,
     clip_eps: Optional[float] = None,
     checkpoint_dir: str | Path = 'logs/team_preview_ppo_checkpoints',
+    canonical: bool = False,
+    ent_coef: Optional[float] = None,
     live: Optional[dict] = None,
     eval_episodes: int = 512,
     eval_baseline: str = 'fixed',
@@ -68,6 +70,9 @@ def train(
 
     device = resolve_device(device)
     cfg = PreviewPPOConfig(seed=seed, device=device)
+    cfg.canonical = bool(canonical)
+    if ent_coef is not None:
+        cfg.ent_coef = float(ent_coef)
     if lr is not None:
         cfg.lr = float(lr)
     if clip_eps is not None:
@@ -187,6 +192,11 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--lr', type=float, default=None)
     p.add_argument('--clip-eps', type=float, default=None)
     p.add_argument('--checkpoint-dir', default='logs/team_preview_ppo_checkpoints')
+    p.add_argument('--canonical', action='store_true',
+                   help='90 formaciones canónicas (leads y reserva ordenados) en vez de 360 órdenes')
+    p.add_argument('--ent-coef', type=float, default=None, help='Coeficiente de entropía (defecto 0.02)')
+    p.add_argument('--own-team', default='',
+                   help='Equipo propio fijo (archivo export; p. ej. showdown/rl/data/ddqn_team.txt)')
     from showdown.rl.preview_live import add_live_cli_args, live_options_from_args
     add_live_cli_args(p)
     add_eval_cli_args(p)
@@ -195,6 +205,10 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--eval-periodic-episodes', type=int, default=256,
                    help='Contextos de cada evaluación periódica (live: 2 BO1 por contexto)')
     args = p.parse_args(argv)
+    if args.own_team:
+        import os
+        os.environ['PS_PREVIEW_OWN_TEAM'] = args.own_team
+        print(f'[preview] equipo propio fijo: {args.own_team}', flush=True)
     train(
         seed=args.seed,
         smoke=args.smoke,
@@ -203,6 +217,8 @@ def main(argv: Optional[list] = None) -> int:
         lr=args.lr,
         clip_eps=args.clip_eps,
         checkpoint_dir=args.checkpoint_dir,
+        canonical=bool(args.canonical),
+        ent_coef=args.ent_coef,
         live=live_options_from_args(args),
         eval_episodes=args.eval_episodes,
         eval_baseline=args.eval_baseline,

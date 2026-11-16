@@ -51,6 +51,8 @@ class PPOPlayer(FamilyPreviewMixin, Player):
             preview_checkpoint=preview_checkpoint,
             preview_kind=preview_kind,
         )
+        from showdown.rl.decision_guard import DecisionStats
+        self.decision_stats = DecisionStats(agent='ppo')
 
     def choose_move(self, battle: AbstractBattle) -> BattleOrder:
         assert isinstance(battle, DoubleBattle)
@@ -65,9 +67,12 @@ class PPOPlayer(FamilyPreviewMixin, Player):
 
             a1, a2, _lp, _v = self.agent.act(obs, m1, m2_fn, greedy=self.greedy)
             self.last_actions = (int(a1), int(a2))
-            order, _fb = joint_order_from_spec_actions(battle, (a1, a2))
+            order, used_fallback = joint_order_from_spec_actions(battle, (a1, a2))
+            self.decision_stats.record_ok(order_fallback=bool(used_fallback))
             return order
-        except Exception:
+        except Exception as exc:
+            # Como DDQN (rl_env_spec v1.22): se cuenta, se registra y con PS_RL_STRICT=1 se propaga.
+            self.decision_stats.record_exception(exc)
             return DefaultBattleOrder()
 
 

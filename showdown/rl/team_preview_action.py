@@ -54,6 +54,23 @@ def action_to_team_string(a: int) -> str:
     return to_showdown_team_string(decode_preview_action(a))
 
 
+def canonical_mask() -> List[float]:
+    """1 = formación canónica: leads en orden creciente y reserva en orden creciente.
+
+    Las 360 acciones son 90 formaciones × 4 órdenes (2 órdenes de los leads × 2 de la
+    reserva) mecánicamente iguales en dobles: izquierda/derecha son simétricas y el orden de
+    la reserva solo cambia los índices de cambio. La única excepción mecánica sería Illusion
+    (depende del último del equipo), que no aparece en el pool de Reg M-C. Con esta máscara la
+    política elige entre 90 formaciones y el crédito no se reparte entre 4 copias
+    (revisión del agente E, punto 4).
+    """
+    out = []
+    for a in range(N_ACTIONS):
+        l1, l2, b1, b2 = decode_preview_action(a)
+        out.append(1.0 if (l1 < l2 and b1 < b2) else 0.0)
+    return out
+
+
 def legal_mask(pool_size: int = N_POOL) -> List[float]:
     """
     Mask length 360; 1=legal.

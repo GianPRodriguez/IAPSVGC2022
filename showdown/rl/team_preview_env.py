@@ -59,6 +59,16 @@ def _fix_pool_name(name: str) -> str:
     return name
 
 
+def _fixed_own_team():
+    """``PS_PREVIEW_OWN_TEAM=<archivo export>``: equipo propio fijo del preview (None = sorteo)."""
+    import os
+    path = os.environ.get('PS_PREVIEW_OWN_TEAM', '').strip()
+    if not path:
+        return None
+    from showdown.inference_sim.team_factory import load_team_file
+    return load_team_file(path)
+
+
 class TeamPreviewEnv:
     """
     Contextual bandit: one preview action → Cand.1 reward.
@@ -123,6 +133,11 @@ class TeamPreviewEnv:
         teams = self._metavgc_teams()
         i, j = (int(x) for x in self._rng.choice(len(teams), size=2, replace=False))
         ours, foes = teams[i], teams[j]
+        own = _fixed_own_team()
+        if own is not None:
+            # Equipo propio fijo (el de DDQN/PPO): el preview solo aprende qué 4 traer de ese
+            # equipo según el rival; el rival se sigue sorteando del grupo `train`.
+            ours = own
         return {
             'our_names': [m.species for m in ours.mons][:6],
             'foe_names': [m.species for m in foes.mons][:6],
