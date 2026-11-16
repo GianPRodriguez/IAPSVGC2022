@@ -241,6 +241,7 @@ def _run_steps(
     seed: int,
     start_ps: bool,
     tracker: Optional[EpisodeTracker] = None,
+    eval_hook=None,
 ) -> Tuple[VGCEnv, int, dict]:
     """
     Run ``steps`` interactions.
@@ -328,6 +329,8 @@ def _run_steps(
         if heartbeat.should_checkpoint(gstep):
             agent.save(ckpt_dir / 'last.pt')
             heartbeat.mark_checkpoint(gstep)
+        if eval_hook is not None:
+            eval_hook(gstep)
 
     return env, int(steps), {'metrics': metrics_last, 'ep_counts': ep_counts}
 
@@ -347,6 +350,7 @@ def _run_steps_vec(
     phase_label: str,
     unlock: str,
     tracker: Optional[EpisodeTracker] = None,
+    eval_hook=None,
 ) -> Tuple[int, dict]:
     """Como :func:`_run_steps` pero con N entornos en paralelo (asíncrono).
 
@@ -445,12 +449,105 @@ def _run_steps_vec(
         if heartbeat.should_checkpoint(gstep):
             agent.save(ckpt_dir / 'last.pt')
             heartbeat.mark_checkpoint(gstep)
+        if eval_hook is not None:
+            eval_hook(gstep)
 
     for i, r in venv.drain():
         flight.pop(i, None)
     return int(local), {
         'metrics': metrics_last, 'ep_counts': ep_counts, 'worker_restarts': restarts,
     }
+
+
+# --------------------------------------------------------------------------- #
+# Validación periódica y mejor checkpoint (ddqn_spec 1.16; protocolo §3c)
+# --------------------------------------------------------------------------- #
+# Rivales DETERMINISTAS (sin sorteo de casi-empates), los 4 heurísticos y semillas fijas: las
+# semillas fijan los equipos rivales (grupo `train`), así que todas las validaciones de una
+# corrida juegan exactamente los mismos emparejamientos. Nunca usa los equipos de `eval`.
+VAL_FOES: Tuple[str, ...] = ('random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian')
+VAL_SEED = 900_000
+VAL_PORT_OFFSET = 100  # servidor Showdown propio para la validación (base_port + 100)
+
+
+def _make_eval_env(*, start_ps: bool, port: Optional[int]) -> VGCEnv:
+    from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
+    our_team = None
+    if _AGENT_TEAM:
+        from showdown.inference_sim.team_factory import load_team_file
+        our_team = load_team_file(_AGENT_TEAM)
+    backend = PokeEnvBattleBackend(
+        opponent=VAL_FOES[0], start_ps=start_ps, port=port, account_prefix='DdqnVal',
+        combat_family='ddqn', our_team=our_team, foe_tie=False,
+    )
+    return VGCEnv(reward_candidate=RewardCandidate.DENSE, backend=backend, max_episode_turns=40)
+
+
+class _Validator:
+    """Evalúa la política sin exploración cada ``every`` pasos y guarda ``best.pt``.
+
+    Criterio del mejor checkpoint: tasa de victorias media contra los 4 rivales de validación.
+    """
+
+    def __init__(self, agent, ckpt_dir: Path, mlog, *, every: int, games: int,
+                 start_ps: bool, port: Optional[int]):
+        self.agent, self.ckpt_dir, self.mlog = agent, Path(ckpt_dir), mlog
+        self.every, self.games = int(every), int(games)
+        self.start_ps, self.port = bool(start_ps), port
+        self.next = self.every
+        self.best: Optional[dict] = None
+        self.history: List[dict] = []
+        self.env: Optional[VGCEnv] = None
+
+    @property
+    def enabled(self) -> bool:
+        return self.every > 0 and self.games > 0
+
+    def maybe(self, gstep: int) -> None:
+        if not self.enabled or gstep < self.next:
+            return
+        while self.next <= gstep:
+            self.next += self.every
+        self.run(gstep)
+
+    def run(self, gstep: int) -> Optional[dict]:
+        if not self.enabled:
+            return None
+        import time as _time
+        from showdown.rl.train_report import run_suite_ddqn_act
+        if self.env is None:
+            self.env = _make_eval_env(start_ps=self.start_ps, port=self.port)
+        t0 = _time.time()
+        rows, _note = run_suite_ddqn_act(self.agent, self.env, foes=VAL_FOES,
+                                         n_games=self.games, seed=VAL_SEED)
+        mean = float(np.mean([r.win_rate for r in rows])) if rows else float('nan')
+        rec = {'step': int(gstep), 'mean_wr': mean, 'games_per_foe': self.games,
+               'rows': [dict(vars(r)) for r in rows], 'sec': round(_time.time() - t0, 1)}
+        self.history.append(rec)
+        self.mlog.write('eval', **rec)
+        self.agent.save(self.ckpt_dir / f'step_{int(gstep)}.pt')
+        improved = self.best is None or mean > float(self.best['mean_wr'])
+        if improved:
+            self.best = rec
+            self.agent.save(self.ckpt_dir / 'best.pt')
+            (self.ckpt_dir / 'best.json').write_text(json.dumps(rec, indent=1), encoding='utf-8')
+        by = ' '.join(f'{r.foe[:6]}={r.win_rate:.2f}' for r in rows)
+        print(f'[ddqn] validación paso {gstep}: media={mean:.3f} | {by} | {rec["sec"]}s'
+              f'{" | NUEVO MEJOR -> best.pt" if improved else ""}', flush=True)
+        return rec
+
+    def close(self) -> None:
+        if self.env is not None:
+            try:
+                self.env.close()
+            except Exception:
+                pass
+            self.env = None
+
+
+def _default_ps_port() -> int:
+    from showdown.inference_sim.paths import PS_PORT
+    return int(PS_PORT)
 
 
 def run_training(
@@ -471,6 +568,9 @@ def run_training(
     gamma: Optional[float] = None,
     target_update_every: Optional[int] = None,
     target_clip: Optional[float] = None,
+    eval_every: int = 500_000,
+    eval_games: int = 40,
+    resume: str = '',
     num_envs: int = 1,
     envs_per_server: int = 4,
     base_port: Optional[int] = None,
@@ -503,6 +603,13 @@ def run_training(
         print(f'[ddqn] objetivo: copia dura cada {cfg.target_update_every} pasos de gradiente '
               f'| clip={cfg.target_clip}', flush=True)
     agent = DDQNAgent(cfg)
+    resume_skip = 0
+    if resume:
+        agent.load(resume, map_location=str(device))
+        agent.min_replay_to_learn = int(cfg.warmup_steps)
+        resume_skip = int(agent.env_steps)
+        print(f'[ddqn] reanudando desde {resume}: {resume_skip} pasos hechos, grad_steps='
+              f'{agent.grad_steps}; el replay se rellena antes de volver a aprender', flush=True)
     rng = np.random.default_rng(int(seed) + 17)
     ckpt_dir = Path(checkpoint_dir)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
@@ -562,10 +669,23 @@ def run_training(
                      for p in expand_sched],
     })
     tracker = EpisodeTracker(mlog, window=200)
+    val_port = (base_port or _default_ps_port()) + VAL_PORT_OFFSET
+    validator = _Validator(agent, ckpt_dir, mlog, every=eval_every, games=eval_games,
+                           start_ps=start_ps, port=val_port)
+    if resume_skip:
+        validator.next = (resume_skip // max(1, validator.every) + 1) * max(1, validator.every)
 
     try:
         assert env is not None or venv is not None
         for pi, phase in enumerate(expand_sched):
+            phase_steps = int(phase.steps)
+            if resume_skip >= phase_steps:
+                resume_skip -= phase_steps
+                global_steps += phase_steps
+                print(f'[ddqn] fase {pi + 1} ya completada antes de reanudar ({phase.unlock})', flush=True)
+                continue
+            phase_steps -= resume_skip
+            resume_skip = 0
             probs = omega_sampling_probs(phase.omega, weights=weights)
             mode = 'expand-Omega' if expand_omega else 'exclusive'
             print(
@@ -581,7 +701,7 @@ def run_training(
                     _ensure_vec_servers(venv, start_ps=start_ps)
                 done, info = _run_steps_vec(
                     agent, venv,
-                    steps=phase.steps,
+                    steps=phase_steps,
                     omega=phase.omega,
                     expand_omega=expand_omega,
                     weights=weights,
@@ -592,6 +712,7 @@ def run_training(
                     phase_label=f'phase={pi}:{phase.unlock}',
                     unlock=phase.unlock,
                     tracker=tracker,
+                    eval_hook=validator.maybe,
                 )
                 global_steps += done
                 phase_log.append({
@@ -620,7 +741,7 @@ def run_training(
             env = _ensure_opponent(env, phase.unlock, seed=seed, start_ps=start_ps)
             env, done, info = _run_steps(
                 agent, env,
-                steps=phase.steps,
+                steps=phase_steps,
                 omega=phase.omega,
                 expand_omega=expand_omega,
                 weights=weights,
@@ -632,6 +753,7 @@ def run_training(
                 seed=seed,
                 start_ps=start_ps,
                 tracker=tracker,
+                eval_hook=validator.maybe,
             )
             global_steps += done
             phase_log.append({
@@ -655,6 +777,9 @@ def run_training(
             )
 
         agent.save(ckpt_dir / 'final.pt')
+        if validator.enabled and (not validator.history or validator.history[-1]['step'] != global_steps):
+            validator.run(global_steps)  # el mejor checkpoint también considera la política final
+        validator.close()
         n_suite = resolve_suite_games(suite_games=suite_games, smoke=smoke)
         suite_rows, suite_note = [], ''
         if n_suite > 0 and env is None and venv is not None:
@@ -689,6 +814,8 @@ def run_training(
                 'envs_per_server': int(envs_per_server),
             },
             metrics={
+                'best_validation': validator.best,
+                'validations': [{'step': h['step'], 'mean_wr': h['mean_wr']} for h in validator.history],
                 'env_steps': agent.env_steps,
                 'grad_steps': agent.grad_steps,
                 'epsilon_final': float(agent.epsilon),
@@ -820,6 +947,12 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--gamma', type=float, default=None, help='Override DDQNConfig.gamma')
     p.add_argument('--target-update-every', type=int, default=None,
                    help='Copia dura de la red objetivo cada N pasos de gradiente (0 = suave con tau; defecto 0)')
+    p.add_argument('--eval-every', type=int, default=500_000,
+                   help='Validación sin exploración cada N pasos con rivales deterministas; guarda best.pt (0 = off)')
+    p.add_argument('--eval-games', type=int, default=40,
+                   help='Partidas BO1 por rival en cada validación (4 rivales)')
+    p.add_argument('--resume', default='',
+                   help='Reanudar desde un checkpoint (p. ej. <dir>/last.pt); el replay se rellena')
     p.add_argument('--target-clip', type=float, default=None,
                    help='Acota el objetivo y a [-c, c] (0 = sin acotar; defecto 2.0, ddqn_spec 1.15)')
     p.add_argument('--num-envs', type=int, default=1,
@@ -874,6 +1007,9 @@ def main(argv: Optional[list] = None) -> int:
         gamma=args.gamma,
         target_update_every=args.target_update_every,
         target_clip=args.target_clip,
+        eval_every=args.eval_every,
+        eval_games=args.eval_games,
+        resume=args.resume,
         num_envs=args.num_envs,
         envs_per_server=args.envs_per_server,
         base_port=args.base_port,

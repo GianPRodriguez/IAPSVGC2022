@@ -232,6 +232,7 @@ class PokeEnvBattleBackend(BattleBackend):
         preview_checkpoint: Optional[str] = None,
         preview_kind: Optional[str] = None,
         port: Optional[int] = None,
+        foe_tie: Optional[bool] = None,
     ):
         from poke_env.ps_client import LocalhostServerConfiguration
 
@@ -241,6 +242,9 @@ class PokeEnvBattleBackend(BattleBackend):
         self.battle_format = battle_format or BATTLE_FORMAT
         # port: servidor Showdown propio de este entorno (entrenamiento vectorizado).
         self.port = int(port) if port is not None else None
+        # Sorteo de casi-empates de los rivales (v1.21): None = PS_RL_FOE_TIE (sí por defecto);
+        # False = rivales deterministas (validación de checkpoints, ddqn_spec 1.16).
+        self._foe_tie = foe_tie
         if server_configuration is None and self.port is not None:
             server_configuration = server_configuration_for_port(self.port)
         self.server_configuration = server_configuration or LocalhostServerConfiguration
@@ -437,6 +441,7 @@ class PokeEnvBattleBackend(BattleBackend):
                 team=opp,
                 server_configuration=self.server_configuration,
                 log_level=self.log_level,
+                tie=self._foe_tie,
                 **foe_kw,
             )
         else:
@@ -450,6 +455,7 @@ class PokeEnvBattleBackend(BattleBackend):
                     team=opp,
                     server_configuration=self.server_configuration,
                     log_level=self.log_level,
+                    tie=self._foe_tie,
                     **foe_kw,
                 )
             else:

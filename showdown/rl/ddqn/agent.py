@@ -61,6 +61,9 @@ class DDQNAgent:
         self._rng = np.random.default_rng(int(self.cfg.seed))
         self.env_steps = 0
         self.grad_steps = 0
+        # Tras reanudar (--resume) el replay está vacío: no aprender hasta volver a juntar
+        # warmup_steps transiciones (en una corrida nueva vale 0 y no cambia nada).
+        self.min_replay_to_learn = 0
         self._ensure_torch()
 
     def _ensure_torch(self) -> None:
@@ -201,6 +204,8 @@ class DDQNAgent:
         )
         if self.env_steps < self.cfg.warmup_steps:
             return None
+        if len(self.replay) < self.min_replay_to_learn:
+            return None
         if self.env_steps % self.cfg.train_freq != 0:
             return None
         if len(self.replay) < self.cfg.batch_size:
@@ -299,6 +304,7 @@ class DDQNAgent:
             'target': self.target.state_dict(),
             'env_steps': self.env_steps,
             'grad_steps': self.grad_steps,
+            'optim': self.optim.state_dict() if self.optim is not None else None,
         }
         self._torch.save(payload, path)
         return path
@@ -319,6 +325,11 @@ class DDQNAgent:
         self.target.load_state_dict(payload.get('target', payload['online']))
         self.env_steps = int(payload.get('env_steps', 0))
         self.grad_steps = int(payload.get('grad_steps', 0))
+        if payload.get('optim') and self.optim is not None:
+            try:
+                self.optim.load_state_dict(payload['optim'])
+            except (ValueError, KeyError):
+                pass  # checkpoint de otra arquitectura: se sigue con el optimizador nuevo
 
     @staticmethod
     def decode(joint_id: int) -> Tuple[int, int]:
