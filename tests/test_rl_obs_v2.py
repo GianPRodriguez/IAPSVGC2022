@@ -233,9 +233,19 @@ def test_excluded_foes_are_dropped_and_brought_probability():
     _apply_brought_belief(s.foe)
     assert sum(m.excluded for m in s.foe.reserve) == 2
     slots = _foe_slots(s.foe)
-    assert sum(1 for m in slots if m is not None) == 4 and slots[4] is None and slots[5] is None
-    a, b = obs_layout()['foe_5']
-    assert np.count_nonzero(build_observation(s)[a:b]) == 0
+    assert sum(1 for m in slots if m is not None) == 4
+    # rl_env_spec v1.22: el resto va en orden fijo por especie y cada descartado queda como
+    # bloque en cero EN SU LUGAR (antes se quitaban y los demás se corrían).
+    from showdown.rl import observation as _obs_mod
+    rest = sorted(s.foe.reserve, key=lambda m: _obs_mod.P.to_id(m.display_species()))
+    obs = build_observation(s)
+    for k, m in enumerate(rest[:4], start=2):
+        if m.excluded:
+            assert slots[k] is None
+            a, b = obs_layout()[f'foe_{k}']
+            assert np.count_nonzero(obs[a:b]) == 0
+        else:
+            assert slots[k] is m
 
 
 def test_mega_is_a_flag_on_each_move_never_on_switch():
