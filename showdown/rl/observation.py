@@ -153,12 +153,18 @@ def _our_slots(side: SideSnapshot) -> List[Optional[MonSnapshot]]:
 
 
 def _foe_slots(side: SideSnapshot) -> List[Optional[MonSnapshot]]:
-    """Activos, luego vistos, luego no vistos posibles. Los confirmados como NO
-    traídos (ya se vieron los 4) se quitan: su bloque queda en cero y no entran
-    en las matrices (no pueden aparecer en este combate)."""
+    """Activos, luego el resto de su hoja en orden fijo por especie.
+
+    Orden estable (spec combate v2.1): el resto se ordena solo por especie, así que un
+    Pokémon no cambia de bloque cuando se revela otro (antes iban los vistos primero) ni
+    cuando se descarta uno. Los confirmados como NO traídos (ya se vieron los 4) quedan
+    como bloque en cero EN SU LUGAR y no entran en las matrices. "Visto" sigue como
+    feature del bloque. Lo único que mueve bloques es un cambio de activos, inherente a
+    tener los dos activos en los bloques 0 y 1.
+    """
     rest = list(side.reserve) if side.reserve else [m for m in side.bench if m is not None]
-    rest = [m for m in rest if not m.excluded]
-    rest = sorted(rest, key=lambda m: (0 if m.seen else 1, P.to_id(m.display_species())))
+    rest = sorted(rest, key=lambda m: P.to_id(m.display_species()))
+    rest = [None if m.excluded else m for m in rest]
     slots = list(side.active[:2]) + rest[:N_FOE_MONS - 2]
     return (slots + [None] * N_FOE_MONS)[:N_FOE_MONS]
 

@@ -12,6 +12,7 @@ from poke_env.player.battle_order import BattleOrder, DefaultBattleOrder
 
 from showdown.rl.action_space import decode_joint_action
 from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
+from showdown.rl.decision_guard import DecisionStats
 from showdown.rl.family_preview_mixin import FamilyPreviewMixin
 from showdown.rl.observation import build_observation_ddqn
 from showdown.rl.pe_adapter import (
@@ -58,6 +59,7 @@ class DDQNPlayer(FamilyPreviewMixin, Player):
                 raise FileNotFoundError(msg)
             warnings.warn(msg, RuntimeWarning, stacklevel=2)
         self.last_joint: int = 0
+        self.decision_stats = DecisionStats(agent='ddqn')
         self.init_family_preview(
             preview_checkpoint=preview_checkpoint,
             preview_kind=preview_kind,
@@ -72,9 +74,12 @@ class DDQNPlayer(FamilyPreviewMixin, Player):
             joint = self.agent.act(obs, mask, epsilon=self.epsilon)
             self.last_joint = int(joint)
             a1, a2 = decode_joint_action(joint)
-            order, _fb = joint_order_from_spec_actions(battle, (a1, a2))
+            order, used_fallback = joint_order_from_spec_actions(battle, (a1, a2))
+            self.decision_stats.record_ok(order_fallback=bool(used_fallback))
             return order
-        except Exception:
+        except Exception as exc:
+            # Ya no se traga en silencio: se cuenta, se registra y en PS_RL_STRICT=1 se propaga.
+            self.decision_stats.record_exception(exc)
             return DefaultBattleOrder()
 
 

@@ -1,6 +1,7 @@
 """VGCEnv — Gymnasium env implementing docs/rl_env_spec.md v1.3."""
 from __future__ import annotations
 
+import copy
 from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
@@ -133,7 +134,10 @@ class MockBattleBackend(BattleBackend):
 
     def step(self, action: Tuple[int, int]) -> Tuple[BattleSnapshot, Dict[str, Any]]:
         assert self._snap is not None
-        snap = self._snap
+        # Snapshot nuevo en cada paso, como el backend real. La caché de build_observation
+        # reconoce el snapshot por identidad: si el mock mutara el mismo objeto, la obs
+        # quedaba congelada en la del primer turno del episodio.
+        snap = copy.deepcopy(self._snap)
         meta: Dict[str, Any] = {'engine': 'mock'}
         a0 = decode_slot_action(int(action[0]))
         a1 = decode_slot_action(int(action[1]))
