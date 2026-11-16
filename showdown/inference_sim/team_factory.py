@@ -43,7 +43,21 @@ def canonicalize_species(species: str) -> str:
     for src, dst in _SPECIES_EXPORT_ALIASES.items():
         if ''.join(ch for ch in src if ch.isalnum()) == compact:
             return dst
-    return raw
+    # Nombre oficial de la Pokédex de Showdown ("Rotom Wash" → "Rotom-Wash"). Showdown ya
+    # resolvía la especie, pero devolvía el nombre tal cual en |showteam| y poke-env no lo
+    # emparejaba con la vista previa (IndexError en Player._handle_battle_message): la hoja
+    # abierta de ese equipo quedaba sin procesar.
+    official = _dex_species_name(compact)
+    return official or raw
+
+
+def _dex_species_name(species_id: str) -> str:
+    try:
+        from poke_env.data import GenData
+        entry = GenData.from_gen(9).pokedex.get(species_id)
+    except Exception:
+        return ''
+    return str(entry.get('name') or '') if entry else ''
 
 
 def canonicalize_move(move: str) -> str:

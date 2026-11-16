@@ -227,3 +227,29 @@ def test_pass_in_forced_slot_stays_pass():
     from showdown.rl.pe_adapter import slot_action_to_pe_order
     b = _ForcedBattle((True, True), [_Mon('Sneasler')])
     assert isinstance(slot_action_to_pe_order(b, 1, decode_slot_action(PASS_ID)), PassBattleOrder)
+
+
+# ------------------------------------------- B: nombres de especie en |showteam|
+def test_species_names_canonical():
+    from showdown.inference_sim.team_factory import canonicalize_species as c
+    assert c('Rotom Wash') == 'Rotom-Wash'
+    assert c('Kommo-O') == 'Kommo-o'
+    assert c('Mr-Mime') == 'Mr. Mime'
+    assert c('Garchomp Mega Z') == 'Garchomp-Mega-Z'
+    assert c('Basculegion-M') == 'Basculegion'   # alias previo se conserva
+    assert c('Floette-Eternal') == 'Floette-Eternal'
+
+
+def test_every_pool_species_matches_poke_env_preview():
+    """poke-env empareja la hoja abierta (|showteam|) con la vista previa por nombre: si un
+    nombre exportado no 'identifica' a su especie, Player._handle_battle_message lanza
+    IndexError y la hoja de ese equipo queda sin procesar (14 equipos antes del arreglo)."""
+    from poke_env.battle.pokemon import Pokemon
+    from showdown.inference_sim.team_factory import active_teams, canonicalize_species
+    bad = []
+    for t in active_teams():
+        for m in t.mons:
+            name = canonicalize_species(m.species)
+            if not Pokemon(gen=9, species=name).identifies_as(name):
+                bad.append((t.name, name))
+    assert not bad, bad[:10]
