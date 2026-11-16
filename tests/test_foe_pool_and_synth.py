@@ -154,3 +154,27 @@ def test_synth_file_roundtrip(clean_env, tmp_path):
     loaded = foe_pool.synth_pool()
     assert [t.name for t in loaded] == [t.name for t in teams]
     assert [m.species for m in loaded[0].mons] == [m.species for m in teams[0].mons]
+
+
+def test_trainer_defaults_turn_holdout_on_and_restore(clean_env):
+    """DDQN y PPO entrenan con validación reservada por defecto (decisión del 16-11-2026)."""
+    import os
+    clean_env.setenv('PS_TEAM_SPLIT', 'train')
+    with foe_pool.trainer_defaults():
+        assert foe_pool.training_split() == 'fit' and foe_pool.validation_split() == 'val'
+    assert 'RL_HOLDOUT_VAL' not in os.environ and foe_pool.validation_split() is None
+    clean_env.setenv('RL_HOLDOUT_VAL', '0')  # apagado explícito: se respeta
+    with foe_pool.trainer_defaults():
+        assert foe_pool.training_split() == 'train' and foe_pool.validation_split() is None
+    assert os.environ['RL_HOLDOUT_VAL'] == '0'
+
+
+@pytest.mark.parametrize('mod', ['showdown.rl.ddqn.train', 'showdown.rl.ppo.train'])
+def test_trainer_main_wraps_defaults(clean_env, mod):
+    import importlib
+    import os
+    m = importlib.import_module(mod)
+    seen = {}
+    clean_env.setattr(m, '_main', lambda argv=None: seen.setdefault('v', os.environ.get('RL_HOLDOUT_VAL')) and 0)
+    m.main([])
+    assert seen['v'] == '1' and 'RL_HOLDOUT_VAL' not in os.environ

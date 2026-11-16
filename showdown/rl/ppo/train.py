@@ -905,7 +905,7 @@ def _ensure_vec_servers(venv, *, start_ps: bool) -> None:
     ensure_ps_ports(ports, start=start_ps)
 
 
-def main(argv: Optional[list] = None) -> int:
+def _main(argv: Optional[list] = None) -> int:
     p = argparse.ArgumentParser(
         description='Train Masked PPO (auto-regressive Slot1→Slot2)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1019,6 +1019,13 @@ def main(argv: Optional[list] = None) -> int:
         resume=args.resume,
     )
     return 0
+
+
+def main(argv: Optional[list] = None) -> int:
+    """Validación reservada por defecto (``RL_HOLDOUT_VAL=0`` la apaga; foe_pool.trainer_defaults)."""
+    from showdown.rl.foe_pool import trainer_defaults
+    with trainer_defaults():
+        return _main(argv)
 
 
 if __name__ == '__main__':

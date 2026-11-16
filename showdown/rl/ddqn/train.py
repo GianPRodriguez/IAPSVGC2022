@@ -946,7 +946,7 @@ def run_training(
     return agent
 
 
-def main(argv: Optional[list] = None) -> int:
+def _main(argv: Optional[list] = None) -> int:
     p = argparse.ArgumentParser(
         description='Train joint DDQN with exclusive or monotonic-Ω curricula',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1084,6 +1084,13 @@ def main(argv: Optional[list] = None) -> int:
         agent_team='' if str(args.agent_team).lower() in ('pool', 'none', '') else args.agent_team,
     )
     return 0
+
+
+def main(argv: Optional[list] = None) -> int:
+    """Validación reservada por defecto (``RL_HOLDOUT_VAL=0`` la apaga; foe_pool.trainer_defaults)."""
+    from showdown.rl.foe_pool import trainer_defaults
+    with trainer_defaults():
+        return _main(argv)
 
 
 if __name__ == '__main__':

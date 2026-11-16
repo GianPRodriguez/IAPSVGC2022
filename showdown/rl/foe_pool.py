@@ -13,6 +13,11 @@ todas apagadas por defecto (sin variables, el muestreo es idéntico al anterior)
   ``showdown/rl/synth_teams.py``). Archivo: ``RL_FOE_SYNTH_FILE`` (por defecto
   ``showdown/rl/data/synth_teams.json``).
 
+**Desde el 16-11-2026 (decisión del usuario tras la octava cola), los entrenadores de DDQN y
+PPO activan la validación reservada por defecto** (``trainer_defaults``); ``RL_HOLDOUT_VAL=0``
+la apaga. Fuera de esos entrenadores (preview, diagnósticos, tests) el valor por defecto sigue
+siendo apagado.
+
 Ninguna opción toca la evaluación final (Conclusión, grupo ``eval``): solo el entrenamiento.
 """
 from __future__ import annotations
@@ -34,6 +39,26 @@ def _flag(name: str) -> bool:
 
 def holdout_val() -> bool:
     return _flag('RL_HOLDOUT_VAL')
+
+
+class trainer_defaults:
+    """Valores por defecto del pool para los entrenadores de DDQN y PPO (contexto).
+
+    Activa ``RL_HOLDOUT_VAL=1`` si la variable no está definida y la restaura al salir, para
+    que no se filtre a otros usos del mismo proceso (tests). Los subprocesos de los entornos
+    paralelos la heredan porque se crean dentro del contexto.
+    """
+
+    def __enter__(self):
+        self._prev = os.environ.get('RL_HOLDOUT_VAL')
+        if self._prev is None:
+            os.environ['RL_HOLDOUT_VAL'] = '1'
+        return self
+
+    def __exit__(self, *exc):
+        if self._prev is None:
+            os.environ.pop('RL_HOLDOUT_VAL', None)
+        return False
 
 
 def train_subset() -> int:

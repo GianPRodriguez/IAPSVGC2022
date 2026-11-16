@@ -383,8 +383,8 @@ y la cantidad de equipos reales no cambia la generalización. La validación con
 coincide con `eval` (~40 % contra heurísticos), así que sí sirve para elegir checkpoints.
 Incluso contra equipos `eval` que comparten 5 de 6 especies con uno de entrenamiento gana
 ~40 %, frente a 80–84 % con los propios: memoriza equipos concretos, no combinaciones de
-especies. Espejo de los rivales: 0 discrepancias en ~2,3 M revisiones. Pendiente: decisión
-del usuario sobre sintéticos y validación reservada.
+especies. Espejo de los rivales: 0 discrepancias en ~2,3 M revisiones. **Decisión del usuario:** sin
+sintéticos; validación reservada activa por defecto en DDQN y PPO (rl_env_spec v1.29).
 
 ### PPO con equipos `train` frente a `eval` y suite completa (novena cola, commit 7c7a11e)
 
@@ -404,6 +404,14 @@ hueco (PPO), 25 episodios por rival, sin variables de entorno. `live_validation`
 en cuántos pasos la máscara del aliado quita acciones y comprueba que nunca agrega ninguna.
 Script: `scripts/server/kickoff_queue10.sh`; corre después de la novena cola. Resultados:
 pendientes.
+
+### Ensayo general y duración del kick-off (undécima cola, 16-11-2026)
+
+Aprobado por el usuario. B: 1M pasos con la configuración final (máscara del aliado activa,
+simetría apagada, validación reservada, sin sintéticos), semillas 0 y 1. C: 2M pasos (fases
+×2), validación cada 250k. Cada corrida se diagnostica con `best.pt` (propios y `eval`) y con
+`final.pt` (`eval`), para ver si `val` elige mejor que el último checkpoint. Script:
+`scripts/server/kickoff_queue11.sh`. Resultados: pendientes.
 
 ## D. Metodología
 

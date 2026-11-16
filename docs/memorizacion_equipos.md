@@ -1,6 +1,6 @@
 # Memorización de los equipos rivales y cómo reducirla
 
-Estado: **octava cola terminada (16-11-2026). Los sintéticos no cumplen el criterio de adopción; la cantidad de equipos reales no cambia la generalización.** PPO (novena cola, §6) generaliza mucho mejor que DDQN. Decisión del usuario pendiente.
+Estado: **octava cola terminada (16-11-2026). Los sintéticos no cumplen el criterio de adopción; la cantidad de equipos reales no cambia la generalización.** PPO (novena cola, §6) generaliza mucho mejor que DDQN. Decisión del usuario: sin sintéticos, validación reservada por defecto.
 Relacionado: [`protocolo_evaluacion.md`](protocolo_evaluacion.md) §2b (separación de equipos),
 [`ddqn_kickoff_checklist.md`](ddqn_kickoff_checklist.md), [`equipos_sinteticos_analisis.md`](equipos_sinteticos_analisis.md).
 
@@ -275,7 +275,7 @@ Error estándar de la brecha: ± 3,4–3,8 puntos; de cada cifra de `eval`: ± 2
   Otras vías (no implementadas): regularización (dropout, menos capacidad), entrenar contra
   rivales que juegan con equipos aleatorios del pool de sets, o mezclar sets por especie.
 
-Decisiones del usuario pendientes: sintéticos y validación reservada para el kick-off.
+**Decisiones del usuario (16-11-2026):** sin sintéticos; validación reservada activa por defecto en DDQN y PPO (rl_env_spec v1.29); ensayo general (B) y corrida de 2M (C) en la undécima cola.
 
 ## 6. PPO frente a DDQN (novena cola, commit 7c7a11e, 16-11-2026)
 
