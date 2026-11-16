@@ -174,6 +174,10 @@ python -m showdown.inference_sim.run_robust_e2e --teams 100 --seed 10 \
   por compatibilidad y no cambia nada.
 - **Prior meta leave-one-out (desde 2026-11-14, por defecto)**: el prior de SP (`meta_sp_prior`, usado por greedy en Spe y por las creencias) y los mundos de expectimax (`belief.py`) se construyen con `metavgc_regmc_teams.json`, el mismo pool de equipos de la evaluación. El wrapper validated descuenta los sets del equipo rival en cada juego (`apply_prior_leave_one_out`); el agente no recibe información nueva, solo se le quita la del rival. Efecto medido sobre los 1800 sets: Spe exacta 95,3 % → 91,7 % (error medio 1,25 SP), reparto completo 80,1 % → 74,2 %. `PS_PRIOR_LOO=0` restaura el prior completo (solo para reproducir corridas antiguas).
 - **Rivales del entrenamiento RL validados (rl_env_spec v1.19)**: en `PokeEnvBattleBackend`, greedy_solo / greedy_joint / expectimax_bayesian usan el mismo wrapper validated que en `run_robust_e2e` (antes eran jugadores poke-env crudos, ~2 pts más débiles). `PS_RL_FOE_VALIDATED=0` restaura el rival crudo. Resultados RL vs heurísticos previos no son comparables.
+- **Modo estricto de los jugadores RL (rl_env_spec v1.22):** `PS_RL_STRICT=1` hace que
+  `DDQNPlayer` propague cualquier excepción de `choose_move` (para validación en vivo y
+  tests). Sin él, la excepción se cuenta en `player.decision_stats` y se registran las
+  primeras `PS_RL_GUARD_LOG_N` (5) con traceback.
 - **Rivales del entrenamiento RL con sorteo entre casi-empates (rl_env_spec v1.21, por
   defecto):** joint con margen 8 y expectimax con `phase1_tie_margin=3`, aplicados por
   instancia del rival. `PS_RL_FOE_TIE=0` los vuelve deterministas. La evaluación

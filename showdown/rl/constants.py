@@ -10,7 +10,7 @@ from showdown.rl.team_preview_obs import MON_DIM as OTS_MON_DIM  # noqa: E402
 
 OBS_VERSION = 2
 N_OUR_MONS = 4  # activos a, b + 2 de banca (orden = índice de cambio)
-N_FOE_MONS = 6  # activos a, b + 4 restantes de su hoja (vistos primero)
+N_FOE_MONS = 6  # activos a, b + 4 restantes de su hoja (orden fijo por especie, v1.22)
 MON_DYN_DIM = 58  # estado (40) + incertidumbre SP (6) + historial y traído (12)
 MOVE_SLOT_DIM = 81  # por movimiento disponible de nuestros activos (alineado con la acción)
 FOE_MOVE_DIM = 43  # por movimiento de la hoja de los activos rivales
