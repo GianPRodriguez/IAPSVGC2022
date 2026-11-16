@@ -59,7 +59,7 @@ corregido.
 | 7 | LayerNorm después del codificador (ablación corta) | pendiente |
 | 9 | Re-tunear hiperparámetros, incluido `sym_coef` ∈ {0; 0,05; 0,1; 0,3} (los `*_best_hp.json` actuales son corridas de prueba) | pendiente |
 | — | Calibrar el paralelismo según el servidor (phantom: 32 hilos, 3 × RTX A5500 de 24 GB, 251 GB de RAM) | **hecho** (ver "Calibración del paralelismo" abajo). Recomendación: `--num-envs 32 --envs-per-server 4`. Hallazgo: el cuello de botella es el aprendiz, no las batallas |
-| — | **Nuevo:** el aprendiz limita el entrenamiento a ~130–155 pasos/s, frente a ~450 pasos/s que dan las batallas solas. Perfilar el paso de aprendizaje (muestreo del replay en float16, aumentación por simetría en CPU, copia a GPU) y acelerarlo sin cambiar el algoritmo (p. ej. replay y aumentación en GPU: 200k × 6332 × 2 B ≈ 2,5 GB por arreglo, cabe en 24 GB) | pendiente |
+| — | El aprendiz limitaba el entrenamiento a ~130–155 pasos/s frente a ~450 de las batallas | **hecho** (5ff2507, ddqn_spec 1.13): replay y aumentación por simetría en GPU (mismos lotes, verificado bit a bit) y fracciones por rival incrementales. Paso de gradiente 34,2 → 4,7 ms. Prueba A/B en entrenamiento real (32 × 4, 4 rivales): replay en CPU 153 pasos/s, **en GPU 410 pasos/s** (2,7×). Un currículo de 2M pasos baja de ~4 h a **~1,4 h** |
 
 ### Calibración del paralelismo (15-11-2026, commit db6d4de)
 

@@ -116,7 +116,9 @@ python -m showdown.rl.ppo.train --seed 0 --opponent curriculum --start-ps \
 
 - **Calibrado (15-11-2026):** las batallas escalan hasta ~32 entornos con 4 por servidor
   (~460 pasos/s); con más de 4 por servidor la CPU se satura. Con aprendizaje el ritmo
-  queda en ~130–155 pasos/s, limitado por el aprendiz. Ver `docs/ddqn_kickoff_checklist.md`.
+  quedaba en ~130–155 pasos/s, limitado por el aprendiz; desde ddqn_spec 1.13 (replay y
+  aumentación en GPU) llega a ~410 pasos/s. `RL_REPLAY_DEVICE=cpu` vuelve a la versión
+  anterior. Ver `docs/ddqn_kickoff_checklist.md`.
 - `--steps` y las fases cuentan pasos de entorno **totales** (suma de los N
   entornos). El presupuesto no cambia al variar `--num-envs`; solo termina antes.
 - `--envs-per-server 4`: 24 entornos sobre 6 servidores Showdown (puertos
