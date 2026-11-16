@@ -58,7 +58,42 @@ corregido.
 |---|---|---|
 | 7 | LayerNorm después del codificador (ablación corta) | pendiente |
 | 9 | Re-tunear hiperparámetros, incluido `sym_coef` ∈ {0; 0,05; 0,1; 0,3} (los `*_best_hp.json` actuales son corridas de prueba) | pendiente |
-| — | Calibrar el paralelismo según el servidor (phantom: 32 hilos, 3 × RTX A5500 de 24 GB, 251 GB de RAM): `--num-envs` 8/16/24/28/32/40/48 y `--envs-per-server` 2/4/6, midiendo pasos/s, uso de CPU, reinicios y timeouts. Se prueba también por encima de 28 (tope automático = núcleos − 4) porque los entornos pasan tiempo esperando a Showdown y a rivales lentos (expectimax, hasta 1,6 s por decisión), así que más batallas simultáneas pueden subir el rendimiento aunque haya más entornos que hilos. La GPU no es el cuello (< 1 % de uso): el aprendiz usa 1 GPU y las otras 2 sirven para trials paralelos del tuning | pendiente |
+| — | Calibrar el paralelismo según el servidor (phantom: 32 hilos, 3 × RTX A5500 de 24 GB, 251 GB de RAM) | **hecho** (ver "Calibración del paralelismo" abajo). Recomendación: `--num-envs 32 --envs-per-server 4`. Hallazgo: el cuello de botella es el aprendiz, no las batallas |
+| — | **Nuevo:** el aprendiz limita el entrenamiento a ~130–155 pasos/s, frente a ~450 pasos/s que dan las batallas solas. Perfilar el paso de aprendizaje (muestreo del replay en float16, aumentación por simetría en CPU, copia a GPU) y acelerarlo sin cambiar el algoritmo (p. ej. replay y aumentación en GPU: 200k × 6332 × 2 B ≈ 2,5 GB por arreglo, cabe en 24 GB) | pendiente |
+
+### Calibración del paralelismo (15-11-2026, commit db6d4de)
+
+DDQN real con `--device cuda`, Ω con los 4 rivales (random, solo, joint, expectimax con
+sorteo; pesos 1/1/1/0,35), 8k–18k pasos por configuración. "Sin aprender" = pasos 1k–5k
+(antes del warm-up de 5000 pasos: solo batallas y llenado del replay); "con aprendizaje" =
+desde el paso 6500 (un paso de gradiente cada 4 pasos de entorno, lote 256).
+
+| `--num-envs` × `--envs-per-server` | Solo batallas (pasos/s) | Con aprendizaje (pasos/s) | CPU media | Reinicios |
+|---|---|---|---|---|
+| 8 × 4 | 193 | 99 | 21 % | 0 |
+| 16 × 4 | 331 | 122 | 27 % | 0 |
+| 24 × 4 | 425 | 124 | 29 % | 0 |
+| 28 × 4 | 457 | 138 | 33 % | 0 |
+| **32 × 4** | **462** | 127 | 31 % | 0 |
+| 40 × 4 | 454 | 154 | 36 % | 0 |
+| 48 × 4 | 452 | 155 | 37 % | 0 |
+| 32 × 2 | 434 | 101 | 67 % | 0 |
+| 32 × 6 | 249 | 100 | 96 % | 0 |
+
+Lectura:
+
+- **Las batallas escalan hasta ~28–32 entornos** (~450–460 pasos/s) y luego se
+  estabilizan. Más de 4 entornos por servidor Showdown satura la CPU (32 × 6: 96 %) y rinde
+  menos; 2 por servidor también rinde algo menos.
+- **Con aprendizaje, el rendimiento queda en ~100–155 pasos/s sin importar los entornos:**
+  el aprendiz (un paso de gradiente cada 4 pasos, ~30–40 por segundo) es el cuello de
+  botella. La CPU total queda baja (≤ 37 %), así que el límite es el bucle principal, no el
+  servidor.
+- Duración estimada de un currículo de 2M pasos: ~3,6–4,5 h con el aprendiz actual; ~1,2 h
+  si el aprendiz alcanzara el ritmo de las batallas.
+- 0 reinicios y 0 errores de `|showteam|` en las 9 configuraciones (con el arreglo de
+  nombres de especie, db6d4de). Un primer intento con el código anterior (53889fa) tenía
+  7 errores `|showteam|` en 1 minuto.
 
 ## D. Metodología
 
