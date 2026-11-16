@@ -95,6 +95,17 @@ Lectura:
   nombres de especie, db6d4de). Un primer intento con el código anterior (53889fa) tenía
   7 errores `|showteam|` en 1 minuto.
 
+### Equipo fijo del agente
+
+**Hecho (15-11-2026).** Indicación del usuario: DDQN juega siempre con el mismo equipo
+(`showdown/rl/data/ddqn_team.txt`) y los rivales cambian de equipo en cada reinicio (grupo
+`train`). Se mantiene **hasta que el usuario indique pasar a un equipo distinto por
+reinicio** (`--agent-team pool`). Verificado: 66 SP por Pokémon, legal en Reg M-C, el equipo
+llega como `TeamMeta` (rivales validados), el rival cambia casi en cada reinicio.
+
+Pendiente de decidir: cómo evalúa la Conclusión al pipeline E con un equipo fijo (mismos
+pares de equipos y lados intercambiados para todos los demás).
+
 ## D. Metodología
 
 | # | Punto | Estado |

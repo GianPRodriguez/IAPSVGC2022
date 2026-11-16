@@ -179,6 +179,9 @@ python -m showdown.inference_sim.run_robust_e2e --teams 100 --seed 10 \
   por compatibilidad y no cambia nada.
 - **Prior meta leave-one-out (desde 2026-11-14, por defecto)**: el prior de SP (`meta_sp_prior`, usado por greedy en Spe y por las creencias) y los mundos de expectimax (`belief.py`) se construyen con `metavgc_regmc_teams.json`, el mismo pool de equipos de la evaluación. El wrapper validated descuenta los sets del equipo rival en cada juego (`apply_prior_leave_one_out`); el agente no recibe información nueva, solo se le quita la del rival. Efecto medido sobre los 1800 sets: Spe exacta 95,3 % → 91,7 % (error medio 1,25 SP), reparto completo 80,1 % → 74,2 %. `PS_PRIOR_LOO=0` restaura el prior completo (solo para reproducir corridas antiguas).
 - **Rivales del entrenamiento RL validados (rl_env_spec v1.19)**: en `PokeEnvBattleBackend`, greedy_solo / greedy_joint / expectimax_bayesian usan el mismo wrapper validated que en `run_robust_e2e` (antes eran jugadores poke-env crudos, ~2 pts más débiles). `PS_RL_FOE_VALIDATED=0` restaura el rival crudo. Resultados RL vs heurísticos previos no son comparables.
+- **Equipo fijo de DDQN (rl_env_spec v1.25):** `showdown/rl/data/ddqn_team.txt` por defecto;
+  `--agent-team <archivo>` lo cambia y `--agent-team pool` sortea también el del agente.
+  Se mantiene fijo hasta nueva indicación del usuario.
 - **Separación de equipos (rl_env_spec v1.24):** `PS_TEAM_SPLIT=all|train|eval`. Los
   entrenamientos RL y de preview usan `train` (200 equipos) por defecto; la Conclusión,
   `eval` (100). `run_robust_e2e` sigue en `all` salvo `--team-split train|eval`. Con

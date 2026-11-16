@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.13** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.23) |
+| **Versión** | **1.14** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.25) |
 | **Estado** | FROZEN; implementado en `showdown/rl/ddqn/` y `battle_bots/ddqn/` |
 | **Training** | **Sí**: off-policy con replay; entrenamiento live requiere Showdown local |
 | **Inferencia** | `ValidatedDDQNPlayer`, acción greedy legal desde un checkpoint |
@@ -273,6 +273,7 @@ Pipeline familiar: **`team_preview_ppo` → DDQN**. Código compartido:
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.14** | 2026-11-15 | **Equipo fijo del agente** (indicación del usuario): DDQN juega SIEMPRE con `showdown/rl/data/ddqn_team.txt` (Raichu, Rillaboom, Gholdengo, Arcanine-Hisui, Staraptor, Primarina; 66 SP cada uno, legal en Reg M-C según el validador de Showdown). Los rivales siguen sorteando su equipo en cada reinicio del grupo `train` (200; rl_env_spec v1.24). Se carga como `TeamMeta` (`team_factory.load_team_file`) para que los rivales validados reciban el OTS del agente (con un texto suelto caerían al rival crudo). `--agent-team <archivo>` cambia el equipo; **`--agent-team pool` sortea también el equipo del agente en cada reinicio (del grupo `train`)**. Vigente hasta que el usuario indique pasar a un equipo distinto por reinicio. Consecuencia pendiente de decidir: la Conclusión mide con los mismos pares de equipos y lados intercambiados; un equipo fijo para el pipeline E exige evaluarlo con ese equipo contra los equipos de `eval`. |
 | **1.13** | 2026-11-15 | **Aprendiz ~2,7× más rápido, mismo algoritmo.** Replay en GPU (`replay_device='auto'`: obs float16 y máscaras uint8 en CUDA, ~5 GB con 200k), aumentación por simetría en GPU (`symmetry.*_t`) con el sorteo en NumPy en el mismo orden (lotes y elementos del grupo idénticos bit a bit; misma pérdida), y fracciones por rival con contadores incrementales (antes recorrían el replay completo en cada paso: ~10 ms con 200k). Paso de gradiente: 34,2 → 4,7 ms con el replay lleno (`profile_learner`). Entrenamiento real 32 × 4 contra los 4 rivales: 153 → **410 pasos/s** con aprendizaje (las batallas solas dan ~450). `RL_REPLAY_DEVICE=cpu` restaura la versión anterior. |
 | **1.12** | 2026-11-15 | Máscaras de cambio forzado según la regla de Showdown (rl_env_spec v1.23): eliminan ~2,7 % de pasos que caían a una orden al azar (la transición guardaba una acción no ejecutada). Validación en vivo (`showdown.rl.live_validation`): paridad entrenamiento/inferencia, alineación, historial y simetrías sin diferencias en 902 pasos reales. |
 | **1.11** | 2026-11-15 | Correcciones previas al entrenamiento oficial (rl_env_spec v1.21–v1.22): rivales de entrenamiento con sorteo entre casi-empates (joint margen 8, expectimax fase 1 margen 3; `PS_RL_FOE_TIE=0` los vuelve deterministas); orden estable del resto del rival por especie (cambia la semántica de la obs: checkpoints anteriores no comparables); mock con snapshot nuevo por paso; `DDQNPlayer` cuenta y registra excepciones (`decision_stats`, `PS_RL_STRICT=1` las propaga) en vez de jugar la orden por defecto en silencio. |
