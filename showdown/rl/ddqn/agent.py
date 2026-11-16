@@ -40,6 +40,13 @@ class DDQNConfig:
     # CUDA: muestreo y aumentación sin copiar ~25 MB por lote desde la CPU. Mismos lotes
     # que en CPU. RL_REPLAY_DEVICE=cpu fuerza la versión anterior.
     replay_device: str = 'auto'
+    # Sobreestimación de Q (piloto 15-11-2026: Q medio hasta 5,6 con retornos <= 1,8).
+    # target_update_every > 0: copia dura de la red objetivo cada N pasos de gradiente en vez
+    # de la actualización suave con tau (separa más objetivo y online para Double DQN).
+    # target_clip > 0: el objetivo y se acota a [-target_clip, target_clip] (rango real de
+    # retornos). 0 = desactivado (comportamiento anterior).
+    target_update_every: int = 0
+    target_clip: float = 0.0
 
 
 class DDQNAgent:
@@ -70,6 +77,7 @@ class DDQNAgent:
         self._torch = torch
         self._F = F
         self._soft_update = soft_update
+        self._copy_weights = copy_weights
         device = torch.device(self.cfg.device)
         self.device = device
         self.online = QNetwork().to(device)
@@ -249,13 +257,20 @@ class DDQNAgent:
             a_star = q_online_next.argmax(dim=1)
             q_target_next = self.target(s2_t).gather(1, a_star.view(-1, 1)).squeeze(1)
             y = r_t + (1.0 - done) * self.cfg.gamma * q_target_next
+            if float(self.cfg.target_clip) > 0.0:
+                c = float(self.cfg.target_clip)
+                y = y.clamp(-c, c)
 
         loss = F.huber_loss(q_sa, y, delta=self.cfg.huber_delta)
         self.optim.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(self.online.parameters(), self.cfg.grad_clip)
         self.optim.step()
-        self._soft_update(self.online, self.target, self.cfg.tau)
+        if int(self.cfg.target_update_every) > 0:
+            if (self.grad_steps + 1) % int(self.cfg.target_update_every) == 0:
+                self._copy_weights(self.online, self.target)
+        else:
+            self._soft_update(self.online, self.target, self.cfg.tau)
         self.grad_steps += 1
         batch_frac = ReplayBuffer.batch_origin_fractions(opp)
         buf_frac = self.replay.origin_fractions()
