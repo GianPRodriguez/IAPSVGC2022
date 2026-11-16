@@ -36,6 +36,10 @@ class DDQNConfig:
     # rival y reservas, a (s, a) y otro independiente a (s', m'). Exacto: Q es
     # invariante. RL_SYM_AUG=0 lo apaga.
     sym_aug: bool = True
+    # Dónde vive el replay (ddqn_spec 1.13). 'auto' = en la GPU si el agente entrena en
+    # CUDA: muestreo y aumentación sin copiar ~25 MB por lote desde la CPU. Mismos lotes
+    # que en CPU. RL_REPLAY_DEVICE=cpu fuerza la versión anterior.
+    replay_device: str = 'auto'
 
 
 class DDQNAgent:
@@ -73,7 +77,15 @@ class DDQNAgent:
         copy_weights(self.online, self.target)
         self.target.eval()
         self.optim = torch.optim.Adam(self.online.parameters(), lr=self.cfg.lr)
-        self.replay = ReplayBuffer(capacity=self.cfg.replay_capacity, obs_dim=OBS_DIM)
+        self.replay = ReplayBuffer(capacity=self.cfg.replay_capacity, obs_dim=OBS_DIM,
+                                   device=self._replay_device(device))
+
+    def _replay_device(self, device) -> str:
+        import os
+        want = os.environ.get('RL_REPLAY_DEVICE', '').strip() or str(self.cfg.replay_device or 'auto')
+        if want == 'auto':
+            return str(device) if getattr(device, 'type', str(device)).startswith('cuda') else 'cpu'
+        return want
 
     @property
     def epsilon(self) -> float:
@@ -192,23 +204,39 @@ class DDQNAgent:
         F = self._F
         from showdown.rl.ddqn.replay import ReplayBuffer
 
-        s, a, r, s2, term, m2, opp = self.replay.sample(self.cfg.batch_size, self._rng)
         sym_stats: Dict[str, float] = {}
-        if s.shape[1] == OBS_DIM:
-            from showdown.rl import symmetry as SYM
+        if self.replay.on_gpu:
+            # Replay en GPU: mismo sorteo (índices y elementos del grupo, en ese orden) que
+            # la rama NumPy; el muestreo y las permutaciones se hacen en la GPU.
+            s_t, a_t, r_t, s2_t, done, m2_t, opp = self.replay.sample_torch(
+                self.cfg.batch_size, self._rng)
+            if s_t.shape[1] == OBS_DIM:
+                from showdown.rl import symmetry as SYM
 
-            if SYM.sym_aug_enabled(self.cfg.sym_aug):
-                g = SYM.sample_elements(s, self._rng)
-                s, a = SYM.augment_obs(s, g), SYM.augment_joint(a, g)
-                h = SYM.sample_elements(s2, self._rng)
-                s2, m2 = SYM.augment_obs(s2, h), SYM.augment_joint_mask(m2, h)
-                sym_stats = SYM.element_stats(g)
-        s_t = torch.as_tensor(s, dtype=torch.float32, device=self.device)
-        a_t = torch.as_tensor(a, dtype=torch.int64, device=self.device)
-        r_t = torch.as_tensor(r, dtype=torch.float32, device=self.device)
-        s2_t = torch.as_tensor(s2, dtype=torch.float32, device=self.device)
-        done = torch.as_tensor(term, dtype=torch.float32, device=self.device)
-        m2_t = torch.as_tensor(m2, dtype=torch.float32, device=self.device)
+                if SYM.sym_aug_enabled(self.cfg.sym_aug):
+                    g = SYM.sample_elements_t(s_t, self._rng)
+                    s_t, a_t = SYM.augment_obs_t(s_t, g), SYM.augment_joint_t(a_t, g)
+                    h = SYM.sample_elements_t(s2_t, self._rng)
+                    s2_t, m2_t = SYM.augment_obs_t(s2_t, h), SYM.augment_joint_mask_t(m2_t, h)
+                    sym_stats = SYM.element_stats(g)
+            a_t, r_t, done = a_t.long(), r_t.float(), done.float()
+        else:
+            s, a, r, s2, term, m2, opp = self.replay.sample(self.cfg.batch_size, self._rng)
+            if s.shape[1] == OBS_DIM:
+                from showdown.rl import symmetry as SYM
+
+                if SYM.sym_aug_enabled(self.cfg.sym_aug):
+                    g = SYM.sample_elements(s, self._rng)
+                    s, a = SYM.augment_obs(s, g), SYM.augment_joint(a, g)
+                    h = SYM.sample_elements(s2, self._rng)
+                    s2, m2 = SYM.augment_obs(s2, h), SYM.augment_joint_mask(m2, h)
+                    sym_stats = SYM.element_stats(g)
+            s_t = torch.as_tensor(s, dtype=torch.float32, device=self.device)
+            a_t = torch.as_tensor(a, dtype=torch.int64, device=self.device)
+            r_t = torch.as_tensor(r, dtype=torch.float32, device=self.device)
+            s2_t = torch.as_tensor(s2, dtype=torch.float32, device=self.device)
+            done = torch.as_tensor(term, dtype=torch.float32, device=self.device)
+            m2_t = torch.as_tensor(m2, dtype=torch.float32, device=self.device)
 
         self.online.train()
         q_all = self.online(s_t)

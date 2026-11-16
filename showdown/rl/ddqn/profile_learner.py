@@ -24,13 +24,22 @@ def _fill(agent, n: int, rng: np.random.Generator) -> None:
         rb._i = rb._size
         rb._alloc()
     obs = (rng.random((n, OBS_DIM)) < 0.15).astype(np.float16)
-    rb._s[:n] = obs
-    rb._s2[:n] = np.roll(obs, 1, axis=0)
+    masks = (rng.random((n, JOINT_ACTION_N)) < 0.05).astype(np.uint8)
+    masks[:, 0] = 1
+    if rb.on_gpu:
+        import torch
+        rb._s[:n] = torch.from_numpy(obs).to(rb.device)
+        rb._s2[:n] = torch.from_numpy(np.roll(obs, 1, axis=0)).to(rb.device)
+        rb._m2[:n] = torch.from_numpy(masks).to(rb.device)
+    else:
+        rb._s[:n] = obs
+        rb._s2[:n] = np.roll(obs, 1, axis=0)
+        rb._m2[:n] = masks
     rb._a[:n] = rng.integers(0, JOINT_ACTION_N, n)
     rb._r[:n] = rng.normal(size=n).astype(np.float32)
-    rb._m2[:n] = (rng.random((n, JOINT_ACTION_N)) < 0.05).astype(np.uint8)
-    rb._m2[:n, 0] = 1
     rb._opp[:n] = rng.integers(0, 4, n)
+    from collections import Counter
+    rb._opp_counts = Counter(int(c) for c in rb._opp[:n].tolist())
     rb._n = n
     rb._i = n % rb.capacity
 
@@ -92,18 +101,42 @@ def main(argv=None) -> int:
     ap.add_argument('--sizes', default='15000,200000')
     ap.add_argument('--steps', type=int, default=100)
     args = ap.parse_args(argv)
+    import torch
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
     rng = np.random.default_rng(0)
     for n in [int(x) for x in args.sizes.split(',')]:
-        agent = DDQNAgent(DDQNConfig(device=args.device, replay_capacity=max(n, 4096)))
+        agent = DDQNAgent(DDQNConfig(device=args.device, replay_device='cpu',
+                                     replay_capacity=max(n, 4096)))
         _fill(agent, n, rng)
         profile(agent, 5)  # calentamiento (cuDNN, caché)
         ms = profile(agent, args.steps)
         tot = sum(ms.values())
-        print(f'replay={n}: total {tot:.1f} ms/paso de gradiente '
+        print(f'replay={n} (CPU, versión anterior): total {tot:.1f} ms/paso de gradiente '
               f'(→ máx. {1000 / tot * agent.cfg.train_freq:.0f} pasos de entorno/s)')
         for k, v in sorted(ms.items(), key=lambda kv: -kv[1]):
             print(f'  {k:18s} {v:7.2f} ms ({100 * v / tot:4.1f} %)')
+        # learn() real con la configuración actual (CPU y GPU) — tiempo de pared por paso
+        for rd in ('cpu', 'auto'):
+            ag = DDQNAgent(DDQNConfig(device=args.device, replay_device=rd,
+                                      replay_capacity=max(n, 4096)))
+            _fill(ag, n, rng)
+            for _ in range(5):
+                ag.learn()
+            if ag.device.type == 'cuda':
+                torch.cuda.synchronize()
+            t0 = time.perf_counter()
+            for _ in range(args.steps):
+                ag.learn()
+            if ag.device.type == 'cuda':
+                torch.cuda.synchronize()
+            ms_l = 1000.0 * (time.perf_counter() - t0) / args.steps
+            where = 'GPU' if ag.replay.on_gpu else 'CPU'
+            print(f'  learn() con replay en {where}: {ms_l:.1f} ms '
+                  f'(→ máx. {1000 / ms_l * ag.cfg.train_freq:.0f} pasos de entorno/s)')
+            del ag
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        del agent
     return 0
 
 

@@ -188,6 +188,63 @@ def augment_joint_mask(mask: np.ndarray, g: np.ndarray) -> np.ndarray:
     return np.take_along_axis(m, joint_perms()[np.asarray(g, dtype=np.int64)], axis=1)
 
 
+# --------------------------------------------------------------------------- #
+# Versiones en torch (replay en GPU, ddqn_spec 1.13). El sorteo de elementos sigue en
+# NumPy con el mismo generador y en el mismo orden, así que el resultado es idéntico al
+# de las funciones de arriba; solo se mueve a la GPU la parte pesada (permutar columnas).
+# --------------------------------------------------------------------------- #
+
+_TORCH_PERMS: Dict[Tuple[str, str], object] = {}
+
+
+def _perm_tensor(kind: str, device):
+    import torch
+    key = (kind, str(device))
+    t = _TORCH_PERMS.get(key)
+    if t is None:
+        src = obs_perms() if kind == 'obs' else joint_perms()
+        t = torch.as_tensor(src, dtype=torch.int64, device=device)
+        _TORCH_PERMS[key] = t
+    return t
+
+
+def bench_swap_valid_t(obs_t):
+    """Como :func:`bench_swap_valid`, sobre un tensor (devuelve bool NumPy)."""
+    from showdown.rl.observation import obs_layout
+    lay = obs_layout()
+    ok = None
+    for name in ('our_2', 'our_3'):
+        d = lay[name][0] + OTS_MON_DIM
+        c = (obs_t[:, d + 0] > 0.5) & (obs_t[:, d + 2] < 0.5)
+        ok = c if ok is None else (ok & c)
+    return ok.cpu().numpy()
+
+
+def sample_elements_t(obs_t, rng: np.random.Generator) -> np.ndarray:
+    """Como :func:`sample_elements` (mismas extracciones del generador), desde un tensor."""
+    g = rng.integers(0, N_ELEMENTS, size=int(obs_t.shape[0]))
+    g[~bench_swap_valid_t(obs_t)] &= ~BIT_BENCH
+    return g.astype(np.int64)
+
+
+def augment_obs_t(obs_t, g: np.ndarray):
+    import torch
+    gt = torch.as_tensor(g, dtype=torch.int64, device=obs_t.device)
+    return obs_t.gather(1, _perm_tensor('obs', obs_t.device)[gt])
+
+
+def augment_joint_t(a_t, g: np.ndarray):
+    import torch
+    gt = torch.as_tensor(g, dtype=torch.int64, device=a_t.device)
+    return _perm_tensor('joint', a_t.device)[gt, a_t.long()]
+
+
+def augment_joint_mask_t(mask_t, g: np.ndarray):
+    import torch
+    gt = torch.as_tensor(g, dtype=torch.int64, device=mask_t.device)
+    return mask_t.gather(1, _perm_tensor('joint', mask_t.device)[gt])
+
+
 def _is_mega(a: np.ndarray) -> np.ndarray:
     return (a >= MEGA_BASE) & (a < MEGA_BASE + N_MOVE_ACTIONS)
 
