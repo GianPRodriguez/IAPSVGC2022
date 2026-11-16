@@ -425,6 +425,7 @@ VAL_PORT_OFFSET = 100
 
 def _make_ppo_eval_env(*, start_ps: bool, port: Optional[int]) -> VGCEnv:
     """Entorno de validación: rivales deterministas (sin sorteo), equipo fijo del agente."""
+    from showdown.rl.foe_pool import validation_split
     from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
     our_team = None
     if _AGENT_TEAM:
@@ -433,8 +434,17 @@ def _make_ppo_eval_env(*, start_ps: bool, port: Optional[int]) -> VGCEnv:
     backend = PokeEnvBattleBackend(
         opponent=VAL_FOES[0], start_ps=start_ps, port=port, account_prefix='PpoVal',
         combat_family='ppo', our_team=our_team, foe_tie=False,
+        team_split=validation_split(),  # 'val' con RL_HOLDOUT_VAL=1 (equipos no entrenados)
     )
     return VGCEnv(reward_candidate=RewardCandidate.SPARSE, backend=backend, max_episode_turns=40)
+
+
+def _foe_pool_meta() -> dict:
+    """Opciones del pool de rivales (showdown/rl/foe_pool.py) para el registro de la corrida."""
+    from showdown.rl.foe_pool import holdout_val, synth_prob, train_subset, training_split
+    import os as _os
+    return {'split': training_split(), 'holdout_val': holdout_val(), 'subset': train_subset(),
+            'synth_prob': synth_prob(), 'synth_file': _os.environ.get('RL_FOE_SYNTH_FILE', '')}
 
 
 class _PPOValidator:
@@ -636,6 +646,7 @@ def run_training(
     from showdown.rl.train_metrics import MetricsLog
     mlog = MetricsLog(ckpt_dir / 'train_metrics.jsonl', run_meta={
         'agent': 'ppo', 'seed': seed, 'device': device, 'num_envs': num_envs, 'lr': float(cfg.lr),
+        'foe_pool': _foe_pool_meta(),
         'clip_eps': float(cfg.clip_eps), 'agent_team': _AGENT_TEAM, 'resume': resume or '',
         'schedule': [{'unlock': p.unlock, 'steps': p.steps, 'omega': list(p.omega)} for p in expand_sched],
     })

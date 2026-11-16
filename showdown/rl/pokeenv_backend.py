@@ -48,17 +48,22 @@ def rl_team_split() -> str:
     return os.environ['PS_TEAM_SPLIT']
 
 
-def _default_team_metas(seed: Optional[int] = None):
-    from showdown.inference_sim.team_factory import active_teams
+def _default_team_metas(seed: Optional[int] = None, split: Optional[str] = None):
+    """Par (nuestro, rival) del grupo ``split`` (por defecto el de entrenamiento, ver foe_pool).
 
-    pool = list(active_teams(rl_team_split()))
+    Sin las opciones de ``foe_pool`` el sorteo es idéntico al anterior (mismos números aleatorios).
+    """
+    from showdown.rl.foe_pool import base_pool, maybe_synthetic_foe, training_split
+
+    split = training_split() if split is None else split
+    pool = base_pool(split)
     if len(pool) < 2:
         raise RuntimeError('Need ≥2 teams in MetaVGC pool for live RL backend')
     rng = np.random.default_rng(seed)
     i, j = int(rng.integers(0, len(pool))), int(rng.integers(0, len(pool) - 1))
     if j >= i:
         j += 1
-    return pool[i], pool[j]
+    return pool[i], maybe_synthetic_foe(rng, split, pool[j])
 
 
 def _default_teams(seed: Optional[int] = None) -> Tuple[str, str]:
@@ -233,6 +238,7 @@ class PokeEnvBattleBackend(BattleBackend):
         preview_kind: Optional[str] = None,
         port: Optional[int] = None,
         foe_tie: Optional[bool] = None,
+        team_split: Optional[str] = None,
     ):
         from poke_env.ps_client import LocalhostServerConfiguration
 
@@ -245,6 +251,10 @@ class PokeEnvBattleBackend(BattleBackend):
         # Sorteo de casi-empates de los rivales (v1.21): None = PS_RL_FOE_TIE (sí por defecto);
         # False = rivales deterministas (validación de checkpoints, ddqn_spec 1.16).
         self._foe_tie = foe_tie
+        # Grupo de equipos de este entorno (None = el de entrenamiento; 'val' en la validación
+        # reservada, 'eval' en diagnósticos). Ver showdown/rl/foe_pool.py.
+        self._team_split = team_split
+        self.last_foe_team: Optional[str] = None
         if server_configuration is None and self.port is not None:
             server_configuration = server_configuration_for_port(self.port)
         self.server_configuration = server_configuration or LocalhostServerConfiguration
@@ -404,12 +414,15 @@ class PokeEnvBattleBackend(BattleBackend):
         our = _team_export(self._our_team_arg)
         opp = _team_export(self._opp_team_arg)
         if our is None or opp is None:
-            d0, d1 = _default_team_metas(seed=seed)
+            d0, d1 = _default_team_metas(seed=seed, split=self._team_split)
             if our is None:
                 our, our_meta = _team_export(d0), d0
             if opp is None:
                 opp, opp_meta = _team_export(d1), d1
         self._cached_opp_export = opp
+        if opp_meta is not None:
+            from showdown.inference_sim.team_split import team_key
+            self.last_foe_team = team_key(opp_meta)
         foe_kw = dict(foe_meta=opp_meta, agent_meta=our_meta)
 
         self._uid += 1

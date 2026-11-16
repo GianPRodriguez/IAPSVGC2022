@@ -13,6 +13,11 @@ Por eso el pool se divide en dos grupos fijos, guardados en ``team_split.json``:
 ``PS_TEAM_SPLIT=all|train|eval`` elige el grupo (por defecto ``all``: comportamiento previo,
 con el que se midieron los baselines). Los entornos RL usan ``train`` por defecto.
 
+Validación reservada (16-11-2026): ``val`` es un subgrupo de ``train`` (grupos de clones
+completos, ~30 equipos) que no se usa para entrenar cuando ``RL_HOLDOUT_VAL=1``; ``fit`` es
+``train`` sin ``val``. Elegir ``best.pt`` con equipos que el agente entrenó premia la
+memorización (cuarta cola: 84 % con equipos ``train`` frente a 50 % con ``eval``).
+
     python -m showdown.inference_sim.team_split --make     # genera team_split.json (una vez)
     python -m showdown.inference_sim.team_split --report   # balance entre grupos
 """
@@ -30,7 +35,8 @@ from typing import Dict, Iterable, List, Optional, Set
 SPLIT_PATH = Path(__file__).resolve().parent / 'team_split.json'
 SPLIT_SEED = 20261115
 N_TRAIN = 200
-SPLITS = ('all', 'train', 'eval')
+SPLITS = ('all', 'train', 'eval', 'fit', 'val')
+N_VAL = 30
 
 
 def team_key(team) -> str:
@@ -66,6 +72,11 @@ def split_keys(which: str) -> Optional[Set[str]]:
     data = _load()
     if not data:
         raise RuntimeError(f'Falta {SPLIT_PATH.name}: genera la separación con --make')
+    if which in ('fit', 'val'):
+        if 'val' not in data:
+            raise RuntimeError(f'{SPLIT_PATH.name} no tiene el subgrupo val: genéralo con --make-val')
+        val = set(data['val'])
+        return val if which == 'val' else set(data['train']) - val
     return set(data[which])
 
 
@@ -147,6 +158,14 @@ def make_balanced_split(teams: List, *, seeds: Iterable[int] = range(500),
     return best
 
 
+def make_val_split(teams: List, split: Dict[str, List[str]], *, n_val: int = N_VAL) -> List[str]:
+    """Subgrupo ``val`` de ``train``: grupos de clones completos, estratificado como ``make_split``."""
+    tr = set(split['train'])
+    train_teams = [t for t in teams if team_key(t) in tr]
+    sub = make_balanced_split(train_teams, n_train=len({team_key(t) for t in train_teams}) - int(n_val))
+    return sorted(sub['eval'])
+
+
 def balance_report(teams: List, split: Dict[str, List[str]], top: int = 15) -> str:
     """Frecuencia de las especies más comunes en cada grupo (para revisar el balance)."""
     by = {'train': set(split['train']), 'eval': set(split['eval'])}
@@ -171,6 +190,8 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument('--make', action='store_true')
     ap.add_argument('--report', action='store_true')
+    ap.add_argument('--make-val', type=int, default=0, metavar='N',
+                    help='agrega el subgrupo val (N equipos de train, grupos de clones completos)')
     args = ap.parse_args(argv)
     from showdown.inference_sim.team_factory import active_teams
     os.environ['PS_TEAM_SPLIT'] = 'all'
@@ -180,6 +201,17 @@ def main(argv=None) -> int:
         SPLIT_PATH.write_text(json.dumps(split, indent=1, ensure_ascii=False) + '\n', encoding='utf-8')
         _load.cache_clear()
         print(f'OK {SPLIT_PATH.name}: train={len(split["train"])} eval={len(split["eval"])}')
+    if args.make_val:
+        data = dict(_load())
+        data['val'] = make_val_split(teams, data, n_val=args.make_val)
+        data['val_criterion'] = (f'{args.make_val} equipos de train por grupos de clones; mismo criterio de '
+                                 'balance (semillas 0..499)')
+        SPLIT_PATH.write_text(json.dumps(data, indent=1, ensure_ascii=False) + '
+', encoding='utf-8')
+        _load.cache_clear()
+        print(f'OK val={len(data["val"])} fit={len(set(data["train"]) - set(data["val"]))}')
+        tr_fit = {'train': sorted(set(data['train']) - set(data['val'])), 'eval': data['val']}
+        print(balance_report(teams, tr_fit).replace('eval', 'val ').replace('train', 'fit  '))
     data = _load()
     if args.report or args.make:
         print(balance_report(teams, data))

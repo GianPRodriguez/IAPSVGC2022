@@ -471,6 +471,7 @@ VAL_PORT_OFFSET = 100  # servidor Showdown propio para la validación (base_port
 
 
 def _make_eval_env(*, start_ps: bool, port: Optional[int]) -> VGCEnv:
+    from showdown.rl.foe_pool import validation_split
     from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
     our_team = None
     if _AGENT_TEAM:
@@ -479,8 +480,17 @@ def _make_eval_env(*, start_ps: bool, port: Optional[int]) -> VGCEnv:
     backend = PokeEnvBattleBackend(
         opponent=VAL_FOES[0], start_ps=start_ps, port=port, account_prefix='DdqnVal',
         combat_family='ddqn', our_team=our_team, foe_tie=False,
+        team_split=validation_split(),  # 'val' con RL_HOLDOUT_VAL=1 (equipos no entrenados)
     )
     return VGCEnv(reward_candidate=RewardCandidate.DENSE, backend=backend, max_episode_turns=40)
+
+
+def _foe_pool_meta() -> dict:
+    """Opciones del pool de rivales (showdown/rl/foe_pool.py) para el registro de la corrida."""
+    from showdown.rl.foe_pool import holdout_val, synth_prob, train_subset, training_split
+    import os as _os
+    return {'split': training_split(), 'holdout_val': holdout_val(), 'subset': train_subset(),
+            'synth_prob': synth_prob(), 'synth_file': _os.environ.get('RL_FOE_SYNTH_FILE', '')}
 
 
 class _Validator:
@@ -672,6 +682,7 @@ def run_training(
 
     mlog = MetricsLog(ckpt_dir / 'train_metrics.jsonl', run_meta={
         'agent': 'ddqn', 'seed': seed, 'device': device, 'num_envs': num_envs,
+        'foe_pool': _foe_pool_meta(),
         'lr': float(cfg.lr), 'gamma': float(cfg.gamma), 'expand_omega': bool(expand_omega),
         'target_clip': float(cfg.target_clip), 'target_update_every': int(cfg.target_update_every),
         'layer_norm': bool(cfg.layer_norm), 'train_freq': int(cfg.train_freq),

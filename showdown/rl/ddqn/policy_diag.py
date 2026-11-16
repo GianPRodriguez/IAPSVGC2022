@@ -86,6 +86,7 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
     our_team = load_team_file(agent_team) if agent_team else None
     by_foe: Dict[str, Counter] = defaultdict(Counter)
     results: Dict[str, Counter] = defaultdict(Counter)
+    games_log = []  # equipo rival y resultado de cada partida (análisis de similitud con train)
     for fi, foe in enumerate(FOES):
         backend = PokeEnvBattleBackend(opponent=foe, start_ps=True, port=port, account_prefix='DdqnDiag',
                                        combat_family='ddqn', our_team=our_team, foe_tie=False)
@@ -118,7 +119,9 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                     if term or trunc:
                         break
                 ret = float(info.get('episode_return', 0.0))
-                results[foe]['win' if ret > 0.05 else ('loss' if ret < -0.05 else 'tie')] += 1
+                res = 'win' if ret > 0.05 else ('loss' if ret < -0.05 else 'tie')
+                results[foe][res] += 1
+                games_log.append({'rival': foe, 'equipo': getattr(env.backend, 'last_foe_team', None), 'res': res})
         finally:
             env.close()
     total = Counter()
@@ -127,6 +130,7 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
     return {'checkpoint': checkpoint, 'games_per_foe': games,
             'por_rival': {f: dict(c) for f, c in by_foe.items()},
             'resultados': {f: dict(c) for f, c in results.items()},
+            'partidas': games_log,
             'total': dict(total)}
 
 
