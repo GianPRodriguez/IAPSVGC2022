@@ -34,7 +34,7 @@ class DDQNConfig:
     # Aumentación por simetría (showdown/rl/symmetry.py): a cada transición
     # muestreada se le aplica un elemento aleatorio del grupo a/b propio, a/b
     # rival y reservas, a (s, a) y otro independiente a (s', m'). Exacto: Q es
-    # invariante. RL_SYM_AUG=0 lo apaga.
+    # invariante. Apagada por defecto (RL_SYM_AUG=1 la enciende; ver symmetry.sym_aug_enabled).
     sym_aug: bool = True
     # Dónde vive el replay (ddqn_spec 1.13). 'auto' = en la GPU si el agente entrena en
     # CUDA: muestreo y aumentación sin copiar ~25 MB por lote desde la CPU. Mismos lotes

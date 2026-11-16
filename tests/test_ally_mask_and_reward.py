@@ -24,10 +24,16 @@ MOVES = [_move('closecombat', 120, 'FIGHTING'), _move('helpinghand', 0, 'NORMAL'
          _move('pollenpuff', 90, 'BUG'), _move('thunderbolt', 90, 'ELECTRIC')]
 
 
-def test_off_by_default_changes_nothing(monkeypatch):
-    monkeypatch.delenv('RL_MASK_ALLY_DAMAGE', raising=False)
+def test_opt_out_changes_nothing(monkeypatch):
+    monkeypatch.setenv('RL_MASK_ALLY_DAMAGE', '0')
     m = np.ones(SLOT_ACTION_N, dtype=np.float32)
     assert np.array_equal(_filter_ally_damage(_battle(MOVES, 'intimidate'), 0, m), m)
+
+
+def test_on_by_default(monkeypatch):
+    monkeypatch.delenv('RL_MASK_ALLY_DAMAGE', raising=False)
+    out = _filter_ally_damage(_battle(MOVES, 'intimidate'), 0, np.ones(SLOT_ACTION_N, dtype=np.float32))
+    assert out[0 * 4 + 2] == 0 and out[1 * 4 + 2] == 1   # Close Combat bloqueado, Helping Hand no
 
 
 def test_blocks_damaging_ally_targets_but_keeps_support(monkeypatch):

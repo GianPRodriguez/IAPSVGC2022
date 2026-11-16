@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.10** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.26) |
+| **Versión** | **1.11** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.28) |
 | **Estado** | FROZEN; `showdown/rl/ppo/` y `battle_bots/ppo/` |
 | **Training** | **Sí, parcial**: PPO/curriculum operativos; self-play tiene infraestructura básica, no un rival de checkpoint plenamente cableado |
 | **Inferencia** | `ValidatedPPOPlayer`, greedy masked desde checkpoint |
@@ -242,6 +242,7 @@ Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.11** | 2026-11-16 | **Máscara de daño al aliado activa y pérdida de consistencia por simetría apagada por defecto** (rl_env_spec v1.28). Simetría: PPO 400k 92,0 % con frente a 90,7 % sin (sin diferencia demostrable); `RL_SYM_AUG=1` la enciende. El piloto de PPO ya no atacaba al aliado (0,0 %), así que la máscara no cambia su política aprendida. |
 | **1.10** | 2026-11-16 | **Validación periódica, mejor checkpoint, reanudación y equipo fijo** (igual que DDQN 1.16). Validación sin exploración cada `--eval-every` pasos contra los 4 heurísticos (rivales deterministas) → `step_N.pt`, `best.pt`, `best.json`; métricas del aprendiz (pérdidas, KL, recorte, entropía, simetría) cada 10 000 pasos en `train_metrics.jsonl`; optimizador en los checkpoints y `--resume`. Equipo fijo del agente por defecto (`showdown/rl/data/ddqn_team.txt`, `--agent-team pool` para sortear), decisión del usuario hasta que indique sortear por reinicio. Corridas solo con `mock` no validan. Validación reservada con `RL_HOLDOUT_VAL=1` (rl_env_spec v1.26). |
 | **1.9** | 2026-11-15 | Codificador estructurado (rl_env_spec §3.c) antes del torso (3,55M → 1,05M parámetros). Pérdida de consistencia por simetría estilo DrAC (§3.d): `sym_coef`=0,1 sobre log π(g·a|g·s) y valor sobre g·s; métricas `sym_*`. Objetivo aliado del slot 0 corregido. Checkpoints anteriores incompatibles. |
 | **1.8** | 2026-11-14 | ObsSpec v2 (6332D, OTS completo + estado + historial) y ActionSpec v2 (40 ids por slot: mega como flag de cada movimiento×objetivo; máscara de entrenamiento = `valid_orders`). Checkpoints anteriores incompatibles. |

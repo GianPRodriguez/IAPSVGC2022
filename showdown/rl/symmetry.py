@@ -17,7 +17,7 @@ Para cada elemento ``g``: ``obs' = obs[OBS_PERM[g]]``, ids por slot
 constructor de la obs en ``tests/test_rl_symmetry.py``.
 
 Uso: DDQN (replay, exacto), críticos TD (exacto) y PPO/QD (término de
-consistencia, ver ``ppo_symmetry_batch``). ``RL_SYM_AUG=0`` lo apaga (ablación).
+consistencia, ver ``ppo_symmetry_batch``). Apagado por defecto desde el 16-11-2026; ``RL_SYM_AUG=1`` lo enciende.
 """
 from __future__ import annotations
 
@@ -47,9 +47,15 @@ BIT_OUR, BIT_FOE, BIT_BENCH = 1, 2, 4
 
 
 def sym_aug_enabled(flag: bool = True) -> bool:
-    """Config del agente AND variable de entorno (``RL_SYM_AUG=0`` apaga)."""
-    env = str(os.environ.get(SYM_ENV, '1')).strip().lower()
-    return bool(flag) and env not in ('0', 'false', 'no', 'off')
+    """Config del agente AND variable de entorno.
+
+    **Apagada por defecto desde el 16-11-2026** (decisión del usuario): en DDQN y PPO no mostró
+    ventaja consistente (DDQN 1M: 85 % con frente a 81 % sin; PPO 400k: 92,0 % frente a 90,7 %;
+    ablación de 400k: sin simetría +10 puntos en el diagnóstico, 3 semillas). ``RL_SYM_AUG=1``
+    la enciende (ablaciones).
+    """
+    env = str(os.environ.get(SYM_ENV, '0')).strip().lower()
+    return bool(flag) and env in ('1', 'true', 'yes', 'on')
 
 
 def _swap(p: np.ndarray, a: int, b: int, n: int = 1) -> None:

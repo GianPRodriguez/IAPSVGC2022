@@ -640,16 +640,20 @@ _ALLY_OK_MOVES = {'pollenpuff'}
 
 
 def _filter_ally_damage(battle, slot: int, mask: np.ndarray) -> np.ndarray:
-    """``RL_MASK_ALLY_DAMAGE=1``: quita los ATAQUES DE DAÑO dirigidos al propio aliado.
+    """Quita los ATAQUES DE DAÑO dirigidos al propio aliado (``RL_MASK_ALLY_DAMAGE``).
 
     Se siguen permitiendo los movimientos de estado sobre el aliado (Helping Hand, Coaching,
     Decorate…), los que tienen poder base pero ayudan al aliado (Pollen Puff lo cura) y los
     ataques de un tipo que la habilidad del aliado absorbe o aprovecha (Lightning Rod, Storm
     Drain, Justified…), para que con otros equipos el agente pueda aprender esas sinergias.
-    Apagado por defecto.
+
+    **Activa por defecto desde el 16-11-2026** (decisión del usuario tras el piloto P6: 44 % de
+    validación frente a 30 % sin máscara, misma configuración, una semilla). Límite: también
+    bloquea jugadas raras pero legítimas (p. ej. activar la Weakness Policy del aliado); los
+    ataques en área no se tocan. ``RL_MASK_ALLY_DAMAGE=0`` la apaga (ablaciones).
     """
     import os
-    if os.environ.get('RL_MASK_ALLY_DAMAGE', '').strip().lower() not in ('1', 'true', 'yes', 'on'):
+    if os.environ.get('RL_MASK_ALLY_DAMAGE', '1').strip().lower() in ('0', 'false', 'no', 'off'):
         return mask
     moves = list(battle.available_moves[slot]) if slot < len(getattr(battle, 'available_moves', [])) else []
     actives = list(getattr(battle, 'active_pokemon', None) or [])
