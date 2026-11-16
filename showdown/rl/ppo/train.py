@@ -640,6 +640,10 @@ def run_training(
         'schedule': [{'unlock': p.unlock, 'steps': p.steps, 'omega': list(p.omega)} for p in expand_sched],
     })
     from showdown.inference_sim.paths import PS_PORT as _PS_PORT
+    if eval_every > 0 and all(o == 'mock' for ph in expand_sched for o in ph.omega):
+        # La validación juega contra rivales heurísticos en Showdown: no aplica a corridas solo con mock.
+        print('[ppo] validación desactivada: el calendario solo usa rivales offline (mock)', flush=True)
+        eval_every = 0
     validator = _PPOValidator(agent, ckpt_dir, mlog, every=eval_every, games=eval_games,
                               start_ps=start_ps, port=(base_port or int(_PS_PORT)) + VAL_PORT_OFFSET)
     if resume_skip:
