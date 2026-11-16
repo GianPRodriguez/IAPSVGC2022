@@ -33,6 +33,11 @@ import numpy as np
 FOES = ('random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian')
 
 
+def _species_id(name: str) -> str:
+    """'Arcanine-Hisui' y 'arcaninehisui' (como lo escribe Showdown) → 'arcaninehisui'."""
+    return ''.join(ch for ch in str(name or '').lower() if ch.isalnum())
+
+
 def _segment(idx: int, layout: Dict[str, tuple]) -> str:
     for name, (a, b) in layout.items():
         if a <= idx < b:
@@ -229,9 +234,8 @@ class Validation:
         our_team, team_species = None, set()
         if agent_team:
             from showdown.inference_sim.team_factory import load_team_file
-            from teams.team_converter import normalize_name
             our_team = load_team_file(agent_team)
-            team_species = {normalize_name(m.species) for m in our_team.mons}
+            team_species = {_species_id(m.species) for m in our_team.mons}
         for foe in foes:
             backend = PokeEnvBattleBackend(opponent=foe, start_ps=True, port=port,
                                            account_prefix=f'Val{foe[:4].title()}',
@@ -247,10 +251,9 @@ class Validation:
                     self._foe_team_names.setdefault(foe, set()).add(
                         getattr(getattr(env.backend._foe, 'user_team', None), 'name', '?'))
                     if team_species:
-                        from teams.team_converter import normalize_name
                         ours = [m for m in (env._snap.our.active + env._snap.our.bench
                                             + list(env._snap.our.reserve)) if m is not None]
-                        names = {normalize_name(m.display_species()) for m in ours}
+                        names = {_species_id(m.display_species()) for m in ours}
                         self.c['agent_team_checks'] += 1
                         if not names <= team_species:
                             self.c['agent_team_mismatch'] += 1

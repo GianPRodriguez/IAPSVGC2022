@@ -94,3 +94,9 @@ def test_foe_team_changes_every_reset_and_comes_from_train(monkeypatch):
         assert team_key(d1) in train
         seen.add(team_key(d1))
     assert len(seen) >= 25                        # cambia de equipo casi en cada reinicio
+
+
+def test_live_validation_species_id_matches_showdown_spelling():
+    from showdown.rl.live_validation import _species_id
+    assert _species_id('Arcanine-Hisui') == _species_id('arcaninehisui') == 'arcaninehisui'
+    assert _species_id('Mr. Mime') == 'mrmime'
