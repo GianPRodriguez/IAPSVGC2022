@@ -499,7 +499,12 @@ def slot_action_to_pe_order(battle, slot: int, act: SlotAction):
     if slot < len(fs):
         force = bool(fs[slot])
 
-    if act.kind == 'pass' or force and act.kind not in ('switch',):
+    if act.kind == 'pass':
+        # Un `pass` en un hueco forzado es legal cuando el otro hueco toma el único
+        # reemplazo (la máscara solo lo permite entonces). Antes se convertía en un cambio
+        # al mismo Pokémon que el otro hueco: la orden doble se descartaba y se jugaba al azar.
+        return PassBattleOrder()
+    if force and act.kind not in ('switch',):
         if force:
             switches = list(battle.available_switches[slot]) if slot < len(battle.available_switches) else []
             if switches:
@@ -587,6 +592,22 @@ def pe_slot_mask(battle, slot: int, *, other: Optional[SlotAction] = None) -> np
         mask[SWITCH_BASE + bi] = 1.0
 
     if force:
+        # ¿Puede pasar este hueco forzado? Showdown exige que entre un reemplazo por cada
+        # hueco forzado mientras haya reemplazos. Con los dos huecos forzados y un solo
+        # Pokémon en la banca, uno cambia y el otro pasa; nunca los dos pasan. Antes la
+        # máscara permitía (pass, pass) y el adaptador caía a una jugada al azar.
+        has_switch = bool(mask[SWITCH_BASE:SWITCH_BASE + N_SWITCH_SLOTS].any())
+        if other is None:
+            n_forced = sum(1 for x in fs[:2] if bool(x))
+            pool = {id(m) for side in (getattr(battle, 'available_switches', None) or [])[:2]
+                    for m in (side or [])}
+            can_pass = (not has_switch) or n_forced > len(pool)
+        else:
+            # Segundo hueco, ya conocida la acción del primero: pasa solo si no le queda
+            # ningún reemplazo (el primero tomó el único).
+            can_pass = not has_switch
+        if not can_pass:
+            mask[PASS_ID] = 0.0
         return mask
 
     moves = list(battle.available_moves[slot]) if slot < len(getattr(battle, 'available_moves', [])) else []

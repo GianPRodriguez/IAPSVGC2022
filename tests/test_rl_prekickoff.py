@@ -172,3 +172,58 @@ def test_last_moves_skips_called_moves_and_counts_turns():
             ['', 'move', 'p2b: Oranguru', 'Psychic', 'p1a: Incineroar'],  # antes de un cambio forzado
         ]
     assert _last_moves(B()) == {'p1: Incineroar': ('fakeout', 1), 'p2: Oranguru': ('psychic', 0)}
+
+
+# ------------------------------------------------------- B: cambios forzados
+class _Mon:
+    def __init__(self, name):
+        self.species = name
+
+
+class _ForcedBattle:
+    """Lo mínimo que leen pe_slot_mask / slot_action_to_pe_order en un cambio forzado."""
+
+    def __init__(self, force, bench):
+        self.force_switch = list(force)
+        self.available_switches = [list(bench) if force[0] else [], list(bench) if force[1] else []]
+        self.available_moves = [[], []]
+        self.can_mega_evolve = [False, False]
+        self.can_tera = [False, False]
+
+
+def _joint_legal(b):
+    from showdown.rl.action_space import decode_slot_action
+    from showdown.rl.constants import PASS_ID, SWITCH_BASE
+    from showdown.rl.pe_adapter import pe_slot_mask
+    out = set()
+    m1 = pe_slot_mask(b, 0)
+    for a1 in np.flatnonzero(m1):
+        m2 = pe_slot_mask(b, 1, other=decode_slot_action(int(a1)))
+        for a2 in np.flatnonzero(m2):
+            name = lambda a: 'pass' if a == PASS_ID else f'sw{a - SWITCH_BASE}'
+            out.add((name(int(a1)), name(int(a2))))
+    return out
+
+
+def test_both_forced_one_bench_never_double_pass():
+    b = _ForcedBattle((True, True), [_Mon('Sneasler')])
+    assert _joint_legal(b) == {('sw0', 'pass'), ('pass', 'sw0')}
+
+
+def test_both_forced_two_bench_both_switch():
+    b = _ForcedBattle((True, True), [_Mon('A'), _Mon('B')])
+    assert _joint_legal(b) == {('sw0', 'sw1'), ('sw1', 'sw0')}
+
+
+def test_single_forced_slot_must_switch_other_passes():
+    assert _joint_legal(_ForcedBattle((True, False), [_Mon('A')])) == {('sw0', 'pass')}
+    assert _joint_legal(_ForcedBattle((False, True), [_Mon('A')])) == {('pass', 'sw0')}
+
+
+def test_pass_in_forced_slot_stays_pass():
+    from poke_env.player.battle_order import PassBattleOrder
+    from showdown.rl.action_space import decode_slot_action
+    from showdown.rl.constants import PASS_ID
+    from showdown.rl.pe_adapter import slot_action_to_pe_order
+    b = _ForcedBattle((True, True), [_Mon('Sneasler')])
+    assert isinstance(slot_action_to_pe_order(b, 1, decode_slot_action(PASS_ID)), PassBattleOrder)
