@@ -28,7 +28,7 @@ Estado: pendiente.
 |---|---|---|
 | 7 | LayerNorm después del codificador (ablación corta) | pendiente |
 | 9 | Re-tunear hiperparámetros, incluido `sym_coef` ∈ {0; 0,05; 0,1; 0,3} (los `*_best_hp.json` actuales son corridas de prueba) | pendiente |
-| — | Calibrar `--num-envs` (8/16/24/28; pasos/s y reinicios) | pendiente |
+| — | Calibrar el paralelismo según el servidor (phantom: 32 hilos, 3 × RTX A5500 de 24 GB, 251 GB de RAM): `--num-envs` 8/16/24/28/32/40/48 y `--envs-per-server` 2/4/6, midiendo pasos/s, uso de CPU, reinicios y timeouts. Se prueba también por encima de 28 (tope automático = núcleos − 4) porque los entornos pasan tiempo esperando a Showdown y a rivales lentos (expectimax, hasta 1,6 s por decisión), así que más batallas simultáneas pueden subir el rendimiento aunque haya más entornos que hilos. La GPU no es el cuello (< 1 % de uso): el aprendiz usa 1 GPU y las otras 2 sirven para trials paralelos del tuning | pendiente |
 
 ## D. Metodología
 
@@ -36,7 +36,7 @@ Estado: pendiente.
 |---|---|---|
 | 11 | ¿Equipos de entrenamiento = equipos de evaluación? Si sí, se mediría memorización; reservar equipos solo para evaluar | sin verificar; decisión del usuario |
 | 12 | Ablación codificador × simetría (≥ 3 semillas, evaluación pareada) | pendiente |
-| — | Suite completa en el servidor con los commits desde dbb188b | en curso (1627cc0) |
+| — | Suite completa en el servidor con los commits desde dbb188b | **hecho**: 651 pasan, 1 falla, 1 omitido, 6 xfail en 1627cc0. La falla era un test con el orden anterior del rival; actualizado al contrato v1.22 en 925b47a y verificado en el servidor |
 
 ## Prerrequisitos del pipeline E
 
