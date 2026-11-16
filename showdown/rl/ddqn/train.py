@@ -496,6 +496,32 @@ def _foe_pool_meta() -> dict:
             'synth_prob': synth_prob(), 'synth_file': _os.environ.get('RL_FOE_SYNTH_FILE', '')}
 
 
+def _restore_best(validator, ckpt_dir: Path, resume: str) -> Optional[dict]:
+    """Al reanudar, recupera el mejor checkpoint previo (``best.json``) para no reemplazarlo por uno peor.
+
+    Busca primero en el directorio de la corrida y después en el del checkpoint de origen; si el
+    mejor está en otro directorio, copia su ``best.pt`` y ``best.json`` aquí.
+    """
+    import shutil
+    for d in (Path(ckpt_dir), Path(resume).parent if resume else None):
+        if d is None or not (d / 'best.json').is_file():
+            continue
+        try:
+            rec = json.loads((d / 'best.json').read_text(encoding='utf-8'))
+            float(rec['mean_wr'])
+        except Exception:
+            continue
+        if d.resolve() != Path(ckpt_dir).resolve():
+            if not (d / 'best.pt').is_file():
+                continue
+            shutil.copy2(d / 'best.pt', Path(ckpt_dir) / 'best.pt')
+            shutil.copy2(d / 'best.json', Path(ckpt_dir) / 'best.json')
+        validator.best = rec
+        print(f"[resume] mejor checkpoint previo: paso {rec.get('step')} media={float(rec['mean_wr']):.3f}", flush=True)
+        return rec
+    return None
+
+
 class _Validator:
     """Evalúa la política sin exploración cada ``every`` pasos y guarda ``best.pt``.
 
@@ -704,6 +730,7 @@ def run_training(
                            start_ps=start_ps, port=val_port)
     if resume_skip:
         validator.next = (resume_skip // max(1, validator.every) + 1) * max(1, validator.every)
+        _restore_best(validator, ckpt_dir, resume)
 
     try:
         assert env is not None or venv is not None
