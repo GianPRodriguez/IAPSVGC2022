@@ -302,8 +302,8 @@ pasos, reanudación desde `final.pt` salta la fase ya hecha). **Bug encontrado:*
 reanudar, la validación olvidaba el mejor previo y marcó 0,375 como nuevo mejor cuando el
 mejor era 0,400, así que reemplazó `best.pt` por uno peor. Afectaba a DDQN y PPO. Corregido en
 9727278 (`_restore_best`: recupera `best.json` del directorio de la corrida o del de origen);
-tests en `tests/test_resume_keeps_best.py`. Falta repetir la prueba en vivo: la limpieza de
-servidores de la séptima cola cortó el primer intento.
+tests en `tests/test_resume_keeps_best.py`. Verificado en vivo (PPO): mejor previo 0,333 en
+el paso 3 000; tras reanudar, 0,292 en el paso 9 000 ya no reemplaza a `best.pt`.
 
 ### Ataques al aliado, cambios voluntarios y preview (séptima cola, commit 5786d82)
 
