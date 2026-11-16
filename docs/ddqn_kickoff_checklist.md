@@ -273,6 +273,38 @@ Lectura:
   entrenado contra joint ni expectimax (fases random y solo). Falta comprobar con equipos
   `eval` cuánto de eso es memorización, como se hizo con DDQN.
 
+### Análisis previos al kick-off de PPO (sexta cola, commit 5933ebb)
+
+**Validación en vivo con máscaras por hueco** (100 episodios, 715 pasos): 0 máscaras vacías,
+0 pares ilegales, 0 diferencias entre la máscara de entrenamiento y la de inferencia, 0
+respaldos de orden, 0 diferencias de paridad, alineación, historial o simetrías, y el equipo
+fijo en los 100 episodios.
+
+**Jugadas del piloto de PPO** (400k pasos, sin exploración, 50 partidas por rival, equipos
+`train`), frente al DDQN de lr 1e-4 de la tercera cola:
+
+| Categoría | PPO | DDQN |
+|---|---|---|
+| Ataque a un rival | 59,4 % | 35,2 % |
+| Ataque en área a los rivales | 17,9 % | 7,2 % |
+| **Ataque de daño al aliado** | **0,0 %** | 7,1 % |
+| **Cambio voluntario** | **0,0 %** | 7,3 % |
+| Protect | 2,5 % | 11,6 % |
+| Mega | 8,9 % | 3,9 % |
+| Victorias: random / solo / joint / expectimax | 50 / 50 / 47 / 37 de 50 | 35 / 22 / 17 / 12 de 50 |
+
+PPO no ataca a su aliado ni cambia voluntariamente; DDQN sí (~7 % cada uno). Juega casi
+siempre ataques directos o en área, con poco Protect. Es una política simple que gana mucho
+contra los heurísticos con equipos `train`; falta medirla con equipos `eval`.
+
+**Validación periódica y reanudación de PPO en vivo:** funcionan (validación cada 6 000
+pasos, reanudación desde `final.pt` salta la fase ya hecha). **Bug encontrado:** tras
+reanudar, la validación olvidaba el mejor previo y marcó 0,375 como nuevo mejor cuando el
+mejor era 0,400, así que reemplazó `best.pt` por uno peor. Afectaba a DDQN y PPO. Corregido en
+9727278 (`_restore_best`: recupera `best.json` del directorio de la corrida o del de origen);
+tests en `tests/test_resume_keeps_best.py`. Falta repetir la prueba en vivo: la limpieza de
+servidores de la séptima cola cortó el primer intento.
+
 ### Respuesta a la memorización (octava cola, 16-11-2026)
 
 Implementado (apagado por defecto): validación reservada (`val`, 30 equipos de `train` no
