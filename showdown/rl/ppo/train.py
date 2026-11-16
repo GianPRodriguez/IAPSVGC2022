@@ -221,6 +221,9 @@ def _collect_and_update(
         obs, m1 = next_obs, _slot_masks(env)[0]
 
         if terminated or truncated:
+            from showdown.rl.train_metrics import FOE_STATE
+            _eng = info.get('engine') if isinstance(info, dict) else None
+            FOE_STATE.add(_eng.get('foe_state') if isinstance(_eng, dict) else None, current)
             if self_play and pool is not None and len(pool) > 0:
                 # Opponent is frozen checkpoint weights — live foes stay in omega mode.
                 pass
@@ -362,6 +365,8 @@ def _collect_and_update_vec(
             if r.get('worker_restarted'):
                 restarts += 1
             if r['terminated'] or r['truncated']:
+                from showdown.rl.train_metrics import FOE_STATE
+                FOE_STATE.add(info.get('foe_state'), current[i])
                 current[i] = r.get('next_opponent') or current[i]
                 ep_counts[current[i]] = ep_counts.get(current[i], 0) + 1
                 pending[i] = _sample_next()
@@ -473,7 +478,8 @@ class _PPOValidator:
         if metrics and gstep >= self.next_log:
             while self.next_log <= gstep:
                 self.next_log += self.log_every
-            self.mlog.write('update', step=int(gstep),
+            from showdown.rl.train_metrics import FOE_STATE
+            self.mlog.write('update', step=int(gstep), foe_state=FOE_STATE.flush(),
                             **{k: float(v) for k, v in metrics.items() if isinstance(v, (int, float))})
         if self.enabled and gstep >= self.next:
             while self.next <= gstep:

@@ -307,7 +307,9 @@ def _run_steps(
                             terminated=bool(terminated), truncated=bool(truncated),
                             components=ended_info.get('reward_components'),
                             trunc_reason=ended_info.get('trunc_reason'),
-                            next_opponent=current)
+                            next_opponent=current,
+                            foe_state=(ended_info.get('engine') or {}).get('foe_state')
+                            if isinstance(ended_info.get('engine'), dict) else None)
             obs, info = env.reset()
             assert env._snap is not None
             obs = build_observation_ddqn(env._snap)
@@ -424,7 +426,8 @@ def _run_steps_vec(
                                 terminated=bool(r['terminated']), truncated=bool(r['truncated']),
                                 components=info.get('components'),
                                 trunc_reason=info.get('trunc_reason'),
-                                next_opponent=current[i])
+                                next_opponent=current[i],
+                                foe_state=info.get('foe_state'))
             obs[i] = r['obs']
             masks[i] = r['mask']
             local += 1

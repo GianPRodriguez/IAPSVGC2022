@@ -75,6 +75,58 @@ def action_kind(slot_action_id: int) -> str:
 
 
 @dataclass
+class FoeStateTally:
+    """Contraste de estado de los rivales heurísticos (``battle_state_check``) durante el entrenamiento.
+
+    Los rivales validated comparan cada turno su estado interno (clases del repo) con poke-env.
+    Si el espejo se desincroniza, el rival juega con información equivocada (más débil) sin
+    que nada falle. Se suma por rival y se escribe con cada ventana / actualización; las
+    primeras discrepancias se avisan en consola con detalle.
+    """
+
+    WARN_N = 5
+
+    def __init__(self) -> None:
+        self.total = Counter()
+        self._win: Dict[str, Counter] = defaultdict(Counter)
+        self._samples: List[str] = []
+        self._warned = 0
+
+    def add(self, fs: Optional[Mapping[str, Any]], opponent: str = '') -> None:
+        if not fs:
+            return
+        c = Counter({k: int(fs.get(k, 0) or 0) for k in ('checks', 'mismatches', 'feed_errors')})
+        c['episodes'] = 1
+        self.total.update(c)
+        self._win[str(opponent or 'unknown')].update(c)
+        bad = c['mismatches'] + c['feed_errors']
+        if bad:
+            for smp in list(fs.get('samples') or [])[:3]:
+                if len(self._samples) < 20:
+                    self._samples.append(f'{opponent}: {smp}')
+            if self._warned < self.WARN_N:
+                self._warned += 1
+                print(f'[foe_state] AVISO rival {opponent}: {c["mismatches"]} discrepancias y '
+                      f'{c["feed_errors"]} errores de espejo en un episodio '
+                      f'({c["checks"]} revisiones). {list(fs.get("samples") or [])[:2]}', flush=True)
+
+    def flush(self) -> dict:
+        """Resumen desde el último ``flush`` (por rival) y totales de la corrida."""
+        def _fmt(c: Counter) -> dict:
+            ch = max(1, c['checks'])
+            return {'episodes': c['episodes'], 'checks': c['checks'], 'mismatches': c['mismatches'],
+                    'feed_errors': c['feed_errors'], 'mismatch_rate': c['mismatches'] / ch}
+        out = {'by_opp': {o: _fmt(c) for o, c in self._win.items()}, 'total': _fmt(self.total)}
+        if self._samples:
+            out['samples'] = list(self._samples)
+        self._win = defaultdict(Counter)
+        self._samples = []
+        return out
+
+
+FOE_STATE = FoeStateTally()
+
+
 class _EpAcc:
     opponent: str
     ret: float = 0.0
@@ -139,8 +191,10 @@ class EpisodeTracker:
         components: Optional[Mapping[str, Any]] = None,
         trunc_reason: Optional[str] = None,
         next_opponent: Optional[str] = None,
+        foe_state: Optional[Mapping[str, Any]] = None,
     ) -> dict:
         acc = self._acc.pop(int(env_id), None) or _EpAcc(opponent='unknown')
+        FOE_STATE.add(foe_state, acc.opponent)
         comp = components or {}
         if truncated:
             outcome = 'crash' if trunc_reason == 'crash' else 'turn_cap'
@@ -164,6 +218,8 @@ class EpisodeTracker:
             'skipped': acc.skipped,
             'act': {k: acc.actions.get(k, 0) / n_act for k in ACTION_KINDS},
         }
+        if foe_state:
+            rec['foe_state'] = {k: foe_state.get(k, 0) for k in ('checks', 'mismatches', 'feed_errors')}
         self.episodes += 1
         self._totals[outcome] += 1
         self._recent[acc.opponent].append(rec)
@@ -213,7 +269,7 @@ class EpisodeTracker:
         s = self.summary()
         if self.log is not None:
             self.log.write('window', step=int(global_step), phase=phase,
-                           learner=dict(learner or {}), **s, **extra)
+                           learner=dict(learner or {}), foe_state=FOE_STATE.flush(), **s, **extra)
         return s
 
     def console_extras(self) -> Dict[str, Any]:

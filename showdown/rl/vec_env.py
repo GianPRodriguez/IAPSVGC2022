@@ -152,6 +152,8 @@ def _lite_info(info: Dict[str, Any], env=None) -> Dict[str, Any]:
             if isinstance(comp.get(k), (int, float))
         },
         'used_fallback': bool(isinstance(eng, dict) and eng.get('used_fallback')),
+        # Contraste de estado del rival heurístico en el episodio (battle_state_check).
+        'foe_state': eng.get('foe_state') if isinstance(eng, dict) else None,
         'episode_return': float(info.get('episode_return', 0.0) or 0.0),
         'turn': int(info.get('turn', 0) or 0),
         'error': info.get('error'),

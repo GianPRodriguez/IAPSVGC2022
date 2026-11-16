@@ -121,7 +121,9 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                 ret = float(info.get('episode_return', 0.0))
                 res = 'win' if ret > 0.05 else ('loss' if ret < -0.05 else 'tie')
                 results[foe][res] += 1
-                games_log.append({'rival': foe, 'equipo': getattr(env.backend, 'last_foe_team', None), 'res': res})
+                fs = env.backend.foe_state_episode() if hasattr(env.backend, 'foe_state_episode') else None
+                games_log.append({'rival': foe, 'equipo': getattr(env.backend, 'last_foe_team', None), 'res': res,
+                                  **({'foe_state': fs} if fs else {})})
         finally:
             env.close()
     total = Counter()

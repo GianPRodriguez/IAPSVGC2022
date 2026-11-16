@@ -255,6 +255,7 @@ class PokeEnvBattleBackend(BattleBackend):
         # reservada, 'eval' en diagnósticos). Ver showdown/rl/foe_pool.py.
         self._team_split = team_split
         self.last_foe_team: Optional[str] = None
+        self._fs_base: Optional[Tuple[int, int, int, int]] = None
         if server_configuration is None and self.port is not None:
             server_configuration = server_configuration_for_port(self.port)
         self.server_configuration = server_configuration or LocalhostServerConfiguration
@@ -331,6 +332,7 @@ class PokeEnvBattleBackend(BattleBackend):
             raise TimeoutError(
                 f'RL env challenge timed out ({self.challenge_timeout}s): {exc!r}'
             ) from exc
+        self._fs_base = self._foe_state_counts()
         return snapshot_from_battle(self._battle)
 
     def step(
@@ -360,7 +362,40 @@ class PokeEnvBattleBackend(BattleBackend):
             'used_fallback': bool(used_fallback),
             'order': str(order),
         }
+        fs = self.foe_state_episode()
+        if fs is not None:
+            meta['foe_state'] = fs
         return snapshot_from_battle(self._battle), meta
+
+    # --- contraste de estado del rival heurístico (battle_state_check) ---------
+
+    def _foe_state_counts(self) -> Optional[Tuple[int, int, int, int]]:
+        rep = getattr(self._foe, 'state_report', None)
+        if rep is None:
+            return None
+        return (int(rep.checks), int(rep._total_mismatches), int(rep.feed_errors), len(rep.mismatches))
+
+    def foe_state_episode(self) -> Optional[Dict[str, Any]]:
+        """Contraste de estado del rival en este episodio (acumulado desde el reset).
+
+        Los heurísticos validated comparan cada turno su estado interno (clases del repo) con
+        poke-env. Antes el resultado se descartaba; ahora va al registro del entrenamiento.
+        El rival procesa su turno en paralelo, así que el último turno de un episodio puede
+        contarse en el siguiente (los totales no cambian). ``None`` para rivales sin espejo.
+        """
+        cur = self._foe_state_counts()
+        if cur is None:
+            return None
+        base = self._fs_base if self._fs_base is not None else (0, 0, 0, 0)
+        if cur[0] < base[0]:  # rival reconstruido: reporte nuevo
+            base = (0, 0, 0, 0)
+        out: Dict[str, Any] = {'checks': cur[0] - base[0], 'mismatches': cur[1] - base[1],
+                               'feed_errors': cur[2] - base[2]}
+        if out['mismatches'] > 0:
+            rep = self._foe.state_report
+            out['samples'] = [f'{m.field}: esperado {m.expected!r}, espejo {m.got!r} (turno {m.turn})'
+                              for m in rep.mismatches[base[3]:base[3] + 3]]
+        return out
 
     def action_masks(
         self,
