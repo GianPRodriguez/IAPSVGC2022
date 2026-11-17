@@ -255,6 +255,7 @@ class PokeEnvBattleBackend(BattleBackend):
         # reservada, 'eval' en diagnósticos). Ver showdown/rl/foe_pool.py.
         self._team_split = team_split
         self.last_foe_team: Optional[str] = None
+        self.last_our_team: Optional[str] = None  # equipo del agente en la última partida (diagnósticos)
         self._fs_base: Optional[Tuple[int, int, int, int]] = None
         if server_configuration is None and self.port is not None:
             server_configuration = server_configuration_for_port(self.port)
@@ -458,6 +459,9 @@ class PokeEnvBattleBackend(BattleBackend):
         if opp_meta is not None:
             from showdown.inference_sim.team_split import team_key
             self.last_foe_team = team_key(opp_meta)
+        if our_meta is not None:
+            from showdown.inference_sim.team_split import team_key
+            self.last_our_team = team_key(our_meta)
         foe_kw = dict(foe_meta=opp_meta, agent_meta=our_meta)
 
         self._uid += 1

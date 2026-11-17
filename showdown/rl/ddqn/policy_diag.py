@@ -14,6 +14,12 @@ decisión de cada hueco:
 
     python -m showdown.rl.ddqn.policy_diag --checkpoint <dir>/best.pt --games 50 --port 8370 \\
         --preview-checkpoint <preview>.pt --out logs/policy_diag.json
+
+``--context`` (memorizacion_equipos.md §12) agrega el desglose de decisiones según el plan del
+rival (Trick Room o Tailwind rival activos, Fake Out disponible, redirección, rival que puede
+activar Trick Room; ver ``showdown/rl/context_diag.py``) y, por partida, los usos reales de Trick
+Room, Tailwind, Fake Out y redirección de cada lado. ``--agent-team ''`` sortea el equipo del
+agente en cada partida (del mismo grupo que el rival) y lo registra.
 """
 from __future__ import annotations
 
@@ -63,7 +69,7 @@ def classify(battle, slot: int, act, mask_slot: np.ndarray) -> str:
 
 
 def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
-        preview_checkpoint: str = '', agent_kind: str = 'ddqn') -> Dict[str, object]:
+        preview_checkpoint: str = '', agent_kind: str = 'ddqn', context: bool = False) -> Dict[str, object]:
     from showdown.inference_sim.team_factory import load_team_file
     from showdown.rl.action_space import decode_joint_action, decode_slot_action
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
@@ -87,6 +93,9 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
     by_foe: Dict[str, Counter] = defaultdict(Counter)
     results: Dict[str, Counter] = defaultdict(Counter)
     games_log = []  # equipo rival y resultado de cada partida (análisis de similitud con train)
+    ctx_counts: Dict[str, Counter] = defaultdict(Counter)
+    if context:
+        from showdown.rl import context_diag as CD
     for fi, foe in enumerate(FOES):
         backend = PokeEnvBattleBackend(opponent=foe, start_ps=True, port=port, account_prefix='DdqnDiag',
                                        combat_family='ddqn', our_team=our_team, foe_tie=False)
@@ -109,12 +118,23 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                         a1, a2 = decode_joint_action(int(a))
                     m1, _ = pe_autoregressive_masks(battle, slot1_action_id=None)
                     _, m2 = pe_autoregressive_masks(battle, slot1_action_id=int(a1))
+                    ctxs = CD.contexts(env._snap, battle) if context else ()
                     for slot, (aid, m) in enumerate(((a1, m1), (a2, m2))):
                         sa = decode_slot_action(int(aid))
-                        by_foe[foe][classify(battle, slot, sa, m)] += 1
+                        cat = classify(battle, slot, sa, m)
+                        by_foe[foe][cat] += 1
                         if sa.kind == 'mega':
                             by_foe[foe]['mega'] += 1
                         by_foe[foe]['decisiones'] += 1
+                        if foe == 'random' or cat in ('pass_obligatorio', 'cambio_forzado', 'sin_movimientos'):
+                            continue  # contexto: solo decisiones libres contra los heurísticos
+                        for c in ctxs:
+                            ctx_counts[c][cat] += 1
+                            ctx_counts[c]['decisiones'] += 1
+                            if cat == 'ataque_rival':
+                                ctx_counts[c]['ataques_un_rival'] += 1
+                                for k, v in CD.target_flags(env._snap, int(sa.target)).items():
+                                    ctx_counts[c][k] += v
                     _o, _r, term, trunc, info = env.step((a1, a2))
                     if term or trunc:
                         break
@@ -122,8 +142,13 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                 res = 'win' if ret > 0.05 else ('loss' if ret < -0.05 else 'tie')
                 results[foe][res] += 1
                 fs = env.backend.foe_state_episode() if hasattr(env.backend, 'foe_state_episode') else None
-                games_log.append({'rival': foe, 'equipo': getattr(env.backend, 'last_foe_team', None), 'res': res,
-                                  **({'foe_state': fs} if fs else {})})
+                rec = {'rival': foe, 'equipo': getattr(env.backend, 'last_foe_team', None), 'res': res,
+                       **({'foe_state': fs} if fs else {})}
+                if our_team is None:
+                    rec['nuestro_equipo'] = getattr(env.backend, 'last_our_team', None)
+                if context:
+                    rec['eventos'] = CD.count_events(env.backend._battle)
+                games_log.append(rec)
         finally:
             env.close()
     total = Counter()
@@ -133,7 +158,8 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
             'por_rival': {f: dict(c) for f, c in by_foe.items()},
             'resultados': {f: dict(c) for f, c in results.items()},
             'partidas': games_log,
-            'total': dict(total)}
+            'total': dict(total),
+            **({'contexto': {c: dict(v) for c, v in ctx_counts.items()}} if context else {})}
 
 
 def format_table(rep: Dict[str, object]) -> str:
@@ -162,10 +188,12 @@ def main(argv=None) -> int:
     ap.add_argument('--agent-team', default='showdown/rl/data/ddqn_team.txt')
     ap.add_argument('--out', default='logs/policy_diag.json')
     ap.add_argument('--agent', choices=('ddqn', 'ppo'), default='ddqn')
+    ap.add_argument('--context', action='store_true',
+                    help='desglose por plan del rival y usos de movimientos clave (§12)')
     args = ap.parse_args(argv)
     rep = run(checkpoint=args.checkpoint, games=args.games, port=args.port, seed=args.seed,
               agent_team=args.agent_team, preview_checkpoint=args.preview_checkpoint,
-              agent_kind=args.agent)
+              agent_kind=args.agent, context=args.context)
     with open(args.out, 'w', encoding='utf-8') as fh:
         json.dump(rep, fh, indent=1)
     print(format_table(rep))

@@ -568,3 +568,30 @@ simetría, cola 12; etiquetas a partir de la hoja del rival; `scripts/analysis/a
    preparar Trick Room con redirección y Fake Out). Que un equipo tenga Trick Room no garantiza
    que el rival lo active en la partida.
 
+## 12. Decisiones según el plan del rival y uso real de los arquetipos (decimonovena cola)
+
+Aprobado por el usuario tras §11, para antes del kick-off. Dos mediciones nuevas en
+`policy_diag --context` (`showdown/rl/context_diag.py`):
+
+1. **Decisiones según el contexto.** Cada decisión libre contra los heurísticos se clasifica
+   según lo que hace el rival en ese momento: Trick Room rival activo (quién lo puso se lee del
+   protocolo), Tailwind rival activo, rival con Fake Out disponible (primer turno en el campo),
+   rival con redirección en el campo, rival que puede activar Trick Room y todavía no lo hizo, y
+   primer turno. Para cada contexto: % de Protect, cambios voluntarios, ataques, ataques en área y
+   movimientos de estado; y, para los ataques a un solo rival, cuántos van al que puede activar
+   Trick Room o al redirector, frente a lo esperado si eligiera el objetivo al azar.
+2. **Uso real de los movimientos clave.** Por partida, cuántas veces cada lado usó Trick Room,
+   Tailwind, Fake Out y redirección, y cuántas veces se activaron Trick Room y Tailwind (protocolo
+   crudo de Showdown). Responde si los rivales heurísticos juegan su arquetipo.
+
+**Equipo del agente al azar en cada partida** (decisión del usuario, solo para este análisis): el
+agente juega con equipos del grupo `eval` que nunca usó, sorteados en cada partida, contra rivales
+también de `eval`. Así el contexto no depende del arquetipo del equipo fijo. Se registra el equipo
+propio de cada partida. Límite: los agentes se entrenaron con el equipo fijo, así que las victorias
+con equipos al azar miden también la generalización a equipos propios nuevos.
+
+Agentes: DDQN con la REG elegida (decimoquinta cola) y PPO con simetría (duodécima cola), final.pt,
+2 semillas, 200 partidas por rival. Tests: `tests/test_context_diag.py`. Script:
+`scripts/server/kickoff_queue19.sh`; resumen: `showdown/rl/kickoff_summary19.py`. Corre después de
+la decimoctava cola. Resultados: pendientes.
+

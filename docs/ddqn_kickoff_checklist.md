@@ -608,6 +608,14 @@ semillas, con la REG elegida. Elección con `val` (más de 4 puntos sobre la cab
 Diseño en [`memorizacion_equipos.md`](memorizacion_equipos.md) §10. Script:
 `scripts/server/kickoff_queue18.sh`; corre después de la cola 17. Resultados: pendientes.
 
+### Juego contra el plan del rival (decimonovena cola, 17-11-2026)
+
+Aprobado por el usuario: medir si DDQN y PPO cambian su juego cuando el rival ejecuta su plan
+(Trick Room, Tailwind, Fake Out, redirección) y si los heurísticos realmente lo ejecutan.
+`policy_diag --context`, con el equipo del agente al azar en cada partida (solo para este
+análisis). Diseño en [`memorizacion_equipos.md`](memorizacion_equipos.md) §11–§12. Script:
+`scripts/server/kickoff_queue19.sh`; corre después de la cola 18. Resultados: pendientes.
+
 ## D. Metodología
 
 | # | Punto | Estado |
