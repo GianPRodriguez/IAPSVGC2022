@@ -510,3 +510,61 @@ REG actual 67,6 / 63,8 %; **weight decay 0,03 + dropout 0,1: 74,1 / 64,7 % (eleg
 66,9 / 61,5 %; 0,03 + 0,2: 72,8 / 62,0 %. Más weight decay ayuda en `val`; más dropout no. La mejora
 en `eval` es pequeña (+0,9), así que la distancia con `val` sugiere que parte de la subida es ruido
 o propia de los 30 equipos de `val`.
+
+## 11. ¿Los agentes detectan la estrategia (arquetipo) del equipo rival? (17-11-2026)
+
+Pregunta del usuario: hay equipos cuya estrategia gira en torno a pocos movimientos (Trick Room,
+Tailwind, Fake Out y posicionamiento, redirección, clima). ¿DDQN y PPO lo detectan?
+
+**La información está en la observación.** Gracias a la hoja abierta, cada Pokémon rival lleva
+indicadores de utilidad de sus movimientos (`fakeout`, `tailwind`, `trickroom`, `redirect`,
+`protect`, `wideguard`, `helpinghand`…). El bloque de campo indica si Trick Room está activo y
+cuántos turnos le quedan, el Tailwind de cada lado y sus turnos, y cuántos Fake Out, Protect,
+cambios y ataques en área usó cada lado el turno anterior. Cada Pokémon rival activo marca si
+todavía puede usar Fake Out (primer turno en el campo).
+
+**Rendimiento por arquetipo** (diagnósticos ya hechos: DDQN con REG, colas 14–15; PPO con
+simetría, cola 12; etiquetas a partir de la hoja del rival; `scripts/analysis/analisis_arquetipos.py`):
+
+#### Rendimiento por arquetipo del equipo rival (3 heurísticos)
+
+| Arquetipo | Equipos `eval` | Equipos `fit` | DDQN (REG) `eval` | PPO (simetría) `eval` | DDQN (REG) propios | PPO (simetría) propios |
+|---|---|---|---|---|---|---|
+| (todos) | 100 | 170 | 62 % (n=1800, ± 2) | 83 % (n=1200, ± 2) | 94 % (n=600, ± 2) | 96 % (n=600, ± 2) |
+| Trick Room | 22 | 42 | 63 % (n=408, ± 5) | 85 % (n=272, ± 4) | 96 % (n=132, ± 3) | 98 % (n=132, ± 3) |
+| Tailwind | 70 | 115 | 61 % (n=1164, ± 3) | 81 % (n=776, ± 3) | 94 % (n=436, ± 2) | 98 % (n=436, ± 1) |
+| Sin control de velocidad (TR/TW) | 14 | 38 | 65 % (n=288, ± 6) | 91 % (n=192, ± 4) | 90 % (n=116, ± 6) | 89 % (n=116, ± 6) |
+| Fake Out ×2+ | 58 | 102 | 61 % (n=1110, ± 3) | 81 % (n=740, ± 3) | 94 % (n=360, ± 2) | 94 % (n=360, ± 2) |
+| Redirección | 21 | 35 | 58 % (n=420, ± 5) | 87 % (n=280, ± 4) | 93 % (n=106, ± 5) | 98 % (n=106, ± 3) |
+| Clima | 38 | 55 | 60 % (n=690, ± 4) | 90 % (n=460, ± 3) | 92 % (n=186, ± 4) | 98 % (n=186, ± 2) |
+
+#### Solo contra expectimax (el rival que mejor ejecuta la estrategia del equipo), equipos `eval`
+
+| Arquetipo | DDQN (REG) | PPO (simetría) |
+|---|---|---|
+| (todos) | 61 % (n=600, ± 4) | 81 % (n=400, ± 4) |
+| Trick Room | 55 % (n=150, ± 8) | 76 % (n=100, ± 8) |
+| Tailwind | 66 % (n=372, ± 5) | 80 % (n=248, ± 5) |
+| Sin control de velocidad (TR/TW) | 58 % (n=108, ± 9) | 94 % (n=72, ± 5) |
+| Fake Out ×2+ | 60 % (n=324, ± 5) | 77 % (n=216, ± 6) |
+| Redirección | 56 % (n=162, ± 8) | 83 % (n=108, ± 7) |
+| Clima | 58 % (n=246, ± 6) | 91 % (n=164, ± 4) |
+
+**Lectura:**
+
+1. **No hay un arquetipo que hunda a ninguno de los dos.** Las tasas por arquetipo quedan dentro
+   del margen de error de la media (DDQN ~62 %, PPO ~83 % con `eval`). Contra expectimax, Trick
+   Room es el arquetipo más difícil para ambos (DDQN 55 %, PPO 76 %), pero dentro del ruido (± 8).
+   La debilidad de §7 (equipos concretos) no se explica por el arquetipo: hay equipos Trick Room
+   fáciles y difíciles.
+2. **Rendir igual no prueba que adapten el juego.** La tasa de victorias no dice si el agente
+   reconoce el plan del rival (por ejemplo, usar Protect o cambiar mientras dura el Trick Room
+   rival, atacar primero al que lo activa, o protegerse del Fake Out en el primer turno). Para
+   saberlo hace falta medir las decisiones según el contexto, algo que `policy_diag` hoy agrega
+   sin distinguir.
+3. **Los rivales heurísticos solo ejecutan el arquetipo en parte.** greedy_joint y greedy_solo
+   valoran Tailwind y Trick Room solo cuando su cálculo de velocidad lo pide, y expectimax los
+   incluye en su búsqueda. Ninguno juega el plan completo como un jugador humano (por ejemplo,
+   preparar Trick Room con redirección y Fake Out). Que un equipo tenga Trick Room no garantiza
+   que el rival lo active en la partida.
+
