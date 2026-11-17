@@ -501,3 +501,12 @@ REG elegida en la decimoquinta cola. Elección con `val` (200 partidas por rival
 adopta la mejor variante si supera a la cabeza conjunta por más de 4 puntos. `eval` y propios
 como registro. Script: `scripts/server/kickoff_queue18.sh`; resumen:
 `showdown/rl/kickoff_summary18.py`. Corre después de la decimoséptima cola. Resultados: pendientes.
+
+### 8.2 Ajuste de REG (decimoquinta cola, 17-11-2026)
+
+Tres variantes más fuertes, 1M × 2 semillas, elegidas con `val` (200 partidas por rival, final.pt;
+regla: más de 4 puntos sobre REG actual). `val` media / `eval` media (registro, 100 por rival):
+REG actual 67,6 / 63,8 %; **weight decay 0,03 + dropout 0,1: 74,1 / 64,7 % (elegida)**; 0,01 + 0,2:
+66,9 / 61,5 %; 0,03 + 0,2: 72,8 / 62,0 %. Más weight decay ayuda en `val`; más dropout no. La mejora
+en `eval` es pequeña (+0,9), así que la distancia con `val` sugiere que parte de la subida es ruido
+o propia de los 30 equipos de `val`.

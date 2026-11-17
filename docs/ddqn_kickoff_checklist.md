@@ -569,6 +569,22 @@ Student, IC por partidas, por rival y PPO frente a DDQN con IC de Welch). Script
 `scripts/server/kickoff_queue16.sh`. Es una evaluación exploratoria respecto de la Conclusión
 formal (run_robust_e2e, BO3, protocolo §2–§3), que queda como paso siguiente.
 
+**Resultados de la cola 15 (commit 1efbf5c, 17-11-2026).** final.pt, 3 heurísticos:
+
+| Configuración | `val` s0 | `val` s1 | **`val` media** | `eval` s0 (registro) | `eval` s1 (registro) |
+|---|---|---|---|---|---|
+| REG actual: weight decay 0,01 + dropout 0,1 | 65,0 % | 70,2 % | 67,6 % | 62,3 % | 65,3 % |
+| **R_wd03: 0,03 + 0,1** | 74,7 % | 73,5 % | **74,1 %** | 63,3 % | 66,0 % |
+| R_do2: 0,01 + 0,2 | 66,3 % | 67,5 % | 66,9 % | 61,3 % | 61,7 % |
+| R_both: 0,03 + 0,2 | 77,7 % | 67,8 % | 72,8 % | 64,0 % | 60,0 % |
+
+`val`: 200 partidas por rival (600 por semilla); `eval`: 100 por rival. **Elección por la regla:
+R_wd03** (+6,5 puntos en `val` sobre REG actual, umbral +4), que usan las colas 17 y 18. En el
+registro de `eval` la mejora es mucho menor (64,7 frente a 63,8 %, +0,9): parte de la subida en
+`val` puede ser ruido o específica de esos 30 equipos (el preview ya los vio). Más dropout (0,2) no
+ayuda. El valor por defecto del código sigue siendo 0,01 hasta que el usuario decida la
+configuración del kick-off junto con los resultados de las colas 17 y 18.
+
 **17-11-2026, 06:20: el usuario retiró la cola 16 antes de que empezara** (no llegó a ejecutar
 nada). El script queda en el repo para lanzarlo cuando lo indique; la cola 15 sigue.
 
