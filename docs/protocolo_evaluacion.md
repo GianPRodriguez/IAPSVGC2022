@@ -255,5 +255,4 @@ frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada
 | 2026-11-15 | Resultados de la confirmación (§5.1): H2 y H3 confirmadas con ventaja pequeña; H1 sin diferencia demostrada. Diagnóstico exploratorio: la opción C fortalece a joint contra expectimax (+2,3 pts en C1, +0,3 en C2; +1,3 en conjunto). |
 | 2026-11-15 | Se agregan los dos niveles de afirmación (umbral práctico provisional: límite inferior del IC ≥ 55 % en BO3), TOST y la sección de agentes con aprendizaje. |
 | 2026-11-16 | **Validación reservada (§2b):** subgrupo `val` (30 equipos de `train`, grupos de clones) para elegir checkpoints; `fit` (170) para entrenar. Motivo: memorización medida (84 % con equipos `train` frente a 50 % con `eval`). Ver `memorizacion_equipos.md`. |
-
 | 2026-11-17 | **Checkpoint principal = el último (§3c.2)**; `best.pt` elegido con `val`, resultado secundario. Motivo: `val` eligió en DDQN con regularización un checkpoint ~8 puntos peor contra `eval` que el final. |
