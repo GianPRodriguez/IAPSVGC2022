@@ -464,6 +464,13 @@ generalización? (La decisión de apagarla se tomó con validaciones sobre equip
 Script: `scripts/server/kickoff_queue12.sh`; corre después de la undécima cola. Resultados:
 pendientes.
 
+### Máscara del aliado frente a simetría en DDQN (decimotercera cola, 16-11-2026)
+
+Aprobado por el usuario. El ensayo general mejoró +11,8 puntos en `eval` frente a F170, pero
+cambiaron dos cosas (máscara activa, simetría apagada). MSYM = máscara activa + simetría activa,
+1M, semillas 0 y 1: MSYM − F170 mide la máscara y B − MSYM la simetría. Script:
+`scripts/server/kickoff_queue13.sh`; corre después de la duodécima cola. Resultados: pendientes.
+
 ## D. Metodología
 
 | # | Punto | Estado |
