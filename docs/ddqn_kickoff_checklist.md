@@ -536,6 +536,13 @@ equipos y 50 partidas por rival, `val` no distingue checkpoints cercanos. Detall
 
 Todo por defecto en el código (sin variables de entorno); rl_env_spec v1.30, protocolo §3c.2.
 
+**Verificación (17-11-2026, commit 1615bef):** suite completa en el servidor 753 passed + 1 test
+corregido (`test_ddqn_gpu_replay` comparaba pérdidas con el dropout nuevo; ahora lo apaga) → 754
+passed, 1 skipped, 6 xfailed. Prueba en vivo de 12k pasos sin variables de entorno: DDQN registra
+`regularization` = weight decay 0,01 / dropout 0,1, sin simetría (`sym_frac_our` ausente) y
+validación reservada (`fit`); PPO registra `sym_pi_loss` (simetría activa) y `fit`. Ambos sin
+reinicios ni errores.
+
 ## D. Metodología
 
 | # | Punto | Estado |
