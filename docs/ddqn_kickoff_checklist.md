@@ -450,7 +450,8 @@ exploración; cifras = 3 heurísticos (300 partidas).
 
 **Recomendación de duración del kick-off: 1M pasos × 5 semillas** (~4,6 h): mismo resultado
 en `eval` que 2M y comparaciones más sólidas. 4M no se recomienda (el doble de costo sin ganancia
-esperable). Decisión pendiente del usuario.
+esperable). **Decisión del usuario (16-11-2026): kick-off de 1M pasos × 5 semillas, por
+ahora** (revisable si aparecen configuraciones que aprendan más lento).
 
 ### PPO de 1M pasos y nueva evaluación de la simetría (duodécima cola, 16-11-2026)
 
