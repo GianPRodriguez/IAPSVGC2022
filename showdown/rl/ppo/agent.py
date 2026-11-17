@@ -197,7 +197,7 @@ class PPOAgent:
 
         obs_np = np.asarray(batch['obs'])
         if (self.cfg.sym_coef <= 0.0 and not self.cfg.sym_value) or \
-                obs_np.shape[-1] != OBS_DIM or not SYM.sym_aug_enabled(True):
+                obs_np.shape[-1] != OBS_DIM or not SYM.sym_aug_enabled(True, default=True):
             return None, None, {}
         torch = self._torch
         aug = SYM.ppo_symmetry_batch(obs_np, batch['a1'], batch['a2'], batch['m1'],

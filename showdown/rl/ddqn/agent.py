@@ -50,14 +50,16 @@ class DDQNConfig:
     target_clip: float = 2.0
     # LayerNorm tras el codificador (punto 7 del checklist; se evalúa en el tuning).
     layer_norm: bool = False
-    # Remedios contra la memorización de equipos rivales (memorizacion_equipos.md §8; ddqn_spec
-    # 1.19). Todos en 0 por defecto (sin cambios respecto de la versión anterior).
+    # Remedios contra la memorización de equipos rivales (memorizacion_equipos.md §8).
     # weight_decay > 0: AdamW (decaimiento desacoplado) en vez de Adam.
     # dropout > 0: dropout tras cada capa oculta de la red Q (solo al aprender).
+    # **REG por defecto desde el 17-11-2026 (ddqn_spec 1.20, decisión del usuario):** weight decay
+    # 0,01 + dropout 0,1 (decimocuarta cola: 62,3 / 65,3 % contra equipos eval con final.pt
+    # frente a 50,0 / 49,0 % sin ellos). weight_decay=0 y dropout=0 restauran la versión anterior.
     # foe_bench_dropout > 0: al aprender, cada uno de los 4 Pokémon rivales no activos de la
-    # obs s se borra (bloque y pares a cero = "ausente") con esa probabilidad, por muestra.
-    weight_decay: float = 0.0
-    dropout: float = 0.0
+    # obs s se borra (bloque y pares a cero = "ausente") con esa probabilidad. Apagado: no mejoró.
+    weight_decay: float = 0.01
+    dropout: float = 0.1
     foe_bench_dropout: float = 0.0
 
 
@@ -343,6 +345,10 @@ class DDQNAgent:
         except TypeError:
             payload = torch.load(path, map_location=loc)
         if 'config' in payload and isinstance(payload['config'], dict):
+            # Checkpoints anteriores a ddqn_spec 1.19 no guardan las opciones de regularización:
+            # se entrenaron sin ellas (0), no con los valores por defecto actuales.
+            for k in ('weight_decay', 'dropout', 'foe_bench_dropout'):
+                setattr(self.cfg, k, 0.0)
             for k, v in payload['config'].items():
                 if hasattr(self.cfg, k):
                     setattr(self.cfg, k, v)

@@ -242,6 +242,7 @@ Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.14** | 2026-11-17 | **Pérdida de consistencia por simetría encendida por defecto en PPO** (decisión del usuario tras la duodécima cola; `sym_aug_enabled(True, default=True)`): contra equipos `eval`, 83,4 % con simetría frente a 77,2 % sin ella (+6,2, z ≈ 3,9; 2 semillas a 1M, 4 diagnósticos por configuración); contra los equipos de entrenamiento no cambia (~96 %), por eso la decisión del 16-11 (medida con ellos) la había apagado. `RL_SYM_AUG=0` la apaga. **Checkpoint principal: final.pt** (protocolo §3c.2). |
 | **1.13** | 2026-11-16 | **Inicialización desde cero por defecto** (decisión del usuario, punto 7 del checklist): el kick-off de PPO no usa `--bc-checkpoint`. Motivo: los pilotos desde cero generalizan a equipos no vistos (74–80 % contra los heurísticos con `eval`); la clonación de comportamiento podría introducir sesgos de los datos de imitación. Queda disponible para una comparación. |
 | **1.12** | 2026-11-16 | **Validación reservada por defecto** (rl_env_spec v1.29), igual que DDQN. |
 | **1.11** | 2026-11-16 | **Máscara de daño al aliado activa y pérdida de consistencia por simetría apagada por defecto** (rl_env_spec v1.28). Simetría: PPO 400k 92,0 % con frente a 90,7 % sin (sin diferencia demostrable); `RL_SYM_AUG=1` la enciende. El piloto de PPO ya no atacaba al aliado (0,0 %), así que la máscara no cambia su política aprendida. |

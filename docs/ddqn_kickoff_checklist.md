@@ -521,6 +521,21 @@ la primera vez que DDQN supera claramente a los heurísticos con equipos nuevos.
 equipos y 50 partidas por rival, `val` no distingue checkpoints cercanos. Detalle en
 [`memorizacion_equipos.md`](memorizacion_equipos.md) §8.
 
+### Configuración final de los kick-offs (decisiones del usuario, 17-11-2026)
+
+| | DDQN | PPO |
+|---|---|---|
+| Máscara de daño al aliado | activa | activa |
+| Simetría | apagada | **activa** (ppo_spec 1.14) |
+| Regularización | **weight decay 0,01 + dropout 0,1** (ddqn_spec 1.20) | — |
+| Validación | reservada (`fit` / `val`) | reservada (`fit` / `val`) |
+| Equipos sintéticos | no | no |
+| Inicialización | — | desde cero |
+| Pasos × semillas | 1M × 5 | por decidir (propuesta: igual que DDQN) |
+| Checkpoint principal | **final.pt**; best.pt secundario | **final.pt**; best.pt secundario |
+
+Todo por defecto en el código (sin variables de entorno); rl_env_spec v1.30, protocolo §3c.2.
+
 ## D. Metodología
 
 | # | Punto | Estado |

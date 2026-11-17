@@ -64,17 +64,22 @@ def _fill(agent, n=40, seed=0):
     return out
 
 
-def test_defaults_unchanged_and_regularized_learn_runs(tmp_path, monkeypatch):
+def test_reg_is_default_and_zero_restores_previous(tmp_path, monkeypatch):
+    """REG por defecto desde ddqn_spec 1.20; weight_decay=dropout=0 = versión anterior."""
     monkeypatch.setenv('RL_REPLAY_DEVICE', 'cpu')
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
+    cfg = DDQNConfig()
+    assert (cfg.weight_decay, cfg.dropout, cfg.foe_bench_dropout) == (0.01, 0.1, 0.0)
     base = dict(batch_size=8, warmup_steps=0, train_freq=1, sym_aug=False)
+    off = dict(weight_decay=0.0, dropout=0.0, foe_bench_dropout=0.0)
     torch.manual_seed(0)  # los pesos iniciales dependen del generador global de torch
-    a = DDQNAgent(DDQNConfig(**base))
+    a = DDQNAgent(DDQNConfig(**base, **off))
     torch.manual_seed(0)
-    b = DDQNAgent(DDQNConfig(**base, weight_decay=0.0, dropout=0.0, foe_bench_dropout=0.0))
+    b = DDQNAgent(DDQNConfig(**base, **off))
     oa, ob = _fill(a), _fill(b)
-    assert oa['loss'] == ob['loss'] and 'foe_bench_dropped' not in oa  # 0 = sin cambios
+    assert oa['loss'] == ob['loss'] and 'foe_bench_dropped' not in oa
     assert type(a.optim).__name__ == 'Adam'
+    assert type(DDQNAgent(DDQNConfig(**base)).optim).__name__ == 'AdamW'
 
     r = DDQNAgent(DDQNConfig(**base, weight_decay=1e-4, dropout=0.2, foe_bench_dropout=0.5))
     assert type(r.optim).__name__ == 'AdamW'
@@ -86,11 +91,25 @@ def test_defaults_unchanged_and_regularized_learn_runs(tmp_path, monkeypatch):
     assert c.cfg.dropout == 0.2 and c.online.dropout == 0.2 and c.cfg.foe_bench_dropout == 0.5
 
 
+def test_old_checkpoint_loads_without_regularization(tmp_path):
+    """Un checkpoint anterior a 1.19 (sin las claves) se entrenó sin REG: se carga así."""
+    from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
+    a = DDQNAgent(DDQNConfig(device='cpu'))
+    path = a.save(tmp_path / 'old.pt')
+    payload = torch.load(path, weights_only=False)
+    for k in ('weight_decay', 'dropout', 'foe_bench_dropout'):
+        payload['config'].pop(k)
+    torch.save(payload, path)
+    b = DDQNAgent(DDQNConfig(device='cpu'))
+    b.load(path)
+    assert (b.cfg.weight_decay, b.cfg.dropout, b.online.dropout) == (0.0, 0.0, 0.0)
+
+
 def test_cli_flags_reach_config():
     import inspect
     from showdown.rl.ddqn import train as T
     sig = inspect.signature(T.run_training)
     for k in ('weight_decay', 'dropout', 'foe_bench_dropout'):
-        assert k in sig.parameters and sig.parameters[k].default == 0.0
+        assert k in sig.parameters and sig.parameters[k].default is None  # None = DDQNConfig
     src = inspect.getsource(T._main)
     assert '--foe-bench-dropout' in src and '--weight-decay' in src and '--dropout' in src

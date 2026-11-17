@@ -183,12 +183,22 @@ def test_same_mon_in_any_block_gets_the_same_embedding():
     assert torch.allclose(out[0, 0:g.out], e[0, 2 * g.out:3 * g.out])
 
 
-def test_symmetry_off_by_default(monkeypatch):
+def test_symmetry_defaults_per_agent(monkeypatch):
+    """DDQN apagada, PPO encendida (17-11-2026); la variable manda en ambos."""
     from showdown.rl.symmetry import sym_aug_enabled
     monkeypatch.delenv('RL_SYM_AUG', raising=False)
-    assert not sym_aug_enabled(True)
+    assert not sym_aug_enabled(True)  # DDQN / QD
+    assert sym_aug_enabled(True, default=True)  # PPO
     monkeypatch.setenv('RL_SYM_AUG', '1')
     assert sym_aug_enabled(True) and not sym_aug_enabled(False)
+    monkeypatch.setenv('RL_SYM_AUG', '0')
+    assert not sym_aug_enabled(True, default=True)
+
+
+def test_ppo_uses_symmetry_by_default():
+    import inspect
+    from showdown.rl.ppo import agent as A
+    assert 'sym_aug_enabled(True, default=True)' in inspect.getsource(A)
 
 
 def test_ddqn_and_ppo_updates_run_with_symmetry(monkeypatch):

@@ -137,9 +137,14 @@ Los agentes entrenados tienen fuentes de variación que los heurísticos no tien
 1. **Varias semillas de entrenamiento** (3–5 entrenamientos independientes). La unidad de
    la afirmación es el **método**, no un agente entrenado: se reporta la media entre
    semillas de entrenamiento con su IC entre semillas, además del IC por partidas.
-2. **Elección del checkpoint con validación aparte.** El checkpoint se elige con semillas o
-   equipos de validación (subgrupo `val` de `train`, no usado para entrenar, §2b), nunca con los bloques de confirmación
-   (C1/C2) ni con los equipos de `eval`.
+2. **Checkpoint: el último como resultado principal** (decisión del usuario, 17-11-2026). Se
+   reporta el checkpoint final de cada semilla (`final.pt`); el mejor según la validación
+   reservada (`best.pt`, subgrupo `val` de `train`, no usado para entrenar, §2b) se reporta como
+   resultado secundario. Ninguno se elige con los bloques de confirmación (C1/C2) ni con los
+   equipos de `eval`. Motivo: con 30 equipos y 50 partidas por rival, `val` no distingue
+   checkpoints cercanos (± 7 puntos por celda); en DDQN con regularización eligió el checkpoint
+   de 750k, ~8 puntos peor contra `eval` que el final (decimocuarta cola). Usar el final además
+   evita que la selección dependa de una medida ruidosa.
 3. **Evaluación fuera de distribución.** Además del rival con el que entrenó, se evalúa
    contra rivales y equipos no vistos, para descartar que solo explote a su rival de
    entrenamiento. Los equipos no vistos son el grupo `eval` (§2b); la diferencia entre
@@ -250,3 +255,5 @@ frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada
 | 2026-11-15 | Resultados de la confirmación (§5.1): H2 y H3 confirmadas con ventaja pequeña; H1 sin diferencia demostrada. Diagnóstico exploratorio: la opción C fortalece a joint contra expectimax (+2,3 pts en C1, +0,3 en C2; +1,3 en conjunto). |
 | 2026-11-15 | Se agregan los dos niveles de afirmación (umbral práctico provisional: límite inferior del IC ≥ 55 % en BO3), TOST y la sección de agentes con aprendizaje. |
 | 2026-11-16 | **Validación reservada (§2b):** subgrupo `val` (30 equipos de `train`, grupos de clones) para elegir checkpoints; `fit` (170) para entrenar. Motivo: memorización medida (84 % con equipos `train` frente a 50 % con `eval`). Ver `memorizacion_equipos.md`. |
+
+| 2026-11-17 | **Checkpoint principal = el último (§3c.2)**; `best.pt` elegido con `val`, resultado secundario. Motivo: `val` eligió en DDQN con regularización un checkpoint ~8 puntos peor contra `eval` que el final. |

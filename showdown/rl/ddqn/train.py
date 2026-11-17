@@ -611,9 +611,9 @@ def run_training(
     eval_games: int = 50,
     resume: str = '',
     layer_norm: bool = False,
-    weight_decay: float = 0.0,
-    dropout: float = 0.0,
-    foe_bench_dropout: float = 0.0,
+    weight_decay: Optional[float] = None,
+    dropout: Optional[float] = None,
+    foe_bench_dropout: Optional[float] = None,
     train_freq: Optional[int] = None,
     batch_size: Optional[int] = None,
     num_envs: int = 1,
@@ -641,9 +641,12 @@ def run_training(
     if gamma is not None:
         cfg.gamma = float(gamma)
     cfg.layer_norm = bool(layer_norm)
-    cfg.weight_decay = float(weight_decay)
-    cfg.dropout = float(dropout)
-    cfg.foe_bench_dropout = float(foe_bench_dropout)
+    if weight_decay is not None:  # None = valor por defecto de DDQNConfig (REG, ddqn_spec 1.20)
+        cfg.weight_decay = float(weight_decay)
+    if dropout is not None:
+        cfg.dropout = float(dropout)
+    if foe_bench_dropout is not None:
+        cfg.foe_bench_dropout = float(foe_bench_dropout)
     if train_freq is not None:
         cfg.train_freq = int(train_freq)
     if batch_size is not None:
@@ -1022,11 +1025,11 @@ def _main(argv: Optional[list] = None) -> int:
     p.add_argument('--eval-games', type=int, default=50,
                    help='Partidas BO1 por rival en cada validación (4 rivales)')
     p.add_argument('--layer-norm', action='store_true', help='LayerNorm tras el codificador (punto 7)')
-    p.add_argument('--weight-decay', type=float, default=0.0,
-                   help='> 0: AdamW con ese decaimiento (memorizacion_equipos.md §8, a)')
-    p.add_argument('--dropout', type=float, default=0.0,
-                   help='Dropout tras cada capa oculta de la red Q (§8, a)')
-    p.add_argument('--foe-bench-dropout', type=float, default=0.0,
+    p.add_argument('--weight-decay', type=float, default=None,
+                   help='AdamW con ese decaimiento (por defecto 0,01; 0 = Adam). memorizacion_equipos.md §8')
+    p.add_argument('--dropout', type=float, default=None,
+                   help='Dropout tras cada capa oculta de la red Q (por defecto 0,1; 0 = sin dropout)')
+    p.add_argument('--foe-bench-dropout', type=float, default=None,
                    help='Prob. de borrar cada Pokémon rival no activo de la obs al aprender (§8, b)')
     p.add_argument('--train-freq', type=int, default=None, help='Pasos de entorno por paso de gradiente (defecto 4)')
     p.add_argument('--batch-size', type=int, default=None, help='Lote del aprendiz (defecto 256)')
@@ -1090,8 +1093,8 @@ def _main(argv: Optional[list] = None) -> int:
         eval_games=args.eval_games,
         resume=args.resume,
         layer_norm=bool(args.layer_norm),
-        weight_decay=float(args.weight_decay), dropout=float(args.dropout),
-        foe_bench_dropout=float(args.foe_bench_dropout),
+        weight_decay=args.weight_decay, dropout=args.dropout,
+        foe_bench_dropout=args.foe_bench_dropout,
         train_freq=args.train_freq,
         batch_size=args.batch_size,
         num_envs=args.num_envs,

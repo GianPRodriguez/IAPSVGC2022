@@ -46,16 +46,28 @@ N_ELEMENTS = 8
 BIT_OUR, BIT_FOE, BIT_BENCH = 1, 2, 4
 
 
-def sym_aug_enabled(flag: bool = True) -> bool:
-    """Config del agente AND variable de entorno.
+def sym_aug_enabled(flag: bool = True, default: bool = False) -> bool:
+    """Config del agente AND variable de entorno (``RL_SYM_AUG``).
 
-    **Apagada por defecto desde el 16-11-2026** (decisión del usuario): en DDQN y PPO no mostró
-    ventaja consistente (DDQN 1M: 85 % con frente a 81 % sin; PPO 400k: 92,0 % frente a 90,7 %;
-    ablación de 400k: sin simetría +10 puntos en el diagnóstico, 3 semillas). ``RL_SYM_AUG=1``
-    la enciende (ablaciones).
+    Sin la variable se usa ``default``, que fija cada agente:
+
+    - **DDQN: apagada** (decisión del usuario, 16-11-2026; se mantiene el 17-11-2026: con la
+      máscara del aliado activa, la simetría dio +5 puntos con best.pt y 0 con final.pt contra
+      equipos ``eval``, no concluyente).
+    - **PPO: encendida desde el 17-11-2026** (decisión del usuario tras la duodécima cola: con
+      equipos ``eval``, 83,4 % con simetría frente a 77,2 % sin ella, +6,2, z ≈ 3,9, 2 semillas a
+      1M; contra los equipos de entrenamiento no cambia, por eso la decisión del 16-11 —medida con
+      ellos— la había apagado).
+    - QD-PGA (crítico): apagada, como desde el 16-11-2026.
+
+    ``RL_SYM_AUG=1`` la enciende y ``RL_SYM_AUG=0`` la apaga en cualquier agente (ablaciones).
     """
-    env = str(os.environ.get(SYM_ENV, '0')).strip().lower()
-    return bool(flag) and env in ('1', 'true', 'yes', 'on')
+    raw = os.environ.get(SYM_ENV)
+    if raw is None or not str(raw).strip():
+        on = bool(default)
+    else:
+        on = str(raw).strip().lower() in ('1', 'true', 'yes', 'on')
+    return bool(flag) and on
 
 
 def _swap(p: np.ndarray, a: int, b: int, n: int = 1) -> None:
