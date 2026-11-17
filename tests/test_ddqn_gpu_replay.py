@@ -75,8 +75,12 @@ def test_learn_same_loss_cpu_and_gpu_replay(monkeypatch):
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
     monkeypatch.delenv('RL_REPLAY_DEVICE', raising=False)
     torch.manual_seed(0)
-    ag_c = DDQNAgent(DDQNConfig(device='cuda', replay_device='cpu', replay_capacity=800, seed=3))
-    ag_g = DDQNAgent(DDQNConfig(device='cuda', replay_device='auto', replay_capacity=800, seed=3))
+    # dropout=0: el dropout (por defecto desde ddqn_spec 1.20) usa el generador global de torch
+    # y haría distintas las dos pérdidas; aquí solo se compara el muestreo del replay.
+    ag_c = DDQNAgent(DDQNConfig(device='cuda', replay_device='cpu', replay_capacity=800, seed=3,
+                                dropout=0.0))
+    ag_g = DDQNAgent(DDQNConfig(device='cuda', replay_device='auto', replay_capacity=800, seed=3,
+                                dropout=0.0))
     assert not ag_c.replay.on_gpu and ag_g.replay.on_gpu
     ag_g.online.load_state_dict(ag_c.online.state_dict())
     ag_g.target.load_state_dict(ag_c.target.state_dict())
