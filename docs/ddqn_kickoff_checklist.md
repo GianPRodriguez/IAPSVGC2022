@@ -569,6 +569,9 @@ Student, IC por partidas, por rival y PPO frente a DDQN con IC de Welch). Script
 `scripts/server/kickoff_queue16.sh`. Es una evaluación exploratoria respecto de la Conclusión
 formal (run_robust_e2e, BO3, protocolo §2–§3), que queda como paso siguiente.
 
+**17-11-2026, 06:20: el usuario retiró la cola 16 antes de que empezara** (no llegó a ejecutar
+nada). El script queda en el repo para lanzarlo cuando lo indique; la cola 15 sigue.
+
 ## D. Metodología
 
 | # | Punto | Estado |
