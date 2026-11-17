@@ -531,7 +531,7 @@ equipos y 50 partidas por rival, `val` no distingue checkpoints cercanos. Detall
 | Validación | reservada (`fit` / `val`) | reservada (`fit` / `val`) |
 | Equipos sintéticos | no | no |
 | Inicialización | — | desde cero |
-| Pasos × semillas | 1M × 5 | por decidir (propuesta: igual que DDQN) |
+| Pasos × semillas | 1M × 5 | 1M × 5 (decisión del usuario, 17-11-2026) |
 | Checkpoint principal | **final.pt**; best.pt secundario | **final.pt**; best.pt secundario |
 
 Todo por defecto en el código (sin variables de entorno); rl_env_spec v1.30, protocolo §3c.2.
@@ -542,6 +542,32 @@ passed, 1 skipped, 6 xfailed. Prueba en vivo de 12k pasos sin variables de entor
 `regularization` = weight decay 0,01 / dropout 0,1, sin simetría (`sym_frac_our` ausente) y
 validación reservada (`fit`); PPO registra `sym_pi_loss` (simetría activa) y `fit`. Ambos sin
 reinicios ni errores.
+
+### Ajuste de REG y kick-offs oficiales (colas 15 y 16, decisiones del usuario, 17-11-2026)
+
+**Decisiones:** PPO con el mismo presupuesto que DDQN (1M × 5 semillas); kick-offs encadenados,
+DDQN primero y después PPO; ajustar los hiperparámetros de REG; 200 partidas por rival en la
+evaluación de ambos.
+
+**Orden:** el ajuste de REG va antes del kick-off de DDQN, para que el kick-off use el mejor
+valor. Para no esperar una decisión intermedia, la elección es automática con una regla fijada de
+antemano.
+
+**Cola 15 (ajuste de REG):** tres variantes más fuertes que la actual (weight decay 0,03 +
+dropout 0,1; 0,01 + 0,2; 0,03 + 0,2), 1M × 2 semillas. **La elección no usa `eval`:** cada
+final.pt se mide contra los 30 equipos `val` con 200 partidas por rival, y la mejor variante se
+adopta solo si supera a REG actual por más de 4 puntos (≈ 2 errores estándar); si no, se mantiene
+la actual. Motivo: hasta ahora las decisiones de configuración (máscara, simetría, REG) se
+tomaron mirando `eval`, lo que puede inflar algo la cifra final medida con esos mismos equipos
+(ver la limitación en `memorizacion_equipos.md` §9). Script: `scripts/server/kickoff_queue15.sh`.
+
+**Cola 16 (kick-offs oficiales):** DDQN 1M × 5 semillas con la REG elegida y después PPO 1M × 5
+semillas, todo con la configuración final por defecto. Cada semilla se evalúa con final.pt
+(principal) y best.pt (secundario) contra `eval`, y final.pt contra sus propios equipos, con 200
+partidas por rival. Resumen: `showdown/rl/kickoff_report.py` (media entre semillas con IC de t de
+Student, IC por partidas, por rival y PPO frente a DDQN con IC de Welch). Script:
+`scripts/server/kickoff_queue16.sh`. Es una evaluación exploratoria respecto de la Conclusión
+formal (run_robust_e2e, BO3, protocolo §2–§3), que queda como paso siguiente.
 
 ## D. Metodología
 

@@ -448,5 +448,24 @@ Script: `scripts/server/kickoff_queue14.sh`.
    o usar el último checkpoint.
 4. Espejo de los rivales: 0 discrepancias en las 4 corridas (~1,4 M revisiones).
 
-**Decisión del usuario pendiente:** adoptar REG en el kick-off de DDQN y cómo elegir el
-checkpoint. La opción (c), valores Q por hueco, queda en reserva.
+**Decisiones del usuario (17-11-2026):** REG por defecto en DDQN (ddqn_spec 1.20) y
+checkpoint principal final.pt (protocolo §3c.2); sus hiperparámetros se ajustan en la
+decimoquinta cola. La opción (c), valores Q por hueco, queda en reserva.
+
+## 9. Limitación: decisiones tomadas mirando `eval`
+
+Durante esta exploración, varias decisiones de configuración se tomaron comparando resultados
+contra los equipos `eval`: la máscara del aliado (colas 11 y 13), la simetría en PPO (cola 12) y
+REG (cola 14). Esos 100 equipos son también los de la evaluación final, así que la cifra final
+contra `eval` puede estar algo inflada: se eligieron las opciones que mejor les fue a esos
+equipos. Factores que lo limitan:
+
+- Son pocas decisiones, entre 2 y 4 opciones cada una, con diferencias grandes (de +6 a +17
+  puntos) y repetidas en 2 semillas; el sesgo de selección esperable es mucho menor que esos
+  efectos.
+- Las opciones elegidas tienen un motivo independiente del resultado (no atacar al aliado,
+  invariancia exacta del juego, regularización estándar contra el sobreajuste).
+
+**Medidas desde el 17-11-2026:** el ajuste de REG (decimoquinta cola) se elige solo con `val`, y
+la Conclusión formal (run_robust_e2e, BO3, bloques de semillas C1/C2) usa semillas de partida
+nuevas. Para la tesis se reporta esta limitación junto con los resultados.
