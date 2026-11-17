@@ -37,3 +37,16 @@ def test_missing_data(tmp_path):
     (tmp_path / 'b').mkdir()
     assert K.main([str(tmp_path / 'a'), str(tmp_path / 'b')]) == 0
     assert 'sin datos' in (tmp_path / 'a' / 'kickoff_summary17.md').read_text(encoding='utf-8')
+
+
+def test_summary18_picks_factored_only_above_threshold(tmp_path):
+    from showdown.rl import kickoff_summary18 as K18
+    q15, d = tmp_path / 'q15', tmp_path / 'q18'
+    (q15 / 'diag').mkdir(parents=True)
+    for s in (0, 1):
+        _diag(q15 / 'diag' / f'REG_s{s}_final_val.json', 120)  # 60 % (sin chosen_reg.txt → REG)
+        _diag(d / 'diag' / f'QF0_s{s}_final_val.json', 124)     # +2
+        _diag(d / 'diag' / f'QF8_s{s}_final_val.json', 136)     # +8
+    assert K18.main([str(d), str(q15)]) == 0
+    md = (d / 'kickoff_summary18.md').read_text(encoding='utf-8')
+    assert 'rango 8 (+8.0 puntos' in md

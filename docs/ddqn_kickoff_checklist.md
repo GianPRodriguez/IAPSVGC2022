@@ -584,6 +584,14 @@ supera a la referencia de 1M por más de 4 puntos. `eval` y propios quedan como 
 de la cola 15. El enfrentamiento directo entre agentes queda para el round robin final (decisión
 del usuario). Resultados: pendientes.
 
+### Valores Q por hueco en DDQN (decimoctava cola, 17-11-2026)
+
+Aprobado por el usuario para antes del kick-off (opción C). Cabeza Q factorizada
+V + A1(a1) + A2(a2) (+ interacción de rango r), ddqn_spec 1.21; variantes rango 0 y 8, 1M × 2
+semillas, con la REG elegida. Elección con `val` (más de 4 puntos sobre la cabeza conjunta).
+Diseño en [`memorizacion_equipos.md`](memorizacion_equipos.md) §10. Script:
+`scripts/server/kickoff_queue18.sh`; corre después de la cola 17. Resultados: pendientes.
+
 ## D. Metodología
 
 | # | Punto | Estado |

@@ -614,6 +614,8 @@ def run_training(
     weight_decay: Optional[float] = None,
     dropout: Optional[float] = None,
     foe_bench_dropout: Optional[float] = None,
+    q_head: Optional[str] = None,
+    q_rank: Optional[int] = None,
     train_freq: Optional[int] = None,
     batch_size: Optional[int] = None,
     num_envs: int = 1,
@@ -647,6 +649,10 @@ def run_training(
         cfg.dropout = float(dropout)
     if foe_bench_dropout is not None:
         cfg.foe_bench_dropout = float(foe_bench_dropout)
+    if q_head is not None:
+        cfg.q_head = str(q_head)
+    if q_rank is not None:
+        cfg.q_rank = int(q_rank)
     if train_freq is not None:
         cfg.train_freq = int(train_freq)
     if batch_size is not None:
@@ -726,6 +732,7 @@ def run_training(
         'layer_norm': bool(cfg.layer_norm), 'train_freq': int(cfg.train_freq),
         'regularization': {'weight_decay': float(cfg.weight_decay), 'dropout': float(cfg.dropout),
                            'foe_bench_dropout': float(cfg.foe_bench_dropout)},
+        'q_head': str(cfg.q_head), 'q_rank': int(cfg.q_rank),
         'batch_size': int(cfg.batch_size), 'agent_team': _AGENT_TEAM,
         'schedule': [{'unlock': p.unlock, 'steps': p.steps, 'omega': list(p.omega)}
                      for p in expand_sched],
@@ -1031,6 +1038,10 @@ def _main(argv: Optional[list] = None) -> int:
                    help='Dropout tras cada capa oculta de la red Q (por defecto 0,1; 0 = sin dropout)')
     p.add_argument('--foe-bench-dropout', type=float, default=None,
                    help='Prob. de borrar cada Pokémon rival no activo de la obs al aprender (§8, b)')
+    p.add_argument('--q-head', choices=('joint', 'factored'), default=None,
+                   help="Cabeza de la red Q: 'joint' (1 600 salidas, por defecto) o 'factored' (por hueco, §10)")
+    p.add_argument('--q-rank', type=int, default=None,
+                   help='Rango de la interacción entre huecos con --q-head factored (0 = aditiva)')
     p.add_argument('--train-freq', type=int, default=None, help='Pasos de entorno por paso de gradiente (defecto 4)')
     p.add_argument('--batch-size', type=int, default=None, help='Lote del aprendiz (defecto 256)')
     p.add_argument('--resume', default='',
@@ -1095,6 +1106,7 @@ def _main(argv: Optional[list] = None) -> int:
         layer_norm=bool(args.layer_norm),
         weight_decay=args.weight_decay, dropout=args.dropout,
         foe_bench_dropout=args.foe_bench_dropout,
+        q_head=args.q_head, q_rank=args.q_rank,
         train_freq=args.train_freq,
         batch_size=args.batch_size,
         num_envs=args.num_envs,

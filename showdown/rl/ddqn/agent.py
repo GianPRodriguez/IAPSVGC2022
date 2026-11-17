@@ -61,6 +61,10 @@ class DDQNConfig:
     weight_decay: float = 0.01
     dropout: float = 0.1
     foe_bench_dropout: float = 0.0
+    # Cabeza de la red Q (memorizacion_equipos.md §10; ddqn_spec 1.21). 'joint' = 1 600 salidas
+    # (por defecto); 'factored' = V + A1(a1) + A2(a2) + interacción de rango q_rank.
+    q_head: str = 'joint'
+    q_rank: int = 0
 
 
 class DDQNAgent:
@@ -97,7 +101,8 @@ class DDQNAgent:
         self._copy_weights = copy_weights
         device = torch.device(self.cfg.device)
         self.device = device
-        kw = dict(layer_norm=bool(self.cfg.layer_norm), dropout=float(self.cfg.dropout))
+        kw = dict(layer_norm=bool(self.cfg.layer_norm), dropout=float(self.cfg.dropout),
+                  q_head=str(self.cfg.q_head), q_rank=int(self.cfg.q_rank))
         self.online = QNetwork(**kw).to(device)
         self.target = QNetwork(**kw).to(device)
         copy_weights(self.online, self.target)
@@ -349,11 +354,14 @@ class DDQNAgent:
             # se entrenaron sin ellas (0), no con los valores por defecto actuales.
             for k in ('weight_decay', 'dropout', 'foe_bench_dropout'):
                 setattr(self.cfg, k, 0.0)
+            self.cfg.q_head, self.cfg.q_rank = 'joint', 0
             for k, v in payload['config'].items():
                 if hasattr(self.cfg, k):
                     setattr(self.cfg, k, v)
         self.online.dropout = self.target.dropout = float(self.cfg.dropout)
-        if bool(getattr(self.online, 'layer_norm', False)) != bool(self.cfg.layer_norm):
+        if (bool(getattr(self.online, 'layer_norm', False)) != bool(self.cfg.layer_norm)
+                or getattr(self.online, 'q_head', 'joint') != str(self.cfg.q_head)
+                or int(getattr(self.online, 'q_rank', 0)) != int(self.cfg.q_rank)):
             # el checkpoint usa otra arquitectura (con/sin LayerNorm): reconstruir las redes
             self.online = None
             self._ensure_torch()

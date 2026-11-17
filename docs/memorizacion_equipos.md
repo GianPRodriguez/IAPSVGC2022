@@ -469,3 +469,35 @@ equipos. Factores que lo limitan:
 **Medidas desde el 17-11-2026:** el ajuste de REG (decimoquinta cola) se elige solo con `val`, y
 la Conclusión formal (run_robust_e2e, BO3, bloques de semillas C1/C2) usa semillas de partida
 nuevas. Para la tesis se reporta esta limitación junto con los resultados.
+
+## 10. Valores Q por hueco (opción C; decimoctava cola, 17-11-2026)
+
+Aprobada por el usuario para antes del kick-off. Motivo: con REG, DDQN gana 62–65 % contra
+`eval`, pero sigue ~30 puntos por debajo de su rendimiento con los equipos propios y ~20 por
+debajo de PPO. §7 mostró que responde a la combinación completa del equipo rival. La diferencia
+estructural con PPO es que PPO decide por hueco (dos distribuciones de 40 acciones) mientras la red
+Q de DDQN tiene una salida por cada una de las 1 600 acciones conjuntas: espacio para guardar una
+respuesta distinta por combinación.
+
+**Diseño** (ddqn_spec 1.21, `--q-head factored --q-rank r`):
+
+    Q(s, a1, a2) = V(s) + A1(s, a1) + A2(s, a2) + Σ_k U1(s, a1)_k · U2(s, a2)_k
+
+- Dos cabezas de 40 valores (una por hueco) más un valor de estado; la interacción de rango r
+  permite coordinar los huecos (p. ej. concentrar ataques en un objetivo) sin volver a 1 600
+  salidas libres. r = 0 es puramente aditiva.
+- La salida se arma como el mismo vector de 1 600 valores (índice 40·a1 + a2), así que la máscara
+  conjunta (que ya prohíbe, por ejemplo, que ambos huecos cambien al mismo Pokémon), el objetivo
+  Double DQN, el replay, la simetría y la inferencia no cambian.
+- Salidas: 81 + 2·40·r (rango 8: 721) frente a 1 600; la capa de salida tiene menos de 40 % de los
+  parámetros de la conjunta.
+
+Tests: `tests/test_ddqn_factored_head.py` (fórmula e índice conjunto, menos parámetros, aprendizaje
+con simetría, acción greedy legal, guardar y cargar con reconstrucción de la red, checkpoints
+anteriores como conjuntos).
+
+**Experimento:** QF0 (rango 0) y QF8 (rango 8), 1M, semillas 0 y 1, configuración por defecto +
+REG elegida en la decimoquinta cola. Elección con `val` (200 partidas por rival, final.pt): se
+adopta la mejor variante si supera a la cabeza conjunta por más de 4 puntos. `eval` y propios
+como registro. Script: `scripts/server/kickoff_queue18.sh`; resumen:
+`showdown/rl/kickoff_summary18.py`. Corre después de la decimoséptima cola. Resultados: pendientes.
