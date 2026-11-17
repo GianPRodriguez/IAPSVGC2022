@@ -127,8 +127,12 @@ for name in ('B_s0', 'B_s1', 'C2M_s0'):
         bj = json.loads(b.read_text())
         L.append(f"| {name} | **best.pt = {bj.get('step', 0) // 1000}k** | {100 * float(bj.get('mean_wr', 0)):.1f} % | | | | |")
     for line in mf.read_text(errors='replace').splitlines():
-        if '"foe_state"' in line and '"total"' in line:
-            L.append(f"| {name} | espejo de rivales | `{json.loads(line).get('total')}` | | | | |")
+        try:
+            r = json.loads(line)
+        except Exception:
+            continue
+        if r.get('kind') == 'foe_state' and 'total' in r:  # solo el registro final (no las ventanas)
+            L.append(f"| {name} | espejo de rivales | `{r['total']}` | | | | |")
 suite = (d / 'suite.txt').read_text(errors='replace').strip().splitlines() if (d / 'suite.txt').is_file() else ['sin datos']
 fails = [l for l in suite if l.startswith('FAILED') or l.startswith('ERROR')]
 L += ['', '## 3. Suite completa de tests', '', '```', suite[-1]] + fails[:30] + ['```', '']

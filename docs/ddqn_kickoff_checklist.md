@@ -417,7 +417,40 @@ Aprobado por el usuario. B: 1M pasos con la configuración final (máscara del a
 simetría apagada, validación reservada, sin sintéticos), semillas 0 y 1. C: 2M pasos (fases
 ×2), validación cada 250k. Cada corrida se diagnostica con `best.pt` (propios y `eval`) y con
 `final.pt` (`eval`), para ver si `val` elige mejor que el último checkpoint. Script:
-`scripts/server/kickoff_queue11.sh`. Resultados: pendientes.
+`scripts/server/kickoff_queue11.sh`.
+
+**Resultados (commit b264a68, 16-11-2026).** Diagnósticos: 100 partidas por rival, sin
+exploración; cifras = 3 heurísticos (300 partidas).
+
+| Corrida | Checkpoint | Propios | `eval` | solo / joint / expectimax (`eval`) | `val` del checkpoint |
+|---|---|---|---|---|---|
+| B, semilla 0 (1M) | mejor = 1M | 87,3 % | **49,3 %** | 45 / 55 / 48 | 61,0 % |
+| B, semilla 0 | último (1M) | — | 50,0 % | 47 / 53 / 50 | — |
+| B, semilla 1 (1M) | mejor = 1M | 86,7 % | **47,0 %** | 49 / 49 / 43 | 68,0 % |
+| B, semilla 1 | último (1M) | — | 49,0 % | 47 / 55 / 45 | — |
+| C, semilla 0 (2M) | mejor = 1,75M | 90,7 % | **48,7 %** | 52 / 48 / 46 | 73,0 % |
+| C, semilla 0 | último (2M) | — | 48,0 % | 44 / 49 / 51 | 64,5 % |
+| F170 (cola 8, configuración anterior) | mejor | 80,0 / 84,3 % | 38,7 / 34,0 % | — | 52,0 / 58,0 % |
+
+1. **La configuración final mejora la generalización de DDQN:** +10,6 y +13,0 puntos contra
+   `eval` frente a F170 con las mismas semillas (media +11,8; ± ~4 cada una). Cambia la máscara
+   del aliado (activa) y la simetría (apagada); no se puede separar el aporte de cada una.
+2. **2M pasos no mejoran contra `eval`** (48,7 / 48,0 % frente a 47,0–49,3 % con 1M); solo suben
+   los equipos propios (87 → 91 %). La curva de `val` de C subió hasta 1,75M (35 → 73 %) y bajó en
+   2M (64,5 %), pero esa subida no se tradujo en `eval`: el máximo de 8 validaciones ruidosas
+   (± 7 puntos por celda) sobreestima, y el preview ya vio los equipos de `val`. **`val` sirve
+   para elegir el checkpoint; la cifra que se reporta sale de `eval`.**
+3. **Mejor checkpoint frente al último:** iguales dentro del ruido (49,3 / 50,0; 47,0 / 49,0;
+   48,7 / 48,0). Elegir con `val` no perjudica.
+4. **Por rival, con `eval` (4 diagnósticos, 400 partidas):** solo 47,5 %, joint 50,3 %,
+   expectimax 47,0 % (± 2,5): DDQN empata con los heurísticos frente a equipos nuevos; su ventaja
+   (75–97 % con los propios) depende de conocer al rival. Expectimax es el más difícil en ambos.
+5. Espejo de los rivales: 0 discrepancias (355 690, 354 837 y 702 753 revisiones). Suite
+   completa: **747 passed, 1 skipped, 6 xfailed**.
+
+**Recomendación de duración del kick-off: 1M pasos × 5 semillas** (~4,6 h): mismo resultado
+en `eval` que 2M y comparaciones más sólidas. 4M no se recomienda (el doble de costo sin ganancia
+esperable). Decisión pendiente del usuario.
 
 ### PPO de 1M pasos y nueva evaluación de la simetría (duodécima cola, 16-11-2026)
 
