@@ -489,8 +489,8 @@ respuesta distinta por combinación.
 - La salida se arma como el mismo vector de 1 600 valores (índice 40·a1 + a2), así que la máscara
   conjunta (que ya prohíbe, por ejemplo, que ambos huecos cambien al mismo Pokémon), el objetivo
   Double DQN, el replay, la simetría y la inferencia no cambian.
-- Salidas: 81 + 2·40·r (rango 8: 721) frente a 1 600; la capa de salida tiene menos de 40 % de los
-  parámetros de la conjunta.
+- Salidas: 81 + 2·40·r (rango 8: 721) frente a 1 600; la capa de salida tiene ~5 % (rango 0) y
+  ~45 % (rango 8) de los parámetros de la conjunta.
 
 Tests: `tests/test_ddqn_factored_head.py` (fórmula e índice conjunto, menos parámetros, aprendizaje
 con simetría, acción greedy legal, guardar y cargar con reconstrucción de la red, checkpoints

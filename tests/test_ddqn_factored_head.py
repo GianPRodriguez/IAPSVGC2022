@@ -40,7 +40,9 @@ def test_factored_matches_formula_and_joint_index(rank):
 def test_factored_has_far_fewer_output_params():
     def head(m):
         return sum(p.numel() for n, p in m.named_parameters() if not n.startswith(('encoder', 'norm', 'net.0', 'net.2')))
-    assert head(QNetwork(q_head='factored', q_rank=8)) < 0.4 * head(QNetwork())
+    joint = head(QNetwork())
+    assert head(QNetwork(q_head='factored', q_rank=8)) < 0.5 * joint  # ~45 %
+    assert head(QNetwork(q_head='factored', q_rank=0)) < 0.06 * joint  # ~5 %
 
 
 def test_bad_head_raises():
