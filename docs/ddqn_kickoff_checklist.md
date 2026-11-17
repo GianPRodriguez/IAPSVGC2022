@@ -572,6 +572,18 @@ formal (run_robust_e2e, BO3, protocolo §2–§3), que queda como paso siguiente
 **17-11-2026, 06:20: el usuario retiró la cola 16 antes de que empezara** (no llegó a ejecutar
 nada). El script queda en el repo para lanzarlo cuando lo indique; la cola 15 sigue.
 
+### Duración y simetría en DDQN sobre REG (decimoséptima cola, 17-11-2026)
+
+Aprobado por el usuario (A y D del plan previo al kick-off). **A:** DDQN con la REG elegida en
+la cola 15 y PPO con simetría, a 2M pasos (fases ×2), 2 semillas: ¿el kick-off debe ser de 1M o
+2M? La prueba de 2M anterior (cola 11) fue sin REG. **D:** DDQN 1M con la REG elegida y simetría,
+2 semillas. Elección con `val` (200 partidas por rival, final.pt); se recomienda el cambio si
+supera a la referencia de 1M por más de 4 puntos. `eval` y propios quedan como registro. Para PPO,
+`val` está cerca del techo (~93–95 %) y es poco sensible. Script:
+`scripts/server/kickoff_queue17.sh`; resumen: `showdown/rl/kickoff_summary17.py`. Corre después
+de la cola 15. El enfrentamiento directo entre agentes queda para el round robin final (decisión
+del usuario). Resultados: pendientes.
+
 ## D. Metodología
 
 | # | Punto | Estado |
