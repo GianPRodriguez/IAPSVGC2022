@@ -471,6 +471,16 @@ cambiaron dos cosas (máscara activa, simetría apagada). MSYM = máscara activa
 1M, semillas 0 y 1: MSYM − F170 mide la máscara y B − MSYM la simetría. Script:
 `scripts/server/kickoff_queue13.sh`; corre después de la duodécima cola. Resultados: pendientes.
 
+### Remedios contra la memorización (decimocuarta cola, 16-11-2026)
+
+El análisis local de derrotas ([`memorizacion_equipos.md`](memorizacion_equipos.md) §7) mostró
+puntos ciegos estables ante combinaciones de equipo nuevas (con piezas conocidas) que PPO no
+comparte. Aprobado por el usuario: (a) regularización (AdamW con weight decay 0,01 + dropout 0,1)
+y (b) borrado de los Pokémon rivales no activos de la obs al aprender (p = 0,5), 1M × 2 semillas
+cada uno, frente al ensayo general B. Criterio: más de ~5 puntos sobre B en `eval` con ambas
+semillas. Diseño en §8. Script: `scripts/server/kickoff_queue14.sh`; corre después de la
+decimotercera cola. Resultados: pendientes.
+
 ## D. Metodología
 
 | # | Punto | Estado |

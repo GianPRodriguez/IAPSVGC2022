@@ -379,5 +379,34 @@ vio, con piezas conocidas. Eso apunta a que la red Q usa la identidad del equipo
 clave (una tabla de respuestas) en lugar de razonar con lo que tiene delante. Remedios que
 atacan eso, de menor a mayor costo: (a) regularización (weight decay, dropout); (b) ruido o
 dropout sobre la parte de la observación que describe el equipo rival no activo; (c) valores Q
-por hueco (arquitectura ramificada), la factorización que usa PPO. Decisión del usuario
-pendiente.
+por hueco (arquitectura ramificada), la factorización que usa PPO. **Decisión del usuario:
+implementar (a) y (b) y probarlas (§8); (c) solo si no alcanzan.**
+
+## 8. Remedios del lado del algoritmo (decimocuarta cola, 16-11-2026)
+
+Implementados en DDQN (ddqn_spec 1.19), todos apagados por defecto:
+
+| Opción | Qué hace | Por qué |
+|---|---|---|
+| (a) `--weight-decay`, `--dropout` | AdamW con decaimiento de pesos desacoplado; dropout tras cada capa oculta de la red Q (solo al aprender) | Regularización genérica: dificulta que la red guarde una tabla de respuestas por equipo |
+| (b) `--foe-bench-dropout p` | Al aprender, cada uno de los 4 Pokémon rivales no activos de la obs (su bloque y sus entradas de daño y velocidad en `pairs`) se pone a cero, la codificación de "ausente", con probabilidad p, por muestra | Ataca lo encontrado en §7: sin la hoja completa del rival no puede usarla como clave y tiene que decidir con lo que está en juego. La inferencia ve la obs completa |
+
+Detalles: el dropout se aplica de forma funcional, así que los checkpoints con y sin dropout
+tienen el mismo `state_dict`. La acción a* del objetivo Double DQN se elige con la red online en
+modo evaluación (sin dropout) y con s' completo. Tests: `tests/test_ddqn_regularization.py`
+(columnas borradas = solo los rivales no activos, versiones NumPy y torch idénticas, valores por
+defecto sin cambios, guardar y cargar).
+
+**Experimento (decimocuarta cola).** Configuración del ensayo general B (1M, máscara del aliado,
+sin simetría, validación reservada), semillas 0 y 1:
+
+| Corrida | Opciones |
+|---|---|
+| REG | `--weight-decay 0.01 --dropout 0.1` |
+| FBD | `--foe-bench-dropout 0.5` |
+| B (referencia, undécima cola) | ninguna: 49,3 / 47,0 % contra `eval` |
+
+**Criterio fijado de antemano:** un remedio se adopta si mejora a B contra `eval` en ambas
+semillas y por más de ~5 puntos de media. Si ninguno lo cumple, la opción (c) (valores Q por
+hueco) queda como siguiente paso, o la memorización se documenta como característica de DDQN.
+Script: `scripts/server/kickoff_queue14.sh`. Resultados: pendientes.

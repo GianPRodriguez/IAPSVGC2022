@@ -12,8 +12,12 @@ from showdown.rl.encoders import combat_encoder
 
 class QNetwork(nn.Module):
     def __init__(self, obs_dim: int = OBS_DIM, n_actions: int = JOINT_ACTION_N,
-                 encoder: Optional[str] = None, layer_norm: bool = False):
+                 encoder: Optional[str] = None, layer_norm: bool = False, dropout: float = 0.0):
         super().__init__()
+        # Dropout tras cada capa oculta (memorizacion_equipos.md §8, opción a). Se aplica en
+        # forward de forma funcional para no cambiar los nombres del state_dict: los
+        # checkpoints con y sin dropout son intercambiables. 0 = sin dropout (por defecto).
+        self.dropout = float(dropout)
         self.encoder = combat_encoder(obs_dim, encoder)
         # Punto 7 del checklist: LayerNorm tras el codificador (se concatenan embeddings ReLU
         # con segmentos crudos de otra escala). Apagado por defecto.
@@ -28,7 +32,13 @@ class QNetwork(nn.Module):
         )
 
     def forward(self, obs: torch.Tensor) -> torch.Tensor:
-        return self.net(self.norm(self.encoder(obs)))
+        h = self.norm(self.encoder(obs))
+        if self.dropout <= 0.0:
+            return self.net(h)
+        import torch.nn.functional as F
+        h = F.dropout(self.net[1](self.net[0](h)), self.dropout, self.training)
+        h = F.dropout(self.net[3](self.net[2](h)), self.dropout, self.training)
+        return self.net[4](h)
 
 
 @torch.no_grad()

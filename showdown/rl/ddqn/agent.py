@@ -50,6 +50,15 @@ class DDQNConfig:
     target_clip: float = 2.0
     # LayerNorm tras el codificador (punto 7 del checklist; se evalúa en el tuning).
     layer_norm: bool = False
+    # Remedios contra la memorización de equipos rivales (memorizacion_equipos.md §8; ddqn_spec
+    # 1.19). Todos en 0 por defecto (sin cambios respecto de la versión anterior).
+    # weight_decay > 0: AdamW (decaimiento desacoplado) en vez de Adam.
+    # dropout > 0: dropout tras cada capa oculta de la red Q (solo al aprender).
+    # foe_bench_dropout > 0: al aprender, cada uno de los 4 Pokémon rivales no activos de la
+    # obs s se borra (bloque y pares a cero = "ausente") con esa probabilidad, por muestra.
+    weight_decay: float = 0.0
+    dropout: float = 0.0
+    foe_bench_dropout: float = 0.0
 
 
 class DDQNAgent:
@@ -86,11 +95,16 @@ class DDQNAgent:
         self._copy_weights = copy_weights
         device = torch.device(self.cfg.device)
         self.device = device
-        self.online = QNetwork(layer_norm=bool(self.cfg.layer_norm)).to(device)
-        self.target = QNetwork(layer_norm=bool(self.cfg.layer_norm)).to(device)
+        kw = dict(layer_norm=bool(self.cfg.layer_norm), dropout=float(self.cfg.dropout))
+        self.online = QNetwork(**kw).to(device)
+        self.target = QNetwork(**kw).to(device)
         copy_weights(self.online, self.target)
         self.target.eval()
-        self.optim = torch.optim.Adam(self.online.parameters(), lr=self.cfg.lr)
+        if float(self.cfg.weight_decay) > 0.0:
+            self.optim = torch.optim.AdamW(self.online.parameters(), lr=self.cfg.lr,
+                                           weight_decay=float(self.cfg.weight_decay))
+        else:
+            self.optim = torch.optim.Adam(self.online.parameters(), lr=self.cfg.lr)
         self.replay = ReplayBuffer(capacity=self.cfg.replay_capacity, obs_dim=OBS_DIM,
                                    device=self._replay_device(device))
 
@@ -254,11 +268,15 @@ class DDQNAgent:
             done = torch.as_tensor(term, dtype=torch.float32, device=self.device)
             m2_t = torch.as_tensor(m2, dtype=torch.float32, device=self.device)
 
-        self.online.train()
-        q_all = self.online(s_t)
-        q_sa = q_all.gather(1, a_t.view(-1, 1)).squeeze(1)
+        reg_stats: Dict[str, float] = {}
+        if float(self.cfg.foe_bench_dropout) > 0.0 and s_t.shape[1] == OBS_DIM:
+            from showdown.rl.ddqn.regularize import foe_bench_dropout_t
+            s_t, frac = foe_bench_dropout_t(s_t, float(self.cfg.foe_bench_dropout), self._rng)
+            reg_stats['foe_bench_dropped'] = frac
 
         with torch.no_grad():
+            # Selección de a* sin dropout (red online en modo evaluación) y con s' completo.
+            self.online.eval()
             q_online_next = self.online(s2_t)
             # Mask illegal before argmax
             q_online_next = q_online_next + (1.0 - m2_t) * (-1.0e9)
@@ -268,6 +286,10 @@ class DDQNAgent:
             if float(self.cfg.target_clip) > 0.0:
                 c = float(self.cfg.target_clip)
                 y = y.clamp(-c, c)
+
+        self.online.train()
+        q_all = self.online(s_t)
+        q_sa = q_all.gather(1, a_t.view(-1, 1)).squeeze(1)
 
         loss = F.huber_loss(q_sa, y, delta=self.cfg.huber_delta)
         self.optim.zero_grad(set_to_none=True)
@@ -290,6 +312,7 @@ class DDQNAgent:
             'eps': self.epsilon,
         }
         out.update(sym_stats)
+        out.update(reg_stats)
         for name, frac in batch_frac.items():
             out[f'batch_frac_{name}'] = float(frac)
         for name, frac in buf_frac.items():
@@ -323,6 +346,7 @@ class DDQNAgent:
             for k, v in payload['config'].items():
                 if hasattr(self.cfg, k):
                     setattr(self.cfg, k, v)
+        self.online.dropout = self.target.dropout = float(self.cfg.dropout)
         if bool(getattr(self.online, 'layer_norm', False)) != bool(self.cfg.layer_norm):
             # el checkpoint usa otra arquitectura (con/sin LayerNorm): reconstruir las redes
             self.online = None
