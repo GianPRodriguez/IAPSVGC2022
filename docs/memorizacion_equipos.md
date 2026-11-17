@@ -1,6 +1,6 @@
 # Memorización de los equipos rivales y cómo reducirla
 
-Estado: **octava cola terminada (16-11-2026). Los sintéticos no cumplen el criterio de adopción; la cantidad de equipos reales no cambia la generalización.** PPO (novena cola, §6) generaliza mucho mejor que DDQN. Decisión del usuario: sin sintéticos, validación reservada por defecto.
+Estado: **decimocuarta cola terminada (17-11-2026): la regularización (REG) cumple el criterio y sube a DDQN a 62–65 % contra `eval` (§8).** Octava cola (16-11-2026): Los sintéticos no cumplen el criterio de adopción; la cantidad de equipos reales no cambia la generalización.** PPO (novena cola, §6) generaliza mucho mejor que DDQN. Decisión del usuario: sin sintéticos, validación reservada por defecto.
 Relacionado: [`protocolo_evaluacion.md`](protocolo_evaluacion.md) §2b (separación de equipos),
 [`ddqn_kickoff_checklist.md`](ddqn_kickoff_checklist.md), [`equipos_sinteticos_analisis.md`](equipos_sinteticos_analisis.md).
 
@@ -409,4 +409,44 @@ sin simetría, validación reservada), semillas 0 y 1:
 **Criterio fijado de antemano:** un remedio se adopta si mejora a B contra `eval` en ambas
 semillas y por más de ~5 puntos de media. Si ninguno lo cumple, la opción (c) (valores Q por
 hueco) queda como siguiente paso, o la memorización se documenta como característica de DDQN.
-Script: `scripts/server/kickoff_queue14.sh`. Resultados: pendientes.
+Script: `scripts/server/kickoff_queue14.sh`.
+
+### 8.1 Resultados (commit 5936dc2, 17-11-2026)
+
+3 heurísticos, 100 partidas por rival, sin exploración. Resumen en el servidor:
+`~/iapsvgc_runs/kickoff14/kickoff_summary14.md`.
+
+| Corrida | Propios | `eval` (best.pt) | `eval` (final.pt) | `eval` solo / joint / expectimax (final.pt) | best.pt (paso, `val`) |
+|---|---|---|---|---|---|
+| B, semilla 0 | 87,3 % | 49,3 % | 50,0 % | 47 / 53 / 50 | 1M, 61,0 % |
+| B, semilla 1 | 86,7 % | 47,0 % | 49,0 % | 47 / 55 / 45 | 1M, 68,0 % |
+| **REG, semilla 0** | 93,0 % | 53,3 % | **62,3 %** | 65 / 65 / 57 | 750k, 74,0 % |
+| **REG, semilla 1** | 94,0 % | 59,0 % | **65,3 %** | 67 / 67 / 62 | 750k, 78,5 % |
+| FBD, semilla 0 | 88,7 % | 49,7 % | 53,3 % | 52 / 60 / 48 | 1M, 72,0 % |
+| FBD, semilla 1 | 87,0 % | 46,3 % | 47,7 % | — | 1M, 69,5 % |
+
+| Remedio frente a B | Semilla 0 | Semilla 1 | Media | Criterio |
+|---|---|---|---|---|
+| REG (best.pt) | +4,0 (± 4,1) | +12,0 (± 4,0) | +8,0 | **cumple** |
+| REG (final.pt) | +12,3 | +16,3 | +14,3 | — |
+| FBD (best.pt) | +0,3 (± 4,1) | −0,7 (± 4,1) | −0,2 | no cumple |
+
+**Lectura:**
+
+1. **La regularización funciona.** Con REG, DDQN gana 62–65 % contra equipos no vistos con el
+   último checkpoint (57–62 % contra expectimax), frente a 49–50 % sin ella. Es la primera vez que
+   supera claramente a los heurísticos con equipos nuevos. También gana más con sus propios
+   equipos (93–94 % frente a 87 %): la regularización no le quita capacidad de aprender, solo
+   reduce el ajuste a equipos concretos. La brecha sigue grande (−35 a −40 con best.pt), así que
+   la memorización baja pero no desaparece.
+2. **Borrar el banco rival no sirve.** FBD queda igual que B. Que la red no vea parte de la hoja
+   del rival al aprender no basta: la memorización no pasa (solo) por esa parte de la
+   observación.
+3. **`val` eligió mal en REG.** Marcó 750k como mejor (74,0 / 78,5 %), pero el checkpoint de 1M
+   rinde ~8 puntos más contra `eval`. Con 30 equipos y 50 partidas por rival (± 7 puntos por
+   celda), `val` no distingue checkpoints cercanos. Opciones: más partidas en la validación,
+   o usar el último checkpoint.
+4. Espejo de los rivales: 0 discrepancias en las 4 corridas (~1,4 M revisiones).
+
+**Decisión del usuario pendiente:** adoptar REG en el kick-off de DDQN y cómo elegir el
+checkpoint. La opción (c), valores Q por hueco, queda en reserva.

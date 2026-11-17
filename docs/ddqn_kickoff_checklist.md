@@ -461,15 +461,49 @@ corridas de PPO de 1M pasos con la configuración final y el currículo completo
 simetría (`RL_SYM_AUG=1`), semillas 0 y 1, medidas con `eval`. Preguntas: ¿PPO mantiene la
 generalización de los pilotos (74–80 % con `eval`) con joint y expectimax? ¿La simetría mejora la
 generalización? (La decisión de apagarla se tomó con validaciones sobre equipos de entrenamiento.)
-Script: `scripts/server/kickoff_queue12.sh`; corre después de la undécima cola. Resultados:
-pendientes.
+Script: `scripts/server/kickoff_queue12.sh`.
+
+**Resultados (commit 7f76106, 16/17-11-2026).** 3 heurísticos, 100 partidas por rival:
+
+| Corrida | Propios | `eval` (best.pt) | `eval` (final.pt) | best.pt (paso) |
+|---|---|---|---|---|
+| PPO sin simetría, semilla 0 | 95,3 % | 77,7 % | 76,7 % | 1M |
+| PPO sin simetría, semilla 1 | 96,3 % | 75,7 % | 78,7 % | 750k |
+| PPO con simetría, semilla 0 | 96,3 % | **87,0 %** | 81,7 % | 1M |
+| PPO con simetría, semilla 1 | 95,7 % | **80,0 %** | 85,0 % | 500k |
+
+1. **PPO mantiene la generalización con el currículo completo** (76–87 % con `eval`, brecha −9
+   a −21), frente a ~48 % de DDQN con la misma configuración y presupuesto.
+2. **La simetría mejora a PPO contra equipos no vistos:** +9,3 y +4,3 (best.pt); con los 4
+   diagnósticos de cada configuración, 83,4 % frente a 77,2 % (+6,2; z ≈ 3,9). Contra los equipos
+   propios no cambia (96 %): por eso no se veía validando con equipos de entrenamiento.
+3. Contra expectimax con `eval`: 75–85 %. Espejo de los rivales: 0 discrepancias.
+4. Coincidiendo best.pt y final.pt (semilla 0 con simetría), los dos diagnósticos dieron 87,0 y
+   81,7 %: el diagnóstico de 100 partidas por rival tiene ~± 3 puntos de ruido propio (los
+   heurísticos desempatan al azar).
 
 ### Máscara del aliado frente a simetría en DDQN (decimotercera cola, 16-11-2026)
 
 Aprobado por el usuario. El ensayo general mejoró +11,8 puntos en `eval` frente a F170, pero
 cambiaron dos cosas (máscara activa, simetría apagada). MSYM = máscara activa + simetría activa,
 1M, semillas 0 y 1: MSYM − F170 mide la máscara y B − MSYM la simetría. Script:
-`scripts/server/kickoff_queue13.sh`; corre después de la duodécima cola. Resultados: pendientes.
+`scripts/server/kickoff_queue13.sh`.
+
+**Resultados (commit be82f79, 17-11-2026).** Contra `eval`, best.pt (3 heurísticos):
+
+| Semilla | F170 (sin máscara, con simetría) | MSYM (con máscara, con simetría) | B (con máscara, sin simetría) |
+|---|---|---|---|
+| 0 | 38,7 % | 52,0 % | 49,3 % |
+| 1 | 34,0 % | 54,3 % | 47,0 % |
+
+| Efecto | Semilla 0 | Semilla 1 | Media |
+|---|---|---|---|
+| Máscara del aliado (MSYM − F170) | +13,3 | +20,3 | **+16,8** |
+| Apagar la simetría (B − MSYM) | −2,7 | −7,3 | −5,0 |
+
+**La máscara del aliado explica toda la mejora del ensayo general.** En DDQN la simetría
+parece ayudar algo con best.pt, pero con final.pt no hay diferencia (MSYM 49,3 / 49,7 frente a B
+50,0 / 49,0): no concluyente. Espejo de los rivales: 0 discrepancias.
 
 ### Remedios contra la memorización (decimocuarta cola, 16-11-2026)
 
@@ -478,8 +512,14 @@ puntos ciegos estables ante combinaciones de equipo nuevas (con piezas conocidas
 comparte. Aprobado por el usuario: (a) regularización (AdamW con weight decay 0,01 + dropout 0,1)
 y (b) borrado de los Pokémon rivales no activos de la obs al aprender (p = 0,5), 1M × 2 semillas
 cada uno, frente al ensayo general B. Criterio: más de ~5 puntos sobre B en `eval` con ambas
-semillas. Diseño en §8. Script: `scripts/server/kickoff_queue14.sh`; corre después de la
-decimotercera cola. Resultados: pendientes.
+semillas. Diseño en §8. Script: `scripts/server/kickoff_queue14.sh`.
+
+**Resultados (commit 5936dc2, 17-11-2026):** **REG cumple el criterio** (+4,0 y +12,0 sobre B con
+best.pt; media +8,0) y con final.pt llega a **62,3 / 65,3 %** contra `eval` (B: 50,0 / 49,0 %),
+la primera vez que DDQN supera claramente a los heurísticos con equipos nuevos. FBD no mejora
+(+0,3 / −0,7). En REG, `val` eligió el checkpoint de 750k, peor que el final en ~8 puntos: con 30
+equipos y 50 partidas por rival, `val` no distingue checkpoints cercanos. Detalle en
+[`memorizacion_equipos.md`](memorizacion_equipos.md) §8.
 
 ## D. Metodología
 
