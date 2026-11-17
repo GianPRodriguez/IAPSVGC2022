@@ -317,3 +317,67 @@ Contra random ambos PPO ganan 99–100 % con cualquier grupo.
 3. **Para el benchmark:** la diferencia DDQN–PPO en equipos no vistos es exactamente lo que
    la evaluación final (Conclusión, grupo `eval`) debe capturar. La validación con equipos de
    entrenamiento la ocultaba (DDQN 85 % frente a PPO 92 %).
+
+## 7. Por qué DDQN pierde con equipos no vistos (análisis local, 16-11-2026)
+
+Datos: las partidas de los diagnósticos ya hechos (rival, equipo y resultado de cada una, y el
+desglose de decisiones por rival), sin usar el servidor. DDQN actual = B y C de la undécima cola
+(6 diagnósticos, 1 800 partidas con `eval` contra los heurísticos); DDQN anterior = las 6
+corridas de la octava cola; PPO = los dos pilotos de la novena. Script:
+`scripts/analysis/analisis_derrotas_eval.py`.
+
+### 7.1 Las derrotas se concentran en equipos concretos, y son estables
+
+- La tasa de victorias por equipo `eval` varía mucho más de lo que daría el azar (chi² de
+  dispersión 499 con 96 grados de libertad; z ≈ 29). 20 de 97 equipos le ganan a DDQN en el 80 %
+  o más de las partidas; contra 13 gana el 80 % o más.
+- Es estable: dividiendo los checkpoints en dos mitades, la tasa por equipo se correlaciona
+  r = 0,69 entre ambas. La configuración anterior falla contra los mismos equipos (r = 0,62).
+- **No son malos emparejamientos de nuestro equipo fijo:** los equipos difíciles para DDQN casi
+  no lo son para PPO (r = 0,28). Varios equipos contra los que DDQN gana 0 % (n = 12–24) PPO los
+  gana 75–100 %. Solo unos pocos son difíciles para ambos: núcleos del metajuego
+  (Kingambit + Basculegion + Rillaboom + Floette + Salamence + Sneasler: DDQN 4–14 %, PPO 0–19 %)
+  y Trick Room (Indeedee + Hatterene + Torkoal: DDQN 0 %, PPO 25 %). Muestras pequeñas por
+  equipo.
+
+### 7.2 No pierde por piezas desconocidas sino por combinaciones
+
+| Sets del equipo `eval` idénticos a uno de `fit` | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|---|
+| Victorias de DDQN | 51 % | 58 % | 37 % | 62 % | 44 % | 44 % | 60 % |
+| Partidas | 78 | 66 | 192 | 162 | 162 | 804 | 336 |
+
+Sin tendencia: incluso contra equipos `eval` cuyos 6 Pokémon tienen sets idénticos a sets de
+entrenamiento gana 60 %, frente a 88 % con sus propios equipos. Tampoco importa si hay especies
+nunca vistas (0: 49 %, 1: 51 %, 2: 39 % con n = 78). Por especie, las peores tasas con `eval`
+son de especies que sí conoce y contra las que gana 80–100 % con sus equipos (Golisopod-Mega,
+Delphox, Grimmsnarl, Baxcalibur, Froslass: 17–27 % con `eval`). **DDQN responde a la combinación
+completa del equipo rival, no a sus piezas.**
+
+### 7.3 DDQN aprende una política compleja que no transfiere; PPO, una simple que sí
+
+Por cada 100 decisiones (3 heurísticos):
+
+| Agente | Grupo | Decisiones por partida | Ataque | Área | Protect | Cambio voluntario | Pass obligatorio |
+|---|---|---|---|---|---|---|---|
+| DDQN actual | propios | 12,9 | 47,1 | 11,3 | 11,2 | 7,4 | 10,2 |
+| DDQN actual | `eval` | 17,0 | 39,5 | 7,9 | 13,6 | 5,3 | 18,2 |
+| PPO pilotos | propios | 11,0 | 56,2 | 16,6 | 2,3 | 0,0 | 12,1 |
+| PPO pilotos | `eval` | 12,8 | 52,5 | 14,6 | 2,2 | 0,0 | 16,5 |
+
+DDQN usa Protect (11 %) y cambios voluntarios (7 %), decisiones que dependen de anticipar al
+rival. Con equipos nuevos sus partidas se alargan (17 frente a 13 decisiones), ataca menos y
+pasa más turnos sin Pokémon disponibles (18 % frente a 10 %). PPO juega casi igual con ambos
+grupos: una política agresiva y simple (ataca el 70 %, Protect 2 %, nunca cambia por voluntad
+propia) que no depende de conocer al rival. Su debilidad potencial es la contraria: contra
+rivales que castiguen esa simpleza (Trick Room, núcleos fuertes) no tiene recursos.
+
+### 7.4 Implicación para el punto 3 (remedio del lado del algoritmo)
+
+Las derrotas no son generales sino puntos ciegos estables ante combinaciones de equipo que no
+vio, con piezas conocidas. Eso apunta a que la red Q usa la identidad del equipo rival como
+clave (una tabla de respuestas) en lugar de razonar con lo que tiene delante. Remedios que
+atacan eso, de menor a mayor costo: (a) regularización (weight decay, dropout); (b) ruido o
+dropout sobre la parte de la observación que describe el equipo rival no activo; (c) valores Q
+por hueco (arquitectura ramificada), la factorización que usa PPO. Decisión del usuario
+pendiente.
