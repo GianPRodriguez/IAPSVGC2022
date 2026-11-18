@@ -686,7 +686,30 @@ cualquier equipo y cuánto pierden con el tuyo? Límite: el preview v2 se entren
 aquí trabaja fuera de su distribución.
 
 Tests: `tests/test_preview_analysis.py`. Script: `scripts/server/kickoff_queue20.sh`; resumen:
-`showdown/rl/kickoff_summary20.py`. Resultados: pendientes.
+`showdown/rl/kickoff_summary20.py`.
+
+### 13.1 Resultados de la contribución del preview (commit 86b212f, 18-11-2026)
+
+3 heurísticos, 2 semillas agrupadas (1 200 partidas por celda):
+
+| Agente | Preview v2 | Formación fija (3546, la más frecuente) | /team 1234 | v2 − fija (adaptación) | fija − 1234 (elección) |
+|---|---|---|---|---|---|
+| DDQN | 64,4 % | 60,3 % | 37,3 % | +4,1 (± 2,0) | +23,0 (± 2,0) |
+| PPO | 85,3 % | 82,5 % | 71,3 % | +2,8 (± 1,5) | +11,2 (± 1,7) |
+
+Por semilla, v2 − fija: DDQN +9,0 y −0,8; PPO +0,9 y +4,8.
+
+1. **Elegir bien los cuatro importa mucho; adaptar la formación al rival, poco.** Jugar siempre
+   la formación 3546 conserva casi todo el rendimiento; traer los cuatro primeros lo hunde, sobre
+   todo a DDQN (−23 puntos).
+2. **PPO depende menos de la formación que DDQN** (con /team 1234 pierde 11 puntos frente a 23):
+   su combate es más robusto a qué Pokémon tiene en el campo.
+3. **El preview elige igual para los dos agentes** (mismo preview, mismo equipo): 17 formaciones
+   distintas; 3546 en el 19 % de las partidas y las tres más frecuentes en el 47 %. Es decir, no
+   tiene en cuenta cómo juega cada combate.
+4. Conclusión: el preview aporta sobre todo una buena formación base; su adaptación al rival es
+   pequeña (+3–4 puntos) y no está coordinada con el combate de cada agente. Motiva entrenar el
+   preview con su propio combate (§15).
 
 ## 14. Rendimiento por baseline, rival de arquetipos y entropía de PPO (18-11-2026)
 
@@ -741,4 +764,26 @@ registra el % de cambios voluntarios.
 
 Tests: `tests/test_joint_archetype.py`. Script: `scripts/server/kickoff_queue21.sh`; resumen:
 `showdown/rl/kickoff_summary21.py`. Corre después de la vigésima cola. Resultados: pendientes.
+
+## 15. Preview entrenado con su propio combate (vigesimosegunda cola, 18-11-2026)
+
+Aprobado por el usuario ("aplicar recomendación") tras §13.1. El preview v2 se entrenó con
+greedy_joint como combate (ambos lados), así que aprendió qué formaciones le sirven a greedy_joint,
+no a DDQN ni a PPO; elige lo mismo para los dos agentes y su adaptación al rival aporta solo +3–4
+puntos.
+
+**Implementación:** `preview_live` acepta ahora pilotos RL (`--pilot ddqn|ppo`): nuestro lado juega
+con el combate congelado del agente (`PREVIEW_PILOT_CHECKPOINT`, jugadores de inferencia
+`DDQNPlayer` / `PPOPlayer`) y el rival con un heurístico (`PREVIEW_FOE_PILOT`, por defecto
+greedy_joint, como en el entrenamiento original). La formación de nuestro lado la sigue eligiendo el
+preview que se entrena. Tests: `tests/test_preview_rl_pilot.py`. Prueba en vivo (4 workers, 2
+actualizaciones, piloto DDQN): 5 120 partidas sin fallos ni reinicios, 28,6 partidas/s (~7 por
+worker, igual que con greedy_joint), así que un preview completo toma ~45–50 min con 28 workers.
+
+**Experimento:** un preview por agente, con su combate (final.pt semilla 0) y solo con los 170
+equipos de `fit` (así `val` queda desconocido también para el preview); misma receta que v2 (200
+actualizaciones, entropía 0,005, tu equipo). Después, mismo combate (semillas 0 y 1) con v2 y con
+el preview nuevo, contra `val` (elige: más de 4 puntos) y `eval` (registro), 200 partidas por rival.
+Script: `scripts/server/kickoff_queue22.sh`; resumen: `showdown/rl/kickoff_summary22.py`. Corre
+después de la vigesimoprimera cola. Resultados: pendientes.
 

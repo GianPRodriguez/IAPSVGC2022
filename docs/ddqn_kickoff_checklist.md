@@ -645,7 +645,12 @@ Aprobado por el usuario: la tupla (preview, combate) debe jugar bien en ambas et
 combate con tres previews (v2, formación fija más frecuente, /team 1234) para aislar lo que aporta
 el preview; (2) combate según el plan del rival con tu equipo; (3) piloto DDQN y PPO entrenados
 con equipo propio al azar. Diseño en [`memorizacion_equipos.md`](memorizacion_equipos.md) §13.
-Script: `scripts/server/kickoff_queue20.sh`. Resultados: pendientes.
+Script: `scripts/server/kickoff_queue20.sh`.
+
+**Parte 1 (18-11-2026, §13.1):** con el combate final, el preview v2 rinde 64,4 % (DDQN) y 85,3 %
+(PPO); jugar siempre su formación más frecuente da 60,3 / 82,5 % (adaptación +4,1 / +2,8) y
+/team 1234 da 37,3 / 71,3 % (elección +23,0 / +11,2). El preview elige igual para los dos agentes.
+Piloto con equipos al azar: pendiente.
 
 ### Rival de arquetipos y entropía de PPO (vigesimoprimera cola, 18-11-2026)
 
@@ -654,6 +659,13 @@ evaluación de los agentes finales; (2) ajuste de entropía de PPO (0,003 y 0,03
 igualar el esfuerzo de ajuste con DDQN; (3) limitaciones documentadas en `protocolo_evaluacion.md`.
 Tabla completa por baseline en [`memorizacion_equipos.md`](memorizacion_equipos.md) §14.1. Script:
 `scripts/server/kickoff_queue21.sh`; corre después de la cola 20. Resultados: pendientes.
+
+### Preview entrenado con su propio combate (vigesimosegunda cola, 18-11-2026)
+
+Aprobado por el usuario tras la parte 1 de la cola 20. Pilotos RL en `preview_live`; un preview por
+agente entrenado con su combate congelado y solo con `fit`; comparado con v2 en `val` (más de 4
+puntos) y `eval`. Diseño en [`memorizacion_equipos.md`](memorizacion_equipos.md) §15. Script:
+`scripts/server/kickoff_queue22.sh`; corre después de la cola 21. Resultados: pendientes.
 
 ## D. Metodología
 
