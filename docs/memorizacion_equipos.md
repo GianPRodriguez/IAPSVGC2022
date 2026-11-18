@@ -727,6 +727,10 @@ más lento, sin exigir que el compañero haga daño ese turno (el compañero cub
 redirección, Protect o un ataque). Apagado por defecto: greedy_joint no cambia (test). Uso:
 evaluación de los agentes finales (2 semillas, tu equipo, `eval`, 200 partidas, con `--context`)
 y, en el futuro, entrenamiento. Mide también si el rival efectivamente activa los planes.
+Prueba en vivo (PPO con simetría, semilla 0, 24 partidas contra joint): el rival activó Tailwind en
+0/24 partidas en modo normal y 6/24 en modo arquetipo, y Trick Room en 0/24 y 2/24 (solo cuando trae
+a quien lo pone y su lado es más lento); PPO ganó 23/24 frente a 19/24. Muestra mínima: la cifra
+confiable sale de la cola.
 
 ### 14.3 Entropía de PPO (vigesimoprimera cola)
 
