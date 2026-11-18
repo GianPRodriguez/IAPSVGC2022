@@ -598,7 +598,20 @@ supera a la referencia de 1M por más de 4 puntos. `eval` y propios quedan como 
 `val` está cerca del techo (~93–95 %) y es poco sensible. Script:
 `scripts/server/kickoff_queue17.sh`; resumen: `showdown/rl/kickoff_summary17.py`. Corre después
 de la cola 15. El enfrentamiento directo entre agentes queda para el round robin final (decisión
-del usuario). Resultados: pendientes.
+del usuario).
+
+**Resultados (commit ef53831, 17-11-2026): ningún cambio supera el umbral.** final.pt, 3
+heurísticos, 2 semillas agrupadas:
+
+| Pregunta | `val` nuevo | `val` referencia | Diferencia | `eval` nuevo (registro) | `eval` 1M (registro) | Propios nuevo |
+|---|---|---|---|---|---|---|
+| A: DDQN 2M frente a 1M (REG 0,03 + 0,1) | 75,0 % | 74,1 % | +0,9 (± 1,8) | 61,0 % | 64,7 % | 94,2 % |
+| A: PPO 2M frente a 1M (simetría) | 87,8 % | 88,1 % | −0,3 (± 1,3) | 82,8 % | 83,4 % | 97,2 % |
+| D: DDQN 1M con simetría frente a sin ella | 72,4 % | 74,1 % | −1,7 (± 1,8) | 65,0 % | 64,7 % | 92,0 % |
+
+**Se mantienen 1M pasos para ambos y la simetría apagada en DDQN.** A 2M, DDQN gana algo más con
+sus equipos y algo menos con `eval` (más memorización); PPO queda igual. Espejo de los rivales: 0
+discrepancias.
 
 ### Valores Q por hueco en DDQN (decimoctava cola, 17-11-2026)
 
