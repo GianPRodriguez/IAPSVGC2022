@@ -24,7 +24,31 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-PILOTS = ('greedy_joint', 'expectimax_bayesian')
+PILOTS = ('greedy_joint', 'expectimax_bayesian', 'ddqn', 'ppo')
+# Pilotos RL (memorizacion_equipos.md §15, 18-11-2026): el preview se entrena con SU propio combate
+# (DDQN o PPO congelado) en nuestro lado, en vez de greedy_joint. El checkpoint del combate va en
+# PREVIEW_PILOT_CHECKPOINT; el rival sigue siendo un heurístico (PREVIEW_FOE_PILOT, por defecto
+# greedy_joint, como en el entrenamiento original). Los workers heredan las variables.
+RL_PILOTS = ('ddqn', 'ppo')
+
+
+def foe_pilot_for(pilot: str) -> str:
+    import os
+    if str(pilot) in RL_PILOTS:
+        foe = os.environ.get('PREVIEW_FOE_PILOT', '').strip() or 'greedy_joint'
+        if foe not in PILOTS or foe in RL_PILOTS:
+            raise ValueError(f'PREVIEW_FOE_PILOT inválido: {foe!r}')
+        return foe
+    return str(pilot)
+
+
+def rl_pilot_checkpoint(pilot: str) -> str:
+    import os
+    from pathlib import Path
+    ck = os.environ.get('PREVIEW_PILOT_CHECKPOINT', '').strip()
+    if str(pilot) in RL_PILOTS and not (ck and Path(ck).is_file()):
+        raise FileNotFoundError(f'piloto {pilot!r} requiere PREVIEW_PILOT_CHECKPOINT (actual: {ck!r})')
+    return ck
 
 # Tiempo máximo por BO1 antes de darlo por colgado (se reintenta en otro intento
 # con el worker reiniciado). Un BO1 con greedy_joint dura ~5 s (máx. 40 turnos
@@ -58,6 +82,10 @@ def _pilot_class(pilot: str):
         from showdown.battle_bots.expectimax_bayesian.pokeenv_player import (
             ExpectimaxBayesianPlayer as base,
         )
+    elif key == 'ddqn':
+        from showdown.rl.ddqn.player import DDQNPlayer as base
+    elif key == 'ppo':
+        from showdown.rl.ppo.player import PPOPlayer as base
     else:
         raise ValueError(f'piloto inválido {pilot!r}; opciones: {", ".join(PILOTS)}')
 
@@ -110,6 +138,8 @@ class _MatchRunner:
         cfg = server_configuration_for_port(self.port)
         fmt = battle_format or BATTLE_FORMAT
         cls = _pilot_class(pilot)
+        foe_cls = _pilot_class(foe_pilot_for(pilot))
+        us_extra = {'checkpoint': rl_pilot_checkpoint(pilot)} if pilot in RL_PILOTS else {}
         stamp = int(time.time()) % 100000
         common = dict(
             battle_format=fmt,
@@ -130,9 +160,9 @@ class _MatchRunner:
         from showdown.rl.pokeenv_backend import rl_team_split
         t0 = to_showdown_export(active_teams(rl_team_split())[0])  # prior/mundos del grupo train
         self.us = cls(account_configuration=AccountConfiguration(f'PvA{worker_id}x{stamp}'[:18], None),
-                      team=t0, **common)
-        self.foe = cls(account_configuration=AccountConfiguration(f'PvB{worker_id}x{stamp}'[:18], None),
-                       team=t0, **common)
+                      team=t0, **common, **us_extra)
+        self.foe = foe_cls(account_configuration=AccountConfiguration(f'PvB{worker_id}x{stamp}'[:18], None),
+                           team=t0, **common)
         for p in (self.us, self.foe):
             p.max_turns = int(max_turns)
 
@@ -323,6 +353,9 @@ class LivePreviewPool:
 
         if pilot not in PILOTS:
             raise ValueError(f'piloto inválido {pilot!r}; opciones: {", ".join(PILOTS)}')
+        if pilot in RL_PILOTS:  # falla pronto, antes de lanzar los workers
+            rl_pilot_checkpoint(pilot)
+            foe_pilot_for(pilot)
         self.num_workers = max(1, int(num_workers))
         self.pilot = pilot
         self.max_turns = int(max_turns)
@@ -501,6 +534,10 @@ class LivePreviewPool:
         s['battles_per_s'] = s['battles'] / s['seconds'] if s['seconds'] > 0 else 0.0
         s['workers'] = self.num_workers
         s['pilot'] = self.pilot
+        if self.pilot in RL_PILOTS:  # procedencia del preview entrenado con su propio combate
+            import os
+            s['pilot_checkpoint'] = os.environ.get('PREVIEW_PILOT_CHECKPOINT', '')
+            s['foe_pilot'] = foe_pilot_for(self.pilot)
         s['worker_restarts'] = int(sum(self.restarts))
         return s
 
@@ -543,7 +580,8 @@ def add_live_cli_args(parser) -> None:
                         help='Primer puerto Showdown (default PS_PORT)')
     parser.add_argument('--start-ps', action='store_true', help='Arrancar Showdown si falta')
     parser.add_argument('--pilot', choices=PILOTS, default='greedy_joint',
-                        help='π_c congelado (spec: greedy_joint; ablación expectimax_bayesian)')
+                        help='π_c congelado (spec: greedy_joint; ablación expectimax_bayesian; '
+                             'ddqn/ppo = el combate propio, con PREVIEW_PILOT_CHECKPOINT)')
     parser.add_argument('--max-turns', type=int, default=40,
                         help='Tope de turnos del BO1 (superarlo cuenta como empate)')
 
