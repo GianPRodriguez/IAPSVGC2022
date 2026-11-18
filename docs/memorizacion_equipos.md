@@ -717,7 +717,13 @@ Por semilla, v2 − fija: DDQN +9,0 y −0,8; PPO +0,9 y +4,8.
    abrir con Raichu + Rillaboom**: con 1234 juega una situación que no vio, además de con una
    formación probablemente peor. DDQN, que memoriza más, sufre más (−23 frente a −11 de PPO). La
    caída mezcla así dos efectos: peor formación y combate fuera de su distribución.
-5. Conclusión: el preview aporta sobre todo una buena formación base; su adaptación al rival es
+5. **Corrección sobre Protect en PPO.** La "política sin Protect" de §7.3 (2 %) era del piloto de
+   400k. El PPO final (1M, simetría, máscara del aliado) usa Protect en el 11,2 % de sus decisiones
+   libres con tu equipo, igual que DDQN (11,7 %). Lo que sigue en 0 % son sus cambios voluntarios
+   (DDQN 5,3 %). Ninguno ajusta mucho el Protect al contexto: PPO 14,1 % con Fake Out rival
+   disponible, 13,6 % en el primer turno y 2,4 % con Tailwind rival activo (n = 42), frente a
+   11,0 % sin contexto.
+6. Conclusión: el preview aporta sobre todo una buena formación base; su adaptación al rival es
    pequeña (+3–4 puntos) y no está coordinada con el combate de cada agente. Motiva entrenar el
    preview con su propio combate (§15).
 
