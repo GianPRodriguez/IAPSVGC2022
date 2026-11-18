@@ -619,7 +619,10 @@ Aprobado por el usuario para antes del kick-off (opción C). Cabeza Q factorizad
 V + A1(a1) + A2(a2) (+ interacción de rango r), ddqn_spec 1.21; variantes rango 0 y 8, 1M × 2
 semillas, con la REG elegida. Elección con `val` (más de 4 puntos sobre la cabeza conjunta).
 Diseño en [`memorizacion_equipos.md`](memorizacion_equipos.md) §10. Script:
-`scripts/server/kickoff_queue18.sh`; corre después de la cola 17. Resultados: pendientes.
+`scripts/server/kickoff_queue18.sh`.
+
+**Resultados (18-11-2026): no supera el umbral** (rango 0: +3,2 en `val`, −3,4 en `eval`; rango 8:
++1,4 / −4,2). Se mantiene la cabeza conjunta. Detalle en §10.
 
 ### Juego contra el plan del rival (decimonovena cola, 17-11-2026)
 
@@ -627,7 +630,14 @@ Aprobado por el usuario: medir si DDQN y PPO cambian su juego cuando el rival ej
 (Trick Room, Tailwind, Fake Out, redirección) y si los heurísticos realmente lo ejecutan.
 `policy_diag --context`, con el equipo del agente al azar en cada partida (solo para este
 análisis). Diseño en [`memorizacion_equipos.md`](memorizacion_equipos.md) §11–§12. Script:
-`scripts/server/kickoff_queue19.sh`; corre después de la cola 18. Resultados: pendientes.
+`scripts/server/kickoff_queue19.sh`.
+
+**Resultados (18-11-2026, §12.1):** con equipo propio al azar ambos se desploman (DDQN 17–22 %,
+PPO 28–34 % contra los heurísticos): están especializados en el equipo fijo. Los heurísticos casi
+nunca activan Trick Room (0–1 % de las partidas) ni Tailwind (0–4 %), así que la evaluación no
+pone a prueba esos arquetipos; Fake Out sí (~27 %). Los agentes no adaptan su juego al plan del
+rival (atacan al que activa Trick Room o al redirector como al azar y no se protegen más del Fake
+Out).
 
 ## D. Metodología
 

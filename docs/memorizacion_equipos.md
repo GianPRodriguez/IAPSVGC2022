@@ -500,7 +500,21 @@ anteriores como conjuntos).
 REG elegida en la decimoquinta cola. Elección con `val` (200 partidas por rival, final.pt): se
 adopta la mejor variante si supera a la cabeza conjunta por más de 4 puntos. `eval` y propios
 como registro. Script: `scripts/server/kickoff_queue18.sh`; resumen:
-`showdown/rl/kickoff_summary18.py`. Corre después de la decimoséptima cola. Resultados: pendientes.
+`showdown/rl/kickoff_summary18.py`.
+
+**Resultados (commit 442d741, 17/18-11-2026): no supera el umbral; se mantiene la cabeza conjunta.**
+
+| Variante | `val` s0 / s1 | `val` media | Diferencia con la conjunta (74,1 %) | `eval` s0 / s1 (registro) | `eval` media | Propios |
+|---|---|---|---|---|---|---|
+| Rango 0 (aditiva) | 76,3 / 78,3 % | 77,3 % | +3,2 (± 1,7) | 66,7 / 56,0 % | 61,3 % | 94,2 % |
+| Rango 8 | 77,2 / 73,8 % | 75,5 % | +1,4 (± 1,8) | 58,0 / 63,0 % | 60,5 % | 94,3 % |
+| Conjunta (REG 0,03 + 0,1, cola 15) | 74,7 / 73,5 % | 74,1 % | — | 63,3 / 66,0 % | 64,7 % | — |
+
+La cabeza por hueco aprende algo más rápido (rango 0: 76 % de `val` con random a 250k) y sube un
+poco en `val`, pero no en `eval` (−3,4 puntos de media; la semilla 0 dio +3,4 y la 1 −10). La
+memorización no baja (propios ~94 % en ambas). **Conclusión:** la factorización por hueco no
+explica por sí sola la ventaja de PPO en generalización; la diferencia debe estar en otra parte
+(on-policy frente a replay, la política estocástica, el objetivo de PPO).
 
 ### 8.2 Ajuste de REG (decimoquinta cola, 17-11-2026)
 
@@ -592,6 +606,51 @@ con equipos al azar miden también la generalización a equipos propios nuevos.
 
 Agentes: DDQN con la REG elegida (decimoquinta cola) y PPO con simetría (duodécima cola), final.pt,
 2 semillas, 200 partidas por rival. Tests: `tests/test_context_diag.py`. Script:
-`scripts/server/kickoff_queue19.sh`; resumen: `showdown/rl/kickoff_summary19.py`. Corre después de
-la decimoctava cola. Resultados: pendientes.
+`scripts/server/kickoff_queue19.sh`; resumen: `showdown/rl/kickoff_summary19.py`.
+
+### 12.1 Resultados (commit 97bbad2, 18-11-2026)
+
+**1. Con un equipo propio que no conocen, ambos agentes se desploman.**
+
+| Agente | random | greedy_solo | greedy_joint | expectimax |
+|---|---|---|---|---|
+| DDQN, equipo propio al azar | 88 % | 22 % | 17 % | 18 % |
+| PPO, equipo propio al azar | 93 % | 32 % | 34 % | 28 % |
+| Referencia con el equipo fijo (`eval`) | — | DDQN ~63 %, PPO ~83 % (3 heurísticos) | | |
+
+Los dos están especializados en el equipo con que entrenaron (el preview v2 también). PPO
+generaliza mejor que DDQN a rivales nuevos, pero no a equipos propios nuevos. Para la tesis, los
+agentes son pilotos de un equipo concreto, no jugadores generales.
+
+**2. Los rivales heurísticos casi nunca juegan el arquetipo de su equipo** (% de partidas con al
+menos un uso; 22 % de los equipos `eval` tienen Trick Room y 70 % Tailwind):
+
+| Rival | Activa Trick Room | Activa Tailwind | Usa Fake Out | Usa redirección |
+|---|---|---|---|---|
+| greedy_solo | 0 % | 0 % | 0 % | 4 % |
+| greedy_joint | 1 % | 2–3 % | 26 % | 0–2 % |
+| expectimax | 0 % | 3–4 % | 28 % | 2–3 % |
+| random (referencia) | 4–6 % | 15–20 % | 26–32 % | 4–6 % |
+
+Ni siquiera el rival al azar activa tan poco Tailwind como los heurísticos: sus reglas de
+velocidad casi nunca lo justifican. **La evaluación actual no pone a prueba el juego contra Trick
+Room ni Tailwind**; sí contra Fake Out (joint y expectimax lo usan en ~27 % de las partidas).
+
+**3. Los agentes no adaptan su juego al plan del rival:**
+
+| Situación | DDQN | PPO | Lectura |
+|---|---|---|---|
+| Ataques al que puede activar Trick Room (antes de que lo haga) | 54 % (azar 58 %) | 47 % (azar 59 %) | No lo priorizan; PPO incluso menos que al azar |
+| Ataques al redirector | 46 % (azar 50 %) | 51 % (azar 50 %) | Indiferentes |
+| Protect con Fake Out rival disponible | 11,9 % (sin contexto 15,0 %) | 13,3 % (17,7 %) | No se protegen más del Fake Out |
+| Protect con Trick Room rival activo | 27,8 % (n = 18) | 20,0 % (n = 15) | Algo más, pero muestras mínimas |
+
+Límite: con equipos propios al azar los agentes juegan fuera de su distribución de entrenamiento;
+aun así, ningún indicador muestra que reconozcan el plan del rival. Es coherente con el punto 2:
+sus rivales de entrenamiento tampoco ejecutan esos planes, así que no tuvieron de qué aprender.
+
+**Implicaciones:** (a) para que los agentes aprendan a jugar contra arquetipos hacen falta rivales
+de entrenamiento y evaluación que los ejecuten (trabajo futuro, p. ej. heurísticos con plan de
+Trick Room / Tailwind o self-play); (b) la generalización a equipos propios nuevos requeriría
+entrenar con equipos propios variados (hoy se usa el equipo fijo por decisión del usuario).
 
