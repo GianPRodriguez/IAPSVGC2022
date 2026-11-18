@@ -647,6 +647,14 @@ el preview; (2) combate según el plan del rival con tu equipo; (3) piloto DDQN 
 con equipo propio al azar. Diseño en [`memorizacion_equipos.md`](memorizacion_equipos.md) §13.
 Script: `scripts/server/kickoff_queue20.sh`. Resultados: pendientes.
 
+### Rival de arquetipos y entropía de PPO (vigesimoprimera cola, 18-11-2026)
+
+Aprobado por el usuario: (1) greedy_joint con modo arquetipo (`PS_JOINT_ARCHETYPE=1`) como rival de
+evaluación de los agentes finales; (2) ajuste de entropía de PPO (0,003 y 0,03 frente a 0,01) para
+igualar el esfuerzo de ajuste con DDQN; (3) limitaciones documentadas en `protocolo_evaluacion.md`.
+Tabla completa por baseline en [`memorizacion_equipos.md`](memorizacion_equipos.md) §14.1. Script:
+`scripts/server/kickoff_queue21.sh`; corre después de la cola 20. Resultados: pendientes.
+
 ## D. Metodología
 
 | # | Punto | Estado |

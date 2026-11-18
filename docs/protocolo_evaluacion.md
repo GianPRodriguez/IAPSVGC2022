@@ -246,6 +246,16 @@ frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada
   batallas quedaba sin procesar. Afecta por igual a ambos lados en las corridas anteriores
   (confirmación, techos, diversidad); no se espera que cambie las conclusiones.
 
+### Limitaciones de los agentes con aprendizaje (18-11-2026)
+
+- **Decisiones de configuración mirando `eval`** (máscara del aliado, simetría en PPO, REG): la
+  cifra final contra `eval` puede estar algo inflada; desde el 17-11-2026 las elecciones se hacen con
+  `val`, y la Conclusión formal usa semillas de partida nuevas (`memorizacion_equipos.md` §9).
+- **Especialización en el equipo fijo:** con un equipo propio desconocido DDQN gana ~19 % y PPO
+  ~31 % contra los heurísticos (§12.1).
+- **Los heurísticos casi no ejecutan arquetipos de velocidad** (Trick Room 0–1 %, Tailwind 0–4 % de
+  las partidas): se agrega un rival de arquetipos para medirlo (§14.2).
+
 ## Registro de cambios del protocolo
 
 | Fecha | Cambio |

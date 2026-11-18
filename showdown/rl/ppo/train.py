@@ -566,6 +566,7 @@ def run_training(
     smoke: bool = False,
     lr: Optional[float] = None,
     clip_eps: Optional[float] = None,
+    ent_coef: Optional[float] = None,
     num_envs: int = 1,
     envs_per_server: int = 4,
     base_port: Optional[int] = None,
@@ -597,6 +598,8 @@ def run_training(
         cfg.lr = float(lr)
     if clip_eps is not None:
         cfg.clip_eps = float(clip_eps)
+    if ent_coef is not None:
+        cfg.ent_coef = float(ent_coef)
     agent = PPOAgent(cfg)
     resume_skip = 0
     if resume:
@@ -679,7 +682,7 @@ def run_training(
     mlog = MetricsLog(ckpt_dir / 'train_metrics.jsonl', run_meta={
         'agent': 'ppo', 'seed': seed, 'device': device, 'num_envs': num_envs, 'lr': float(cfg.lr),
         'foe_pool': _foe_pool_meta(),
-        'clip_eps': float(cfg.clip_eps), 'agent_team': _AGENT_TEAM, 'resume': resume or '',
+        'clip_eps': float(cfg.clip_eps), 'ent_coef': float(cfg.ent_coef), 'agent_team': _AGENT_TEAM, 'resume': resume or '',
         'schedule': [{'unlock': p.unlock, 'steps': p.steps, 'omega': list(p.omega)} for p in expand_sched],
     })
     from showdown.inference_sim.paths import PS_PORT as _PS_PORT
@@ -944,6 +947,8 @@ def _main(argv: Optional[list] = None) -> int:
     p.add_argument('--smoke', action='store_true', help='Treat as smoke (suite default 0)')
     p.add_argument('--lr', type=float, default=None, help='Override PPOConfig.lr')
     p.add_argument('--clip-eps', type=float, default=None, help='Override PPOConfig.clip_eps')
+    p.add_argument('--ent-coef', type=float, default=None,
+                   help='Override PPOConfig.ent_coef (por defecto 0,01; memorizacion_equipos.md §14)')
     p.add_argument('--eval-every', type=int, default=250_000,
                    help='Validación sin exploración cada N pasos (rivales deterministas); guarda best.pt (0 = off)')
     p.add_argument('--eval-games', type=int, default=50, help='Partidas BO1 por rival en cada validación')
@@ -1010,6 +1015,7 @@ def _main(argv: Optional[list] = None) -> int:
         smoke=bool(args.smoke),
         lr=args.lr,
         clip_eps=args.clip_eps,
+        ent_coef=args.ent_coef,
         num_envs=args.num_envs,
         envs_per_server=args.envs_per_server,
         base_port=args.base_port,

@@ -70,7 +70,8 @@ def classify(battle, slot: int, act, mask_slot: np.ndarray) -> str:
 
 
 def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
-        preview_checkpoint: str = '', agent_kind: str = 'ddqn', context: bool = False) -> Dict[str, object]:
+        preview_checkpoint: str = '', agent_kind: str = 'ddqn', context: bool = False,
+        foes=FOES) -> Dict[str, object]:
     from showdown.inference_sim.team_factory import load_team_file
     from showdown.rl.action_space import decode_joint_action, decode_slot_action
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
@@ -98,6 +99,8 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
     if context:
         from showdown.rl import context_diag as CD
     for fi, foe in enumerate(FOES):
+        if foe not in foes:
+            continue
         backend = PokeEnvBattleBackend(opponent=foe, start_ps=True, port=port, account_prefix='DdqnDiag',
                                        combat_family='ddqn', our_team=our_team, foe_tie=False)
         env = VGCEnv(reward_candidate=RewardCandidate.SPARSE, backend=backend, max_episode_turns=40)
@@ -163,6 +166,7 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
             'resultados': {f: dict(c) for f, c in results.items()},
             'partidas': games_log,
             'preview_forzado': os.environ.get('PREVIEW_FORCE_ORDER', '') or None,
+            'joint_arquetipo': os.environ.get('PS_JOINT_ARCHETYPE', '') or None,
             'total': dict(total),
             **({'contexto': {c: dict(v) for c, v in ctx_counts.items()}} if context else {})}
 
@@ -193,12 +197,14 @@ def main(argv=None) -> int:
     ap.add_argument('--agent-team', default='showdown/rl/data/ddqn_team.txt')
     ap.add_argument('--out', default='logs/policy_diag.json')
     ap.add_argument('--agent', choices=('ddqn', 'ppo'), default='ddqn')
+    ap.add_argument('--foes', default=','.join(FOES), help='rivales a jugar (lista separada por comas)')
     ap.add_argument('--context', action='store_true',
                     help='desglose por plan del rival y usos de movimientos clave (§12)')
     args = ap.parse_args(argv)
     rep = run(checkpoint=args.checkpoint, games=args.games, port=args.port, seed=args.seed,
               agent_team=args.agent_team, preview_checkpoint=args.preview_checkpoint,
-              agent_kind=args.agent, context=args.context)
+              agent_kind=args.agent, context=args.context,
+              foes=tuple(f.strip() for f in args.foes.split(',') if f.strip()))
     with open(args.out, 'w', encoding='utf-8') as fh:
         json.dump(rep, fh, indent=1)
     print(format_table(rep))

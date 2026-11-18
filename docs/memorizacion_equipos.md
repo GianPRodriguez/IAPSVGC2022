@@ -688,3 +688,53 @@ aquí trabaja fuera de su distribución.
 Tests: `tests/test_preview_analysis.py`. Script: `scripts/server/kickoff_queue20.sh`; resumen:
 `showdown/rl/kickoff_summary20.py`. Resultados: pendientes.
 
+## 14. Rendimiento por baseline, rival de arquetipos y entropía de PPO (18-11-2026)
+
+### 14.1 Rendimiento contra cada baseline (configuración final, 1M, entrenados con tu equipo)
+
+Victorias sin exploración; final.pt salvo que se indique. "Conocidos" = equipos de
+entrenamiento; `eval` y `val` = equipos nunca entrenados; "propio al azar" = el agente juega con un
+equipo propio que no conoce (cola 19).
+
+| Agente | Rivales | random | greedy_solo | greedy_joint | expectimax | 3 heurísticos |
+|---|---|---|---|---|---|---|
+| DDQN | conocidos ¹ | 98,5–99,5 % | 93,0–97,5 % | 94,5–96,5 % | 86,5–88,5 % | 92,0–93,5 % |
+| DDQN | **`eval`** | 99,5 % | 63,0 % | 66,5 % | **64,5 %** | **64,7 %** |
+| DDQN | `val` (200 por rival) | 97,5 % | 84,5 % | 74,0 % | 63,8 % | 74,1 % |
+| DDQN | propio al azar (`eval`) | 88,2 % | 21,5 % | 17,2 % | 18,0 % | 18,9 % |
+| PPO | conocidos (best.pt) | 100 % | 98,5 % | 97,5 % | 92,0 % | 96,0 % |
+| PPO | **`eval`** | 99,0 % | 85,0 % | 85,0 % | **80,0 %** | **83,3 %** |
+| PPO | `val` (200 por rival) | 100 % | 94,2 % | 91,2 % | 78,8 % | 88,1 % |
+| PPO | propio al azar (`eval`) | 93,0 % | 32,5 % | 33,5 % | 28,5 % | 31,5 % |
+
+¹ DDQN con REG 0,03 a 1M no se midió con equipos conocidos; rango de corridas equivalentes (REG
+0,01 best.pt y REG 0,03 con simetría). 2 semillas; 200 partidas por rival y grupo (400 en `val` y
+con propio al azar).
+
+**Lectura:** contra rivales desconocidos los dos superan a los tres heurísticos, incluido
+expectimax (DDQN ~64 %, PPO ~80 %), y contra conocidos casi los dominan. Contra expectimax la
+brecha conocidos − `eval` es ~−23 en DDQN y −12 en PPO. Con un equipo propio desconocido ambos
+pierden contra todos los heurísticos: su fuerza depende de pilotar tu equipo. En `val`, greedy_solo
+y joint resultan más fáciles que en `eval` (30 equipos, distinta composición).
+
+### 14.2 Rival de arquetipos (vigesimoprimera cola)
+
+La cola 19 mostró que los heurísticos casi nunca activan Trick Room (0–1 % de las partidas) ni
+Tailwind (0–4 %), aunque 22 % y 70 % de los equipos los traen: la evaluación no ponía a prueba esos
+planes. **Modo arquetipo de greedy_joint** (`PS_JOINT_ARCHETYPE=1`, `joint.py`): Tailwind recibe
+un bono dominante (250) siempre que no esté puesto, y Trick Room cuando no está puesto y su lado es
+más lento, sin exigir que el compañero haga daño ese turno (el compañero cubre con Fake Out,
+redirección, Protect o un ataque). Apagado por defecto: greedy_joint no cambia (test). Uso:
+evaluación de los agentes finales (2 semillas, tu equipo, `eval`, 200 partidas, con `--context`)
+y, en el futuro, entrenamiento. Mide también si el rival efectivamente activa los planes.
+
+### 14.3 Entropía de PPO (vigesimoprimera cola)
+
+Para igualar el esfuerzo de ajuste con DDQN (que tuvo el de REG): `--ent-coef` 0,003 y 0,03 frente
+a 0,01, 1M × 2 semillas, configuración final; elección con `val` (más de 4 puntos). Más entropía
+podría además darle a PPO el repertorio que le falta (nunca cambia por voluntad propia); el resumen
+registra el % de cambios voluntarios.
+
+Tests: `tests/test_joint_archetype.py`. Script: `scripts/server/kickoff_queue21.sh`; resumen:
+`showdown/rl/kickoff_summary21.py`. Corre después de la vigésima cola. Resultados: pendientes.
+

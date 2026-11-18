@@ -98,6 +98,19 @@ _SYNERGY_LITE = True
 _FO_PARTNER_BONUS = 8.0
 _HH_PARTNER_BONUS = 7.0
 _SPEED_PARTNER_BONUS = 4.0
+
+# Modo arquetipo (memorizacion_equipos.md §14; 18-11-2026). Diagnóstico de la cola 19: greedy_joint
+# activa Trick Room en ~1 % de las partidas y Tailwind en ~2–3 %, aunque 22 % / 70 % de los equipos
+# los traen; la evaluación no ponía a prueba esos planes. Con PS_JOINT_ARCHETYPE=1 el rival juega
+# su plan de velocidad: activa Tailwind siempre que no esté puesto y Trick Room cuando su lado es
+# más lento, sin exigir que el compañero haga daño ese turno (el compañero puede cubrir con Fake
+# Out, redirección o Protect). Apagado por defecto: greedy_joint no cambia.
+_ARCHETYPE_SETUP_BONUS = 250.0
+
+
+def _archetype_mode() -> bool:
+    import os
+    return os.environ.get('PS_JOINT_ARCHETYPE', '').strip().lower() in ('1', 'true', 'yes', 'on')
 _SCREEN_PARTNER_BONUS = 8.0  # Reflect/LS Screen/Aurora Veil + partner daño
 _REDIRECT_LITE_SCALE = 0.55
 
@@ -854,10 +867,23 @@ def _field_setup_bonus(
     our_tailwind: bool,
     opp_tailwind: bool,
 ) -> float:
-    """A9.1: TW/TR solo valen si el campo aún no está y Spe lo pide; else Icy Wind…"""
+    """A9.1: TW/TR solo valen si el campo aún no está y Spe lo pide; else Icy Wind…
+
+    En modo arquetipo (``PS_JOINT_ARCHETYPE=1``) Tailwind vale ``_ARCHETYPE_SETUP_BONUS`` si no está
+    puesto y Trick Room si no está puesto y el lado propio es más lento, haga o no daño el compañero.
+    """
+    mid = _norm_move(atom.move_name)
+    if _archetype_mode() and mid in ('tailwind', 'trickroom'):
+        if mid == 'tailwind':
+            return 0.0 if our_tailwind else float(_ARCHETYPE_SETUP_BONUS)
+        if trick_room:
+            return 0.0
+        living = [f for _tid, f in _living_foes(foes)]
+        our_spe = _mean_effective_spe((left_poke, right_poke), tailwind=our_tailwind)
+        foe_spe = _mean_effective_spe(living, tailwind=opp_tailwind)
+        return float(_ARCHETYPE_SETUP_BONUS) if our_spe < foe_spe else 0.0
     if partner.total_damage_pct <= 0.0 and not partner.has_guaranteed_ko:
         return 0.0
-    mid = _norm_move(atom.move_name)
     if mid not in ('tailwind', 'trickroom'):
         return float(_SPEED_PARTNER_BONUS)
     if not _FIELD_SETUP:
@@ -1656,7 +1682,7 @@ def _utility_score_damage_iso(
                 s += _HH_PARTNER_BONUS
             else:
                 s += 2.0  # pequeño nudge para preferir HH+ataque vs doble ataque débil
-        elif atom.utility == 'speed' and partner_dmg:
+        elif atom.utility == 'speed' and (partner_dmg or _archetype_mode()):
             s += _field_setup_bonus(
                 atom, partner,
                 left_poke=left_poke, right_poke=right_poke,
