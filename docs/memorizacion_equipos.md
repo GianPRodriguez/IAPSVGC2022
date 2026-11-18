@@ -707,7 +707,17 @@ Por semilla, v2 − fija: DDQN +9,0 y −0,8; PPO +0,9 y +4,8.
 3. **El preview elige igual para los dos agentes** (mismo preview, mismo equipo): 17 formaciones
    distintas; 3546 en el 19 % de las partidas y las tres más frecuentes en el 47 %. Es decir, no
    tiene en cuenta cómo juega cada combate.
-4. Conclusión: el preview aporta sobre todo una buena formación base; su adaptación al rival es
+4. **Por qué /team 1234 hunde tanto el rendimiento.** Con tu equipo (1 Raichu, 2 Rillaboom,
+   3 Gholdengo, 4 Arcanine-Hisui, 5 Staraptor, 6 Primarina), 1234 abre con Raichu + Rillaboom y deja
+   fuera a Staraptor y Primarina. El preview v2 **nunca** eligió 1234 ni ese par de leads (0 de 2 400
+   partidas), y Rillaboom nunca sale de lead (0 %), aunque se trae en el 46 % de las partidas.
+   Traídos: Arcanine-Hisui 92 %, Primarina 79 %, Staraptor 72 %, Gholdengo 63 %, Raichu 48 %,
+   Rillaboom 46 %. Pares de leads más usados: Raichu + Primarina 32 %, Gholdengo + Staraptor 30 %,
+   Raichu + Arcanine-Hisui 13 %. Como el combate se entrenó con este preview, **nunca practicó
+   abrir con Raichu + Rillaboom**: con 1234 juega una situación que no vio, además de con una
+   formación probablemente peor. DDQN, que memoriza más, sufre más (−23 frente a −11 de PPO). La
+   caída mezcla así dos efectos: peor formación y combate fuera de su distribución.
+5. Conclusión: el preview aporta sobre todo una buena formación base; su adaptación al rival es
    pequeña (+3–4 puntos) y no está coordinada con el combate de cada agente. Motiva entrenar el
    preview con su propio combate (§15).
 
