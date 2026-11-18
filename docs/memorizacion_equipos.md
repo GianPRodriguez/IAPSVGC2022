@@ -654,3 +654,37 @@ de entrenamiento y evaluación que los ejecuten (trabajo futuro, p. ej. heuríst
 Trick Room / Tailwind o self-play); (b) la generalización a equipos propios nuevos requeriría
 entrenar con equipos propios variados (hoy se usa el equipo fijo por decisión del usuario).
 
+## 13. Preview y combate por separado; piloto con equipos propios al azar (vigésima cola, 18-11-2026)
+
+Aprobado por el usuario. El agente es una tupla (preview, combate) que decide por separado en
+cada etapa, y el resultado final exige que ambas jueguen bien. Hasta ahora casi todo el análisis
+fue del combate; el preview v2 (PPO de preview) se entrenó con un combate heurístico
+(greedy_joint) como piloto, no con DDQN ni PPO.
+
+**1. Contribución del preview.** Mismo combate (final.pt de la configuración final, 2 semillas
+por agente), tres previews, tu equipo fijo, rivales `eval`, 200 partidas por rival:
+
+| Preview | Qué aísla |
+|---|---|
+| v2 (la red) | La tupla completa |
+| Formación fija: la que más elige v2 con ese agente, jugada siempre | v2 − fija = cuánto aporta adaptar la formación al rival |
+| `/team 1234` (los cuatro primeros) | fija − 1234 = cuánto aporta elegir bien los cuatro |
+
+Implementación: `PREVIEW_FORCE_ORDER` en `showdown/rl/frozen_preview.py` (fuerza una formación
+sin consultar la red) y registro de la formación de cada partida en `policy_diag`. Límite: el
+combate se entrenó con las formaciones de v2; con otras formaciones juega algo fuera de su
+distribución, así que las diferencias mezclan la calidad del preview con la adaptación del
+combate a él.
+
+**2. Combate según el plan del rival con tu equipo** (`--context` en la corrida con v2): repite el
+análisis de §12 en la distribución de entrenamiento.
+
+**3. Piloto con equipo propio al azar:** DDQN y PPO, 1M, semillas 0 y 1, configuración final,
+`--agent-team pool` (equipo propio sorteado del grupo `fit` en cada partida). Evaluación contra
+rivales `eval` con equipo propio al azar y con tu equipo. Pregunta: ¿aprenden a jugar con
+cualquier equipo y cuánto pierden con el tuyo? Límite: el preview v2 se entrenó para tu equipo y
+aquí trabaja fuera de su distribución.
+
+Tests: `tests/test_preview_analysis.py`. Script: `scripts/server/kickoff_queue20.sh`; resumen:
+`showdown/rl/kickoff_summary20.py`. Resultados: pendientes.
+

@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from collections import Counter, defaultdict
 from typing import Dict
 
@@ -146,6 +147,9 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                        **({'foe_state': fs} if fs else {})}
                 if our_team is None:
                     rec['nuestro_equipo'] = getattr(env.backend, 'last_our_team', None)
+                pp = getattr(env.backend, '_preview_policy', None)
+                if getattr(pp, 'last_order', None):
+                    rec['formacion'] = ''.join(str(x) for x in pp.last_order)  # 1-based, orden del equipo
                 if context:
                     rec['eventos'] = CD.count_events(env.backend._battle)
                 games_log.append(rec)
@@ -158,6 +162,7 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
             'por_rival': {f: dict(c) for f, c in by_foe.items()},
             'resultados': {f: dict(c) for f, c in results.items()},
             'partidas': games_log,
+            'preview_forzado': os.environ.get('PREVIEW_FORCE_ORDER', '') or None,
             'total': dict(total),
             **({'contexto': {c: dict(v) for c, v in ctx_counts.items()}} if context else {})}
 

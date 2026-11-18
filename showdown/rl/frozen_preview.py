@@ -119,6 +119,7 @@ class FrozenPreviewPolicy:
     _chooser: Optional[Callable[[np.ndarray, np.ndarray], int]] = None
     _loaded: bool = False
     _load_error: str = ''
+    last_order: Optional[Tuple[int, ...]] = None  # formación de la última batalla (diagnósticos)
 
     @property
     def available(self) -> bool:
@@ -261,8 +262,25 @@ class FrozenPreviewPolicy:
         return tuple(i + 1 for i in decode_preview_action(a))
 
     def teampreview(self, battle: Any) -> str:
+        """Orden ``/team`` para la batalla.
+
+        ``PREVIEW_FORCE_ORDER=1356`` (diagnóstico, memorizacion_equipos.md §13) fuerza siempre esa
+        formación, sin consultar la red: sirve para separar la contribución del preview de la del
+        combate. La formación jugada queda en ``self.last_order`` (1-based) para los registros.
+        """
+        forced = os.environ.get('PREVIEW_FORCE_ORDER', '').strip()
+        if forced:
+            order = tuple(int(c) for c in forced if c.isdigit())
+            if len(order) != 4 or len(set(order)) != 4 or not all(1 <= x <= 6 for x in order):
+                raise ValueError(f'PREVIEW_FORCE_ORDER inválido: {forced!r}')
+            self.last_order = order
+            mark_selected_in_teampreview(battle, order)
+            return '/team ' + ''.join(str(x) for x in order)
         a, cmd = self.choose_action(battle)
         order = tuple(i + 1 for i in decode_preview_action(a))
+        if self._chooser is None:
+            order = FIXED_EXPORT_TUPLE
+        self.last_order = order
         mark_selected_in_teampreview(battle, order)
         return cmd
 

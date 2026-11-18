@@ -639,6 +639,14 @@ pone a prueba esos arquetipos; Fake Out sí (~27 %). Los agentes no adaptan su j
 rival (atacan al que activa Trick Room o al redirector como al azar y no se protegen más del Fake
 Out).
 
+### Preview y combate por separado; piloto con equipos al azar (vigésima cola, 18-11-2026)
+
+Aprobado por el usuario: la tupla (preview, combate) debe jugar bien en ambas etapas. (1) Mismo
+combate con tres previews (v2, formación fija más frecuente, /team 1234) para aislar lo que aporta
+el preview; (2) combate según el plan del rival con tu equipo; (3) piloto DDQN y PPO entrenados
+con equipo propio al azar. Diseño en [`memorizacion_equipos.md`](memorizacion_equipos.md) §13.
+Script: `scripts/server/kickoff_queue20.sh`. Resultados: pendientes.
+
 ## D. Metodología
 
 | # | Punto | Estado |
