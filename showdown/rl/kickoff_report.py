@@ -124,6 +124,24 @@ def build(d: Path) -> str:
             row = [rate(idx[k].get(s)) for k in ('final_eval', 'best_eval', 'final_own')]
             if any(row):
                 L.append(f'| {m.upper()} | {s} | ' + ' | '.join(_pct(x[0]) if x else '—' for x in row) + ' |')
+    arch_rows = []
+    for m in METHODS:
+        normal, arch = [], []
+        for s in SEEDS:
+            a = rate(_load(d / 'diag' / f'{m}_s{s}_final_arquetipo.json'), ('greedy_joint',))
+            n = rate(_load(d / 'diag' / f'{m}_s{s}_final_eval.json'), ('greedy_joint',))
+            if a and n:
+                arch.append(a[0])
+                normal.append(n[0])
+        if arch:
+            mn, _ = mean_ci(normal)
+            ma, hwa = mean_ci(arch)
+            arch_rows.append(f'| {m.upper()} | {len(arch)} | {_pct(mn)} | {_pct(ma)}'
+                             f"{f' (± {100 * hwa:.1f})' if len(arch) > 1 else ''} | {100 * (ma - mn):+.1f} |")
+    if arch_rows:
+        L += ['', '## 3b. Contra greedy_joint en modo arquetipo (Tailwind / Trick Room; final.pt, `eval`)', '',
+              '| Método | Semillas | joint normal | joint arquetipo (IC entre semillas) | Diferencia |',
+              '|---|---|---|---|---|'] + arch_rows
     if len(means) == 2 and all(len(v) > 1 for v in means.values()):
         a, b = means['ppo'], means['ddqn']
         ma, mb = sum(a) / len(a), sum(b) / len(b)

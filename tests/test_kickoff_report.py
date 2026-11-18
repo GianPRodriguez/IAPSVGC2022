@@ -35,3 +35,16 @@ def test_missing_data_does_not_crash(tmp_path):
     (tmp_path / 'diag').mkdir()
     assert KR.main([str(tmp_path)]) == 0
     assert 'sin datos' in (tmp_path / 'kickoff_summary16.md').read_text(encoding='utf-8')
+
+
+def test_report_archetype_section_and_ppo_only(tmp_path):
+    d = tmp_path / 'diag'
+    d.mkdir()
+    for s in range(2):
+        _diag(d / f'ppo_s{s}_final_eval.json', (198, 170, 170, 160))
+        arch = {'resultados': {'greedy_joint': {'win': 150, 'loss': 50}}}
+        (d / f'ppo_s{s}_final_arquetipo.json').write_text(json.dumps(arch), encoding='utf-8')
+    assert KR.main([str(tmp_path)]) == 0
+    md = (tmp_path / 'kickoff_summary16.md').read_text(encoding='utf-8')
+    assert '## 3b.' in md and '| PPO | 2 | 85.0 % | 75.0 %' in md and '-10.0' in md
+    assert '| DDQN | 0 | sin datos' in md and '## 4.' not in md  # solo PPO: sin comparación

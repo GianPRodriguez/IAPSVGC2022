@@ -679,6 +679,17 @@ puntos) y `eval`. Diseño en [`memorizacion_equipos.md`](memorizacion_equipos.md
 −3,7). Se mantiene el preview v2. Hipótesis: recompensa saturada (el combate ganó el 92–97 % de las
 partidas de entrenamiento contra greedy_joint).
 
+### Kick-off oficial de PPO (vigesimotercera cola, 18-11-2026)
+
+**Decisión del usuario:** iniciar primero el kick-off oficial solo de PPO (el de DDQN, después).
+Configuración final por defecto: máscara del aliado, simetría, entropía 0,01, desde cero, validación
+reservada, preview v2, equipo fijo; 1M pasos × 5 semillas (0–4). Evaluación de cada semilla con 200
+partidas por rival: final.pt contra `eval` (principal), best.pt contra `eval` (secundario), final.pt
+contra sus propios equipos, y final.pt contra greedy_joint en modo arquetipo (con `--context`;
+recomendado tras §14.4, ~2 min por semilla). Resumen: `showdown/rl/kickoff_report.py` (sección 3b
+para el rival de arquetipos). Script: `scripts/server/kickoff_ppo_oficial.sh`. Duración estimada
+~5,5 h. Resultados: pendientes.
+
 ## D. Metodología
 
 | # | Punto | Estado |
