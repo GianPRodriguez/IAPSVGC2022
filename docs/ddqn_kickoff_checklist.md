@@ -650,7 +650,9 @@ Script: `scripts/server/kickoff_queue20.sh`.
 **Parte 1 (18-11-2026, §13.1):** con el combate final, el preview v2 rinde 64,4 % (DDQN) y 85,3 %
 (PPO); jugar siempre su formación más frecuente da 60,3 / 82,5 % (adaptación +4,1 / +2,8) y
 /team 1234 da 37,3 / 71,3 % (elección +23,0 / +11,2). El preview elige igual para los dos agentes.
-Piloto con equipos al azar: pendiente.
+Piloto con equipos al azar (§13.2): DDQN no generaliza (19,5 % con equipo propio al azar, +0,6) y
+pierde con tu equipo (29,8 %, −34,8); PPO generaliza en parte (45,5 %, +14,0; con tu equipo 72,8 %,
+−10,6). Para el kick-off se mantiene el equipo fijo.
 
 ### Rival de arquetipos y entropía de PPO (vigesimoprimera cola, 18-11-2026)
 
@@ -658,14 +660,24 @@ Aprobado por el usuario: (1) greedy_joint con modo arquetipo (`PS_JOINT_ARCHETYP
 evaluación de los agentes finales; (2) ajuste de entropía de PPO (0,003 y 0,03 frente a 0,01) para
 igualar el esfuerzo de ajuste con DDQN; (3) limitaciones documentadas en `protocolo_evaluacion.md`.
 Tabla completa por baseline en [`memorizacion_equipos.md`](memorizacion_equipos.md) §14.1. Script:
-`scripts/server/kickoff_queue21.sh`; corre después de la cola 20. Resultados: pendientes.
+`scripts/server/kickoff_queue21.sh`.
+
+**Resultados (§14.4):** contra el rival de arquetipos ambos pierden 7–9 puntos (DDQN 62,3 → 53,8 %,
+PPO 85,8 → 78,8 %); el rival activa Tailwind en ~29 % y Trick Room en ~11 % de las partidas. PPO
+adapta algo su Protect a esos planes; DDQN no. Entropía de PPO: ninguna alternativa supera el
+umbral (0,003: −2,1; 0,03: −0,5 en `val`); se mantiene 0,01. Con 0,03 aparecen cambios voluntarios
+(3 %) sin perder rendimiento.
 
 ### Preview entrenado con su propio combate (vigesimosegunda cola, 18-11-2026)
 
 Aprobado por el usuario tras la parte 1 de la cola 20. Pilotos RL en `preview_live`; un preview por
 agente entrenado con su combate congelado y solo con `fit`; comparado con v2 en `val` (más de 4
 puntos) y `eval`. Diseño en [`memorizacion_equipos.md`](memorizacion_equipos.md) §15. Script:
-`scripts/server/kickoff_queue22.sh`; corre después de la cola 21. Resultados: pendientes.
+`scripts/server/kickoff_queue22.sh`.
+
+**Resultados (§15.1): el preview nuevo es peor** (DDQN −5,8 en `val` y −3,2 en `eval`; PPO −1,4 y
+−3,7). Se mantiene el preview v2. Hipótesis: recompensa saturada (el combate ganó el 92–97 % de las
+partidas de entrenamiento contra greedy_joint).
 
 ## D. Metodología
 

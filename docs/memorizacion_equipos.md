@@ -1,6 +1,6 @@
 # Memorización de los equipos rivales y cómo reducirla
 
-Estado: **decimocuarta cola terminada (17-11-2026): la regularización (REG) cumple el criterio y sube a DDQN a 62–65 % contra `eval` (§8).** Octava cola (16-11-2026): Los sintéticos no cumplen el criterio de adopción; la cantidad de equipos reales no cambia la generalización.** PPO (novena cola, §6) generaliza mucho mejor que DDQN. Decisión del usuario: sin sintéticos, validación reservada por defecto.
+Estado: **colas 20–22 terminadas (18-11-2026): piloto con equipos al azar (§13.2), rival de arquetipos y entropía (§14.4), preview con su propio combate peor que v2 (§15.1).** Decimocuarta cola (17-11-2026): la regularización (REG) cumple el criterio y sube a DDQN a 62–65 % contra `eval` (§8).** Octava cola (16-11-2026): Los sintéticos no cumplen el criterio de adopción; la cantidad de equipos reales no cambia la generalización.** PPO (novena cola, §6) generaliza mucho mejor que DDQN. Decisión del usuario: sin sintéticos, validación reservada por defecto.
 Relacionado: [`protocolo_evaluacion.md`](protocolo_evaluacion.md) §2b (separación de equipos),
 [`ddqn_kickoff_checklist.md`](ddqn_kickoff_checklist.md), [`equipos_sinteticos_analisis.md`](equipos_sinteticos_analisis.md).
 
@@ -727,6 +727,31 @@ Por semilla, v2 − fija: DDQN +9,0 y −0,8; PPO +0,9 y +4,8.
    pequeña (+3–4 puntos) y no está coordinada con el combate de cada agente. Motiva entrenar el
    preview con su propio combate (§15).
 
+### 13.2 Resultados del piloto con equipo propio al azar (18-11-2026)
+
+Entrenado con un equipo propio sorteado en cada partida entre los 170 de `fit` (~107 000 partidas
+en 1M pasos: ~630 por equipo propio, frente a ~107 000 con el equipo fijo). Contra los 3
+heurísticos, rivales `eval`, 2 semillas, 200 partidas por rival:
+
+| Agente | Entrenado con | Equipo propio al azar (`eval`) | Tu equipo |
+|---|---|---|---|
+| DDQN | tu equipo | 18,9 % | 64,7 % |
+| DDQN | **equipo al azar** | **19,5 %** (+0,6 ± 1,6) | **29,8 %** (−34,8 ± 2,4) |
+| PPO | tu equipo | 31,5 % | 83,3 % |
+| PPO | **equipo al azar** | **45,5 %** (+14,0 ± 2,0) | **72,8 %** (−10,6 ± 2,0) |
+
+Por semilla: DDQN 19,8 / 19,2 % y 32,0 / 27,7 %; PPO 42,7 / 48,3 % y 73,8 / 71,7 %.
+
+1. **DDQN no aprende nada general** al entrenar con equipos variados y pierde la mitad de su
+   rendimiento con tu equipo: diluir la práctica (~630 partidas por equipo) no le deja dominar
+   ninguno.
+2. **PPO sí generaliza en parte:** +14 puntos con equipos propios desconocidos (casi 50 % contra
+   greedy_solo) a cambio de −10,6 con tu equipo, con el que sigue ganando a los tres heurísticos.
+3. Es el mismo patrón visto con rivales, formaciones y equipos: **PPO generaliza, DDQN memoriza**.
+   Con 1M pasos, especializarse en un equipo sigue siendo lo mejor para ambos; un agente general
+   necesitaría más entrenamiento y un preview entrenado con equipos propios variados (el v2 es el de
+   tu equipo). Trabajo futuro.
+
 ## 14. Rendimiento por baseline, rival de arquetipos y entropía de PPO (18-11-2026)
 
 ### 14.1 Rendimiento contra cada baseline (configuración final, 1M, entrenados con tu equipo)
@@ -779,7 +804,37 @@ podría además darle a PPO el repertorio que le falta (nunca cambia por volunta
 registra el % de cambios voluntarios.
 
 Tests: `tests/test_joint_archetype.py`. Script: `scripts/server/kickoff_queue21.sh`; resumen:
-`showdown/rl/kickoff_summary21.py`. Corre después de la vigésima cola. Resultados: pendientes.
+`showdown/rl/kickoff_summary21.py`.
+
+### 14.4 Resultados (commit c9a5a3f, 18-11-2026)
+
+**Rival de arquetipos** (tu equipo, `eval`, 2 semillas, 400 partidas contra joint por agente):
+
+| Agente | Contra joint normal | Contra joint arquetipo | Diferencia | Rival activa Trick Room | Rival activa Tailwind |
+|---|---|---|---|---|---|
+| DDQN (REG 0,03) | 62,3 % | 53,8 % | −8,5 | 0 % → 12 % | 1 % → 29 % |
+| PPO (simetría) | 85,8 % | 78,8 % | −7,0 | 0 % → 10 % | 1 % → 28 % |
+
+- El modo arquetipo sí ejecuta los planes (Tailwind en ~29 % de las partidas, Trick Room en
+  ~11 %, frente a ~0–1 %), y **ambos agentes pierden 7–9 puntos**: la evaluación con heurísticos
+  normales los sobreestimaba frente a planes de velocidad. Siguen ganando (DDQN 54 %, PPO 79 %).
+- **PPO sí adapta algo su Protect:** 24,2 % con Tailwind rival activo y 18,1 % con Trick Room rival,
+  frente a 10,6 % sin contexto (esperar a que se agote el efecto). DDQN casi no (14,8 % y 9,9 %
+  frente a 12,5 %), aunque cambia algo más con Trick Room rival (7,2 % frente a 4,7 %).
+- Ninguno ataca primero al que puede activar Trick Room (DDQN 48 %, PPO 41 %, frente a ~55 % al
+  azar) ni al redirector.
+
+**Entropía de PPO** (1M, 2 semillas; elección con `val`, umbral +4):
+
+| Entropía | `val` | Diferencia con 0,01 (88,1 %) | `eval` (registro) | Propios | Cambios voluntarios |
+|---|---|---|---|---|---|
+| 0,003 | 86,0 % | −2,1 (± 1,4) | 84,5 % | 95,3 % | 0,0 % |
+| 0,01 (actual) | 88,1 % | — | 83,4 % | ~96 % | 0,0 % |
+| 0,03 | 87,6 % | −0,5 (± 1,3) | 84,5 % | 96,0 % | **3,0 %** |
+
+Ninguna supera el umbral: **se mantiene 0,01**. Hallazgo: con entropía 0,03 PPO empieza a cambiar
+de Pokémon por voluntad propia (3 %) sin perder rendimiento. Confirma que su 0 % de cambios era
+falta de exploración y no una imposibilidad, pero contra estos rivales cambiar no le da ventaja.
 
 ## 15. Preview entrenado con su propio combate (vigesimosegunda cola, 18-11-2026)
 
@@ -800,6 +855,28 @@ worker, igual que con greedy_joint), así que un preview completo toma ~45–50 
 equipos de `fit` (así `val` queda desconocido también para el preview); misma receta que v2 (200
 actualizaciones, entropía 0,005, tu equipo). Después, mismo combate (semillas 0 y 1) con v2 y con
 el preview nuevo, contra `val` (elige: más de 4 puntos) y `eval` (registro), 200 partidas por rival.
-Script: `scripts/server/kickoff_queue22.sh`; resumen: `showdown/rl/kickoff_summary22.py`. Corre
-después de la vigesimoprimera cola. Resultados: pendientes.
+Script: `scripts/server/kickoff_queue22.sh`; resumen: `showdown/rl/kickoff_summary22.py`.
+
+### 15.1 Resultados (18-11-2026): **el preview nuevo es peor; se mantiene v2**
+
+| Agente | `val` v2 | `val` nuevo | Diferencia | `eval` v2 | `eval` nuevo | Diferencia |
+|---|---|---|---|---|---|---|
+| DDQN (REG 0,03) | 74,2 % | 68,4 % | −5,8 (± 1,8) | 64,4 % | 61,2 % | −3,2 (± 2,0) |
+| PPO (simetría) | 88,2 % | 86,8 % | −1,4 (± 1,4) | 85,3 % | 81,7 % | −3,7 (± 1,5) |
+
+Mismo combate (final.pt, semillas 0 y 1), tu equipo, 200 partidas por rival.
+
+**Por qué salió peor (hipótesis principal: señal saturada).** Durante el entrenamiento del preview,
+nuestro lado ganó el 92 % (DDQN) y el 97 % (PPO) de las ~415 000 partidas contra greedy_joint. Si
+casi cualquier formación gana, la recompensa casi no distingue entre formaciones y el preview
+aprende poco o preferencias poco útiles. Con v2 (greedy_joint contra greedy_joint) también ganaba
+~90 %, pero su combate era más débil y dependía más de la formación. Además, entrenar con un solo
+combate (semilla 0) puede ajustar el preview a sus manías, y `fit` tiene 30 equipos menos. Nota: la
+cifra MEAN_WR del entrenamiento (0,97 / 0,99) compara con el preview propio del piloto, que en los
+workers cae a /team 1234 (no tiene checkpoint de preview configurado), así que no sirve como
+referencia.
+
+**Para un intento futuro:** un rival más fuerte para el preview (expectimax, o el rival de
+arquetipos) para que la recompensa vuelva a discriminar, y entrenar con varios combates (varias
+semillas).
 
