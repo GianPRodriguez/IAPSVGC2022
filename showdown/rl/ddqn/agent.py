@@ -58,7 +58,9 @@ class DDQNConfig:
     # frente a 50,0 / 49,0 % sin ellos). weight_decay=0 y dropout=0 restauran la versión anterior.
     # foe_bench_dropout > 0: al aprender, cada uno de los 4 Pokémon rivales no activos de la
     # obs s se borra (bloque y pares a cero = "ausente") con esa probabilidad. Apagado: no mejoró.
-    weight_decay: float = 0.01
+    # Desde el 18-11-2026 (ddqn_spec 1.22, decisión del usuario): weight decay 0,03, elegido por la
+    # decimoquinta cola con `val` (74,1 % frente a 67,6 % con 0,01; en `eval` +0,9).
+    weight_decay: float = 0.03
     dropout: float = 0.1
     foe_bench_dropout: float = 0.0
     # Cabeza de la red Q (memorizacion_equipos.md §10; ddqn_spec 1.21). 'joint' = 1 600 salidas

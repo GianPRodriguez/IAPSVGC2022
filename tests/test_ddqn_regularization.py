@@ -69,7 +69,7 @@ def test_reg_is_default_and_zero_restores_previous(tmp_path, monkeypatch):
     monkeypatch.setenv('RL_REPLAY_DEVICE', 'cpu')
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
     cfg = DDQNConfig()
-    assert (cfg.weight_decay, cfg.dropout, cfg.foe_bench_dropout) == (0.01, 0.1, 0.0)
+    assert (cfg.weight_decay, cfg.dropout, cfg.foe_bench_dropout) == (0.03, 0.1, 0.0)  # ddqn_spec 1.22
     base = dict(batch_size=8, warmup_steps=0, train_freq=1, sym_aug=False)
     off = dict(weight_decay=0.0, dropout=0.0, foe_bench_dropout=0.0)
     torch.manual_seed(0)  # los pesos iniciales dependen del generador global de torch

@@ -527,7 +527,7 @@ equipos y 50 partidas por rival, `val` no distingue checkpoints cercanos. Detall
 |---|---|---|
 | Máscara de daño al aliado | activa | activa |
 | Simetría | apagada | **activa** (ppo_spec 1.14) |
-| Regularización | **weight decay 0,01 + dropout 0,1** (ddqn_spec 1.20) | — |
+| Regularización | **weight decay 0,03 + dropout 0,1** (ddqn_spec 1.22; 0,01 hasta el 18-11) | — |
 | Validación | reservada (`fit` / `val`) | reservada (`fit` / `val`) |
 | Equipos sintéticos | no | no |
 | Inicialización | — | desde cero |

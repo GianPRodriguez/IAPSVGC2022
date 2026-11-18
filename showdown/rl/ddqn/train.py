@@ -1033,7 +1033,7 @@ def _main(argv: Optional[list] = None) -> int:
                    help='Partidas BO1 por rival en cada validación (4 rivales)')
     p.add_argument('--layer-norm', action='store_true', help='LayerNorm tras el codificador (punto 7)')
     p.add_argument('--weight-decay', type=float, default=None,
-                   help='AdamW con ese decaimiento (por defecto 0,01; 0 = Adam). memorizacion_equipos.md §8')
+                   help='AdamW con ese decaimiento (por defecto 0,03; 0 = Adam). memorizacion_equipos.md §8')
     p.add_argument('--dropout', type=float, default=None,
                    help='Dropout tras cada capa oculta de la red Q (por defecto 0,1; 0 = sin dropout)')
     p.add_argument('--foe-bench-dropout', type=float, default=None,
