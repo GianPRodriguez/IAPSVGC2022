@@ -751,6 +751,14 @@ Conclusión: con 2 partidas no hay estadística, pero sí ilustra las debilidade
 humano: falta de adaptación entre partidas, 0 % de cambios voluntarios y arquetipos de campo no vistos
 en entrenamiento. Refuerza el trabajo futuro (rival de arquetipos en el entrenamiento, más entropía).
 
+### PPO v2: candidatos (vigesimocuarta cola, 18-11-2026)
+
+**Decisión del usuario:** encolar P1, P2, P3 y P4 solo para PPO y reportarlo como **PPO v2**. La v1
+(kick-off oficial) queda congelada: tag git `ppo-v1` (f671e65) y `~/iapsvgc_runs/ppo_v1`, en solo
+lectura con `MANIFEST.md5`. Diseño y reglas de adopción en
+[`memorizacion_equipos.md`](memorizacion_equipos.md) §17. Script: `scripts/server/kickoff_queue24.sh`.
+Duración estimada ~8,2 h. Resultados: pendientes.
+
 ## D. Metodología
 
 | # | Punto | Estado |

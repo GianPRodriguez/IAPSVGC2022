@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -77,13 +77,27 @@ def _default_teams(seed: Optional[int] = None) -> Tuple[str, str]:
 # igual que en run_robust_e2e: "ganarle a joint" significa lo mismo en toda la tesis.
 VALIDATED_FOES = ('greedy_solo', 'greedy_joint', 'expectimax_bayesian')
 
+# PPO v2 (memorizacion_equipos.md §17): rivales de entrenamiento nuevos.
+# - greedy_joint_arq: greedy_joint en modo arquetipo nivel 2 (Tailwind / Trick Room, Protect de
+#   cobertura y sueño), solo en esta instancia (``wrap_archetype_level``).
+# - ppo_v1: PPO v1 congelado (checkpoints en PPO_FOE_CHECKPOINTS, separados por comas; uno al azar
+#   por partida) jugando con el MISMO equipo que el agente (espejo): v1 es especialista de ese equipo.
+FOE_BASE_KIND = {'greedy_joint_arq': 'greedy_joint'}
+ARCHETYPE_FOE_LEVEL = {'greedy_joint_arq': 2}
+MIRROR_FOES = ('ppo_v1',)
+
+
+def _base_kind(kind: str) -> str:
+    key = str(kind or '').strip().lower().replace('-', '_')
+    return FOE_BASE_KIND.get(key, key)
+
 
 def foe_validated(kind: str) -> bool:
     """True si el rival `kind` va validated (PS_RL_FOE_VALIDATED=0 → rival crudo antiguo)."""
     import os
     if os.environ.get('PS_RL_FOE_VALIDATED', '1').strip().lower() in ('0', 'false', 'no', 'off'):
         return False
-    return str(kind or '').strip().lower().replace('-', '_') in VALIDATED_FOES
+    return _base_kind(kind) in VALIDATED_FOES
 
 
 # Rivales de ENTRENAMIENTO con sorteo entre casi-empates (docs/diversidad_baselines.md):
@@ -104,7 +118,7 @@ def foe_tie_enabled() -> bool:
 
 def apply_foe_tie(player, kind: str) -> bool:
     """Activa el sorteo de casi-empates en la instancia ``player`` (no toca variables globales)."""
-    key = str(kind or '').strip().lower().replace('-', '_')
+    key = _base_kind(kind)
     spec = FOE_TIE_MARGINS.get(key)
     if spec is None:
         return False
@@ -124,6 +138,8 @@ LIVE_OPPONENTS = (
     'greedy_solo',
     'greedy_joint',
     'expectimax_bayesian',
+    'greedy_joint_arq',
+    'ppo_v1',
 )
 
 
@@ -147,6 +163,10 @@ def _make_foe_player(
     )
     if foe_tie_enabled() if tie is None else bool(tie):
         apply_foe_tie(player, kind)
+    level = ARCHETYPE_FOE_LEVEL.get(str(kind or '').strip().lower().replace('-', '_'))
+    if level:
+        from showdown.battle_bots.greedy_joint.joint import wrap_archetype_level
+        wrap_archetype_level(player, level)
     return player
 
 
@@ -169,7 +189,10 @@ def _build_foe_player(
     Sin TeamMeta (equipos como export str) se usa el rival crudo: stats del rival =
     bases de especie y HP en % (pierde ~2 pts solo por información).
     """
-    key = str(kind or 'random').strip().lower().replace('-', '_')
+    key = _base_kind(str(kind or 'random'))
+    if key == 'ppo_v1':
+        return _build_ppo_v1_foe(account_configuration=account_configuration, battle_format=battle_format,
+                                 team=team, server_configuration=server_configuration, log_level=log_level)
     if foe_validated(key) and foe_meta is not None and agent_meta is not None:
         from showdown.inference_sim.battle_state_check import StateCheckReport
         from showdown.inference_sim.validated_greedy_player import validated_player_class
@@ -210,6 +233,68 @@ def _build_foe_player(
     raise ValueError(
         f'oponente live inválido: {kind!r}. Opciones: {", ".join(LIVE_OPPONENTS)}'
     )
+
+
+def ppo_foe_checkpoints() -> List[str]:
+    import os
+    raw = os.environ.get('PPO_FOE_CHECKPOINTS', '')
+    return [p.strip() for p in raw.split(',') if p.strip()]
+
+
+def _build_ppo_v1_foe(*, account_configuration, battle_format, team, server_configuration, log_level):
+    """Rival PPO congelado (P3): un checkpoint al azar de PPO_FOE_CHECKPOINTS por partida, greedy."""
+    import multiprocessing
+    import random as _random
+
+    from showdown.rl.ppo.player import PPOPlayer
+
+    cks = ppo_foe_checkpoints()
+    if not cks:
+        raise ValueError('ppo_v1: falta PPO_FOE_CHECKPOINTS (checkpoints del PPO v1 congelado)')
+    try:  # 32 entornos con una red cada uno: un hilo de torch por proceso de entorno
+        import torch
+        if multiprocessing.current_process().name != 'MainProcess':
+            torch.set_num_threads(1)
+    except Exception:
+        pass
+
+    class PPOv1Foe(PPOPlayer):
+        """Cambia de checkpoint (al azar) en cada partida nueva."""
+
+        def __init__(self, *a, **kw):
+            import os
+            prev = os.environ.get('PPO_DEVICE')
+            os.environ['PPO_DEVICE'] = 'cpu'  # el rival nunca usa la GPU del entrenamiento
+            try:
+                super().__init__(*a, checkpoint=None, greedy=True, **kw)
+            finally:
+                if prev is None:
+                    os.environ.pop('PPO_DEVICE', None)
+                else:
+                    os.environ['PPO_DEVICE'] = prev
+            from showdown.rl.ppo.agent import PPOAgent, PPOConfig
+            self._pool = []
+            for c in cks:
+                ag = PPOAgent(PPOConfig(device='cpu'))
+                ag.load(c, map_location='cpu')
+                self._pool.append(ag)
+            self.agent = self._pool[0]
+            self.checkpoint_path = cks[0]
+            self._cur_tag = None
+            self.foe_checkpoint_counts = {c: 0 for c in cks}
+
+        def choose_move(self, battle):
+            tag = getattr(battle, 'battle_tag', None)
+            if tag != self._cur_tag:
+                self._cur_tag = tag
+                i = _random.randrange(len(self._pool))
+                self.agent = self._pool[i]
+                self.foe_checkpoint_counts[cks[i]] += 1
+            return super().choose_move(battle)
+
+    return PPOv1Foe(account_configuration=account_configuration, battle_format=battle_format, team=team,
+                    server_configuration=server_configuration, accept_open_team_sheet=True,
+                    max_concurrent_battles=1, log_level=log_level)
 
 
 class PokeEnvBattleBackend(BattleBackend):
@@ -455,6 +540,9 @@ class PokeEnvBattleBackend(BattleBackend):
                 our, our_meta = _team_export(d0), d0
             if opp is None:
                 opp, opp_meta = _team_export(d1), d1
+        if self._opponent in MIRROR_FOES:
+            # Espejo (P3): el PPO v1 congelado juega con el equipo del agente.
+            opp, opp_meta = our, our_meta
         self._cached_opp_export = opp
         if opp_meta is not None:
             from showdown.inference_sim.team_split import team_key

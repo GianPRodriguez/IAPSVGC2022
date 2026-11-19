@@ -106,11 +106,64 @@ _SPEED_PARTNER_BONUS = 4.0
 # más lento, sin exigir que el compañero haga daño ese turno (el compañero puede cubrir con Fake
 # Out, redirección o Protect). Apagado por defecto: greedy_joint no cambia.
 _ARCHETYPE_SETUP_BONUS = 250.0
+# Nivel 2 (PPO v2, P2; memorizacion_equipos.md §16–§17): además del nivel 1, el compañero cubre con
+# Protect mientras el otro activa Tailwind / Trick Room, y los movimientos de sueño puntúan alto
+# (patrones vistos contra una persona en la prueba online). El nivel 1 no cambia.
+_ARCHETYPE_PROTECT_COVER_BONUS = 80.0
+_ARCHETYPE_SLEEP_BONUS = 90.0
+_SLEEP_MOVES = frozenset({'spore', 'sleeppowder', 'hypnosis', 'yawn', 'darkvoid', 'lovelykiss', 'sing',
+                          'grasswhistle'})
+
+import contextvars as _contextvars
+
+# Nivel por instancia de rival (los entornos RL mezclan rivales normales y de arquetipo en un mismo
+# proceso): lo fija ``archetype_level_scope``; sin él se usa la variable de entorno.
+_ARCHETYPE_LEVEL_OVERRIDE: '_contextvars.ContextVar[Optional[int]]' = _contextvars.ContextVar(
+    'greedy_joint_archetype_level', default=None)
+
+
+def _archetype_level() -> int:
+    ov = _ARCHETYPE_LEVEL_OVERRIDE.get()
+    if ov is not None:
+        return int(ov)
+    import os
+    raw = os.environ.get('PS_JOINT_ARCHETYPE', '').strip().lower()
+    if raw in ('1', 'true', 'yes', 'on'):
+        return 1
+    if raw.isdigit():
+        return int(raw)
+    return 0
 
 
 def _archetype_mode() -> bool:
-    import os
-    return os.environ.get('PS_JOINT_ARCHETYPE', '').strip().lower() in ('1', 'true', 'yes', 'on')
+    return _archetype_level() >= 1
+
+
+def wrap_archetype_level(player, level: int):
+    """Hace que ``player`` (greedy_joint) juegue siempre con el nivel de arquetipo ``level``."""
+    import inspect
+    orig = player.choose_move
+
+    def choose_move(battle):
+        tok = _ARCHETYPE_LEVEL_OVERRIDE.set(int(level))
+        try:
+            res = orig(battle)
+        finally:
+            _ARCHETYPE_LEVEL_OVERRIDE.reset(tok)
+        if not inspect.isawaitable(res):
+            return res
+
+        async def _run():
+            t = _ARCHETYPE_LEVEL_OVERRIDE.set(int(level))
+            try:
+                return await res
+            finally:
+                _ARCHETYPE_LEVEL_OVERRIDE.reset(t)
+        return _run()
+
+    player.choose_move = choose_move
+    player.archetype_level = int(level)
+    return player
 _SCREEN_PARTNER_BONUS = 8.0  # Reflect/LS Screen/Aurora Veil + partner daño
 _REDIRECT_LITE_SCALE = 0.55
 
@@ -1646,6 +1699,18 @@ def _utility_score_damage_iso(
         if atom.utility == 'charge':
             s += _charge_utility(atom)
             continue
+
+        if _archetype_level() >= 2:
+            # Nivel 2: Protect del compañero mientras el otro pone Tailwind / Trick Room.
+            if atom.utility == 'protect' and partner.utility == 'speed' and _field_setup_bonus(
+                    partner, atom, left_poke=left_poke, right_poke=right_poke, foes=foes,
+                    trick_room=trick_room, our_tailwind=our_tailwind,
+                    opp_tailwind=opp_tailwind) > 0.0:
+                s += _ARCHETYPE_PROTECT_COVER_BONUS
+                continue
+            # Nivel 2: dormir a un rival (el átomo solo existe si el movimiento puede afectarlo).
+            if atom.utility == 'status' and _norm_move(atom.move_name) in _SLEEP_MOVES:
+                s += _ARCHETYPE_SLEEP_BONUS
 
         partner_dmg = partner.total_damage_pct > 0
         partner_ko = partner.has_guaranteed_ko

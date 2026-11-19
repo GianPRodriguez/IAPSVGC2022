@@ -110,9 +110,13 @@ class PPOAgent:
         m2_fn,
         *,
         greedy: bool = False,
+        temperature: float = 1.0,
     ) -> Tuple[int, int, float, float]:
         """
         Sample (or greedy) (a1, a2).
+
+        ``temperature`` (solo al muestrear, PPO v2 P1): divide los logits enmascarados; 1.0 = la
+        política tal cual (entrenamiento), < 1 la concentra. logπ se devuelve siempre con T = 1.
 
         ``m2_fn(a1) -> mask24`` for conditioned Slot2 mask.
         Returns a1, a2, logπ, V(s).
@@ -128,7 +132,8 @@ class PPOAgent:
             if greedy:
                 a1 = int(z1m.argmax(dim=-1).item())
             else:
-                dist1 = torch.distributions.Categorical(logits=z1m)
+                t = max(1e-3, float(temperature))
+                dist1 = torch.distributions.Categorical(logits=z1m / t)
                 a1 = int(dist1.sample().item())
             # Ensure legal
             legal1 = np.flatnonzero(np.asarray(m1).reshape(-1) > 0.5)
@@ -146,7 +151,7 @@ class PPOAgent:
             if greedy:
                 a2 = int(z2m.argmax(dim=-1).item())
             else:
-                dist2 = torch.distributions.Categorical(logits=z2m)
+                dist2 = torch.distributions.Categorical(logits=z2m / max(1e-3, float(temperature)))
                 a2 = int(dist2.sample().item())
             legal2 = np.flatnonzero(m2 > 0.5)
             if legal2.size == 0:

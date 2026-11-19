@@ -32,6 +32,9 @@ from typing import Dict
 import numpy as np
 
 FOES = ('random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian')
+# Rivales opcionales (solo con --foes; van al final para no cambiar las semillas de los anteriores):
+# greedy_joint_arq = arquetipo nivel 2; ppo_v1 = PPO v1 congelado en espejo (PPO_FOE_CHECKPOINTS).
+EXTRA_FOES = ('greedy_joint_arq', 'ppo_v1')
 _PROTECT = {'protect', 'detect', 'spikyshield', 'banefulbunker', 'kingsshield', 'silktrap',
             'obstruct', 'burningbulwark', 'wideguard', 'quickguard', 'maxguard'}
 
@@ -71,7 +74,7 @@ def classify(battle, slot: int, act, mask_slot: np.ndarray) -> str:
 
 def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
         preview_checkpoint: str = '', agent_kind: str = 'ddqn', context: bool = False,
-        foes=FOES) -> Dict[str, object]:
+        foes=FOES, sample: bool = False, temperature: float = 1.0) -> Dict[str, object]:
     from showdown.inference_sim.team_factory import load_team_file
     from showdown.rl.action_space import decode_joint_action, decode_slot_action
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
@@ -98,7 +101,10 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
     ctx_counts: Dict[str, Counter] = defaultdict(Counter)
     if context:
         from showdown.rl import context_diag as CD
-    for fi, foe in enumerate(FOES):
+    if sample:  # P1: política estocástica reproducible
+        import torch
+        torch.manual_seed(int(seed))
+    for fi, foe in enumerate(FOES + EXTRA_FOES):
         if foe not in foes:
             continue
         backend = PokeEnvBattleBackend(opponent=foe, start_ps=True, port=port, account_prefix='DdqnDiag',
@@ -115,7 +121,7 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                         p1, _ = pe_autoregressive_masks(battle, slot1_action_id=None)
                         a1, a2, _lp, _v = agent.act(
                             obs, p1, lambda x, _b=battle: pe_autoregressive_masks(_b, slot1_action_id=int(x))[1],
-                            greedy=True)
+                            greedy=not sample, temperature=temperature)
                     else:
                         obs = build_observation_ddqn(env._snap)
                         a = agent.act(obs, _joint_masks(env), epsilon=0.0)
@@ -167,6 +173,7 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
             'partidas': games_log,
             'preview_forzado': os.environ.get('PREVIEW_FORCE_ORDER', '') or None,
             'joint_arquetipo': os.environ.get('PS_JOINT_ARCHETYPE', '') or None,
+            'muestreo': {'activo': bool(sample), 'temperatura': float(temperature)} if sample else None,
             'total': dict(total),
             **({'contexto': {c: dict(v) for c, v in ctx_counts.items()}} if context else {})}
 
@@ -198,12 +205,15 @@ def main(argv=None) -> int:
     ap.add_argument('--out', default='logs/policy_diag.json')
     ap.add_argument('--agent', choices=('ddqn', 'ppo'), default='ddqn')
     ap.add_argument('--foes', default=','.join(FOES), help='rivales a jugar (lista separada por comas)')
+    ap.add_argument('--sample', action='store_true',
+                    help='PPO: sortear la acción de la política en vez de tomar la más probable (P1)')
+    ap.add_argument('--temperature', type=float, default=1.0, help='temperatura del sorteo (con --sample)')
     ap.add_argument('--context', action='store_true',
                     help='desglose por plan del rival y usos de movimientos clave (§12)')
     args = ap.parse_args(argv)
     rep = run(checkpoint=args.checkpoint, games=args.games, port=args.port, seed=args.seed,
               agent_team=args.agent_team, preview_checkpoint=args.preview_checkpoint,
-              agent_kind=args.agent, context=args.context,
+              agent_kind=args.agent, context=args.context, sample=args.sample, temperature=args.temperature,
               foes=tuple(f.strip() for f in args.foes.split(',') if f.strip()))
     with open(args.out, 'w', encoding='utf-8') as fh:
         json.dump(rep, fh, indent=1)

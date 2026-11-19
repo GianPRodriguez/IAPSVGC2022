@@ -943,3 +943,47 @@ Trick Room + Tailwind + Lluvia 20, Tailwind + Sol 19, solo Trick Room 17, Trick 
 **Implicaciones para P2** (rival de arquetipos en el entrenamiento): priorizar que el rival ejecute
 Tailwind y Trick Room (~77 % del pool) por sobre ampliar a clima (que ya ocurre solo); como añadido,
 el patrón "Protect + preparación" y el uso de sueño.
+
+## 17. PPO v2: candidatos de mejora (vigesimocuarta cola, 18-11-2026)
+
+**Decisión del usuario:** crear una versión mejorada, **PPO v2**, solo para PPO, y **congelar la v1**.
+- **v1 congelado:** kick-off oficial (1M × 5, equipo fijo, preview v2; 81,2 % contra `eval`). Código:
+  commit f671e65, tag git `ppo-v1`. Checkpoints, diagnósticos, resumen y preview en
+  `~/iapsvgc_runs/ppo_v1`, en solo lectura y con `MANIFEST.md5` (131 archivos). La cola verifica el
+  manifiesto antes de empezar.
+- **v2** = v1 + los candidatos que cumplan su regla, entrenado después con 1M × 5 semillas y evaluado
+  igual que v1 (requiere la aprobación del usuario).
+
+Origen: la prueba online (0-2 contra velascoAlvarado; checklist, "Prueba online") y los arquetipos
+del pool (§16).
+
+| # | Candidato | Qué cambia | Debilidad que ataca | Regla de adopción |
+|---|---|---|---|---|
+| P1 | Sorteo al jugar | Sin reentrenar: la acción se sortea de la política (T = 1,0 y 0,5) en vez de tomar la más probable. Mismo algoritmo y mismos pesos (ppo_spec 1.15) | Juega siempre igual: en un BO3 el rival lo lee | Δ`val` ≥ −2 (5 semillas de v1); si ambas T cumplen, T = 1 |
+| P2 | Rival de arquetipos en el entrenamiento | La mitad de la fase greedy_joint (150k) contra `greedy_joint_arq`: arquetipo **nivel 2** = nivel 1 (Tailwind siempre; Trick Room si es más lento) + Protect del compañero mientras el otro lo activa + sueño | Planes de velocidad (~75 % del pool, §16) que los heurísticos nunca ejecutan | Δ`val` ≥ −2 y Δ(arquetipo nivel 2, `val`) > +4 |
+| P4 | P2 + entropía 0,03 | Igual que P2 con `--ent-coef 0.03` | 0 % de cambios voluntarios (con 0,03 aparecían, §14.4) | La misma que P2 |
+| P3 | Rival PPO v1 congelado | La mitad de la fase expectimax (150k) contra `ppo_v1`: los 5 checkpoints de v1 (uno al azar por partida) **con tu mismo equipo (espejo)** | Nunca enfrentó a un rival que castigue sus errores | Δ`val` ≥ −2 y > 54 % contra v1 |
+
+Cualquier candidato con Δ`val` > +4 también se adopta (regla general). `eval` es solo registro.
+
+**Decisiones de diseño:**
+1. **P3 en espejo:** v1 es especialista de tu equipo (~31 % con equipos al azar, §13.2). Con
+   equipos del pool sería un rival débil; con tu equipo es el rival más fuerte disponible. Contra
+   v1, v1 gana el 50 % por construcción.
+2. **Con `--expand-omega` los rivales se acumulan:** en la última fase de P2 el rival de arquetipos
+   sale en ~23 % de las partidas (peso 1,0 frente a 0,35 de expectimax), y en P3 el PPO v1 también
+   en ~23 %.
+3. **El nivel 2 no reemplaza al nivel 1:** la comparación con el rival de arquetipos del kick-off de
+   v1 (nivel 1, −5,7) se mantiene.
+4. **Referencia de P2, P4 y P3:** semillas 0 y 1 de v1, con los mismos diagnósticos.
+
+**Diagnósticos de cada candidato** (semillas 0 y 1, 200 partidas por rival): `val`, `eval`,
+arquetipo nivel 1 (`eval`), arquetipo nivel 2 (`val` y `eval`) y contra PPO v1 (espejo). El resumen
+también da la tasa de victorias por arquetipo del rival (§16).
+
+Código: `showdown/rl/pokeenv_backend.py` (rivales `greedy_joint_arq` y `ppo_v1`),
+`showdown/battle_bots/greedy_joint/joint.py` (`_archetype_level`, `wrap_archetype_level`),
+`showdown/rl/ppo/agent.py` (temperatura), `showdown/rl/ddqn/policy_diag.py`
+(`--sample`, `--temperature`, rivales extra), `showdown/rl/team_archetypes.py`. Tests:
+`tests/test_ppo_v2.py`. Script: `scripts/server/kickoff_queue24.sh`; resumen:
+`showdown/rl/kickoff_summary24.py`. Duración estimada ~8,2 h. Resultados: pendientes.
