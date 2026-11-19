@@ -1,0 +1,50 @@
+{
+  "rival": "velascoAlvarado",
+  "formato": "gen9championsvgc2026regmcbo3",
+  "checkpoint": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\online_ppo\\ppo_s2_final.pt",
+  "preview": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\online_ppo\\preview_v2.pt",
+  "partidas": [
+    {
+      "sala": "battle-gen9championsvgc2026regmcbo3-2716232043",
+      "turnos": 10,
+      "ganó": false,
+      "rival": "VelascoAlvarado",
+      "equipo_rival": [
+        "charizard",
+        "farigiraf",
+        "garchomp",
+        "incineroar",
+        "sylveon",
+        "venusaur"
+      ]
+    },
+    {
+      "sala": "battle-gen9championsvgc2026regmcbo3-2716233210",
+      "turnos": 11,
+      "ganó": false,
+      "rival": "VelascoAlvarado",
+      "equipo_rival": [
+        "charizard",
+        "farigiraf",
+        "garchomp",
+        "incineroar",
+        "sylveon",
+        "venusaur"
+      ]
+    }
+  ],
+  "victorias": 0,
+  "derrotas": 2,
+  "serie": "perdida",
+  "decisiones": {
+    "agent": "ppo",
+    "decisions": 25,
+    "exceptions": 0,
+    "exception_rate": 0.0,
+    "order_fallbacks": 0,
+    "order_fallback_rate": 0.0,
+    "by_error": {},
+    "last_error": ""
+  },
+  "duracion_min": 6.3
+}

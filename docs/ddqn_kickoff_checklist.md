@@ -716,6 +716,39 @@ Por rival (final.pt, `eval`): random 99,1 % (± 0,7), greedy_solo 82,7 % (± 4,4
 Resumen completo: `~/iapsvgc_runs/kickoff_ppo1/kickoff_summary16.md`. Kick-off de DDQN: pendiente de
 la decisión del usuario.
 
+#### Prueba online contra una persona (18-11-2026, exploratoria)
+
+Pedido del usuario: el PPO del kick-off (semilla 2, final.pt, preview v2, equipo fijo) reta desde el
+laptop (CPU) a un BO3 en Showdown público (`gen9championsvgc2026regmcbo3`) al usuario
+velascoAlvarado. Script: `scripts/online/ppo_online_bo3.py` (mismo `PPOPlayer` de poke-env y misma
+observación que el entrenamiento; política determinista). Antes, prueba local en el laptop contra
+greedy_joint en BO3: 2-0, 0 errores, el BO3 (`/confirmready`) funciona.
+
+| Partida | Turnos | Resultado | Bajas que causó PPO |
+|---|---|---|---|
+| 1 | 10 | Derrota (4-0) | 0 |
+| 2 | 11 | Derrota (4-1) | 1 (Incineroar) |
+
+Serie perdida 0-2 en 6,3 min; 25 decisiones, 0 excepciones, 0 órdenes de reserva (el agente funcionó
+técnicamente; perdió jugando). Rival: equipo de sol (Venusaur + Charizard-Mega-Y, Incineroar,
+Garchomp, Farigiraf, Sylveon). Replays y resumen en `logs/online_ppo/`.
+
+Lo que se ve en los replays:
+1. **Jugó las dos partidas casi igual** (mismo líder Raichu + Primarina, mismos primeros turnos):
+   la política es determinista y no aprende entre partidas; el rival sí se adaptó.
+2. **Turno 1 contra doble Protect:** atacó a los dos protegidos (Zap Cannon y Hyper Voice
+   desperdiciados) y el rival activó el sol con Charizard-Mega-Y en el turno 2.
+3. **Raichu dormido y luego caído** (Sleep Powder + Sludge Bomb); no hubo cambio voluntario para
+   salvarlo (el 0 % de cambios voluntarios ya visto, memorizacion_equipos §13.1).
+4. **Primarina repitió Hyper Voice** en vez de concentrar daño; **Arcanine encadenó Protect tres
+   turnos** al final (el último falló), sin opciones reales.
+5. **Arquetipo nunca practicado:** sol con Chlorophyll y Mega-Y es un plan de clima que los
+   heurísticos de entrenamiento casi no juegan (mismo hueco que Tailwind y Trick Room, §14.4).
+
+Conclusión: con 2 partidas no hay estadística, pero sí ilustra las debilidades ya medidas contra un
+humano: falta de adaptación entre partidas, 0 % de cambios voluntarios y arquetipos de campo no vistos
+en entrenamiento. Refuerza el trabajo futuro (rival de arquetipos en el entrenamiento, más entropía).
+
 ## D. Metodología
 
 | # | Punto | Estado |
