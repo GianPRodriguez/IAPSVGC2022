@@ -1273,3 +1273,10 @@ El preview está muy concentrado: incluso con T = 1,0 cambia la formación en so
 partidas, y casi nunca los líderes (2,2 %). Ambas temperaturas cumplen la regla (Δ ≥ −2). Por la
 misma regla de P1 (si ambas cumplen, T = 1) correspondería T = 1,0, que no cuesta nada pero aporta
 poca variedad.
+
+**Decisiones del usuario (19-11-2026, tras §18.2):**
+1. **Separar los efectos** de P5 y del preview v2.1 con evaluaciones sobre los checkpoints existentes
+   (cruces A–D, `scripts/server/ablacion_p5_preview.sh`; tabla 2 × 2 en
+   `scripts/analysis/ablacion_p5_preview.py`).
+2. **Preview no determinista con T = 1,0 al jugar contra personas**, junto con el combate con
+   T = 0,5. Los resultados oficiales siguen en modo determinista.
