@@ -988,6 +988,13 @@ Código: `showdown/rl/pokeenv_backend.py` (rivales `greedy_joint_arq` y `ppo_v1`
 `tests/test_ppo_v2.py`. Script: `scripts/server/kickoff_queue24.sh`; resumen:
 `showdown/rl/kickoff_summary24.py`. Duración estimada ~8,2 h. Resultados: pendientes.
 
+**Calibración del enfrentamiento en espejo (19-11-2026).** Con resultados parciales, P2 y P4
+ganaron solo el 28,2 % y el 21,8 % contra PPO v1, y la regla de P3 suponía que v1 contra sí mismo
+da 50 % sin haberlo medido. Decisión del usuario: medirlo al terminar la cola 24 (v1 semillas 0 y 1
+contra el mismo rival, 200 partidas; `scripts/server/h2h_v1_calib.sh`). La regla de P3 pasa a
+"más de 4 puntos por encima de la calibración" (antes: > 54 %, que es lo mismo si la calibración da
+50 %). La cola 25 espera a la calibración.
+
 ## 18. P5: corrección de habilidades en la observación (vigesimoquinta cola, 18-11-2026)
 
 **Hallazgo del usuario en la prueba online:** Primarina atacaba con Hyper Voice teniendo

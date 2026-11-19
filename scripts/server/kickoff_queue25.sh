@@ -21,8 +21,11 @@ export PYTHONUNBUFFERED=1 PS_RL_STRICT=1
 unset RL_MASK_ALLY_DAMAGE RL_SYM_AUG RL_HOLDOUT_VAL RL_TRAIN_SUBSET RL_FOE_SYNTH PREVIEW_FORCE_ORDER PS_JOINT_ARCHETYPE PPO_FOE_CHECKPOINTS RL_OBS_ABILITIES
 log() { echo "$(date '+%F %T') $*" >> "$OUT/queue.log"; }
 clean_ps() { pkill -f "pokemon-showdown.*start" 2>/dev/null; sleep 5; }
-log "esperando a la vigesimocuarta cola ($V2)"
-until grep -q KICKOFF_QUEUE24_DONE "$V2/queue.log" 2>/dev/null; do sleep 60; done
+# Espera configurable (19-11-2026: tras la calibración de v1 contra v1, h2h_v1_calib.sh).
+WAIT_FILE=${WAIT_FILE:-$V2/queue.log}
+WAIT_MARK=${WAIT_MARK:-KICKOFF_QUEUE24_DONE}
+log "esperando $WAIT_MARK en $WAIT_FILE"
+until grep -q "$WAIT_MARK" "$WAIT_FILE" 2>/dev/null; do sleep 60; done
 clean_ps
 log "inicio commit $(git rev-parse --short HEAD)"
 TEAM=showdown/rl/data/ddqn_team.txt

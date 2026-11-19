@@ -8,7 +8,8 @@ Reglas de decisión (fijadas antes de ver resultados):
   Se adopta para jugar contra personas si Δ ≥ −2 puntos; si ambas cumplen, la de T = 1.
 - P2 / P4 (rival de arquetipos; + entropía 0,03): frente a v1 (semillas 0 y 1, partidas agrupadas),
   se adopta si Δ`val` ≥ −2 y Δ(arquetipo nivel 2, `val`) > +4.
-- P3 (rival PPO v1 espejo): se adopta si Δ`val` ≥ −2 y gana > 54 % contra el PPO v1 congelado.
+- P3 (rival PPO v1 espejo): se adopta si Δ`val` ≥ −2 y gana contra el PPO v1 congelado más de 4 puntos
+  por encima de v1 contra sí mismo (calibración ``v1_s{0,1}_h2h``; sin ella se supone 50 %, es decir > 54 %).
 - Cualquiera: Δ`val` > +4 → se adopta (regla general del protocolo).
 `eval` es solo registro.
 
@@ -140,7 +141,10 @@ def build(out: Path, v1: Path) -> str:
     re_ = pooled([g(V, f'ppo_s{s}_final_eval') for s in (0, 1)])
     ra1e = pooled([g(V, f'ppo_s{s}_final_arquetipo') for s in (0, 1)], ('greedy_joint',))
     ra2e = pooled([g(D, f'v1_s{s}_arq2_eval') for s in (0, 1)], ('greedy_joint_arq',))
-    L.append(f'| v1 (referencia) | {pct(rv)} | — | {pct(ra2)} | — | 50 % (por construcción) | {pct(re_)} | — | '
+    rh = pooled([g(D, f'v1_s{s}_h2h') for s in (0, 1)], ('ppo_v1',))
+    base_h2h = rh[0] / rh[1] if rh[1] else 0.5
+    rh_txt = f'{pct(rh)} (calibración)' if rh[1] else '50 % (supuesto, sin calibrar)'
+    L.append(f'| v1 (referencia) | {pct(rv)} | — | {pct(ra2)} | — | {rh_txt} | {pct(re_)} | — | '
              f'{pct(ra1e)} | {pct(ra2e)} | — |')
     adopted = []
     for key, name in CANDS:
@@ -160,8 +164,8 @@ def build(out: Path, v1: Path) -> str:
             dec = 'no (pierde en `val`)'
         elif key in ('P2', 'P4') and da is not None and da[0] > 4.0:
             dec = '**se adopta** (arquetipo > +4)'
-        elif key == 'P3' and ch[1] and ch[0] / ch[1] > 0.54:
-            dec = '**se adopta** (> 54 % contra v1)'
+        elif key == 'P3' and ch[1] and ch[0] / ch[1] > base_h2h + 0.04:
+            dec = f'**se adopta** (contra v1 > {100 * (base_h2h + 0.04):.0f} %)'
         else:
             dec = 'no (no alcanza el umbral)'
         if 'adopta' in dec:

@@ -171,3 +171,18 @@ def test_summary24_without_data(tmp_path):
     (tmp_path / 'v2' / 'diag').mkdir(parents=True)
     assert K.main([str(tmp_path / 'v2'), str(tmp_path / 'v1')]) == 0
     assert 'sin datos' in (tmp_path / 'v2' / 'kickoff_summary24.md').read_text(encoding='utf-8')
+
+
+def test_summary24_h2h_calibration(tmp_path):
+    from showdown.rl import kickoff_summary24 as K
+    out, v1 = tmp_path / 'v2', tmp_path / 'v1'
+    (out / 'diag').mkdir(parents=True)
+    (v1 / 'diag').mkdir(parents=True)
+    for s in (0, 1):
+        _w(out / 'diag' / f'v1_s{s}_val.json', (170, 170, 170))
+        _w(out / 'diag' / f'p3_s{s}_val.json', (170, 170, 170))
+        _w(out / 'diag' / f'p3_s{s}_h2h.json', (60,), ('ppo_v1',))   # 30 %
+        _w(out / 'diag' / f'v1_s{s}_h2h.json', (50,), ('ppo_v1',))   # v1 contra v1: 25 %
+    assert K.main([str(out), str(v1)]) == 0
+    md = (out / 'kickoff_summary24.md').read_text(encoding='utf-8')
+    assert '25.0 % (calibración)' in md and '**se adopta** (contra v1 > 29 %)' in md
