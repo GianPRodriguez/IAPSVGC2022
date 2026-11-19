@@ -817,3 +817,7 @@ velocidad de la calculadora.
 - Por semilla, el set del kick-off de PPO v1, con 200 partidas por rival.
 
 Duración estimada ~6,3 h. Script: `scripts/server/kickoff_ddqn_v2.sh`.
+
+**Decisión del usuario (19-11-2026):** no lanzarlo automáticamente. Primero se analizan los
+resultados del preview v2.1 sin `val`, y el usuario decide entonces si se ejecuta. El encadenamiento
+automático se detuvo antes de empezar (solo estaba esperando).
