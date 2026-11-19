@@ -1185,3 +1185,27 @@ Vigesimosexta cola (`scripts/server/kickoff_queue26.sh`, espera al piloto de vel
 
 Resumen: `showdown/rl/kickoff_summary26.py` (incluye el uso de la calculadora y la velocidad de cada
 entrenamiento). PPO v2 = v1 + P5 completo + preview v2.1 + sorteo T = 0,5 al jugar contra personas.
+
+### 17.2 ¿Cuánto se aparta el sorteo del modo determinista? (P1, 19-11-2026)
+
+Pedido del usuario. Las 5 semillas de v1 contra `val`, contando solo las decisiones con más de una
+opción legal (`scripts/server/p1_divergencia.sh`, `scripts/analysis/divergencia_p1.py`; commit
+6299332, rc=0):
+
+| Temperatura | Jugada distinta | Hueco 1 distinto | Turno 1: jugada distinta | Partidas con alguna decisión distinta | Decisiones | Victorias |
+|---|---|---|---|---|---|---|
+| **0,5** | **22,7 %** | 13,7 % | **12,0 %** | **71,3 %** | 15 429 | 90,2 % |
+| 1,0 | 38,3 % | 23,9 % | 23,3 % | 89,2 % | 7 835 | 87,9 % |
+
+1. **T = 0,5 sí aporta variedad sin costo:** cambia la jugada en ~1 de cada 4–5 decisiones, y 7 de
+   cada 10 partidas tienen al menos una decisión distinta del modo determinista. Victorias 90,2 %
+   (determinista: 90,4 %).
+2. **La apertura cambia poco:** en el turno 1 solo difiere el 12 %. Es justo lo que leyó
+   velascoAlvarado (las dos partidas empezaron igual). El sorteo no basta para variar la
+   apertura; también cuenta el preview, que es determinista (mismo líder en las dos partidas).
+3. T = 1,0 varía más (38 %, turno 1: 23 %), pero pierde victorias (87,9 %).
+4. Control: con las mismas semillas que P1 se esperaba 90,3 % y salió 90,2 %. La pequeña diferencia
+   sugiere algo de no determinismo del simulador entre corridas; no cambia la conclusión.
+
+**Conclusión:** se mantiene T = 0,5 para jugar contra personas. Una mejora futura para el BO3 es
+variar también la apertura: sorteo en el preview o en el turno 1.
