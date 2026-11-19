@@ -120,6 +120,8 @@ class FrozenPreviewPolicy:
     _loaded: bool = False
     _load_error: str = ''
     last_order: Optional[Tuple[int, ...]] = None  # formación de la última batalla (diagnósticos)
+    # Versión de la observación con que se entrenó el preview (P5): v2 False, v2.1 True.
+    obs_abilities: bool = False
 
     @property
     def available(self) -> bool:
@@ -142,6 +144,7 @@ class FrozenPreviewPolicy:
                 agent = PreviewPPOAgent()
                 agent.cfg.device = self.device
                 agent.load(path)
+                self.obs_abilities = bool(getattr(agent.cfg, 'obs_abilities', False))
 
                 def choose(obs, mask):
                     a, _lp, _v = agent.act(obs, mask, greedy=self.greedy)
@@ -225,7 +228,9 @@ class FrozenPreviewPolicy:
         self._ensure()
         if self._chooser is None:
             return 0, FIXED_EXPORT_ORDER
-        obs = encode_preview_obs(PreviewObsBundle(our=_pad6(our), foe=_pad6(foe)))
+        from showdown.rl.team_preview_obs import obs_abilities_scope
+        with obs_abilities_scope(self.obs_abilities):
+            obs = encode_preview_obs(PreviewObsBundle(our=_pad6(our), foe=_pad6(foe)))
         mask = np.asarray(legal_mask(6), dtype=np.float32)
         a = int(self._chooser(obs, mask))
         return a, f'/team {action_to_team_string(a)}'
@@ -245,8 +250,10 @@ class FrozenPreviewPolicy:
         self._ensure()
         if self._chooser is None:
             return 0, FIXED_EXPORT_ORDER
-        bundle = obs_bundle_from_pokeenv_battle(battle)
-        obs = encode_preview_obs(bundle)
+        from showdown.rl.team_preview_obs import obs_abilities_scope
+        with obs_abilities_scope(self.obs_abilities):
+            bundle = obs_bundle_from_pokeenv_battle(battle)
+            obs = encode_preview_obs(bundle)
         mask = np.asarray(legal_mask(6), dtype=np.float32)
         a = int(self._chooser(obs, mask))
         return a, f'/team {action_to_team_string(a)}'

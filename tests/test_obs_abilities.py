@@ -172,3 +172,56 @@ def test_ability_immunities_and_sturdy(monkeypatch):
     assert not O.sturdy_survives(sturdy, NS(**{**_mon().__dict__, 'hp_pct': 50.0}), _mv('Surf'))
     monkeypatch.delenv('RL_OBS_ABILITIES')
     assert not O.sturdy_survives(sturdy, _mon(), _mv('Surf'))  # v1: sin cambio
+
+
+# --------------------------------------------------------------------------- P5 parte 2b: preview
+def test_preview_move_profile_corrections():
+    hv_old = P._move_infos(['Hyper Voice'], 'liquidvoice', ('Water', 'Fairy'), abilities=False)[0][0]
+    hv_new = P._move_infos(['Hyper Voice'], 'liquidvoice', ('Water', 'Fairy'), abilities=True)[0][0]
+    assert hv_old.type == 'Normal' and hv_new.type == 'Water'
+    wb = P._move_infos(['Weather Ball'], 'drought', ('Fire',), abilities=True)[0][0]
+    assert wb.type == 'Fire' and wb.power == pytest.approx(100.0)
+    assert P._move_infos(['Weather Ball'], '', ('Normal',), abilities=True)[0][0].type == 'Normal'
+    de_old = P._move_infos(['Double-Edge'], 'toughclaws', ('Normal',), abilities=False)[0][0]
+    de_new = P._move_infos(['Double-Edge'], 'toughclaws', ('Normal',), abilities=True)[0][0]
+    assert de_new.power == pytest.approx(de_old.power * 1.3)
+    # agregados por tipo del preview: Liquid Voice suma potencia de Agua
+    agg_old = P._move_infos(['Hyper Voice'], 'liquidvoice', ('Water', 'Fairy'), abilities=False)[1]
+    agg_new = P._move_infos(['Hyper Voice'], 'liquidvoice', ('Water', 'Fairy'), abilities=True)[1]
+    wi = P.TYPES.index('Water')
+    assert agg_old[wi] == 0.0 and agg_new[wi] > 0.0
+
+
+def test_profile_cache_is_per_version():
+    from showdown.rl.team_preview_obs import mon_feat_from_species, mon_profile, obs_abilities_scope
+    feat = mon_feat_from_species('Primarina', ability='Liquid Voice', item='Leftovers',
+                                 moves=('Hyper Voice', 'Moonblast'))
+    with obs_abilities_scope(False):
+        old = {m.mid: m.type for m in mon_profile(feat).damaging}
+    with obs_abilities_scope(True):
+        new = {m.mid: m.type for m in mon_profile(feat).damaging}
+    assert old.get('hypervoice') == 'Normal' and new.get('hypervoice') == 'Water'
+
+
+def test_preview_checkpoint_version(tmp_path):
+    import torch
+    from showdown.rl.frozen_preview import FrozenPreviewPolicy
+    from showdown.rl.team_preview_ppo.agent import PreviewPPOAgent, PreviewPPOConfig
+    ag = PreviewPPOAgent(PreviewPPOConfig())
+    ag._ensure_torch()
+    assert ag.cfg.obs_abilities is True  # preview v2.1 en adelante
+    new = ag.save(tmp_path / 'v21.pt')
+    pol = FrozenPreviewPolicy(kind='team_preview_ppo', checkpoint=str(new))
+    pol._ensure()
+    assert pol.obs_abilities is True
+    payload = torch.load(new, map_location='cpu', weights_only=False)
+    payload['cfg'].pop('obs_abilities')  # como el preview v2 congelado
+    torch.save(payload, tmp_path / 'v2.pt')
+    pol2 = FrozenPreviewPolicy(kind='team_preview_ppo', checkpoint=str(tmp_path / 'v2.pt'))
+    pol2._ensure()
+    assert pol2.obs_abilities is False
+
+
+def test_preview_trainer_flag():
+    from showdown.rl.team_preview_ppo import train as T
+    assert 'obs_abilities' in inspect.signature(T.train).parameters and '--obs-abilities' in inspect.getsource(T)

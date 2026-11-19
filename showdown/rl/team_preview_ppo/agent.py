@@ -28,6 +28,9 @@ class PreviewPPOConfig:
     seed: int = 0
     # 90 formaciones canónicas en vez de 360 órdenes (team_preview_action.canonical_mask).
     canonical: bool = False
+    # Observación nueva (P5 completo, rl_env_spec v1.33): preview v2.1 en adelante. Los checkpoints
+    # anteriores (preview v2, congelado con PPO v1) cargan con False.
+    obs_abilities: bool = True
 
 
 class PreviewPPOAgent:
@@ -203,6 +206,7 @@ class PreviewPPOAgent:
         if isinstance(payload, dict) and 'state_dict' in payload:
             sd = payload['state_dict']
             cfg = payload.get('cfg') or {}
+            self.cfg.obs_abilities = False  # anteriores a P5 (preview v2)
             if isinstance(cfg, dict):
                 for k, v in cfg.items():
                     if hasattr(self.cfg, k):

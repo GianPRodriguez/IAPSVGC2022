@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import json
 from pathlib import Path
 from typing import Optional
@@ -64,6 +65,7 @@ def train(
     eval_seed: int = DEFAULT_EVAL_SEED,
     eval_every: int = 5,
     eval_periodic_episodes: int = 256,
+    obs_abilities: Optional[bool] = None,
 ) -> PreviewPPOAgent:
     from showdown.rl.parallel import resolve_device
     from showdown.rl.preview_live import make_preview_env, provenance_lines, provenance_meta
@@ -80,6 +82,11 @@ def train(
     n = cfg.smoke_episodes if smoke else cfg.rollout_episodes
     if smoke:
         cfg.rollout_episodes = n
+    if obs_abilities is not None:
+        cfg.obs_abilities = bool(obs_abilities)
+    # Observación del preview (y de sus entornos, que heredan la variable): sigue a la config (P5).
+    os.environ['RL_OBS_ABILITIES'] = '1' if cfg.obs_abilities else '0'
+    print(f'[preview] observación: corrección de habilidades (P5) = {bool(cfg.obs_abilities)}', flush=True)
     agent = PreviewPPOAgent(cfg)
     env, pool = make_preview_env(seed, live)
     ckpt_dir = Path(checkpoint_dir)
@@ -88,6 +95,7 @@ def train(
         'agent': 'team_preview_ppo', 'seed': seed, 'device': device, 'smoke': smoke,
         'updates': updates, 'episodes_per_update': n, 'lr': float(cfg.lr),
         'clip_eps': float(cfg.clip_eps), 'obs_version': OBS_VERSION, 'obs_dim': OBS_DIM,
+        'obs_abilities': bool(cfg.obs_abilities),
         'backend': env.provenance, 'eval_baseline': eval_baseline, 'eval_seed': eval_seed,
     })
     n_periodic = resolve_eval_n(eval_periodic_episodes, smoke=smoke, smoke_n=32)
@@ -195,6 +203,8 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--canonical', action='store_true',
                    help='90 formaciones canónicas (leads y reserva ordenados) en vez de 360 órdenes')
     p.add_argument('--ent-coef', type=float, default=None, help='Coeficiente de entropía (defecto 0.02)')
+    p.add_argument('--obs-abilities', type=int, choices=(0, 1), default=None,
+                   help='observación con la corrección de habilidades (P5): 1 = preview v2.1 (defecto), 0 = como v2')
     p.add_argument('--own-team', default='',
                    help='Equipo propio fijo (archivo export; p. ej. showdown/rl/data/ddqn_team.txt)')
     from showdown.rl.preview_live import add_live_cli_args, live_options_from_args
@@ -219,6 +229,7 @@ def main(argv: Optional[list] = None) -> int:
         checkpoint_dir=args.checkpoint_dir,
         canonical=bool(args.canonical),
         ent_coef=args.ent_coef,
+        obs_abilities=None if args.obs_abilities is None else bool(args.obs_abilities),
         live=live_options_from_args(args),
         eval_episodes=args.eval_episodes,
         eval_baseline=args.eval_baseline,

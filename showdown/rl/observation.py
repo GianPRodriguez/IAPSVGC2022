@@ -221,7 +221,8 @@ def _pick(prof, k: str, mode: str, *, attacker: bool) -> float:
 import contextvars as _cv
 import os as _os
 
-_OBS_ABILITIES: '_cv.ContextVar[Optional[bool]]' = _cv.ContextVar('rl_obs_abilities', default=None)
+# El indicador vive en team_preview_obs (lo comparten el preview y el combate; parte 2b).
+from showdown.rl.team_preview_obs import _OBS_ABILITIES, obs_abilities_default, obs_abilities_on  # noqa: E402
 
 
 # Tabla de daño de la calculadora real para la observación en curso (P5 completo, parte 2a):
@@ -247,15 +248,6 @@ def obs_calc_enabled() -> bool:
 
 def calc_stats() -> Dict[str, int]:
     return dict(CALC_STATS)
-
-
-def obs_abilities_default() -> bool:
-    return _os.environ.get('RL_OBS_ABILITIES', '').strip().lower() in ('1', 'true', 'yes', 'on')
-
-
-def obs_abilities_on() -> bool:
-    v = _OBS_ABILITIES.get()
-    return obs_abilities_default() if v is None else bool(v)
 
 
 _FLAG_POWER = {'toughclaws': ('contact', 1.3), 'ironfist': ('punch', 1.2), 'strongjaw': ('bite', 1.5),
@@ -323,6 +315,7 @@ def move_damage_frac(att_p, att: MonSnapshot, def_p, dfn: MonSnapshot, mv, field
             if v is not None:
                 return float(v)  # calculadora real; si falta, sigue la aproximación (respaldo)
     raw_type, pw_mult, def_mult = ability_damage_mods(att_p, def_p, mv) if fix else (mv.type, 1.0, 1.0)
+    pw_mult = 1.0  # con P5 la potencia por habilidad ya viene en el perfil (preview_move_mods, parte 2b)
     immune_type = P.IMMUNITY_ABILITIES.get(def_p.ability)
     mtype = P.normalize_type(raw_type)
     if immune_type and mtype == immune_type and att_p.ability != 'moldbreaker':

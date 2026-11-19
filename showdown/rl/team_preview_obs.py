@@ -214,6 +214,77 @@ ITEM_FLAGS = (
 _SWITCH_ITEMS = {'ejectbutton', 'ejectpack', 'redcard'}
 _PROTECTIVE_ITEMS = {'safetygoggles', 'covertcloak', 'clearamulet', 'abilityshield'}
 
+# --------------------------------------------------------------------------- #
+# Observación nueva (P5 completo; rl_env_spec v1.33). Apagada por defecto: PPO v1 y su preview v2
+# congelados no cambian. Cada checkpoint (combate o preview) guarda ``obs_abilities``.
+# --------------------------------------------------------------------------- #
+import contextvars as _cv
+import os as _os
+
+_OBS_ABILITIES: '_cv.ContextVar[Optional[bool]]' = _cv.ContextVar('rl_obs_abilities', default=None)
+
+
+def obs_abilities_default() -> bool:
+    return _os.environ.get('RL_OBS_ABILITIES', '').strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def obs_abilities_on() -> bool:
+    v = _OBS_ABILITIES.get()
+    return obs_abilities_default() if v is None else bool(v)
+
+
+class obs_abilities_scope:
+    """``with obs_abilities_scope(flag):`` fija la versión de la observación en este contexto."""
+
+    def __init__(self, flag: Optional[bool]):
+        self.flag, self._tok = flag, None
+
+    def __enter__(self):
+        if self.flag is not None:
+            self._tok = _OBS_ABILITIES.set(bool(self.flag))
+        return self
+
+    def __exit__(self, *exc):
+        if self._tok is not None:
+            _OBS_ABILITIES.reset(self._tok)
+        return False
+
+
+_P5_FLAG_POWER = {'toughclaws': ('contact', 1.3), 'ironfist': ('punch', 1.2), 'strongjaw': ('bite', 1.5),
+                  'megalauncher': ('pulse', 1.5), 'sharpness': ('slicing', 1.5), 'punkrock': ('sound', 1.3)}
+_P5_WEATHER_BALL = {'sun': 'Fire', 'rain': 'Water', 'sand': 'Rock', 'snow': 'Ice'}
+
+
+def _flagset(m: Dict[str, Any]) -> set:
+    raw = m.get('flags') or ()
+    return {k for k, v in raw.items() if v} if isinstance(raw, dict) else {str(k) for k in raw}
+
+
+def preview_move_mods(ability: str, mid: str, m: Dict[str, Any], mtype: str, bp: float) -> Tuple[str, float]:
+    """P5 en el perfil del movimiento (sin rival concreto): tipo y potencia efectivos, mismas reglas que
+    aplica la calculadora real. Lo que depende del compañero (aura o clima ajenos) lo ve la red por
+    las marcas de habilidad del compañero."""
+    flags = _flagset(m)
+    if ability == 'liquidvoice' and 'sound' in flags:
+        mtype = 'Water'
+    if mid == 'weatherball' and ability in _WEATHER_AB:
+        mtype, bp = _P5_WEATHER_BALL.get(_WEATHER_AB[ability], mtype), 100.0
+    fp = _P5_FLAG_POWER.get(ability)
+    if fp and fp[0] in flags:
+        bp *= fp[1]
+    if ability == 'technician' and 0 < float(m.get('basePower') or 0) <= 60:
+        bp *= 1.5
+    if ability == 'sheerforce' and (m.get('secondaries') or m.get('secondary')):
+        bp *= 1.3
+    if (ability, mtype) in (('fairyaura', 'Fairy'), ('darkaura', 'Dark')):
+        bp *= 4.0 / 3.0
+    if ability == 'parentalbond' and m.get('target') not in _SPREAD_TARGETS:
+        bp *= 1.25
+    if ability == 'waterbubble' and mtype == 'Water':
+        bp *= 2.0
+    return mtype, bp
+
+
 ATE_ABILITIES = {'aerilate': 'Flying', 'pixilate': 'Fairy', 'refrigerate': 'Ice',
                  'galvanize': 'Electric', 'dragonize': 'Dragon', 'normalize': 'Normal'}
 IMMUNITY_ABILITIES = {
@@ -557,9 +628,13 @@ PAIR_DIM = 3 * N_POOL * N_POOL
 OBS_DIM = 2 * N_POOL * MON_DIM + PAIR_DIM
 
 
-def _move_infos(moves: Sequence[str], ability: str, types: Sequence[str]
+def _move_infos(moves: Sequence[str], ability: str, types: Sequence[str], abilities: Optional[bool] = None
                 ) -> Tuple[List[_MoveInfo], np.ndarray, np.ndarray]:
-    """Movimientos dañinos + agregados (poder por tipo, 4 mejores) + utilidades."""
+    """Movimientos dañinos + agregados (poder por tipo, 4 mejores) + utilidades.
+
+    ``abilities`` (P5): tipo y potencia efectivos por habilidad (``preview_move_mods``); None = indicador.
+    """
+    p5 = obs_abilities_on() if abilities is None else bool(abilities)
     table = _dex()['moves']
     util = np.zeros(len(MOVE_UTILITY_FLAGS), dtype=np.float32)
     uidx = {k: i for i, k in enumerate(MOVE_UTILITY_FLAGS)}
@@ -657,6 +732,8 @@ def _move_infos(moves: Sequence[str], ability: str, types: Sequence[str]
         if ate and mtype == 'Normal':
             mtype = ate
             bp *= 1.2
+        if p5:
+            mtype, bp = preview_move_mods(ability, mid, m, mtype, bp)
         hits = m.get('multihit')
         if isinstance(hits, list):
             bp *= 5.0 if ability == 'skilllink' else 3.1
@@ -695,7 +772,7 @@ def _move_infos(moves: Sequence[str], ability: str, types: Sequence[str]
 
 @lru_cache(maxsize=8192)
 def _profile_cached(key: Tuple) -> _Profile:
-    species, item, ability, nature, moves, exact, sp_bounds = key
+    species, item, ability, nature, moves, exact, sp_bounds, p5 = key
     ent = species_entry(species)
     if ent is None:
         return _Profile(
@@ -734,7 +811,7 @@ def _profile_cached(key: Tuple) -> _Profile:
 
     ifl, itype = _item_flags(item)
     afl, atype = _ability_flags(eff_ability)
-    dmg_moves, agg, util = _move_infos(moves, eff_ability, types1)
+    dmg_moves, agg, util = _move_infos(moves, eff_ability, types1, abilities=p5)
 
     parts = [
         np.asarray([1.0, 1.0 if exact is not None else 0.0], dtype=np.float32),
@@ -765,7 +842,7 @@ def _profile_cached(key: Tuple) -> _Profile:
 def mon_profile(mon: Optional[PreviewMonFeat]) -> Optional[_Profile]:
     if mon is None:
         return None
-    return _profile_cached(mon.key())
+    return _profile_cached(tuple(mon.key()) + (obs_abilities_on(),))
 
 
 _OFF_CAN_MEGA = 2 + 18 + N_TYPES
