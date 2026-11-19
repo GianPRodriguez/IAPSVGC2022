@@ -1101,3 +1101,55 @@ cómo integrarla (lote por observación, caché, cálculo solo de lo necesario).
 Tests: `tests/test_obs_abilities.py` (efectos que no son de daño) y `tests/test_obs_calc.py`
 (incluye el caso de la prueba online con la calculadora real: el sol reduce a la mitad el Hyper Voice
 de Primarina porque es de Agua).
+
+### 17.1 Resultados de la vigesimocuarta cola y de la calibración (19-11-2026)
+
+Commit c8bc5ec (calibración y resumen rehecho: 9fc0842). Todo rc=0. 200 partidas por rival, equipo
+fijo, preview v2; `val` decide y `eval` es solo registro.
+
+**P1, sorteo al jugar** (5 semillas de v1):
+
+| Modo | `val` | Δ`val` | `eval` | Arquetipo n1 | Regla |
+|---|---|---|---|---|---|
+| Determinista (v1) | 90,4 % | — | 81,2 % | 77,1 % | — |
+| T = 1,0 | 88,0 % | −2,4 (± 1,6) | 80,1 % | 76,7 % | no cumple |
+| T = 0,5 | 90,3 % | −0,1 (± 1,5) | 81,2 % | 77,9 % | **cumple** |
+
+**P2, P4 y P3** (2 semillas, frente a v1 semillas 0 y 1):
+
+| | `val` | Δ`val` | Arquetipo n2 `val` | Δ | Contra v1 (espejo) | `eval` | Δ`eval` | Arquetipo n1 `eval` | Regla |
+|---|---|---|---|---|---|---|---|---|---|
+| v1 | 90,7 % | — | 84,5 % | — | **59,8 %** (calibración) | 81,3 % | — | 76,8 % | — |
+| P2 | 89,3 % | −1,3 | 86,2 % | +1,8 | 28,2 % | 81,5 % | +0,2 | 79,5 % | no |
+| P4 | 90,2 % | −0,5 | 87,8 % | +3,2 | 21,8 % | **85,7 %** | **+4,3** | 81,0 % | no |
+| P3 | 90,5 % | −0,2 | 88,0 % | +3,5 | **99,5 %** | 83,2 % | +1,8 | 77,2 % | sí por la regla (> 64 %) |
+
+**Lectura:**
+1. **La calibración no da 50 %: v1 contra v1 en espejo da 59,8 %.** La medición favorece unos 10
+   puntos al lado del agente (el jugador del entorno frente al `PPOPlayer` rival: camino de
+   observación y orden de mensajes distintos). Suponer 50 % habría sido un error. P2 y P4 quedan
+   31 y 38 puntos por debajo de esa referencia: v1 los explota.
+2. **P3 cumple la regla, pero la evidencia está contaminada.** P3 se entrenó contra esos mismos
+   checkpoints de v1, y el 99,5 % mide que aprendió a explotarlos, no que juegue mejor en general.
+   En `val` queda igual (−0,2) y mejora algo contra arquetipos (+3,5, dentro del IC). La regla fijada
+   no previó que el rival de prueba fuera el mismo del entrenamiento; queda como limitación y
+   decide el usuario.
+3. **P4 es el mejor en `eval`** (+4,3, en el límite del IC) y contra arquetipos (Trick Room
+   87,4 % frente a 81,0 %; Tailwind 83,8 % frente a 77,6 %). Pero no cumple la regla en `val`
+   (+3,2 contra el umbral de +4) y es el más explotable por v1.
+4. **Ningún candidato empeora en `val`** (todos dentro de ±2 puntos).
+
+**Medición de velocidad de la calculadora real** (`~/iapsvgc_runs/bench_calc`, servidor libre,
+60 s por variante, 0 errores):
+
+| Variante | Cálculos/s | Pasos/s equivalentes (80 por paso) | Latencia del lote p50 / p95 |
+|---|---|---|---|
+| 32 procesos, lotes de 80 (realista, con caché) | 123 037 | 1 538 | 6,6 / 61,0 ms |
+| 32 procesos, lotes de 80, sin caché (peor caso) | 38 653 | 483 | 7,7 / 296,9 ms |
+| 8 procesos, lotes de 80 | 164 232 | 2 053 | 2,7 / 4,4 ms |
+| 32 procesos, lotes de 240 | 378 476 | 1 577 | 13,6 / 19,5 ms |
+
+El entrenamiento corre a ~300 pasos/s: **la calculadora alcanza incluso en el peor caso** (483
+pasos/s sin caché). Lotes más grandes rinden más por cálculo. El riesgo son los picos de latencia
+sin caché (p95 297 ms), y que en el entrenamiento los heurísticos usan el mismo servidor a la vez.
+Integración: un lote por observación con caché; se mide la velocidad real en el piloto.
