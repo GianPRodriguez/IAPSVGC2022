@@ -186,3 +186,26 @@ def test_summary24_h2h_calibration(tmp_path):
     assert K.main([str(out), str(v1)]) == 0
     md = (out / 'kickoff_summary24.md').read_text(encoding='utf-8')
     assert '25.0 % (calibración)' in md and '**se adopta** (contra v1 > 29 %)' in md
+
+
+def test_divergence_summary(tmp_path):
+    import json
+    import sys
+    sys.path.insert(0, 'scripts/analysis')
+    import divergencia_p1 as D
+    rep = {'resultados': {'greedy_solo': {'win': 90, 'loss': 10}},
+           'divergencia': {'greedy_solo': {'todas_decisiones': 200, 'todas_jugada_distinta': 30,
+                                           'todas_hueco1_distinto': 20, 'turno_1_decisiones': 50,
+                                           'turno_1_jugada_distinta': 5, 'partidas': 100,
+                                           'partidas_con_alguna_distinta': 60}}}
+    (tmp_path / 'T0.5_s0_val.json').write_text(json.dumps(rep))
+    assert D.main([str(tmp_path)]) == 0
+    md = (tmp_path / 'divergencia_p1.md').read_text(encoding='utf-8')
+    assert '| 0.5 | 15.0 % | 10.0 % | 10.0 % | 60.0 % | 200 | 90.0 % |' in md
+
+
+def test_policy_diag_records_divergence():
+    import inspect
+    from showdown.rl.ddqn import policy_diag as P
+    src = inspect.getsource(P.run)
+    assert "'divergencia'" in src and 'greedy=True' in src

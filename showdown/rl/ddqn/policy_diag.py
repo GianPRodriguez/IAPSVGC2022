@@ -99,6 +99,7 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
     results: Dict[str, Counter] = defaultdict(Counter)
     games_log = []  # equipo rival y resultado de cada partida (análisis de similitud con train)
     ctx_counts: Dict[str, Counter] = defaultdict(Counter)
+    div: Dict[str, Counter] = defaultdict(Counter)  # sorteo frente a determinista (P1)
     if context:
         from showdown.rl import context_diag as CD
     if sample:  # P1: política estocástica reproducible
@@ -114,14 +115,26 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
             for g in range(games):
                 env.reset(seed=int(seed) + 300_000 + fi * 10_000 + g)
                 info = {}
+                game_div = False
                 for _ in range(80):
                     battle = env.backend._battle
                     if agent_kind == 'ppo':
                         obs = build_observation_ppo(env._snap, abilities=bool(agent.cfg.obs_abilities))
                         p1, _ = pe_autoregressive_masks(battle, slot1_action_id=None)
-                        a1, a2, _lp, _v = agent.act(
-                            obs, p1, lambda x, _b=battle: pe_autoregressive_masks(_b, slot1_action_id=int(x))[1],
-                            greedy=not sample, temperature=temperature)
+                        m2f = (lambda x, _b=battle: pe_autoregressive_masks(_b, slot1_action_id=int(x))[1])
+                        a1, a2, _lp, _v = agent.act(obs, p1, m2f, greedy=not sample, temperature=temperature)
+                        if sample:  # ¿cuánto se aparta el sorteo del modo determinista? (P1)
+                            g1, g2, _l, _vv = agent.act(obs, p1, m2f, greedy=True)
+                            free = int((np.asarray(p1) > 0.5).sum()) > 1
+                            t1 = int(getattr(battle, 'turn', 0) or 0) <= 1
+                            for key, on in (('todas', True), ('turno_1', t1)):
+                                if not (on and free):
+                                    continue
+                                div[foe][key + '_decisiones'] += 1
+                                div[foe][key + '_hueco1_distinto'] += int(a1 != g1)
+                                div[foe][key + '_jugada_distinta'] += int((a1, a2) != (g1, g2))
+                            if free and (a1, a2) != (g1, g2):
+                                game_div = True
                     else:
                         obs = build_observation_ddqn(env._snap, abilities=bool(agent.cfg.obs_abilities))
                         a = agent.act(obs, _joint_masks(env), epsilon=0.0)
@@ -151,6 +164,9 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                 ret = float(info.get('episode_return', 0.0))
                 res = 'win' if ret > 0.05 else ('loss' if ret < -0.05 else 'tie')
                 results[foe][res] += 1
+                if sample and agent_kind == 'ppo':
+                    div[foe]['partidas'] += 1
+                    div[foe]['partidas_con_alguna_distinta'] += int(game_div)
                 fs = env.backend.foe_state_episode() if hasattr(env.backend, 'foe_state_episode') else None
                 rec = {'rival': foe, 'equipo': getattr(env.backend, 'last_foe_team', None), 'res': res,
                        **({'foe_state': fs} if fs else {})}
@@ -175,6 +191,7 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
             'joint_arquetipo': os.environ.get('PS_JOINT_ARCHETYPE', '') or None,
             'obs_habilidades': bool(agent.cfg.obs_abilities),
             'muestreo': {'activo': bool(sample), 'temperatura': float(temperature)} if sample else None,
+            'divergencia': {f: dict(c) for f, c in div.items()} if sample else None,
             'total': dict(total),
             **({'contexto': {c: dict(v) for c, v in ctx_counts.items()}} if context else {})}
 
