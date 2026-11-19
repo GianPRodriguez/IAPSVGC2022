@@ -1,0 +1,3870 @@
+{
+ "abilities": [
+  {
+   "id": "auraguard",
+   "name": "Aura Guard",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "dragonize",
+   "name": "Dragonize",
+   "hooks": [
+    "onModifyType",
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "firemane",
+   "name": "Fire Mane",
+   "hooks": [
+    "onModifyAtk",
+    "onModifySpA"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "adaptability",
+   "name": "Adaptability",
+   "hooks": [
+    "onModifySTAB"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "aerilate",
+   "name": "Aerilate",
+   "hooks": [
+    "onModifyType",
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "analytic",
+   "name": "Analytic",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "anticipation",
+   "name": "Anticipation",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "battlebond",
+   "name": "Battle Bond",
+   "hooks": [
+    "onModifyMove"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "blaze",
+   "name": "Blaze",
+   "hooks": [
+    "onModifyAtk",
+    "onModifySpA"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "bulletproof",
+   "name": "Bulletproof",
+   "hooks": [
+    "onTryHit"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "chlorophyll",
+   "name": "Chlorophyll",
+   "hooks": [
+    "onModifySpe"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "cloudnine",
+   "name": "Cloud Nine",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "compoundeyes",
+   "name": "Compound Eyes",
+   "hooks": [
+    "onSourceModifyAccuracy"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "curiousmedicine",
+   "name": "Curious Medicine",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "disguise",
+   "name": "Disguise",
+   "hooks": [
+    "onEffectiveness"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "drizzle",
+   "name": "Drizzle",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "drought",
+   "name": "Drought",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "dryskin",
+   "name": "Dry Skin",
+   "hooks": [
+    "onSourceBasePower",
+    "onTryHit",
+    "onWeather"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "eartheater",
+   "name": "Earth Eater",
+   "hooks": [
+    "onTryHit"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "electricsurge",
+   "name": "Electric Surge",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "embodyaspectcornerstone",
+   "name": "Embody Aspect (Cornerstone)",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "embodyaspecthearthflame",
+   "name": "Embody Aspect (Hearthflame)",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "embodyaspectteal",
+   "name": "Embody Aspect (Teal)",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "embodyaspectwellspring",
+   "name": "Embody Aspect (Wellspring)",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "fairyaura",
+   "name": "Fairy Aura",
+   "hooks": [
+    "onAnyBasePower",
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "filter",
+   "name": "Filter",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "flashfire",
+   "name": "Flash Fire",
+   "hooks": [
+    "onTryHit",
+    "condition.onModifyAtk",
+    "condition.onModifySpA",
+    "condition.onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "fluffy",
+   "name": "Fluffy",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "forecast",
+   "name": "Forecast",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "forewarn",
+   "name": "Forewarn",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "friendguard",
+   "name": "Friend Guard",
+   "hooks": [
+    "onAnyModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "frisk",
+   "name": "Frisk",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "furcoat",
+   "name": "Fur Coat",
+   "hooks": [
+    "onModifyDef"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "galewings",
+   "name": "Gale Wings",
+   "hooks": [
+    "onModifyPriority"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "gluttony",
+   "name": "Gluttony",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "goodasgold",
+   "name": "Good as Gold",
+   "hooks": [
+    "onTryHit"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "grasspelt",
+   "name": "Grass Pelt",
+   "hooks": [
+    "onModifyDef"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "grassysurge",
+   "name": "Grassy Surge",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "guts",
+   "name": "Guts",
+   "hooks": [
+    "onModifyAtk"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "heatproof",
+   "name": "Heatproof",
+   "hooks": [
+    "onSourceModifyAtk",
+    "onSourceModifySpA"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "hospitality",
+   "name": "Hospitality",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "hugepower",
+   "name": "Huge Power",
+   "hooks": [
+    "onModifyAtk"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "hustle",
+   "name": "Hustle",
+   "hooks": [
+    "onModifyAtk",
+    "onSourceModifyAccuracy"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "icebody",
+   "name": "Ice Body",
+   "hooks": [
+    "onImmunity",
+    "onWeather"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "iceface",
+   "name": "Ice Face",
+   "hooks": [
+    "onEffectiveness",
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "illuminate",
+   "name": "Illuminate",
+   "hooks": [
+    "onModifyMove"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "infiltrator",
+   "name": "Infiltrator",
+   "hooks": [
+    "onModifyMove"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "intimidate",
+   "name": "Intimidate",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "ironfist",
+   "name": "Iron Fist",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "keeneye",
+   "name": "Keen Eye",
+   "hooks": [
+    "onModifyMove"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "klutz",
+   "name": "Klutz",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "lightningrod",
+   "name": "Lightning Rod",
+   "hooks": [
+    "onTryHit",
+    "onAnyRedirectTarget"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "liquidvoice",
+   "name": "Liquid Voice",
+   "hooks": [
+    "onModifyType"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "longreach",
+   "name": "Long Reach",
+   "hooks": [
+    "onModifyMove"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "magicbounce",
+   "name": "Magic Bounce",
+   "hooks": [
+    "onTryHit",
+    "onAllyTryHitSide"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "magmaarmor",
+   "name": "Magma Armor",
+   "hooks": [
+    "onImmunity"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "marvelscale",
+   "name": "Marvel Scale",
+   "hooks": [
+    "onModifyDef"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "megalauncher",
+   "name": "Mega Launcher",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "merciless",
+   "name": "Merciless",
+   "hooks": [
+    "onModifyCritRatio"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "mimicry",
+   "name": "Mimicry",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "minus",
+   "name": "Minus",
+   "hooks": [
+    "onModifySpA"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "moldbreaker",
+   "name": "Mold Breaker",
+   "hooks": [
+    "onModifyMove",
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "motordrive",
+   "name": "Motor Drive",
+   "hooks": [
+    "onTryHit"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "multiscale",
+   "name": "Multiscale",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "noguard",
+   "name": "No Guard",
+   "hooks": [
+    "onAnyAccuracy"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "oblivious",
+   "name": "Oblivious",
+   "hooks": [
+    "onTryHit",
+    "onImmunity"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "overcoat",
+   "name": "Overcoat",
+   "hooks": [
+    "onTryHit",
+    "onImmunity"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "overgrow",
+   "name": "Overgrow",
+   "hooks": [
+    "onModifyAtk",
+    "onModifySpA"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "pixilate",
+   "name": "Pixilate",
+   "hooks": [
+    "onModifyType",
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "plus",
+   "name": "Plus",
+   "hooks": [
+    "onModifySpA"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "prankster",
+   "name": "Prankster",
+   "hooks": [
+    "onModifyPriority"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "pressure",
+   "name": "Pressure",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "psychicsurge",
+   "name": "Psychic Surge",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "punkrock",
+   "name": "Punk Rock",
+   "hooks": [
+    "onBasePower",
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "purepower",
+   "name": "Pure Power",
+   "hooks": [
+    "onModifyAtk"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "purifyingsalt",
+   "name": "Purifying Salt",
+   "hooks": [
+    "onSourceModifyAtk",
+    "onSourceModifySpA"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "quickdraw",
+   "name": "Quick Draw",
+   "hooks": [
+    "onFractionalPriority"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "quickfeet",
+   "name": "Quick Feet",
+   "hooks": [
+    "onModifySpe"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "raindish",
+   "name": "Rain Dish",
+   "hooks": [
+    "onWeather"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "reckless",
+   "name": "Reckless",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "refrigerate",
+   "name": "Refrigerate",
+   "hooks": [
+    "onModifyType",
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "ripen",
+   "name": "Ripen",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "rivalry",
+   "name": "Rivalry",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "sandforce",
+   "name": "Sand Force",
+   "hooks": [
+    "onBasePower",
+    "onImmunity"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "sandrush",
+   "name": "Sand Rush",
+   "hooks": [
+    "onImmunity",
+    "onModifySpe"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "sandstream",
+   "name": "Sand Stream",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "sandveil",
+   "name": "Sand Veil",
+   "hooks": [
+    "onImmunity",
+    "onModifyAccuracy"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "sapsipper",
+   "name": "Sap Sipper",
+   "hooks": [
+    "onTryHit",
+    "onAllyTryHitSide"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "scrappy",
+   "name": "Scrappy",
+   "hooks": [
+    "onModifyMove"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "screencleaner",
+   "name": "Screen Cleaner",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "serenegrace",
+   "name": "Serene Grace",
+   "hooks": [
+    "onModifyMove"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "sharpness",
+   "name": "Sharpness",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "sheerforce",
+   "name": "Sheer Force",
+   "hooks": [
+    "onModifyMove",
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "shieldsdown",
+   "name": "Shields Down",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "skilllink",
+   "name": "Skill Link",
+   "hooks": [
+    "onModifyMove"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "slushrush",
+   "name": "Slush Rush",
+   "hooks": [
+    "onModifySpe"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "sniper",
+   "name": "Sniper",
+   "hooks": [
+    "onModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "snowcloak",
+   "name": "Snow Cloak",
+   "hooks": [
+    "onImmunity",
+    "onModifyAccuracy"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "snowwarning",
+   "name": "Snow Warning",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "solarpower",
+   "name": "Solar Power",
+   "hooks": [
+    "onModifySpA",
+    "onWeather"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "solidrock",
+   "name": "Solid Rock",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "soundproof",
+   "name": "Soundproof",
+   "hooks": [
+    "onTryHit",
+    "onAllyTryHitSide"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "stakeout",
+   "name": "Stakeout",
+   "hooks": [
+    "onModifyAtk",
+    "onModifySpA"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "stalwart",
+   "name": "Stalwart",
+   "hooks": [
+    "onModifyMove"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "stancechange",
+   "name": "Stance Change",
+   "hooks": [
+    "onModifyMove"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "steelyspirit",
+   "name": "Steely Spirit",
+   "hooks": [
+    "onAllyBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "stench",
+   "name": "Stench",
+   "hooks": [
+    "onModifyMove"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "strongjaw",
+   "name": "Strong Jaw",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "sturdy",
+   "name": "Sturdy",
+   "hooks": [
+    "onTryHit"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "superluck",
+   "name": "Super Luck",
+   "hooks": [
+    "onModifyCritRatio"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "supersweetsyrup",
+   "name": "Supersweet Syrup",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "supremeoverlord",
+   "name": "Supreme Overlord",
+   "hooks": [
+    "onBasePower",
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "surgesurfer",
+   "name": "Surge Surfer",
+   "hooks": [
+    "onModifySpe"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "swarm",
+   "name": "Swarm",
+   "hooks": [
+    "onModifyAtk",
+    "onModifySpA"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "swiftswim",
+   "name": "Swift Swim",
+   "hooks": [
+    "onModifySpe"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "tangledfeet",
+   "name": "Tangled Feet",
+   "hooks": [
+    "onModifyAccuracy"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "technician",
+   "name": "Technician",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "telepathy",
+   "name": "Telepathy",
+   "hooks": [
+    "onTryHit"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "thickfat",
+   "name": "Thick Fat",
+   "hooks": [
+    "onSourceModifyAtk",
+    "onSourceModifySpA"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "torrent",
+   "name": "Torrent",
+   "hooks": [
+    "onModifyAtk",
+    "onModifySpA"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "toughclaws",
+   "name": "Tough Claws",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "trace",
+   "name": "Trace",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "unaware",
+   "name": "Unaware",
+   "hooks": [
+    "onAnyModifyBoost"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "unburden",
+   "name": "Unburden",
+   "hooks": [
+    "condition.onModifySpe"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "unnerve",
+   "name": "Unnerve",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "voltabsorb",
+   "name": "Volt Absorb",
+   "hooks": [
+    "onTryHit"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "waterabsorb",
+   "name": "Water Absorb",
+   "hooks": [
+    "onTryHit"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "waterbubble",
+   "name": "Water Bubble",
+   "hooks": [
+    "onModifyAtk",
+    "onModifySpA",
+    "onSourceModifyAtk",
+    "onSourceModifySpA"
+   ],
+   "desc": ""
+  }
+ ],
+ "moves": [
+  {
+   "id": "banefulbunker",
+   "name": "Baneful Bunker",
+   "type": "Poison",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onTryHit",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "beakblast",
+   "name": "Beak Blast",
+   "type": "Flying",
+   "category": "Physical",
+   "basePower": 120,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "bonerush",
+   "name": "Bone Rush",
+   "type": "Ground",
+   "category": "Physical",
+   "basePower": 30,
+   "hooks": [],
+   "override": [],
+   "multihit": [
+    2,
+    5
+   ],
+   "desc": ""
+  },
+  {
+   "id": "clangoroussoul",
+   "name": "Clangorous Soul",
+   "type": "Dragon",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "curse",
+   "name": "Curse",
+   "type": "Ghost",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onModifyMove",
+    "onTryHit",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "disable",
+   "name": "Disable",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "dragoncheer",
+   "name": "Dragon Cheer",
+   "type": "Dragon",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onModifyCritRatio",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "electrify",
+   "name": "Electrify",
+   "type": "Electric",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit",
+    "condition.onModifyType",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "encore",
+   "name": "Encore",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "freezedry",
+   "name": "Freeze-Dry",
+   "type": "Ice",
+   "category": "Special",
+   "basePower": 70,
+   "hooks": [
+    "onEffectiveness"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "gravapple",
+   "name": "Grav Apple",
+   "type": "Grass",
+   "category": "Physical",
+   "basePower": 90,
+   "hooks": [
+    "onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "growth",
+   "name": "Growth",
+   "type": "Grass",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onModifyMove"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "infernalparade",
+   "name": "Infernal Parade",
+   "type": "Ghost",
+   "category": "Special",
+   "basePower": 65,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "kingsshield",
+   "name": "King's Shield",
+   "type": "Steel",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onTryHit",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "lightofruin",
+   "name": "Light of Ruin",
+   "type": "Fairy",
+   "category": "Special",
+   "basePower": 140,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "noretreat",
+   "name": "No Retreat",
+   "type": "Fighting",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "octolock",
+   "name": "Octolock",
+   "type": "Fighting",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "powershift",
+   "name": "Power Shift",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "protect",
+   "name": "Protect",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onTryHit",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "ragefist",
+   "name": "Rage Fist",
+   "type": "Ghost",
+   "category": "Physical",
+   "basePower": 50,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "saltcure",
+   "name": "Salt Cure",
+   "type": "Rock",
+   "category": "Physical",
+   "basePower": 40,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "spikyshield",
+   "name": "Spiky Shield",
+   "type": "Grass",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onTryHit",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "stormthrow",
+   "name": "Storm Throw",
+   "type": "Fighting",
+   "category": "Physical",
+   "basePower": 60,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "syrupbomb",
+   "name": "Syrup Bomb",
+   "type": "Grass",
+   "category": "Special",
+   "basePower": 60,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "wish",
+   "name": "Wish",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "acrobatics",
+   "name": "Acrobatics",
+   "type": "Flying",
+   "category": "Physical",
+   "basePower": 55,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "allyswitch",
+   "name": "Ally Switch",
+   "type": "Psychic",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "aquaring",
+   "name": "Aqua Ring",
+   "type": "Water",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "assurance",
+   "name": "Assurance",
+   "type": "Dark",
+   "category": "Physical",
+   "basePower": 60,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "attract",
+   "name": "Attract",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "aurawheel",
+   "name": "Aura Wheel",
+   "type": "Electric",
+   "category": "Physical",
+   "basePower": 110,
+   "hooks": [
+    "onModifyType"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "auroraveil",
+   "name": "Aurora Veil",
+   "type": "Ice",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onAnyModifyDamage"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "avalanche",
+   "name": "Avalanche",
+   "type": "Ice",
+   "category": "Physical",
+   "basePower": 60,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "barbbarrage",
+   "name": "Barb Barrage",
+   "type": "Poison",
+   "category": "Physical",
+   "basePower": 60,
+   "hooks": [
+    "onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "beatup",
+   "name": "Beat Up",
+   "type": "Dark",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "onModifyMove",
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "bitterblade",
+   "name": "Bitter Blade",
+   "type": "Fire",
+   "category": "Physical",
+   "basePower": 90,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "blizzard",
+   "name": "Blizzard",
+   "type": "Ice",
+   "category": "Special",
+   "basePower": 110,
+   "hooks": [
+    "onModifyMove"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "bodypress",
+   "name": "Body Press",
+   "type": "Fighting",
+   "category": "Physical",
+   "basePower": 80,
+   "hooks": [],
+   "override": [
+    "def"
+   ],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "bounce",
+   "name": "Bounce",
+   "type": "Flying",
+   "category": "Physical",
+   "basePower": 85,
+   "hooks": [
+    "condition.onSourceBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "bravebird",
+   "name": "Brave Bird",
+   "type": "Flying",
+   "category": "Physical",
+   "basePower": 120,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "brickbreak",
+   "name": "Brick Break",
+   "type": "Fighting",
+   "category": "Physical",
+   "basePower": 75,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "bulletseed",
+   "name": "Bullet Seed",
+   "type": "Grass",
+   "category": "Physical",
+   "basePower": 25,
+   "hooks": [],
+   "override": [],
+   "multihit": [
+    2,
+    5
+   ],
+   "desc": ""
+  },
+  {
+   "id": "charge",
+   "name": "Charge",
+   "type": "Electric",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onBasePower",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "comeuppance",
+   "name": "Comeuppance",
+   "type": "Dark",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "damageCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "counter",
+   "name": "Counter",
+   "type": "Fighting",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "damageCallback",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "darkestlariat",
+   "name": "Darkest Lariat",
+   "type": "Dark",
+   "category": "Physical",
+   "basePower": 85,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "destinybond",
+   "name": "Destiny Bond",
+   "type": "Ghost",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "dig",
+   "name": "Dig",
+   "type": "Ground",
+   "category": "Physical",
+   "basePower": 80,
+   "hooks": [
+    "condition.onSourceModifyDamage",
+    "condition.onImmunity"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "dive",
+   "name": "Dive",
+   "type": "Water",
+   "category": "Physical",
+   "basePower": 80,
+   "hooks": [
+    "condition.onSourceModifyDamage",
+    "condition.onImmunity"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "doubleedge",
+   "name": "Double-Edge",
+   "type": "Normal",
+   "category": "Physical",
+   "basePower": 120,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "doublehit",
+   "name": "Double Hit",
+   "type": "Normal",
+   "category": "Physical",
+   "basePower": 35,
+   "hooks": [],
+   "override": [],
+   "multihit": 2,
+   "desc": ""
+  },
+  {
+   "id": "dragondarts",
+   "name": "Dragon Darts",
+   "type": "Dragon",
+   "category": "Physical",
+   "basePower": 50,
+   "hooks": [],
+   "override": [],
+   "multihit": 2,
+   "desc": ""
+  },
+  {
+   "id": "drainingkiss",
+   "name": "Draining Kiss",
+   "type": "Fairy",
+   "category": "Special",
+   "basePower": 50,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "drainpunch",
+   "name": "Drain Punch",
+   "type": "Fighting",
+   "category": "Physical",
+   "basePower": 75,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "dualwingbeat",
+   "name": "Dual Wingbeat",
+   "type": "Flying",
+   "category": "Physical",
+   "basePower": 40,
+   "hooks": [],
+   "override": [],
+   "multihit": 2,
+   "desc": ""
+  },
+  {
+   "id": "electricterrain",
+   "name": "Electric Terrain",
+   "type": "Electric",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "electroball",
+   "name": "Electro Ball",
+   "type": "Electric",
+   "category": "Special",
+   "basePower": 0,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "endeavor",
+   "name": "Endeavor",
+   "type": "Normal",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "damageCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "endure",
+   "name": "Endure",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "entrainment",
+   "name": "Entrainment",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "eruption",
+   "name": "Eruption",
+   "type": "Fire",
+   "category": "Special",
+   "basePower": 150,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "expandingforce",
+   "name": "Expanding Force",
+   "type": "Psychic",
+   "category": "Special",
+   "basePower": 80,
+   "hooks": [
+    "onModifyMove",
+    "onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "explosion",
+   "name": "Explosion",
+   "type": "Normal",
+   "category": "Physical",
+   "basePower": 250,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "facade",
+   "name": "Facade",
+   "type": "Normal",
+   "category": "Physical",
+   "basePower": 70,
+   "hooks": [
+    "onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "ficklebeam",
+   "name": "Fickle Beam",
+   "type": "Dragon",
+   "category": "Special",
+   "basePower": 80,
+   "hooks": [
+    "onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "finalgambit",
+   "name": "Final Gambit",
+   "type": "Fighting",
+   "category": "Special",
+   "basePower": 0,
+   "hooks": [
+    "damageCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "flail",
+   "name": "Flail",
+   "type": "Normal",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "flareblitz",
+   "name": "Flare Blitz",
+   "type": "Fire",
+   "category": "Physical",
+   "basePower": 120,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "flowertrick",
+   "name": "Flower Trick",
+   "type": "Grass",
+   "category": "Physical",
+   "basePower": 70,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "fly",
+   "name": "Fly",
+   "type": "Flying",
+   "category": "Physical",
+   "basePower": 90,
+   "hooks": [
+    "condition.onSourceModifyDamage"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "flyingpress",
+   "name": "Flying Press",
+   "type": "Fighting",
+   "category": "Physical",
+   "basePower": 100,
+   "hooks": [
+    "onEffectiveness"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "focusenergy",
+   "name": "Focus Energy",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onModifyCritRatio",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "focuspunch",
+   "name": "Focus Punch",
+   "type": "Fighting",
+   "category": "Physical",
+   "basePower": 150,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "followme",
+   "name": "Follow Me",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onFoeRedirectTarget",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "foulplay",
+   "name": "Foul Play",
+   "type": "Dark",
+   "category": "Physical",
+   "basePower": 95,
+   "hooks": [],
+   "override": [
+    "target"
+   ],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "frostbreath",
+   "name": "Frost Breath",
+   "type": "Ice",
+   "category": "Special",
+   "basePower": 60,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "futuresight",
+   "name": "Future Sight",
+   "type": "Psychic",
+   "category": "Special",
+   "basePower": 120,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "gastroacid",
+   "name": "Gastro Acid",
+   "type": "Poison",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "gigadrain",
+   "name": "Giga Drain",
+   "type": "Grass",
+   "category": "Special",
+   "basePower": 75,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "glaiverush",
+   "name": "Glaive Rush",
+   "type": "Dragon",
+   "category": "Physical",
+   "basePower": 120,
+   "hooks": [
+    "condition.onSourceModifyDamage",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "grassknot",
+   "name": "Grass Knot",
+   "type": "Grass",
+   "category": "Special",
+   "basePower": 0,
+   "hooks": [
+    "basePowerCallback",
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "grassyglide",
+   "name": "Grassy Glide",
+   "type": "Grass",
+   "category": "Physical",
+   "basePower": 55,
+   "hooks": [
+    "onModifyPriority"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "grassyterrain",
+   "name": "Grassy Terrain",
+   "type": "Grass",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "gravity",
+   "name": "Gravity",
+   "type": "Psychic",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onModifyMove",
+    "condition.onModifyAccuracy"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "gyroball",
+   "name": "Gyro Ball",
+   "type": "Steel",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "hardpress",
+   "name": "Hard Press",
+   "type": "Steel",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "headsmash",
+   "name": "Head Smash",
+   "type": "Rock",
+   "category": "Physical",
+   "basePower": 150,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "healingwish",
+   "name": "Healing Wish",
+   "type": "Psychic",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "heatcrash",
+   "name": "Heat Crash",
+   "type": "Fire",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "basePowerCallback",
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "heavyslam",
+   "name": "Heavy Slam",
+   "type": "Steel",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "basePowerCallback",
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "helpinghand",
+   "name": "Helping Hand",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit",
+    "condition.onBasePower",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "hex",
+   "name": "Hex",
+   "type": "Ghost",
+   "category": "Special",
+   "basePower": 65,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "hornleech",
+   "name": "Horn Leech",
+   "type": "Grass",
+   "category": "Physical",
+   "basePower": 75,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "hurricane",
+   "name": "Hurricane",
+   "type": "Flying",
+   "category": "Special",
+   "basePower": 110,
+   "hooks": [
+    "onModifyMove"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "iciclespear",
+   "name": "Icicle Spear",
+   "type": "Ice",
+   "category": "Physical",
+   "basePower": 25,
+   "hooks": [],
+   "override": [],
+   "multihit": [
+    2,
+    5
+   ],
+   "desc": ""
+  },
+  {
+   "id": "imprison",
+   "name": "Imprison",
+   "type": "Psychic",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "ingrain",
+   "name": "Ingrain",
+   "type": "Grass",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "knockoff",
+   "name": "Knock Off",
+   "type": "Dark",
+   "category": "Physical",
+   "basePower": 65,
+   "hooks": [
+    "onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "lashout",
+   "name": "Lash Out",
+   "type": "Dark",
+   "category": "Physical",
+   "basePower": 75,
+   "hooks": [
+    "onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "lastrespects",
+   "name": "Last Respects",
+   "type": "Ghost",
+   "category": "Physical",
+   "basePower": 50,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "leechlife",
+   "name": "Leech Life",
+   "type": "Bug",
+   "category": "Physical",
+   "basePower": 80,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "leechseed",
+   "name": "Leech Seed",
+   "type": "Grass",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "lightscreen",
+   "name": "Light Screen",
+   "type": "Psychic",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onAnyModifyDamage"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "lockon",
+   "name": "Lock-On",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "lowkick",
+   "name": "Low Kick",
+   "type": "Fighting",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "basePowerCallback",
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "magnetrise",
+   "name": "Magnet Rise",
+   "type": "Electric",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onImmunity",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "matchagotcha",
+   "name": "Matcha Gotcha",
+   "type": "Grass",
+   "category": "Special",
+   "basePower": 80,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "metalburst",
+   "name": "Metal Burst",
+   "type": "Steel",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "damageCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "minimize",
+   "name": "Minimize",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onSourceModifyDamage"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "mirrorcoat",
+   "name": "Mirror Coat",
+   "type": "Psychic",
+   "category": "Special",
+   "basePower": 0,
+   "hooks": [
+    "damageCallback",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "mistyexplosion",
+   "name": "Misty Explosion",
+   "type": "Fairy",
+   "category": "Special",
+   "basePower": 100,
+   "hooks": [
+    "onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "mistyterrain",
+   "name": "Misty Terrain",
+   "type": "Fairy",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "paraboliccharge",
+   "name": "Parabolic Charge",
+   "type": "Electric",
+   "category": "Special",
+   "basePower": 65,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "payback",
+   "name": "Payback",
+   "type": "Dark",
+   "category": "Physical",
+   "basePower": 50,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "pinmissile",
+   "name": "Pin Missile",
+   "type": "Bug",
+   "category": "Physical",
+   "basePower": 25,
+   "hooks": [],
+   "override": [],
+   "multihit": [
+    2,
+    5
+   ],
+   "desc": ""
+  },
+  {
+   "id": "pollenpuff",
+   "name": "Pollen Puff",
+   "type": "Bug",
+   "category": "Special",
+   "basePower": 90,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "poltergeist",
+   "name": "Poltergeist",
+   "type": "Ghost",
+   "category": "Physical",
+   "basePower": 110,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "populationbomb",
+   "name": "Population Bomb",
+   "type": "Normal",
+   "category": "Physical",
+   "basePower": 20,
+   "hooks": [],
+   "override": [],
+   "multihit": 10,
+   "desc": ""
+  },
+  {
+   "id": "powertrick",
+   "name": "Power Trick",
+   "type": "Psychic",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "powertrip",
+   "name": "Power Trip",
+   "type": "Dark",
+   "category": "Physical",
+   "basePower": 20,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "psychicfangs",
+   "name": "Psychic Fangs",
+   "type": "Psychic",
+   "category": "Physical",
+   "basePower": 85,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "psychicterrain",
+   "name": "Psychic Terrain",
+   "type": "Psychic",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onBasePower",
+    "condition.onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "psyshock",
+   "name": "Psyshock",
+   "type": "Psychic",
+   "category": "Special",
+   "basePower": 80,
+   "hooks": [],
+   "override": [
+    "def"
+   ],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "quickguard",
+   "name": "Quick Guard",
+   "type": "Fighting",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "ragepowder",
+   "name": "Rage Powder",
+   "type": "Bug",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onFoeRedirectTarget",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "ragingbull",
+   "name": "Raging Bull",
+   "type": "Normal",
+   "category": "Physical",
+   "basePower": 90,
+   "hooks": [
+    "onModifyType",
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "reflect",
+   "name": "Reflect",
+   "type": "Psychic",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onAnyModifyDamage"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "reversal",
+   "name": "Reversal",
+   "type": "Fighting",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "revivalblessing",
+   "name": "Revival Blessing",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "risingvoltage",
+   "name": "Rising Voltage",
+   "type": "Electric",
+   "category": "Special",
+   "basePower": 70,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "rockblast",
+   "name": "Rock Blast",
+   "type": "Rock",
+   "category": "Physical",
+   "basePower": 25,
+   "hooks": [],
+   "override": [],
+   "multihit": [
+    2,
+    5
+   ],
+   "desc": ""
+  },
+  {
+   "id": "roleplay",
+   "name": "Role Play",
+   "type": "Psychic",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "roost",
+   "name": "Roost",
+   "type": "Flying",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "round",
+   "name": "Round",
+   "type": "Normal",
+   "category": "Special",
+   "basePower": 60,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "sacredsword",
+   "name": "Sacred Sword",
+   "type": "Fighting",
+   "category": "Physical",
+   "basePower": 90,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "scaleshot",
+   "name": "Scale Shot",
+   "type": "Dragon",
+   "category": "Physical",
+   "basePower": 25,
+   "hooks": [],
+   "override": [],
+   "multihit": [
+    2,
+    5
+   ],
+   "desc": ""
+  },
+  {
+   "id": "selfdestruct",
+   "name": "Self-Destruct",
+   "type": "Normal",
+   "category": "Physical",
+   "basePower": 200,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "shedtail",
+   "name": "Shed Tail",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "shellsidearm",
+   "name": "Shell Side Arm",
+   "type": "Poison",
+   "category": "Special",
+   "basePower": 90,
+   "hooks": [
+    "onModifyMove"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "simplebeam",
+   "name": "Simple Beam",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "smackdown",
+   "name": "Smack Down",
+   "type": "Rock",
+   "category": "Physical",
+   "basePower": 50,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "solarbeam",
+   "name": "Solar Beam",
+   "type": "Grass",
+   "category": "Special",
+   "basePower": 120,
+   "hooks": [
+    "onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "solarblade",
+   "name": "Solar Blade",
+   "type": "Grass",
+   "category": "Physical",
+   "basePower": 125,
+   "hooks": [
+    "onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "spitup",
+   "name": "Spit Up",
+   "type": "Normal",
+   "category": "Special",
+   "basePower": 0,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "stockpile",
+   "name": "Stockpile",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "stompingtantrum",
+   "name": "Stomping Tantrum",
+   "type": "Ground",
+   "category": "Physical",
+   "basePower": 75,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "storedpower",
+   "name": "Stored Power",
+   "type": "Psychic",
+   "category": "Special",
+   "basePower": 20,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "struggle",
+   "name": "Struggle",
+   "type": "Normal",
+   "category": "Physical",
+   "basePower": 50,
+   "hooks": [
+    "onModifyMove"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "substitute",
+   "name": "Substitute",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "superfang",
+   "name": "Super Fang",
+   "type": "Normal",
+   "category": "Physical",
+   "basePower": 0,
+   "hooks": [
+    "damageCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "tailslap",
+   "name": "Tail Slap",
+   "type": "Normal",
+   "category": "Physical",
+   "basePower": 25,
+   "hooks": [],
+   "override": [],
+   "multihit": [
+    2,
+    5
+   ],
+   "desc": ""
+  },
+  {
+   "id": "tailwind",
+   "name": "Tailwind",
+   "type": "Flying",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onModifySpe"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "taunt",
+   "name": "Taunt",
+   "type": "Dark",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "temperflare",
+   "name": "Temper Flare",
+   "type": "Fire",
+   "category": "Physical",
+   "basePower": 75,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "terrainpulse",
+   "name": "Terrain Pulse",
+   "type": "Normal",
+   "category": "Special",
+   "basePower": 50,
+   "hooks": [
+    "onModifyType",
+    "onModifyMove"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "throatchop",
+   "name": "Throat Chop",
+   "type": "Dark",
+   "category": "Physical",
+   "basePower": 80,
+   "hooks": [
+    "condition.onModifyMove",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "thunder",
+   "name": "Thunder",
+   "type": "Electric",
+   "category": "Special",
+   "basePower": 110,
+   "hooks": [
+    "onModifyMove"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "torment",
+   "name": "Torment",
+   "type": "Dark",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "tripleaxel",
+   "name": "Triple Axel",
+   "type": "Ice",
+   "category": "Physical",
+   "basePower": 20,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": 3,
+   "desc": ""
+  },
+  {
+   "id": "twinbeam",
+   "name": "Twin Beam",
+   "type": "Psychic",
+   "category": "Special",
+   "basePower": 40,
+   "hooks": [],
+   "override": [],
+   "multihit": 2,
+   "desc": ""
+  },
+  {
+   "id": "uproar",
+   "name": "Uproar",
+   "type": "Normal",
+   "category": "Special",
+   "basePower": 90,
+   "hooks": [
+    "onTryHit",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "venoshock",
+   "name": "Venoshock",
+   "type": "Poison",
+   "category": "Special",
+   "basePower": 65,
+   "hooks": [
+    "onBasePower"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "volttackle",
+   "name": "Volt Tackle",
+   "type": "Electric",
+   "category": "Physical",
+   "basePower": 120,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "watershuriken",
+   "name": "Water Shuriken",
+   "type": "Water",
+   "category": "Special",
+   "basePower": 15,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": [
+    2,
+    5
+   ],
+   "desc": ""
+  },
+  {
+   "id": "waterspout",
+   "name": "Water Spout",
+   "type": "Water",
+   "category": "Special",
+   "basePower": 150,
+   "hooks": [
+    "basePowerCallback"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "wavecrash",
+   "name": "Wave Crash",
+   "type": "Water",
+   "category": "Physical",
+   "basePower": 120,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "weatherball",
+   "name": "Weather Ball",
+   "type": "Normal",
+   "category": "Special",
+   "basePower": 50,
+   "hooks": [
+    "onModifyType",
+    "onModifyMove"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "wideguard",
+   "name": "Wide Guard",
+   "type": "Rock",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "wildcharge",
+   "name": "Wild Charge",
+   "type": "Electric",
+   "category": "Physical",
+   "basePower": 90,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "wonderroom",
+   "name": "Wonder Room",
+   "type": "Psychic",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "condition.onModifyMove"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "woodhammer",
+   "name": "Wood Hammer",
+   "type": "Grass",
+   "category": "Physical",
+   "basePower": 120,
+   "hooks": [],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "worryseed",
+   "name": "Worry Seed",
+   "type": "Grass",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  },
+  {
+   "id": "yawn",
+   "name": "Yawn",
+   "type": "Normal",
+   "category": "Status",
+   "basePower": 0,
+   "hooks": [
+    "onTryHit",
+    "condition.onStart"
+   ],
+   "override": [],
+   "multihit": null,
+   "desc": ""
+  }
+ ],
+ "items": [
+  {
+   "id": "leek",
+   "name": "Leek",
+   "hooks": [
+    "onModifyCritRatio"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "spelltag",
+   "name": "Spell Tag",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "airballoon",
+   "name": "Air Balloon",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "babiriberry",
+   "name": "Babiri Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "blackbelt",
+   "name": "Black Belt",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "blackglasses",
+   "name": "Black Glasses",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "brightpowder",
+   "name": "Bright Powder",
+   "hooks": [
+    "onModifyAccuracy"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "charcoal",
+   "name": "Charcoal",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "chartiberry",
+   "name": "Charti Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "chilanberry",
+   "name": "Chilan Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "choicescarf",
+   "name": "Choice Scarf",
+   "hooks": [
+    "onModifyMove",
+    "onModifySpe",
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "chopleberry",
+   "name": "Chople Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "cobaberry",
+   "name": "Coba Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "colburberry",
+   "name": "Colbur Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "dragonfang",
+   "name": "Dragon Fang",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "electricseed",
+   "name": "Electric Seed",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "expertbelt",
+   "name": "Expert Belt",
+   "hooks": [
+    "onModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "fairyfeather",
+   "name": "Fairy Feather",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "grassyseed",
+   "name": "Grassy Seed",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "habanberry",
+   "name": "Haban Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "hardstone",
+   "name": "Hard Stone",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "ironball",
+   "name": "Iron Ball",
+   "hooks": [
+    "onEffectiveness",
+    "onModifySpe"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "kasibberry",
+   "name": "Kasib Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "kebiaberry",
+   "name": "Kebia Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "kingsrock",
+   "name": "King's Rock",
+   "hooks": [
+    "onModifyMove"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "lifeorb",
+   "name": "Life Orb",
+   "hooks": [
+    "onModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "lightball",
+   "name": "Light Ball",
+   "hooks": [
+    "onModifyAtk",
+    "onModifySpA"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "magnet",
+   "name": "Magnet",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "metalcoat",
+   "name": "Metal Coat",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "metronome",
+   "name": "Metronome",
+   "hooks": [
+    "onStart",
+    "condition.onModifyDamage",
+    "condition.onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "miracleseed",
+   "name": "Miracle Seed",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "mistyseed",
+   "name": "Misty Seed",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "muscleband",
+   "name": "Muscle Band",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "mysticwater",
+   "name": "Mystic Water",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "nevermeltice",
+   "name": "Never-Melt Ice",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "occaberry",
+   "name": "Occa Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "passhoberry",
+   "name": "Passho Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "payapaberry",
+   "name": "Payapa Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "poisonbarb",
+   "name": "Poison Barb",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "psychicseed",
+   "name": "Psychic Seed",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "quickclaw",
+   "name": "Quick Claw",
+   "hooks": [
+    "onFractionalPriority"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "rindoberry",
+   "name": "Rindo Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "roseliberry",
+   "name": "Roseli Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "scopelens",
+   "name": "Scope Lens",
+   "hooks": [
+    "onModifyCritRatio"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "sharpbeak",
+   "name": "Sharp Beak",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "shucaberry",
+   "name": "Shuca Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "silkscarf",
+   "name": "Silk Scarf",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "silverpowder",
+   "name": "Silver Powder",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "softsand",
+   "name": "Soft Sand",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "tangaberry",
+   "name": "Tanga Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "twistedspoon",
+   "name": "Twisted Spoon",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "wacanberry",
+   "name": "Wacan Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "whiteherb",
+   "name": "White Herb",
+   "hooks": [
+    "onStart"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "widelens",
+   "name": "Wide Lens",
+   "hooks": [
+    "onSourceModifyAccuracy"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "wiseglasses",
+   "name": "Wise Glasses",
+   "hooks": [
+    "onBasePower"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "yacheberry",
+   "name": "Yache Berry",
+   "hooks": [
+    "onSourceModifyDamage"
+   ],
+   "desc": ""
+  },
+  {
+   "id": "zoomlens",
+   "name": "Zoom Lens",
+   "hooks": [
+    "onSourceModifyAccuracy"
+   ],
+   "desc": ""
+  }
+ ],
+ "conditions": [
+  {
+   "id": "sunnyday",
+   "hooks": [
+    "onImmunity"
+   ]
+  },
+  {
+   "id": "raindance",
+   "hooks": []
+  },
+  {
+   "id": "sandstorm",
+   "hooks": [
+    "onModifySpD",
+    "onWeather"
+   ]
+  },
+  {
+   "id": "snowscape",
+   "hooks": [
+    "onModifyDef"
+   ]
+  },
+  {
+   "id": "electricterrain",
+   "hooks": [
+    "onBasePower"
+   ]
+  },
+  {
+   "id": "grassyterrain",
+   "hooks": [
+    "onBasePower"
+   ]
+  },
+  {
+   "id": "psychicterrain",
+   "hooks": [
+    "onBasePower",
+    "onTryHit"
+   ]
+  },
+  {
+   "id": "mistyterrain",
+   "hooks": [
+    "onBasePower"
+   ]
+  },
+  {
+   "id": "reflect",
+   "hooks": [
+    "onAnyModifyDamage"
+   ]
+  },
+  {
+   "id": "lightscreen",
+   "hooks": [
+    "onAnyModifyDamage"
+   ]
+  },
+  {
+   "id": "auroraveil",
+   "hooks": [
+    "onAnyModifyDamage"
+   ]
+  },
+  {
+   "id": "helpinghand",
+   "hooks": [
+    "onBasePower",
+    "onStart"
+   ]
+  },
+  {
+   "id": "charge",
+   "hooks": [
+    "onBasePower",
+    "onStart"
+   ]
+  },
+  {
+   "id": "tailwind",
+   "hooks": [
+    "onModifySpe"
+   ]
+  },
+  {
+   "id": "trickroom",
+   "hooks": []
+  },
+  {
+   "id": "gravity",
+   "hooks": [
+    "onModifyMove",
+    "onModifyAccuracy"
+   ]
+  }
+ ]
+}
