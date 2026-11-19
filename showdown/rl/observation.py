@@ -241,7 +241,9 @@ _AURA = {'fairyaura': 'Fairy', 'darkaura': 'Dark'}
 def ability_damage_mods(att_p, def_p, mv) -> Tuple[str, float, float]:
     """(tipo efectivo, multiplicador de potencia del atacante, multiplicador defensivo)."""
     m = P._dex()['moves'].get(getattr(mv, 'mid', ''), {}) or {}
-    flags = m.get('flags') or {}
+    raw_flags = m.get('flags') or ()
+    # El dex del repo guarda las marcas como lista (["contact", "sound"]); el de Showdown, como dict.
+    flags = {k: 1 for k, v in raw_flags.items() if v} if isinstance(raw_flags, dict) else {str(k): 1 for k in raw_flags}
     ab = getattr(att_p, 'ability', '') or ''
     dab = getattr(def_p, 'ability', '') or ''
     t = mv.type
