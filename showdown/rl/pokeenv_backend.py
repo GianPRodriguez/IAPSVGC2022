@@ -266,7 +266,9 @@ def _build_ppo_v1_foe(*, account_configuration, battle_format, team, server_conf
             prev = os.environ.get('PPO_DEVICE')
             os.environ['PPO_DEVICE'] = 'cpu'  # el rival nunca usa la GPU del entrenamiento
             try:
-                super().__init__(*a, checkpoint=None, greedy=True, **kw)
+                # v1 congelado juega con SU preview (v2), no con el del agente (PPO_FOE_PREVIEW).
+                fp = os.environ.get('PPO_FOE_PREVIEW', '').strip() or None
+                super().__init__(*a, checkpoint=None, greedy=True, preview_checkpoint=fp, **kw)
             finally:
                 if prev is None:
                     os.environ.pop('PPO_DEVICE', None)

@@ -1167,3 +1167,21 @@ Integración: un lote por observación con caché; se mide la velocidad real en 
 
 Tests en el servidor: 125 pasan. Pendiente: el piloto de velocidad dentro del entrenamiento y
 entrenar el preview v2.1.
+
+
+**Decisiones del usuario (19-11-2026):**
+- **P3 no se adopta.** Su único argumento era ganarle al mismo rival con que se entrenó.
+- **P4 no se implementa.**
+- **El preview v2.1 usa la misma receta que el v2:** greedy_joint como combate, tu equipo, 200
+  actualizaciones, entropía 0,005, formaciones canónicas, `best.pt`.
+- **Medir antes de las corridas oficiales.**
+
+Vigesimosexta cola (`scripts/server/kickoff_queue26.sh`, espera al piloto de velocidad):
+1. Reinicia el servidor de la calculadora.
+2. Entrena el preview v2.1.
+3. PPO con P5 + preview v2.1 (2 semillas): `val`, `eval`, arquetipo y contra v1 en espejo. El v1
+   juega con su preview v2 (`PPO_FOE_PREVIEW`).
+4. DDQN con P5 + preview v2.1 (2 semillas): `val` y `eval`, frente a REG 0,03.
+
+Resumen: `showdown/rl/kickoff_summary26.py` (incluye el uso de la calculadora y la velocidad de cada
+entrenamiento). PPO v2 = v1 + P5 completo + preview v2.1 + sorteo T = 0,5 al jugar contra personas.

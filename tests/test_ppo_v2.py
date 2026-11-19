@@ -209,3 +209,9 @@ def test_policy_diag_records_divergence():
     from showdown.rl.ddqn import policy_diag as P
     src = inspect.getsource(P.run)
     assert "'divergencia'" in src and 'greedy=True' in src
+
+
+def test_ppo_v1_foe_uses_its_own_preview():
+    import inspect
+    from showdown.rl import pokeenv_backend as B
+    assert 'PPO_FOE_PREVIEW' in inspect.getsource(B._build_ppo_v1_foe)

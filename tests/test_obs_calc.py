@@ -146,3 +146,17 @@ def test_training_tally_aggregates_calc_stats():
     assert out['total']['episodes'] == 1  # el episodio sin espejo no cuenta en el contraste del rival
     assert out['obs_calc']['obs'] == 20 and out['obs_calc']['fallback_rate'] == pytest.approx(0.05)
     assert out['obs_calc']['missing_rate'] == pytest.approx(4 / 4000)
+
+
+def test_summary26_runs_and_reports_calc_usage(tmp_path):
+    import json
+    from showdown.rl import kickoff_summary26 as K
+    out = tmp_path / 'p5full'
+    (out / 'diag').mkdir(parents=True)
+    (out / 'ppo_p5_s0.txt').write_text(
+        "[ppo] DONE 100.0% | steps 1M/1M | 250 step/s | ETA 0s | elapsed 1h6m\n"
+        "[ppo] calculadora real en la observación (P5): {'obs': 1000, 'fallback_rate': 0.001, 'missing_rate': 0.0005}\n",
+        encoding='utf-8')
+    assert K.main([str(out), str(tmp_path / 'v2'), str(tmp_path / 'v1'), str(tmp_path / 'q15')]) == 0
+    md = (out / 'kickoff_summary26.md').read_text(encoding='utf-8')
+    assert 'vigesimosexta cola' in md and '1000 obs; respaldo 0.10 %' in md and '250 pasos/s, 1h6m' in md
