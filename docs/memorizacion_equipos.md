@@ -1309,3 +1309,14 @@ semillas 0 y 1, contra los 3 heurísticos, partidas agrupadas.
    los dos efectos.
 5. Formaciones: el v2.1 elige más seguido `35 | 2345` (con Rillaboom entre los 4) en lugar de
    `36 | 3456`.
+
+### 18.4 Preview v2.1 reentrenado sin `val` (decisión del usuario, 19-11-2026)
+
+- **Receta:** la del v2 y la observación nueva, con `PS_TEAM_SPLIT=fit` (170 equipos), así que
+  `val` queda desconocido también para el preview. Semillas 0 y 1.
+- **Evaluación:** combate fijo (PPO y DDQN con P5, semillas 0 y 1) contra `val` y `eval`.
+  Referencia: el mismo combate con el preview v2 (ablación, cruces B y D).
+- **Regla, fijada antes de ver resultados:** se elige el preview nuevo con mejor `val` (PPO y DDQN
+  agrupados) y se adopta si no pierde más de 2 puntos frente al v2. La tolerancia se debe a que el
+  v2 sí conoce los equipos de `val`.
+- **Archivos:** `scripts/server/preview_v21b.sh`; resumen en `scripts/analysis/preview_v21b.py`.
