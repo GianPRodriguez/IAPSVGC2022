@@ -1209,3 +1209,24 @@ opción legal (`scripts/server/p1_divergencia.sh`, `scripts/analysis/divergencia
 
 **Conclusión:** se mantiene T = 0,5 para jugar contra personas. Una mejora futura para el BO3 es
 variar también la apertura: sorteo en el preview o en el turno 1.
+
+**Piloto de velocidad dentro del entrenamiento** (19-11-2026, `~/iapsvgc_runs/p5_speed`, commit
+d45fbf6; PPO 30k pasos, 32 entornos, observación nueva):
+
+| Daño de la observación | Pasos/s | Observaciones con la calculadora | Respaldo | Pedidos sin respuesta | Pedidos por observación |
+|---|---|---|---|---|---|
+| Calculadora real | **270** | 29 616 (100 %) | 0 % | 0 % | ~87 |
+| Respaldo en Python (control) | 346 | — | — | — | — |
+
+La calculadora cuesta **−22 % de velocidad** (1M pasos: ~62 min frente a ~48) y funcionó en el 100 %
+de las observaciones, sin errores. Los pedidos reales por observación (~87) son menos que los
+estimados (~230): no se repiten, y los Pokémon caídos o excluidos no generan pedidos. **Se integra
+tal cual.** La vigesimosexta cola pasó el resguardo (270 ≥ 0,4 × 346) y arrancó a las 08:33.
+
+P1b (preview no determinista, `scripts/server/p1b_preview.sh`) quedó encadenado a la cola 26:
+- **Modos:** preview sorteado con T = 1,0 y 0,5 (combate determinista), y preview + combate con
+  T = 0,5 (el modo contra personas).
+- **Combate y preview:** PPO con P5 + preview v2.1, semillas 0 y 1, contra `val`.
+- **Sorteo:** solo entre las 90 formaciones canónicas con que se entrenó; el modo determinista no
+  cambia.
+- **Regla:** como P1 (Δ`val` ≥ −2).
