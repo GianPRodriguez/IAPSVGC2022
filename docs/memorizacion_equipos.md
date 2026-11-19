@@ -1280,3 +1280,32 @@ poca variedad.
    `scripts/analysis/ablacion_p5_preview.py`).
 2. **Preview no determinista con T = 1,0 al jugar contra personas**, junto con el combate con
    T = 0,5. Los resultados oficiales siguen en modo determinista.
+
+### 18.3 Resultado de la ablación observación × preview (19-11-2026)
+
+`~/iapsvgc_runs/ablacion_p5`, commit 9cab41a, 16 evaluaciones rc=0. 200 partidas por rival,
+semillas 0 y 1, contra los 3 heurísticos, partidas agrupadas.
+
+| Agente | Grupo | Efecto del preview v2.1 (con obs. anterior / con P5) | Efecto de P5 (con preview v2 / con v2.1) |
+|---|---|---|---|
+| PPO | `val` | +1,2 (± 2,3) / +1,2 (± 2,6) | −3,2 (± 2,5) / −3,1 (± 2,4) |
+| PPO | `eval` | **−5,3 (± 3,3) / −4,2 (± 3,1)** | +2,3 (± 3,0) / +3,5 (± 3,3) |
+| DDQN | `val` | −0,8 (± 3,5) / +1,5 (± 3,5) | −0,3 (± 3,5) / +1,9 (± 3,5) |
+| DDQN | `eval` | **−7,9 (± 3,9) / −8,8 (± 3,9)** | −0,1 (± 3,8) / −0,9 (± 4,0) |
+
+**Lectura:**
+1. **La caída en `eval` viene del preview v2.1, no de P5.** Con el combate fijo, cambiar el v2 por el
+   v2.1 cuesta 4–9 puntos con equipos desconocidos, con las dos observaciones y en los dos agentes.
+   En `val` el v2.1 queda igual o algo mejor.
+2. **`val` no es una medida limpia para el preview:** el v2.1 (y antes el v2) se entrenaron con los
+   200 equipos de `train`, que **incluyen los 30 de `val`** (no se fijó `PS_TEAM_SPLIT=fit`, a
+   diferencia de la vigesimosegunda cola). El preview conoce los equipos de `val`, así que la medida
+   honesta es `eval`: el v2.1 generaliza peor (MEAN_WR de entrenamiento 0,951, con señales de
+   memorización).
+3. **Hay una sola corrida de cada preview.** Parte de la diferencia entre v2 y v2.1 puede ser
+   variación entre semillas del entrenamiento del preview, no la corrección.
+4. **P5 es neutro en conjunto.** En DDQN no cambia nada. En PPO pierde ~3 puntos en `val` pero gana
+   2–3 en `eval`, sin significancia clara. La pérdida de PPO en la cola 26 (−1,9 en `val`) combina
+   los dos efectos.
+5. Formaciones: el v2.1 elige más seguido `35 | 2345` (con Rillaboom entre los 4) en lugar de
+   `36 | 3456`.
