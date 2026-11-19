@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.30** |
+| **Version** | **v1.33** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) — **Mega Evolution yes; Terastallization no** |
@@ -20,7 +20,7 @@
 | Item | Contract |
 |------|----------|
 | Environment | `VGCEnv(gymnasium.Env)` — async wrapper over poke-env |
-| Execution | Optimized for multi-env workers; **local heuristic caching**; **no blocking Node.js / `@smogon/calc` API calls inside `step()`** |
+| Execution | Optimized for multi-env workers; **local heuristic caching**. Observation v1 (`obs_abilities=False`: PPO v1, earlier DDQN): **no `@smogon/calc` calls inside `step()`**. Observation v2.1 (`obs_abilities=True`, v1.33): damage features come from `@smogon/calc` Champions (damage-calc commit `bacbbfc`), **one batched request per observation** through `damage_calc_bridge` (LRU + disk cache), with Python fallback and a 60 s circuit breaker |
 | Episodic MDP | **1 Episode = 1 Game (BO1)** |
 | Cross-game memory | **None** (BO3 is evaluation/ladder only, not the training MDP) |
 
@@ -660,7 +660,7 @@ con Tera on no es compatible con este benchmark aunque sus dimensiones encajen.
 
 - Expectimax live \(V(s)\) as Ng potential \(\Phi(s)\) inside \(R_t\) — **forbidden** (stochastic / anytime / \(\pi_{\mathrm{opp}}\)-dependent).
 - DDQN \(Q(s,\cdot)\) as Ng potential \(\Phi(s)\) inside \(R_t\) — **forbidden**.
-- Node `@smogon/calc` inside env `step()` — **forbidden**.
+- Node `@smogon/calc` inside env `step()` — **forbidden for observation v1** (`obs_abilities=False`). Allowed since v1.33 for observation v2.1 only as one batched request per observation (user decision 19-11-2026: exact damage features; measured throughput ≥ 480 steps/s worst case vs ~300 needed).
 - Magical per-move bonuses (Tailwind, Fake Out, Sub break, etc.) inside \(R_t\) — **forbidden**.
 - Treating harness truncate as Loss — **forbidden**.
 - DDQN v1.2: PER / n-step / Rainbow / preview-in-MDP / self-play / train-on-L2 — **forbidden** (see §6.b).
@@ -676,6 +676,7 @@ con Tera on no es compatible con este benchmark aunque sus dimensiones encajen.
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.33** | 2026-11-19 | **Observation v2.1: real damage calculator + full ability/move/item corrections (P5 complete; user decisions, memorizacion_equipos §18.1).** (1) Damage features (our moves vs each foe in 3 modes, vs ally for spread, foe moves vs ours, pair matrix 4×6 both ways) come from `@smogon/calc` Champions (damage-calc `bacbbfc`), built by `showdown/rl/obs_calc.py` with field effects as in reality: Fairy/Dark Aura and Aura Break from any of the 4 actives, the four Ruin abilities, screens, Friend Guard, Battery, Power Spot, Steely Spirit, Last Respects (fainted allies), effective Mega forme. Semantics kept: mid = mean of the roll range × accuracy, max/min = best/worst stats and roll. One batch per observation (~230 requests), fallback to the Python estimate with a circuit breaker; per-episode usage (`obs_calc`) is logged with `foe_state`. (2) Non-damage effects in Python: priority (Grassy Glide in Grassy Terrain, Gale Wings, Prankster), speed (Iron Ball, Surge Surfer), immunities (Bulletproof, Soundproof, Overcoat, Magnet Rise), Sturdy blocks one-hit KO at full HP, Telepathy. Quick Claw / Quick Draw (random) not modelled. (3) Move profile (shared with the preview, `preview_move_mods`): Liquid Voice → Water, Weather Ball with own weather setter, power abilities; cache keyed by version. Audit of legal effects: `API/JSONs/damage_effects_audit.json` (128 abilities, 173 moves, 57 items). Versioned per checkpoint (`obs_abilities`, combat and preview); v1 checkpoints load as False and keep the old observation. Same OBS_DIM. |
 | **v1.32** | 2026-11-18 | **Ability corrections in the observation's damage estimate (P5)** — Liquid Voice (movimientos de sonido → Agua: el Hyper Voice de Primarina contaba como Normal; con sol y contra Venusaur la obs decía ×1 y el real era ×0,375, hallazgo de la prueba online), habilidades de potencia (Tough Claws, Iron Fist, Strong Jaw, Mega Launcher, Sharpness, Punk Rock, Technician, Sheer Force, Fairy/Dark Aura, Parental Bond, Water Bubble) y defensivas (Thick Fat, Heatproof, Water Bubble, Purifying Salt, Fluffy) en `move_damage_frac`, el código de efectividad, el aviso de redirección y el tipo de los movimientos rivales. Same OBS_DIM; the shared move profile (`team_preview_obs._move_infos`, used by the preview) is unchanged. Per checkpoint: `PPOConfig/DDQNConfig.obs_abilities` (default **True** for new training, user decision: PPO and DDQN); checkpoints without the key (PPO v1, earlier DDQN) load as False and keep the old observation. Trainers export `RL_OBS_ABILITIES` from the agent config (workers inherit it); `build_observation*(…, abilities=)` and the PPO/DDQN players and `policy_diag` use each checkpoint's flag, so v1 and v2 can play in the same process. |
 | **v1.31** | 2026-11-18 | **New optional training opponents (PPO v2 candidates)**: `greedy_joint_arq` (greedy_joint with archetype level 2 on that instance only, via `wrap_archetype_level`; validated like greedy_joint, same near-tie draw) and `ppo_v1` (frozen PPO v1 checkpoints from `PPO_FOE_CHECKPOINTS`, one at random per battle, CPU, playing the agent's own team = mirror match). Both are opt-in through `--phases`; with `--expand-omega` they enter Ω with weight 1.0. `policy_diag` accepts them via `--foes` (appended after the 4 default foes, so existing seeds are unchanged) and adds `--sample/--temperature` for PPO. Defaults unchanged. |
 | **v1.30** | 2026-11-17 | **Symmetry default per agent** (`symmetry.sym_aug_enabled(flag, default)`): PPO on (user decision after queue 12: +6.2 pts vs `eval` teams, z ≈ 3.9, 2 seeds at 1M), DDQN and the QD-PGA critic off. `RL_SYM_AUG=1/0` forces it on/off for every agent. DDQN regularization (weight decay 0.01 + dropout 0.1) on by default (ddqn_spec 1.20). Evaluation reports the final checkpoint as primary (protocolo §3c.2). |

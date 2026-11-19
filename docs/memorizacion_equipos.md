@@ -1153,3 +1153,17 @@ El entrenamiento corre a ~300 pasos/s: **la calculadora alcanza incluso en el pe
 pasos/s sin caché). Lotes más grandes rinden más por cálculo. El riesgo son los picos de latencia
 sin caché (p95 297 ms), y que en el entrenamiento los heurísticos usan el mismo servidor a la vez.
 Integración: un lote por observación con caché; se mide la velocidad real en el piloto.
+
+**Avance (19-11-2026, partes 2a–2c):**
+- **2a** (c2a0f6b): la observación toma el daño de la calculadora real en un lote por paso (~230
+  pedidos: bloques de movimientos y matriz de pares), con respaldo en Python y cortacircuito. El uso
+  se registra por episodio.
+- **2b** (971ddc6): el perfil de cada movimiento, que comparten preview y combate, usa tipo y
+  potencia efectivos (Liquid Voice, Weather Ball con clima propio, habilidades de potencia). La
+  caché va por versión. El preview guarda su versión: v2 sin corrección, v2.1 con ella.
+- **2c:** rl_env_spec v1.33 (la prohibición de la calculadora en `step()` queda solo para la
+  observación v1; damage-calc fijado en `bacbbfc`) y team_preview_masked_ppo_spec 1.7 (preview
+  v2.1).
+
+Tests en el servidor: 125 pasan. Pendiente: el piloto de velocidad dentro del entrenamiento y
+entrenar el preview v2.1.

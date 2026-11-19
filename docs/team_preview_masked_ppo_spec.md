@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|-------|
 | **Documento** | Contrato exclusivo — Masked PPO solo Team Preview |
-| **Versión** | **1.6** (alineado con `docs/rl_env_spec.md` v1.20 §6.i) |
+| **Versión** | **1.7** (alineado con `docs/rl_env_spec.md` v1.33) |
 | **Estado** | **FROZEN** — implementado en `showdown/rl/team_preview_ppo/` |
 | **Algoritmo** | PPO + Invalid Action Masking (IAM), acción Flat-360 |
 | **Formato** | Gen 9 VGC **Regulation M-C**, OTS, Mega on, **Tera off** |
@@ -288,6 +288,7 @@ métricas en [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.7** | 2026-11-19 | **Preview v2.1** (P5 completo; rl_env_spec v1.33): `PreviewPPOConfig.obs_abilities=True` en entrenamientos nuevos: el perfil de cada movimiento usa tipo y potencia efectivos (Liquid Voice → Agua, Weather Ball con clima propio, habilidades de potencia). `FrozenPreviewPolicy` aplica la versión guardada en el checkpoint; **el preview v2 (congelado con PPO v1) carga con False**. Lo usarán PPO v2 y el kick-off de DDQN. `--obs-abilities 0/1`. |
 | **1.6** | 2026-11-15 | Codificador estructurado compartido (rl_env_spec §3.c): mismo sub-MLP `464→128→64` para los 12 Pokémon + matrices crudas → 876 → tronco 256 (1,61M → 0,45M parámetros). `RL_OBS_ENCODER=flat` restaura el MLP plano. Checkpoints anteriores incompatibles. |
 | **1.5** | 2026-11-14 | Observación v2 con OTS completo (5676D: stats exactos/rango, mega, item, habilidad, movimientos, identidad y matrices daño/velocidad) desde el dex Champions congelado; rival en orden canónico. Score de checkpoint/tune = `MEAN_WR` pareado sobre contextos fijos (antes `-pg_loss`). Evaluación periódica + `best.pt`. `train_metrics.jsonl` (diagnóstico PPO y estrategia por rol). Barajado de minibatches distinto por update. Probe `run_preview_value_probe`. |
 | **1.4** | 2026-10-11 | Persiste `final.pt`; consumido por DDQN/PPO vía `frozen_preview`. |
