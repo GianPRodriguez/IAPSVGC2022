@@ -87,7 +87,9 @@ class PreviewPPOAgent:
         mask: np.ndarray,
         *,
         greedy: bool = False,
+        temperature: float = 1.0,
     ) -> Tuple[int, float, float]:
+        """``temperature`` solo al sortear (preview no determinista, P1b); logπ con T = 1."""
         self._ensure_torch()
         torch = self._torch
         with torch.no_grad():
@@ -98,7 +100,7 @@ class PreviewPPOAgent:
             if greedy:
                 a = int(torch.argmax(z, dim=-1).item())
             else:
-                dist = torch.distributions.Categorical(logits=z)
+                dist = torch.distributions.Categorical(logits=z / max(1e-3, float(temperature)))
                 a = int(dist.sample().item())
             logp = float(torch.distributions.Categorical(logits=z).log_prob(
                 torch.tensor([a], device=self.device)

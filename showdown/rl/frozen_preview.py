@@ -19,6 +19,7 @@ import numpy as np
 
 from showdown.rl.team_preview_action import (
     action_to_team_string,
+    canonical_mask,
     decode_preview_action,
     legal_mask,
 )
@@ -122,6 +123,10 @@ class FrozenPreviewPolicy:
     last_order: Optional[Tuple[int, ...]] = None  # formación de la última batalla (diagnósticos)
     # Versión de la observación con que se entrenó el preview (P5): v2 False, v2.1 True.
     obs_abilities: bool = False
+    # Preview no determinista (P1b): temperatura del sorteo cuando greedy=False; y la formación que
+    # habría elegido el modo determinista en la última batalla (para medir cuánto se aparta).
+    temperature: float = 1.0
+    last_greedy_order: Optional[Tuple[int, ...]] = None
 
     @property
     def available(self) -> bool:
@@ -146,8 +151,18 @@ class FrozenPreviewPolicy:
                 agent.load(path)
                 self.obs_abilities = bool(getattr(agent.cfg, 'obs_abilities', False))
 
+                canon = np.asarray(canonical_mask(), dtype=np.float32) if getattr(agent.cfg, 'canonical', False) else None
+
                 def choose(obs, mask):
-                    a, _lp, _v = agent.act(obs, mask, greedy=self.greedy)
+                    m = mask
+                    if not self.greedy and canon is not None:
+                        # Sorteo solo entre las 90 formaciones canónicas con que se entrenó (las otras 270
+                        # tienen salidas sin entrenar). El modo determinista no cambia (v1 congelado).
+                        m = np.asarray(mask, dtype=np.float32) * canon
+                    a, _lp, _v = agent.act(obs, m, greedy=self.greedy, temperature=self.temperature)
+                    if not self.greedy:
+                        g, _l, _vv = agent.act(obs, mask, greedy=True)
+                        self.last_greedy_order = tuple(i + 1 for i in decode_preview_action(int(g)))
                     return int(a)
 
                 self._chooser = choose
@@ -316,11 +331,15 @@ def load_frozen_preview(
     # PREVIEW_REQUIRED=1: no caer en silencio a /team 1234 si falta el preview.
     if os.environ.get('PREVIEW_REQUIRED', '').strip().lower() in ('1', 'true', 'yes'):
         allow_missing = False
+    # PREVIEW_SAMPLE=1 / PREVIEW_TEMPERATURE=T: preview no determinista (P1b, diagnóstico).
+    if os.environ.get('PREVIEW_SAMPLE', '').strip().lower() in ('1', 'true', 'yes'):
+        greedy = False
     pol = FrozenPreviewPolicy(
         kind=k,
         checkpoint=ckpt,
         device=device or os.environ.get('PREVIEW_DEVICE', 'cpu'),
         greedy=greedy,
+        temperature=float(os.environ.get('PREVIEW_TEMPERATURE', '1.0') or 1.0),
     )
     if not allow_missing:
         pol._ensure()

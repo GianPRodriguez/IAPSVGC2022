@@ -175,6 +175,8 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                 pp = getattr(env.backend, '_preview_policy', None)
                 if getattr(pp, 'last_order', None):
                     rec['formacion'] = ''.join(str(x) for x in pp.last_order)  # 1-based, orden del equipo
+                if getattr(pp, 'last_greedy_order', None):  # preview no determinista (P1b)
+                    rec['formacion_determinista'] = ''.join(str(x) for x in pp.last_greedy_order)
                 if context:
                     rec['eventos'] = CD.count_events(env.backend._battle)
                 games_log.append(rec)
@@ -191,6 +193,9 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
             'joint_arquetipo': os.environ.get('PS_JOINT_ARCHETYPE', '') or None,
             'obs_habilidades': bool(agent.cfg.obs_abilities),
             'muestreo': {'activo': bool(sample), 'temperatura': float(temperature)} if sample else None,
+            'preview_muestreo': ({'temperatura': float(os.environ.get('PREVIEW_TEMPERATURE', '1.0') or 1.0)}
+                                 if os.environ.get('PREVIEW_SAMPLE', '').strip().lower() in ('1', 'true', 'yes')
+                                 else None),
             'divergencia': {f: dict(c) for f, c in div.items()} if sample else None,
             'total': dict(total),
             **({'contexto': {c: dict(v) for c, v in ctx_counts.items()}} if context else {})}

@@ -215,3 +215,33 @@ def test_ppo_v1_foe_uses_its_own_preview():
     import inspect
     from showdown.rl import pokeenv_backend as B
     assert 'PPO_FOE_PREVIEW' in inspect.getsource(B._build_ppo_v1_foe)
+
+
+def test_preview_divergence_summary(tmp_path):
+    import json
+    import sys
+    sys.path.insert(0, 'scripts/analysis')
+    import divergencia_preview as D
+    ref = tmp_path / 'q26' / 'diag'
+    ref.mkdir(parents=True)
+    out = tmp_path / 'p1b' / 'diag'
+    out.mkdir(parents=True)
+    res = {f: {'win': 180, 'loss': 20} for f in D.HEUR}
+    for s in (0, 1):
+        (ref / f'ppo_p5_s{s}_val.json').write_text(json.dumps({'resultados': res}))
+        games = [{'rival': 'greedy_solo', 'formacion': '1234' if i % 4 else '3456', 'formacion_determinista': '1234'}
+                 for i in range(100)]
+        (out / f'pv_T1.0_s{s}_val.json').write_text(json.dumps({'resultados': res, 'partidas': games}))
+    assert D.main([str(tmp_path / 'p1b'), str(tmp_path / 'q26')]) == 0
+    md = (tmp_path / 'p1b' / 'divergencia_preview.md').read_text(encoding='utf-8')
+    assert '| Preview sorteado T = 1,0 (combate determinista) | 90.0 % | +0.0' in md and '25.0 %' in md
+
+
+def test_frozen_preview_sampling_options(monkeypatch):
+    from showdown.rl.frozen_preview import load_frozen_preview
+    monkeypatch.setenv('PREVIEW_SAMPLE', '1')
+    monkeypatch.setenv('PREVIEW_TEMPERATURE', '0.5')
+    pol = load_frozen_preview(kind='team_preview_ppo', checkpoint='no_existe.pt', allow_missing=True)
+    assert pol.greedy is False and pol.temperature == 0.5
+    monkeypatch.delenv('PREVIEW_SAMPLE')
+    assert load_frozen_preview(kind='team_preview_ppo', checkpoint='no_existe.pt').greedy is True
