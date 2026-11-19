@@ -232,6 +232,11 @@ function handleOne(msg) {
     isSwordOfRuin: !!(msg.field && msg.field.isSwordOfRuin),
     isTabletsOfRuin: !!(msg.field && msg.field.isTabletsOfRuin),
     isVesselOfRuin: !!(msg.field && msg.field.isVesselOfRuin),
+    // P5 completo (observación RL): auras de campo de cualquiera de los 4 en campo. Los heurísticos no
+    // envían estos campos (sin cambio para ellos).
+    isFairyAura: !!(msg.field && msg.field.isFairyAura),
+    isDarkAura: !!(msg.field && msg.field.isDarkAura),
+    isAuraBreak: !!(msg.field && msg.field.isAuraBreak),
     attackerSide: (msg.field && msg.field.attackerSide) || {},
     defenderSide: (msg.field && msg.field.defenderSide) || {},
   };

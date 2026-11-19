@@ -129,3 +129,46 @@ def test_summary25(tmp_path):
     md = (tmp_path / 'p5' / 'kickoff_summary25.md').read_text(encoding='utf-8')
     assert '| PPO | 85.0 % | 88.0 % | +3.0' in md and '| ok |' in md
     assert '**revisar: pierde más de 2 puntos**' in md
+
+
+# --------------------------------------------------------------------------- P5: no daño (v1.33)
+def _on(monkeypatch):
+    monkeypatch.setenv('RL_OBS_ABILITIES', '1')
+
+
+def test_priority_grassy_glide_and_gale_wings(monkeypatch):
+    dex = P._dex()['moves']
+    rill, mon = _prof('grassysurge', ('Grass',)), NS(**{**_mon().__dict__, 'item': ''})
+    grassy = NS(**{**_field().__dict__, 'terrain': 'grassyterrain'})
+    monkeypatch.delenv('RL_OBS_ABILITIES', raising=False)
+    assert O.move_priority(rill, mon, 'grassyglide', dex['grassyglide'], grassy) == 0  # v1: sin cambio
+    _on(monkeypatch)
+    assert O.move_priority(rill, mon, 'grassyglide', dex['grassyglide'], grassy) == 1
+    assert O.move_priority(rill, mon, 'grassyglide', dex['grassyglide'], _field()) == 0
+    talon = _prof('galewings', ('Fire', 'Flying'))
+    assert O.move_priority(talon, mon, 'bravebird', dex['bravebird'], _field()) == 1
+    hurt = NS(**{**mon.__dict__, 'hp_pct': 60.0})
+    assert O.move_priority(talon, hurt, 'bravebird', dex['bravebird'], _field()) == 0
+
+
+def test_speed_iron_ball_and_surge_surfer(monkeypatch):
+    f = NS(**{**_field().__dict__, 'our_tailwind': False, 'opp_tailwind': False})
+    base = O.effective_speed(_prof('', ('Normal',)), _mon(), f, ours=True)[0]
+    _on(monkeypatch)
+    assert O.effective_speed(_prof('', ('Normal',), item='ironball'), _mon(), f, ours=True)[0] == base * 0.5
+    ef = NS(**{**f.__dict__, 'terrain': 'electricterrain'})
+    assert O.effective_speed(_prof('surgesurfer', ('Electric',)), _mon(), ef, ours=True)[0] == base * 2.0
+
+
+def test_ability_immunities_and_sturdy(monkeypatch):
+    _on(monkeypatch)
+    assert O.move_blocked_by_ability(_prof('bulletproof', ('Grass',)), _mon(), 'sludgebomb')
+    assert O.move_blocked_by_ability(_prof('soundproof', ('Normal',)), _mon(), 'hypervoice')
+    assert not O.move_blocked_by_ability(_prof('soundproof', ('Normal',)), _mon(), 'moonblast')
+    rise = NS(**{**_mon().__dict__, 'volatiles': {'magnetrise': 1.0}})
+    assert O.move_blocked_by_ability(_prof('', ('Steel',)), rise, 'earthquake')
+    sturdy = _prof('sturdy', ('Rock',))
+    assert O.sturdy_survives(sturdy, _mon(), _mv('Surf'))
+    assert not O.sturdy_survives(sturdy, NS(**{**_mon().__dict__, 'hp_pct': 50.0}), _mv('Surf'))
+    monkeypatch.delenv('RL_OBS_ABILITIES')
+    assert not O.sturdy_survives(sturdy, _mon(), _mv('Surf'))  # v1: sin cambio

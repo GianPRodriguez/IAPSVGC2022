@@ -298,6 +298,8 @@ def move_damage_frac(att_p, att: MonSnapshot, def_p, dfn: MonSnapshot, mv, field
         return 0.0
     if mtype == 'Ground' and P.to_id(dfn.item) == 'airballoon':
         return 0.0
+    if fix and move_blocked_by_ability(def_p, dfn, getattr(mv, 'mid', '')):
+        return 0.0
     eff = P.type_effectiveness(raw_type, def_p.types)
     if eff <= 0:
         return 0.0
@@ -392,7 +394,50 @@ def effective_speed(prof, mon: MonSnapshot, field: FieldSnapshot, *, ours: bool)
         m *= 2.0
     if prof.ability == 'unburden' and not mon.item:
         m *= 2.0
+    if obs_abilities_on():  # P5 (rl_env_spec v1.33)
+        if prof.ability == 'surgesurfer' and 'electric' in str(field.terrain or '').lower():
+            m *= 2.0
+        if prof.item == 'ironball':
+            m *= 0.5
     return lo * m, hi * m
+
+
+def move_priority(prof, mon: MonSnapshot, mid: str, m: dict, field: FieldSnapshot) -> int:
+    """Prioridad efectiva: base + Prankster; con P5 también Grassy Glide y Gale Wings."""
+    cat = m.get('category')
+    prio = int(m.get('priority') or 0) + (1 if prof.ability == 'prankster' and cat == 'Status' else 0)
+    if obs_abilities_on():
+        if mid == 'grassyglide' and 'grassy' in str(field.terrain or '').lower() and _grounded(prof, mon):
+            prio += 1
+        if prof.ability == 'galewings' and m.get('type') == 'Flying' and float(mon.hp_pct) >= 99.9:
+            prio += 1
+    return prio
+
+
+_IMMUNE_FLAG = {'bulletproof': 'bullet', 'soundproof': 'sound', 'overcoat': 'powder'}
+
+
+def move_blocked_by_ability(def_p, dfn: Optional[MonSnapshot], mid: str) -> bool:
+    """P5: Bulletproof / Soundproof / Overcoat y Magnet Rise o Dig/Dive (semiinvulnerable)."""
+    if not obs_abilities_on() or def_p is None:
+        return False
+    m = P._dex()['moves'].get(mid, {}) or {}
+    raw = m.get('flags') or ()
+    flags = set(k for k, v in raw.items() if v) if isinstance(raw, dict) else set(raw)
+    flag = _IMMUNE_FLAG.get(getattr(def_p, 'ability', '') or '')
+    if flag and flag in flags:
+        return True
+    vol = (getattr(dfn, 'volatiles', None) or {}) if dfn is not None else {}
+    if 'magnetrise' in vol and m.get('type') == 'Ground':
+        return True
+    return False
+
+
+def sturdy_survives(def_p, dfn: MonSnapshot, mv) -> bool:
+    """P5: Sturdy con HP lleno aguanta un golpe (salvo ataques de varios golpes)."""
+    if not obs_abilities_on() or getattr(def_p, 'ability', '') != 'sturdy' or float(dfn.hp_pct) < 99.9:
+        return False
+    return not (P._dex()['moves'].get(getattr(mv, 'mid', ''), {}) or {}).get('multihit')
 
 
 def speed_relation(ap, a, bp, b, field) -> float:
@@ -499,9 +544,11 @@ def _our_move_block(snap: BattleSnapshot, ours: List[Optional[MonSnapshot]],
                         continue
                     frac = move_damage_frac(prof, mon, fp, f, mv, field, defender_is_ours=False)
                     v[65 + fi] = min(2.0, frac) / 2.0
-                    v[68 + fi] = 1.0 if _cur_frac(frac, f) >= 1.0 else 0.0
+                    v[68 + fi] = 1.0 if (_cur_frac(frac, f) >= 1.0 and not sturdy_survives(fp, f, mv)) else 0.0
                     v[70 + fi] = _eff_code(mv, fp, prof)
-                if ally is not None and ally_p is not None and not ally.fainted and \
+                telepathy = obs_abilities_on() and ally_p is not None and ally_p.ability == 'telepathy' \
+                    and str(m.get('target')) == 'allAdjacent'
+                if ally is not None and ally_p is not None and not ally.fainted and not telepathy and \
                         str(m.get('target')) in ('allAdjacent', 'adjacentAlly', 'adjacentAllyOrSelf'):
                     v[67] = min(2.0, move_damage_frac(prof, mon, ally_p, ally, mv, field,
                                                       defender_is_ours=True)) / 2.0
@@ -512,13 +559,14 @@ def _our_move_block(snap: BattleSnapshot, ours: List[Optional[MonSnapshot]],
                     cur = max(0.01, float(f.hp_pct) / 100.0)
                     hi = move_damage_frac(prof, mon, fp, f, mv, field, defender_is_ours=False, mode='max')
                     lo = move_damage_frac(prof, mon, fp, f, mv, field, defender_is_ours=False, mode='min')
-                    v[77 + fi] = 1.0 if hi >= cur else 0.0  # KO posible
-                    v[79 + fi] = 1.0 if lo >= cur else 0.0  # KO garantizado (si acierta)
+                    st = sturdy_survives(fp, f, mv)
+                    v[77 + fi] = 1.0 if (hi >= cur and not st) else 0.0  # KO posible
+                    v[79 + fi] = 1.0 if (lo >= cur and not st) else 0.0  # KO garantizado (si acierta)
             # Historial / mecánicas del formato
             v[72] = 1.0 if (mon.last_move and P.to_id(mon.last_move) == mid) else 0.0
             v[73] = 1.0 if (mon.locked_move and P.to_id(mon.locked_move) == mid) else 0.0
             foe_profiles = [_profile(f) if (f is not None and not f.fainted) else None for f in foes[:2]]
-            prio = int(m.get('priority') or 0) + (1 if prof.ability == 'prankster' and cat == 'Status' else 0)
+            prio = move_priority(prof, mon, mid, m, field)
             for fi in range(2):
                 f, fp = foes[fi], foe_profiles[fi]
                 if f is not None and fp is not None:
@@ -554,7 +602,7 @@ def _foe_move_block(snap: BattleSnapshot, ours: List[Optional[MonSnapshot]],
             v[20] = 1.0 if cat == 'Special' else 0.0
             v[21] = 1.0 if cat == 'Status' else 0.0
             v[22] = (dmg[0].power / 250.0) if dmg else 0.0
-            prio = int(m.get('priority') or 0) + (1 if prof.ability == 'prankster' and cat == 'Status' else 0)
+            prio = move_priority(prof, mon, mid, m, field)
             v[23] = prio / 5.0
             v[24] = 1.0 if str(m.get('target')) in ('allAdjacentFoes', 'allAdjacent') else 0.0
             for ui, k in enumerate(_FOE_UTIL):
@@ -566,9 +614,10 @@ def _foe_move_block(snap: BattleSnapshot, ours: List[Optional[MonSnapshot]],
                         continue
                     frac = move_damage_frac(prof, mon, tp, t, dmg[0], field, defender_is_ours=True)
                     v[35 + ti] = min(2.0, frac) / 2.0
-                    v[37 + ti] = 1.0 if _cur_frac(frac, t) >= 1.0 else 0.0
+                    st = sturdy_survives(tp, t, dmg[0])
+                    v[37 + ti] = 1.0 if (_cur_frac(frac, t) >= 1.0 and not st) else 0.0
                     hi = move_damage_frac(prof, mon, tp, t, dmg[0], field, defender_is_ours=True, mode='max')
-                    v[41 + ti] = 1.0 if hi >= max(0.01, float(t.hp_pct) / 100.0) else 0.0
+                    v[41 + ti] = 1.0 if (hi >= max(0.01, float(t.hp_pct) / 100.0) and not st) else 0.0
             v[39] = 1.0 if (mon.last_move and P.to_id(mon.last_move) == mid) else 0.0
             v[40] = 1.0 if (mon.locked_move and P.to_id(mon.locked_move) == mid) else 0.0
     return out

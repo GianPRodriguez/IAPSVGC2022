@@ -1074,3 +1074,30 @@ Huecos graves de la aproximación anterior, además de Liquid Voice:
 **Primer paso: medir la velocidad** (`scripts/analysis/bench_calc_obs.py`). La observación pediría
 ~80 cálculos por paso: ~24 000/s para entrenar a la velocidad actual. Según el resultado se decide
 cómo integrarla (lote por observación, caché, cálculo solo de lo necesario).
+
+**Avance (19-11-2026, sin esperar la medición de velocidad):**
+- **Efectos que no son de daño**, en Python y solo con la observación nueva (`obs_abilities`):
+  - prioridad: Grassy Glide con Campo de Hierba y Gale Wings;
+  - velocidad: Iron Ball y Surge Surfer;
+  - inmunidades: Bulletproof, Soundproof, Overcoat, Magnet Rise;
+  - Sturdy anula el KO de un golpe con HP lleno;
+  - Telepathy: el área del aliado no le pega.
+
+  Quick Claw y Quick Draw dan prioridad al azar: no se modelan.
+- **`showdown/rl/obs_calc.py`:** arma los pedidos a la calculadora desde el estado de la partida.
+  - Forma Mega efectiva y stats según el modo (medio, máximo, mínimo).
+  - Aliados caídos (Last Respects).
+  - Pantallas del bando defensor, Friend Guard, Battery, Power Spot y Steely Spirit.
+  - **Fairy / Dark Aura y Aura Break si cualquiera de los cuatro en campo las tiene**, y las cuatro
+    habilidades "de la ruina".
+  - Convierte (mínimo, máximo) en fracción del HP con la misma semántica que la aproximación
+    anterior.
+  - `calc_core.js` debe aceptar `isFairyAura`, `isDarkAura` e `isAuraBreak`. Los heurísticos no
+    mandan esos campos, así que no cambian.
+- **Propuesta de cambio al contrato** (rl_env_spec, al integrar): quitar de §1 y §8 la prohibición de
+  usar `@smogon/calc` dentro de `step()` cuando `obs_abilities` está activo, fijar el commit de
+  `damage-calc` y registrar la velocidad medida.
+
+Tests: `tests/test_obs_abilities.py` (efectos que no son de daño) y `tests/test_obs_calc.py`
+(incluye el caso de la prueba online con la calculadora real: el sol reduce a la mitad el Hyper Voice
+de Primarina porque es de Agua).
