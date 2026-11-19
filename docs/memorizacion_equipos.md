@@ -1230,3 +1230,46 @@ P1b (preview no determinista, `scripts/server/p1b_preview.sh`) quedó encadenado
 - **Sorteo:** solo entre las 90 formaciones canónicas con que se entrenó; el modo determinista no
   cambia.
 - **Regla:** como P1 (Δ`val` ≥ −2).
+
+### 18.2 Resultados de la vigesimosexta cola y de P1b (19-11-2026)
+
+Cola 26: commit b7732d8, todo rc=0. P1b: commit 0b08719. 200 partidas por rival, semillas 0 y 1,
+`final.pt`.
+
+**P5 completo + preview v2.1 frente a la referencia** (PPO v1; DDQN REG 0,03; ambas con preview v2 y
+la observación anterior):
+
+| Agente | `val` antes → con P5 | Δ`val` | `eval` antes → con P5 | Δ`eval` | Otros |
+|---|---|---|---|---|---|
+| PPO | 90,7 → 88,8 % | −1,9 (± 2,4) | 81,3 → 79,5 % | −1,8 (± 3,2) | Arquetipo n1: 72,0 % (v1 77,1 %); contra v1 en espejo 30,8 % (calibración 59,8 %) |
+| DDQN | 74,1 → 75,2 % | +1,2 (± 3,5) | 65,3 → 56,5 % | **−8,8 (± 3,9)** | — |
+
+Calculadora real en los 4 entrenamientos: ~1M observaciones cada uno, **0 % de respaldo y 0 %
+de pedidos sin respuesta**. Velocidad: PPO 260 pasos/s (1h04m), DDQN 290 pasos/s (57m). Preview
+v2.1: MEAN_WR 0,951.
+
+**Lectura:**
+1. **La condición acordada se cumple** (Δ`val` ≥ −2 en ambos y la calculadora sin fallos), pero
+   hay señales de empeoramiento:
+   - PPO queda en el límite (−1,9) y cae en todo lo demás: `eval` −1,8, arquetipos −5,1, y contra
+     v1 queda 29 puntos por debajo de la calibración.
+   - DDQN mejora en `val` (+1,2) pero **cae 8,8 puntos en `eval`**, fuera del IC.
+2. **Dos cambios a la vez:** la observación nueva (P5) y el preview v2.1. Con estos datos no se
+   puede saber cuál de los dos causa la caída.
+3. **Patrón sin explicar contra v1:** todos los modelos nuevos pierden mucho contra v1 en espejo
+   (P2 28 %, P4 22 %, P5 31 %; v1 contra v1 59,8 %), incluso los que no empeoran contra los
+   heurísticos.
+
+**P1b, preview no determinista** (combate PPO con P5 + preview v2.1, contra `val`):
+
+| Modo | Victorias | Δ | Otra formación | Otros líderes | Formaciones distintas |
+|---|---|---|---|---|---|
+| Determinista | 88,8 % | — | — | — | — |
+| Preview T = 1,0 | 89,0 % | +0,3 (± 2,5) | 10,1 % | 2,2 % | 18 |
+| Preview T = 0,5 | 87,8 % | −1,0 (± 2,6) | 5,6 % | 0,7 % | 12 |
+| Preview T = 0,5 + combate T = 0,5 | 87,7 % | −1,1 (± 2,6) | 4,9 % | 0,4 % | 11 |
+
+El preview está muy concentrado: incluso con T = 1,0 cambia la formación en solo 1 de cada 10
+partidas, y casi nunca los líderes (2,2 %). Ambas temperaturas cumplen la regla (Δ ≥ −2). Por la
+misma regla de P1 (si ambas cumplen, T = 1) correspondería T = 1,0, que no cuesta nada pero aporta
+poca variedad.
