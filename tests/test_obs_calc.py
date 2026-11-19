@@ -66,3 +66,83 @@ def test_real_calc_liquid_voice_in_sun():
         pytest.skip('calculadora no disponible')
     (lo0, hi0), (lo1, hi1) = out
     assert hi1 / hi0 == pytest.approx(0.5, rel=0.05)  # Agua: el sol la reduce a la mitad (no Normal)
+
+
+# --------------------------------------------------------------------------- integración (parte 2a)
+def _snap_from_pool():
+    import sys
+    sys.path.insert(0, 'tests')
+    from test_rl_obs_v2 import _snap
+    return _snap()
+
+
+def test_requests_cover_moves_and_pairs():
+    from showdown.rl import observation as O
+    snap = _snap_from_pool()
+    ours, foes = O._our_slots(snap.our), O._foe_slots(snap.foe)
+    reqs = C.requests_for_snapshot(snap, O._profile, ours, foes)
+    keys = set(reqs)
+    a0, f0 = snap.our.active[0], snap.foe.active[0]
+    mv = O._profile(a0).damaging[0]
+    for mode in ('mid', 'max', 'min'):
+        assert (id(a0), id(f0), mv.mid, mode) in keys
+    bench_foe = [m for m in foes[2:] if m is not None][0]
+    assert any(k[0] == id(a0) and k[1] == id(bench_foe) and k[3] == 'mid' for k in keys)  # matriz de pares
+    assert 80 <= len(reqs) <= 400
+
+
+def test_observation_uses_calc_table_and_falls_back(monkeypatch):
+    """La obs toma el daño de la tabla de la calculadora; sin respuesta usa la aproximación."""
+    import numpy as np
+    from showdown.rl import observation as O
+    snap = _snap_from_pool()
+    monkeypatch.setenv('RL_OBS_ABILITIES', '1')
+    monkeypatch.setenv('RL_OBS_CALC', '0')
+    base = O.build_observation(snap, abilities=True)
+    monkeypatch.setenv('RL_OBS_CALC', '1')
+    calls = []
+
+    def fake_ranges(reqs):
+        calls.append(len(reqs))
+        return [(1, 1) for _ in reqs]  # daño mínimo: la obs debe cambiar
+    monkeypatch.setattr(C, 'damage_table', lambda reqs, ranges_fn=None: C.__dict__['_real_damage_table'](reqs, fake_ranges))
+    O._LAST = (None, None, None)
+    alt = O.build_observation(snap, abilities=True)
+    assert calls and calls[0] >= 80 and not np.allclose(base, alt)
+    st = O.calc_stats()
+    assert st['calc_obs'] >= 1
+
+
+def test_real_calc_observation_end_to_end(monkeypatch):
+    """Con la calculadora real (servidor): la obs se arma sin respaldo y sin pedidos fallidos."""
+    from showdown.rl import observation as O
+    try:
+        from showdown.damage_calc_bridge import damage_ranges_batch
+        if any(r is None for r in damage_ranges_batch([C.build_request(
+                MonSnapshot(species='Pikachu', hp_pct=100.0), _prof(), MonSnapshot(species='Pikachu', hp_pct=100.0),
+                _prof(), 'thunderbolt', FieldSnapshot(), attacker_ours=True, att_ally_prof=None, def_ally_prof=None,
+                on_field=set(), is_spread=False, mode='mid')])):
+            pytest.skip('calculadora no disponible')
+    except Exception as exc:
+        pytest.skip(f'calculadora no disponible: {exc}')
+    monkeypatch.setenv('RL_OBS_ABILITIES', '1')
+    monkeypatch.setenv('RL_OBS_CALC', '1')
+    before = O.calc_stats()
+    O._LAST = (None, None, None)
+    obs = O.build_observation(_snap_from_pool(), abilities=True)
+    after = O.calc_stats()
+    assert obs.shape[0] > 0
+    assert after['calc_obs'] == before['calc_obs'] + 1 and after['errors'] == before['errors']
+    assert after['missing'] - before['missing'] <= 0.02 * (after['requests'] - before['requests'])
+
+
+def test_training_tally_aggregates_calc_stats():
+    from showdown.rl.train_metrics import FoeStateTally
+    t = FoeStateTally()
+    t.add({'obs_calc': {'obs': 10, 'calc_obs': 9, 'fallback_obs': 1, 'requests': 2000, 'missing': 4}}, 'random')
+    t.add({'checks': 5, 'mismatches': 0, 'feed_errors': 0,
+           'obs_calc': {'obs': 10, 'calc_obs': 10, 'fallback_obs': 0, 'requests': 2000, 'missing': 0}}, 'greedy_joint')
+    out = t.flush()
+    assert out['total']['episodes'] == 1  # el episodio sin espejo no cuenta en el contraste del rival
+    assert out['obs_calc']['obs'] == 20 and out['obs_calc']['fallback_rate'] == pytest.approx(0.05)
+    assert out['obs_calc']['missing_rate'] == pytest.approx(4 / 4000)

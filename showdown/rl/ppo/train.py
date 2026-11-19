@@ -813,6 +813,8 @@ def run_training(
         _fs = FOE_STATE.flush()  # último tramo + total de la corrida (contraste de estado del rival)
         mlog.write('foe_state', step=int(global_steps), **_fs)
         print(f"[ppo] contraste de estado del rival: {_fs['total']}", flush=True)
+        if _fs.get('obs_calc'):
+            print(f"[ppo] calculadora real en la observación (P5): {_fs['obs_calc']}", flush=True)
         n_suite = resolve_suite_games(suite_games=suite_games, smoke=smoke)
         suite_rows, suite_note = [], ''
         if n_suite > 0 and env is None and venv is not None:

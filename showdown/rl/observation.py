@@ -224,6 +224,31 @@ import os as _os
 _OBS_ABILITIES: '_cv.ContextVar[Optional[bool]]' = _cv.ContextVar('rl_obs_abilities', default=None)
 
 
+# Tabla de daño de la calculadora real para la observación en curso (P5 completo, parte 2a):
+# clave (id(atacante), id(defensor), movimiento, modo) → fracción del HP máximo del defensor.
+_CALC_TABLE: '_cv.ContextVar[Optional[Dict[tuple, float]]]' = _cv.ContextVar('rl_obs_calc_table', default=None)
+# Contadores para vigilar la integración (los trainers los registran).
+CALC_STATS = {'obs': 0, 'calc_obs': 0, 'fallback_obs': 0, 'requests': 0, 'missing': 0, 'errors': 0}
+
+
+_CALC_PAUSED_UNTIL = [0.0]  # cortacircuito: tras un fallo, la calculadora se pausa en este proceso
+_CALC_PAUSE_S = 60.0
+
+
+def obs_calc_enabled() -> bool:
+    """Con la corrección activa, el daño sale de la calculadora real salvo RL_OBS_CALC=0 (depuración)."""
+    if not obs_abilities_on():
+        return False
+    if _os.environ.get('RL_OBS_CALC', '1').strip().lower() in ('0', 'false', 'no', 'off'):
+        return False
+    import time as _time
+    return _time.time() >= _CALC_PAUSED_UNTIL[0]
+
+
+def calc_stats() -> Dict[str, int]:
+    return dict(CALC_STATS)
+
+
 def obs_abilities_default() -> bool:
     return _os.environ.get('RL_OBS_ABILITIES', '').strip().lower() in ('1', 'true', 'yes', 'on')
 
@@ -291,6 +316,12 @@ def move_damage_frac(att_p, att: MonSnapshot, def_p, dfn: MonSnapshot, mv, field
     'min' = peor caso (atacante mín., defensor máx., tirada 0.85).
     """
     fix = obs_abilities_on()
+    if fix:
+        tbl = _CALC_TABLE.get()
+        if tbl is not None:
+            v = tbl.get((id(att), id(dfn), getattr(mv, 'mid', ''), mode))
+            if v is not None:
+                return float(v)  # calculadora real; si falta, sigue la aproximación (respaldo)
     raw_type, pw_mult, def_mult = ability_damage_mods(att_p, def_p, mv) if fix else (mv.type, 1.0, 1.0)
     immune_type = P.IMMUNITY_ABILITIES.get(def_p.ability)
     mtype = P.normalize_type(raw_type)
@@ -712,6 +743,41 @@ def build_observation(battle: BattleSnapshot, *, abilities: Optional[bool] = Non
         return _LAST[1].copy()
     ours = _our_slots(battle.our)
     foes = _foe_slots(battle.foe)
+    tok = None
+    if obs_calc_enabled():
+        tok = _CALC_TABLE.set(_calc_table_for(battle, ours, foes))
+    elif flag:
+        CALC_STATS['obs'] += 1
+        CALC_STATS['fallback_obs'] += 1
+    try:
+        obs = _assemble(battle, ours, foes)
+    finally:
+        if tok is not None:
+            _CALC_TABLE.reset(tok)
+    _LAST = (battle, obs, flag)
+    return obs.copy()
+
+
+def _calc_table_for(battle: BattleSnapshot, ours, foes) -> Optional[Dict[tuple, float]]:
+    """Un lote a la calculadora real por observación; None si falla (respaldo: aproximación)."""
+    from showdown.rl import obs_calc as C
+    CALC_STATS['obs'] += 1
+    try:
+        reqs = C.requests_for_snapshot(battle, _profile, ours, foes)
+        table, missing = C.damage_table(reqs)
+    except Exception:
+        import time as _time
+        CALC_STATS['errors'] += 1
+        CALC_STATS['fallback_obs'] += 1
+        _CALC_PAUSED_UNTIL[0] = _time.time() + _CALC_PAUSE_S
+        return None
+    CALC_STATS['calc_obs'] += 1
+    CALC_STATS['requests'] += len(reqs)
+    CALC_STATS['missing'] += missing
+    return table
+
+
+def _assemble(battle: BattleSnapshot, ours, foes) -> np.ndarray:
     can_mega = [bool(m.can_mega) if m is not None else False for m in battle.our.active[:2]]
     blocks = [
         _mon_block(m, can_mega=(i < 2 and can_mega[i] if i < len(can_mega) else False))
@@ -726,8 +792,7 @@ def build_observation(battle: BattleSnapshot, *, abilities: Optional[bool] = Non
     ]).astype(np.float32)
     if obs.shape[0] != OBS_DIM:  # pragma: no cover - garantía de contrato
         raise AssertionError(f'obs {obs.shape[0]} != OBS_DIM {OBS_DIM}')
-    _LAST = (battle, obs, flag)
-    return obs.copy()
+    return obs
 
 
 def build_observation_ddqn(battle: BattleSnapshot, *, abilities: Optional[bool] = None) -> np.ndarray:

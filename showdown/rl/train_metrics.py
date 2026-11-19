@@ -90,9 +90,15 @@ class FoeStateTally:
         self._win: Dict[str, Counter] = defaultdict(Counter)
         self._samples: List[str] = []
         self._warned = 0
+        self.calc = Counter()  # P5: observaciones con la calculadora real / con respaldo
 
     def add(self, fs: Optional[Mapping[str, Any]], opponent: str = '') -> None:
         if not fs:
+            return
+        oc = fs.get('obs_calc')
+        if oc:
+            self.calc.update({k: int(v or 0) for k, v in oc.items()})
+        if 'checks' not in fs:  # solo trae los contadores de la calculadora (rival sin espejo)
             return
         c = Counter({k: int(fs.get(k, 0) or 0) for k in ('checks', 'mismatches', 'feed_errors')})
         c['episodes'] = 1
@@ -116,6 +122,10 @@ class FoeStateTally:
             return {'episodes': c['episodes'], 'checks': c['checks'], 'mismatches': c['mismatches'],
                     'feed_errors': c['feed_errors'], 'mismatch_rate': c['mismatches'] / ch}
         out = {'by_opp': {o: _fmt(c) for o, c in self._win.items()}, 'total': _fmt(self.total)}
+        if self.calc.get('obs'):
+            n = max(1, self.calc['obs'])
+            out['obs_calc'] = {**dict(self.calc), 'fallback_rate': self.calc['fallback_obs'] / n,
+                               'missing_rate': self.calc['missing'] / max(1, self.calc['requests'])}
         if self._samples:
             out['samples'] = list(self._samples)
         self._win = defaultdict(Counter)

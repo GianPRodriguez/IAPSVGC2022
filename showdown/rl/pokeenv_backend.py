@@ -419,6 +419,11 @@ class PokeEnvBattleBackend(BattleBackend):
                 f'RL env challenge timed out ({self.challenge_timeout}s): {exc!r}'
             ) from exc
         self._fs_base = self._foe_state_counts()
+        try:  # P5: base de los contadores de la calculadora para este episodio
+            from showdown.rl.observation import calc_stats
+            self._oc_base = calc_stats()
+        except Exception:
+            self._oc_base = None
         return snapshot_from_battle(self._battle)
 
     def step(
@@ -469,9 +474,10 @@ class PokeEnvBattleBackend(BattleBackend):
         El rival procesa su turno en paralelo, así que el último turno de un episodio puede
         contarse en el siguiente (los totales no cambian). ``None`` para rivales sin espejo.
         """
+        oc = self._obs_calc_episode()
         cur = self._foe_state_counts()
         if cur is None:
-            return None
+            return {'obs_calc': oc} if oc else None
         base = self._fs_base if self._fs_base is not None else (0, 0, 0, 0)
         if cur[0] < base[0]:  # rival reconstruido: reporte nuevo
             base = (0, 0, 0, 0)
@@ -481,7 +487,20 @@ class PokeEnvBattleBackend(BattleBackend):
             rep = self._foe.state_report
             out['samples'] = [f'{m.field}: esperado {m.expected!r}, espejo {m.got!r} (turno {m.turn})'
                               for m in rep.mismatches[base[3]:base[3] + 3]]
+        if oc:
+            out['obs_calc'] = oc
         return out
+
+    def _obs_calc_episode(self) -> Optional[Dict[str, int]]:
+        """P5: observaciones de este episodio con la calculadora real / con respaldo (proceso del entorno)."""
+        try:
+            from showdown.rl.observation import calc_stats
+        except Exception:
+            return None
+        cur = calc_stats()
+        base = getattr(self, '_oc_base', None) or {}
+        d = {k: int(cur.get(k, 0)) - int(base.get(k, 0)) for k in cur}
+        return d if d.get('obs', 0) > 0 else None
 
     def action_masks(
         self,

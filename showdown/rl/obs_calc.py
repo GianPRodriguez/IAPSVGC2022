@@ -147,50 +147,108 @@ def fainted_count(side) -> int:
     return n
 
 
-def requests_for_snapshot(snap: BattleSnapshot, profile_fn) -> Tuple[List[Dict[str, Any]], List[tuple]]:
-    """Todos los pedidos de una observación y su clave (lado, hueco, movimiento, objetivo, modo).
+def requests_for_snapshot(snap: BattleSnapshot, profile_fn, our_slots: Sequence[Optional[MonSnapshot]],
+                          foe_slots: Sequence[Optional[MonSnapshot]]) -> Dict[tuple, tuple]:
+    """Todos los cálculos que usa una observación, sin repetir: ``clave → (pedido, perfil defensor, modo, precisión)``.
 
-    ``profile_fn(mon)`` devuelve el perfil (``observation._profile``). Nuestros movimientos contra cada
-    rival en los 3 modos y contra el aliado (área); los del rival contra cada uno de los nuestros (mid,
-    max). Es el conjunto que hoy llena la observación.
+    Clave: ``(id(atacante), id(defensor), movimiento, modo)``, la misma que consulta
+    ``observation.move_damage_frac``. Cubre: nuestros movimientos contra cada rival activo (3 modos) y
+    contra el aliado (área); los del rival activo contra cada uno de los nuestros (medio y máximo); y la
+    matriz de pares (``_pair_block``: 4 nuestros × 6 rivales en ambos sentidos, modo medio).
+    ``profile_fn(mon)`` es ``observation._profile``.
     """
-    reqs: List[Dict[str, Any]] = []
-    keys: List[tuple] = []
-    ours = list(snap.our.active[:2])
-    foes = list(snap.foe.active[:2])
-    actives = [(m, profile_fn(m)) for m in ours + foes]
-    on_field = _abilities_on_field(actives)
-    our_f, foe_f = fainted_count(snap.our), fainted_count(snap.foe)
+    out: Dict[tuple, tuple] = {}
+    actives_ours = list(snap.our.active[:2])
+    actives_foe = list(snap.foe.active[:2])
+    on_field = _abilities_on_field([(m, profile_fn(m)) for m in actives_ours + actives_foe])
+    fainted = {True: fainted_count(snap.our), False: fainted_count(snap.foe)}
     table = P._dex()['moves']
-    for side, atk_list, def_list, att_ours in (('our', ours, foes, True), ('foe', foes, ours, False)):
-        for s, mon in enumerate(atk_list):
-            prof = profile_fn(mon)
-            if mon is None or prof is None or mon.fainted:
-                continue
-            ally = atk_list[1 - s]
-            ally_p = profile_fn(ally) if ally is not None else None
-            for raw in list(mon.moves)[:4]:
-                mid = P.to_id(raw)
-                m = table.get(mid) or {}
-                if m.get('category') not in ('Physical', 'Special'):
-                    continue
-                spread = m.get('target') in ('allAdjacentFoes', 'allAdjacent')
-                modes = ('mid', 'max', 'min') if att_ours else ('mid', 'max')
-                for ti, dfn in enumerate(def_list):
-                    dp = profile_fn(dfn)
-                    if dfn is None or dp is None or dfn.fainted:
-                        continue
-                    d_ally = def_list[1 - ti]
-                    for mode in modes:
-                        reqs.append(build_request(
-                            mon, prof, dfn, dp, mid, snap.field, attacker_ours=att_ours, att_ally_prof=ally_p,
-                            def_ally_prof=profile_fn(d_ally) if d_ally is not None else None, on_field=on_field,
-                            is_spread=spread, mode=mode, allies_fainted=our_f if att_ours else foe_f))
-                        keys.append((side, s, mid, ti, mode))
-                if att_ours and m.get('target') == 'allAdjacent' and ally is not None and ally_p is not None \
-                        and not ally.fainted:
-                    reqs.append(build_request(
-                        mon, prof, ally, ally_p, mid, snap.field, attacker_ours=False, att_ally_prof=None,
-                        def_ally_prof=None, on_field=on_field, is_spread=True, mode='mid', allies_fainted=our_f))
-                    keys.append((side, s, mid, 'ally', 'mid'))
-    return reqs, keys
+
+    def ally_of(mon, actives):
+        if mon is None:
+            return None
+        for i, m in enumerate(actives):
+            if m is mon:
+                other = actives[1 - i]
+                return profile_fn(other) if other is not None and not other.fainted else None
+        return None
+
+    def add(att, dfn, mv, mode, att_ours, *, spread_target=None):
+        ap, dp = profile_fn(att), profile_fn(dfn)
+        if att is None or dfn is None or ap is None or dp is None or att.fainted or dfn.fainted:
+            return
+        key = (id(att), id(dfn), mv.mid, mode)
+        if key in out:
+            return
+        m = table.get(mv.mid) or {}
+        spread = m.get('target') in ('allAdjacentFoes', 'allAdjacent') if spread_target is None else spread_target
+        a_act = actives_ours if att_ours else actives_foe
+        d_act = actives_foe if att_ours else actives_ours
+        req = build_request(att, ap, dfn, dp, mv.mid, snap.field, attacker_ours=att_ours,
+                            att_ally_prof=ally_of(att, a_act), def_ally_prof=ally_of(dfn, d_act),
+                            on_field=on_field, is_spread=bool(spread), mode=mode,
+                            allies_fainted=fainted[att_ours])
+        out[key] = (req, dp, mode, float(getattr(mv, 'accuracy', 1.0) or 1.0))
+
+    # bloques de movimientos (activos)
+    for s_, mon in enumerate(actives_ours):
+        prof = profile_fn(mon)
+        if mon is None or prof is None or mon.fainted:
+            continue
+        for mv in prof.damaging:
+            for dfn in actives_foe:
+                for mode in ('mid', 'max', 'min'):
+                    add(mon, dfn, mv, mode, True)
+            ally = actives_ours[1 - s_]
+            if (table.get(mv.mid) or {}).get('target') == 'allAdjacent' and ally is not None:
+                ap = profile_fn(ally)
+                if ap is not None and not ally.fainted:
+                    key = (id(mon), id(ally), mv.mid, 'mid')
+                    if key not in out:
+                        req = build_request(mon, prof, ally, ap, mv.mid, snap.field, attacker_ours=False,
+                                            att_ally_prof=None, def_ally_prof=None, on_field=on_field,
+                                            is_spread=True, mode='mid', allies_fainted=fainted[True])
+                        out[key] = (req, ap, 'mid', float(getattr(mv, 'accuracy', 1.0) or 1.0))
+    for mon in actives_foe:
+        prof = profile_fn(mon)
+        if mon is None or prof is None or mon.fainted:
+            continue
+        for mv in prof.damaging:
+            for dfn in actives_ours:
+                for mode in ('mid', 'max'):
+                    add(mon, dfn, mv, mode, False)
+    # matriz de pares (también banca)
+    for a in our_slots:
+        pa = profile_fn(a)
+        for b in foe_slots:
+            pb = profile_fn(b)
+            if pa is not None:
+                for mv in pa.damaging:
+                    add(a, b, mv, 'mid', True)
+            if pb is not None:
+                for mv in pb.damaging:
+                    add(b, a, mv, 'mid', False)
+    return out
+
+
+def damage_table(reqs: Dict[tuple, tuple], ranges_fn=None) -> Tuple[Dict[tuple, float], int]:
+    """Resuelve los pedidos en UN lote. Devuelve (clave → fracción del HP, nº de pedidos sin respuesta)."""
+    if not reqs:
+        return {}, 0
+    if ranges_fn is None:
+        from showdown.damage_calc_bridge import damage_ranges_batch as ranges_fn
+    keys = list(reqs)
+    res = ranges_fn([reqs[k][0] for k in keys])
+    table: Dict[tuple, float] = {}
+    missing = 0
+    for k, r in zip(keys, res):
+        _req, dp, mode, acc = reqs[k]
+        v = damage_frac(r, dp, mode, acc)
+        if v is None:
+            missing += 1
+        else:
+            table[k] = v
+    return table, missing
+
+
+_real_damage_table = damage_table  # referencia estable (tests)
