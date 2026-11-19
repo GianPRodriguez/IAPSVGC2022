@@ -797,3 +797,23 @@ velocidad de la calculadora.
 - Evaluación con ε = 0 y `DDQN_REQUIRED` (791e5b2, ddqn_spec 1.8).
 - Rivales de entrenamiento validados (rl_env_spec v1.19) y con sorteo entre casi-empates
   (v1.21; evaluación determinista). Ver `docs/diversidad_baselines.md`.
+
+### Kick-off oficial de DDQN con P5 completo + preview v2.1 sin `val` (preparado el 19-11-2026)
+
+**Decisiones del usuario:**
+- El kick-off de DDQN usa la observación nueva (calculadora real) y el preview v2.1, no el v2
+  congelado.
+- Se prepara con **control intermedio**: las semillas 0 y 1 hacen de piloto. Si DDQN pierde más de 2
+  puntos en `val` frente a DDQN REG 0,03, o la calculadora falla, se detiene antes de las semillas
+  2–4.
+
+**Entrada:**
+- Arranca cuando termine el reentrenamiento del preview v2.1 sin `val`.
+- Si ese preview no se adopta, también se detiene (decisión del usuario pendiente).
+
+**Configuración y evaluación:**
+- Configuración final: REG 0,03 + dropout 0,1, cabeza conjunta, sin simetría, máscara del aliado,
+  validación reservada, equipo fijo, 1M × 5.
+- Por semilla, el set del kick-off de PPO v1, con 200 partidas por rival.
+
+Duración estimada ~6,3 h. Script: `scripts/server/kickoff_ddqn_v2.sh`.
