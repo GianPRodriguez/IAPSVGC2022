@@ -42,7 +42,7 @@ def main(argv=None) -> int:
         for sp in ('val', 'eval'):
             p = {k: pooled(v[sp]) for k, v in c.items()}
             L += [f'## {agent}, `{sp}`', '',
-                  '| Observación \ preview | v2 | v2.1 | Efecto del preview (v2.1 − v2) |', '|---|---|---|---|',
+                  '| Observación / preview | v2 | v2.1 | Efecto del preview (v2.1 − v2) |', '|---|---|---|---|',
                   f"| anterior | {pct(p[('vieja', 'v2')])} | {pct(p[('vieja', 'v2.1')])} | "
                   f"{fd(diff(p[('vieja', 'v2.1')], p[('vieja', 'v2')]))} |",
                   f"| P5 | {pct(p[('P5', 'v2')])} | {pct(p[('P5', 'v2.1')])} | "
