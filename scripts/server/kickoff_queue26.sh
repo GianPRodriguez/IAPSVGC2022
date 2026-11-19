@@ -29,6 +29,13 @@ log() { echo "$(date '+%F %T') $*" >> "$OUT/queue.log"; }
 clean_ps() { pkill -f "pokemon-showdown.*start" 2>/dev/null; sleep 5; }
 log "esperando al piloto de velocidad"
 until grep -q P5_SPEED_DONE "$HOME/iapsvgc_runs/p5_speed/queue.log" 2>/dev/null; do sleep 60; done
+# Resguardo: si la calculadora deja el entrenamiento por debajo del 40 % de la velocidad sin ella, se detiene.
+SP1=$(grep -o "[0-9.]* step/s | ETA 0s" "$HOME/iapsvgc_runs/p5_speed/calc1.txt" 2>/dev/null | tail -1 | cut -d' ' -f1)
+SP0=$(grep -o "[0-9.]* step/s | ETA 0s" "$HOME/iapsvgc_runs/p5_speed/calc0.txt" 2>/dev/null | tail -1 | cut -d' ' -f1)
+log "piloto: con calculadora ${SP1:-?} pasos/s, sin ella ${SP0:-?} pasos/s"
+if [ -z "${SP1:-}" ] || [ -z "${SP0:-}" ] || ! python -c "import sys; sys.exit(0 if float('$SP1') >= 0.4 * float('$SP0') else 1)"; then
+  log "ERROR: piloto sin datos o calculadora demasiado lenta; se detiene la cola para revisar"; log "KICKOFF_QUEUE26_DONE"; exit 1
+fi
 clean_ps
 pkill -f "calc_serve[r].js" 2>/dev/null; sleep 2
 log "inicio commit $(git rev-parse --short HEAD)"
