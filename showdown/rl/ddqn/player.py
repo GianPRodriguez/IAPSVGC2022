@@ -69,7 +69,7 @@ class DDQNPlayer(FamilyPreviewMixin, Player):
         assert isinstance(battle, DoubleBattle)
         try:
             snap = snapshot_from_battle(battle, stat_beliefs=player_stat_beliefs(self))
-            obs = build_observation_ddqn(snap)
+            obs = build_observation_ddqn(snap, abilities=bool(getattr(self.agent.cfg, 'obs_abilities', False)))
             mask = legal_joint_mask(battle)
             joint = self.agent.act(obs, mask, epsilon=self.epsilon)
             self.last_joint = int(joint)

@@ -9,6 +9,7 @@ Examples::
 from __future__ import annotations
 
 import argparse
+import os
 import json
 from dataclasses import asdict
 from pathlib import Path
@@ -569,6 +570,7 @@ def run_training(
     lr: Optional[float] = None,
     clip_eps: Optional[float] = None,
     ent_coef: Optional[float] = None,
+    obs_abilities: Optional[bool] = None,
     num_envs: int = 1,
     envs_per_server: int = 4,
     base_port: Optional[int] = None,
@@ -611,6 +613,11 @@ def run_training(
     if bc_checkpoint and not resume:
         agent.load_bc_weights(bc_checkpoint)
         print(f'[ppo] loaded BC checkpoint {bc_checkpoint} lr={agent.cfg.lr_post_bc}')
+    if obs_abilities is not None and not resume:
+        agent.cfg.obs_abilities = bool(obs_abilities)
+    # La observación de este proceso y de sus entornos (heredan la variable) sigue al checkpoint.
+    os.environ['RL_OBS_ABILITIES'] = '1' if agent.cfg.obs_abilities else '0'
+    print(f'[ppo] observación: corrección de habilidades (P5) = {bool(agent.cfg.obs_abilities)}', flush=True)
 
     rng = np.random.default_rng(int(seed) + 17)
     ckpt_dir = Path(checkpoint_dir)
@@ -949,6 +956,7 @@ def _main(argv: Optional[list] = None) -> int:
     p.add_argument('--smoke', action='store_true', help='Treat as smoke (suite default 0)')
     p.add_argument('--lr', type=float, default=None, help='Override PPOConfig.lr')
     p.add_argument('--clip-eps', type=float, default=None, help='Override PPOConfig.clip_eps')
+    p.add_argument('--obs-abilities', type=int, choices=(0, 1), default=None, help='corrección de habilidades en la observación (P5): 1 = sí (por defecto en entrenamientos nuevos), 0 = como PPO v1')
     p.add_argument('--ent-coef', type=float, default=None,
                    help='Override PPOConfig.ent_coef (por defecto 0,01; memorizacion_equipos.md §14)')
     p.add_argument('--eval-every', type=int, default=250_000,
@@ -1018,6 +1026,7 @@ def _main(argv: Optional[list] = None) -> int:
         lr=args.lr,
         clip_eps=args.clip_eps,
         ent_coef=args.ent_coef,
+        obs_abilities=None if args.obs_abilities is None else bool(args.obs_abilities),
         num_envs=args.num_envs,
         envs_per_server=args.envs_per_server,
         base_port=args.base_port,

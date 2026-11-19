@@ -987,3 +987,48 @@ Código: `showdown/rl/pokeenv_backend.py` (rivales `greedy_joint_arq` y `ppo_v1`
 (`--sample`, `--temperature`, rivales extra), `showdown/rl/team_archetypes.py`. Tests:
 `tests/test_ppo_v2.py`. Script: `scripts/server/kickoff_queue24.sh`; resumen:
 `showdown/rl/kickoff_summary24.py`. Duración estimada ~8,2 h. Resultados: pendientes.
+
+## 18. P5: corrección de habilidades en la observación (vigesimoquinta cola, 18-11-2026)
+
+**Hallazgo del usuario en la prueba online:** Primarina atacaba con Hyper Voice teniendo
+Charizard-Mega-Y el sol activo. Diagnóstico:
+- El agente sí sabe que Charizard con Charizardite Y trae sol: la observación calcula la forma Mega
+  con su habilidad (Drought) a partir de la hoja abierta del rival.
+- Lo que no sabía es que **su propio Hyper Voice es de tipo Agua**: la estimación de daño no
+  aplicaba Liquid Voice y lo trataba como Normal.
+
+| Hyper Voice de Primarina (con sol) | La obs decía (Normal) | Real (Agua, STAB, sol) |
+|---|---|---|
+| Venusaur (Planta/Veneno) | ×1 | ×0,375 |
+| Charizard-Mega-Y (Fuego/Volador) | ×1 | ×1,5 (sin sol, ×3) |
+| Garchomp (Dragón/Tierra) | ×1 | ×0,375 |
+
+Revisión de las habilidades del pool que afectan el daño:
+- **Sin modelar:** Liquid Voice (10 equipos y el nuestro) y Parental Bond (3).
+- **Solo como marca en el perfil:** las habilidades de potencia (Tough Claws 41 equipos, Fairy Aura
+  69, Sharpness, Iron Fist, Technician…) aparecían como marca, pero el cálculo de daño no las
+  aplicaba.
+- **Ya modeladas:** -ate, Adaptability, Huge Power, inmunidades, Multiscale y Filter.
+- El estudio de arquetipos (P2) no lo habría corregido: cambia cómo juega el rival, no lo que el
+  agente sabe de sus propios movimientos.
+
+**Corrección (P5, rl_env_spec v1.32):**
+- Liquid Voice, las habilidades de potencia y algunas defensivas entran en la estimación de daño, el
+  código de efectividad, el aviso de redirección y el tipo de los movimientos rivales.
+- El perfil compartido con el preview no cambia: el preview v2 sigue igual.
+
+**Decisión del usuario: P5 se activa en PPO y DDQN.**
+- Por defecto en los entrenamientos nuevos.
+- Cada checkpoint guarda con qué observación se entrenó (`obs_abilities`). PPO v1 y los DDQN
+  anteriores cargan con la observación vieja, así que v1 congelado no cambia.
+- Entra en la corrida final de PPO v2 y en el kick-off de DDQN.
+- La vigesimoquinta cola **mide** su efecto; no decide. Configuración final de cada agente, 1M,
+  semillas 0 y 1:
+  - PPO frente a v1, más arquetipo nivel 1 y contra v1 en espejo.
+  - DDQN frente a REG 0,03.
+- Si alguno pierde más de 2 puntos en `val`, se revisa antes de seguir.
+
+Los candidatos de la vigesimocuarta cola (§17) se entrenaron sin P5; sus comparaciones siguen siendo
+válidas porque referencia y candidatos usan la misma observación. Tests:
+`tests/test_obs_abilities.py`. Script: `scripts/server/kickoff_queue25.sh` (espera a la 24); resumen:
+`showdown/rl/kickoff_summary25.py`. Duración estimada ~4,3 h. Resultados: pendientes.

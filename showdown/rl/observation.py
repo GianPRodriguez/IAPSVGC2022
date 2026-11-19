@@ -210,6 +210,76 @@ def _pick(prof, k: str, mode: str, *, attacker: bool) -> float:
     return prof.smax[k] if high else prof.smin[k]
 
 
+# --------------------------------------------------------------------------- #
+# Habilidades en la estimación de daño (rl_env_spec v1.32; PPO v2, P5).
+# Hallazgo de la prueba online: Liquid Voice no estaba modelada (Hyper Voice de Primarina contaba como
+# Normal: con sol y contra Venusaur la obs decía ×1 y el daño real era ×0,375). Con la corrección se
+# aplican también las habilidades que cambian la potencia (Tough Claws, Fairy Aura, Sharpness…) y
+# algunas defensivas. APAGADA por defecto: v1, DDQN y el preview v2 no cambian. Se activa por
+# checkpoint (PPOConfig.obs_abilities → ``obs_abilities_scope``) o con RL_OBS_ABILITIES=1.
+# --------------------------------------------------------------------------- #
+import contextvars as _cv
+import os as _os
+
+_OBS_ABILITIES: '_cv.ContextVar[Optional[bool]]' = _cv.ContextVar('rl_obs_abilities', default=None)
+
+
+def obs_abilities_default() -> bool:
+    return _os.environ.get('RL_OBS_ABILITIES', '').strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def obs_abilities_on() -> bool:
+    v = _OBS_ABILITIES.get()
+    return obs_abilities_default() if v is None else bool(v)
+
+
+_FLAG_POWER = {'toughclaws': ('contact', 1.3), 'ironfist': ('punch', 1.2), 'strongjaw': ('bite', 1.5),
+               'megalauncher': ('pulse', 1.5), 'sharpness': ('slicing', 1.5), 'punkrock': ('sound', 1.3)}
+_AURA = {'fairyaura': 'Fairy', 'darkaura': 'Dark'}
+
+
+def ability_damage_mods(att_p, def_p, mv) -> Tuple[str, float, float]:
+    """(tipo efectivo, multiplicador de potencia del atacante, multiplicador defensivo)."""
+    m = P._dex()['moves'].get(getattr(mv, 'mid', ''), {}) or {}
+    flags = m.get('flags') or {}
+    ab = getattr(att_p, 'ability', '') or ''
+    dab = getattr(def_p, 'ability', '') or ''
+    t = mv.type
+    pw = 1.0
+    if ab == 'liquidvoice' and flags.get('sound'):
+        t = 'Water'
+    fp = _FLAG_POWER.get(ab)
+    if fp and flags.get(fp[0]):
+        pw *= fp[1]
+    if ab == 'technician' and 0 < float(m.get('basePower') or 0) <= 60:
+        pw *= 1.5
+    if ab == 'sheerforce' and (m.get('secondaries') or m.get('secondary')):
+        pw *= 1.3
+    if _AURA.get(ab) == t:
+        pw *= 4.0 / 3.0
+    if ab == 'parentalbond' and not mv.spread and mv.fixed_damage is None:
+        pw *= 1.25
+    if ab == 'waterbubble' and t == 'Water':
+        pw *= 2.0
+    d = 1.0
+    if dab == 'thickfat' and t in ('Fire', 'Ice'):
+        d *= 0.5
+    if dab in ('heatproof', 'waterbubble') and t == 'Fire':
+        d *= 0.5
+    if dab == 'purifyingsalt' and t == 'Ghost':
+        d *= 0.5
+    if dab == 'fluffy':
+        d *= (0.5 if flags.get('contact') else 1.0) * (2.0 if t == 'Fire' else 1.0)
+    return t, pw, d
+
+
+def effective_move_type(att_p, mv) -> str:
+    """Tipo del movimiento con las habilidades de la corrección (si está activa)."""
+    if not obs_abilities_on():
+        return mv.type
+    return ability_damage_mods(att_p, att_p, mv)[0]
+
+
 def move_damage_frac(att_p, att: MonSnapshot, def_p, dfn: MonSnapshot, mv, field: FieldSnapshot,
                      *, defender_is_ours: bool, mode: str = 'mid') -> float:
     """Daño de ``mv`` como fracción del HP MÁXIMO del defensor.
@@ -218,13 +288,15 @@ def move_damage_frac(att_p, att: MonSnapshot, def_p, dfn: MonSnapshot, mv, field
     'max' = mejor caso (atacante máx., defensor mín., tirada 1.00);
     'min' = peor caso (atacante mín., defensor máx., tirada 0.85).
     """
+    fix = obs_abilities_on()
+    raw_type, pw_mult, def_mult = ability_damage_mods(att_p, def_p, mv) if fix else (mv.type, 1.0, 1.0)
     immune_type = P.IMMUNITY_ABILITIES.get(def_p.ability)
-    mtype = P.normalize_type(mv.type)
+    mtype = P.normalize_type(raw_type)
     if immune_type and mtype == immune_type and att_p.ability != 'moldbreaker':
         return 0.0
     if mtype == 'Ground' and P.to_id(dfn.item) == 'airballoon':
         return 0.0
-    eff = P.type_effectiveness(mv.type, def_p.types)
+    eff = P.type_effectiveness(raw_type, def_p.types)
     if eff <= 0:
         return 0.0
     hp = max(1.0, _pick(def_p, 'hp', mode, attacker=False))
@@ -251,13 +323,13 @@ def move_damage_frac(att_p, att: MonSnapshot, def_p, dfn: MonSnapshot, mv, field
             d *= 1.5
     if mv.defensive_stat == 'def' and w == 'snow' and 'Ice' in def_p.types:
         d *= 1.5
-    base = math.floor(math.floor(22.0 * mv.power * a / d) / 50.0) + 2.0
+    base = math.floor(math.floor(22.0 * mv.power * pw_mult * a / d) / 50.0) + 2.0
     mod = {'mid': 0.925, 'max': 1.0, 'min': 0.85}[mode]
     if mv.spread:
         mod *= 0.75
-    if mv.type in att_p.types:
+    if raw_type in att_p.types:
         mod *= 2.0 if att_p.ability == 'adaptability' else 1.5
-    mod *= eff
+    mod *= eff * def_mult
     if w == 'rain':
         mod *= 1.5 if mtype == 'Water' else (0.5 if mtype == 'Fire' else 1.0)
     elif w == 'sun':
@@ -366,10 +438,11 @@ def _redirected(mtype: str, target: str, foe_side_profiles) -> bool:
     return False
 
 
-def _eff_code(mv, def_p) -> float:
+def _eff_code(mv, def_p, att_p=None) -> float:
     if def_p is None:
         return 0.0
-    eff = P.type_effectiveness(mv.type, def_p.types)
+    t = effective_move_type(att_p, mv) if att_p is not None else mv.type
+    eff = P.type_effectiveness(t, def_p.types)
     if eff <= 0:
         return -1.0
     return max(-1.0, min(1.0, math.log2(eff) / 2.0))
@@ -425,7 +498,7 @@ def _our_move_block(snap: BattleSnapshot, ours: List[Optional[MonSnapshot]],
                     frac = move_damage_frac(prof, mon, fp, f, mv, field, defender_is_ours=False)
                     v[65 + fi] = min(2.0, frac) / 2.0
                     v[68 + fi] = 1.0 if _cur_frac(frac, f) >= 1.0 else 0.0
-                    v[70 + fi] = _eff_code(mv, fp)
+                    v[70 + fi] = _eff_code(mv, fp, prof)
                 if ally is not None and ally_p is not None and not ally.fainted and \
                         str(m.get('target')) in ('allAdjacent', 'adjacentAlly', 'adjacentAllyOrSelf'):
                     v[67] = min(2.0, move_damage_frac(prof, mon, ally_p, ally, mv, field,
@@ -448,7 +521,7 @@ def _our_move_block(snap: BattleSnapshot, ours: List[Optional[MonSnapshot]],
                 f, fp = foes[fi], foe_profiles[fi]
                 if f is not None and fp is not None:
                     v[74 + fi] = 1.0 if _priority_blocked(prio, cat, prof, fp, f, foe_profiles, field) else 0.0
-            v[76] = 1.0 if _redirected(dmg[0].type if dmg else str(m.get('type') or ''),
+            v[76] = 1.0 if _redirected(effective_move_type(prof, dmg[0]) if dmg else str(m.get('type') or ''),
                                        str(m.get('target') or 'normal'), foe_profiles) else 0.0
     return out
 
@@ -470,7 +543,7 @@ def _foe_move_block(snap: BattleSnapshot, ours: List[Optional[MonSnapshot]],
             v = out[o:o + FOE_MOVE_DIM]
             dmg, _agg, util = P._move_infos([mid], prof.ability, prof.types)
             v[0] = 1.0
-            mtype = dmg[0].type if dmg else str(m.get('type') or '')
+            mtype = effective_move_type(prof, dmg[0]) if dmg else str(m.get('type') or '')
             nt = P.normalize_type(mtype)
             if nt in P.TYPES:
                 v[1 + P.TYPES.index(nt)] = 1.0
@@ -568,13 +641,23 @@ def _field_block(snap: BattleSnapshot, ours, foes) -> np.ndarray:
 # API
 # --------------------------------------------------------------------------- #
 
-_LAST: Tuple[Optional[BattleSnapshot], Optional[np.ndarray]] = (None, None)
+_LAST: Tuple[Optional[BattleSnapshot], Optional[np.ndarray], Optional[bool]] = (None, None, None)
 
 
-def build_observation(battle: BattleSnapshot) -> np.ndarray:
-    """float32[OBS_DIM]. Memo del último snapshot (env y entrenador piden la misma obs)."""
+def build_observation(battle: BattleSnapshot, *, abilities: Optional[bool] = None) -> np.ndarray:
+    """float32[OBS_DIM]. Memo del último snapshot (env y entrenador piden la misma obs).
+
+    ``abilities``: corrección de habilidades en el daño (P5); None = RL_OBS_ABILITIES / contexto.
+    """
+    if abilities is not None and abilities != obs_abilities_on():
+        tok = _OBS_ABILITIES.set(bool(abilities))
+        try:
+            return build_observation(battle)
+        finally:
+            _OBS_ABILITIES.reset(tok)
     global _LAST
-    if _LAST[0] is battle and _LAST[1] is not None:
+    flag = obs_abilities_on()
+    if _LAST[0] is battle and _LAST[1] is not None and _LAST[2] == flag:
         return _LAST[1].copy()
     ours = _our_slots(battle.our)
     foes = _foe_slots(battle.foe)
@@ -592,17 +675,17 @@ def build_observation(battle: BattleSnapshot) -> np.ndarray:
     ]).astype(np.float32)
     if obs.shape[0] != OBS_DIM:  # pragma: no cover - garantía de contrato
         raise AssertionError(f'obs {obs.shape[0]} != OBS_DIM {OBS_DIM}')
-    _LAST = (battle, obs)
+    _LAST = (battle, obs, flag)
     return obs.copy()
 
 
-def build_observation_ddqn(battle: BattleSnapshot) -> np.ndarray:
+def build_observation_ddqn(battle: BattleSnapshot, *, abilities: Optional[bool] = None) -> np.ndarray:
     """v2: igual para todos los agentes (ya no hay segmento belief que anular)."""
-    return build_observation(battle)
+    return build_observation(battle, abilities=abilities)
 
 
-def build_observation_ppo(battle: BattleSnapshot) -> np.ndarray:
-    return build_observation(battle)
+def build_observation_ppo(battle: BattleSnapshot, *, abilities: Optional[bool] = None) -> np.ndarray:
+    return build_observation(battle, abilities=abilities)
 
 
 def obs_layout() -> Dict[str, Tuple[int, int]]:

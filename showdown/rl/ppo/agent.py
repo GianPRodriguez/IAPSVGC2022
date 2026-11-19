@@ -23,6 +23,9 @@ class PPOConfig:
     epochs: int = 4
     vf_coef: float = 0.5
     ent_coef: float = 0.01
+    # Corrección de habilidades en la observación (P5, rl_env_spec v1.32). Checkpoints anteriores
+    # (PPO v1) no la tienen: al cargarlos queda en False.
+    obs_abilities: bool = True
     grad_clip: float = 0.5
     device: str = 'cpu'
     seed: int = 0
@@ -453,6 +456,7 @@ class PPOAgent:
         except TypeError:
             payload = torch.load(path, map_location=loc)
         if 'config' in payload and isinstance(payload['config'], dict):
+            self.cfg.obs_abilities = False  # anteriores a P5: observación sin la corrección
             for k, v in payload['config'].items():
                 if hasattr(self.cfg, k):
                     setattr(self.cfg, k, v)

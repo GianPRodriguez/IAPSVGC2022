@@ -117,13 +117,13 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                 for _ in range(80):
                     battle = env.backend._battle
                     if agent_kind == 'ppo':
-                        obs = build_observation_ppo(env._snap)
+                        obs = build_observation_ppo(env._snap, abilities=bool(agent.cfg.obs_abilities))
                         p1, _ = pe_autoregressive_masks(battle, slot1_action_id=None)
                         a1, a2, _lp, _v = agent.act(
                             obs, p1, lambda x, _b=battle: pe_autoregressive_masks(_b, slot1_action_id=int(x))[1],
                             greedy=not sample, temperature=temperature)
                     else:
-                        obs = build_observation_ddqn(env._snap)
+                        obs = build_observation_ddqn(env._snap, abilities=bool(agent.cfg.obs_abilities))
                         a = agent.act(obs, _joint_masks(env), epsilon=0.0)
                         a1, a2 = decode_joint_action(int(a))
                     m1, _ = pe_autoregressive_masks(battle, slot1_action_id=None)
@@ -173,6 +173,7 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
             'partidas': games_log,
             'preview_forzado': os.environ.get('PREVIEW_FORCE_ORDER', '') or None,
             'joint_arquetipo': os.environ.get('PS_JOINT_ARCHETYPE', '') or None,
+            'obs_habilidades': bool(agent.cfg.obs_abilities),
             'muestreo': {'activo': bool(sample), 'temperatura': float(temperature)} if sample else None,
             'total': dict(total),
             **({'contexto': {c: dict(v) for c, v in ctx_counts.items()}} if context else {})}

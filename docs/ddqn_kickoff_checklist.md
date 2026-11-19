@@ -759,6 +759,16 @@ lectura con `MANIFEST.md5`. Diseño y reglas de adopción en
 [`memorizacion_equipos.md`](memorizacion_equipos.md) §17. Script: `scripts/server/kickoff_queue24.sh`.
 Duración estimada ~8,2 h. Resultados: pendientes.
 
+### P5: corrección de habilidades en la observación (vigesimoquinta cola, 18-11-2026)
+
+Hallazgo del usuario en la prueba online: Primarina usaba Hyper Voice con el sol de Charizard-Mega-Y.
+La observación no aplicaba Liquid Voice (Hyper Voice contaba como Normal, no como Agua); tampoco las
+habilidades de potencia. **Decisión del usuario: P5 activo en PPO y DDQN** (por defecto en los
+entrenamientos nuevos; los checkpoints anteriores conservan su observación). Entra en el kick-off de
+DDQN y en la corrida final de PPO v2. La cola mide su efecto (2 semillas por agente). Detalle en
+[`memorizacion_equipos.md`](memorizacion_equipos.md) §18. Script: `scripts/server/kickoff_queue25.sh`.
+Resultados: pendientes.
+
 ## D. Metodología
 
 | # | Punto | Estado |

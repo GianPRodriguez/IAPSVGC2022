@@ -66,6 +66,9 @@ class DDQNConfig:
     # Cabeza de la red Q (memorizacion_equipos.md §10; ddqn_spec 1.21). 'joint' = 1 600 salidas
     # (por defecto); 'factored' = V + A1(a1) + A2(a2) + interacción de rango q_rank.
     q_head: str = 'joint'
+    # Corrección de habilidades en la observación (P5, rl_env_spec v1.32); al cargar checkpoints
+    # anteriores queda en False.
+    obs_abilities: bool = True
     q_rank: int = 0
 
 
@@ -357,6 +360,7 @@ class DDQNAgent:
             for k in ('weight_decay', 'dropout', 'foe_bench_dropout'):
                 setattr(self.cfg, k, 0.0)
             self.cfg.q_head, self.cfg.q_rank = 'joint', 0
+            self.cfg.obs_abilities = False  # anteriores a P5 (rl_env_spec v1.32)
             for k, v in payload['config'].items():
                 if hasattr(self.cfg, k):
                     setattr(self.cfg, k, v)

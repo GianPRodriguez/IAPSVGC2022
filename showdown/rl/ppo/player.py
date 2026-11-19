@@ -58,7 +58,7 @@ class PPOPlayer(FamilyPreviewMixin, Player):
         assert isinstance(battle, DoubleBattle)
         try:
             snap = snapshot_from_battle(battle, stat_beliefs=player_stat_beliefs(self))
-            obs = build_observation_ppo(snap)
+            obs = build_observation_ppo(snap, abilities=bool(getattr(self.agent.cfg, 'obs_abilities', False)))
             m1, _m2u = pe_autoregressive_masks(battle, slot1_action_id=None)
 
             def m2_fn(a1: int):

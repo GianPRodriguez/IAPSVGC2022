@@ -19,6 +19,7 @@ Examples::
 from __future__ import annotations
 
 import argparse
+import os
 import json
 import re
 from dataclasses import asdict, dataclass
@@ -618,6 +619,7 @@ def run_training(
     foe_bench_dropout: Optional[float] = None,
     q_head: Optional[str] = None,
     q_rank: Optional[int] = None,
+    obs_abilities: Optional[bool] = None,
     train_freq: Optional[int] = None,
     batch_size: Optional[int] = None,
     num_envs: int = 1,
@@ -674,6 +676,10 @@ def run_training(
         resume_skip = int(agent.env_steps)
         print(f'[ddqn] reanudando desde {resume}: {resume_skip} pasos hechos, grad_steps='
               f'{agent.grad_steps}; el replay se rellena antes de volver a aprender', flush=True)
+    if obs_abilities is not None and not resume:
+        agent.cfg.obs_abilities = bool(obs_abilities)
+    os.environ['RL_OBS_ABILITIES'] = '1' if agent.cfg.obs_abilities else '0'
+    print(f'[ddqn] observación: corrección de habilidades (P5) = {bool(agent.cfg.obs_abilities)}', flush=True)
     rng = np.random.default_rng(int(seed) + 17)
     ckpt_dir = Path(checkpoint_dir)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
@@ -1042,6 +1048,7 @@ def _main(argv: Optional[list] = None) -> int:
                    help='Prob. de borrar cada Pokémon rival no activo de la obs al aprender (§8, b)')
     p.add_argument('--q-head', choices=('joint', 'factored'), default=None,
                    help="Cabeza de la red Q: 'joint' (1 600 salidas, por defecto) o 'factored' (por hueco, §10)")
+    p.add_argument('--obs-abilities', type=int, choices=(0, 1), default=None, help='corrección de habilidades en la observación (P5): 1 = sí (por defecto en entrenamientos nuevos), 0 = como PPO v1')
     p.add_argument('--q-rank', type=int, default=None,
                    help='Rango de la interacción entre huecos con --q-head factored (0 = aditiva)')
     p.add_argument('--train-freq', type=int, default=None, help='Pasos de entorno por paso de gradiente (defecto 4)')
@@ -1109,6 +1116,7 @@ def _main(argv: Optional[list] = None) -> int:
         weight_decay=args.weight_decay, dropout=args.dropout,
         foe_bench_dropout=args.foe_bench_dropout,
         q_head=args.q_head, q_rank=args.q_rank,
+        obs_abilities=None if args.obs_abilities is None else bool(args.obs_abilities),
         train_freq=args.train_freq,
         batch_size=args.batch_size,
         num_envs=args.num_envs,
