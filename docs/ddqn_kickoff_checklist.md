@@ -688,7 +688,33 @@ partidas por rival: final.pt contra `eval` (principal), best.pt contra `eval` (s
 contra sus propios equipos, y final.pt contra greedy_joint en modo arquetipo (con `--context`;
 recomendado tras §14.4, ~2 min por semilla). Resumen: `showdown/rl/kickoff_report.py` (sección 3b
 para el rival de arquetipos). Script: `scripts/server/kickoff_ppo_oficial.sh`. Duración estimada
-~5,5 h. Resultados: pendientes.
+~5,5 h (real: 15:40 → 21:01, commit f671e65, salida `~/iapsvgc_runs/kickoff_ppo1`; todo rc=0).
+
+**Resultados (equipo fijo `ddqn_team.txt`, 200 partidas por rival, 600 contra los 3 heurísticos por
+semilla):**
+
+| Medida | Media (IC 95 % entre semillas) | Por semilla (0 / 1 / 2 / 3 / 4) |
+|---|---|---|
+| **final.pt contra `eval`** (principal) | **81,2 % (± 3,5)**; por partidas ± 1,4 | 81,3 / 81,3 / 84,0 / 82,8 / 76,7 |
+| best.pt contra `eval` (secundario) | 81,1 % | 77,7 / 80,0 / 83,0 / 83,7 / 81,0 |
+| final.pt contra sus propios equipos (`fit`) | 96,2 % (brecha −15,0) | 96,0 / 96,0 / 96,5 / 97,5 / 95,2 |
+| final.pt contra joint arquetipo | 77,1 % (± 2,2); joint normal 82,8 % (−5,7) | 76,0 / 77,5 / 76,5 / 80,0 / 75,5 |
+
+Por rival (final.pt, `eval`): random 99,1 % (± 0,7), greedy_solo 82,7 % (± 4,4), greedy_joint
+82,8 % (± 3,9), expectimax 78,2 % (± 4,7).
+
+1. **Reproduce los pilotos:** 81,2 % frente a ~83–85 % de PPO con simetría en 2 semillas (colas 12 y
+   22); la diferencia cabe en el IC entre semillas. La semilla 4 es la más débil (76,7 %); en ella
+   best.pt (81,0 %) supera a final.pt, pero en la media best.pt y final.pt empatan (81,1 frente a
+   81,2), así que la regla de usar final.pt como resultado principal no cambia nada.
+2. **Expectimax sigue siendo el rival más difícil** (78,2 %), aunque PPO le gana con holgura en todas
+   las semillas (73–83 %).
+3. **Brecha de memorización de 15 puntos** (96,2 % con equipos rivales vistos frente a 81,2 % con
+   desconocidos), similar a los pilotos.
+4. **Rival de arquetipos:** −5,7 puntos (piloto: −7,0), estable entre semillas (± 2,2).
+
+Resumen completo: `~/iapsvgc_runs/kickoff_ppo1/kickoff_summary16.md`. Kick-off de DDQN: pendiente de
+la decisión del usuario.
 
 ## D. Metodología
 
