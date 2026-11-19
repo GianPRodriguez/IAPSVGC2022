@@ -880,3 +880,66 @@ referencia.
 arquetipos) para que la recompensa vuelva a discriminar, y entrenar con varios combates (varias
 semillas).
 
+
+## 16. Arquetipos del pool de equipos (18-11-2026)
+
+Pregunta del usuario tras la prueba online (ddqn_kickoff_checklist.md, "Prueba online"): ¿qué
+arquetipos hay en nuestros 300 equipos? Script: `scripts/analysis/arquetipos_pool.py` (etiquetas a
+partir de las hojas: movimientos, habilidades y objetos; un equipo puede tener varias).
+
+**Arquetipo primario** (precedencia: Trick Room > clima > Tailwind > Campo Psíquico > equilibrado):
+
+| Arquetipo | `train` | `eval` | Total | % |
+|---|---|---|---|---|
+| Tailwind | 72 | 45 | 117 | 39 % |
+| Trick Room | 48 | 22 | 70 | 23 % |
+| Equilibrado / ofensivo (sin plan de campo) | 36 | 5 | 41 | 14 % |
+| Sol | 18 | 9 | 27 | 9 % |
+| Arena | 7 | 9 | 16 | 5 % |
+| Lluvia | 9 | 7 | 16 | 5 % |
+| Nieve | 10 | 2 | 12 | 4 % |
+| Campo Psíquico | 0 | 1 | 1 | 0 % |
+
+**Etiquetas** (no excluyentes; "Equipo fijo" = tu equipo, `ddqn_team.txt`):
+
+| Etiqueta | Total (de 300) | Equipo fijo |
+|---|---|---|
+| Setup (Swords Dance, Nasty Plot, Dragon Dance…) | 207 | sí |
+| Tailwind | 207 | sí (Staraptor) |
+| Campo de Hierba (casi siempre Rillaboom) | 195 | sí |
+| Fake Out en 2+ Pokémon | 176 | sí |
+| Trick Room | 70 | |
+| Redirección (Follow Me / Rage Powder) | 60 | |
+| Wide Guard | 55 | |
+| Lluvia (fuente) | 51 | |
+| Disrupción (Encore, Taunt, Trick, Imprison) | 49 | |
+| Pantallas | 39 | |
+| Sol (fuente + abusador o ataque de fuego/Weather Ball) | 39 | |
+| Campo Psíquico | 34 | |
+| Sueño (Spore, Sleep Powder, Yawn…) | 32 | |
+| Icy Wind / Electroweb / Thunder Wave | 19 | |
+| Arena | 18 | |
+| Nieve | 13 | |
+| Perish Song | 11 | |
+
+Combinaciones de control de velocidad más comunes: solo Tailwind 117, ninguna 42,
+Trick Room + Tailwind + Lluvia 20, Tailwind + Sol 19, solo Trick Room 17, Trick Room + Tailwind 12.
+
+**Lectura:**
+1. **El meta del pool es Tailwind + Trick Room:** 207 equipos llevan Tailwind y 70 Trick Room, pero
+   los heurísticos casi nunca los usan (~0–1 % de las partidas, §14). Es decir, en el entrenamiento
+   **el plan principal de ~3 de cada 4 equipos rivales nunca se ejecuta**. Es el hueco más grande, y
+   el que el rival de arquetipos cubre solo en parte (§14.4).
+2. **El clima sí se vio en el entrenamiento:** viene de habilidades (Drought, Drizzle, Sand Stream,
+   Snow Warning, Charizard-Mega-Y) y se activa solo, sin decisión del heurístico. Sol en 39 equipos
+   (23 de `train`). **Corrección a la prueba online:** el agente sí había enfrentado sol; lo nuevo
+   contra velascoAlvarado fue cómo se jugó (doble Protect el turno 1 mientras evoluciona el Mega,
+   Sleep Powder, Parting Shot), no el clima en sí.
+3. **Sueño** (32 equipos) y **disrupción** (49) existen en el pool, pero un heurístico codicioso
+   rara vez elige movimientos de estado frente a un ataque.
+4. **Tu equipo** es un Tailwind con Campo de Hierba, Fake Out doble y setup: el arquetipo más común
+   del pool, pero que el propio agente tampoco aprendió a usar como plan (Staraptor con Tailwind).
+
+**Implicaciones para P2** (rival de arquetipos en el entrenamiento): priorizar que el rival ejecute
+Tailwind y Trick Room (~77 % del pool) por sobre ampliar a clima (que ya ocurre solo); como añadido,
+el patrón "Protect + preparación" y el uso de sueño.

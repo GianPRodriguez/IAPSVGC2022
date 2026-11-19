@@ -742,8 +742,10 @@ Lo que se ve en los replays:
    salvarlo (el 0 % de cambios voluntarios ya visto, memorizacion_equipos §13.1).
 4. **Primarina repitió Hyper Voice** en vez de concentrar daño; **Arcanine encadenó Protect tres
    turnos** al final (el último falló), sin opciones reales.
-5. **Arquetipo nunca practicado:** sol con Chlorophyll y Mega-Y es un plan de clima que los
-   heurísticos de entrenamiento casi no juegan (mismo hueco que Tailwind y Trick Room, §14.4).
+5. **Patrón de juego no practicado** (corregido tras memorizacion_equipos §16): el sol en sí sí
+   aparece en el entrenamiento (39 equipos del pool; el clima de habilidades se activa solo), pero no
+   cómo lo juega una persona: doble Protect el turno 1 mientras evoluciona el Mega, Sleep Powder y
+   Parting Shot. Los heurísticos casi no usan movimientos de estado ni Tailwind / Trick Room (§14.4).
 
 Conclusión: con 2 partidas no hay estadística, pero sí ilustra las debilidades ya medidas contra un
 humano: falta de adaptación entre partidas, 0 % de cambios voluntarios y arquetipos de campo no vistos
