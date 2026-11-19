@@ -765,9 +765,17 @@ Hallazgo del usuario en la prueba online: Primarina usaba Hyper Voice con el sol
 La observación no aplicaba Liquid Voice (Hyper Voice contaba como Normal, no como Agua); tampoco las
 habilidades de potencia. **Decisión del usuario: P5 activo en PPO y DDQN** (por defecto en los
 entrenamientos nuevos; los checkpoints anteriores conservan su observación). Entra en el kick-off de
-DDQN y en la corrida final de PPO v2. La cola mide su efecto (2 semillas por agente). Detalle en
-[`memorizacion_equipos.md`](memorizacion_equipos.md) §18. Script: `scripts/server/kickoff_queue25.sh`.
-Resultados: pendientes.
+DDQN y en la corrida final de PPO v2. Detalle en
+[`memorizacion_equipos.md`](memorizacion_equipos.md) §18.
+
+**19-11-2026 (§18.1), decisiones del usuario:**
+- Corrección completa con la **calculadora real** (la de los heurísticos) en la observación.
+- **Preview v2.1** con la corrección.
+- **El kick-off de DDQN usa el preview v2.1, no el v2 congelado.**
+- La cola 25 (P5 parcial) se canceló.
+
+Auditoría: 128 habilidades, 173 movimientos y 57 objetos legales con efecto. Primer paso: medir la
+velocidad de la calculadora.
 
 ## D. Metodología
 

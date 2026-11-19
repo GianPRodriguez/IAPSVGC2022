@@ -1039,3 +1039,38 @@ Los candidatos de la vigesimocuarta cola (§17) se entrenaron sin P5; sus compar
 válidas porque referencia y candidatos usan la misma observación. Tests:
 `tests/test_obs_abilities.py`. Script: `scripts/server/kickoff_queue25.sh` (espera a la 24); resumen:
 `showdown/rl/kickoff_summary25.py`. Duración estimada ~4,3 h. Resultados: pendientes.
+
+### 18.1 P5 completo: calculadora real y preview v2.1 (decisiones del usuario, 19-11-2026)
+
+1. **v1 congelado no cambia** (observación y preview v2 originales).
+2. **Desde PPO v2 y el kick-off de DDQN, la corrección es completa.** Todas las habilidades,
+   movimientos y objetos con efectos parecidos, y los efectos de campo como en la realidad (Fairy
+   Aura afecta a todo el campo).
+3. **Enfoque elegido: la calculadora real.** El daño de la observación de DDQN y PPO se toma de la
+   misma calculadora de Showdown (`@smogon/calc`, mecánicas Champions) que usan los heurísticos,
+   a través de `damage_calc_bridge`. Hasta ahora DDQN y PPO usaban una aproximación propia en
+   Python (`move_damage_frac`).
+4. **Preview v2.1:** preview nuevo con la corrección (tipo y potencia efectivos de cada movimiento
+   según la calculadora). Lo usarán PPO v2 y el kick-off de DDQN; **el preview v2 queda congelado
+   con v1**.
+5. **La cola 25 (P5 parcial) se canceló:** quedaba superada (`~/iapsvgc_runs/p5_cancelada_19nov`).
+
+**Auditoría** (`scripts/analysis/audit_damage_effects.js` → `API/JSONs/damage_effects_audit.json`,
+manejadores del simulador de Showdown, dex Champions):
+
+| | Legales con efecto sobre daño, tipo o efectividad | Usados en el pool |
+|---|---|---|
+| Habilidades | 128 | 54 |
+| Movimientos | 173 | 84 |
+| Objetos | 57 | 29 |
+
+Huecos graves de la aproximación anterior, además de Liquid Voice:
+- **Weather Ball** (91 usos en el pool): con sol es Fuego de 100 de potencia; la obs la trataba como
+  Normal de 50.
+- **Last Respects** (106 usos): la potencia sube con los aliados caídos.
+- **Grassy Glide** (191 usos): prioridad con Campo de Hierba.
+- **Fairy Aura** en todo el campo (69 equipos).
+
+**Primer paso: medir la velocidad** (`scripts/analysis/bench_calc_obs.py`). La observación pediría
+~80 cálculos por paso: ~24 000/s para entrenar a la velocidad actual. Según el resultado se decide
+cómo integrarla (lote por observación, caché, cálculo solo de lo necesario).
