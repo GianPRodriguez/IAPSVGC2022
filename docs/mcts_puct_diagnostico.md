@@ -169,4 +169,29 @@ Medición: cola `scripts/server/mcts_g_v3.sh`, mismas semillas que v2 para compa
 pareado: tests, smoke con la calculadora real (se detiene ante cualquier anomalía),
 `v3_n200` 9101–9117, `v3_n200_ownpreview` 9101–9105, barrido 100/400 en 9101–9105.
 
-Resultados: se añadirán aquí.
+### 6.1 Resultados de exploración (2026-11-20, commit 6f85aa9, terminada 09:59)
+
+Tests 40/40 en el servidor; smoke con la calculadora real sin anomalías; **0 anomalías**
+del player en toda la cola (sin fallos de la calculadora, pedidos sin respuesta,
+fallbacks ni rivales sin movimientos). Rival: greedy_joint validado. Δ pareado por semilla
+frente a `v2_n200` en las semillas comunes.
+
+| Config | Semillas × equipos | Series G/total | WR G | IC 95 % (Wilson) | Δ vs v2_n200 (pareado) | Tiempo/semilla |
+|---|---|---:|---:|---|---|---:|
+| `v2_n200` (referencia, §5.1) | 9101–9117 × 300 | 1886/5100 | 37,0 % | [35,7, 38,3] | — | 81 s |
+| **`v3_n200`**, preview greedy | 9101–9117 × 300 | **2935/5100** | **57,5 %** | [56,2, 58,9] | **+20,6 ± 1,5 pts** (17/17 semillas suben) | 83 s |
+| `v3_n100` | 9101–9105 × 300 | 853/1500 | 56,9 % | [54,3, 59,4] | +19,2 ± 2,5 | 57 s |
+| `v3_n400` | 9101–9105 × 300 | 868/1500 | 57,9 % | [55,4, 60,3] | +20,2 ± 2,5 | 133 s |
+| `v3_n200_ownpreview` (**orden fijo `/team 1234`**, sin preview Nash) | 9101–9105 × 300 | 801/1500 | 53,4 % | [50,9, 55,9] | +15,8 ± 2,4 | 83 s |
+
+Lectura (exploración):
+
+- **El modelo era el cuello de botella**: con la misma búsqueda, cambiar S2 por S3 sube
+  a G de 37 % a 57,5 % contra joint, en todas las semillas.
+- El presupuesto sigue en meseta: 100 → 200 → 400 sims dan 56,9 / 57,5 / 57,9 % (pasos
+  dentro del ruido); se mantiene 200 por defecto.
+- El orden fijo de la hoja cuesta ~4 puntos frente al preview greedy (53,4 % frente a
+  57,5–57,9 % en las mismas semillas), igual que en v2. Por eso G v3.1 usa el preview
+  greedy por defecto (decisión del usuario; `team_preview_nash` nunca se entrenó).
+- Confirmación pre-registrada en `protocolo_evaluacion.md` §4.1 (G1–G3 + control G4,
+  bloques C3/C4, solo baselines): en curso, resultados en §6.2.
