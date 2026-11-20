@@ -1353,3 +1353,32 @@ entrenados con el v2.1 anterior), semillas 0 y 1, 200 partidas por rival.
 **Para el kick-off de DDQN**, la forma justa de juzgar el preview es entrenar el combate con él. Eso
 es lo que hacen las semillas 0 y 1 del kick-off, con su control intermedio (Δ`val` ≥ −2 frente a
 DDQN REG).
+
+### 18.6 Resultado del piloto de DDQN con el preview v2.1 nuevo (19-11-2026)
+
+`~/iapsvgc_runs/kickoff_ddqn_v2`, commit 12229a3, todo rc=0. DDQN con la configuración final, P5
+(calculadora: ~1M observaciones por semilla, 0 % de respaldo) y el preview v2.1 sin `val` (semilla
+0), **entrenado junto con ese preview**. 200 partidas por rival.
+
+| Evaluación | Semilla 0 | Semilla 1 | Media | Referencia DDQN REG (preview v2) | DDQN P5 + v2.1 anterior (cola 26) |
+|---|---|---|---|---|---|
+| `final.pt` contra `eval` (principal) | 65,5 % | 62,7 % | **64,1 %** | 65,3 % | 56,5 % |
+| `best.pt` contra `eval` | 60,8 % | 59,3 % | 60,1 % | — | — |
+| Propios | 95,7 % | 95,3 % | 95,5 % | — | — |
+| Arquetipos (joint) | 61,5 % | 61,5 % | 61,5 % | — | — |
+| `val` | 69,0 % | 66,7 % | **67,8 %** | 74,1 % | 75,2 % |
+
+**El control falla:** Δ`val` −6,3 (± 3,6) frente a DDQN REG; la regla pide ≥ −2. El piloto se detuvo,
+como estaba previsto.
+
+**Lectura:**
+1. **En `eval`, la única medida que ningún preview conoce, DDQN con el preview nuevo queda igual que
+   la referencia:** 64,1 % frente a 65,3 %, una diferencia de −1,2 dentro del ruido. Queda 7,6
+   puntos por encima del DDQN entrenado con el v2.1 anterior.
+2. **En `val` pierde 6,3 puntos, pero la comparación está sesgada:** las dos referencias se
+   entrenaron con previews que conocían los equipos de `val` (v2 y v2.1 anterior), y el preview
+   nuevo no. Ese sesgo favorece a las referencias justo en `val`. **No hay hoy una referencia limpia
+   en `val` para DDQN.**
+3. La brecha de memorización de DDQN no cambia (propios 95,5 % frente a `eval` 64 %).
+4. Entrenar el combate junto con el preview corrigió casi toda la caída del test de combate fijo
+   (`eval` 56,5 → 64,1 %): confirma que esa caída venía de formaciones no practicadas.
