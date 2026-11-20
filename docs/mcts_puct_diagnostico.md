@@ -261,4 +261,36 @@ Si no, G sigue con el preview greedy.
 **Secundaria (memorización, descriptiva):** P1 y P2 con los 300 equipos (`all`, incluye
 los de entrenamiento), semillas 9101–9117, en pareado con `v3_n200` (preview greedy, §6.1).
 
-Resultados: se añadirán aquí.
+### 7.1 Resultados (2026-11-20, commit 9761b03, `~/iapsvgc_runs/mcts_g_nash/`)
+
+Entrenamiento live (etiquetas de BO1 reales con greedy_joint): semilla 0 en 36 min (loss
+BCE final 0,619), semilla 1 en 36 min (0,648); la caché compartida de la calculadora
+creció ~95 GB durante el entrenamiento (bajo el límite de 250 GB). Smoke con preview Nash
+sin anomalías (el checkpoint cargó; no cayó al orden fijo). 0 anomalías en la medición.
+
+G v3.1 contra greedy_joint validado, equipos `eval` (no vistos), 9101–9134:
+
+| Id | Preview | Victorias / N | Tasa | IC 95 % (cluster) | Semillas > 50 % |
+|---|---|---|---|---|---|
+| P0 | greedy (tipado + BST) | 2000 / 3394 | **58,93 %** | [57,51; 60,40] | 33/34 |
+| P1 | Nash, semilla 0 | 1783 / 3395 | 52,52 % | [50,91; 54,11] | 21/34 |
+| P2 | Nash, semilla 1 | 1753 / 3397 | 51,60 % | [49,97; 53,16] | 18/34 |
+
+| Comparación (McNemar) | Series donde gana solo cada una | Diferencia | p | p Holm |
+|---|---|---|---|---|
+| P1 frente a P0 | 599 frente a 816 | **−6,42 pts** | 8,8·10⁻⁹ | 8,8·10⁻⁹ |
+| P2 frente a P0 | 584 frente a 835 | **−7,42 pts** | 2,9·10⁻¹¹ | 5,7·10⁻¹¹ |
+
+**Decisión (regla §7): no se adopta.** Las dos semillas del preview Nash son
+significativamente **peores** que el preview greedy (−6,4 y −7,4 puntos); la regla exige
+mejora. G sigue con el preview greedy, y la confirmación de v4 (protocolo §4.2) lo usa
+(`nash_decision` devuelve `greedy` porque las diferencias son negativas).
+
+Lectura: el preview Nash aprende la matriz de pagos con partidas de greedy_joint y la
+resuelve como un juego minimax de horizonte uno; con 200 actualizaciones y muestreo
+uniforme de pares (360 × 360 formaciones por contexto) la matriz es ruidosa (loss ≈ 0,62–0,65
+frente a 0,69 de etiquetas al azar), y las formaciones que elige rinden peor que la regla
+de tipado + BST. Por referencia, G con preview greedy saca 58,9 % con equipos no vistos,
+coherente con el 57,5 % con los 300 equipos (§6.1).
+
+Secundaria (memorización con los 300 equipos): en curso; se añadirá aquí.
