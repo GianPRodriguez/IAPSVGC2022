@@ -1,5 +1,7 @@
 """MCTS+PUCT agent (docs/mcts_puct_spec.md).
 
+``version=4``: S3 fase 3b (+ Protect, Wide Guard, Fake Out, redirección, Helping Hand);
+candidato en medición (spec v4.0).
 ``version=3`` (default desde spec v3.0): open-loop con el modelo S3 (``s3.py``: daño
 real de la calculadora, orden por velocidad/prioridad, área, precisión).
 ``version=2``: open-loop con S2 (``simulator.py``).
@@ -42,7 +44,7 @@ class MCTSPuctConfig:
             inner_top_k=int(self.inner_top_k), opp_temperature=float(self.opp_temperature),
             opp_eps=float(self.opp_eps), rollout_turns=int(self.rollout_turns),
             max_depth=int(self.max_depth), prefer_mega=bool(self.prefer_mega),
-            model='s3' if int(self.version) >= 3 else 's2',
+            model='s3b' if int(self.version) >= 4 else ('s3' if int(self.version) == 3 else 's2'),
         )
 
 

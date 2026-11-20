@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS+PUCT open-loop (solo turnos) |
-| **Versión** | **3.1.1** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
+| **Versión** | **3.1.1** por defecto; **4.0** candidata (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
 | **Estado** | v3.1 confirmada (protocolo §5.2: > joint, expectimax y solo); siguiente fase 3b. Modelo S3 fase 3a; v2 (S2) con `MCTS_PUCT_VERSION=2`, v1 con `=1`. Diagnóstico: [`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md) |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Hiperparámetros de búsqueda (sobre todo \(N_{\rm sim}\)); barrido automatizado |
@@ -173,6 +173,29 @@ Fuera de 3a (fases 3b/3c): Protect, Fake Out, redirección, Helping Hand, Tailwi
 Trick Room como acciones, Intimidate, estados, clima/terreno cambiantes, boosts dentro
 del árbol, críticos. Los movimientos de estado no hacen nada. La tabla se calcula con
 el estado de la raíz (HP, boosts, campo) y no se recalcula dentro del árbol.
+
+---
+
+### 4.3 Fase 3b (v4.0, candidata: `MCTS_PUCT_VERSION=4`)
+
+S3 con `phase='3b'`. Mecánicas añadidas (todas desde el dex de Champions):
+
+| Mecánica | Modelo |
+|---|---|
+| Protect y variantes (`stallingMove` + volátil protect, Spiky Shield, Baneful Bunker, King's Shield…) | Prioridad +4; éxito con prob. \((1/3)^n\), \(n\) = usos seguidos (`protect_counter`); bloquea los movimientos con flag `protect`; Feint (`breaksProtect`) la rompe. Endure no protege |
+| Wide Guard | Bloquea los golpes de área sobre su lado ese turno |
+| Fake Out / First Impression | Solo en el primer turno en campo (`turns_active = 0`); si no, fallan. Fake Out hace retroceder al objetivo (no actúa) salvo Inner Focus, Shield Dust o Covert Cloak |
+| Follow Me / Rage Powder | Los golpes individuales del rival hacia ese lado van al redirector; Rage Powder no afecta a tipo Planta, Overcoat ni Safety Goggles |
+| Helping Hand | El daño del aliado ese turno ×1,5 |
+
+Contadores: `turns_active` sube al final del turno para los activos; un cambio o un
+reemplazo lo pone a 0 (y `protect_counter` también).
+
+Puntuación (prior, rival del árbol, rollout): Protect = 0,5 · \((1/3)^n\) · amenaza entrante;
+Fake Out = daño + 0,5 · daño que el objetivo haría (0 fuera del primer turno);
+Follow Me / Rage Powder = 0,4 · amenaza individual al aliado; Helping Hand = 0,5 · mejor
+daño del aliado; Wide Guard = 0,5 · daño en área sobre el lado. Amenaza = Σ rivales del
+mejor daño esperado (tabla de S3) acotado al HP.
 
 ---
 
@@ -380,6 +403,7 @@ y turno para reproducir RNG.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **4.0** (candidata) | 2026-11-20 | Fase 3b (§4.3): Protect y variantes con \((1/3)^n\), Feint, Wide Guard, Fake Out / First Impression con primer turno y retroceso, Follow Me / Rage Powder, Helping Hand; puntuación de jugadas de apoyo por amenaza evitada. Uso en el meta (1800 sets): Protect 1182, Fake Out 459, Helping Hand 73, Wide Guard 57, Follow Me 35, Rage Powder 29. `MCTS_PUCT_VERSION=4`; el default sigue en 3 hasta medirla en pareado contra v3.1. |
 | **3.1.1** | 2026-11-20 | Sin cambios de decisión: S3 pide a la calculadora con `persist=False` (solo caché en memoria). La caché en disco `calc_cache.sqlite` no tiene límite y la clave lleva el HP actual: con S3 llegó a 386 GB en un día y llenó el disco del servidor. Confirmación de v3.1 (protocolo §5.2): superioridad práctica sobre joint (56,3 %), expectimax (56,3 %) y solo (59,6 %). |
 | **3.1** | 2026-11-20 | **Preview greedy por defecto** (tipado + BST, el de solo/joint/expectimax), decisión del usuario: `team_preview_nash` nunca se entrenó (solo un checkpoint de smoke con etiquetas mock) y G caía al orden fijo `/team 1234` (−4 pts medidos en v2). `MCTS_PREVIEW=nash` vuelve al preview de familia. No se usa el preview PPO (sin componentes RL en G). Combate idéntico a v3.0. |
 | **3.0** | 2026-11-20 | Fase 3a del plan: modelo **S3** (`s3.py`) en lugar de S2 para G. Tabla de daño real por decisión (un lote a la calculadora, mismos pedidos que P5), stats del rival por prior meta LOO, orden por prioridad y velocidad efectiva (Tailwind, Trick Room), redirección de golpes individuales, área ×0,75 con fuego amigo, precisión por movimiento; prior, rival del árbol y rollout puntúan con la tabla (+ bono de KO). Dex de Champions (el antiguo no tenía 21 movimientos del meta). `MCTS_PUCT_VERSION=2` reproduce v2. Motivo: v2 con meseta en 37–38 % contra joint aunque se suban las sims (diagnóstico §5.2). |

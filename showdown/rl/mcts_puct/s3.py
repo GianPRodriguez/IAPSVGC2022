@@ -20,9 +20,16 @@ Qué modela (fase 3a):
   área sobre los rivales vivos (y el aliado en ``allAdjacent``) con ×0,75 si golpea a
   más de uno; precisión por movimiento.
 
-Qué NO modela todavía (fases 3b/3c): Protect, Fake Out, redirección, Helping Hand,
-Tailwind/Trick Room como acciones, Intimidate, estados, clima/terreno cambiantes,
-boosts dentro del árbol, críticos. Los movimientos de estado no hacen nada.
+Fase 3b (``phase='3b'``, MCTS+PUCT v4): Protect y variantes (falla con prob. creciente si
+se repite: 1/3^n), Wide Guard (bloquea área en su lado), Fake Out y First Impression (solo
+en el primer turno en campo; Fake Out hace retroceder salvo Inner Focus / Covert Cloak),
+Follow Me / Rage Powder (redirigen los golpes individuales del rival; Rage Powder no
+afecta a tipo Planta, Overcoat ni Safety Goggles) y Helping Hand (×1,5 al aliado). Feint
+rompe la protección. La puntuación (prior, rival, rollout) valora estas jugadas con la
+amenaza que evitan.
+
+Qué NO modela todavía (fase 3c): Tailwind/Trick Room como acciones, Intimidate, estados,
+clima/terreno cambiantes, boosts dentro del árbol, críticos, Quick Guard, Spotlight.
 """
 from __future__ import annotations
 
@@ -42,6 +49,15 @@ _SINGLE = {'normal', 'adjacentfoe', 'any', 'randomnormal'}
 _SPREAD_FOES = 'alladjacentfoes'
 _SPREAD_ALL = 'alladjacent'
 KO_BONUS = 40.0  # puntos de % por KO esperado en la puntuación (prior / rival / rollout)
+# Fase 3b: peso de la amenaza evitada en la puntuación de jugadas de apoyo.
+PROTECT_W = 0.5     # Protect: fracción de la amenaza entrante que "vale" protegerse
+FLINCH_W = 0.5      # Fake Out: fracción del daño del objetivo que se le niega
+REDIRECT_W = 0.4    # Follow Me / Rage Powder: fracción de la amenaza al aliado absorbida
+HELP_W = 0.5        # Helping Hand: fracción del daño del aliado que se suma (×1,5 → +50 %)
+WIDEGUARD_W = 0.5   # Wide Guard: fracción del daño en área evitado
+_PROTECT_VOL = {'protect', 'kingsshield', 'spikyshield', 'banefulbunker', 'silktrap',
+                'obstruct', 'burningbulwark', 'maxguard'}
+_FIRST_TURN = {'fakeout', 'firstimpression'}
 
 
 def _norm(s) -> str:
@@ -88,6 +104,46 @@ def target_class(move_id: str) -> str:
     return 'none'
 
 
+def move_effect(move_id: str) -> str:
+    """Efecto de fase 3b: protect | wideguard | redirect | redirect_powder | helpinghand | ''."""
+    e = dex_move(move_id)
+    vol = _norm(e.get('volatileStatus'))
+    if e.get('stallingMove') and vol in _PROTECT_VOL:
+        return 'protect'
+    if _norm(e.get('sideCondition')) == 'wideguard':
+        return 'wideguard'
+    if vol == 'followme':
+        return 'redirect'
+    if vol == 'ragepowder':
+        return 'redirect_powder'
+    if vol == 'helpinghand':
+        return 'helpinghand'
+    return ''
+
+
+def _flags(move_id: str) -> set:
+    f = dex_move(move_id).get('flags') or []
+    return set(f) if isinstance(f, (list, tuple, set)) else {k for k, v in dict(f).items() if v}
+
+
+def blockable(move_id: str) -> bool:
+    """¿Protect lo bloquea? (flag ``protect`` y sin ``breaksProtect``)."""
+    return 'protect' in _flags(move_id) and not dex_move(move_id).get('breaksProtect')
+
+
+def breaks_protect(move_id: str) -> bool:
+    return bool(dex_move(move_id).get('breaksProtect'))
+
+
+def _powder_immune(m: MonSnapshot) -> bool:
+    types = {_norm(t) for t in (m.types or ())}
+    return 'grass' in types or _norm(m.ability) == 'overcoat' or _norm(m.item) == 'safetygoggles'
+
+
+def _flinch_immune(m: MonSnapshot) -> bool:
+    return _norm(m.ability) in ('innerfocus', 'shielddust') or _norm(m.item) == 'covertcloak'
+
+
 def is_damaging(move_id: str) -> bool:
     entry = dex_move(move_id)
     if str(entry.get('category') or '').lower() == 'status':
@@ -131,6 +187,7 @@ class S3Model:
     speed: Dict[Tuple[str, str], int] = field(default_factory=dict)
     prio: Dict[Tuple[Tuple[str, str], str], int] = field(default_factory=dict)
     trick_room: bool = False
+    phase: str = '3a'
     stats: S3Stats = field(default_factory=S3Stats)
 
     # ------------------------------------------------------------------ build
@@ -141,6 +198,7 @@ class S3Model:
         *,
         stat_beliefs=None,
         ranges_fn: Optional[Callable] = None,
+        phase: str = '3a',
     ) -> 'S3Model':
         """Etiqueta los Pokémon de ``root`` (se modifica in situ: es la copia preparada)
         y resuelve la tabla de daño en un lote."""
@@ -149,7 +207,7 @@ class S3Model:
         from showdown.stat_inference import effective_speed, move_priority
 
         t0 = time.perf_counter()
-        model = cls(trick_room=bool(getattr(root.field, 'trick_room', False)))
+        model = cls(trick_room=bool(getattr(root.field, 'trick_room', False)), phase=str(phase))
         st = model.stats
 
         our = [m for m in list(root.our.active) + list(root.our.bench) if m is not None]
@@ -315,6 +373,8 @@ class S3Model:
                 out_m, in_m = side.active[slot], side.bench[bi]
                 side.active[slot], side.bench[bi] = in_m, out_m
                 in_m.is_active = True
+                in_m.turns_active = 0
+                in_m.protect_counter = 0
                 if out_m is not None:
                     out_m.is_active = False
 
@@ -340,6 +400,13 @@ class S3Model:
             queue.append((self.prio.get((k, mid), 0), spe, float(rng.random()), ours, slot, act, actor, mid))
         queue.sort(key=lambda q: (q[0], q[1], q[2]), reverse=True)
 
+        b3 = self.phase == '3b'
+        protected: set = set()           # id() de los protegidos este turno
+        wide_guard = {True: False, False: False}
+        redirect: Dict[bool, Optional[Tuple[MonSnapshot, bool]]] = {True: None, False: None}
+        helped: set = set()              # id() de quien recibe Helping Hand
+        flinched: set = set()            # id() de quien retrocede
+
         for _p, _sp, _tb, ours, slot, act, actor, mid in queue:
             if not _alive(actor):
                 continue  # cayó antes de actuar
@@ -347,20 +414,68 @@ class S3Model:
             slot_now = next((i for i, x in enumerate(side.active) if x is actor), None)
             if slot_now is None:
                 continue
+            if b3:
+                if id(actor) in flinched:
+                    actor.protect_counter = 0
+                    continue
+                eff = move_effect(mid)
+                if eff == 'protect':
+                    n = int(getattr(actor, 'protect_counter', 0) or 0)
+                    if rng.random() < (1.0 / 3.0) ** n:
+                        protected.add(id(actor))
+                        actor.protect_counter = n + 1
+                    else:
+                        actor.protect_counter = 0
+                    continue
+                actor.protect_counter = 0
+                if eff == 'wideguard':
+                    wide_guard[ours] = True
+                    continue
+                if eff in ('redirect', 'redirect_powder'):
+                    redirect[ours] = (actor, eff == 'redirect_powder')
+                    continue
+                if eff == 'helpinghand':
+                    ally = side.active[1 - slot_now] if len(side.active) > 1 else None
+                    if _alive(ally):
+                        helped.add(id(ally))
+                    continue
+                if mid in _FIRST_TURN and int(getattr(actor, 'turns_active', 0) or 0) > 0:
+                    continue  # Fake Out / First Impression fallan fuera del primer turno
             targets, spread = self._targets(side, opp, slot_now, act, mid)
+            if b3 and targets and move_target(mid) in _SINGLE and act.target != 2:
+                rd = redirect[not ours]
+                if rd is not None and _alive(rd[0]) and not (rd[1] and _powder_immune(actor)):
+                    targets = [rd[0]]
             if not targets or not is_damaging(mid):
                 continue
             acc = move_accuracy(mid)
             for dfn in targets:
+                if b3:
+                    dfn_ours = any(dfn is x for x in s.our.active)
+                    if spread and wide_guard[dfn_ours]:
+                        continue
+                    if id(dfn) in protected:
+                        if breaks_protect(mid):
+                            protected.discard(id(dfn))
+                        elif blockable(mid):
+                            continue
                 if acc < 1.0 and rng.random() > acc:
                     continue
                 lo, hi = self.damage_range(actor, dfn, mid, spread, weather)
                 dmg = float(rng.uniform(lo, hi)) if hi > lo else float(lo)
+                if b3 and id(actor) in helped:
+                    dmg *= 1.5
                 dfn.hp_pct = max(0.0, float(dfn.hp_pct) - dmg)
                 if dfn.hp_pct <= 0.0:
                     dfn.fainted = True
                     dfn.hp_pct = 0.0
+                elif b3 and mid == 'fakeout' and not _flinch_immune(dfn):
+                    flinched.add(id(dfn))
 
+        if b3:
+            for m in list(s.our.active) + list(s.foe.active):
+                if _alive(m):
+                    m.turns_active = int(getattr(m, 'turns_active', 0) or 0) + 1
         s.turn = int(s.turn) + 1
         our_alive = any(_alive(m) for m in s.our.all_mons())
         foe_alive = any(_alive(m) for m in s.foe.all_mons())
@@ -398,7 +513,90 @@ class S3Model:
                     sign = -1.0 if any(dfn is x for x in side.active) else 1.0  # golpear al aliado resta
                     v += sign * acc * (exp + KO_BONUS * p_ko)
                 out[mi * 4 + t] = v
+            if self.phase == '3b' and mid in _FIRST_TURN:
+                first = int(getattr(actor, 'turns_active', 0) or 0) == 0
+                for t in range(4):
+                    if (mi * 4 + t) not in out:
+                        continue
+                    if not first:
+                        out[mi * 4 + t] = 0.0  # falla
+                    elif mid == 'fakeout' and t in (0, 1):
+                        tg = opp.active[t] if t < len(opp.active) else None
+                        if _alive(tg) and not _flinch_immune(tg):
+                            out[mi * 4 + t] += FLINCH_W * self.best_output(view, tg, flip=True)
+        if self.phase == '3b':
+            self._support_scores(view, slot, actor, out)
         return out
+
+    # --------------------------------------------------- amenazas (fase 3b)
+    def best_output(self, view: BattleSnapshot, att: MonSnapshot, *, flip: bool = False) -> float:
+        """Mejor daño esperado (acotado al HP) de ``att`` contra un activo del otro lado.
+
+        ``flip=True``: ``att`` está en ``view.foe`` y golpea a ``view.our``.
+        """
+        if not _alive(att):
+            return 0.0
+        weather = str(getattr(view.field, 'weather', '') or '')
+        dfns = view.our.active if flip else view.foe.active
+        best = 0.0
+        for mv in att.moves[:4]:
+            mid = _norm(mv)
+            if not mid or not is_damaging(mid):
+                continue
+            acc = move_accuracy(mid)
+            spread = move_target(mid) in (_SPREAD_FOES, _SPREAD_ALL)
+            tot = 0.0
+            for d in dfns:
+                if not _alive(d):
+                    continue
+                lo, hi = self.damage_range(att, d, mid, spread, weather)
+                v = acc * min(0.5 * (lo + hi), float(d.hp_pct))
+                tot = (tot + v) if spread else max(tot, v)
+            best = max(best, tot)
+        return best
+
+    def threat_to(self, view: BattleSnapshot, mon: MonSnapshot, *, spread_only: bool = False,
+                  single_only: bool = False) -> float:
+        """Daño esperado que ``mon`` (lado ``view.our``) recibiría si cada rival lo eligiera."""
+        if not _alive(mon):
+            return 0.0
+        weather = str(getattr(view.field, 'weather', '') or '')
+        tot = 0.0
+        for f in view.foe.active:
+            if not _alive(f):
+                continue
+            best = 0.0
+            for mv in f.moves[:4]:
+                mid = _norm(mv)
+                if not mid or not is_damaging(mid):
+                    continue
+                spread = move_target(mid) in (_SPREAD_FOES, _SPREAD_ALL)
+                if (spread_only and not spread) or (single_only and spread):
+                    continue
+                lo, hi = self.damage_range(f, mon, mid, spread, weather)
+                best = max(best, move_accuracy(mid) * 0.5 * (lo + hi))
+            tot += best
+        return min(tot, float(mon.hp_pct))
+
+    def _support_scores(self, view: BattleSnapshot, slot: int, actor: MonSnapshot,
+                        out: Dict[int, float]) -> None:
+        side = view.our
+        ally = side.active[1 - slot] if len(side.active) > 1 else None
+        for mi, mv in enumerate(actor.moves[:4]):
+            mid = _norm(mv)
+            eff = move_effect(mid) if mid else ''
+            if not eff:
+                continue
+            if eff == 'protect':
+                n = int(getattr(actor, 'protect_counter', 0) or 0)
+                out[mi * 4 + 3] = PROTECT_W * ((1.0 / 3.0) ** n) * self.threat_to(view, actor)
+            elif eff == 'wideguard':
+                v = sum(self.threat_to(view, m, spread_only=True) for m in side.active if _alive(m))
+                out[mi * 4 + 3] = WIDEGUARD_W * v
+            elif eff in ('redirect', 'redirect_powder'):
+                out[mi * 4 + 3] = REDIRECT_W * self.threat_to(view, ally, single_only=True) if _alive(ally) else 0.0
+            elif eff == 'helpinghand':
+                out[mi * 4 + 2] = HELP_W * self.best_output(view, ally) if _alive(ally) else 0.0
 
     def joint_scores(self, view: BattleSnapshot, joints: Sequence[int]) -> np.ndarray:
         d0 = self.slot_scores(view, 0)

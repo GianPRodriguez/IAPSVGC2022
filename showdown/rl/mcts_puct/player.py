@@ -56,7 +56,8 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
     ``MCTS_PREVIEW=nash`` vuelve al preview de familia (requiere checkpoint).
 
     Env: ``MCTS_SIMS`` (presupuesto), ``MCTS_SEED``, ``MCTS_PUCT_VERSION`` (3 por
-    defecto = S3; 2 = S2 open-loop; 1 = búsqueda original). Contadores (``mcts_stats``): decisiones,
+    defecto = S3 fase 3a; 4 = S3 fase 3b, en medición; 2 = S2 open-loop; 1 = búsqueda
+    original). Contadores (``mcts_stats``): decisiones,
     excepciones (→ orden por defecto) y fallbacks del adaptador (→ orden al azar);
     antes eran silenciosos.
     """

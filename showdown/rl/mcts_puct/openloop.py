@@ -58,7 +58,8 @@ class OpenLoopConfig:
     # Profundidad máxima del árbol (plies propios).
     max_depth: int = 6
     prefer_mega: bool = True
-    # Modelo de transición: 's2' (v2, simulator.step_sim) o 's3' (v3: daño real + orden).
+    # Modelo de transición: 's2' (v2, simulator.step_sim), 's3' (v3: daño real + orden) o
+    # 's3b' (v4: + Protect, Wide Guard, Fake Out, redirección, Helping Hand).
     model: str = 's2'
 
 
@@ -170,6 +171,8 @@ def auto_replace(s: BattleSnapshot) -> None:
             side.bench[best] = m
             side.active[slot] = incoming
             incoming.is_active = True
+            incoming.turns_active = 0      # S3 fase 3b: primer turno (Fake Out) y Protect
+            incoming.protect_counter = 0
             if m is not None:
                 m.is_active = False
 
@@ -336,9 +339,10 @@ def search_openloop(
     s0 = prepare_root(root_state)
     root_force = bool(any(root_state.force_switch))
     model = None
-    if str(cfg.model).lower() == 's3':
+    if str(cfg.model).lower() in ('s3', 's3b'):
         from showdown.rl.mcts_puct.s3 import S3Model
-        model = S3Model.build(s0, stat_beliefs=stat_beliefs, ranges_fn=ranges_fn)
+        model = S3Model.build(s0, stat_beliefs=stat_beliefs, ranges_fn=ranges_fn,
+                              phase='3b' if str(cfg.model).lower() == 's3b' else '3a')
         ms = model.stats
         tel.calc_requests, tel.calc_missing, tel.calc_sec = ms.requests, ms.missing, ms.build_sec
         tel.calc_error, tel.foe_no_moves, tel.foe_point_stats = ms.error, ms.foe_no_moves, ms.foe_point_stats
