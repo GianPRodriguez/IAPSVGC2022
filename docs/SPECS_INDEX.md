@@ -34,7 +34,7 @@ está en [`rl_env_spec.md`](rl_env_spec.md). La evaluación final está en
 | [`team_preview_qd_pga_spec`](team_preview_qd_pga_spec.md) | Solo preview | Sí (archive) | Preview de QD-PPO / QD-PGA / QD-PPGA |
 | [`ddqn_spec`](ddqn_spec.md) | Solo turnos (MDP) | Sí | Combate + preview PPO |
 | [`ppo_spec`](ppo_spec.md) | Solo turnos (MDP) | Sí | Combate + preview PPO |
-| [`mcts_puct_spec`](mcts_puct_spec.md) | Solo turnos | No (búsqueda) | Combate + preview Nash |
+| [`mcts_puct_spec`](mcts_puct_spec.md) | Solo turnos | No (búsqueda) | Combate + preview greedy (desde v3.1; `team_preview_nash` sin entrenar) |
 | [`mcts_puct_nash_spec`](mcts_puct_nash_spec.md) | Solo turnos | No (búsqueda) | Combate + preview Nash |
 | [`qd_ppo_spec`](qd_ppo_spec.md) | Solo turnos | Sí | Combate + preview QD-PGA |
 | [`qd_pga_map_elites_spec`](qd_pga_map_elites_spec.md) | Solo turnos | Sí | Combate + preview QD-PGA |
@@ -48,7 +48,7 @@ está en [`rl_env_spec.md`](rl_env_spec.md). La evaluación final está en
 | Preview | Combates |
 |---------|----------|
 | `team_preview_ppo` | `ddqn`, `ppo` |
-| `team_preview_nash` | `mcts_puct`, `mcts_puct_nash` |
+| `team_preview_nash` | `mcts_puct_nash` (y `mcts_puct` hasta v3.0; desde v3.1 G usa el preview greedy: `team_preview_nash` nunca se entrenó) |
 | `team_preview_qd_pga` | `qd_ppo`, `qd_pga`, `qd_ppga` |
 | Preview propio §3 | `random`, `greedy_solo`, `greedy_joint`, `expectimax_bayesian` (desde expectimax v1.7, B/C/D comparten el preview por tipos + BST; el de roles se descartó por medición, ver `expectimax_diagnostico.md`) |
 

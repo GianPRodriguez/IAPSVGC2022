@@ -190,25 +190,32 @@ etiquetan como secundarias):
 ganó 57,2 % contra greedy_joint, frente a 37,1 % de v2 en las mismas semillas
 (`mcts_puct_diagnostico.md` §6). Decisión del usuario: confirmar antes de seguir con 3b.
 
-**Versión congelada:** G v3.0 por defecto (código del commit `6f85aa9`; 200 sims,
-`MCTS_PUCT_VERSION=3`, `MCTS_SEED=0`). Rivales: greedy_joint v1.8 y expectimax v1.9, los
-congelados de §4. La cola aborta si el código de `mcts_puct`, `greedy_joint`,
-`greedy_solo` o `expectimax_bayesian` cambió desde `6f85aa9`.
+**Versión congelada:** G v3.1 por defecto (código del commit `bb9ef00`: combate idéntico a
+v3.0 / `6f85aa9`, más el preview greedy por defecto; 200 sims, `MCTS_PUCT_VERSION=3`,
+`MCTS_SEED=0`). Rivales: solo los **baselines** (decisión del usuario: ningún agente RL),
+random, greedy_solo y greedy_joint v1.8 y expectimax v1.9, los congelados de §4. La cola
+aborta si el código de `mcts_puct`, `greedy_joint`, `greedy_solo` o `expectimax_bayesian`
+cambió desde `bb9ef00`.
 
 **Bloques nuevos:** C3 = 9401–9417 y C4 = 9501–9517 (no usados antes por ningún agente).
 
-**Preview:** G juega con el preview greedy (tipado + BST), el mismo que joint y
-expectimax, para que la comparación sea de combate como en H1–H3.
+**Preview:** G juega con el preview greedy (tipado + BST), el mismo que solo, joint y
+expectimax, para que la comparación sea de combate como en H1–H3. Desde v3.1 es el preview
+por defecto de G (decisión del usuario, 20-11-2026: `team_preview_nash` nunca se entrenó;
+no se usa el preview PPO para no mezclar componentes RL).
 
-**Familia de G** (Holm con m = 2; binomial exacta + IC por *cluster bootstrap*; regla de
+**Familia de G** (Holm con m = 3; binomial exacta + IC por *cluster bootstrap*; regla de
 la §3, consistencia en C3 y C4):
 
 | Id | Hipótesis | Comparación | Bloques |
 |---|---|---|---|
-| G1 | G v3.0 > greedy_joint | A = mcts_puct (preview greedy), B = greedy_joint | C3 + C4 |
-| G2 | G v3.0 > expectimax v1.9 | A = mcts_puct (preview greedy), B = expectimax_bayesian | C3 + C4 |
+| G1 | G v3.1 > greedy_joint | A = mcts_puct, B = greedy_joint | C3 + C4 |
+| G2 | G v3.1 > expectimax v1.9 | A = mcts_puct, B = expectimax_bayesian | C3 + C4 |
+| G3 | G v3.1 > greedy_solo | A = mcts_puct, B = greedy_solo | C3 + C4 |
 
 Nivel práctico (§3b): además, límite inferior del IC 95 % ≥ 55 %.
+
+**Control de cordura (fuera de Holm):** G4 = G v3.1 > random, binomial en C3 (como S3).
 
 ~~**Secundaria GS1**~~ (pipeline G con preview Nash contra joint en C3): **eliminada el
 20-11-2026, antes de medir nada en C3/C4.** No existe un checkpoint entrenado de
@@ -300,3 +307,4 @@ frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada
 | 2026-11-17 | **Checkpoint principal = el último (§3c.2)**; `best.pt` elegido con `val`, resultado secundario. Motivo: `val` eligió en DDQN con regularización un checkpoint ~8 puntos peor contra `eval` que el final. |
 | 2026-11-20 | **Hipótesis G1–G2 de MCTS+PUCT v3 (§4.1)**, fijadas antes de medir: G v3.0 contra joint y contra expectimax en bloques nuevos C3 (9401–9417) y C4 (9501–9517), preview greedy, Holm con m = 2; secundaria GS1 (pipeline G con preview Nash) en C3. |
 | 2026-11-20 | Enmienda §4.1 antes de medir: se elimina la secundaria GS1 porque no existe un preview Nash entrenado (G caía al orden fijo `/team 1234`). G1–G2 sin cambios. |
+| 2026-11-20 | Segunda enmienda §4.1 antes de medir (usuario): se agregan G3 (G > greedy_solo, C3 + C4; Holm pasa a m = 3) y el control G4 (G > random, C3); solo baselines, ningún agente RL. Código congelado `bb9ef00` (v3.1: combate de v3.0 + preview greedy por defecto). |
