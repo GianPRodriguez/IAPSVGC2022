@@ -1390,3 +1390,36 @@ como estaba previsto.
 - Resultado en `eval`: 64,1 % frente a 65,3 %; no empeora.
 - Se completa el kick-off de DDQN con las semillas 2–4 (`SKIP_PILOT=1`). Las semillas 0 y 1 del
   piloto cuentan como parte del kick-off.
+
+### 18.7 Resultado del kick-off oficial de DDQN (P5 + preview v2.1 sin `val`, 20-11-2026)
+
+`~/iapsvgc_runs/kickoff_ddqn_v2/kickoff_summary16.md`. Semillas 0–1 del piloto (commit 12229a3) y
+2–4 (`SKIP_PILOT=1`, misma configuración y preview), todo rc=0, fin 05:59. Calculadora real:
+~1M observaciones y ~90M pedidos por semilla, **0 % de respaldo y 0 pedidos sin respuesta** en las 5.
+200 partidas por rival; las cifras agrupan greedy_solo, greedy_joint y expectimax (600 por semilla).
+
+| Semilla | `final.pt` contra `eval` (principal) | `best.pt` contra `eval` | Propios | Arquetipos (joint) |
+|---|---|---|---|---|
+| 0 | 65,5 % | 60,8 % | 95,7 % | 61,5 % |
+| 1 | 62,7 % | 59,3 % | 95,3 % | 61,5 % |
+| 2 | 60,3 % | 51,7 % | 96,3 % | 55,0 % |
+| 3 | 63,3 % | 62,7 % | 96,7 % | 58,5 % |
+| 4 | 58,5 % | 62,0 % | 95,3 % | 62,0 % |
+| **Media** | **62,1 % (± 3,4 entre semillas; ± 1,7 por partidas)** | 59,3 % | 95,9 % | 59,7 % (± 3,7) |
+
+Por rival (`final.pt`, `eval`): random 97,7 %, greedy_solo 62,4 %, greedy_joint 64,0 %, expectimax
+59,8 %. En modo arquetipo, greedy_joint baja a DDQN 4,3 puntos (64,0 → 59,7 %).
+
+**Lectura:**
+1. **Cifra oficial de DDQN: 62,1 % (± 3,4) contra `eval`.** Es 19,1 puntos menos que PPO v1
+   (81,2 %, kick-off de PPO con el preview v2).
+2. **Frente a DDQN REG 0,03 con el preview v2 (65,3 %, solo 2 semillas):** −3,2 puntos (± 3,2 por
+   partidas agrupadas), en el límite del ruido. El piloto (64,1 %) era algo optimista: las semillas
+   2–4 dan 60,7 %. La referencia tiene solo 2 semillas, así que su propia variación entre semillas
+   no se conoce; con la variación observada aquí (58,5–65,5 %) no se puede afirmar que el preview
+   v2.1 sin `val` empeore a DDQN, pero tampoco que lo iguale.
+3. **`final.pt` > `best.pt`** en 4 de 5 semillas (media 62,1 frente a 59,3 %), como en los kick-offs
+   anteriores: se mantiene `final.pt` como checkpoint principal.
+4. **Memorización:** propios 95,9 % frente a `eval` 62,1 % (brecha −33,8), igual que antes de P5.
+5. P5 (calculadora real) funcionó sin fallos en 5M pasos; su costo es solo de velocidad (~300 frente
+   a ~346 pasos/s).

@@ -839,3 +839,9 @@ semilla 0) antes de decidir el kick-off.
   con el preview v2.1 nuevo queda igual (64,1 % frente a 65,3 %).
 - **Decisión del usuario:** decidir con `eval` (excepción declarada) y completar el kick-off con las
   semillas 2–4.
+
+**Resultado del kick-off (20-11-2026, memorizacion §18.7):** 5 semillas, todo rc=0, calculadora con
+0 % de respaldo. **final.pt contra `eval`: 62,1 % (± 3,4 entre semillas)**; por semilla 65,5 / 62,7 /
+60,3 / 63,3 / 58,5 %. best.pt 59,3 %, propios 95,9 %, arquetipos 59,7 %. Frente a DDQN REG con el
+preview v2 (65,3 %, 2 semillas): −3,2 (± 3,2), en el límite del ruido. Frente a PPO v1 (81,2 %):
+−19,1.
