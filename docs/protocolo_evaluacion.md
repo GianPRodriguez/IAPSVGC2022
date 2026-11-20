@@ -198,8 +198,7 @@ congelados de §4. La cola aborta si el código de `mcts_puct`, `greedy_joint`,
 **Bloques nuevos:** C3 = 9401–9417 y C4 = 9501–9517 (no usados antes por ningún agente).
 
 **Preview:** G juega con el preview greedy (tipado + BST), el mismo que joint y
-expectimax, para que la comparación sea de combate como en H1–H3. El pipeline G con su
-preview Nash congelado se mide aparte como secundaria descriptiva.
+expectimax, para que la comparación sea de combate como en H1–H3.
 
 **Familia de G** (Holm con m = 2; binomial exacta + IC por *cluster bootstrap*; regla de
 la §3, consistencia en C3 y C4):
@@ -211,8 +210,11 @@ la §3, consistencia en C3 y C4):
 
 Nivel práctico (§3b): además, límite inferior del IC 95 % ≥ 55 %.
 
-**Secundaria (descriptiva, sin ajuste):** GS1 = pipeline G (preview Nash congelado + v3.0)
-contra greedy_joint en C3.
+~~**Secundaria GS1**~~ (pipeline G con preview Nash contra joint en C3): **eliminada el
+20-11-2026, antes de medir nada en C3/C4.** No existe un checkpoint entrenado de
+`team_preview_nash` (solo el de un smoke de tests: 1 actualización, etiquetas *mock*), y el
+clon de medición ni siquiera lo tiene, así que G caía al orden fijo `/team 1234`; GS1 habría
+medido ese orden, no un preview Nash.
 
 ## 5. Plantilla de reporte
 
@@ -297,3 +299,4 @@ frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada
 | 2026-11-16 | **Validación reservada (§2b):** subgrupo `val` (30 equipos de `train`, grupos de clones) para elegir checkpoints; `fit` (170) para entrenar. Motivo: memorización medida (84 % con equipos `train` frente a 50 % con `eval`). Ver `memorizacion_equipos.md`. |
 | 2026-11-17 | **Checkpoint principal = el último (§3c.2)**; `best.pt` elegido con `val`, resultado secundario. Motivo: `val` eligió en DDQN con regularización un checkpoint ~8 puntos peor contra `eval` que el final. |
 | 2026-11-20 | **Hipótesis G1–G2 de MCTS+PUCT v3 (§4.1)**, fijadas antes de medir: G v3.0 contra joint y contra expectimax en bloques nuevos C3 (9401–9417) y C4 (9501–9517), preview greedy, Holm con m = 2; secundaria GS1 (pipeline G con preview Nash) en C3. |
+| 2026-11-20 | Enmienda §4.1 antes de medir: se elimina la secundaria GS1 porque no existe un preview Nash entrenado (G caía al orden fijo `/team 1234`). G1–G2 sin cambios. |

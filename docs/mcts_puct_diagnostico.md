@@ -100,7 +100,7 @@ anomalías del player.
 | Config | Semillas × equipos | Series G/total | WR G | IC 95 % (Wilson) | Notas |
 |---|---|---:|---:|---|---|
 | `v2_n200`, preview greedy | 9101–9117 × 300 | 1886/5100 | **37,0 %** | [35,7, 38,3] | Por semilla 34,3–39,3 %; ~1,6 min por semilla; 0 fallbacks |
-| `v2_n200_ownpreview` (pipeline G real) | 9101–9105 × 300 | 504/1500 | **33,6 %** | [31,2, 36,0] | s9104 `rc=1` por un fallo de sync en 1 matchup (`invalid=1`); el resto válido |
+| `v2_n200_ownpreview` (preview "propio") | 9101–9105 × 300 | 504/1500 | **33,6 %** | [31,2, 36,0] | **En realidad orden fijo `/team 1234`** (ver nota abajo). s9104 `rc=1` por un fallo de sync en 1 matchup (`invalid=1`); el resto válido |
 | `v1_n200` (referencia) | 9101 × 100 | 2 victorias / 66 decididas | ~3 % | — | **Terminada a mano** a las 08:28 (usuario): 93/100 series en 1 h 53 min, 27 errores y 4 omitidas por timeouts de 2400 s con hasta 3 reintentos; servidor ocioso esperando. Sin reporte; datos del log parcial `raw/v1_n200_s9101.txt` |
 
 Fallbacks del adaptador: **0 en v2**. Las 488 líneas de `anomalies.tsv` vienen todas de
@@ -111,8 +111,13 @@ Lectura (exploración, no afirmación confirmatoria):
 
 - v2 corrige el colapso de v1 (de ~3 % a 37 %), pero **G sigue claramente por debajo de
   greedy_joint**; como referencia, greedy_solo ≈ 48 % y expectimax ≈ 50–53 % contra joint.
-- El preview Nash congelado le resta ~3,4 puntos frente al preview greedy, coherente con
-  su HP `score 0.5` (revisar en una fase posterior).
+- ~~El preview Nash congelado le resta ~3,4 puntos~~ **Corrección (20-11-2026):** no
+  existe un preview Nash entrenado. El único `final.pt` del servidor es el de un smoke de
+  tests (1 actualización, `provenance: mock`, en otro clon) y el clon de medición no lo
+  tiene; `frozen_preview` cae entonces al orden fijo `/team 1234` (los 4 primeros de la
+  hoja, leads 1–2). Los −4,0 ± 2,0 puntos son del **orden fijo**, no de un preview Nash.
+  El tune de `team_preview_nash` (`score 0.5`) también era `dry_run_fake_score`, y su CLI
+  de entrenamiento solo genera etiquetas *mock* (no hay pipeline BO1 live).
 - Con la búsqueda ya sana, la hipótesis es que el techo lo pone **S2** (sin velocidad,
   Protect, área ni stats reales): la búsqueda optimiza un modelo equivocado. El barrido
   de \(N_{\rm sim}\) (paso 6) lo pone a prueba: si más sims no ayudan, el límite es el

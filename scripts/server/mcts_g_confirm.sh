@@ -5,7 +5,8 @@
 #
 #   G1: G v3.0 > greedy_joint        (preview greedy)  C3 = 9401–9417 + C4 = 9501–9517
 #   G2: G v3.0 > expectimax v1.9     (preview greedy)  C3 + C4
-#   GS1 (secundaria, descriptiva): pipeline G (preview Nash) contra greedy_joint, C3.
+#   (GS1 eliminada el 20-11-2026 antes de medir: no existe checkpoint entrenado del preview Nash;
+#    se habría medido el orden fijo /team 1234. Ver protocolo §4.1.)
 # Estadística: confirm_stats binom (binomial exacta + IC por cluster bootstrap) por hipótesis y por
 # bloque, y Holm con m = 2. Resumen: $OUT/confirm_summary.txt. Marca: MCTS_G_CONFIRM_DONE.
 #
@@ -66,10 +67,9 @@ rc=$?; log "tests rc=$rc ($(tail -1 "$OUT/tests.txt"))"
 [ $rc = 0 ] || { log "ERROR: tests fallan; se detiene"; log "MCTS_G_CONFIRM_DONE"; exit 1; }
 export MCTS_STATS_FILE="$OUT/anomalies.tsv"
 
-# Orden por bloque: así C3 completo (G1, G2, GS1) queda antes que C4.
+# Orden por bloque: así C3 completo (G1, G2) queda antes que C4.
 for s in $(seq 9401 9417); do run G1 "$s" greedy_joint --preview-a greedy --timeout 1200; done
 for s in $(seq 9401 9417); do run G2 "$s" expectimax_bayesian --preview-a greedy --timeout 2400; done
-for s in $(seq 9401 9417); do run GS1 "$s" greedy_joint --timeout 1200; done
 for s in $(seq 9501 9517); do run G1 "$s" greedy_joint --preview-a greedy --timeout 1200; done
 for s in $(seq 9501 9517); do run G2 "$s" expectimax_bayesian --preview-a greedy --timeout 2400; done
 
@@ -88,7 +88,6 @@ S="$OUT/confirm_summary.txt"
     echo "--- $h C4";    python -m showdown.inference_sim.confirm_stats binom "$OUT"/raw/${h}_s95*.txt
   done
   echo; echo "--- Holm (m=2; orden G1, G2 por p creciente)"; python -m showdown.inference_sim.confirm_stats holm $PS_
-  echo; echo "--- GS1 C3 (secundaria, descriptiva)"; python -m showdown.inference_sim.confirm_stats binom "$OUT"/raw/GS1_s94*.txt
 } > "$S" 2>&1
 log "estadística escrita en $S"
 log "MCTS_G_CONFIRM_DONE"
