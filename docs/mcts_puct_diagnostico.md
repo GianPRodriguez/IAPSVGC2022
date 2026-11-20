@@ -92,4 +92,30 @@ Resumen: `~/iapsvgc_runs/mcts_g_v2/summary.md`
 `anomalies.tsv`. Es exploración (semillas 9101-9117): cualquier afirmación "G > joint"
 necesitará un bloque fresco según el protocolo.
 
-Resultados: se añadirán aquí.
+### 5.1 Resultados (2026-11-20, commit e2f4c62, `~/iapsvgc_runs/mcts_g_v2/`)
+
+Cola iniciada 05:59 tras el kick-off de DDQN. Tests 33/33; smoke 0 errores de serie y 0
+anomalías del player.
+
+| Config | Semillas × equipos | Series G/total | WR G | IC 95 % (Wilson) | Notas |
+|---|---|---:|---:|---|---|
+| `v2_n200`, preview greedy | 9101–9117 × 300 | 1886/5100 | **37,0 %** | [35,7, 38,3] | Por semilla 34,3–39,3 %; ~1,6 min por semilla; 0 fallbacks |
+| `v2_n200_ownpreview` (pipeline G real) | 9101–9105 × 300 | 504/1500 | **33,6 %** | [31,2, 36,0] | s9104 `rc=1` por un fallo de sync en 1 matchup (`invalid=1`); el resto válido |
+| `v1_n200` (referencia) | 9101 × 100 | 2 victorias / 66 decididas | ~3 % | — | **Terminada a mano** a las 08:28 (usuario): 93/100 series en 1 h 53 min, 27 errores y 4 omitidas por timeouts de 2400 s con hasta 3 reintentos; servidor ocioso esperando. Sin reporte; datos del log parcial `raw/v1_n200_s9101.txt` |
+
+Fallbacks del adaptador: **0 en v2**. Las 488 líneas de `anomalies.tsv` vienen todas de
+v1 (el archivo dejó de crecer a las 06:46, con v1 corriendo; ninguna corrida v2 tiene
+avisos `mcts_puct:` en su log): v1 juega casi siempre el joint `(0,0)`, a menudo ilegal.
+
+Lectura (exploración, no afirmación confirmatoria):
+
+- v2 corrige el colapso de v1 (de ~3 % a 37 %), pero **G sigue claramente por debajo de
+  greedy_joint**; como referencia, greedy_solo ≈ 48 % y expectimax ≈ 50–53 % contra joint.
+- El preview Nash congelado le resta ~3,4 puntos frente al preview greedy, coherente con
+  su HP `score 0.5` (revisar en una fase posterior).
+- Con la búsqueda ya sana, la hipótesis es que el techo lo pone **S2** (sin velocidad,
+  Protect, área ni stats reales): la búsqueda optimiza un modelo equivocado. El barrido
+  de \(N_{\rm sim}\) (paso 6) lo pone a prueba: si más sims no ayudan, el límite es el
+  modelo, no el presupuesto.
+
+Barrido de \(N_{\rm sim}\): en curso (se añadirá aquí).
