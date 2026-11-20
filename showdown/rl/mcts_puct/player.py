@@ -22,6 +22,24 @@ from showdown.rl.pe_adapter import (
 _LOG = logging.getLogger(__name__)
 
 
+def _record_anomaly(kind: str, battle, detail: str = '') -> None:
+    """Una línea por excepción/fallback en ``MCTS_STATS_FILE`` (si está definida).
+
+    Los avisos de logging salen de los subprocesos de run_robust_e2e y pueden perderse;
+    el archivo permite a la cola del servidor contarlos de forma fiable.
+    """
+    path = os.environ.get('MCTS_STATS_FILE', '').strip()
+    if not path:
+        return
+    try:
+        tag = str(getattr(battle, 'battle_tag', '?'))
+        turn = int(getattr(battle, 'turn', 0) or 0)
+        with open(path, 'a', encoding='utf-8') as fh:
+            fh.write(f'{kind}\t{tag}\t{turn}\t{detail}\n')
+    except Exception:
+        pass
+
+
 def _env_int(name: str, default: int) -> int:
     try:
         return int(os.environ.get(name, default))
@@ -93,12 +111,14 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
             order, fb = joint_order_from_spec_actions(battle, (a1, a2))
             if fb:
                 st['adapter_fallbacks'] += 1
+                _record_anomaly('fallback', battle, f'{a1},{a2}')
                 if st['adapter_fallbacks'] <= 3:
                     _LOG.warning('mcts_puct: orden ilegal %s en %s → jugada al azar',
                                  (a1, a2), getattr(battle, 'battle_tag', '?'))
             return order
-        except Exception:
+        except Exception as exc:
             st['exceptions'] += 1
+            _record_anomaly('exception', battle, repr(exc)[:200])
             if st['exceptions'] <= 3:
                 _LOG.exception('mcts_puct: excepción en choose_move → orden por defecto')
             return DefaultBattleOrder()

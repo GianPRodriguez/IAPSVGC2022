@@ -71,14 +71,25 @@ Ver spec §4–§7. Misma sonda:
 lo comparte); v2 activa `status_chip=False` y una copia de estado más barata.
 Tests: `tests/test_mcts_puct_v2.py` (+ los de v1, MCTS–Nash y el barrido).
 
-## 5. Medición (paso 2) — pendiente
+## 5. Medición (paso 2) — encolada
 
-Por correr en el servidor (`~/iapsvgc_scratch`), sin competir con las colas de RL:
+Cola `scripts/server/mcts_g_v2.sh` (usuario, 2026-11-20: "encolarlo a las ejecuciones
+actuales"). Corre en el clon aislado `~/iapsvgc_scratch/spinfo/IAPSVGC2022` tras la
+marca de fin del kick-off de DDQN v2 (`KICKOFF_DDQN_V2_DONE` o `PILOT_DONE`; cambiable
+con `WAIT_FILE`/`WAIT_PAT`). Todo contra `greedy_joint` validado, `--procs 28`:
 
-1. Smoke live: 1 semilla × pocos equipos, revisar `mcts_stats`
-   (excepciones/fallbacks deben ser ~0) y tiempo por decisión.
-2. Exploración: v2.0 (200 sims) vs `greedy_joint` validado, semillas 9101-9117
-   (5100 BO3), y v1 como referencia en un bloque reducido (v1 tarda ~26 s/decisión).
-3. Barrido real de \(N_{\rm sim}\) (50/100/200/400) en exploración.
+| Paso | Config | Semillas × equipos | Propósito |
+|---|---|---|---|
+| 1 | tests MCTS | — | Se detiene si fallan |
+| 2 | smoke v2 | 9001 × 20 | Se detiene si hay errores de serie o excepciones/fallbacks del player (`MCTS_STATS_FILE`) |
+| 3 | `v2_n200`, preview greedy | 9101–9117 × 300 (5100 BO3) | Combate aislado (como el factorial de expectimax) |
+| 4 | `v2_n200_ownpreview` | 9101–9105 × 300 | Pipeline G real con preview Nash congelado |
+| 5 | `v1_n200` (`MCTS_PUCT_VERSION=1`) | 9101 × 100 | Referencia de v1 |
+| 6 | `v2_n50/100/400`, preview greedy | 9101–9105 × 300 | Barrido real de \(N_{\rm sim}\) (pareado con `v2_n200`) |
+
+Resumen: `~/iapsvgc_runs/mcts_g_v2/summary.md`
+(`python -m showdown.inference_sim.mcts_g_summary`), con anomalías del player en
+`anomalies.tsv`. Es exploración (semillas 9101-9117): cualquier afirmación "G > joint"
+necesitará un bloque fresco según el protocolo.
 
 Resultados: se añadirán aquí.
