@@ -84,11 +84,41 @@ def render(res: Dict[str, Dict[int, dict]], base_cfg: str = BASE) -> str:
     return '\n'.join(lines)
 
 
+def nash_decision(text: str) -> Optional[str]:
+    """Regla del diagnóstico §7 sobre ``nash_summary.txt``: 'P1', 'P2' o None (preview greedy).
+
+    Se adopta la semilla cuyo McNemar contra P0 es positivo y rechaza H0 tras Holm (m = 2);
+    si las dos, la de mayor diferencia. Holm se imprime en el orden P1, P2.
+    """
+    lines = [ln.strip() for ln in text.splitlines()]
+    diffs: Dict[str, float] = {}
+    holm_rows: List[str] = []
+    for k, ln in enumerate(lines):
+        for c in ('P1', 'P2'):
+            if ln.startswith(f'--- McNemar {c} vs P0') and k + 1 < len(lines):
+                m = re.search(r'diferencia=([+-]?[0-9.]+)', lines[k + 1])
+                if m:
+                    diffs[c] = float(m.group(1))
+        if ln.startswith('--- Holm'):
+            holm_rows = [x for x in lines[k + 1:k + 3] if x.startswith('p=')]
+    if len(holm_rows) < 2 or len(diffs) < 2:
+        return None
+    ok = [c for c, row in zip(('P1', 'P2'), holm_rows)
+          if 'rechaza H0' in row and 'no rechaza' not in row and diffs.get(c, 0.0) > 0]
+    if not ok:
+        return None
+    return max(ok, key=lambda c: diffs[c])
+
+
 def main(argv=None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv:
         print(__doc__)
         return 2
+    if argv[0] == '--nash-decision':  # imprime P1 / P2 / greedy (diagnóstico §7)
+        txt = Path(argv[1]).expanduser().read_text(encoding='utf-8', errors='replace')
+        print(nash_decision(txt) or 'greedy')
+        return 0
     out = Path(argv[0]).expanduser()
     text = render(load(out), argv[1] if len(argv) > 1 else BASE)
     (out / 'summary.md').write_text(text, encoding='utf-8')

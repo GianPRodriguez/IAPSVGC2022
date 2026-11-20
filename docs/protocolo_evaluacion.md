@@ -223,6 +223,36 @@ Nivel práctico (§3b): además, límite inferior del IC 95 % ≥ 55 %.
 clon de medición ni siquiera lo tiene, así que G caía al orden fijo `/team 1234`; GS1 habría
 medido ese orden, no un preview Nash.
 
+### 4.2 Hipótesis de MCTS+PUCT v4 (agente G, fase 3b), fijadas el 20-11-2026 antes de medir
+
+**Motivo.** En exploración (9101–9117, 5100 BO3) v4 ganó 60,3 % contra joint frente a 57,5 % de
+v3.1 en las mismas series (McNemar 745 frente a 606, p = 0,0002; `mcts_puct_diagnostico.md`
+§6.3). Decisión del usuario: confirmar antes de pasar v4 a ser el valor por defecto.
+
+**Versión congelada:** código del commit `0df75cb` (v4 = `MCTS_PUCT_VERSION=4`; v3.1 =
+`MCTS_PUCT_VERSION=3`; 200 sims, `MCTS_SEED=0`). Solo **baselines** como rivales: random,
+greedy_solo, greedy_joint v1.8, expectimax v1.9. La cola aborta si cambió el código de
+`mcts_puct`, `team_preview_nash`, `frozen_preview` o de los baselines desde `0df75cb`.
+
+**Preview (igual para v4 y v3.1):** lo decide de forma automática la regla del diagnóstico §7
+sobre el resultado de la cola del preview Nash (`nash_decision`): si se adopta una semilla del
+preview Nash, su `final.pt`; si no, el preview greedy. Se registra cuál se usó.
+
+**Bloques nuevos:** C5 = 9601–9617 y C6 = 9701–9717 (no usados antes).
+
+**Familia de v4** (Holm con m = 4; regla de la §3, consistencia en C5 y C6):
+
+| Id | Hipótesis | Prueba | Bloques |
+|---|---|---|---|
+| V1 | v4 > greedy_joint | binomial + IC cluster | C5 + C6 |
+| V2 | v4 > expectimax v1.9 | binomial + IC cluster | C5 + C6 |
+| V3 | v4 > greedy_solo | binomial + IC cluster | C5 + C6 |
+| V4 | v4 > v3.1 (ambos contra greedy_joint, mismas series) | McNemar exacta | C5 + C6 |
+
+Nivel práctico (§3b) para V1–V3. **Control (fuera de Holm):** V5 = v4 > random en C5.
+**Cambio de valor por defecto:** v4 pasa a ser el default de G solo si V4 se confirma (y
+V1–V3 se mantienen).
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -339,3 +369,4 @@ M-C, pool MetaVGC de 300 equipos (`all`), información simétrica, preview greed
 | 2026-11-20 | Enmienda §4.1 antes de medir: se elimina la secundaria GS1 porque no existe un preview Nash entrenado (G caía al orden fijo `/team 1234`). G1–G2 sin cambios. |
 | 2026-11-20 | Segunda enmienda §4.1 antes de medir (usuario): se agregan G3 (G > greedy_solo, C3 + C4; Holm pasa a m = 3) y el control G4 (G > random, C3); solo baselines, ningún agente RL. Código congelado `bb9ef00` (v3.1: combate de v3.0 + preview greedy por defecto). |
 | 2026-11-20 | Resultados de la confirmación de G (§5.2): G1, G2 y G3 con superioridad práctica (G1 y G2 por poco: límite inferior 55,44 y 55,42 %); control G4 correcto. |
+| 2026-11-20 | Hipótesis V1–V4 de MCTS+PUCT v4 (§4.2), fijadas antes de medir: v4 contra joint, expectimax y solo, y v4 frente a v3.1 en pareado, bloques C5 (9601–9617) y C6 (9701–9717); preview según la regla del diagnóstico §7; control V5 contra random. |

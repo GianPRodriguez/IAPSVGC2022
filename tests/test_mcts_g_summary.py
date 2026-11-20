@@ -38,3 +38,26 @@ def test_load_render_and_paired(tmp_path):
     text = render(res)
     assert '| v2_n200 | 9101–9102 (2) | 600 | 310 |' in text
     assert '| v2_n50 |' in text and '(2 sem.)' in text
+
+
+def _nash(d1, d2, holm1, holm2):
+    lines = [
+        '--- McNemar P1 vs P0',
+        f'emparejadas=3400 A_mejor=10 B_mejor=5 diferencia={d1} pts p=0.01',
+        '--- McNemar P2 vs P0',
+        f'emparejadas=3400 A_mejor=10 B_mejor=5 diferencia={d2} pts p=0.02',
+        '--- Holm (m=2; P1, P2)',
+        f'p=0.01 p_holm=0.02 {holm1}',
+        f'p=0.02 p_holm=0.02 {holm2}',
+    ]
+    return '\n'.join(lines) + '\n'
+
+
+def test_nash_decision_rule():
+    from showdown.inference_sim.mcts_g_summary import nash_decision
+    assert nash_decision(_nash('+1.50', '+2.00', 'rechaza H0', 'rechaza H0')) == 'P2'
+    assert nash_decision(_nash('+1.50', '+2.00', 'rechaza H0', 'no rechaza')) == 'P1'
+    assert nash_decision(_nash('-1.50', '+2.00', 'rechaza H0', 'no rechaza')) is None  # empeora
+    assert nash_decision(_nash('+1.50', '+2.00', 'no rechaza', 'no rechaza')) is None
+    assert nash_decision('basura') is None
+
