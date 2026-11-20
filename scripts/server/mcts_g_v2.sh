@@ -23,6 +23,9 @@ set -u
 OUT=${1:-$HOME/iapsvgc_runs/mcts_g_v2}
 WAIT_FILE=${WAIT_FILE:-$HOME/iapsvgc_runs/kickoff_ddqn_v2/queue.log}
 WAIT_PAT=${WAIT_PAT:-KICKOFF_DDQN_V2_DONE}
+# Líneas de WAIT_FILE que se ignoran (marcas de corridas anteriores en el mismo log). Por defecto,
+# las que ya existen al lanzar la cola: la marca del piloto de DDQN ya está en ese log.
+WAIT_SKIP_LINES=${WAIT_SKIP_LINES:-$(wc -l < "$WAIT_FILE" 2>/dev/null || echo 0)}
 PROCS=${PROCS:-28}
 mkdir -p "$OUT"/reports "$OUT"/raw
 source ~/miniconda3/etc/profile.d/conda.sh; conda activate kuroneko
@@ -38,9 +41,13 @@ run() {
   local cfg=$1 seed=$2 teams=$3; shift 3
   local rpt="$OUT/reports/${cfg}_s${seed}.txt"
   if [ -s "$rpt" ]; then log "$cfg s$seed ya hecho (reanudación)"; return 0; fi
+  rm -f logs/robust_e2e_report.txt  # que una corrida fallida no copie el reporte anterior
   python -m showdown.inference_sim.run_robust_e2e --teams "$teams" --procs "$PROCS" --seed "$seed" \
     --restart-ps --player-a mcts_puct --player-b greedy_joint "$@" > "$OUT/raw/${cfg}_s${seed}.txt" 2>&1
   local rc=$?
+  if [ ! -s logs/robust_e2e_report.txt ]; then
+    log "ERROR: $cfg s$seed rc=$rc sin reporte (ver raw/${cfg}_s${seed}.txt)"; clean_ps; return 1
+  fi
   cp logs/robust_e2e_report.txt "$rpt.tmp" && mv "$rpt.tmp" "$rpt"
   log "$cfg s$seed rc=$rc $(grep -E '^win_rate_player_a|^player_a_wins|^series_errors' "$rpt" | tr '\n' ' ')"
   clean_ps
@@ -48,8 +55,8 @@ run() {
 }
 
 if [ -n "$WAIT_FILE" ]; then
-  log "esperando /$WAIT_PAT/ en $WAIT_FILE"
-  until grep -qE "$WAIT_PAT" "$WAIT_FILE" 2>/dev/null; do sleep 60; done
+  log "esperando /$WAIT_PAT/ en $WAIT_FILE (después de la línea $WAIT_SKIP_LINES)"
+  until tail -n +"$((WAIT_SKIP_LINES + 1))" "$WAIT_FILE" 2>/dev/null | grep -qE "$WAIT_PAT"; do sleep 60; done
 fi
 clean_ps
 log "inicio commit $(git rev-parse --short HEAD)"
