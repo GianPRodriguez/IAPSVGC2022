@@ -75,7 +75,7 @@ Tests: `tests/test_mcts_puct_v2.py` (+ los de v1, MCTS–Nash y el barrido).
 
 Cola `scripts/server/mcts_g_v2.sh` (usuario, 2026-11-20: "encolarlo a las ejecuciones
 actuales"). Corre en el clon aislado `~/iapsvgc_scratch/spinfo/IAPSVGC2022` tras la
-marca de fin del kick-off de DDQN v2 (`KICKOFF_DDQN_V2_DONE` o `PILOT_DONE`; cambiable
+marca de fin del kick-off completo de DDQN v2 (`KICKOFF_DDQN_V2_DONE`, tras las semillas 2–4; cambiable
 con `WAIT_FILE`/`WAIT_PAT`). Todo contra `greedy_joint` validado, `--procs 28`:
 
 | Paso | Config | Semillas × equipos | Propósito |

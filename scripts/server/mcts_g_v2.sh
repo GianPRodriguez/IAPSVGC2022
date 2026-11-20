@@ -6,7 +6,7 @@
 # run_robust_e2e reescribe logs/robust_e2e_report.txt dentro del repo.
 #
 # 0. Espera la marca de fin de la cola actual (WAIT_FILE / WAIT_PAT; por defecto el kick-off de DDQN v2:
-#    KICKOFF_DDQN_V2_DONE o PILOT_DONE).
+#    KICKOFF_DDQN_V2_DONE; no PILOT_DONE: el usuario decidió completar las semillas 2-4, 20-11-2026).
 # 1. Tests de MCTS (v2, v1, MCTS-Nash, barrido). Si fallan, se detiene.
 # 2. Smoke: v2 vs greedy_joint, 20 equipos. Se detiene si hay errores de serie, excepciones o fallbacks
 #    del adaptador (avisos "mcts_puct:" del player).
@@ -22,7 +22,7 @@
 set -u
 OUT=${1:-$HOME/iapsvgc_runs/mcts_g_v2}
 WAIT_FILE=${WAIT_FILE:-$HOME/iapsvgc_runs/kickoff_ddqn_v2/queue.log}
-WAIT_PAT=${WAIT_PAT:-KICKOFF_DDQN_V2_DONE|PILOT_DONE}
+WAIT_PAT=${WAIT_PAT:-KICKOFF_DDQN_V2_DONE}
 PROCS=${PROCS:-28}
 mkdir -p "$OUT"/reports "$OUT"/raw
 source ~/miniconda3/etc/profile.d/conda.sh; conda activate kuroneko
