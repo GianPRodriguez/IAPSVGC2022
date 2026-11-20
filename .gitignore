@@ -54,3 +54,7 @@ logs/calc_cache.sqlite*
 # Expectimax tune overlay (ephemeral; defaults live in ExpectimaxConfig)
 showdown/battle_bots/expectimax_bayesian/ACTIVE_OVERRIDES.json
 
+
+# Checkpoints copiados del servidor para jugar online (DDQN v1); no se versionan
+logs/online_ddqn/*.pt
+logs/online_ddqn/replays/

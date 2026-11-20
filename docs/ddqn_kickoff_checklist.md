@@ -846,3 +846,28 @@ semilla 0) antes de decidir el kick-off.
 preview v2 (65,3 %, 2 semillas): −3,2 (± 3,2), en el límite del ruido. Frente a PPO v1 (81,2 %):
 −19,1 (mezcla algoritmo, preview y observación). **Nombre: DDQN v1** (decisión del usuario, 20-11-2026;
 ddqn_spec 1.24).
+
+#### DDQN v1 listo para jugar online contra personas (20-11-2026)
+
+Pedido del usuario: dejar DDQN v1 configurado para Showdown público, como se hizo con PPO.
+Script: `scripts/online/ddqn_online_bo3.py`.
+- **Agente:** el mismo `DDQNPlayer` de poke-env que la evaluación, con la observación v2.1 y el equipo
+  fijo. Corre en el laptop (CPU).
+- **Checkpoint:** DDQN v1 semilla 0, `final.pt`, la de mejor `eval` (65,5 %; elegida con `eval`, como
+  PPO semilla 2 en la prueba de PPO). Preview: v2.1 sin `val` (`preview_v21b/preview_s0/best.pt`).
+  Copiados a `logs/online_ddqn/` (md5 435584f6… y 50e541cd…, iguales al servidor; no se versionan).
+- **Combate determinista** (argmax de Q, épsilon 0). **Preview con sorteo, temperatura 1,0**, entre
+  las 90 formaciones canónicas (decisión del usuario: preview no determinista contra personas);
+  `--preview-greedy` vuelve al modo determinista.
+- **Calculadora real obligatoria:** DDQN v1 se entrenó con los daños de `@smogon/calc`. El script
+  comprueba antes de conectarse que la calculadora responde y aborta si no. Al final reporta
+  respaldos y pedidos sin respuesta. En el laptop faltaba compilar `../damage-calc/calc/dist`: se
+  copió del servidor (mismo commit bacbbfc).
+- `--check` verifica checkpoint (`obs_abilities=True`), preview y calculadora sin conectarse.
+
+**Prueba local** (laptop, Showdown local, BO3 contra greedy_joint): 2-0, 14 decisiones, 0 excepciones,
+0 órdenes de reserva; calculadora en 14/14 observaciones (1195 pedidos, 0 respaldos, 0 sin
+respuesta).
+
+    python scripts/online/ddqn_online_bo3.py --check
+    python scripts/online/ddqn_online_bo3.py --opponent <usuario>
