@@ -211,3 +211,23 @@ def test_s3_real_calc_path_does_not_persist_to_disk(monkeypatch):
     root = prepare_root(_snap())
     m = S3Model.build(root)
     assert seen.get('persist') is False and m.stats.missing == 0
+
+
+def test_nash_preview_fallback_is_recorded(monkeypatch, tmp_path):
+    """Con MCTS_PREVIEW=nash y sin checkpoint, la caída al orden fijo queda registrada."""
+    from showdown.rl.family_preview_mixin import FamilyPreviewMixin
+    from showdown.rl.mcts_puct.player import MCTSPuctPlayer
+
+    class FP:
+        available = False
+        _load_error = 'missing_checkpoint:x.pt'
+
+    class Fake:
+        _frozen_preview = FP()
+
+    stats = tmp_path / 'anom.tsv'
+    monkeypatch.setenv('MCTS_PREVIEW', 'nash')
+    monkeypatch.setenv('MCTS_STATS_FILE', str(stats))
+    monkeypatch.setattr(FamilyPreviewMixin, 'teampreview', lambda self, b: '/team 1234')
+    assert MCTSPuctPlayer.teampreview(Fake(), None) == '/team 1234'
+    assert stats.read_text(encoding='utf-8').startswith('preview_fallback')

@@ -53,7 +53,9 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
     Preview (decisión del usuario, 20-11-2026): el mismo de solo/joint/expectimax.
     ``team_preview_nash`` nunca se entrenó (solo un checkpoint de smoke con etiquetas
     mock), así que la familia caía al orden fijo ``/team 1234`` (−4 pts medidos).
-    ``MCTS_PREVIEW=nash`` vuelve al preview de familia (requiere checkpoint).
+    ``MCTS_PREVIEW=nash`` vuelve al preview de familia (requiere checkpoint;
+    ``MCTS_PREVIEW_CKPT`` elige cuál). Si el checkpoint no carga y se cae al orden fijo,
+    se registra la anomalía ``preview_fallback`` (antes pasaba en silencio).
 
     Env: ``MCTS_SIMS`` (presupuesto), ``MCTS_SEED``, ``MCTS_PUCT_VERSION`` (3 por
     defecto = S3 fase 3a; 4 = S3 fase 3b, en medición; 2 = S2 open-loop; 1 = búsqueda
@@ -91,13 +93,17 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
             'foe_no_moves': 0,
         }
         self.init_family_preview(
-            preview_checkpoint=preview_checkpoint,
+            preview_checkpoint=preview_checkpoint or os.environ.get('MCTS_PREVIEW_CKPT') or None,
             preview_kind=preview_kind,
         )
 
     def teampreview(self, battle) -> str:
         if os.environ.get('MCTS_PREVIEW', 'greedy').strip().lower() == 'nash':
-            return FamilyPreviewMixin.teampreview(self, battle)
+            out = FamilyPreviewMixin.teampreview(self, battle)
+            fp = getattr(self, '_frozen_preview', None)
+            if fp is not None and not fp.available:
+                _record_anomaly('preview_fallback', battle, str(getattr(fp, '_load_error', '')))
+            return out
         from showdown.battle_bots.greedy_solo.pokeenv_player import GreedyDamagePlayer
         return GreedyDamagePlayer.teampreview(self, battle)
 

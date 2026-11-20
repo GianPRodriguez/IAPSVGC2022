@@ -216,3 +216,33 @@ corrida. Desde v3.1.1 S3 no escribe en la caché en disco (`persist=False`).
 
 Siguiente: fase 3b (Protect, Fake Out, redirección, Helping Hand), medida en pareado
 contra v3.1 en exploración y, si mejora, confirmada en un bloque nuevo.
+
+## 7. Preview Nash para G (entrenamiento y medición, fijado el 20-11-2026 antes de medir)
+
+Decisión del usuario: entrenar por fin `team_preview_nash` (nunca se había entrenado; G
+usa el preview greedy desde v3.1) y medir si mejora al preview greedy. Solo baselines.
+
+**Entrenamiento:** `team_preview_nash.train --backend live`, piloto greedy_joint congelado
+(como pide su spec), 200 actualizaciones × 2048 BO1, equipos `fit` (`PS_TEAM_SPLIT=fit`,
+como el preview v2.1), semillas 0 y 1. ~50 min por semilla.
+
+**Medición (exploración):** combate G v3.1 (el confirmado, `MCTS_PUCT_VERSION=3`) contra
+greedy_joint validado, con equipos **`eval`** (no vistos por el preview:
+`--team-split eval`, 100 equipos, 100 BO3 por semilla), semillas 9101–9134 (3400 BO3 por
+configuración). Configuraciones en pareado (mismas series):
+
+| Id | Preview |
+|---|---|
+| P0 | greedy (tipado + BST, el actual) |
+| P1 | Nash, semilla 0 |
+| P2 | Nash, semilla 1 |
+
+**Regla de decisión:** McNemar exacta P1 frente a P0 y P2 frente a P0, Holm con m = 2. Se
+adopta el preview Nash solo si alguna semilla mejora a P0 con p Holm < 0,05 (si las dos,
+la de mayor diferencia); entonces se confirma en un bloque nuevo con el commit congelado.
+Si no, G sigue con el preview greedy.
+
+**Secundaria (memorización, descriptiva):** P1 y P2 con los 300 equipos (`all`, incluye
+los de entrenamiento), semillas 9101–9117, en pareado con `v3_n200` (preview greedy, §6.1).
+
+Resultados: se añadirán aquí.
