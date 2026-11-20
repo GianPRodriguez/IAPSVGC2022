@@ -217,6 +217,22 @@ corrida. Desde v3.1.1 S3 no escribe en la caché en disco (`persist=False`).
 Siguiente: fase 3b (Protect, Fake Out, redirección, Helping Hand), medida en pareado
 contra v3.1 en exploración y, si mejora, confirmada en un bloque nuevo.
 
+### 6.3 Fase 3b (v4.0): exploración (2026-11-20, commit 20f41c7, terminada 15:10)
+
+Cola `scripts/server/mcts_g_v4.sh`: tests 50/50 en el servidor, smoke sin anomalías, 0
+anomalías en toda la cola. G v4 (`MCTS_PUCT_VERSION=4`, 200 sims, preview greedy) contra
+greedy_joint validado, mismas semillas que v3 (9101–9117 × 300).
+
+| Config | Series G/5100 | WR G | IC 95 % (Wilson) | Δ vs v3 por semilla | McNemar por serie | Tiempo/semilla |
+|---|---:|---:|---|---|---|---:|
+| v3_n200 (§6.1) | 2935 | 57,5 % | [56,2, 58,9] | — | — | 83 s |
+| **v4_n200** | **3073** | **60,3 %** | [58,9, 61,6] | **+2,7 ± 1,4 pts** (13 suben, 2 igual, 2 bajan) | 745 frente a 606 series discordantes, **p = 0,0002** | 113 s |
+
+Lectura (exploración): modelar Protect, Wide Guard, Fake Out, redirección y Helping Hand
+mejora a G ~2,7 puntos contra joint, con significación en el diseño pareado. El costo es
+~35 % más de tiempo por decisión. Pendiente: confirmación en bloques nuevos antes de
+pasar v4 a ser el valor por defecto.
+
 ## 7. Preview Nash para G (entrenamiento y medición, fijado el 20-11-2026 antes de medir)
 
 Decisión del usuario: entrenar por fin `team_preview_nash` (nunca se había entrenado; G
