@@ -25,7 +25,8 @@ class PipelineSpec:
 DEFAULT_PIPELINES: List[PipelineSpec] = [
     PipelineSpec('ddqn', 'ddqn', 'team_preview_ppo', 'family'),
     PipelineSpec('ppo', 'ppo', 'team_preview_ppo', 'family'),
-    PipelineSpec('mcts_puct', 'mcts_puct', 'team_preview_nash', 'family'),
+    # G: preview greedy desde mcts_puct v3.1 (team_preview_nash nunca se entrenó; usuario 20-11-2026).
+    PipelineSpec('mcts_puct', 'mcts_puct', 'greedy_solo', 'family'),
     PipelineSpec(
         'mcts_puct_nash', 'mcts_puct_nash', 'team_preview_nash', 'family',
     ),

@@ -48,7 +48,12 @@ def _env_int(name: str, default: int) -> int:
 
 
 class MCTSPuctPlayer(FamilyPreviewMixin, Player):
-    """Frozen ``team_preview_nash`` + MCTS+PUCT joint policy.
+    """Preview greedy (tipado + BST) + MCTS+PUCT joint policy (spec v3.1).
+
+    Preview (decisión del usuario, 20-11-2026): el mismo de solo/joint/expectimax.
+    ``team_preview_nash`` nunca se entrenó (solo un checkpoint de smoke con etiquetas
+    mock), así que la familia caía al orden fijo ``/team 1234`` (−4 pts medidos).
+    ``MCTS_PREVIEW=nash`` vuelve al preview de familia (requiere checkpoint).
 
     Env: ``MCTS_SIMS`` (presupuesto), ``MCTS_SEED``, ``MCTS_PUCT_VERSION`` (3 por
     defecto = S3; 2 = S2 open-loop; 1 = búsqueda original). Contadores (``mcts_stats``): decisiones,
@@ -88,6 +93,12 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
             preview_checkpoint=preview_checkpoint,
             preview_kind=preview_kind,
         )
+
+    def teampreview(self, battle) -> str:
+        if os.environ.get('MCTS_PREVIEW', 'greedy').strip().lower() == 'nash':
+            return FamilyPreviewMixin.teampreview(self, battle)
+        from showdown.battle_bots.greedy_solo.pokeenv_player import GreedyDamagePlayer
+        return GreedyDamagePlayer.teampreview(self, battle)
 
     def _root_joints(self, battle):
         try:
