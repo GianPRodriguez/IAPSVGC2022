@@ -1382,3 +1382,11 @@ como estaba previsto.
 3. La brecha de memorización de DDQN no cambia (propios 95,5 % frente a `eval` 64 %).
 4. Entrenar el combate junto con el preview corrigió casi toda la caída del test de combate fijo
    (`eval` 56,5 → 64,1 %): confirma que esa caída venía de formaciones no practicadas.
+
+**Decisión del usuario (20-11-2026): opción A.**
+- Para esta decisión se usa `eval` como medida, en vez de `val`.
+- **Excepción al protocolo, justificada:** para comparar previews, `val` está contaminado, porque las
+  referencias usaron previews entrenados con esos equipos. `eval` es la única medida limpia.
+- Resultado en `eval`: 64,1 % frente a 65,3 %; no empeora.
+- Se completa el kick-off de DDQN con las semillas 2–4 (`SKIP_PILOT=1`). Las semillas 0 y 1 del
+  piloto cuentan como parte del kick-off.

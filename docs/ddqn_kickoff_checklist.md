@@ -833,3 +833,9 @@ semilla 0) antes de decidir el kick-off.
 - **Si el usuario aprueba el kick-off:** solo faltan las semillas 2–4 (`SKIP_PILOT=1`, ~3,7 h).
 - **En la tesis:** el preview se usa contra el veredicto de su regla, porque el test de esa regla
   tenía sesgo; el control del piloto es el juicio definitivo.
+
+**Resultado del piloto y decisión (20-11-2026, memorizacion §18.6):**
+- **Resultado:** el control en `val` falló (−6,3), por el sesgo de las referencias. En `eval`, DDQN
+  con el preview v2.1 nuevo queda igual (64,1 % frente a 65,3 %).
+- **Decisión del usuario:** decidir con `eval` (excepción declarada) y completar el kick-off con las
+  semillas 2–4.
