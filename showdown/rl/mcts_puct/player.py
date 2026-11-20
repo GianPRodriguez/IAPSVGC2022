@@ -50,8 +50,8 @@ def _env_int(name: str, default: int) -> int:
 class MCTSPuctPlayer(FamilyPreviewMixin, Player):
     """Frozen ``team_preview_nash`` + MCTS+PUCT joint policy.
 
-    Env: ``MCTS_SIMS`` (presupuesto), ``MCTS_SEED``, ``MCTS_PUCT_VERSION`` (2 por
-    defecto; 1 = búsqueda original). Contadores (``mcts_stats``): decisiones,
+    Env: ``MCTS_SIMS`` (presupuesto), ``MCTS_SEED``, ``MCTS_PUCT_VERSION`` (3 por
+    defecto = S3; 2 = S2 open-loop; 1 = búsqueda original). Contadores (``mcts_stats``): decisiones,
     excepciones (→ orden por defecto) y fallbacks del adaptador (→ orden al azar);
     antes eran silenciosos.
     """
@@ -74,13 +74,15 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
             MCTSPuctConfig(
                 n_sims=int(sims),
                 seed=_env_int('MCTS_SEED', seed),
-                version=_env_int('MCTS_PUCT_VERSION', 2),
+                version=_env_int('MCTS_PUCT_VERSION', 3),
             )
         )
         self.last_joint = 0
         self.mcts_stats = {
             'decisions': 0, 'exceptions': 0, 'adapter_fallbacks': 0,
             'trivial': 0, 'search_sec': 0.0,
+            'calc_requests': 0, 'calc_missing': 0, 'calc_errors': 0, 'calc_sec': 0.0,
+            'foe_no_moves': 0,
         }
         self.init_family_preview(
             preview_checkpoint=preview_checkpoint,
@@ -101,11 +103,24 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
         try:
             snap = snapshot_from_battle(battle)
             root = self._root_joints(battle) if int(self.agent.cfg.version) >= 2 else None
-            joint = self.agent.act(snap, root_joints=root)
+            beliefs = getattr(getattr(self, 'iap_battle', None), 'stat_beliefs', None)
+            joint = self.agent.act(snap, root_joints=root, stat_beliefs=beliefs)
             tel = self.agent.last_telemetry
             if tel is not None:
                 st['search_sec'] += float(getattr(tel, 'elapsed_sec', 0.0) or 0.0)
                 st['trivial'] += int(bool(getattr(tel, 'trivial', False)))
+                st['calc_requests'] += int(getattr(tel, 'calc_requests', 0) or 0)
+                st['calc_missing'] += int(getattr(tel, 'calc_missing', 0) or 0)
+                st['calc_sec'] += float(getattr(tel, 'calc_sec', 0.0) or 0.0)
+                st['foe_no_moves'] += int(getattr(tel, 'foe_no_moves', 0) or 0)
+                if getattr(tel, 'calc_error', ''):
+                    st['calc_errors'] += 1
+                    _record_anomaly('calc_error', battle, str(tel.calc_error))
+                if int(getattr(tel, 'calc_missing', 0) or 0) > 0:
+                    _record_anomaly('calc_missing', battle,
+                                    f'{tel.calc_missing}/{tel.calc_requests}')
+                if int(getattr(tel, 'foe_no_moves', 0) or 0) > 0:
+                    _record_anomaly('foe_no_moves', battle, str(tel.foe_no_moves))
             self.last_joint = int(joint)
             a1, a2 = decode_joint_action(joint)
             order, fb = joint_order_from_spec_actions(battle, (a1, a2))

@@ -6,7 +6,9 @@ series ganadas, WR con IC 95 % (Wilson) y, para cada configuración, la diferenc
 pareada por semilla frente a la configuración base (``v2_n200``) en las semillas
 comunes. Es exploración (protocolo_evaluacion.md): no respalda afirmaciones.
 
-    python -m showdown.inference_sim.mcts_g_summary ~/iapsvgc_runs/mcts_g_v2
+    python -m showdown.inference_sim.mcts_g_summary ~/iapsvgc_runs/mcts_g_v2 [base]
+
+``base``: configuración de referencia para el Δ pareado (por defecto ``v2_n200``).
 """
 from __future__ import annotations
 
@@ -57,14 +59,14 @@ def paired_diff(a: Dict[int, dict], b: Dict[int, dict]) -> Optional[Tuple[float,
     return mu, 2.0 * sd / math.sqrt(len(d)), len(seeds)
 
 
-def render(res: Dict[str, Dict[int, dict]]) -> str:
+def render(res: Dict[str, Dict[int, dict]], base_cfg: str = BASE) -> str:
     lines: List[str] = [
         '# MCTS+PUCT v2 (G) — resumen de la cola', '',
         'Rival: greedy_joint validado. WR = series BO3 ganadas por G. Exploración.', '',
-        '| Config | Semillas | Series | Ganadas | WR | IC 95 % | Errores | Tiempo medio/semilla | Δ vs v2_n200 (pareado) |',
+        f'| Config | Semillas | Series | Ganadas | WR | IC 95 % | Errores | Tiempo medio/semilla | Δ vs {base_cfg} (pareado) |',
         '|---|---|---:|---:|---:|---|---:|---:|---|',
     ]
-    base = res.get(BASE, {})
+    base = res.get(base_cfg, {})
     for cfg in sorted(res):
         rows = res[cfg]
         w = sum(r['wins'] for r in rows.values())
@@ -74,7 +76,7 @@ def render(res: Dict[str, Dict[int, dict]]) -> str:
         t = sum(r['elapsed_s'] for r in rows.values()) / max(1, len(rows))
         seeds = sorted(rows)
         span = f'{seeds[0]}–{seeds[-1]} ({len(seeds)})' if seeds else '-'
-        pd = paired_diff(rows, base) if cfg != BASE else None
+        pd = paired_diff(rows, base) if cfg != base_cfg else None
         pds = f'{pd[0]:+.1f} ± {pd[1]:.1f} pts ({pd[2]} sem.)' if pd else '-'
         wr = 100 * w / n if n else 0.0
         lines.append(f'| {cfg} | {span} | {n} | {w} | {wr:.1f} % | [{lo:.1f}, {hi:.1f}] | {err} | {t:.0f} s | {pds} |')
@@ -88,7 +90,7 @@ def main(argv=None) -> int:
         print(__doc__)
         return 2
     out = Path(argv[0]).expanduser()
-    text = render(load(out))
+    text = render(load(out), argv[1] if len(argv) > 1 else BASE)
     (out / 'summary.md').write_text(text, encoding='utf-8')
     print(text)
     return 0

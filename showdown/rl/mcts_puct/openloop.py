@@ -58,6 +58,8 @@ class OpenLoopConfig:
     # Profundidad máxima del árbol (plies propios).
     max_depth: int = 6
     prefer_mega: bool = True
+    # Modelo de transición: 's2' (v2, simulator.step_sim) o 's3' (v3: daño real + orden).
+    model: str = 's2'
 
 
 @dataclass
@@ -71,6 +73,13 @@ class OpenLoopTelemetry:
     root_visited: int = 0
     elapsed_sec: float = 0.0
     trivial: bool = False
+    model: str = 's2'
+    calc_requests: int = 0
+    calc_missing: int = 0
+    calc_sec: float = 0.0
+    calc_error: str = ''
+    foe_no_moves: int = 0
+    foe_point_stats: int = 0
 
 
 @dataclass
@@ -192,9 +201,27 @@ def material_value(s: BattleSnapshot) -> float:
 # --------------------------------------------------------------------------- árbol
 
 
-def _step(s: BattleSnapshot, a_self: int, a_opp: int, rng, cfg: OpenLoopConfig) -> BattleSnapshot:
-    out = step_sim(s, a_self, a_opp, rng, max_turns=cfg.max_turns,
-                   status_chip=False, clone_fn=fast_clone)
+class _Ctx:
+    """Modelo de transición y puntuación de una búsqueda (S2 o S3)."""
+
+    def __init__(self, cfg: OpenLoopConfig, model=None):
+        self.cfg = cfg
+        self.model = model
+        self.scorer = model.joint_scores if model is not None else None
+        if model is not None:
+            from showdown.rl.mcts_puct.s3 import target_class
+            self.target_fn = target_class
+        else:
+            self.target_fn = None
+
+
+def _step(s: BattleSnapshot, a_self: int, a_opp: int, rng, ctx: '_Ctx') -> BattleSnapshot:
+    cfg = ctx.cfg
+    if ctx.model is not None:
+        out = ctx.model.step(s, a_self, a_opp, rng, max_turns=cfg.max_turns)
+    else:
+        out = step_sim(s, a_self, a_opp, rng, max_turns=cfg.max_turns,
+                       status_chip=False, clone_fn=fast_clone)
     if not out.finished:
         auto_replace(out)
     out.force_switch = (False, False)
@@ -202,14 +229,15 @@ def _step(s: BattleSnapshot, a_self: int, a_opp: int, rng, cfg: OpenLoopConfig) 
     return out
 
 
-def _expand(node: OLNode, s: BattleSnapshot, cfg: OpenLoopConfig,
+def _expand(node: OLNode, s: BattleSnapshot, ctx: '_Ctx',
             joints: Optional[Sequence[int]] = None, *, root: bool = False) -> None:
+    cfg = ctx.cfg
     if joints is None:
-        joints = A.pruned_joints(s)
+        joints = A.pruned_joints(s, ctx.target_fn)
     joints = [int(j) for j in joints]
     if cfg.prefer_mega:
         joints = A.prefer_mega(joints)
-    scores = A.joint_scores(s, joints)
+    scores = (ctx.scorer or A.joint_scores)(s, joints)
     if not root:
         joints, scores = A.top_k(joints, scores, cfg.inner_top_k)
     pri = A.prior_from_scores(scores, cfg.prior_temperature, cfg.prior_eps)
@@ -232,18 +260,23 @@ def _select(node: OLNode, s: BattleSnapshot, cfg: OpenLoopConfig, *, root: bool)
     return best_a
 
 
-def _rollout_value(s: BattleSnapshot, rng, cfg: OpenLoopConfig) -> float:
-    for _ in range(max(0, int(cfg.rollout_turns))):
+def _opp(s: BattleSnapshot, rng, ctx: '_Ctx') -> int:
+    return A.sample_opponent_joint(s, rng, temperature=ctx.cfg.opp_temperature,
+                                   eps=ctx.cfg.opp_eps, scorer=ctx.scorer, target_fn=ctx.target_fn)
+
+
+def _rollout_value(s: BattleSnapshot, rng, ctx: '_Ctx') -> float:
+    for _ in range(max(0, int(ctx.cfg.rollout_turns))):
         if s.finished:
             break
-        a_self = A.greedy_joint(s)
-        a_opp = A.sample_opponent_joint(s, rng, temperature=cfg.opp_temperature, eps=cfg.opp_eps)
-        s = _step(s, a_self, a_opp, rng, cfg)
+        a_self = A.greedy_joint(s, scorer=ctx.scorer, target_fn=ctx.target_fn)
+        s = _step(s, a_self, _opp(s, rng, ctx), rng, ctx)
     return material_value(s)
 
 
 def _simulate(root: OLNode, root_state: BattleSnapshot, sim_id: int,
-              cfg: OpenLoopConfig, tel: OpenLoopTelemetry, *, root_force: bool) -> None:
+              ctx: '_Ctx', tel: OpenLoopTelemetry, *, root_force: bool) -> None:
+    cfg = ctx.cfg
     rng = make_sim_rng(cfg.seed, int(root_state.turn), int(sim_id))
     node, s = root, root_state
     path: List[Tuple[OLNode, int]] = []
@@ -254,24 +287,22 @@ def _simulate(root: OLNode, root_state: BattleSnapshot, sim_id: int,
                 z = material_value(s)
                 break
             if not node.expanded:
-                _expand(node, s, cfg)
+                _expand(node, s, ctx)
                 tel.nodes += 1
-                z = _rollout_value(s, rng, cfg) if path else material_value(s)
+                z = _rollout_value(s, rng, ctx) if path else material_value(s)
                 break
             a = _select(node, s, cfg, root=(node is root))
             if a is None or depth >= cfg.max_depth:
-                z = _rollout_value(s, rng, cfg)
+                z = _rollout_value(s, rng, ctx)
                 break
             if node is root and root_force:
                 # Fase de cambio forzado: el rival no actúa en este ply.
                 a_opp = encode_joint_action(PASS_ID, PASS_ID)
             else:
-                a_opp = A.sample_opponent_joint(
-                    s, rng, temperature=cfg.opp_temperature, eps=cfg.opp_eps,
-                )
+                a_opp = _opp(s, rng, ctx)
             path.append((node, a))
             depth += 1
-            s = _step(s, a, a_opp, rng, cfg)
+            s = _step(s, a, a_opp, rng, ctx)
             node = node.children.setdefault(a, OLNode())
     except Exception:
         tel.failures += 1
@@ -291,15 +322,29 @@ def search_openloop(
     cfg: Optional[OpenLoopConfig] = None,
     *,
     root_joints: Optional[Sequence[int]] = None,
+    stat_beliefs=None,
+    ranges_fn=None,
 ) -> Tuple[int, OLNode, OpenLoopTelemetry]:
-    """N_sim simulaciones open-loop; devuelve el joint más visitado (desempate Q, id)."""
+    """N_sim simulaciones open-loop; devuelve el joint más visitado (desempate Q, id).
+
+    ``cfg.model='s3'``: tabla de daño real (un lote a la calculadora por decisión) con
+    ``stat_beliefs`` del rival (prior meta) y orden por velocidad/prioridad.
+    """
     cfg = cfg or OpenLoopConfig()
     t0 = time.perf_counter()
-    tel = OpenLoopTelemetry()
+    tel = OpenLoopTelemetry(model=str(cfg.model))
     s0 = prepare_root(root_state)
     root_force = bool(any(root_state.force_switch))
+    model = None
+    if str(cfg.model).lower() == 's3':
+        from showdown.rl.mcts_puct.s3 import S3Model
+        model = S3Model.build(s0, stat_beliefs=stat_beliefs, ranges_fn=ranges_fn)
+        ms = model.stats
+        tel.calc_requests, tel.calc_missing, tel.calc_sec = ms.requests, ms.missing, ms.build_sec
+        tel.calc_error, tel.foe_no_moves, tel.foe_point_stats = ms.error, ms.foe_no_moves, ms.foe_point_stats
+    ctx = _Ctx(cfg, model)
     root = OLNode()
-    _expand(root, s0, cfg, joints=root_joints, root=True)
+    _expand(root, s0, ctx, joints=root_joints, root=True)
     tel.root_actions = len(root.edges)
     if not root.edges:
         tel.trivial = True
@@ -310,7 +355,7 @@ def search_openloop(
         tel.elapsed_sec = time.perf_counter() - t0
         return int(next(iter(root.edges))), root, tel
     for k in range(int(cfg.n_sims)):
-        _simulate(root, s0, k, cfg, tel, root_force=root_force)
+        _simulate(root, s0, k, ctx, tel, root_force=root_force)
 
     def key(item):
         a, e = item

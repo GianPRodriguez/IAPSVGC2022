@@ -1,8 +1,10 @@
 """MCTS+PUCT agent (docs/mcts_puct_spec.md).
 
-``version=2`` (default desde spec v2.0): búsqueda open-loop de ``openloop.py``.
-``version=1``: búsqueda original de ``search.py`` (reproducibilidad / ablación;
-``MCTS_PUCT_VERSION=1`` en el player).
+``version=3`` (default desde spec v3.0): open-loop con el modelo S3 (``s3.py``: daño
+real de la calculadora, orden por velocidad/prioridad, área, precisión).
+``version=2``: open-loop con S2 (``simulator.py``).
+``version=1``: búsqueda original de ``search.py``.
+En el player: ``MCTS_PUCT_VERSION`` (reproducibilidad / ablación).
 """
 from __future__ import annotations
 
@@ -21,7 +23,7 @@ class MCTSPuctConfig:
     c_puct: float = 1.5
     max_turns: int = 40
     seed: int = 0
-    version: int = 2
+    version: int = 3
     # --- solo v2 (ver OpenLoopConfig) ---
     prior_temperature: float = 20.0
     prior_eps: float = 0.25
@@ -40,6 +42,7 @@ class MCTSPuctConfig:
             inner_top_k=int(self.inner_top_k), opp_temperature=float(self.opp_temperature),
             opp_eps=float(self.opp_eps), rollout_turns=int(self.rollout_turns),
             max_depth=int(self.max_depth), prefer_mega=bool(self.prefer_mega),
+            model='s3' if int(self.version) >= 3 else 's2',
         )
 
 
@@ -49,10 +52,12 @@ class MCTSPuctAgent:
         self.last_telemetry = None
         self.last_joint: int = 0
 
-    def act(self, snap: BattleSnapshot, root_joints: Optional[Sequence[int]] = None) -> int:
+    def act(self, snap: BattleSnapshot, root_joints: Optional[Sequence[int]] = None,
+            stat_beliefs=None) -> int:
         """Joint más visitado tras N_sim simulaciones.
 
-        ``root_joints``: joints legales reales (poke-env ``valid_orders``); solo v2.
+        ``root_joints``: joints legales reales (poke-env ``valid_orders``); v2/v3.
+        ``stat_beliefs``: creencias de SP del rival (prior meta); solo v3.
         """
         if int(self.cfg.version) == 1:
             sc = SearchConfig(
@@ -63,7 +68,8 @@ class MCTSPuctAgent:
             )
             joint, _root, tel = search(snap, sc)
         else:
-            joint, _root, tel = search_openloop(snap, self.cfg.openloop(), root_joints=root_joints)
+            joint, _root, tel = search_openloop(snap, self.cfg.openloop(), root_joints=root_joints,
+                                                stat_beliefs=stat_beliefs)
         self.last_telemetry = tel
         self.last_joint = int(joint)
         return int(joint)

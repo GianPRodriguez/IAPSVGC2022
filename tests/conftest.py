@@ -30,6 +30,8 @@ def _isolate_obs_calc(monkeypatch):
     (RL_OBS_CALC=0, respaldo en Python); los tests de integración la activan explícitamente."""
     before = os.environ.get('RL_OBS_ABILITIES')
     monkeypatch.setenv('RL_OBS_CALC', os.environ.get('RL_OBS_CALC_TESTS', '0'))
+    # MCTS+PUCT v3 (S3) tampoco llama a Node en los tests salvo que se pida (respaldo S2 por pedido).
+    monkeypatch.setenv('MCTS_S3_CALC', os.environ.get('MCTS_S3_CALC_TESTS', '0'))
     try:
         yield
     finally:

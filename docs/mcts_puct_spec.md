@@ -3,14 +3,14 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS+PUCT open-loop (solo turnos) |
-| **Versión** | **2.0** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
-| **Estado** | v2.0 en medición (open-loop real, acciones podadas); v1 disponible con `MCTS_PUCT_VERSION=1`. Diagnóstico: [`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md) |
+| **Versión** | **3.0** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
+| **Estado** | v3.0 en medición (modelo S3 fase 3a: daño real + orden del turno); v2 (S2) con `MCTS_PUCT_VERSION=2`, v1 con `=1`. Diagnóstico: [`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md) |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Hiperparámetros de búsqueda (sobre todo \(N_{\rm sim}\)); barrido automatizado |
 | **CLI smoke** | `python -m showdown.rl.mcts_puct --seed 0 --sims 16 --smoke` |
 | **CLI barrido** | `python -m showdown.inference_sim.run_mcts_sims_sweep --agent mcts_puct ...` |
-| **Env presupuesto** | `MCTS_SIMS` (default config `200`); `MCTS_PUCT_VERSION` (`2` default, `1` = búsqueda original) |
-| **Dependencias** | NumPy; no requiere Torch |
+| **Env presupuesto** | `MCTS_SIMS` (default config `200`); `MCTS_PUCT_VERSION` (`3` default = S3; `2` = S2; `1` = búsqueda original); `MCTS_S3_CALC=0` = S3 sin calculadora (tests) |
+| **Dependencias** | NumPy; v3: calculadora real (`damage_calc_bridge`, Node + `damage-calc`); no requiere Torch |
 
 > **Para quien aprende IA.** Este agente no “estudia” partidas previas. En cada
 > turno imagina muchas continuaciones (simulaciones), anota qué acciones
@@ -155,6 +155,27 @@ medidas en [`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md).
 
 ---
 
+### 4.2 Modelo S3 (v3.0, fase 3a: `s3.py`)
+
+S3 sustituye a S2 como modelo de transición **y** de puntuación (prior, rival del
+árbol y rollout greedy). S2 sigue intacto para MCTS–Nash y para `MCTS_PUCT_VERSION=2`.
+
+| Pieza | Cómo |
+|---|---|
+| Tabla de daño | Al inicio de cada decisión, **un lote** a la calculadora real (`@smogon/calc` Champions, mismos pedidos que P5: `obs_calc.build_request`): cada atacante × defensor × movimiento dañino para los 4 Pokémon de cada lado (activos y banca), variante individual y de área (`isSpread`), y fuego amigo de `allAdjacent`. ~100–130 pedidos; ~19 ms sin caché, ~6 ms con caché; arranque de Node ~10 s una vez por proceso. La tirada se sortea uniforme en el rango. Pedido sin respuesta → heurística S2 para ese par |
+| Stats | Propios exactos (`|request|`). Rival: SP preferido por el prior meta leave-one-out de sus creencias (`iap_battle.stat_beliefs`, `preferred_sp`), como greedy/expectimax; sin creencias, punto medio del rango de la hoja |
+| Dex | El de Champions (`team_preview_obs`), no `API/JSONs/moves.json`: a este le faltan 21 de los 212 movimientos del meta (Make It Rain, Kowtow Cleave, Glaive Rush…), que con S2 no hacían nada. La poda de objetivos de v3 usa también este dex |
+| Orden | Cambios primero; luego movimientos por prioridad (`move_priority`: Prankster, Grassy Glide…) y velocidad efectiva (`effective_speed`: boosts, Scarf, parálisis; Tailwind ×2 por lado; Trick Room invierte); desempate al azar. Quien cae antes de actuar no actúa |
+| Objetivos | Individual: si el rival elegido cayó, se redirige al otro. `allAdjacentFoes`: rivales vivos; `allAdjacent`: también el aliado; ×0,75 si golpea a más de uno. Precisión por movimiento |
+| Puntuación | Valor de un hueco = Σ objetivos de precisión × (daño medio acotado al HP + 40·P(KO)); golpear al aliado resta. Prior, rival (softmax) y rollout greedy la usan |
+
+Fuera de 3a (fases 3b/3c): Protect, Fake Out, redirección, Helping Hand, Tailwind /
+Trick Room como acciones, Intimidate, estados, clima/terreno cambiantes, boosts dentro
+del árbol, críticos. Los movimientos de estado no hacen nada. La tabla se calcula con
+el estado de la raíz (HP, boosts, campo) y no se recalcula dentro del árbol.
+
+---
+
 ## 5. Observación, acción y máscaras
 
 Contrato live: [`rl_env_spec.md`](rl_env_spec.md). La búsqueda usa snapshots, no
@@ -268,7 +289,8 @@ python -m showdown.rl.mcts_puct --seed 0 --sims 16 --smoke
 | `max_depth` | `6` plies | Acotar árbol | Más allá, se valora con rollout corto |
 | Reemplazo tras KO | automático, más HP (v1: no) | Estado coherente | Evita lados con un solo activo |
 | Chip de estado S2 | off (v1: 8–18 % de daño) | Protect no daña | Corrige un artefacto de S2 |
-| `prefer_mega` | on | Mega con el mismo movimiento | S2 no distingue mega |
+| `prefer_mega` | on | Mega con el mismo movimiento | S2/S3 no distinguen mega (S3 usa la forma Mega si lleva la piedra) |
+| Modelo | `s3` (v3; `s2` en v2) | Transición y puntuación | §4.2 |
 | Max turns | `40` | Corte del combate simulado | Cap → 0 |
 | Descuento | `1` | Backup | — |
 | RNG | seed+turn+sim | Repro | Azar S2 / accuracy |
@@ -316,7 +338,8 @@ parte del artefacto de evaluación.
 |---|---|
 | `showdown/rl/mcts_puct/agent.py` | `MCTSPuctConfig` / API; `version` 1/2 |
 | `showdown/rl/mcts_puct/openloop.py` | v2: open-loop, FPU, hoja corta, `prepare_root`, reemplazo tras KO |
-| `showdown/rl/mcts_puct/actions.py` | v2: poda de joints, prior, rival del árbol, `prefer_mega` |
+| `showdown/rl/mcts_puct/actions.py` | v2: poda de joints, prior, rival del árbol, `prefer_mega` (v3: puntuador y clase de objetivo de S3) |
+| `showdown/rl/mcts_puct/s3.py` | v3: modelo S3 (tabla de daño real, orden del turno, área, precisión, puntuación) |
 | `showdown/rl/mcts_puct/search.py` | v1 (y `make_sim_rng`/`rollout` usados por MCTS–Nash) |
 | `showdown/rl/mcts_puct/tree.py` | nodos, aristas, PUCT, \(Q,N,W\) |
 | `showdown/rl/mcts_puct/simulator.py` | S2 |
@@ -330,10 +353,12 @@ parte del artefacto de evaluación.
 
 ## 12. Limitaciones
 
-- **S2 sigue siendo el cuello de botella** (fase siguiente): sin orden por velocidad
-  (siempre actuamos primero), sin Protect/prioridad/estados/clima más allá del daño,
-  daño solo por tipos con stats fijos, área resuelta sobre un único rival, precisión
-  95 % para todo. Con S2, Protect y los movimientos de estado valen "no hacer nada".
+- **S3 (v3) cubre solo la fase 3a**: daño real y orden del turno. Protect, Fake Out,
+  redirección, Helping Hand y los efectos de varios turnos (Tailwind/Trick Room como
+  acciones, Intimidate, estados) siguen sin modelar: valen "no hacer nada".
+- La tabla de daño es la de la raíz: boosts, clima o HP que cambian dentro del árbol no
+  la recalculan (salvo el HP restante, que acota el daño en la puntuación).
+- v2 (S2): sin velocidad, sin stats reales, dex sin 21 movimientos del meta.
 - Rival del árbol = softmax de daño: no anticipa Protect, redirección ni cambios.
 - La evaluación de material ignora estados, velocidad y campo.
 - Sin poke-env (bot IAP) la raíz usa la poda del snapshot y no ofrece mega.
@@ -354,6 +379,7 @@ y turno para reproducir RNG.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **3.0** | 2026-11-20 | Fase 3a del plan: modelo **S3** (`s3.py`) en lugar de S2 para G. Tabla de daño real por decisión (un lote a la calculadora, mismos pedidos que P5), stats del rival por prior meta LOO, orden por prioridad y velocidad efectiva (Tailwind, Trick Room), redirección de golpes individuales, área ×0,75 con fuego amigo, precisión por movimiento; prior, rival del árbol y rollout puntúan con la tabla (+ bono de KO). Dex de Champions (el antiguo no tenía 21 movimientos del meta). `MCTS_PUCT_VERSION=2` reproduce v2. Motivo: v2 con meseta en 37–38 % contra joint aunque se suban las sims (diagnóstico §5.2). |
 | **2.0** | 2026-11-19 | Diagnóstico de v1 ([`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md)): raíz de ~660 joints explorada en orden de id, hijo fijo por arista (no era open-loop), rival uniforme, chip de 8–18 % en movimientos de estado, ~26 s/decisión. v2: raíz desde `valid_orders`, poda por objetivo, prior softmax(daño)+ε, FPU, open-loop real con remuestreo, rival softmax(daño), hoja = 2 turnos + material, reemplazo tras KO, banca rival creíble, movimientos alineados con `available_moves`, contadores de fallback/excepción. ~2 ms/sim. `MCTS_PUCT_VERSION=1` reproduce v1. S2 sin cambios por defecto (MCTS–Nash intacto). El barrido de `logs/mcts_sims_sweep_mcts_puct.*` era `dry_run` (datos falsos) y no cuenta. |
 | **1.7** | 2026-11-15 | Objetivo aliado del slot 0 corregido en el adaptador de órdenes (−2; antes −1 = sí mismo, rechazado por Showdown). Sin cambios de obs. |
 | **1.6** | 2026-11-14 | ActionSpec v2 (40 ids por slot, mega como flag de cada movimiento; joint 1600) y máscaras desde `valid_orders`. |

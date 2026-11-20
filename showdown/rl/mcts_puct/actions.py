@@ -73,8 +73,12 @@ def flip_view(snap: BattleSnapshot) -> BattleSnapshot:
     )
 
 
-def slot_candidates(snap: BattleSnapshot, slot: int) -> List[int]:
-    """Acciones con sentido de un hueco (sin mega, sin ``pass`` salvo que no quede nada)."""
+def slot_candidates(snap: BattleSnapshot, slot: int, target_fn=None) -> List[int]:
+    """Acciones con sentido de un hueco (sin mega, sin ``pass`` salvo que no quede nada).
+
+    ``target_fn(move_id) -> 'foe'|'ally'|'none'``: clase de objetivo (v3: dex de Champions);
+    None = ``move_target_class`` (dex antiguo, v2).
+    """
     out: List[int] = []
     side = snap.our
     active = side.active[slot] if slot < len(side.active) else None
@@ -86,7 +90,7 @@ def slot_candidates(snap: BattleSnapshot, slot: int) -> List[int]:
         for mi, mv in enumerate(active.moves[:4]):
             if not mv:
                 continue
-            cls = move_target_class(mv)
+            cls = (target_fn or move_target_class)(mv)
             if cls == 'foe':
                 targets = foes
             elif cls == 'ally':
@@ -105,13 +109,13 @@ def slot_candidates(snap: BattleSnapshot, slot: int) -> List[int]:
     return out
 
 
-def pruned_joints(snap: BattleSnapshot) -> List[int]:
+def pruned_joints(snap: BattleSnapshot, target_fn=None) -> List[int]:
     """Joints podados desde la perspectiva ``our`` (para el rival pasar ``flip_view``)."""
     if any(snap.force_switch):
         mask = legal_joint_mask(snap)
         return [int(j) for j in np.flatnonzero(mask > 0.5)]
-    c0 = slot_candidates(snap, 0)
-    c1 = slot_candidates(snap, 1)
+    c0 = slot_candidates(snap, 0, target_fn)
+    c1 = slot_candidates(snap, 1, target_fn)
     out: List[int] = []
     for a1 in c0:
         for a2 in c1:
@@ -219,26 +223,31 @@ def sample_opponent_joint(
     *,
     temperature: float,
     eps: float,
+    scorer=None,
+    target_fn=None,
 ) -> int:
-    """Rival del árbol: softmax del daño con prob. 1−ε, uniforme (podado) con prob. ε."""
+    """Rival del árbol: softmax del daño con prob. 1−ε, uniforme (podado) con prob. ε.
+
+    ``scorer(view, joints)``: puntuación alternativa (S3: daño real); None = S2.
+    """
     view = flip_view(snap)
-    joints = pruned_joints(view)
+    joints = pruned_joints(view, target_fn)
     if not joints:
         return encode_joint_action(PASS_ID, PASS_ID)
     if len(joints) == 1:
         return int(joints[0])
     if rng.random() < eps:
         return int(joints[int(rng.integers(len(joints)))])
-    p = softmax(joint_scores(view, joints), temperature)
+    p = softmax((scorer or joint_scores)(view, joints), temperature)
     return int(joints[int(rng.choice(len(joints), p=p))])
 
 
-def greedy_joint(snap: BattleSnapshot) -> int:
+def greedy_joint(snap: BattleSnapshot, scorer=None, target_fn=None) -> int:
     """Argmax de daño sobre joints podados (rollout de nuestro lado)."""
-    joints = pruned_joints(snap)
+    joints = pruned_joints(snap, target_fn)
     if not joints:
         return encode_joint_action(PASS_ID, PASS_ID)
-    s = joint_scores(snap, joints)
+    s = (scorer or joint_scores)(snap, joints)
     return int(joints[int(np.argmax(s))])
 
 

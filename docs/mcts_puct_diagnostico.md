@@ -140,3 +140,28 @@ equivoca. Esto confirma el paso 3 del plan: sustituir S2 por un modelo de turno 
 
 Reproducir: `bash scripts/server/mcts_g_v2.sh <out>` (resumen con
 `python -m showdown.inference_sim.mcts_g_summary <out>`).
+
+## 6. Fase 3a: modelo S3 (v3.0)
+
+Plan (usuario, 2026-11-20): reemplazar S2 por fases y medir cada una; empezar por 3a.
+Implementación: `showdown/rl/mcts_puct/s3.py`, spec §4.2. Resumen:
+
+- Tabla de daño real por decisión (un lote a la calculadora con los pedidos de P5) para
+  los 4 Pokémon de cada lado, en variantes individual, área y fuego amigo.
+- Stats del rival por prior meta leave-one-out. Orden por prioridad y velocidad efectiva
+  (Tailwind, Trick Room). Redirección, área ×0,75 y precisión por movimiento.
+- Prior, rival del árbol y rollout puntúan con la tabla.
+
+Hallazgo de la implementación: el dex de S2 (`API/JSONs/moves.json`) no tiene **21 de
+los 212 movimientos** de los equipos del meta (Make It Rain, Kowtow Cleave, Glaive Rush,
+Electro Shot, Population Bomb, Aqua Cutter…). Con v2 esos ataques no hacían nada (la v2
+quitó el chip de 8–18 %). S3 usa el dex de Champions de P5, que los tiene todos.
+
+Coste medido (laptop, 200 sims): ~0,5 s por decisión (v2: 0,4 s); tabla de ~107 pedidos
+en 19 ms sin caché y ~6 ms con caché; arranque de Node ~10 s una vez por proceso.
+
+Medición: cola `scripts/server/mcts_g_v3.sh`, mismas semillas que v2 para comparar en
+pareado: tests, smoke con la calculadora real (se detiene ante cualquier anomalía),
+`v3_n200` 9101–9117, `v3_n200_ownpreview` 9101–9105, barrido 100/400 en 9101–9105.
+
+Resultados: se añadirán aquí.
