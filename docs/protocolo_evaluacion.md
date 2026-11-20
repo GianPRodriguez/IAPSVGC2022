@@ -184,6 +184,36 @@ etiquetan como secundarias):
 | S2 | el oráculo de SP no mejora a v1.9 (valor de la información) | McNemar en C1 |
 | S3 | v1.9 > random (control de cordura) | binomial en C1 |
 
+### 4.1 Hipótesis de MCTS+PUCT v3 (agente G), fijadas el 20-11-2026 antes de medir
+
+**Motivo.** En exploración (semillas 9101–9114, 4200 BO3), G v3.0 (modelo S3, fase 3a)
+ganó 57,2 % contra greedy_joint, frente a 37,1 % de v2 en las mismas semillas
+(`mcts_puct_diagnostico.md` §6). Decisión del usuario: confirmar antes de seguir con 3b.
+
+**Versión congelada:** G v3.0 por defecto (código del commit `6f85aa9`; 200 sims,
+`MCTS_PUCT_VERSION=3`, `MCTS_SEED=0`). Rivales: greedy_joint v1.8 y expectimax v1.9, los
+congelados de §4. La cola aborta si el código de `mcts_puct`, `greedy_joint`,
+`greedy_solo` o `expectimax_bayesian` cambió desde `6f85aa9`.
+
+**Bloques nuevos:** C3 = 9401–9417 y C4 = 9501–9517 (no usados antes por ningún agente).
+
+**Preview:** G juega con el preview greedy (tipado + BST), el mismo que joint y
+expectimax, para que la comparación sea de combate como en H1–H3. El pipeline G con su
+preview Nash congelado se mide aparte como secundaria descriptiva.
+
+**Familia de G** (Holm con m = 2; binomial exacta + IC por *cluster bootstrap*; regla de
+la §3, consistencia en C3 y C4):
+
+| Id | Hipótesis | Comparación | Bloques |
+|---|---|---|---|
+| G1 | G v3.0 > greedy_joint | A = mcts_puct (preview greedy), B = greedy_joint | C3 + C4 |
+| G2 | G v3.0 > expectimax v1.9 | A = mcts_puct (preview greedy), B = expectimax_bayesian | C3 + C4 |
+
+Nivel práctico (§3b): además, límite inferior del IC 95 % ≥ 55 %.
+
+**Secundaria (descriptiva, sin ajuste):** GS1 = pipeline G (preview Nash congelado + v3.0)
+contra greedy_joint en C3.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -266,3 +296,4 @@ frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada
 | 2026-11-15 | Se agregan los dos niveles de afirmación (umbral práctico provisional: límite inferior del IC ≥ 55 % en BO3), TOST y la sección de agentes con aprendizaje. |
 | 2026-11-16 | **Validación reservada (§2b):** subgrupo `val` (30 equipos de `train`, grupos de clones) para elegir checkpoints; `fit` (170) para entrenar. Motivo: memorización medida (84 % con equipos `train` frente a 50 % con `eval`). Ver `memorizacion_equipos.md`. |
 | 2026-11-17 | **Checkpoint principal = el último (§3c.2)**; `best.pt` elegido con `val`, resultado secundario. Motivo: `val` eligió en DDQN con regularización un checkpoint ~8 puntos peor contra `eval` que el final. |
+| 2026-11-20 | **Hipótesis G1–G2 de MCTS+PUCT v3 (§4.1)**, fijadas antes de medir: G v3.0 contra joint y contra expectimax en bloques nuevos C3 (9401–9417) y C4 (9501–9517), preview greedy, Holm con m = 2; secundaria GS1 (pipeline G con preview Nash) en C3. |
