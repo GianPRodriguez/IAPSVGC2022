@@ -57,6 +57,7 @@ def _apply_damage(
     move_name: str,
     weather: str,
     rng: np.random.Generator,
+    status_chip: bool = True,
 ) -> None:
     if attacker is None or defender is None or defender.fainted:
         return
@@ -69,7 +70,10 @@ def _apply_damage(
         base_def_spd=100.0,
     )
     if hi <= 0:
-        # Fallback crude chip so rollouts resolve
+        if not status_chip:
+            # v2 (mcts_puct_spec 2.0): estado / poder 0 / desconocido no hace daño.
+            return
+        # Fallback crude chip so rollouts resolve (v1; MCTS–Nash sigue usándolo)
         dmg = float(rng.uniform(8.0, 18.0))
     else:
         dmg = float(rng.uniform(max(0.0, lo), max(lo, hi)))
@@ -88,6 +92,7 @@ def _apply_actor(
     rng: np.random.Generator,
     *,
     actor_is_our: bool,
+    status_chip: bool = True,
 ) -> None:
     a1, a2 = decode_joint_action(int(joint))
     side: SideSnapshot = snap.our if actor_is_our else snap.foe
@@ -118,7 +123,7 @@ def _apply_actor(
         move_name = atk.moves[mi] if mi < len(atk.moves) else ''
         ti = int(min(max(act.target, 0), 1))
         dfn = opp.active[ti] if ti < len(opp.active) else None
-        _apply_damage(atk, dfn, move_name, weather, rng)
+        _apply_damage(atk, dfn, move_name, weather, rng, status_chip=status_chip)
 
 
 def step_sim(
@@ -128,18 +133,22 @@ def step_sim(
     rng: np.random.Generator,
     *,
     max_turns: int = 40,
+    status_chip: bool = True,
+    clone_fn=None,
 ) -> BattleSnapshot:
     """
     Apply simultaneous crude transitions for both sides (True MC).
 
     Order: self actions then opp actions (approximation; simultaneous in spirit).
+    ``status_chip=False`` (MCTS+PUCT v2): los movimientos sin daño no hacen el chip de
+    8–18 %. ``clone_fn``: copia alternativa más barata (v2). Los defaults conservan v1.
     """
-    s = clone_state(snap)
+    s = (clone_fn or clone_state)(snap)
     if s.finished:
         return s
     try:
-        _apply_actor(s, int(joint_self), rng, actor_is_our=True)
-        _apply_actor(s, int(joint_opp), rng, actor_is_our=False)
+        _apply_actor(s, int(joint_self), rng, actor_is_our=True, status_chip=status_chip)
+        _apply_actor(s, int(joint_opp), rng, actor_is_our=False, status_chip=status_chip)
     except Exception:
         # Leave state as-is; caller may treat as failure
         pass
