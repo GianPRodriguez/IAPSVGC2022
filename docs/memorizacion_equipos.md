@@ -1423,3 +1423,9 @@ Por rival (`final.pt`, `eval`): random 97,7 %, greedy_solo 62,4 %, greedy_joint 
 4. **Memorización:** propios 95,9 % frente a `eval` 62,1 % (brecha −33,8), igual que antes de P5.
 5. P5 (calculadora real) funcionó sin fallos en 5M pasos; su costo es solo de velocidad (~300 frente
    a ~346 pasos/s).
+
+**Nombre (decisión del usuario, 20-11-2026): este agente es DDQN v1** (código 12229a3, preview v2.1 sin
+`val`, observación v2.1; checkpoints `~/iapsvgc_runs/kickoff_ddqn_v2/ddqn_s{0..4}/`).
+**Comparación con PPO:** PPO v1 usa el preview v2 y la observación v1, así que la brecha PPO v1 −
+DDQN v1 (19,1 puntos) mezcla algoritmo, preview y observación. La comparación limpia entre
+algoritmos será PPO v2 frente a DDQN v1 (mismo preview v2.1 sin `val` y misma observación).

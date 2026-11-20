@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.17** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.28) |
+| **Versión** | **1.24** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.33) |
 | **Estado** | FROZEN; implementado en `showdown/rl/ddqn/` y `battle_bots/ddqn/` |
 | **Training** | **Sí**: off-policy con replay; entrenamiento live requiere Showdown local |
 | **Inferencia** | `ValidatedDDQNPlayer`, acción greedy legal desde un checkpoint |
@@ -273,6 +273,7 @@ Pipeline familiar: **`team_preview_ppo` → DDQN**. Código compartido:
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.24** | 2026-11-20 | **DDQN v1** (nombre fijado por el usuario) = kick-off oficial de DDQN: configuración final (REG weight decay 0,03 + dropout 0,1, cabeza conjunta, sin simetría, máscara del aliado, validación reservada, equipo fijo, 1M × 5), observación v2.1 (P5, calculadora real) y preview v2.1 sin `val` (`preview_v21b/preview_s0/best.pt`). Código 12229a3; checkpoints en `~/iapsvgc_runs/kickoff_ddqn_v2/ddqn_s{0..4}/`. final.pt contra `eval`: 62,1 % (± 3,4 entre semillas). Resultados: memorizacion_equipos §18.7. |
 | **1.23** | 2026-11-18 | **P5: corrección de habilidades en la observación activa por defecto** (decisión del usuario, también para DDQN; rl_env_spec v1.32). `DDQNConfig.obs_abilities=True`; checkpoints anteriores cargan con False. `--obs-abilities 0/1`. Entra en el kick-off de DDQN; su efecto se mide en la vigesimoquinta cola. |
 | **1.22** | 2026-11-18 | **Weight decay por defecto 0,03** (antes 0,01; decisión del usuario). Elegido por la decimoquinta cola con la regla fijada de antemano: `val` 74,1 % frente a 67,6 % (final.pt, 200 partidas por rival, 2 semillas); en `eval` (registro) 64,7 frente a 63,8 %. Dropout sigue en 0,1. Configuración final del kick-off tras las colas 17 y 18: 1M pasos, cabeza conjunta, sin simetría (ninguna alternativa superó el umbral). |
 | **1.21** | 2026-11-17 | **Cabeza Q factorizada por hueco (opcional)** (memorizacion_equipos.md §10): `--q-head factored --q-rank r` → Q(s,a1,a2) = V(s) + A1(s,a1) + A2(s,a2) + Σ_k U1(s,a1)_k·U2(s,a2)_k, con dos cabezas de 40 y una interacción de rango r (0 = aditiva). La salida sigue siendo el vector de 1 600 valores conjuntos (índice 40·a1 + a2): máscara conjunta, objetivo Double DQN, replay y simetría sin cambios. Por defecto `joint` (sin cambios; mismos nombres del state_dict). `DDQNAgent.load` reconstruye la red si el checkpoint usa otra cabeza; los checkpoints anteriores se cargan como `joint`. Se evalúa en la decimoctava cola. |
