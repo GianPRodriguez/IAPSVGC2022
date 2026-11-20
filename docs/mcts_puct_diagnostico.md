@@ -118,4 +118,25 @@ Lectura (exploración, no afirmación confirmatoria):
   de \(N_{\rm sim}\) (paso 6) lo pone a prueba: si más sims no ayudan, el límite es el
   modelo, no el presupuesto.
 
-Barrido de \(N_{\rm sim}\): en curso (se añadirá aquí).
+### 5.2 Barrido de \(N_{\rm sim}\) (terminado 08:50, `MCTS_G_V2_DONE`)
+
+Preview greedy, semillas 9101–9105 × 300 (1500 BO3 por punto). Δ pareado por semilla
+frente a `v2_n200` en las mismas 5 semillas (ahí `v2_n200` = 565/1500 = 37,7 %);
+± = semiancho IC 95 % aprox. Tiempo = media por semilla de 300 BO3 con 28 procesos.
+
+| \(N_{\rm sim}\) | Series G/1500 | WR G | IC 95 % | Δ vs 200 (pareado) | Tiempo/semilla |
+|---:|---:|---:|---|---|---:|
+| 50 | 529 | 35,3 % | [32,9, 37,7] | −2,4 ± 2,0 pts | 44 s |
+| 100 | 541 | 36,1 % | [33,7, 38,5] | −1,6 ± 1,4 pts | 57 s |
+| 200 | 565 | 37,7 % | — | — | 81 s |
+| 400 | 559 | 37,3 % | [34,9, 39,7] | −0,4 ± 1,4 pts | 118 s |
+
+Lectura: de 50 a 200 sims se ganan ~2 puntos y de 200 a 400 nada (Δ −0,4,
+indistinguible de 0) con ~1,5× más tiempo. **Meseta en 200 sims**, que se mantiene como
+presupuesto por defecto. El techo de G v2 (~37–38 % contra joint) **no lo pone el
+presupuesto sino el modelo**: la búsqueda converge a lo que S2 considera mejor, y S2 se
+equivoca. Esto confirma el paso 3 del plan: sustituir S2 por un modelo de turno realista
+(velocidad, Protect, prioridad, área, stats reales).
+
+Reproducir: `bash scripts/server/mcts_g_v2.sh <out>` (resumen con
+`python -m showdown.inference_sim.mcts_g_summary <out>`).
