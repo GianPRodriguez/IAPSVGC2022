@@ -41,9 +41,15 @@ run() {
   local rpt="$OUT/reports/${cfg}_s${seed}.txt"
   if [ -s "$rpt" ]; then log "$cfg s$seed ya hecho (reanudación)"; return 0; fi
   rm -f logs/robust_e2e_report.txt
+  # Caché en disco de la calculadora POR CORRIDA, borrada al terminar: la compartida
+  # (logs/calc_cache.sqlite) creció sin límite con las claves de S3 (HP actual) hasta 360 GB y
+  # llenó el disco el 20-11-2026 a las 11:36. No cambia ningún valor de daño (solo la caché).
+  export DAMAGE_CALC_CACHE="$OUT/calc_cache_run.sqlite"
+  rm -f "$DAMAGE_CALC_CACHE" "$DAMAGE_CALC_CACHE"-wal "$DAMAGE_CALC_CACHE"-shm
   python -m showdown.inference_sim.run_robust_e2e --teams 300 --procs "$PROCS" --seed "$seed" \
     --restart-ps --player-a mcts_puct --player-b "$pb" "$@" > "$OUT/raw/${cfg}_s${seed}.txt" 2>&1
   local rc=$?
+  rm -f "$DAMAGE_CALC_CACHE" "$DAMAGE_CALC_CACHE"-wal "$DAMAGE_CALC_CACHE"-shm
   if [ ! -s logs/robust_e2e_report.txt ]; then
     log "ERROR: $cfg s$seed rc=$rc sin reporte (ver raw/${cfg}_s${seed}.txt)"; clean_ps; return 1
   fi
