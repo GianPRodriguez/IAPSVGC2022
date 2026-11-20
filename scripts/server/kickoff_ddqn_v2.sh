@@ -16,6 +16,11 @@
 # eval, final.pt contra sus propios equipos, final.pt contra greedy_joint en modo arquetipo.
 # Resumen: $OUT/kickoff_summary16.md (showdown/rl/kickoff_report.py; PPO queda sin datos).
 #
+# Opciones (19-11-2026, decisión del usuario: probar DDQN con el v2.1 nuevo antes de decidir el kick-off):
+#   PV_OVERRIDE=<preview.pt>  usa ese preview sin mirar la decisión de preview_v21b.md (se registra).
+#   PILOT_ONLY=1              se detiene tras el control intermedio (semillas 0 y 1), pase o no: PILOT_DONE.
+#   SKIP_PILOT=1              continuación: no repite las semillas 0 y 1 ni el control (mismo $OUT).
+#
 #   bash scripts/server/kickoff_ddqn_v2.sh ~/iapsvgc_runs/kickoff_ddqn_v2 ~/iapsvgc_runs/preview_v21b ~/iapsvgc_runs/kickoff15
 set -u
 OUT=${1:-$HOME/iapsvgc_runs/kickoff_ddqn_v2}
@@ -34,6 +39,11 @@ log "esperando al preview v2.1 sin val ($PVB)"
 until grep -q PREVIEW_V21B_DONE "$PVB/queue.log" 2>/dev/null; do sleep 60; done
 
 # ---------------------------------------------------------------- 1. preview elegido
+if [ -n "${PV_OVERRIDE:-}" ]; then
+  PV="$PV_OVERRIDE"
+  [ -f "$PV" ] || { log "ERROR: falta PV_OVERRIDE=$PV"; log "KICKOFF_DDQN_V2_DONE"; exit 1; }
+  log "preview fijado por decisión del usuario (PV_OVERRIDE; la regla del preview no lo adoptaba): $PV"
+else
 DEC=$(grep -o "Elegido por \`val\`: semilla [0-9]*\. \*\*[^*]*\*\*" "$PVB/preview_v21b.md" 2>/dev/null)
 log "decisión del preview: ${DEC:-sin resumen}"
 case "$DEC" in
@@ -45,6 +55,7 @@ PS_=$(echo "$DEC" | grep -o "semilla [0-9]*" | grep -o "[0-9]*")
 PV="$PVB/preview_s$PS_/best.pt"; [ -f "$PV" ] || PV="$PVB/preview_s$PS_/final.pt"
 [ -f "$PV" ] || { log "ERROR: falta $PV"; log "KICKOFF_DDQN_V2_DONE"; exit 1; }
 log "preview v2.1: $PV"
+fi
 
 # ---------------------------------------------------------------- 2. calculadora con el código nuevo
 clean_ps
@@ -77,6 +88,7 @@ seed() {  # semilla
 }
 
 # ---------------------------------------------------------------- 3. semillas 0 y 1 (piloto)
+if [ "${SKIP_PILOT:-0}" != 1 ]; then
 for s in 0 1; do
   seed $s
   diag ddqn_s${s}_final_val "$OUT/ddqn_s$s/final.pt" val
@@ -107,9 +119,15 @@ PY
 if [ $? != 0 ]; then
   log "CONTROL_FAIL ($(tr '\n' ' ' < "$OUT/control.txt")); se detiene para revisión"
   python -m showdown.rl.kickoff_report "$OUT" > "$OUT/kickoff_report.err" 2>&1
+  [ "${PILOT_ONLY:-0}" = 1 ] && log "PILOT_DONE"
   log "KICKOFF_DDQN_V2_DONE"; exit 1
 fi
 log "control intermedio cumplido: $(tr '\n' ' ' < "$OUT/control.txt")"
+if [ "${PILOT_ONLY:-0}" = 1 ]; then
+  python -m showdown.rl.kickoff_report "$OUT" > "$OUT/kickoff_report.err" 2>&1
+  log "PILOT_DONE (semillas 0 y 1; el usuario decide si sigue con las semillas 2-4)"; exit 0
+fi
+fi
 
 # ---------------------------------------------------------------- 5. semillas 2–4
 for s in 2 3 4; do seed $s; done

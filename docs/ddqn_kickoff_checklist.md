@@ -821,3 +821,15 @@ Duración estimada ~6,3 h. Script: `scripts/server/kickoff_ddqn_v2.sh`.
 **Decisión del usuario (19-11-2026):** no lanzarlo automáticamente. Primero se analizan los
 resultados del preview v2.1 sin `val`, y el usuario decide entonces si se ejecuta. El encadenamiento
 automático se detuvo antes de empezar (solo estaba esperando).
+
+**Decisión del usuario (19-11-2026, tras §18.5): probar DDQN con el preview v2.1 nuevo** (sin `val`,
+semilla 0) antes de decidir el kick-off.
+- **Por qué:** el test de combate fijo no lo adoptaba (Δ`val` −5,9), pero tenía sesgo en DDQN (combate
+  entrenado con las formaciones del v2.1 anterior).
+- **Cómo se corre:** como piloto del propio kick-off (`PV_OVERRIDE=…/preview_v21b/preview_s0/best.pt
+  PILOT_ONLY=1`). Semillas 0 y 1 con la configuración final, el set de evaluación del kick-off y
+  `val`; luego el control (Δ`val` ≥ −2 frente a DDQN REG y la calculadora sin fallos). Ahí se
+  detiene.
+- **Si el usuario aprueba el kick-off:** solo faltan las semillas 2–4 (`SKIP_PILOT=1`, ~3,7 h).
+- **En la tesis:** el preview se usa contra el veredicto de su regla, porque el test de esa regla
+  tenía sesgo; el control del piloto es el juicio definitivo.
