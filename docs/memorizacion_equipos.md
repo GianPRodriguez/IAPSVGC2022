@@ -1320,3 +1320,36 @@ semillas 0 y 1, contra los 3 heurísticos, partidas agrupadas.
   agrupados) y se adopta si no pierde más de 2 puntos frente al v2. La tolerancia se debe a que el
   v2 sí conoce los equipos de `val`.
 - **Archivos:** `scripts/server/preview_v21b.sh`; resumen en `scripts/analysis/preview_v21b.py`.
+
+### 18.5 Resultado: preview v2.1 sin `val` (19-11-2026)
+
+`~/iapsvgc_runs/preview_v21b`, commit 5edd81f, todo rc=0. Combate fijo: PPO y DDQN con P5 (cola 26,
+entrenados con el v2.1 anterior), semillas 0 y 1, 200 partidas por rival.
+
+| Preview | MEAN_WR entr. | PPO `val` | DDQN `val` | Δ`val` (agrupado) vs v2 | PPO `eval` | DDQN `eval` | Δ`eval` vs v2 |
+|---|---|---|---|---|---|---|---|
+| v2 (conoce `val`) | — | 87,5 % | 73,8 % | — | 83,7 % | 65,2 % | — |
+| v2.1 sin `val`, semilla 0 | 0,955 | 85,7 % | 63,8 % | −5,9 (± 2,4) | 85,4 % | 60,3 % | −1,6 (± 2,5) |
+| v2.1 sin `val`, semilla 1 | 0,963 | 84,2 % | 61,3 % | −7,8 (± 2,4) | 82,7 % | 59,7 % | −3,3 (± 2,5) |
+
+**Por la regla fijada, no se adopta** (la mejor semilla, la 0, queda en −5,9 en `val`; la regla pide
+≥ −2).
+
+**Lectura:**
+1. **PPO casi no cambia con el preview nuevo:** `val` −1,8 y −3,3; `eval` +1,7 y −1,0. **DDQN cae
+   mucho:** `val` −10 y −12,5; `eval` −4,9 y −5,5.
+2. **El test combate-fijo favorece al v2 en DDQN, y tiene dos sesgos:**
+   - el v2 conoce los equipos de `val`;
+   - el combate DDQN se entrenó con las formaciones del v2.1 **anterior** (`16 | 1456`, `14 | 1246`,
+     `35 | 2345`). El v2 comparte dos de esas tres. El v2.1 nuevo usa en ~25 % de las partidas una
+     formación que ese DDQN nunca practicó (`16 | 1346`). DDQN memoriza formaciones (§13.1: cae
+     mucho con una formación no practicada), así que en este test se castiga a cualquier preview
+     que cambie de formación, sea mejor o peor.
+3. **PPO, que generaliza, es el árbitro menos sesgado:** con él el v2.1 nuevo queda cerca del v2
+   (en `eval`, la semilla 0 es incluso mejor).
+4. El v2.1 nuevo se parece más al v2 que el anterior: su formación más usada vuelve a ser
+   `35 | 3456`. Generaliza mejor que el v2.1 anterior (Δ`eval` −1,6 frente a −4 / −9).
+
+**Para el kick-off de DDQN**, la forma justa de juzgar el preview es entrenar el combate con él. Eso
+es lo que hacen las semillas 0 y 1 del kick-off, con su control intermedio (Δ`val` ≥ −2 frente a
+DDQN REG).
