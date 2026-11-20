@@ -76,12 +76,16 @@ def damage_ranges_batch(
     *,
     chunk_size: Optional[int] = None,
     deadline_monotonic: Optional[float] = None,
+    persist: bool = True,
 ) -> List[Optional[Tuple[int, int]]]:
     """
     Calcula rangos de daño. Los misses a Node se envían en chunks.
 
     deadline_monotonic: si se pasa (time.perf_counter()), entre chunks se para
     y los requests pendientes quedan None.
+    persist=False: no lee ni escribe la caché en disco (solo la LRU en memoria). Para
+    pedidos que casi no se repiten (MCTS v3: HP actual en la clave), que inflaban
+    ``calc_cache.sqlite`` sin límite (360 GB el 20-11-2026, disco lleno).
     """
     if not requests:
         return []
@@ -98,6 +102,7 @@ def damage_ranges_batch(
         list(requests),
         chunk_size=chunk_size,
         deadline_monotonic=deadline_monotonic,
+        persist=persist,
     )
 
 
@@ -386,6 +391,7 @@ class DamageCalcBridge:
         miss_idx: List[int],
         miss_reqs: List[Dict[str, Any]],
         miss_keys: List[str],
+        persist: bool = True,
     ) -> None:
         """Resuelve un trozo de misses (un round-trip batch o fallback 1-a-1)."""
         if not miss_reqs:
@@ -417,7 +423,8 @@ class DamageCalcBridge:
             out[idx] = val
             self._remember(miss_keys[j], val)
             disk_writes.append((miss_keys[j], val))
-        self._disk.put_many(disk_writes)
+        if persist:
+            self._disk.put_many(disk_writes)
 
     def damage_ranges_batch(
         self,
@@ -425,6 +432,7 @@ class DamageCalcBridge:
         *,
         chunk_size: Optional[int] = None,
         deadline_monotonic: Optional[float] = None,
+        persist: bool = True,
     ) -> List[Optional[Tuple[int, int]]]:
         n = len(requests)
         out: List[Optional[Tuple[int, int]]] = [None] * n
@@ -443,7 +451,7 @@ class DamageCalcBridge:
                     self._cache.move_to_end(key)
                     out[i] = hit
                     continue
-                disk_hit = self._disk.get(key)
+                disk_hit = self._disk.get(key) if persist else None
                 if disk_hit is not None:
                     self._remember(key, disk_hit)
                     out[i] = disk_hit
@@ -473,6 +481,7 @@ class DamageCalcBridge:
                     miss_idx=miss_idx[start:end],
                     miss_reqs=miss_reqs[start:end],
                     miss_keys=miss_keys[start:end],
+                    persist=persist,
                 )
 
         return out

@@ -272,6 +272,36 @@ frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada
 **Escalera confirmada:** expectimax > solo y joint > solo (estadística, ventajas pequeñas).
 **No confirmada:** expectimax > joint. Ninguna comparación alcanza el umbral práctico.
 
+### 5.2 Resultados de la confirmación de G (20-11-2026, código congelado `bb9ef00`)
+
+Pre-registro: §4.1 (G1–G3 + control G4, solo baselines, preview greedy). Cola
+`scripts/server/mcts_g_confirm.sh` (commit de ejecución `65f271e`: solo cambia la caché de
+la calculadora, por corrida; ningún valor de daño cambia). 0 anomalías del player. Las
+corridas que fallaron por el disco lleno (11:36–11:43, sin reporte) se repitieron completas.
+
+| Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
+|---|---|---|---|---|---|---|---|
+| G1 G v3.1 > greedy_joint (C3+C4) | 5710 / 10146 | 56,28 % | [55,44; 57,11] | 1,1·10⁻³⁶ | 2,1·10⁻³⁶ | 34/34 | **Superioridad práctica** (+6,3 pts; límite inferior ≥ 55 %, por 0,44) |
+| G2 G v3.1 > expectimax v1.9 (C3+C4) | 5702 / 10137 | 56,25 % | [55,42; 57,10] | 2,4·10⁻³⁶ | 2,4·10⁻³⁶ | 34/34 | **Superioridad práctica** (+6,3 pts; límite inferior ≥ 55 %, por 0,42) |
+| G3 G v3.1 > greedy_solo (C3+C4) | 6047 / 10146 | 59,60 % | [58,81; 60,41] | 9,5·10⁻⁸⁴ | 2,8·10⁻⁸³ | 34/34 | **Superioridad práctica** (+9,6 pts) |
+
+Consistencia por bloque (regla §3.3):
+
+| Hipótesis | C3 | C4 |
+|---|---|---|
+| G1 | 56,57 % [55,43; 57,81], 17/17 | 55,99 % [54,81; 57,15], 17/17 |
+| G2 | 56,81 % [55,61; 58,02], 17/17 | 55,69 % [54,59; 56,89], 17/17 |
+| G3 | 59,46 % [58,33; 60,57], 17/17 | 59,74 % [58,58; 60,91], 17/17 |
+
+Control G4 (C3): G contra random 5073 / 5080 = 99,86 % [99,76; 99,94], 17/17. Correcto.
+
+Lectura: G v3.1 supera a todos los baselines con ventaja grande y en las 34 semillas de
+los dos bloques. Para G1 y G2 el nivel práctico se cumple con el IC combinado (C3+C4),
+pero por poco (0,4 puntos); en C4 solo, el límite inferior queda en 54,8 % y 54,6 %. La
+frase en la tesis: "G es claramente superior a greedy_joint y a expectimax (+6,3 pts,
+IC [55,4; 57,1]), aunque el margen sobre el umbral práctico es estrecho". Alcance: Reg
+M-C, pool MetaVGC de 300 equipos (`all`), información simétrica, preview greedy común.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -308,3 +338,4 @@ frente a ~52 % en confirmación), explica que H1 quede sin diferencia demostrada
 | 2026-11-20 | **Hipótesis G1–G2 de MCTS+PUCT v3 (§4.1)**, fijadas antes de medir: G v3.0 contra joint y contra expectimax en bloques nuevos C3 (9401–9417) y C4 (9501–9517), preview greedy, Holm con m = 2; secundaria GS1 (pipeline G con preview Nash) en C3. |
 | 2026-11-20 | Enmienda §4.1 antes de medir: se elimina la secundaria GS1 porque no existe un preview Nash entrenado (G caía al orden fijo `/team 1234`). G1–G2 sin cambios. |
 | 2026-11-20 | Segunda enmienda §4.1 antes de medir (usuario): se agregan G3 (G > greedy_solo, C3 + C4; Holm pasa a m = 3) y el control G4 (G > random, C3); solo baselines, ningún agente RL. Código congelado `bb9ef00` (v3.1: combate de v3.0 + preview greedy por defecto). |
+| 2026-11-20 | Resultados de la confirmación de G (§5.2): G1, G2 y G3 con superioridad práctica (G1 y G2 por poco: límite inferior 55,44 y 55,42 %); control G4 correcto. |

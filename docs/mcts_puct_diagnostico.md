@@ -194,4 +194,25 @@ Lectura (exploración):
   57,5–57,9 % en las mismas semillas), igual que en v2. Por eso G v3.1 usa el preview
   greedy por defecto (decisión del usuario; `team_preview_nash` nunca se entrenó).
 - Confirmación pre-registrada en `protocolo_evaluacion.md` §4.1 (G1–G3 + control G4,
-  bloques C3/C4, solo baselines): en curso, resultados en §6.2.
+  bloques C3/C4, solo baselines): resultados en §6.2.
+
+### 6.2 Confirmación (bloques nuevos, 2026-11-20, código congelado `bb9ef00`)
+
+Detalle y estadística completa en `protocolo_evaluacion.md` §5.2. Resumen (binomial
+exacta, IC 95 % por *cluster bootstrap*, Holm m = 3; C3 = 9401–9417, C4 = 9501–9517):
+
+| Hipótesis | Tasa C3+C4 | IC 95 % | Semillas > 50 % | Veredicto |
+|---|---:|---|---|---|
+| G1 G > greedy_joint | 56,28 % | [55,44; 57,11] | 34/34 | Superioridad práctica (por poco) |
+| G2 G > expectimax v1.9 | 56,25 % | [55,42; 57,10] | 34/34 | Superioridad práctica (por poco) |
+| G3 G > greedy_solo | 59,60 % | [58,81; 60,41] | 34/34 | Superioridad práctica |
+| G4 G > random (control) | 99,86 % | [99,76; 99,94] | 17/17 | Correcto |
+
+La exploración (57,5 % contra joint) se replica en bloques nuevos con ~1 punto menos
+(56,3 %). G v3.1 es ahora el agente sin aprendizaje más fuerte de la tesis. Incidente: el
+disco del servidor se llenó a las 11:36 por la caché de la calculadora (sin límite, clave
+con el HP actual); las corridas afectadas se repitieron y desde `65f271e` la caché es por
+corrida. Desde v3.1.1 S3 no escribe en la caché en disco (`persist=False`).
+
+Siguiente: fase 3b (Protect, Fake Out, redirección, Helping Hand), medida en pareado
+contra v3.1 en exploración y, si mejora, confirmada en un bloque nuevo.

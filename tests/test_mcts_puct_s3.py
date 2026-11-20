@@ -195,3 +195,19 @@ def test_g_preview_defaults_to_greedy_and_nash_is_opt_in(monkeypatch):
     assert MCTSPuctPlayer.teampreview(object(), None) == '/team greedy'
     monkeypatch.setenv('MCTS_PREVIEW', 'nash')
     assert MCTSPuctPlayer.teampreview(object(), None) == '/team family'
+
+
+def test_s3_real_calc_path_does_not_persist_to_disk(monkeypatch):
+    """S3 llama a la calculadora con persist=False (la caché en disco llenó el servidor)."""
+    import showdown.damage_calc_bridge as B
+    seen = {}
+
+    def fake(requests, *, chunk_size=None, deadline_monotonic=None, persist=True):
+        seen['persist'] = persist
+        return [(30, 40)] * len(requests)
+
+    monkeypatch.setenv('MCTS_S3_CALC', '1')
+    monkeypatch.setattr(B, 'damage_ranges_batch', fake)
+    root = prepare_root(_snap())
+    m = S3Model.build(root)
+    assert seen.get('persist') is False and m.stats.missing == 0

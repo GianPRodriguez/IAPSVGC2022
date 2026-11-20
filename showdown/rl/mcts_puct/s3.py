@@ -218,7 +218,12 @@ class S3Model:
             if os.environ.get('MCTS_S3_CALC', '1').strip().lower() in ('0', 'false', 'no', 'off'):
                 ranges_fn = lambda rs: [None] * len(rs)  # sin Node (tests): respaldo S2 por pedido
             else:
-                from showdown.damage_calc_bridge import damage_ranges_batch as ranges_fn
+                from showdown.damage_calc_bridge import damage_ranges_batch
+
+                # Sin caché en disco: la clave lleva el HP actual y casi no se repite; con disco
+                # la caché creció a 360 GB en un día y llenó el disco del servidor (20-11-2026).
+                def ranges_fn(rs):
+                    return damage_ranges_batch(rs, persist=False)
         keys = list(reqs)
         st.requests = len(keys)
         try:

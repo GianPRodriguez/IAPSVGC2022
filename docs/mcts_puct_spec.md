@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS+PUCT open-loop (solo turnos) |
-| **Versión** | **3.1** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
-| **Estado** | v3.0 en medición (modelo S3 fase 3a: daño real + orden del turno); v2 (S2) con `MCTS_PUCT_VERSION=2`, v1 con `=1`. Diagnóstico: [`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md) |
+| **Versión** | **3.1.1** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
+| **Estado** | v3.1 confirmada (protocolo §5.2: > joint, expectimax y solo); siguiente fase 3b. Modelo S3 fase 3a; v2 (S2) con `MCTS_PUCT_VERSION=2`, v1 con `=1`. Diagnóstico: [`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md) |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Hiperparámetros de búsqueda (sobre todo \(N_{\rm sim}\)); barrido automatizado |
 | **CLI smoke** | `python -m showdown.rl.mcts_puct --seed 0 --sims 16 --smoke` |
@@ -380,6 +380,7 @@ y turno para reproducir RNG.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **3.1.1** | 2026-11-20 | Sin cambios de decisión: S3 pide a la calculadora con `persist=False` (solo caché en memoria). La caché en disco `calc_cache.sqlite` no tiene límite y la clave lleva el HP actual: con S3 llegó a 386 GB en un día y llenó el disco del servidor. Confirmación de v3.1 (protocolo §5.2): superioridad práctica sobre joint (56,3 %), expectimax (56,3 %) y solo (59,6 %). |
 | **3.1** | 2026-11-20 | **Preview greedy por defecto** (tipado + BST, el de solo/joint/expectimax), decisión del usuario: `team_preview_nash` nunca se entrenó (solo un checkpoint de smoke con etiquetas mock) y G caía al orden fijo `/team 1234` (−4 pts medidos en v2). `MCTS_PREVIEW=nash` vuelve al preview de familia. No se usa el preview PPO (sin componentes RL en G). Combate idéntico a v3.0. |
 | **3.0** | 2026-11-20 | Fase 3a del plan: modelo **S3** (`s3.py`) en lugar de S2 para G. Tabla de daño real por decisión (un lote a la calculadora, mismos pedidos que P5), stats del rival por prior meta LOO, orden por prioridad y velocidad efectiva (Tailwind, Trick Room), redirección de golpes individuales, área ×0,75 con fuego amigo, precisión por movimiento; prior, rival del árbol y rollout puntúan con la tabla (+ bono de KO). Dex de Champions (el antiguo no tenía 21 movimientos del meta). `MCTS_PUCT_VERSION=2` reproduce v2. Motivo: v2 con meseta en 37–38 % contra joint aunque se suban las sims (diagnóstico §5.2). |
 | **2.0** | 2026-11-19 | Diagnóstico de v1 ([`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md)): raíz de ~660 joints explorada en orden de id, hijo fijo por arista (no era open-loop), rival uniforme, chip de 8–18 % en movimientos de estado, ~26 s/decisión. v2: raíz desde `valid_orders`, poda por objetivo, prior softmax(daño)+ε, FPU, open-loop real con remuestreo, rival softmax(daño), hoja = 2 turnos + material, reemplazo tras KO, banca rival creíble, movimientos alineados con `available_moves`, contadores de fallback/excepción. ~2 ms/sim. `MCTS_PUCT_VERSION=1` reproduce v1. S2 sin cambios por defecto (MCTS–Nash intacto). El barrido de `logs/mcts_sims_sweep_mcts_puct.*` era `dry_run` (datos falsos) y no cuenta. |
