@@ -61,10 +61,17 @@ def main(argv=None) -> int:
     k = argv.index('--')
     a_logs, b_logs = argv[:k], argv[k + 1:]
     teams = load_teams()
-    sa = {(s, x, y): r for s, x, y, r in parse_series(a_logs)}
-    sb = {(s, x, y): r for s, x, y, r in parse_series(b_logs)}
+    from collections import defaultdict
+
+    def index(xs):  # igual que confirm_stats.mcnemar: hay claves repetidas → listas emparejadas en orden
+        d = defaultdict(list)
+        for s, x, y, r in xs:
+            d[(s, x, y)].append(r)
+        return d
+
+    sa, sb = index(parse_series(a_logs)), index(parse_series(b_logs))
     groups = {'con terreno': [], 'sin terreno': [], 'ambiguo': []}
-    for key in sorted(set(sa) & set(sb)):
+    for key in sorted(sa.keys() & sb.keys()):
         _s, ta, tb = key
         fa, fb = terrain_of(ta, teams), terrain_of(tb, teams)
         if 'yes' in (fa, fb):
@@ -73,7 +80,7 @@ def main(argv=None) -> int:
             g = 'sin terreno'
         else:
             g = 'ambiguo'
-        groups[g].append((sa[key], sb[key]))
+        groups[g].extend(zip(sa[key], sb[key]))
     allp = [p for v in groups.values() for p in v]
     print('Subgrupo | series emparejadas | A mejor | B mejor | diferencia (pts) | p (McNemar exacta)')
     for name, pairs in list(groups.items()) + [('total', allp)]:
