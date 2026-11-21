@@ -40,8 +40,17 @@ clima por movimiento o habilidad al entrar (Fuego/Agua ×1,5 / ×0,5 respecto al
 raíz; Swift Swim, Chlorophyll, Sand Rush, Slush Rush; daño de arena); cambios de pivote
 (U-turn, Volt Switch, Flip Turn, Parting Shot).
 
-Qué NO modela: terreno (ni sus setters), críticos, Quick Guard, Spotlight, Yawn, objetos
-consumibles, habilidades raras.
+Fase 3d (``phase='3d'``, MCTS+PUCT v6; incluye 3c): terreno. Al entrar por habilidad
+(Grassy / Psychic / Electric / Misty Surge, Hadron Engine), 5 turnos. Daño ajustado respecto al
+terreno de la raíz (Grass / Electric / Psychic ×1,3 del atacante en el suelo; Dragon ×0,5 contra
+un defensor en el suelo con Misty; Earthquake / Bulldoze ×0,5 con Grassy). Prioridad de Grassy
+Glide según el terreno actual. Psychic Terrain bloquea los movimientos con prioridad contra
+rivales en el suelo (Fake Out, Sucker Punch, Aqua Jet…). Expanding Force golpea en área y ×1,5
+en Psychic Terrain. Grassy cura 1/16; Misty bloquea estados y Electric el sueño a quien está
+en el suelo. "En el suelo" = no Volador, sin Levitate ni Air Balloon.
+
+Qué NO modela: críticos, Quick Guard, Spotlight, Yawn, objetos consumibles (Terrain Extender,
+semillas), habilidades raras.
 """
 from __future__ import annotations
 
@@ -86,6 +95,11 @@ _WEATHER_ABIL = {'drought': 'sunnyday', 'drizzle': 'raindance', 'sandstream': 's
 _WEATHER_SPEED = {'swiftswim': ('raindance', 'primordialsea'), 'chlorophyll': ('sunnyday', 'desolateland'),
                   'sandrush': ('sandstorm',), 'slushrush': ('snow', 'snowscape', 'hail')}
 _EXTRA_TARGET_BOOSTS = {'partingshot': {'atk': -1, 'spa': -1}}
+# Fase 3d: terreno
+_TERRAIN_ABIL = {'grassysurge': 'grassy', 'psychicsurge': 'psychic', 'electricsurge': 'electric',
+                 'mistysurge': 'misty', 'hadronengine': 'electric'}
+_TERRAIN_BOOST = {'grassy': 'grass', 'electric': 'electric', 'psychic': 'psychic'}
+_GRASSY_HALVED = {'earthquake', 'bulldoze', 'magnitude'}
 
 
 def _norm(s) -> str:
@@ -191,6 +205,34 @@ def _weather_factor(mtype: str, weather: str) -> float:
     return 1.0
 
 
+def _tnorm(t) -> str:
+    t = _norm(t)
+    for k in ('grassy', 'psychic', 'electric', 'misty'):
+        if t.startswith(k):
+            return k
+    return ''
+
+
+def grounded(m: MonSnapshot) -> bool:
+    types = {_norm(t) for t in (m.types or ())}
+    return 'flying' not in types and _norm(m.ability) != 'levitate' and _norm(m.item) != 'airballoon'
+
+
+def _terrain_factor(att: MonSnapshot, dfn: MonSnapshot, mid: str, terrain: str) -> float:
+    t = _tnorm(terrain)
+    if not t:
+        return 1.0
+    mtype = _norm(dex_move(mid).get('type', ''))
+    f = 1.0
+    if _TERRAIN_BOOST.get(t) == mtype and grounded(att):
+        f *= 1.3
+    if t == 'misty' and mtype == 'dragon' and grounded(dfn):
+        f *= 0.5
+    if t == 'grassy' and _norm(mid) in _GRASSY_HALVED and grounded(dfn):
+        f *= 0.5
+    return f
+
+
 def move_effect3(move_id: str) -> str:
     """Efecto de fase 3c para movimientos de estado: tailwind | trickroom | weather | status | boost | ''."""
     e = dex_move(move_id)
@@ -208,8 +250,13 @@ def move_effect3(move_id: str) -> str:
     return ''
 
 
-def _status_immune(m: MonSnapshot, status: str, move_id: str) -> bool:
+def _status_immune(m: MonSnapshot, status: str, move_id: str, terrain: str = '') -> bool:
     if m.status:
+        return True
+    t = _tnorm(terrain)
+    if t == 'misty' and grounded(m):
+        return True
+    if t == 'electric' and status == 'slp' and grounded(m):
         return True
     types = {_norm(t) for t in (m.types or ())}
     if 'powder' in _flags(move_id) and _powder_immune(m):
@@ -275,6 +322,7 @@ class S3Model:
     root_status: Dict[Tuple[str, str], str] = field(default_factory=dict)
     spe_raw: Dict[Tuple[str, str], int] = field(default_factory=dict)
     root_weather: str = ''
+    root_terrain: str = ''
     stats: S3Stats = field(default_factory=S3Stats)
 
     # ------------------------------------------------------------------ build
@@ -405,7 +453,8 @@ class S3Model:
                     pr = move_priority(mid, m.ability or None, terrain or None)
                     model.prio[(_key(m), mid)] = int(pr) if pr is not None else 0
         model.root_weather = _wnorm(getattr(root.field, 'weather', ''))
-        if model.phase == '3c':  # sueño en la raíz: status_counter = turnos ya dormidos -> restantes
+        model.root_terrain = _tnorm(getattr(root.field, 'terrain', ''))
+        if model.phase in ('3c', '3d'):  # sueño en la raíz: status_counter = turnos ya dormidos -> restantes
             for m in our + foe:
                 if str(m.status or '').startswith('slp'):
                     m.status_counter = max(1, 3 - int(getattr(m, 'status_counter', 0) or 0))
@@ -459,7 +508,7 @@ class S3Model:
             spe *= 2.0
         return -spe if s.field.trick_room else spe
 
-    def _mods(self, att: MonSnapshot, dfn: MonSnapshot, mid: str, weather: str) -> float:
+    def _mods(self, att: MonSnapshot, dfn: MonSnapshot, mid: str, weather: str, terrain: str = '') -> float:
         """Ajuste de la tabla (calculada en la raíz) por etapas, quemadura y clima actuales."""
         e = dex_move(mid)
         cat = str(e.get('category') or '').lower()
@@ -476,6 +525,9 @@ class S3Model:
             elif was_b and not now_b:
                 f *= 2.0
         f *= _weather_factor(e.get('type', ''), weather) / _weather_factor(e.get('type', ''), self.root_weather)
+        if self.phase == '3d':
+            f *= (_terrain_factor(att, dfn, mid, terrain)
+                  / _terrain_factor(att, dfn, mid, self.root_terrain))
         return f
 
     @staticmethod
@@ -504,7 +556,7 @@ class S3Model:
 
     def on_entry(self, s: BattleSnapshot, m: MonSnapshot, ours: bool) -> None:
         """Habilidades al entrar (fase 3c): Intimidate y clima."""
-        if self.phase != '3c' or not _alive(m):
+        if self.phase not in ('3c', '3d') or not _alive(m):
             return
         ab = _norm(m.ability)
         if ab == 'intimidate':
@@ -516,6 +568,9 @@ class S3Model:
                     self._boost(f, {'atk': 1}, by_foe=False)
         if ab in _WEATHER_ABIL:
             self._set_weather(s, _WEATHER_ABIL[ab])
+        if self.phase == '3d' and ab in _TERRAIN_ABIL:
+            s.field.terrain = _TERRAIN_ABIL[ab] + 'terrain'
+            s.field.terrain_turns = 5.0
 
     def _pivot(self, s: BattleSnapshot, side: SideSnapshot, actor: MonSnapshot, ours: bool) -> None:
         """U-turn / Volt Switch / Parting Shot: entra el de banca con más HP."""
@@ -540,7 +595,7 @@ class S3Model:
         before = {(o, i): (s.our if o else s.foe).active[i] for o in (True, False) for i in range(2)}
         from showdown.rl.mcts_puct.openloop import auto_replace
         auto_replace(s)
-        if self.phase != '3c':
+        if self.phase not in ('3c', '3d'):
             return
         for (o, i), old in before.items():
             side = s.our if o else s.foe
@@ -563,8 +618,10 @@ class S3Model:
             if w == 'sandstorm' and not types & {'rock', 'ground', 'steel'} and _norm(m.ability) not in (
                     'sandveil', 'sandrush', 'sandforce', 'overcoat', 'magicguard'):
                 chip += 6.25
+            if self.phase == '3d' and _tnorm(s.field.terrain) == 'grassy' and grounded(m):
+                chip -= 6.25
             if chip:
-                m.hp_pct = max(0.0, float(m.hp_pct) - chip)
+                m.hp_pct = min(100.0, max(0.0, float(m.hp_pct) - chip))
                 if m.hp_pct <= 0.0:
                     m.fainted, m.hp_pct = True, 0.0
         f = s.field
@@ -576,6 +633,12 @@ class S3Model:
                 setattr(f, turns, t)
                 if t <= 0:
                     setattr(f, flag, False)
+        if self.phase == '3d' and f.terrain:
+            tt = float(f.terrain_turns or 0.0)
+            tt = (tt if tt > 0 else 4.0) - 1.0  # sin dato de la raíz: quedan ~3
+            f.terrain_turns = tt
+            if tt <= 0:
+                f.terrain = ''
         if f.weather:
             t = float(f.weather_turns or 0.0)
             if t > 0:
@@ -631,11 +694,15 @@ class S3Model:
                 spe *= 2.0
             if self.trick_room:
                 spe = -spe
-            queue.append((self.prio.get((k, mid), 0), spe, float(rng.random()), ours, slot, act, actor, mid))
+            pr = self.prio.get((k, mid), 0)
+            if self.phase == '3d' and mid == 'grassyglide':
+                pr = 1 if (_tnorm(s.field.terrain) == 'grassy' and grounded(actor)) else 0
+            queue.append((pr, spe, float(rng.random()), ours, slot, act, actor, mid))
         queue.sort(key=lambda q: (q[0], q[1], q[2]), reverse=True)
 
-        c3 = self.phase == '3c'
-        b3 = self.phase in ('3b', '3c')
+        c3 = self.phase in ('3c', '3d')
+        b3 = self.phase in ('3b', '3c', '3d')
+        d3 = self.phase == '3d'
         protected: set = set()           # id() de los protegidos este turno
         wide_guard = {True: False, False: False}
         redirect: Dict[bool, Optional[Tuple[MonSnapshot, bool]]] = {True: None, False: None}
@@ -723,11 +790,14 @@ class S3Model:
                         for dfn in tg:
                             if id(dfn) in protected and blockable(mid):
                                 continue
+                            if d3 and _p > 0 and _tnorm(s.field.terrain) == 'psychic' and grounded(dfn) \
+                                    and not any(dfn is x for x in side.active):
+                                continue  # Psychic Terrain: prioridad bloqueada (Prankster…)
                             if acc3 < 1.0 and rng.random() > acc3:
                                 continue
                             if e3 == 'status':
                                 stt = str(e.get('status') or '')
-                                if not _status_immune(dfn, stt, mid):
+                                if not _status_immune(dfn, stt, mid, s.field.terrain if d3 else ''):
                                     dfn.status = stt
                                     if stt == 'slp':
                                         dfn.status_counter = int(rng.integers(1, 4))
@@ -741,6 +811,10 @@ class S3Model:
                 rd = redirect[not ours]
                 if rd is not None and _alive(rd[0]) and not (rd[1] and _powder_immune(actor)):
                     targets = [rd[0]]
+            ef = (d3 and mid == 'expandingforce' and _tnorm(s.field.terrain) == 'psychic' and grounded(actor))
+            if ef:
+                targets = [m for m in opp.active if _alive(m)]
+                spread = len(targets) > 1
             if not targets or not is_damaging(mid):
                 continue
             acc = move_accuracy(mid)
@@ -755,14 +829,22 @@ class S3Model:
                             protected.discard(id(dfn))
                         elif blockable(mid):
                             continue
+                if d3 and _p > 0 and _tnorm(s.field.terrain) == 'psychic' and grounded(dfn) \
+                        and not any(dfn is x for x in side.active):
+                    continue  # Psychic Terrain: Fake Out, Sucker Punch, Aqua Jet… no golpean
                 if acc < 1.0 and rng.random() > acc:
                     continue
-                lo, hi = self.damage_range(actor, dfn, mid, spread, weather)
+                if ef:  # la tabla solo tiene Expanding Force individual
+                    lo, hi = self.damage_range(actor, dfn, mid, False, weather)
+                    k_ef = 1.5 * (0.75 if spread else 1.0)
+                    lo, hi = lo * k_ef, hi * k_ef
+                else:
+                    lo, hi = self.damage_range(actor, dfn, mid, spread, weather)
                 dmg = float(rng.uniform(lo, hi)) if hi > lo else float(lo)
                 if b3 and id(actor) in helped:
                     dmg *= 1.5
                 if c3:
-                    dmg *= self._mods(actor, dfn, mid, s.field.weather)
+                    dmg *= self._mods(actor, dfn, mid, s.field.weather, s.field.terrain if d3 else '')
                 hit_any = True
                 dfn.hp_pct = max(0.0, float(dfn.hp_pct) - dmg)
                 if dfn.hp_pct <= 0.0:
@@ -775,7 +857,8 @@ class S3Model:
                     for sec in dex_move(mid).get('secondaries') or []:
                         if rng.random() * 100.0 >= float(sec.get('chance', 100) or 100):
                             continue
-                        if sec.get('status') and not _status_immune(dfn, str(sec['status']), mid):
+                        if sec.get('status') and not _status_immune(dfn, str(sec['status']), mid,
+                                                                    s.field.terrain if d3 else ''):
                             dfn.status = str(sec['status'])
                             if dfn.status == 'slp':
                                 dfn.status_counter = int(rng.integers(1, 4))
@@ -831,7 +914,7 @@ class S3Model:
                     sign = -1.0 if any(dfn is x for x in side.active) else 1.0  # golpear al aliado resta
                     v += sign * acc * (exp + KO_BONUS * p_ko)
                 out[mi * 4 + t] = v
-            if self.phase in ('3b', '3c') and mid in _FIRST_TURN:
+            if self.phase in ('3b', '3c', '3d') and mid in _FIRST_TURN:
                 first = int(getattr(actor, 'turns_active', 0) or 0) == 0
                 for t in range(4):
                     if (mi * 4 + t) not in out:
@@ -842,9 +925,9 @@ class S3Model:
                         tg = opp.active[t] if t < len(opp.active) else None
                         if _alive(tg) and not _flinch_immune(tg):
                             out[mi * 4 + t] += FLINCH_W * self.best_output(view, tg, flip=True)
-        if self.phase in ('3b', '3c'):
+        if self.phase in ('3b', '3c', '3d'):
             self._support_scores(view, slot, actor, out)
-        if self.phase == '3c':
+        if self.phase in ('3c', '3d'):
             self._scores_3c(view, slot, actor, out)
         return out
 
@@ -890,7 +973,7 @@ class S3Model:
                     tgts, _ = self._targets(side, opp, slot, SlotAction(kind='move', move_index=mi, target=t), mid)
                     v = 0.0
                     for d in tgts:
-                        if _status_immune(d, stt, mid):
+                        if _status_immune(d, stt, mid, view.field.terrain if self.phase == '3d' else ''):
                             continue
                         outp = self.best_output(view, d, flip=True)
                         if stt == 'slp':

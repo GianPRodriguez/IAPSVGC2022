@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS+PUCT open-loop (solo turnos) |
-| **Versión** | **4.0** por defecto (confirmada); **5.0** candidata (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
+| **Versión** | **4.0** por defecto (confirmada); **5.0** y **6.0** candidatas (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
 | **Estado** | v4.0 confirmada y por defecto (protocolo §5.3: > joint 62,6 %, expectimax 61,2 %, solo 64,3 %, y +5,1 pts sobre v3.1); v3.1 (3a) con `MCTS_PUCT_VERSION=3`. Siguiente: fase 3c; v2 (S2) con `MCTS_PUCT_VERSION=2`, v1 con `=1`. Diagnóstico: [`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md) |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Hiperparámetros de búsqueda (sobre todo \(N_{\rm sim}\)); barrido automatizado |
@@ -220,8 +220,29 @@ con el efecto − sin él); sueño 0,8 · daño del objetivo, parálisis 0,35, q
 mejor ataque es físico (0,1 si no), veneno 8; boosts propios 0,15 · propio mejor daño por
 etapa de ataque; bajadas al rival 0,2 · su daño; Icy Wind / Electroweb +5 por rival.
 
-Fuera de 3c: terreno (ni Grassy Glide condicional dentro del árbol), críticos, Quick
-Guard, Spotlight, Yawn, objetos consumibles, habilidades raras.
+Fuera de 3c: terreno (cubierto en la fase 3d, §4.5), críticos, Quick Guard, Spotlight,
+Yawn, objetos consumibles, habilidades raras.
+
+---
+
+### 4.5 Fase 3d: terreno (v6.0, candidata: `MCTS_PUCT_VERSION=6`)
+
+S3 con `phase='3d'` (incluye 3c). Motivo: en la v5 el terreno de la raíz ya entraba en la
+tabla de daño, pero el que aparece dentro del árbol no; en el meta, Grassy Surge (Rillaboom)
+está en 195 de 1800 sets (~65 % de los equipos) con Grassy Glide en 191, y Psychic Surge
+(Indeedee-F) en 34 con Expanding Force en 30; ningún set usa movimientos de terreno.
+
+| Mecánica | Modelo |
+|---|---|
+| Terreno al entrar | Grassy / Psychic / Electric / Misty Surge, Hadron Engine (al cambiar, reemplazar o pivotar); 5 turnos (sin dato de la raíz: ~3 restantes) |
+| Daño | × factor de terreno actual / factor del terreno de la raíz: Grass / Electric / Psychic ×1,3 si el atacante está en el suelo; Dragon ×0,5 contra defensor en el suelo con Misty; Earthquake / Bulldoze / Magnitude ×0,5 contra defensor en el suelo con Grassy |
+| Grassy Glide | Prioridad +1 si hay Grassy Terrain y el usuario está en el suelo (se evalúa al ordenar el turno) |
+| Psychic Terrain | Bloquea los movimientos con prioridad > 0 dirigidos a rivales en el suelo (daño y estado: Fake Out, Sucker Punch, Aqua Jet, Extreme Speed, Prankster) |
+| Expanding Force | En Psychic Terrain y con el usuario en el suelo: golpea a los dos rivales (×0,75) con poder ×1,5 (más el ×1,3 del terreno) |
+| Grassy Terrain | Cura 1/16 al final del turno a quien esté en el suelo |
+| Misty / Electric | Misty bloquea estados no volátiles y Electric el sueño a quien esté en el suelo |
+
+"En el suelo" = no Volador, sin Levitate ni Air Balloon.
 
 ---
 
@@ -429,6 +450,7 @@ y turno para reproducir RNG.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **6.0** (candidata) | 2026-11-21 | Fase 3d (§4.5): terreno al entrar por habilidad y su duración, ajuste de daño por terreno respecto a la raíz, prioridad de Grassy Glide según el terreno actual, bloqueo de prioridad en Psychic Terrain, Expanding Force en área ×1,5, curación de Grassy, Misty / Electric contra estados. `MCTS_PUCT_VERSION=6`; se mide en pareado contra v5. |
 | **5.0** (candidata) | 2026-11-21 | Fase 3c (§4.4): velocidad dinámica, Tailwind, Trick Room, estados con inmunidades y residuales, boosts en el árbol (estado, secundarios, `selfBoosts`, Parting Shot) con la tabla ajustada por etapas / quemadura / clima, Intimidate y clima al entrar, clima por movimiento, pivotes. Uso en el meta: Tailwind 213, Parting Shot 129, Trick Room 96, Icy Wind 17, Snarl 20. `MCTS_PUCT_VERSION=5`; el default sigue en 4 hasta medirla en pareado contra v4. |
 | **4.0** (por defecto desde 2026-11-21) | 2026-11-20 | Fase 3b (§4.3): Protect y variantes con \((1/3)^n\), Feint, Wide Guard, Fake Out / First Impression con primer turno y retroceso, Follow Me / Rage Powder, Helping Hand; puntuación de jugadas de apoyo por amenaza evitada. Uso en el meta (1800 sets): Protect 1182, Fake Out 459, Helping Hand 73, Wide Guard 57, Follow Me 35, Rage Powder 29. `MCTS_PUCT_VERSION=4`. **Confirmada el 21-11-2026** (protocolo §5.3, C5+C6, 34/34 semillas): > greedy_joint 62,61 % [61,80; 63,41], > expectimax 61,18 % [60,34; 62,11], > greedy_solo 64,30 % [63,47; 65,08], y frente a v3.1 McNemar +5,09 pts (1582 frente a 1066, p = 10⁻²³); por la regla del pre-registro pasa a ser el valor por defecto. |
 | **3.1.1** | 2026-11-20 | Sin cambios de decisión: S3 pide a la calculadora con `persist=False` (solo caché en memoria). La caché en disco `calc_cache.sqlite` no tiene límite y la clave lleva el HP actual: con S3 llegó a 386 GB en un día y llenó el disco del servidor. Confirmación de v3.1 (protocolo §5.2): superioridad práctica sobre joint (56,3 %), expectimax (56,3 %) y solo (59,6 %). |

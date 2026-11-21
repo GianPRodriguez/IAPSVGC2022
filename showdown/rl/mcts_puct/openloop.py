@@ -60,7 +60,7 @@ class OpenLoopConfig:
     prefer_mega: bool = True
     # Modelo de transición: 's2' (v2, simulator.step_sim), 's3' (v3: daño real + orden) o
     # 's3b' (v4: + Protect, Wide Guard, Fake Out, redirección, Helping Hand) o 's3c' (v5: + Tailwind,
-    # Trick Room, estados, boosts en el árbol, Intimidate, clima, pivotes).
+    # Trick Room, estados, boosts en el árbol, Intimidate, clima, pivotes) o 's3d' (v6: + terreno).
     model: str = 's2'
 
 
@@ -343,9 +343,9 @@ def search_openloop(
     s0 = prepare_root(root_state)
     root_force = bool(any(root_state.force_switch))
     model = None
-    if str(cfg.model).lower() in ('s3', 's3b', 's3c'):
+    if str(cfg.model).lower() in ('s3', 's3b', 's3c', 's3d'):
         from showdown.rl.mcts_puct.s3 import S3Model
-        phase = {'s3': '3a', 's3b': '3b', 's3c': '3c'}[str(cfg.model).lower()]
+        phase = {'s3': '3a', 's3b': '3b', 's3c': '3c', 's3d': '3d'}[str(cfg.model).lower()]
         model = S3Model.build(s0, stat_beliefs=stat_beliefs, ranges_fn=ranges_fn, phase=phase)
         ms = model.stats
         tel.calc_requests, tel.calc_missing, tel.calc_sec = ms.requests, ms.missing, ms.build_sec
