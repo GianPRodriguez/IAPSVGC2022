@@ -1,5 +1,7 @@
 """MCTS+PUCT agent (docs/mcts_puct_spec.md).
 
+``version=5``: S3 fase 3c (+ Tailwind / Trick Room, estados, boosts en el árbol, Intimidate,
+clima, pivotes); candidata en medición (spec v5.0).
 ``version=4`` (default desde el 21-11-2026, confirmada: protocolo §5.3): S3 fase 3b
 (+ Protect, Wide Guard, Fake Out, redirección, Helping Hand).
 ``version=3``: open-loop con el modelo S3 fase 3a (``s3.py``: daño real de la calculadora,
@@ -44,7 +46,7 @@ class MCTSPuctConfig:
             inner_top_k=int(self.inner_top_k), opp_temperature=float(self.opp_temperature),
             opp_eps=float(self.opp_eps), rollout_turns=int(self.rollout_turns),
             max_depth=int(self.max_depth), prefer_mega=bool(self.prefer_mega),
-            model='s3b' if int(self.version) >= 4 else ('s3' if int(self.version) == 3 else 's2'),
+            model={5: 's3c', 4: 's3b', 3: 's3'}.get(min(int(self.version), 5), 's2'),
         )
 
 

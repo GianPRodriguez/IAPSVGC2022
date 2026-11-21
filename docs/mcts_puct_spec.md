@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS+PUCT open-loop (solo turnos) |
-| **Versión** | **4.0** por defecto (confirmada; alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
+| **Versión** | **4.0** por defecto (confirmada); **5.0** candidata (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
 | **Estado** | v4.0 confirmada y por defecto (protocolo §5.3: > joint 62,6 %, expectimax 61,2 %, solo 64,3 %, y +5,1 pts sobre v3.1); v3.1 (3a) con `MCTS_PUCT_VERSION=3`. Siguiente: fase 3c; v2 (S2) con `MCTS_PUCT_VERSION=2`, v1 con `=1`. Diagnóstico: [`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md) |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Hiperparámetros de búsqueda (sobre todo \(N_{\rm sim}\)); barrido automatizado |
@@ -196,6 +196,32 @@ Fake Out = daño + 0,5 · daño que el objetivo haría (0 fuera del primer turno
 Follow Me / Rage Powder = 0,4 · amenaza individual al aliado; Helping Hand = 0,5 · mejor
 daño del aliado; Wide Guard = 0,5 · daño en área sobre el lado. Amenaza = Σ rivales del
 mejor daño esperado (tabla de S3) acotado al HP.
+
+---
+
+### 4.4 Fase 3c (v5.0, candidata: `MCTS_PUCT_VERSION=5`)
+
+S3 con `phase='3c'` (incluye todo 3b). Mecánicas añadidas:
+
+| Mecánica | Modelo |
+|---|---|
+| Velocidad dinámica | Tras cada acción se elige la siguiente con la velocidad **actual** (Gen 9): Tailwind, Trick Room, Icy Wind, parálisis o un cambio de etapas reordenan el resto del turno |
+| Tailwind | Lado ×2 de velocidad, 4 turnos (el actual incluido) |
+| Trick Room | Prioridad −7; invierte el orden dentro de cada prioridad, 5 turnos; repetirlo lo cancela |
+| Estados | Sueño 1–3 turnos (no actúa; al despertar actúa), parálisis (×0,5 velocidad, 25 % de no actuar), quemadura (×0,5 daño físico salvo Guts; 1/16 por turno), veneno (1/8). Inmunidades: ya con estado, Eléctrico/par, Tierra/Thunder Wave, Fuego/quemadura, Veneno y Acero/veneno, polvo (Planta, Overcoat, Safety Goggles), Insomnia / Vital Spirit / Sweet Veil |
+| Boosts en el árbol | Movimientos de estado (`boosts`, p. ej. Swords Dance, Nasty Plot), secundarios (`secondaries`, p. ej. Icy Wind −1 Vel, Snarl −1 AtEsp), `selfBoosts` (Close Combat, Draco Meteor, Make It Rain), Parting Shot (−1 Atk/−1 AtEsp, falta en el dex). Clear Body / White Smoke / Full Metal Body bloquean bajadas del rival; Defiant / Competitive (+2) |
+| Daño | Tabla de la raíz × razón de etapas (atk/def o spa/spd) respecto a la raíz × quemadura × clima actual / clima de la raíz (Fuego/Agua ×1,5 / ×0,5) |
+| Al entrar | Intimidate (−1 Atk a los rivales; inmunes Clear Body, Inner Focus, Oblivious, Own Tempo, Scrappy, Hyper Cutter…; Guard Dog +1) y clima por habilidad (Drought, Drizzle, Sand Stream, Snow Warning, Orichalcum Pulse): al cambiar, al reemplazar tras KO y al pivotar |
+| Clima | Por movimiento (Sunny Day, Rain Dance…) o habilidad, 5 turnos; Swift Swim / Chlorophyll / Sand Rush / Slush Rush ×2 velocidad; daño de arena 1/16 |
+| Pivotes | U-turn, Volt Switch, Flip Turn (si golpean) y Parting Shot: entra el de banca con más HP |
+
+Puntuación añadida: Tailwind / Trick Room = 25 × (fracción de duelos de velocidad ganados
+con el efecto − sin él); sueño 0,8 · daño del objetivo, parálisis 0,35, quemadura 0,5 si su
+mejor ataque es físico (0,1 si no), veneno 8; boosts propios 0,15 · propio mejor daño por
+etapa de ataque; bajadas al rival 0,2 · su daño; Icy Wind / Electroweb +5 por rival.
+
+Fuera de 3c: terreno (ni Grassy Glide condicional dentro del árbol), críticos, Quick
+Guard, Spotlight, Yawn, objetos consumibles, habilidades raras.
 
 ---
 
@@ -403,6 +429,7 @@ y turno para reproducir RNG.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **5.0** (candidata) | 2026-11-21 | Fase 3c (§4.4): velocidad dinámica, Tailwind, Trick Room, estados con inmunidades y residuales, boosts en el árbol (estado, secundarios, `selfBoosts`, Parting Shot) con la tabla ajustada por etapas / quemadura / clima, Intimidate y clima al entrar, clima por movimiento, pivotes. Uso en el meta: Tailwind 213, Parting Shot 129, Trick Room 96, Icy Wind 17, Snarl 20. `MCTS_PUCT_VERSION=5`; el default sigue en 4 hasta medirla en pareado contra v4. |
 | **4.0** (por defecto desde 2026-11-21) | 2026-11-20 | Fase 3b (§4.3): Protect y variantes con \((1/3)^n\), Feint, Wide Guard, Fake Out / First Impression con primer turno y retroceso, Follow Me / Rage Powder, Helping Hand; puntuación de jugadas de apoyo por amenaza evitada. Uso en el meta (1800 sets): Protect 1182, Fake Out 459, Helping Hand 73, Wide Guard 57, Follow Me 35, Rage Powder 29. `MCTS_PUCT_VERSION=4`. **Confirmada el 21-11-2026** (protocolo §5.3, C5+C6, 34/34 semillas): > greedy_joint 62,61 % [61,80; 63,41], > expectimax 61,18 % [60,34; 62,11], > greedy_solo 64,30 % [63,47; 65,08], y frente a v3.1 McNemar +5,09 pts (1582 frente a 1066, p = 10⁻²³); por la regla del pre-registro pasa a ser el valor por defecto. |
 | **3.1.1** | 2026-11-20 | Sin cambios de decisión: S3 pide a la calculadora con `persist=False` (solo caché en memoria). La caché en disco `calc_cache.sqlite` no tiene límite y la clave lleva el HP actual: con S3 llegó a 386 GB en un día y llenó el disco del servidor. Confirmación de v3.1 (protocolo §5.2): superioridad práctica sobre joint (56,3 %), expectimax (56,3 %) y solo (59,6 %). |
 | **3.1** | 2026-11-20 | **Preview greedy por defecto** (tipado + BST, el de solo/joint/expectimax), decisión del usuario: `team_preview_nash` nunca se entrenó (solo un checkpoint de smoke con etiquetas mock) y G caía al orden fijo `/team 1234` (−4 pts medidos en v2). `MCTS_PREVIEW=nash` vuelve al preview de familia. No se usa el preview PPO (sin componentes RL en G). Combate idéntico a v3.0. |

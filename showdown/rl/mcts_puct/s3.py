@@ -28,8 +28,20 @@ afecta a tipo Planta, Overcoat ni Safety Goggles) y Helping Hand (×1,5 al aliad
 rompe la protección. La puntuación (prior, rival, rollout) valora estas jugadas con la
 amenaza que evitan.
 
-Qué NO modela todavía (fase 3c): Tailwind/Trick Room como acciones, Intimidate, estados,
-clima/terreno cambiantes, boosts dentro del árbol, críticos, Quick Guard, Spotlight.
+Fase 3c (``phase='3c'``, MCTS+PUCT v5; incluye 3b): Tailwind (4 turnos) y Trick Room
+(5 turnos, se cancela si se repite) como acciones; orden del turno recalculado tras cada
+acción (velocidad dinámica, Gen 9); estados (sueño 1–3 turnos, parálisis ×0,5 velocidad y
+25 % de no actuar, quemadura ×0,5 daño físico, veneno; daño residual 1/16 y 1/8) con
+inmunidades (tipo, Safety Goggles/polvo, ya con estado); boosts dentro del árbol
+(movimientos de estado, secundarios, ``selfBoosts`` como Close Combat / Draco Meteor,
+Parting Shot), con el daño de la tabla ajustado por la razón de etapas respecto a la raíz;
+Intimidate al entrar (Clear Body y similares lo bloquean; Defiant / Competitive);
+clima por movimiento o habilidad al entrar (Fuego/Agua ×1,5 / ×0,5 respecto al clima de la
+raíz; Swift Swim, Chlorophyll, Sand Rush, Slush Rush; daño de arena); cambios de pivote
+(U-turn, Volt Switch, Flip Turn, Parting Shot).
+
+Qué NO modela: terreno (ni sus setters), críticos, Quick Guard, Spotlight, Yawn, objetos
+consumibles, habilidades raras.
 """
 from __future__ import annotations
 
@@ -58,6 +70,22 @@ WIDEGUARD_W = 0.5   # Wide Guard: fracción del daño en área evitado
 _PROTECT_VOL = {'protect', 'kingsshield', 'spikyshield', 'banefulbunker', 'silktrap',
                 'obstruct', 'burningbulwark', 'maxguard'}
 _FIRST_TURN = {'fakeout', 'firstimpression'}
+# Fase 3c
+TAILWIND_W = 25.0   # valor de Tailwind / Trick Room por fracción de duelos de velocidad ganados
+SLEEP_W = 0.8       # fracción del daño del objetivo que se niega al dormirlo
+PARA_W = 0.35
+BURN_W = 0.5        # solo si su mejor ataque es físico
+POISON_V = 8.0
+BOOST_W = 0.15      # por etapa de atk/spa propia: fracción del propio mejor daño
+SPEEDCTL_V = 5.0    # por rival al que se le baja la velocidad
+_INTIM_IMMUNE = {'clearbody', 'whitesmoke', 'fullmetalbody', 'hypercutter', 'innerfocus', 'oblivious',
+                 'owntempo', 'scrappy', 'guarddog'}
+_DROP_IMMUNE = {'clearbody', 'whitesmoke', 'fullmetalbody'}
+_WEATHER_ABIL = {'drought': 'sunnyday', 'drizzle': 'raindance', 'sandstream': 'sandstorm',
+                 'snowwarning': 'snow', 'orichalcumpulse': 'sunnyday'}
+_WEATHER_SPEED = {'swiftswim': ('raindance', 'primordialsea'), 'chlorophyll': ('sunnyday', 'desolateland'),
+                  'sandrush': ('sandstorm',), 'slushrush': ('snow', 'snowscape', 'hail')}
+_EXTRA_TARGET_BOOSTS = {'partingshot': {'atk': -1, 'spa': -1}}
 
 
 def _norm(s) -> str:
@@ -144,6 +172,59 @@ def _flinch_immune(m: MonSnapshot) -> bool:
     return _norm(m.ability) in ('innerfocus', 'shielddust') or _norm(m.item) == 'covertcloak'
 
 
+def stage_mult(st: int) -> float:
+    st = int(max(-6, min(6, st)))
+    return (2.0 + st) / 2.0 if st >= 0 else 2.0 / (2.0 - st)
+
+
+def _wnorm(w) -> str:
+    w = _norm(w)
+    return {'snowscape': 'snow', 'hail': 'snow', 'sun': 'sunnyday', 'rain': 'raindance', 'sand': 'sandstorm'}.get(w, w)
+
+
+def _weather_factor(mtype: str, weather: str) -> float:
+    t, w = _norm(mtype), _wnorm(weather)
+    if w in ('sunnyday', 'desolateland'):
+        return 1.5 if t == 'fire' else (0.5 if t == 'water' else 1.0)
+    if w in ('raindance', 'primordialsea'):
+        return 1.5 if t == 'water' else (0.5 if t == 'fire' else 1.0)
+    return 1.0
+
+
+def move_effect3(move_id: str) -> str:
+    """Efecto de fase 3c para movimientos de estado: tailwind | trickroom | weather | status | boost | ''."""
+    e = dex_move(move_id)
+    if _norm(e.get('sideCondition')) == 'tailwind':
+        return 'tailwind'
+    if _norm(e.get('pseudoWeather')) == 'trickroom':
+        return 'trickroom'
+    if e.get('weather'):
+        return 'weather'
+    if str(e.get('category') or '').lower() == 'status':
+        if e.get('status'):
+            return 'status'
+        if e.get('boosts') or _norm(move_id) in _EXTRA_TARGET_BOOSTS:
+            return 'boost'
+    return ''
+
+
+def _status_immune(m: MonSnapshot, status: str, move_id: str) -> bool:
+    if m.status:
+        return True
+    types = {_norm(t) for t in (m.types or ())}
+    if 'powder' in _flags(move_id) and _powder_immune(m):
+        return True
+    if status == 'par':
+        return 'electric' in types or (_norm(move_id) == 'thunderwave' and 'ground' in types)
+    if status == 'brn':
+        return 'fire' in types
+    if status in ('psn', 'tox'):
+        return 'poison' in types or 'steel' in types
+    if status == 'slp':
+        return _norm(m.ability) in ('insomnia', 'vitalspirit', 'sweetveil')
+    return False
+
+
 def is_damaging(move_id: str) -> bool:
     entry = dex_move(move_id)
     if str(entry.get('category') or '').lower() == 'status':
@@ -163,6 +244,7 @@ def fast_clone(snap: BattleSnapshot) -> BattleSnapshot:
     out = copy.copy(snap)
     out.our = side(snap.our)
     out.foe = side(snap.foe)
+    out.field = copy.copy(snap.field)  # fase 3c cambia Tailwind / Trick Room / clima
     return out
 
 
@@ -188,6 +270,11 @@ class S3Model:
     prio: Dict[Tuple[Tuple[str, str], str], int] = field(default_factory=dict)
     trick_room: bool = False
     phase: str = '3a'
+    # Fase 3c: estado de la raíz (para ajustar la tabla) y velocidad base por Pokémon.
+    root_boosts: Dict[Tuple[str, str], Dict[str, int]] = field(default_factory=dict)
+    root_status: Dict[Tuple[str, str], str] = field(default_factory=dict)
+    spe_raw: Dict[Tuple[str, str], int] = field(default_factory=dict)
+    root_weather: str = ''
     stats: S3Stats = field(default_factory=S3Stats)
 
     # ------------------------------------------------------------------ build
@@ -305,6 +392,9 @@ class S3Model:
             else:
                 spe = 100
             status = str(m.status or '').lower()
+            model.spe_raw[_key(m)] = int(spe)
+            model.root_boosts[_key(m)] = dict(m.boosts or {})
+            model.root_status[_key(m)] = status
             model.speed[_key(m)] = int(effective_speed(
                 spe, boost=int((m.boosts or {}).get('spe') or 0), item=m.item or None,
                 paralyzed=status.startswith('par'),
@@ -314,6 +404,11 @@ class S3Model:
                 if mid:
                     pr = move_priority(mid, m.ability or None, terrain or None)
                     model.prio[(_key(m), mid)] = int(pr) if pr is not None else 0
+        model.root_weather = _wnorm(getattr(root.field, 'weather', ''))
+        if model.phase == '3c':  # sueño en la raíz: status_counter = turnos ya dormidos -> restantes
+            for m in our + foe:
+                if str(m.status or '').startswith('slp'):
+                    m.status_counter = max(1, 3 - int(getattr(m, 'status_counter', 0) or 0))
         st.build_sec = time.perf_counter() - t0
         return model
 
@@ -350,6 +445,144 @@ class S3Model:
             return foes[:1], False  # redirección al otro rival
         return [], False  # estado / self / campo: sin efecto en 3a
 
+    # --------------------------------------------------------- fase 3c: estado
+    def cur_speed(self, s: BattleSnapshot, m: MonSnapshot, ours: bool) -> float:
+        from showdown.stat_inference import effective_speed
+        k = _key(m)
+        spe = float(effective_speed(
+            int(self.spe_raw.get(k, 100)), boost=int((m.boosts or {}).get('spe') or 0), item=m.item or None,
+            paralyzed=str(m.status or '').startswith('par'),
+            tailwind=bool(s.field.our_tailwind if ours else s.field.opp_tailwind),
+        ))
+        w = _wnorm(s.field.weather)
+        if w and w in _WEATHER_SPEED.get(_norm(m.ability), ()):
+            spe *= 2.0
+        return -spe if s.field.trick_room else spe
+
+    def _mods(self, att: MonSnapshot, dfn: MonSnapshot, mid: str, weather: str) -> float:
+        """Ajuste de la tabla (calculada en la raíz) por etapas, quemadura y clima actuales."""
+        e = dex_move(mid)
+        cat = str(e.get('category') or '').lower()
+        a_st, d_st = ('atk', 'def') if cat == 'physical' else ('spa', 'spd')
+        ka, kd = _key(att), _key(dfn)
+        ra, rd = self.root_boosts.get(ka, {}), self.root_boosts.get(kd, {})
+        f = (stage_mult((att.boosts or {}).get(a_st, 0)) / stage_mult(ra.get(a_st, 0))
+             * stage_mult(rd.get(d_st, 0)) / stage_mult((dfn.boosts or {}).get(d_st, 0)))
+        if cat == 'physical' and _norm(att.ability) != 'guts':
+            now_b = str(att.status or '').startswith('brn')
+            was_b = self.root_status.get(ka, '').startswith('brn')
+            if now_b and not was_b:
+                f *= 0.5
+            elif was_b and not now_b:
+                f *= 2.0
+        f *= _weather_factor(e.get('type', ''), weather) / _weather_factor(e.get('type', ''), self.root_weather)
+        return f
+
+    @staticmethod
+    def _boost(m: MonSnapshot, boosts: Dict[str, int], *, by_foe: bool) -> None:
+        if not boosts or not _alive(m):
+            return
+        ab = _norm(m.ability)
+        b = dict(m.boosts or {})
+        dropped = False
+        for k, d in boosts.items():
+            d = int(d)
+            if d < 0 and by_foe and ab in _DROP_IMMUNE:
+                continue
+            b[k] = int(max(-6, min(6, int(b.get(k, 0)) + d)))
+            dropped = dropped or d < 0
+        if dropped and by_foe:
+            if ab == 'defiant':
+                b['atk'] = int(min(6, int(b.get('atk', 0)) + 2))
+            elif ab == 'competitive':
+                b['spa'] = int(min(6, int(b.get('spa', 0)) + 2))
+        m.boosts = b
+
+    def _set_weather(self, s: BattleSnapshot, w: str) -> None:
+        s.field.weather = _wnorm(w)
+        s.field.weather_turns = 5.0
+
+    def on_entry(self, s: BattleSnapshot, m: MonSnapshot, ours: bool) -> None:
+        """Habilidades al entrar (fase 3c): Intimidate y clima."""
+        if self.phase != '3c' or not _alive(m):
+            return
+        ab = _norm(m.ability)
+        if ab == 'intimidate':
+            opp = s.foe if ours else s.our
+            for f in opp.active:
+                if _alive(f) and _norm(f.ability) not in _INTIM_IMMUNE:
+                    self._boost(f, {'atk': -1}, by_foe=True)
+                elif _alive(f) and _norm(f.ability) == 'guarddog':
+                    self._boost(f, {'atk': 1}, by_foe=False)
+        if ab in _WEATHER_ABIL:
+            self._set_weather(s, _WEATHER_ABIL[ab])
+
+    def _pivot(self, s: BattleSnapshot, side: SideSnapshot, actor: MonSnapshot, ours: bool) -> None:
+        """U-turn / Volt Switch / Parting Shot: entra el de banca con más HP."""
+        slot = next((i for i, x in enumerate(side.active) if x is actor), None)
+        if slot is None:
+            return
+        best = None
+        for bi, b in enumerate(side.bench):
+            if _alive(b) and (best is None or b.hp_pct > side.bench[best].hp_pct):
+                best = bi
+        if best is None:
+            return
+        inc = side.bench[best]
+        side.bench[best], side.active[slot] = actor, inc
+        inc.is_active, actor.is_active = True, False
+        inc.turns_active = 0
+        inc.protect_counter = 0
+        self.on_entry(s, inc, ours)
+
+    def replace_fainted(self, s: BattleSnapshot) -> None:
+        """Reemplazo tras KO (como ``openloop.auto_replace``) + efectos al entrar en 3c."""
+        before = {(o, i): (s.our if o else s.foe).active[i] for o in (True, False) for i in range(2)}
+        from showdown.rl.mcts_puct.openloop import auto_replace
+        auto_replace(s)
+        if self.phase != '3c':
+            return
+        for (o, i), old in before.items():
+            side = s.our if o else s.foe
+            new = side.active[i] if i < len(side.active) else None
+            if new is not None and new is not old:
+                self.on_entry(s, new, o)
+
+    def _end_of_turn(self, s: BattleSnapshot) -> None:
+        w = _wnorm(s.field.weather)
+        for m in list(s.our.active) + list(s.foe.active):
+            if not _alive(m):
+                continue
+            st = str(m.status or '')
+            chip = 0.0
+            if st.startswith('brn'):
+                chip += 6.25
+            elif st.startswith('psn') or st.startswith('tox'):
+                chip += 12.5
+            types = {_norm(t) for t in (m.types or ())}
+            if w == 'sandstorm' and not types & {'rock', 'ground', 'steel'} and _norm(m.ability) not in (
+                    'sandveil', 'sandrush', 'sandforce', 'overcoat', 'magicguard'):
+                chip += 6.25
+            if chip:
+                m.hp_pct = max(0.0, float(m.hp_pct) - chip)
+                if m.hp_pct <= 0.0:
+                    m.fainted, m.hp_pct = True, 0.0
+        f = s.field
+        for flag, turns in (('our_tailwind', 'our_tailwind_turns'), ('opp_tailwind', 'opp_tailwind_turns'),
+                            ('trick_room', 'trick_room_turns')):
+            if getattr(f, flag):
+                t = float(getattr(f, turns) or 0.0)
+                t = (t if t > 0 else 3.0) - 1.0  # sin dato de la raíz: quedan ~2
+                setattr(f, turns, t)
+                if t <= 0:
+                    setattr(f, flag, False)
+        if f.weather:
+            t = float(f.weather_turns or 0.0)
+            if t > 0:
+                f.weather_turns = t - 1.0
+                if f.weather_turns <= 0:
+                    f.weather = ''
+
     # ------------------------------------------------------------- transición
     def step(self, snap: BattleSnapshot, joint_self: int, joint_opp: int,
              rng: np.random.Generator, *, max_turns: int = 40) -> BattleSnapshot:
@@ -377,6 +610,7 @@ class S3Model:
                 in_m.protect_counter = 0
                 if out_m is not None:
                     out_m.is_active = False
+                self.on_entry(s, in_m, ours)
 
         # 2) movimientos por prioridad y velocidad
         queue = []
@@ -400,14 +634,24 @@ class S3Model:
             queue.append((self.prio.get((k, mid), 0), spe, float(rng.random()), ours, slot, act, actor, mid))
         queue.sort(key=lambda q: (q[0], q[1], q[2]), reverse=True)
 
-        b3 = self.phase == '3b'
+        c3 = self.phase == '3c'
+        b3 = self.phase in ('3b', '3c')
         protected: set = set()           # id() de los protegidos este turno
         wide_guard = {True: False, False: False}
         redirect: Dict[bool, Optional[Tuple[MonSnapshot, bool]]] = {True: None, False: None}
         helped: set = set()              # id() de quien recibe Helping Hand
         flinched: set = set()            # id() de quien retrocede
 
-        for _p, _sp, _tb, ours, slot, act, actor, mid in queue:
+        pending = list(queue)
+        while pending:
+            if c3:  # velocidad dinámica (Gen 9): el siguiente se elige con la velocidad actual
+                ib = max(range(len(pending)), key=lambda i: (
+                    pending[i][0],
+                    self.cur_speed(s, pending[i][6], pending[i][3]) if _alive(pending[i][6]) else -1e9,
+                    pending[i][2]))
+                _p, _sp, _tb, ours, slot, act, actor, mid = pending.pop(ib)
+            else:
+                _p, _sp, _tb, ours, slot, act, actor, mid = pending.pop(0)
             if not _alive(actor):
                 continue  # cayó antes de actuar
             side, opp = (s.our, s.foe) if ours else (s.foe, s.our)
@@ -441,6 +685,57 @@ class S3Model:
                     continue
                 if mid in _FIRST_TURN and int(getattr(actor, 'turns_active', 0) or 0) > 0:
                     continue  # Fake Out / First Impression fallan fuera del primer turno
+            if c3:
+                st = str(actor.status or '')
+                if st.startswith('slp'):
+                    c = int(getattr(actor, 'status_counter', 0) or 0)
+                    if c > 0:
+                        actor.status_counter = c - 1
+                        continue
+                    actor.status = ''  # despierta y actúa
+                elif st.startswith('par') and rng.random() < 0.25:
+                    continue
+                e3 = move_effect3(mid)
+                if e3 == 'tailwind':
+                    if ours:
+                        s.field.our_tailwind, s.field.our_tailwind_turns = True, 4.0
+                    else:
+                        s.field.opp_tailwind, s.field.opp_tailwind_turns = True, 4.0
+                    continue
+                if e3 == 'trickroom':
+                    on = not s.field.trick_room
+                    s.field.trick_room, s.field.trick_room_turns = on, (5.0 if on else 0.0)
+                    continue
+                if e3 == 'weather':
+                    self._set_weather(s, dex_move(mid).get('weather', ''))
+                    continue
+                if e3 in ('status', 'boost'):
+                    e = dex_move(mid)
+                    if move_target(mid) == 'self':
+                        self._boost(actor, e.get('boosts') or {}, by_foe=False)
+                    else:
+                        tg, _spr = self._targets(side, opp, slot_now, act, mid)
+                        if tg and move_target(mid) in _SINGLE and act.target != 2:
+                            rd = redirect[not ours]
+                            if rd is not None and _alive(rd[0]) and not (rd[1] and _powder_immune(actor)):
+                                tg = [rd[0]]
+                        acc3 = move_accuracy(mid)
+                        for dfn in tg:
+                            if id(dfn) in protected and blockable(mid):
+                                continue
+                            if acc3 < 1.0 and rng.random() > acc3:
+                                continue
+                            if e3 == 'status':
+                                stt = str(e.get('status') or '')
+                                if not _status_immune(dfn, stt, mid):
+                                    dfn.status = stt
+                                    if stt == 'slp':
+                                        dfn.status_counter = int(rng.integers(1, 4))
+                            else:
+                                self._boost(dfn, e.get('boosts') or _EXTRA_TARGET_BOOSTS.get(mid, {}), by_foe=True)
+                    if e.get('selfSwitch'):
+                        self._pivot(s, side, actor, ours)
+                    continue
             targets, spread = self._targets(side, opp, slot_now, act, mid)
             if b3 and targets and move_target(mid) in _SINGLE and act.target != 2:
                 rd = redirect[not ours]
@@ -449,6 +744,7 @@ class S3Model:
             if not targets or not is_damaging(mid):
                 continue
             acc = move_accuracy(mid)
+            hit_any = False
             for dfn in targets:
                 if b3:
                     dfn_ours = any(dfn is x for x in s.our.active)
@@ -465,13 +761,35 @@ class S3Model:
                 dmg = float(rng.uniform(lo, hi)) if hi > lo else float(lo)
                 if b3 and id(actor) in helped:
                     dmg *= 1.5
+                if c3:
+                    dmg *= self._mods(actor, dfn, mid, s.field.weather)
+                hit_any = True
                 dfn.hp_pct = max(0.0, float(dfn.hp_pct) - dmg)
                 if dfn.hp_pct <= 0.0:
                     dfn.fainted = True
                     dfn.hp_pct = 0.0
-                elif b3 and mid == 'fakeout' and not _flinch_immune(dfn):
+                    continue
+                if b3 and mid == 'fakeout' and not _flinch_immune(dfn):
                     flinched.add(id(dfn))
+                if c3:  # secundarios sobre el objetivo
+                    for sec in dex_move(mid).get('secondaries') or []:
+                        if rng.random() * 100.0 >= float(sec.get('chance', 100) or 100):
+                            continue
+                        if sec.get('status') and not _status_immune(dfn, str(sec['status']), mid):
+                            dfn.status = str(sec['status'])
+                            if dfn.status == 'slp':
+                                dfn.status_counter = int(rng.integers(1, 4))
+                        if sec.get('boosts'):
+                            self._boost(dfn, sec['boosts'], by_foe=True)
+            if c3 and hit_any and _alive(actor):
+                e = dex_move(mid)
+                if e.get('selfBoosts'):
+                    self._boost(actor, e['selfBoosts'], by_foe=False)
+                if e.get('selfSwitch'):
+                    self._pivot(s, side, actor, ours)
 
+        if c3:
+            self._end_of_turn(s)
         if b3:
             for m in list(s.our.active) + list(s.foe.active):
                 if _alive(m):
@@ -513,7 +831,7 @@ class S3Model:
                     sign = -1.0 if any(dfn is x for x in side.active) else 1.0  # golpear al aliado resta
                     v += sign * acc * (exp + KO_BONUS * p_ko)
                 out[mi * 4 + t] = v
-            if self.phase == '3b' and mid in _FIRST_TURN:
+            if self.phase in ('3b', '3c') and mid in _FIRST_TURN:
                 first = int(getattr(actor, 'turns_active', 0) or 0) == 0
                 for t in range(4):
                     if (mi * 4 + t) not in out:
@@ -524,9 +842,84 @@ class S3Model:
                         tg = opp.active[t] if t < len(opp.active) else None
                         if _alive(tg) and not _flinch_immune(tg):
                             out[mi * 4 + t] += FLINCH_W * self.best_output(view, tg, flip=True)
-        if self.phase == '3b':
+        if self.phase in ('3b', '3c'):
             self._support_scores(view, slot, actor, out)
+        if self.phase == '3c':
+            self._scores_3c(view, slot, actor, out)
         return out
+
+    # --------------------------------------------------- puntuación (fase 3c)
+    def _speed_share(self, view: BattleSnapshot, *, tailwind: bool = False, trick: Optional[bool] = None) -> float:
+        """Fracción de duelos (nuestro activo, rival activo) que ganamos en velocidad."""
+        f = view.field
+        saved = (f.our_tailwind, f.trick_room)
+        if tailwind:
+            f.our_tailwind = True
+        if trick is not None:
+            f.trick_room = trick
+        try:
+            n = w = 0
+            for a in view.our.active:
+                for b in view.foe.active:
+                    if _alive(a) and _alive(b):
+                        n += 1
+                        w += self.cur_speed(view, a, True) > self.cur_speed(view, b, False)
+            return (w / n) if n else 0.0
+        finally:
+            f.our_tailwind, f.trick_room = saved
+
+    def _scores_3c(self, view: BattleSnapshot, slot: int, actor: MonSnapshot, out: Dict[int, float]) -> None:
+        side, opp = view.our, view.foe
+        from showdown.rl.snapshot import SlotAction
+        for mi, mv in enumerate(actor.moves[:4]):
+            mid = _norm(mv)
+            if not mid:
+                continue
+            e = dex_move(mid)
+            e3 = move_effect3(mid)
+            if e3 == 'tailwind':
+                base = self._speed_share(view)
+                gain = self._speed_share(view, tailwind=True) - base
+                out[mi * 4 + 3] = 0.0 if view.field.our_tailwind else TAILWIND_W * gain
+            elif e3 == 'trickroom':
+                base = self._speed_share(view)
+                out[mi * 4 + 3] = TAILWIND_W * (self._speed_share(view, trick=not view.field.trick_room) - base)
+            elif e3 == 'status':
+                stt = str(e.get('status') or '')
+                for t in (0, 1):
+                    tgts, _ = self._targets(side, opp, slot, SlotAction(kind='move', move_index=mi, target=t), mid)
+                    v = 0.0
+                    for d in tgts:
+                        if _status_immune(d, stt, mid):
+                            continue
+                        outp = self.best_output(view, d, flip=True)
+                        if stt == 'slp':
+                            v += SLEEP_W * outp
+                        elif stt == 'par':
+                            v += PARA_W * outp
+                        elif stt == 'brn':
+                            phys = any(str(dex_move(_norm(x)).get('category', '')).lower() == 'physical'
+                                       for x in d.moves[:4] if x)
+                            v += (BURN_W if phys else 0.1) * outp
+                        else:
+                            v += POISON_V
+                    out[mi * 4 + t] = move_accuracy(mid) * v
+            elif e3 == 'boost' and move_target(mid) == 'self':
+                b = e.get('boosts') or {}
+                own = self.best_output(view, actor)
+                v = BOOST_W * own * (max(0, int(b.get('atk', 0))) + max(0, int(b.get('spa', 0))))
+                v += SPEEDCTL_V * max(0, int(b.get('spe', 0)))
+                out[mi * 4 + 3] = v
+            elif e3 == 'boost':
+                for t in (0, 1):
+                    tgts, _ = self._targets(side, opp, slot, SlotAction(kind='move', move_index=mi, target=t), mid)
+                    out[mi * 4 + t] = sum(0.2 * self.best_output(view, d, flip=True) for d in tgts)
+            if is_damaging(mid):  # control de velocidad por secundarios seguros (Icy Wind, Electroweb)
+                for sec in e.get('secondaries') or []:
+                    if float(sec.get('chance', 0) or 0) >= 100 and (sec.get('boosts') or {}).get('spe', 0) < 0:
+                        for t in range(4):
+                            if (mi * 4 + t) in out:
+                                out[mi * 4 + t] += SPEEDCTL_V * sum(1 for d in opp.active if _alive(d))
 
     # --------------------------------------------------- amenazas (fase 3b)
     def best_output(self, view: BattleSnapshot, att: MonSnapshot, *, flip: bool = False) -> float:

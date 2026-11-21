@@ -59,7 +59,8 @@ class OpenLoopConfig:
     max_depth: int = 6
     prefer_mega: bool = True
     # Modelo de transición: 's2' (v2, simulator.step_sim), 's3' (v3: daño real + orden) o
-    # 's3b' (v4: + Protect, Wide Guard, Fake Out, redirección, Helping Hand).
+    # 's3b' (v4: + Protect, Wide Guard, Fake Out, redirección, Helping Hand) o 's3c' (v5: + Tailwind,
+    # Trick Room, estados, boosts en el árbol, Intimidate, clima, pivotes).
     model: str = 's2'
 
 
@@ -226,7 +227,10 @@ def _step(s: BattleSnapshot, a_self: int, a_opp: int, rng, ctx: '_Ctx') -> Battl
         out = step_sim(s, a_self, a_opp, rng, max_turns=cfg.max_turns,
                        status_chip=False, clone_fn=fast_clone)
     if not out.finished:
-        auto_replace(out)
+        if ctx.model is not None:
+            ctx.model.replace_fainted(out)  # S3 3c: + Intimidate / clima al entrar
+        else:
+            auto_replace(out)
     out.force_switch = (False, False)
     out.avail_moves = None
     return out
@@ -339,10 +343,10 @@ def search_openloop(
     s0 = prepare_root(root_state)
     root_force = bool(any(root_state.force_switch))
     model = None
-    if str(cfg.model).lower() in ('s3', 's3b'):
+    if str(cfg.model).lower() in ('s3', 's3b', 's3c'):
         from showdown.rl.mcts_puct.s3 import S3Model
-        model = S3Model.build(s0, stat_beliefs=stat_beliefs, ranges_fn=ranges_fn,
-                              phase='3b' if str(cfg.model).lower() == 's3b' else '3a')
+        phase = {'s3': '3a', 's3b': '3b', 's3c': '3c'}[str(cfg.model).lower()]
+        model = S3Model.build(s0, stat_beliefs=stat_beliefs, ranges_fn=ranges_fn, phase=phase)
         ms = model.stats
         tel.calc_requests, tel.calc_missing, tel.calc_sec = ms.requests, ms.missing, ms.build_sec
         tel.calc_error, tel.foe_no_moves, tel.foe_point_stats = ms.error, ms.foe_no_moves, ms.foe_point_stats
