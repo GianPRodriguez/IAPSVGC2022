@@ -131,8 +131,11 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
         from showdown.rl.pe_adapter import mon_from_pe
         try:
             our_src = list(getattr(battle, 'teampreview_team', None) or list(battle.team.values()))
-            foe_src = list(getattr(battle, 'teampreview_opponent_team', None)
-                           or list(battle.opponent_team.values()))
+            # Rival: poke-env vuelca la hoja abierta (``showteam``: movimientos, ítem, habilidad) en
+            # ``opponent_team``; ``teampreview_opponent_team`` solo trae la especie (sin movimientos la
+            # búsqueda no simula nada). Igual que ``frozen_preview.obs_bundle_from_pokeenv_battle``.
+            foe_ots = list((getattr(battle, 'opponent_team', None) or {}).values())
+            foe_src = foe_ots or list(getattr(battle, 'teampreview_opponent_team', None) or [])
             ours = [mon_from_pe(m, is_active=False, own=True) for m in our_src]
             foes = [mon_from_pe(m, is_active=False, own=False) for m in foe_src]
             ver = int(self.agent.cfg.version)

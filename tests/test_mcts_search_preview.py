@@ -110,3 +110,31 @@ def test_preview_key_depends_on_teams_and_config():
     assert k1 != P._preview_key(b, a, SearchPreviewConfig())
     assert k1 != P._preview_key(a, b, SearchPreviewConfig(decision='maximin'))
 
+
+def test_search_preview_reads_foe_moves_from_open_team_sheet(monkeypatch):
+    """El rival sale de ``opponent_team`` (hoja abierta, con movimientos), no de la lista del preview."""
+    from types import SimpleNamespace
+
+    from showdown.rl.mcts_puct import player as P
+    import showdown.rl.mcts_puct.search_preview as SPV
+
+    seen = {}
+
+    def fake_choose(ours, foes, cfg, stat_beliefs=None, ranges_fn=None):
+        seen['foe_moves'] = [tuple(m.moves) for m in foes]
+        return [1, 2, 3, 4], SimpleNamespace(fallback='', elapsed_sec=0.0)
+
+    monkeypatch.setattr(SPV, 'choose_formation', fake_choose)
+    monkeypatch.setattr(P, 'mon_from_pe', lambda m, **k: m, raising=False)
+    import showdown.rl.pe_adapter as PA
+    monkeypatch.setattr(PA, 'mon_from_pe', lambda m, **k: m)
+    P._PREVIEW_MEMO.clear()
+    battle = SimpleNamespace(teampreview_team=_team_a(), team={},
+                             teampreview_opponent_team=[_mon(m.species, m.types, ()) for m in _team_b()],
+                             opponent_team={m.species: m for m in _team_b()})
+    me = P.MCTSPuctPlayer.__new__(P.MCTSPuctPlayer)
+    me.agent = SimpleNamespace(cfg=SimpleNamespace(version=5, seed=0))
+    me.mcts_stats = {}
+    assert me._search_preview(battle) == '/team 1234'
+    assert seen['foe_moves'] and all(seen['foe_moves'])
+
