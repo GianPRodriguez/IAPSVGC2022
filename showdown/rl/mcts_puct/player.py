@@ -120,9 +120,17 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
                 _record_anomaly('preview_fallback', battle, str(getattr(fp, '_load_error', '')))
             return out
         if os.environ.get('MCTS_PREVIEW', 'greedy').strip().lower() == 'search':
-            return self._search_preview(battle)
+            # La búsqueda tarda ~7 s (más bajo carga). Síncrona bloqueaba el bucle asyncio y las
+            # conexiones nuevas de otros jugadores del proceso caían por ``open_timeout`` (10 s) de
+            # poke-env (servidor, 21-11-2026). poke-env espera la corrutina; la calculadora usa lock.
+            return self._search_preview_async(battle)
         from showdown.battle_bots.greedy_solo.pokeenv_player import GreedyDamagePlayer
         return GreedyDamagePlayer.teampreview(self, battle)
+
+    async def _search_preview_async(self, battle) -> str:
+        """``_search_preview`` en un hilo, sin bloquear el bucle de eventos de poke-env."""
+        import asyncio
+        return await asyncio.to_thread(self._search_preview, battle)
 
     def _search_preview(self, battle) -> str:
         """Preview por búsqueda con S3 (``search_preview``); cae al greedy si falla."""

@@ -97,8 +97,44 @@ def test_player_routes_search_preview(monkeypatch):
 
     monkeypatch.setattr(P.MCTSPuctPlayer, '_search_preview', fake)
     monkeypatch.setenv('MCTS_PREVIEW', 'search')
-    assert P.MCTSPuctPlayer.teampreview(P.MCTSPuctPlayer.__new__(P.MCTSPuctPlayer), None) == '/team 1234'
+    import asyncio
+    out = P.MCTSPuctPlayer.teampreview(P.MCTSPuctPlayer.__new__(P.MCTSPuctPlayer), None)
+    assert asyncio.run(out) == '/team 1234'  # corrutina: poke-env la espera
     assert called.get('yes')
+
+
+def test_search_preview_does_not_block_event_loop(monkeypatch):
+    """Mientras la búsqueda corre (aquí 0,5 s), el bucle asyncio sigue atendiendo otras tareas
+    (en el servidor, la versión síncrona tumbaba conexiones nuevas por open_timeout)."""
+    import asyncio
+    import time
+
+    from showdown.rl.mcts_puct import player as P
+
+    def slow(self, battle):
+        time.sleep(0.5)
+        return '/team 1234'
+
+    monkeypatch.setattr(P.MCTSPuctPlayer, '_search_preview', slow)
+    monkeypatch.setenv('MCTS_PREVIEW', 'search')
+    me = P.MCTSPuctPlayer.__new__(P.MCTSPuctPlayer)
+
+    async def main():
+        ticks = 0
+
+        async def ticker():
+            nonlocal ticks
+            while True:
+                ticks += 1
+                await asyncio.sleep(0.02)
+
+        t = asyncio.create_task(ticker())
+        res = await me.teampreview(None)
+        t.cancel()
+        return res, ticks
+
+    res, ticks = asyncio.run(main())
+    assert res == '/team 1234' and ticks >= 10, ticks
 
 
 def test_preview_key_depends_on_teams_and_config():
