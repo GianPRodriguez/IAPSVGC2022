@@ -249,6 +249,21 @@ La fase 3b se confirma con una ganancia mayor que en exploración (+5,1 frente a
 y v4 pasa a ser el valor por defecto. Evolución contra greedy_joint: v1 ~3 % → v2 37 % →
 v3.1 56,3 % → **v4 62,6 %** (confirmadas v3.1 y v4).
 
+### 6.5 Fase 3c (v5.0): exploración (2026-11-21, commit 6ee616c, terminada 06:47)
+
+Cola `scripts/server/mcts_g_v5.sh`: tests 64/64, smoke sin anomalías, 0 anomalías. G v5
+(`MCTS_PUCT_VERSION=5`, 200 sims, preview greedy) contra greedy_joint, mismas series que v4
+(9101–9117 × 300).
+
+| Config | Series G/5100 | WR G | IC 95 % (Wilson) | Δ vs v4 por semilla | McNemar por serie | Tiempo/semilla |
+|---|---:|---:|---|---|---|---:|
+| v4_n200 (§6.3) | 3073 | 60,3 % | [58,9, 61,6] | — | — | 113 s |
+| **v5_n200** | **3276** | **64,2 %** | [62,9, 65,5] | **+4,0 ± 1,2 pts** (16 suben, 1 igual, 0 bajan) | 737 frente a 533, **p = 1·10⁻⁸** | 140 s |
+
+Lectura (exploración): velocidad dinámica, Tailwind / Trick Room, estados, boosts en el
+árbol, Intimidate, clima y pivotes suman ~4 puntos sobre v4, con el costo de ~25 % más de
+tiempo. Pendiente: comparar con v6 (terreno) y confirmar la mejor en bloques nuevos.
+
 ## 7. Preview Nash para G (entrenamiento y medición, fijado el 20-11-2026 antes de medir)
 
 Decisión del usuario: entrenar por fin `team_preview_nash` (nunca se había entrenado; G
