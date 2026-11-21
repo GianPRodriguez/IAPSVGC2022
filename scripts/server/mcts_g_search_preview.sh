@@ -12,7 +12,7 @@
 # Resumen: $OUT/search_summary.txt. Marca: MCTS_G_SEARCH_DONE.
 set -u
 OUT=${1:-$HOME/iapsvgc_runs/mcts_g_search}
-FROZEN=${FROZEN:-d247fab}
+FROZEN=${FROZEN:-3269711}
 WAIT_FILE=${WAIT_FILE:-$HOME/iapsvgc_runs/mcts_g_confirm_v5/queue.log}
 WAIT_PAT=${WAIT_PAT:-MCTS_G_CONFIRM_V5_DONE}
 PROCS=${PROCS:-28}

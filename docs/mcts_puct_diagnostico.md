@@ -393,7 +393,7 @@ Decisión del usuario: como método de árbol, el preview debe mirar los primero
 (spec §4.6). Hallazgo previo: el preview greedy elige bien los 4 Pokémon pero no los leads.
 Criterio y diseño idénticos a `protocolo_evaluacion.md` §4.4:
 
-**Versión congelada:** commit `d247fab` (G v5, 200 sims, `MCTS_SEED=0`; preview por búsqueda
+**Versión congelada:** commit `3269711` (G v5, 200 sims, `MCTS_SEED=0`; preview por búsqueda
 con memo por proceso, `MCTS_PREVIEW_DEADLINE=90` bajo carga de 28 procesos). Solo **baselines**
 como rivales. La cola aborta si cambia el código de `mcts_puct` o de los baselines.
 
@@ -419,7 +419,9 @@ queda con el preview greedy, se documenta y la cola termina.
 
 Holm con m = 2 y consistencia de signo en C9 y C10.
 
-**Smoke del 21-11-2026 (14:32):** la cola se detuvo sola por 112 anomalías `preview_foe_no_moves`: el preview leía al rival de `teampreview_opponent_team` (solo especie). Corregido en `d247fab` (lee la hoja abierta de `opponent_team`, como `frozen_preview`); se relanza con ese commit congelado y el mismo diseño. **Cambio de valor por defecto:** el
+**Smoke del 21-11-2026 (14:32):** la cola se detuvo sola por 112 anomalías `preview_foe_no_moves`: el preview leía al rival de `teampreview_opponent_team` (solo especie). Corregido en `d247fab` (lee la hoja abierta de `opponent_team`, como `frozen_preview`); se relanza con ese commit congelado y el mismo diseño.
+
+**Bloqueo del bucle (21-11-2026, 15:20–17:40):** con la búsqueda síncrona, la primera semilla de S1 se colgó dos veces (9 errores `timed out during opening handshake`; series con 3 timeouts de 1800 s): la búsqueda (~7 s, más bajo carga) bloqueaba el bucle asyncio del proceso y las conexiones nuevas de otros jugadores caían por el `open_timeout` de 10 s de poke-env. Corregido en `3269711` (búsqueda en un hilo, `teampreview` asíncrono). S0 (preview greedy, 3276/5100) se conserva: el cambio solo toca la ruta `MCTS_PREVIEW=search`. Logs fallidos en `raw_failed/`; se repiten el smoke y S1 desde 9101. **Cambio de valor por defecto:** el
 preview por búsqueda pasa a ser el de G solo si X1 se confirma y X2 no es significativamente
 negativa (p Holm < 0,05 con diferencia < 0). Se reportan además las tasas binomiales de cada
 brazo y los fallbacks del preview. Cola: `scripts/server/mcts_g_search_preview.sh`.
@@ -433,7 +435,7 @@ el prior meta LOO ya acierta la Spe en ~92 %. Pero G sí usa la Velocidad en el 
 dinámico, Tailwind, Trick Room), así que hay que medirlo en G. Decisión del usuario: si la
 inferencia no aporta, desactivarla.
 
-**Diseño** (`scripts/server/mcts_g_spinfo.sh`, código congelado `d247fab`, tras la cola del
+**Diseño** (`scripts/server/mcts_g_spinfo.sh`, código congelado `3269711`, tras la cola del
 preview por búsqueda; G v5, 200 sims, preview greedy fijo, contra greedy_joint, 9101–9117 × 300):
 
 | Config | `--sp-info-a` | Qué es |

@@ -14,7 +14,7 @@
 # Resumen: $OUT/spinfo_summary.txt. Marca: MCTS_G_SPINFO_DONE.
 set -u
 OUT=${1:-$HOME/iapsvgc_runs/mcts_g_spinfo}
-FROZEN=${FROZEN:-d247fab}
+FROZEN=${FROZEN:-3269711}
 WAIT_FILE=${WAIT_FILE:-$HOME/iapsvgc_runs/mcts_g_search/queue.log}
 WAIT_PAT=${WAIT_PAT:-MCTS_G_SEARCH_DONE}
 PROCS=${PROCS:-28}
