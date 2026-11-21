@@ -285,7 +285,7 @@ W1–W3 se mantienen).
 búsqueda (`MCTS_PREVIEW=search`, `mcts_puct_spec.md` §4.6) simula los primeros 3 turnos de
 cada formación. Detalle también en `mcts_puct_diagnostico.md` §8.
 
-**Versión congelada:** commit `118e998` (G v5, 200 sims, `MCTS_SEED=0`; preview por búsqueda
+**Versión congelada:** commit `d247fab` (G v5, 200 sims, `MCTS_SEED=0`; preview por búsqueda
 con memo por proceso, `MCTS_PREVIEW_DEADLINE=90` bajo carga de 28 procesos). Solo **baselines**
 como rivales. La cola aborta si cambia el código de `mcts_puct` o de los baselines.
 

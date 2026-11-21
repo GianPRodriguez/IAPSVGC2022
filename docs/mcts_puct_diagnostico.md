@@ -318,7 +318,7 @@ Decisión del usuario: como método de árbol, el preview debe mirar los primero
 (spec §4.6). Hallazgo previo: el preview greedy elige bien los 4 Pokémon pero no los leads.
 Criterio y diseño idénticos a `protocolo_evaluacion.md` §4.4:
 
-**Versión congelada:** commit `118e998` (G v5, 200 sims, `MCTS_SEED=0`; preview por búsqueda
+**Versión congelada:** commit `d247fab` (G v5, 200 sims, `MCTS_SEED=0`; preview por búsqueda
 con memo por proceso, `MCTS_PREVIEW_DEADLINE=90` bajo carga de 28 procesos). Solo **baselines**
 como rivales. La cola aborta si cambia el código de `mcts_puct` o de los baselines.
 
@@ -342,7 +342,9 @@ queda con el preview greedy, se documenta y la cola termina.
 | X1 | preview por búsqueda > greedy, ambos con G v5 contra greedy_joint, mismas series | McNemar exacta, C9 + C10 |
 | X2 | preview por búsqueda > greedy, ambos con G v5 contra expectimax v1.9, mismas series | McNemar exacta, C9 + C10 |
 
-Holm con m = 2 y consistencia de signo en C9 y C10. **Cambio de valor por defecto:** el
+Holm con m = 2 y consistencia de signo en C9 y C10.
+
+**Smoke del 21-11-2026 (14:32):** la cola se detuvo sola por 112 anomalías `preview_foe_no_moves`: el preview leía al rival de `teampreview_opponent_team` (solo especie). Corregido en `d247fab` (lee la hoja abierta de `opponent_team`, como `frozen_preview`); se relanza con ese commit congelado y el mismo diseño. **Cambio de valor por defecto:** el
 preview por búsqueda pasa a ser el de G solo si X1 se confirma y X2 no es significativamente
 negativa (p Holm < 0,05 con diferencia < 0). Se reportan además las tasas binomiales de cada
 brazo y los fallbacks del preview. Cola: `scripts/server/mcts_g_search_preview.sh`.
