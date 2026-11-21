@@ -312,43 +312,6 @@ puntos) y v5 pasa a ser el valor por defecto. Evolución contra greedy_joint: v1
 acordado: preview por búsqueda (spec §4.6) sobre v5, en pareado contra el preview greedy y con
 regla fijada de antemano.
 
-## 8. Preview por búsqueda para G v5 (fijado el 21-11-2026 antes de medir)
-
-Decisión del usuario: como método de árbol, el preview debe mirar los primeros turnos
-(spec §4.6). Hallazgo previo: el preview greedy elige bien los 4 Pokémon pero no los leads.
-Criterio y diseño idénticos a `protocolo_evaluacion.md` §4.4:
-
-**Versión congelada:** commit `d247fab` (G v5, 200 sims, `MCTS_SEED=0`; preview por búsqueda
-con memo por proceso, `MCTS_PREVIEW_DEADLINE=90` bajo carga de 28 procesos). Solo **baselines**
-como rivales. La cola aborta si cambia el código de `mcts_puct` o de los baselines.
-
-**Exploración** (9101–9117 × 300 BO3, contra greedy_joint, mismas series):
-
-| Config | Preview |
-|---|---|
-| S0 | greedy (`--preview-a greedy`, el actual) |
-| S1 | búsqueda, decisión `mean` |
-| S2 | búsqueda, decisión `maximin` |
-
-Una variante es **elegible** si tiene 0 errores de serie y fallbacks del preview (deadline o
-fallo → greedy) en ≤ 5 % de las series. Se elige la elegible con mayor diferencia McNemar
-frente a S0 y pasa a confirmación **solo si** la diferencia es > 0 y p < 0,05. Si no, G se
-queda con el preview greedy, se documenta y la cola termina.
-
-**Confirmación** (bloques nuevos C9 = 10001–10017 y C10 = 10101–10117; variante elegida):
-
-| Id | Hipótesis | Prueba |
-|---|---|---|
-| X1 | preview por búsqueda > greedy, ambos con G v5 contra greedy_joint, mismas series | McNemar exacta, C9 + C10 |
-| X2 | preview por búsqueda > greedy, ambos con G v5 contra expectimax v1.9, mismas series | McNemar exacta, C9 + C10 |
-
-Holm con m = 2 y consistencia de signo en C9 y C10.
-
-**Smoke del 21-11-2026 (14:32):** la cola se detuvo sola por 112 anomalías `preview_foe_no_moves`: el preview leía al rival de `teampreview_opponent_team` (solo especie). Corregido en `d247fab` (lee la hoja abierta de `opponent_team`, como `frozen_preview`); se relanza con ese commit congelado y el mismo diseño. **Cambio de valor por defecto:** el
-preview por búsqueda pasa a ser el de G solo si X1 se confirma y X2 no es significativamente
-negativa (p Holm < 0,05 con diferencia < 0). Se reportan además las tasas binomiales de cada
-brazo y los fallbacks del preview. Cola: `scripts/server/mcts_g_search_preview.sh`.
-
 ## 7. Preview Nash para G (entrenamiento y medición, fijado el 20-11-2026 antes de medir)
 
 Decisión del usuario: entrenar por fin `team_preview_nash` (nunca se había entrenado; G
@@ -423,3 +386,66 @@ la desventaja es menor que con equipos no vistos (−3,7/−4,9 frente a −6,4/
 lo que sugiere algo de memorización, pero no la suficiente para compensar. Cola terminada
 19:11 (`MCTS_G_NASH_DONE`), 0 anomalías. La confirmación de v4 arrancó a las 19:12 con
 `preview: greedy (decisión §7: greedy)`.
+
+## 8. Preview por búsqueda para G v5 (fijado el 21-11-2026 antes de medir)
+
+Decisión del usuario: como método de árbol, el preview debe mirar los primeros turnos
+(spec §4.6). Hallazgo previo: el preview greedy elige bien los 4 Pokémon pero no los leads.
+Criterio y diseño idénticos a `protocolo_evaluacion.md` §4.4:
+
+**Versión congelada:** commit `d247fab` (G v5, 200 sims, `MCTS_SEED=0`; preview por búsqueda
+con memo por proceso, `MCTS_PREVIEW_DEADLINE=90` bajo carga de 28 procesos). Solo **baselines**
+como rivales. La cola aborta si cambia el código de `mcts_puct` o de los baselines.
+
+**Exploración** (9101–9117 × 300 BO3, contra greedy_joint, mismas series):
+
+| Config | Preview |
+|---|---|
+| S0 | greedy (`--preview-a greedy`, el actual) |
+| S1 | búsqueda, decisión `mean` |
+| S2 | búsqueda, decisión `maximin` |
+
+Una variante es **elegible** si tiene 0 errores de serie y fallbacks del preview (deadline o
+fallo → greedy) en ≤ 5 % de las series. Se elige la elegible con mayor diferencia McNemar
+frente a S0 y pasa a confirmación **solo si** la diferencia es > 0 y p < 0,05. Si no, G se
+queda con el preview greedy, se documenta y la cola termina.
+
+**Confirmación** (bloques nuevos C9 = 10001–10017 y C10 = 10101–10117; variante elegida):
+
+| Id | Hipótesis | Prueba |
+|---|---|---|
+| X1 | preview por búsqueda > greedy, ambos con G v5 contra greedy_joint, mismas series | McNemar exacta, C9 + C10 |
+| X2 | preview por búsqueda > greedy, ambos con G v5 contra expectimax v1.9, mismas series | McNemar exacta, C9 + C10 |
+
+Holm con m = 2 y consistencia de signo en C9 y C10.
+
+**Smoke del 21-11-2026 (14:32):** la cola se detuvo sola por 112 anomalías `preview_foe_no_moves`: el preview leía al rival de `teampreview_opponent_team` (solo especie). Corregido en `d247fab` (lee la hoja abierta de `opponent_team`, como `frozen_preview`); se relanza con ese commit congelado y el mismo diseño. **Cambio de valor por defecto:** el
+preview por búsqueda pasa a ser el de G solo si X1 se confirma y X2 no es significativamente
+negativa (p Holm < 0,05 con diferencia < 0). Se reportan además las tasas binomiales de cada
+brazo y los fallbacks del preview. Cola: `scripts/server/mcts_g_search_preview.sh`.
+
+## 9. ¿Aporta el motor de inferencia de SP a G? (fijado el 21-11-2026 antes de medir)
+
+**Motivo.** G corre con `sp_info = inference` (clase validated por defecto), mientras joint / solo
+usan `meta` y expectimax `none`. Con greedy, la inferencia no estrechó ningún stat en partida
+(0/10 140, 14-11-2026) y la Velocidad exacta del rival no aportó (`oracle_spe` ≈ línea base);
+el prior meta LOO ya acierta la Spe en ~92 %. Pero G sí usa la Velocidad en el árbol (orden
+dinámico, Tailwind, Trick Room), así que hay que medirlo en G. Decisión del usuario: si la
+inferencia no aporta, desactivarla.
+
+**Diseño** (`scripts/server/mcts_g_spinfo.sh`, código congelado `d247fab`, tras la cola del
+preview por búsqueda; G v5, 200 sims, preview greedy fijo, contra greedy_joint, 9101–9117 × 300):
+
+| Config | `--sp-info-a` | Qué es |
+|---|---|---|
+| conteo | inference + `PS_SP_INFO_DEBUG=1` | 56 series: cuántos stats estrecha la inferencia en partidas de G |
+| I0 | inference | default actual |
+| I1 | oracle_spe | techo: Velocidad real del rival (diagnóstico) |
+| I2 | meta | sin inferencia; 6 stats del rival al reparto más frecuente del prior meta LOO |
+
+**Regla:** si I2 no es significativamente peor que I0 (no: diferencia < 0 y p < 0,05) y además
+|diferencia| ≤ 1 pt o I2 es significativamente mejor, el default de G pasa a `meta` (inferencia
+apagada). Si I2 es significativamente peor, se mantiene la inferencia. I1 frente a I0 mide el
+valor máximo de conocer la Velocidad; si es significativo, queda como motivo para mejorar la
+inferencia de Velocidad (no cambia el default). Se reporta también el tiempo por semilla y la
+reproducibilidad I0 frente a S0 (misma config en la cola del preview).
