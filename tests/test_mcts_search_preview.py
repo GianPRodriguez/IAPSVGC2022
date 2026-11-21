@@ -99,3 +99,14 @@ def test_player_routes_search_preview(monkeypatch):
     monkeypatch.setenv('MCTS_PREVIEW', 'search')
     assert P.MCTSPuctPlayer.teampreview(P.MCTSPuctPlayer.__new__(P.MCTSPuctPlayer), None) == '/team 1234'
     assert called.get('yes')
+
+
+def test_preview_key_depends_on_teams_and_config():
+    from showdown.rl.mcts_puct import player as P
+
+    a, b = _team_a(), _team_b()
+    k1 = P._preview_key(a, b, SearchPreviewConfig())
+    assert k1 == P._preview_key(_team_a(), _team_b(), SearchPreviewConfig())
+    assert k1 != P._preview_key(b, a, SearchPreviewConfig())
+    assert k1 != P._preview_key(a, b, SearchPreviewConfig(decision='maximin'))
+

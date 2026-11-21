@@ -22,6 +22,21 @@ from showdown.rl.pe_adapter import (
 _LOG = logging.getLogger(__name__)
 
 
+# Memo del preview por búsqueda (por proceso): la búsqueda es determinista dado (equipos, config),
+# así que en un BO3 las partidas 2 y 3 reutilizan la formación de la 1 (≈ 1/3 del costo y sin
+# diferencias por el deadline). Solo se guardan resultados sin fallback.
+_PREVIEW_MEMO: dict = {}
+_PREVIEW_MEMO_MAX = 512
+
+
+def _preview_key(ours, foes, cfg) -> tuple:
+    def mk(m):
+        return (m.species, tuple(m.types), m.ability, m.item, tuple(m.moves),
+                tuple(sorted((m.stats or {}).items())) if isinstance(getattr(m, 'stats', None), dict) else ())
+    return (tuple(mk(m) for m in ours), tuple(mk(m) for m in foes), cfg.decision, cfg.phase, cfg.seed,
+            cfg.our_combos, cfg.foe_combos, cfg.n_rollouts, cfg.turns)
+
+
 def _record_anomaly(kind: str, battle, detail: str = '') -> None:
     """Una línea por excepción/fallback en ``MCTS_STATS_FILE`` (si está definida).
 
@@ -125,12 +140,23 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
                 decision=os.environ.get('MCTS_PREVIEW_DECISION', 'mean').strip().lower(),
                 phase=os.environ.get('MCTS_PREVIEW_PHASE', {6: '3d', 5: '3c', 4: '3b'}.get(ver, '3c')),
                 seed=int(self.agent.cfg.seed),
+                deadline_sec=float(os.environ.get('MCTS_PREVIEW_DEADLINE', '25') or 25),
             )
             beliefs = getattr(getattr(self, 'iap_battle', None), 'stat_beliefs', None)
-            order, info = choose_formation(ours, foes, cfg, stat_beliefs=beliefs)
-            self.mcts_stats['preview_sec'] = self.mcts_stats.get('preview_sec', 0.0) + info.elapsed_sec
-            if info.fallback:
-                _record_anomaly('preview_search_fallback', battle, info.fallback)
+            key = _preview_key(ours, foes, cfg)
+            hit = _PREVIEW_MEMO.get(key)
+            if hit is not None:
+                order = list(hit)
+                self.mcts_stats['preview_memo_hits'] = self.mcts_stats.get('preview_memo_hits', 0) + 1
+            else:
+                order, info = choose_formation(ours, foes, cfg, stat_beliefs=beliefs)
+                self.mcts_stats['preview_sec'] = self.mcts_stats.get('preview_sec', 0.0) + info.elapsed_sec
+                if info.fallback:
+                    _record_anomaly('preview_search_fallback', battle, info.fallback)
+                else:
+                    if len(_PREVIEW_MEMO) >= _PREVIEW_MEMO_MAX:
+                        _PREVIEW_MEMO.clear()
+                    _PREVIEW_MEMO[key] = tuple(order)
             if any(not m.moves for m in foes):
                 _record_anomaly('preview_foe_no_moves', battle, str(sum(1 for m in foes if not m.moves)))
             selected = set(order)
