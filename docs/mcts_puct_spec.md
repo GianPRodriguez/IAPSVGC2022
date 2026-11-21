@@ -264,8 +264,10 @@ pero **no elige los leads** (su puntuación ignora el orden; salen en el orden d
 | Seguridad | `deadline_sec = 25`; si se agota o falla, orden greedy y anomalía `preview_search_fallback` |
 
 Coste medido en el laptop: ~12–15 s por preview (1728 simulaciones), ~24 s con el arranque de
-Node. Estado: implementado y probado; se medirá sobre v5 (confirmada) en pareado contra el
-preview greedy, con regla fijada de antemano.
+Node. Memo por proceso (21-11-2026, commit `118e998`): la búsqueda es determinista dado (equipos,
+config), así que las partidas 2 y 3 del BO3 reutilizan la formación de la 1; `MCTS_PREVIEW_DEADLINE`
+sube el límite bajo carga. Estado: en medición sobre v5, en pareado contra el preview greedy, con
+regla fijada de antemano (protocolo §4.4, diagnóstico §8).
 
 ---
 

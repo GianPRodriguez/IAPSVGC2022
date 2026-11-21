@@ -279,6 +279,41 @@ Nivel práctico (§3b) para W1–W3. **Control (fuera de Holm):** W5 = v5 > rand
 **Cambio de valor por defecto:** v5 pasa a ser el default de G solo si W4 se confirma (y
 W1–W3 se mantienen).
 
+### 4.4 Preview por búsqueda para G v5, fijado el 21-11-2026 antes de medir
+
+**Motivo.** v5 quedó confirmada (§5.4). El preview greedy no elige leads; el preview por
+búsqueda (`MCTS_PREVIEW=search`, `mcts_puct_spec.md` §4.6) simula los primeros 3 turnos de
+cada formación. Detalle también en `mcts_puct_diagnostico.md` §8.
+
+**Versión congelada:** commit `118e998` (G v5, 200 sims, `MCTS_SEED=0`; preview por búsqueda
+con memo por proceso, `MCTS_PREVIEW_DEADLINE=90` bajo carga de 28 procesos). Solo **baselines**
+como rivales. La cola aborta si cambia el código de `mcts_puct` o de los baselines.
+
+**Exploración** (9101–9117 × 300 BO3, contra greedy_joint, mismas series):
+
+| Config | Preview |
+|---|---|
+| S0 | greedy (`--preview-a greedy`, el actual) |
+| S1 | búsqueda, decisión `mean` |
+| S2 | búsqueda, decisión `maximin` |
+
+Una variante es **elegible** si tiene 0 errores de serie y fallbacks del preview (deadline o
+fallo → greedy) en ≤ 5 % de las series. Se elige la elegible con mayor diferencia McNemar
+frente a S0 y pasa a confirmación **solo si** la diferencia es > 0 y p < 0,05. Si no, G se
+queda con el preview greedy, se documenta y la cola termina.
+
+**Confirmación** (bloques nuevos C9 = 10001–10017 y C10 = 10101–10117; variante elegida):
+
+| Id | Hipótesis | Prueba |
+|---|---|---|
+| X1 | preview por búsqueda > greedy, ambos con G v5 contra greedy_joint, mismas series | McNemar exacta, C9 + C10 |
+| X2 | preview por búsqueda > greedy, ambos con G v5 contra expectimax v1.9, mismas series | McNemar exacta, C9 + C10 |
+
+Holm con m = 2 y consistencia de signo en C9 y C10. **Cambio de valor por defecto:** el
+preview por búsqueda pasa a ser el de G solo si X1 se confirma y X2 no es significativamente
+negativa (p Holm < 0,05 con diferencia < 0). Se reportan además las tasas binomiales de cada
+brazo y los fallbacks del preview. Cola: `scripts/server/mcts_g_search_preview.sh`.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -443,3 +478,4 @@ v5 sube +2,9 pts contra joint, +2,4 contra expectimax y +2,5 contra solo, con un
 | 2026-11-21 | Resultados de la confirmación de G v4 (§5.3): V1–V4 confirmadas con superioridad práctica (62,6 % contra joint, 61,2 % contra expectimax, 64,3 % contra solo) y +5,1 pts sobre v3.1; v4 pasa a ser el valor por defecto de G. |
 | 2026-11-21 | Hipótesis W1–W4 de MCTS+PUCT v5 (§4.3), fijadas antes de medir: v5 contra joint, expectimax y solo, y v5 frente a v4 en pareado, bloques C7 (9801–9817) y C8 (9901–9917); control W5 contra random. |
 | 2026-11-21 | Resultados de la confirmación de G v5 (§5.4): W1–W4 confirmadas con superioridad práctica (65,5 % contra joint, 63,6 % contra expectimax, 66,8 % contra solo) y +4,5 pts sobre v4 (McNemar p = 6·10⁻¹⁹); v5 pasa a ser el valor por defecto de G. |
+| 2026-11-21 | Preview por búsqueda para G v5 (§4.4), fijado antes de medir: exploración S0 greedy / S1 mean / S2 maximin en 9101–9117 con regla de selección; si pasa, X1 (contra joint) y X2 (contra expectimax) en pareado frente al greedy, bloques C9 (10001–10017) y C10 (10101–10117), Holm m = 2. |

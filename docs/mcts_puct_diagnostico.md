@@ -312,6 +312,41 @@ puntos) y v5 pasa a ser el valor por defecto. Evolución contra greedy_joint: v1
 acordado: preview por búsqueda (spec §4.6) sobre v5, en pareado contra el preview greedy y con
 regla fijada de antemano.
 
+## 8. Preview por búsqueda para G v5 (fijado el 21-11-2026 antes de medir)
+
+Decisión del usuario: como método de árbol, el preview debe mirar los primeros turnos
+(spec §4.6). Hallazgo previo: el preview greedy elige bien los 4 Pokémon pero no los leads.
+Criterio y diseño idénticos a `protocolo_evaluacion.md` §4.4:
+
+**Versión congelada:** commit `118e998` (G v5, 200 sims, `MCTS_SEED=0`; preview por búsqueda
+con memo por proceso, `MCTS_PREVIEW_DEADLINE=90` bajo carga de 28 procesos). Solo **baselines**
+como rivales. La cola aborta si cambia el código de `mcts_puct` o de los baselines.
+
+**Exploración** (9101–9117 × 300 BO3, contra greedy_joint, mismas series):
+
+| Config | Preview |
+|---|---|
+| S0 | greedy (`--preview-a greedy`, el actual) |
+| S1 | búsqueda, decisión `mean` |
+| S2 | búsqueda, decisión `maximin` |
+
+Una variante es **elegible** si tiene 0 errores de serie y fallbacks del preview (deadline o
+fallo → greedy) en ≤ 5 % de las series. Se elige la elegible con mayor diferencia McNemar
+frente a S0 y pasa a confirmación **solo si** la diferencia es > 0 y p < 0,05. Si no, G se
+queda con el preview greedy, se documenta y la cola termina.
+
+**Confirmación** (bloques nuevos C9 = 10001–10017 y C10 = 10101–10117; variante elegida):
+
+| Id | Hipótesis | Prueba |
+|---|---|---|
+| X1 | preview por búsqueda > greedy, ambos con G v5 contra greedy_joint, mismas series | McNemar exacta, C9 + C10 |
+| X2 | preview por búsqueda > greedy, ambos con G v5 contra expectimax v1.9, mismas series | McNemar exacta, C9 + C10 |
+
+Holm con m = 2 y consistencia de signo en C9 y C10. **Cambio de valor por defecto:** el
+preview por búsqueda pasa a ser el de G solo si X1 se confirma y X2 no es significativamente
+negativa (p Holm < 0,05 con diferencia < 0). Se reportan además las tasas binomiales de cada
+brazo y los fallbacks del preview. Cola: `scripts/server/mcts_g_search_preview.sh`.
+
 ## 7. Preview Nash para G (entrenamiento y medición, fijado el 20-11-2026 antes de medir)
 
 Decisión del usuario: entrenar por fin `team_preview_nash` (nunca se había entrenado; G
