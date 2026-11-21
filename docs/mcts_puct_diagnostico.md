@@ -264,6 +264,35 @@ Lectura (exploración): velocidad dinámica, Tailwind / Trick Room, estados, boo
 árbol, Intimidate, clima y pivotes suman ~4 puntos sobre v4, con el costo de ~25 % más de
 tiempo. Pendiente: comparar con v6 (terreno) y confirmar la mejor en bloques nuevos.
 
+### 6.6 Fase 3d (v6.0, terreno): exploración (2026-11-21, commit d9abb31, terminada 07:33)
+
+G v6 contra greedy_joint, mismas series que v5 (9101–9117 × 300). 0 anomalías.
+
+| Config | Series G/5100 | WR G | Δ vs v5 por semilla | McNemar por serie |
+|---|---:|---:|---|---|
+| v5_n200 (§6.5) | 3276 | 64,2 % | — | — |
+| v6_n200 | 3289 | 64,5 % | +0,2 ± 1,1 pts | 350 frente a 340, p = 0,73 |
+
+Por subgrupos (`scripts/analysis/terrain_subgroup.py`; "con terreno" = algún equipo con
+Grassy / Psychic / Electric / Misty Surge o Hadron Engine; 225 de los 300 equipos lo llevan):
+
+| Subgrupo | Series emparejadas | Gana solo v6 | Gana solo v5 | Diferencia | p |
+|---|---:|---:|---:|---:|---|
+| Con terreno | 3865 | 281 | 271 | +0,26 pts | 0,70 |
+| Sin terreno | 130 | 0 | 0 | 0 | — |
+| Ambiguo (nombre truncado en el log) | 1075 | 69 | 69 | 0 | 1,0 |
+
+Lectura: sin creadores de terreno v6 juega **exactamente igual** que v5 (control de
+coherencia). Con terreno, modelarlo cambia el resultado de ~14 % de las series, pero en las
+dos direcciones por igual: **sin efecto neto**. La tabla de daño ya incluía el terreno de la
+raíz; lo que el modelo de 3d gana en algunas situaciones (Grassy Glide, bloqueo de prioridad de
+Psychic Terrain) se compensa con lo que pierde en otras (p. ej. la duración supuesta del
+terreno sin dato de la raíz). Como referencia, v5 frente a v4 sí mejora en todos los
+subgrupos (con terreno +3,6 pts, p = 7·10⁻⁶).
+
+**Decisión:** se confirma **v5** (fase 3c), más simple y equivalente; v6 queda como
+"probada, sin efecto neto" (`MCTS_PUCT_VERSION=6`).
+
 ## 7. Preview Nash para G (entrenamiento y medición, fijado el 20-11-2026 antes de medir)
 
 Decisión del usuario: entrenar por fin `team_preview_nash` (nunca se había entrenado; G
