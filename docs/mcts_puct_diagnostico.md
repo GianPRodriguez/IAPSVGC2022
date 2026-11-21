@@ -293,4 +293,17 @@ frente a 0,69 de etiquetas al azar), y las formaciones que elige rinden peor que
 de tipado + BST. Por referencia, G con preview greedy saca 58,9 % con equipos no vistos,
 coherente con el 57,5 % con los 300 equipos (§6.1).
 
-Secundaria (memorización con los 300 equipos): en curso; se añadirá aquí.
+Secundaria (memorización, 300 equipos = incluye los `fit` con los que entrenó el preview;
+9101–9117, en pareado con `v3_n200`, preview greedy):
+
+| Preview | Victorias / N | Tasa | IC 95 % (cluster) | McNemar frente al greedy |
+|---|---|---|---|---|
+| Greedy (`v3_n200`, §6.1) | 2935 / 5100 | 57,5 % | — | — |
+| Nash s0 | 2737 / 5083 | 53,85 % | [52,43; 55,16] | 1011 frente a 1200, **−3,73 pts**, p = 6·10⁻⁵ |
+| Nash s1 | 2671 / 5083 | 52,55 % | [51,23; 53,83] | 975 frente a 1224, **−4,92 pts**, p = 1·10⁻⁷ |
+
+Incluso con los equipos que vio al entrenar, el preview Nash rinde peor que el greedy;
+la desventaja es menor que con equipos no vistos (−3,7/−4,9 frente a −6,4/−7,4 puntos),
+lo que sugiere algo de memorización, pero no la suficiente para compensar. Cola terminada
+19:11 (`MCTS_G_NASH_DONE`), 0 anomalías. La confirmación de v4 arrancó a las 19:12 con
+`preview: greedy (decisión §7: greedy)`.
