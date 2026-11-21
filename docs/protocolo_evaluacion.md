@@ -253,6 +253,32 @@ Nivel práctico (§3b) para V1–V3. **Control (fuera de Holm):** V5 = v4 > rand
 **Cambio de valor por defecto:** v4 pasa a ser el default de G solo si V4 se confirma (y
 V1–V3 se mantienen).
 
+### 4.3 Hipótesis de MCTS+PUCT v5 (agente G, fase 3c), fijadas el 21-11-2026 antes de medir
+
+**Motivo.** En exploración (9101–9117, 5100 BO3) v5 ganó 64,2 % contra joint frente a 60,3 % de
+v4 en las mismas series (McNemar 737 frente a 533, p = 10⁻⁸; `mcts_puct_diagnostico.md` §6.5).
+v6 (terreno) no mejoró a v5 (§6.6), así que se confirma v5. Orden acordado con el usuario.
+
+**Versión congelada:** código del commit `cce1356` (v5 = `MCTS_PUCT_VERSION=5`; v4 =
+`MCTS_PUCT_VERSION=4`; 200 sims, `MCTS_SEED=0`; preview greedy). Solo **baselines** como rivales:
+random, greedy_solo, greedy_joint v1.8, expectimax v1.9. La cola aborta si cambió el código de
+`mcts_puct` o de los baselines desde `cce1356`.
+
+**Bloques nuevos:** C7 = 9801–9817 y C8 = 9901–9917 (no usados antes).
+
+**Familia de v5** (Holm con m = 4; regla de la §3, consistencia en C7 y C8):
+
+| Id | Hipótesis | Prueba | Bloques |
+|---|---|---|---|
+| W1 | v5 > greedy_joint | binomial + IC cluster | C7 + C8 |
+| W2 | v5 > expectimax v1.9 | binomial + IC cluster | C7 + C8 |
+| W3 | v5 > greedy_solo | binomial + IC cluster | C7 + C8 |
+| W4 | v5 > v4 (ambos contra greedy_joint, mismas series) | McNemar exacta | C7 + C8 |
+
+Nivel práctico (§3b) para W1–W3. **Control (fuera de Holm):** W5 = v5 > random en C7.
+**Cambio de valor por defecto:** v5 pasa a ser el default de G solo si W4 se confirma (y
+W1–W3 se mantienen).
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -392,3 +418,4 @@ inferiores ≥ 60,3 %), a diferencia de v3.1, que superaba el 55 % por solo 0,4 
 | 2026-11-20 | Resultados de la confirmación de G (§5.2): G1, G2 y G3 con superioridad práctica (G1 y G2 por poco: límite inferior 55,44 y 55,42 %); control G4 correcto. |
 | 2026-11-20 | Hipótesis V1–V4 de MCTS+PUCT v4 (§4.2), fijadas antes de medir: v4 contra joint, expectimax y solo, y v4 frente a v3.1 en pareado, bloques C5 (9601–9617) y C6 (9701–9717); preview según la regla del diagnóstico §7; control V5 contra random. |
 | 2026-11-21 | Resultados de la confirmación de G v4 (§5.3): V1–V4 confirmadas con superioridad práctica (62,6 % contra joint, 61,2 % contra expectimax, 64,3 % contra solo) y +5,1 pts sobre v3.1; v4 pasa a ser el valor por defecto de G. |
+| 2026-11-21 | Hipótesis W1–W4 de MCTS+PUCT v5 (§4.3), fijadas antes de medir: v5 contra joint, expectimax y solo, y v5 frente a v4 en pareado, bloques C7 (9801–9817) y C8 (9901–9917); control W5 contra random. |
