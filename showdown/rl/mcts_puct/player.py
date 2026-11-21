@@ -104,8 +104,46 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
             if fp is not None and not fp.available:
                 _record_anomaly('preview_fallback', battle, str(getattr(fp, '_load_error', '')))
             return out
+        if os.environ.get('MCTS_PREVIEW', 'greedy').strip().lower() == 'search':
+            return self._search_preview(battle)
         from showdown.battle_bots.greedy_solo.pokeenv_player import GreedyDamagePlayer
         return GreedyDamagePlayer.teampreview(self, battle)
+
+    def _search_preview(self, battle) -> str:
+        """Preview por búsqueda con S3 (``search_preview``); cae al greedy si falla."""
+        from showdown.battle_bots.greedy_solo.pokeenv_player import GreedyDamagePlayer
+        from showdown.rl.mcts_puct.search_preview import SearchPreviewConfig, choose_formation
+        from showdown.rl.pe_adapter import mon_from_pe
+        try:
+            our_src = list(getattr(battle, 'teampreview_team', None) or list(battle.team.values()))
+            foe_src = list(getattr(battle, 'teampreview_opponent_team', None)
+                           or list(battle.opponent_team.values()))
+            ours = [mon_from_pe(m, is_active=False, own=True) for m in our_src]
+            foes = [mon_from_pe(m, is_active=False, own=False) for m in foe_src]
+            ver = int(self.agent.cfg.version)
+            cfg = SearchPreviewConfig(
+                decision=os.environ.get('MCTS_PREVIEW_DECISION', 'mean').strip().lower(),
+                phase=os.environ.get('MCTS_PREVIEW_PHASE', {6: '3d', 5: '3c', 4: '3b'}.get(ver, '3c')),
+                seed=int(self.agent.cfg.seed),
+            )
+            beliefs = getattr(getattr(self, 'iap_battle', None), 'stat_beliefs', None)
+            order, info = choose_formation(ours, foes, cfg, stat_beliefs=beliefs)
+            self.mcts_stats['preview_sec'] = self.mcts_stats.get('preview_sec', 0.0) + info.elapsed_sec
+            if info.fallback:
+                _record_anomaly('preview_search_fallback', battle, info.fallback)
+            if any(not m.moves for m in foes):
+                _record_anomaly('preview_foe_no_moves', battle, str(sum(1 for m in foes if not m.moves)))
+            selected = set(order)
+            for i, mon in enumerate(getattr(battle, 'teampreview_team', None) or [], start=1):
+                try:
+                    mon._selected_in_teampreview = i in selected  # requisito de poke-env
+                except Exception:
+                    pass
+            self.last_preview_order = ''.join(str(int(i)) for i in order)
+            return f'/team {self.last_preview_order}'
+        except Exception as exc:
+            _record_anomaly('preview_search_fallback', battle, repr(exc)[:160])
+            return GreedyDamagePlayer.teampreview(self, battle)
 
     def _root_joints(self, battle):
         try:

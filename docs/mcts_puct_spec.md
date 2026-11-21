@@ -246,6 +246,29 @@ está en 195 de 1800 sets (~65 % de los equipos) con Grassy Glide en 191, y Psyc
 
 ---
 
+### 4.6 Preview por búsqueda (candidato, `MCTS_PREVIEW=search`)
+
+Decisión del usuario (21-11-2026): como método de árbol, el preview también debe mirar los
+primeros turnos. Hallazgo previo: el preview greedy (tipado + BST) elige bien los 4 Pokémon
+pero **no elige los leads** (su puntuación ignora el orden; salen en el orden de la hoja).
+
+`showdown/rl/mcts_puct/search_preview.py`:
+
+| Paso | Detalle |
+|---|---|
+| Candidatas propias | 3 mejores combinaciones de 4 según la regla greedy × 6 parejas de leads = 18 formaciones |
+| Candidatas del rival | Sus 2 mejores combinaciones (hoja abierta; SP por prior meta) × 6 leads = 12 |
+| Modelo | Una tabla S3 para los 6 × 6 Pokémon (~150 pedidos) y la fase de S3 del combate (3c en v5, 3d en v6) |
+| Simulación | 8 simulaciones × 3 turnos por par (softmax de la puntuación S3 en ambos lados, efectos al entrar de los leads); valor = material |
+| Decisión | `mean` (mejor promedio contra las 12 formaciones del rival, por defecto) o `maximin` (`MCTS_PREVIEW_DECISION`); desempate: el orden greedy |
+| Seguridad | `deadline_sec = 25`; si se agota o falla, orden greedy y anomalía `preview_search_fallback` |
+
+Coste medido en el laptop: ~12–15 s por preview (1728 simulaciones), ~24 s con el arranque de
+Node. Estado: implementado y probado; se medirá en pareado contra el preview greedy tras
+confirmar v5/v6, con regla fijada de antemano.
+
+---
+
 ## 5. Observación, acción y máscaras
 
 Contrato live: [`rl_env_spec.md`](rl_env_spec.md). La búsqueda usa snapshots, no
