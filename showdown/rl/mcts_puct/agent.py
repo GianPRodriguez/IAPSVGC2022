@@ -1,9 +1,9 @@
 """MCTS+PUCT agent (docs/mcts_puct_spec.md).
 
-``version=4``: S3 fase 3b (+ Protect, Wide Guard, Fake Out, redirección, Helping Hand);
-candidato en medición (spec v4.0).
-``version=3`` (default desde spec v3.0): open-loop con el modelo S3 (``s3.py``: daño
-real de la calculadora, orden por velocidad/prioridad, área, precisión).
+``version=4`` (default desde el 21-11-2026, confirmada: protocolo §5.3): S3 fase 3b
+(+ Protect, Wide Guard, Fake Out, redirección, Helping Hand).
+``version=3``: open-loop con el modelo S3 fase 3a (``s3.py``: daño real de la calculadora,
+orden por velocidad/prioridad, área, precisión).
 ``version=2``: open-loop con S2 (``simulator.py``).
 ``version=1``: búsqueda original de ``search.py``.
 En el player: ``MCTS_PUCT_VERSION`` (reproducibilidad / ablación).
@@ -25,7 +25,7 @@ class MCTSPuctConfig:
     c_puct: float = 1.5
     max_turns: int = 40
     seed: int = 0
-    version: int = 3
+    version: int = 4
     # --- solo v2 (ver OpenLoopConfig) ---
     prior_temperature: float = 20.0
     prior_eps: float = 0.25

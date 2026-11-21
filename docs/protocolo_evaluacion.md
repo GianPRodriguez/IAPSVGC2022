@@ -332,6 +332,27 @@ frase en la tesis: "G es claramente superior a greedy_joint y a expectimax (+6,3
 IC [55,4; 57,1]), aunque el margen sobre el umbral práctico es estrecho". Alcance: Reg
 M-C, pool MetaVGC de 300 equipos (`all`), información simétrica, preview greedy común.
 
+### 5.3 Resultados de la confirmación de G v4 (21-11-2026, código congelado `0df75cb`)
+
+Pre-registro: §4.2. Cola `scripts/server/mcts_g_confirm_v4.sh` (commit de ejecución
+`debcda9`; preview greedy por la regla del diagnóstico §7, porque el preview Nash empeoraba
+a G). 0 anomalías del player; código congelado verificado al arrancar.
+
+| Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
+|---|---|---|---|---|---|---|---|
+| V1 v4 > greedy_joint (C5+C6) | 6360 / 10158 | 62,61 % | [61,80; 63,41] | 6·10⁻¹⁴⁴ | 2·10⁻¹⁴³ | 34/34 | **Superioridad práctica** (+12,6 pts) |
+| V2 v4 > expectimax v1.9 (C5+C6) | 6215 / 10158 | 61,18 % | [60,34; 62,11] | 2·10⁻¹¹³ | 5·10⁻¹¹³ | 34/34 | **Superioridad práctica** (+11,2 pts) |
+| V3 v4 > greedy_solo (C5+C6) | 6534 / 10162 | 64,30 % | [63,47; 65,08] | 4·10⁻¹⁸⁵ | 1·10⁻¹⁸⁴ | 34/34 | **Superioridad práctica** (+14,3 pts) |
+| V4 v4 > v3.1 (McNemar, ambos contra joint) | 1582 frente a 1066 discordantes (10 128 emparejadas) | +5,09 pts | — | 1·10⁻²³ | 1·10⁻²³ | — | **Confirmada** |
+
+Consistencia por bloque: V1 62,98 % / 62,24 %; V2 61,17 % / 61,19 %; V3 63,20 % / 65,40 %;
+V4 +5,10 / +5,09 pts (C5 / C6), todos con 17/17 semillas > 50 %. Referencia: v3.1 contra joint
+en las mismas series 57,53 % [56,73; 58,39]. Control V5: v4 contra random 99,84 %, 17/17.
+
+**Consecuencia (regla del pre-registro):** v4 pasa a ser el valor por defecto de G
+(`MCTS_PUCT_VERSION=4`). Ahora todos los niveles prácticos se cumplen con holgura (límites
+inferiores ≥ 60,3 %), a diferencia de v3.1, que superaba el 55 % por solo 0,4 puntos.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -370,3 +391,4 @@ M-C, pool MetaVGC de 300 equipos (`all`), información simétrica, preview greed
 | 2026-11-20 | Segunda enmienda §4.1 antes de medir (usuario): se agregan G3 (G > greedy_solo, C3 + C4; Holm pasa a m = 3) y el control G4 (G > random, C3); solo baselines, ningún agente RL. Código congelado `bb9ef00` (v3.1: combate de v3.0 + preview greedy por defecto). |
 | 2026-11-20 | Resultados de la confirmación de G (§5.2): G1, G2 y G3 con superioridad práctica (G1 y G2 por poco: límite inferior 55,44 y 55,42 %); control G4 correcto. |
 | 2026-11-20 | Hipótesis V1–V4 de MCTS+PUCT v4 (§4.2), fijadas antes de medir: v4 contra joint, expectimax y solo, y v4 frente a v3.1 en pareado, bloques C5 (9601–9617) y C6 (9701–9717); preview según la regla del diagnóstico §7; control V5 contra random. |
+| 2026-11-21 | Resultados de la confirmación de G v4 (§5.3): V1–V4 confirmadas con superioridad práctica (62,6 % contra joint, 61,2 % contra expectimax, 64,3 % contra solo) y +5,1 pts sobre v3.1; v4 pasa a ser el valor por defecto de G. |

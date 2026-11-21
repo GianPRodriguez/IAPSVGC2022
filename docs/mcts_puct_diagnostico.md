@@ -233,6 +233,22 @@ mejora a G ~2,7 puntos contra joint, con significación en el diseño pareado. E
 ~35 % más de tiempo por decisión. Pendiente: confirmación en bloques nuevos antes de
 pasar v4 a ser el valor por defecto.
 
+### 6.4 Confirmación de v4 (bloques C5 + C6, 2026-11-21)
+
+Detalle en `protocolo_evaluacion.md` §5.3 (código congelado `0df75cb`, preview greedy,
+0 anomalías, 34/34 semillas en cada hipótesis):
+
+| Comparación | v3.1 (§6.2) | **v4** |
+|---|---:|---:|
+| contra greedy_joint | 56,3 % (C3+C4) | **62,6 %** [61,8; 63,4] |
+| contra expectimax v1.9 | 56,3 % (C3+C4) | **61,2 %** [60,3; 62,1] |
+| contra greedy_solo | 59,6 % (C3+C4) | **64,3 %** [63,5; 65,1] |
+| v4 frente a v3.1 en las mismas series (McNemar) | — | **+5,09 pts**, p = 10⁻²³ (C5 +5,10, C6 +5,09) |
+
+La fase 3b se confirma con una ganancia mayor que en exploración (+5,1 frente a +2,7 puntos)
+y v4 pasa a ser el valor por defecto. Evolución contra greedy_joint: v1 ~3 % → v2 37 % →
+v3.1 56,3 % → **v4 62,6 %** (confirmadas v3.1 y v4).
+
 ## 7. Preview Nash para G (entrenamiento y medición, fijado el 20-11-2026 antes de medir)
 
 Decisión del usuario: entrenar por fin `team_preview_nash` (nunca se había entrenado; G

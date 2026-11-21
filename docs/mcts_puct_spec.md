@@ -3,13 +3,13 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS+PUCT open-loop (solo turnos) |
-| **Versión** | **3.1.1** por defecto; **4.0** candidata (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
-| **Estado** | v3.1 confirmada (protocolo §5.2: > joint, expectimax y solo); siguiente fase 3b. Modelo S3 fase 3a; v2 (S2) con `MCTS_PUCT_VERSION=2`, v1 con `=1`. Diagnóstico: [`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md) |
+| **Versión** | **4.0** por defecto (confirmada; alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
+| **Estado** | v4.0 confirmada y por defecto (protocolo §5.3: > joint 62,6 %, expectimax 61,2 %, solo 64,3 %, y +5,1 pts sobre v3.1); v3.1 (3a) con `MCTS_PUCT_VERSION=3`. Siguiente: fase 3c; v2 (S2) con `MCTS_PUCT_VERSION=2`, v1 con `=1`. Diagnóstico: [`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md) |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Hiperparámetros de búsqueda (sobre todo \(N_{\rm sim}\)); barrido automatizado |
 | **CLI smoke** | `python -m showdown.rl.mcts_puct --seed 0 --sims 16 --smoke` |
 | **CLI barrido** | `python -m showdown.inference_sim.run_mcts_sims_sweep --agent mcts_puct ...` |
-| **Env presupuesto** | `MCTS_SIMS` (default config `200`); `MCTS_PUCT_VERSION` (`3` default = S3; `2` = S2; `1` = búsqueda original); `MCTS_S3_CALC=0` = S3 sin calculadora (tests) |
+| **Env presupuesto** | `MCTS_SIMS` (default config `200`); `MCTS_PUCT_VERSION` (`4` default = S3 fase 3b; `3` = S3 fase 3a; `2` = S2; `1` = búsqueda original); `MCTS_S3_CALC=0` = S3 sin calculadora (tests) |
 | **Dependencias** | NumPy; v3: calculadora real (`damage_calc_bridge`, Node + `damage-calc`); no requiere Torch |
 
 > **Para quien aprende IA.** Este agente no “estudia” partidas previas. En cada
@@ -176,7 +176,7 @@ el estado de la raíz (HP, boosts, campo) y no se recalcula dentro del árbol.
 
 ---
 
-### 4.3 Fase 3b (v4.0, candidata: `MCTS_PUCT_VERSION=4`)
+### 4.3 Fase 3b (v4.0, por defecto desde el 21-11-2026)
 
 S3 con `phase='3b'`. Mecánicas añadidas (todas desde el dex de Champions):
 
@@ -403,7 +403,7 @@ y turno para reproducir RNG.
 
 | Versión | Fecha | Notas |
 |---|---|---|
-| **4.0** (candidata) | 2026-11-20 | Fase 3b (§4.3): Protect y variantes con \((1/3)^n\), Feint, Wide Guard, Fake Out / First Impression con primer turno y retroceso, Follow Me / Rage Powder, Helping Hand; puntuación de jugadas de apoyo por amenaza evitada. Uso en el meta (1800 sets): Protect 1182, Fake Out 459, Helping Hand 73, Wide Guard 57, Follow Me 35, Rage Powder 29. `MCTS_PUCT_VERSION=4`; el default sigue en 3 hasta medirla en pareado contra v3.1. |
+| **4.0** (por defecto desde 2026-11-21) | 2026-11-20 | Fase 3b (§4.3): Protect y variantes con \((1/3)^n\), Feint, Wide Guard, Fake Out / First Impression con primer turno y retroceso, Follow Me / Rage Powder, Helping Hand; puntuación de jugadas de apoyo por amenaza evitada. Uso en el meta (1800 sets): Protect 1182, Fake Out 459, Helping Hand 73, Wide Guard 57, Follow Me 35, Rage Powder 29. `MCTS_PUCT_VERSION=4`. **Confirmada el 21-11-2026** (protocolo §5.3, C5+C6, 34/34 semillas): > greedy_joint 62,61 % [61,80; 63,41], > expectimax 61,18 % [60,34; 62,11], > greedy_solo 64,30 % [63,47; 65,08], y frente a v3.1 McNemar +5,09 pts (1582 frente a 1066, p = 10⁻²³); por la regla del pre-registro pasa a ser el valor por defecto. |
 | **3.1.1** | 2026-11-20 | Sin cambios de decisión: S3 pide a la calculadora con `persist=False` (solo caché en memoria). La caché en disco `calc_cache.sqlite` no tiene límite y la clave lleva el HP actual: con S3 llegó a 386 GB en un día y llenó el disco del servidor. Confirmación de v3.1 (protocolo §5.2): superioridad práctica sobre joint (56,3 %), expectimax (56,3 %) y solo (59,6 %). |
 | **3.1** | 2026-11-20 | **Preview greedy por defecto** (tipado + BST, el de solo/joint/expectimax), decisión del usuario: `team_preview_nash` nunca se entrenó (solo un checkpoint de smoke con etiquetas mock) y G caía al orden fijo `/team 1234` (−4 pts medidos en v2). `MCTS_PREVIEW=nash` vuelve al preview de familia. No se usa el preview PPO (sin componentes RL en G). Combate idéntico a v3.0. |
 | **3.0** | 2026-11-20 | Fase 3a del plan: modelo **S3** (`s3.py`) en lugar de S2 para G. Tabla de daño real por decisión (un lote a la calculadora, mismos pedidos que P5), stats del rival por prior meta LOO, orden por prioridad y velocidad efectiva (Tailwind, Trick Room), redirección de golpes individuales, área ×0,75 con fuego amigo, precisión por movimiento; prior, rival del árbol y rollout puntúan con la tabla (+ bono de KO). Dex de Champions (el antiguo no tenía 21 movimientos del meta). `MCTS_PUCT_VERSION=2` reproduce v2. Motivo: v2 con meseta en 37–38 % contra joint aunque se suban las sims (diagnóstico §5.2). |
