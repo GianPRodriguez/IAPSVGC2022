@@ -57,8 +57,8 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
     ``MCTS_PREVIEW_CKPT`` elige cuál). Si el checkpoint no carga y se cae al orden fijo,
     se registra la anomalía ``preview_fallback`` (antes pasaba en silencio).
 
-    Env: ``MCTS_SIMS`` (presupuesto), ``MCTS_SEED``, ``MCTS_PUCT_VERSION`` (4 por
-    defecto = S3 fase 3b, confirmada; 3 = S3 fase 3a; 2 = S2 open-loop; 1 = búsqueda
+    Env: ``MCTS_SIMS`` (presupuesto), ``MCTS_SEED``, ``MCTS_PUCT_VERSION`` (5 por
+    defecto = S3 fase 3c, confirmada; 6 = 3d; 4 = 3b; 3 = S3 fase 3a; 2 = S2 open-loop; 1 = búsqueda
     original). Contadores (``mcts_stats``): decisiones,
     excepciones (→ orden por defecto) y fallbacks del adaptador (→ orden al azar);
     antes eran silenciosos.
@@ -82,7 +82,7 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
             MCTSPuctConfig(
                 n_sims=int(sims),
                 seed=_env_int('MCTS_SEED', seed),
-                version=_env_int('MCTS_PUCT_VERSION', 4),
+                version=_env_int('MCTS_PUCT_VERSION', 5),
             )
         )
         self.last_joint = 0

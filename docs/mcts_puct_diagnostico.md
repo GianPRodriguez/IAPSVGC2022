@@ -293,6 +293,25 @@ subgrupos (con terreno +3,6 pts, p = 7·10⁻⁶).
 **Decisión:** se confirma **v5** (fase 3c), más simple y equivalente; v6 queda como
 "probada, sin efecto neto" (`MCTS_PUCT_VERSION=6`).
 
+### 6.7 Confirmación de v5 (bloques C7 + C8, 2026-11-21)
+
+Detalle en `protocolo_evaluacion.md` §5.4 (código congelado `cce1356`, preview greedy,
+0 anomalías, 34/34 semillas en cada hipótesis):
+
+| Comparación | v4 (§6.4) | **v5** |
+|---|---:|---:|
+| contra greedy_joint | 62,6 % (C5+C6) | **65,5 %** [64,7; 66,3] |
+| contra expectimax v1.9 | 61,2 % (C5+C6) | **63,6 %** [62,7; 64,4] |
+| contra greedy_solo | 64,3 % (C5+C6) | **66,8 %** [66,0; 67,6] |
+| v5 frente a v4 en las mismas series (McNemar) | — | **+4,48 pts**, p = 6·10⁻¹⁹ (C7 +3,46, C8 +5,50) |
+| contra random (control) | 99,8 % | 99,8 % |
+
+La fase 3c se confirma con una ganancia similar a la de exploración (+4,5 frente a +4,0
+puntos) y v5 pasa a ser el valor por defecto. Evolución contra greedy_joint: v1 ~3 % → v2 37 %
+→ v3.1 56,3 % → v4 62,6 % → **v5 65,5 %** (confirmadas v3.1, v4 y v5). Siguiente paso
+acordado: preview por búsqueda (spec §4.6) sobre v5, en pareado contra el preview greedy y con
+regla fijada de antemano.
+
 ## 7. Preview Nash para G (entrenamiento y medición, fijado el 20-11-2026 antes de medir)
 
 Decisión del usuario: entrenar por fin `team_preview_nash` (nunca se había entrenado; G

@@ -379,6 +379,29 @@ en las mismas series 57,53 % [56,73; 58,39]. Control V5: v4 contra random 99,84 
 (`MCTS_PUCT_VERSION=4`). Ahora todos los niveles prácticos se cumplen con holgura (límites
 inferiores ≥ 60,3 %), a diferencia de v3.1, que superaba el 55 % por solo 0,4 puntos.
 
+### 5.4 Resultados de la confirmación de G v5 (21-11-2026, código congelado `cce1356`)
+
+Pre-registro: §4.3. Cola `scripts/server/mcts_g_confirm_v5.sh` (commit de ejecución
+`79b0cb1`; preview greedy; 07:45–14:18). Tests 38/38, smoke sin errores, **0 anomalías del
+player** en toda la cola; código congelado verificado al arrancar.
+
+| Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
+|---|---|---|---|---|---|---|---|
+| W1 v5 > greedy_joint (C7+C8) | 6665 / 10172 | 65,52 % | [64,68; 66,34] | 1·10⁻²¹⁸ | 4·10⁻²¹⁸ | 34/34 | **Superioridad práctica** (+15,5 pts) |
+| W2 v5 > expectimax v1.9 (C7+C8) | 6468 / 10170 | 63,60 % | [62,72; 64,44] | 1·10⁻¹⁶⁷ | 3·10⁻¹⁶⁷ | 34/34 | **Superioridad práctica** (+13,6 pts) |
+| W3 v5 > greedy_solo (C7+C8) | 6795 / 10172 | 66,80 % | [65,96; 67,57] | 2·10⁻²⁵⁶ | 6·10⁻²⁵⁶ | 34/34 | **Superioridad práctica** (+16,8 pts) |
+| W4 v5 > v4 (McNemar, ambos contra joint) | 1535 frente a 1080 discordantes (10 155 emparejadas) | +4,48 pts | — | 6·10⁻¹⁹ | 6·10⁻¹⁹ | — | **Confirmada** |
+
+Consistencia por bloque (C7 / C8): W1 65,32 % / 65,72 %; W2 64,00 % / 63,19 %; W3 66,14 % /
+67,47 %; W4 +3,46 pts (p = 1·10⁻⁶) / +5,50 pts (p = 8·10⁻¹⁵); todas con 17/17 semillas > 50 %.
+Referencia: v4 contra joint en las mismas series 61,05 % [60,21; 61,91]. Control W5: v5 contra
+random 99,82 % [99,71; 99,92], 17/17.
+
+**Consecuencia (regla del pre-registro):** W4 se confirma y W1–W3 se mantienen, así que v5
+pasa a ser el valor por defecto de G (`MCTS_PUCT_VERSION=5`). Frente a v4 confirmada (§5.3),
+v5 sube +2,9 pts contra joint, +2,4 contra expectimax y +2,5 contra solo, con un costo de
+~25 % más de tiempo por decisión.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -419,3 +442,4 @@ inferiores ≥ 60,3 %), a diferencia de v3.1, que superaba el 55 % por solo 0,4 
 | 2026-11-20 | Hipótesis V1–V4 de MCTS+PUCT v4 (§4.2), fijadas antes de medir: v4 contra joint, expectimax y solo, y v4 frente a v3.1 en pareado, bloques C5 (9601–9617) y C6 (9701–9717); preview según la regla del diagnóstico §7; control V5 contra random. |
 | 2026-11-21 | Resultados de la confirmación de G v4 (§5.3): V1–V4 confirmadas con superioridad práctica (62,6 % contra joint, 61,2 % contra expectimax, 64,3 % contra solo) y +5,1 pts sobre v3.1; v4 pasa a ser el valor por defecto de G. |
 | 2026-11-21 | Hipótesis W1–W4 de MCTS+PUCT v5 (§4.3), fijadas antes de medir: v5 contra joint, expectimax y solo, y v5 frente a v4 en pareado, bloques C7 (9801–9817) y C8 (9901–9917); control W5 contra random. |
+| 2026-11-21 | Resultados de la confirmación de G v5 (§5.4): W1–W4 confirmadas con superioridad práctica (65,5 % contra joint, 63,6 % contra expectimax, 66,8 % contra solo) y +4,5 pts sobre v4 (McNemar p = 6·10⁻¹⁹); v5 pasa a ser el valor por defecto de G. |
