@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.24** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.33) |
+| **Versión** | **1.25** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.33) |
 | **Estado** | FROZEN; implementado en `showdown/rl/ddqn/` y `battle_bots/ddqn/` |
 | **Training** | **Sí**: off-policy con replay; entrenamiento live requiere Showdown local |
 | **Inferencia** | `ValidatedDDQNPlayer`, acción greedy legal desde un checkpoint |
@@ -26,7 +26,7 @@ basado en valor frente a PPO: usa experiencias antiguas y una salida joint de
 | Término | Significado |
 |---|---|
 | \(Q(s,a)\) | Retorno futuro estimado al ejecutar \(a\) en \(s\) |
-| Acción joint | Un id \(a=24a_1+a_2\), con \(a\in[0,575]\) |
+| Acción joint | Un id \(a=40a_1+a_2\), con \(a\in[0,1599]\) (ActionSpec v2: 40 ids por hueco) |
 | Red online | Red que actúa y recibe gradientes |
 | Red target | Copia lenta que estabiliza el objetivo TD |
 | Replay | Memoria de transiciones reutilizables; DDQN es off-policy |
@@ -90,10 +90,36 @@ protocolos L1/L2/L3 de [`rl_env_spec.md`](rl_env_spec.md). No hay segmento anula
 M(a_1,a_2)=M_1(a_1)M_2(a_2\mid a_1).
 \]
 
-Los ids 0–15 son movimiento×objetivo, 16–31 mega + movimiento×objetivo (la mega siempre va con
-un movimiento; nunca con cambio), 32–35 switch, 36 pass, 37 Tera,
-22 Tera reservado y 23 reservado. En Reg M-C, Tera está desactivada y el id 22
-siempre queda enmascarado. Ni exploración ni inferencia pueden elegir ilegales.
+**ActionSpec v2** (vigente desde 1.9; `showdown/rl/constants.py`, `showdown/rl/action_space.py`).
+Cada hueco tiene 40 ids:
+
+| ids | Acción | Fórmula |
+|---|---|---|
+| 0–15 | movimiento \(i\) (0–3) × objetivo \(t\) (0–3) | \(4i+t\) |
+| 16–31 | **Mega** + movimiento \(i\) × objetivo \(t\) (`MEGA_BASE = 16`) | \(16+4i+t\) |
+| 32–35 | cambio a la reserva \(k\) (0–3) | \(32+k\) |
+| 36 | pass | — |
+| 37 | Tera (reservado; en Reg M-C siempre enmascarado) | — |
+| 38–39 | reservados (se decodifican como pass; siempre enmascarados) | — |
+
+Objetivos \(t\): 0 = rival A, 1 = rival B, 2 = aliado, 3 = uno mismo / campo. La acción
+conjunta es \(a = 40a_1 + a_2\) (1600 ids, `JOINT_ACTION_N`); la red Q da un valor por id.
+
+Reglas de la Mega:
+
+- Megaevolucionar **siempre** va con un movimiento y un objetivo elegidos por el agente; nunca con
+  un cambio. El bloque 16–31 copia la legalidad de 0–15 y solo se habilita si el Pokémon `can_mega`.
+- Una sola Mega por turno: si \(a_1\) está en 16–31, el bloque 16–31 de \(a_2\) queda
+  enmascarado (\(M_2(a_2\mid a_1)\)).
+- `MEGA_ID = 16` se conserva solo por compatibilidad (= Mega + movimiento 0 → rival A).
+
+Ejemplos: id 5 = movimiento 1 → rival B; id 21 = Mega + movimiento 1 → rival B; id 34 = cambio a
+la reserva 2; \((a_1,a_2)=(21,0)\) → joint \(40\cdot21+0=840\).
+
+**Diferencia con ActionSpec v1** (DDQN ≤ 1.8; 24 ids por hueco, joint \(24a_1+a_2\), 576 ids):
+0–15 movimiento×objetivo, 16–19 cambio, 20 pass, **21 = Mega fija con movimiento 0 → rival A**
+(el agente no elegía el movimiento ni el objetivo al megaevolucionar), 22 Tera, 23 reservado.
+Los checkpoints v1 no son compatibles con v2. Ni exploración ni inferencia pueden elegir ilegales.
 
 ## Entrenamiento
 
@@ -273,6 +299,7 @@ Pipeline familiar: **`team_preview_ppo` → DDQN**. Código compartido:
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.25** | 2026-11-21 | Documentación (sin cambio de código): ActionSpec v2 descrito completo en §Observación, acción y máscaras (tabla de 40 ids por hueco, objetivos, joint \(40a_1+a_2\) en [0, 1599], reglas de la Mega, ejemplos y diferencia con v1). Corrige restos de v1 en el glosario (\(24a_1+a_2\), [0, 575]) y en la sección de acciones (ids 22 Tera / 23 reservado). La fila 1.2 («Mega 21 intacto») describe ActionSpec v1. |
 | **1.24** | 2026-11-20 | **DDQN v1** (nombre fijado por el usuario) = kick-off oficial de DDQN: configuración final (REG weight decay 0,03 + dropout 0,1, cabeza conjunta, sin simetría, máscara del aliado, validación reservada, equipo fijo, 1M × 5), observación v2.1 (P5, calculadora real) y preview v2.1 sin `val` (`preview_v21b/preview_s0/best.pt`). Código 12229a3; checkpoints en `~/iapsvgc_runs/kickoff_ddqn_v2/ddqn_s{0..4}/`. final.pt contra `eval`: 62,1 % (± 3,4 entre semillas). Resultados: memorizacion_equipos §18.7. |
 | **1.23** | 2026-11-18 | **P5: corrección de habilidades en la observación activa por defecto** (decisión del usuario, también para DDQN; rl_env_spec v1.32). `DDQNConfig.obs_abilities=True`; checkpoints anteriores cargan con False. `--obs-abilities 0/1`. Entra en el kick-off de DDQN; su efecto se mide en la vigesimoquinta cola. |
 | **1.22** | 2026-11-18 | **Weight decay por defecto 0,03** (antes 0,01; decisión del usuario). Elegido por la decimoquinta cola con la regla fijada de antemano: `val` 74,1 % frente a 67,6 % (final.pt, 200 partidas por rival, 2 semillas); en `eval` (registro) 64,7 frente a 63,8 %. Dropout sigue en 0,1. Configuración final del kick-off tras las colas 17 y 18: 1M pasos, cabeza conjunta, sin simetría (ninguna alternativa superó el umbral). |
