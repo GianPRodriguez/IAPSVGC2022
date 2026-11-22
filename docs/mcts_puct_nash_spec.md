@@ -3,14 +3,15 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS–PUCT/Nash simultáneo (solo turnos) |
-| **Versión** | **1.7** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
+| **Versión** | **2.0** (H 2.0: S3 de G open-loop + preview por búsqueda + SP meta, §4b; candidata) |
 | **Estado** | FROZEN; `showdown/rl/mcts_puct_nash/` |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Presupuesto \(N_{\rm sim}\), Top-K, FP; barrido automatizado de sims |
 | **CLI smoke** | `python -m showdown.rl.mcts_puct_nash --seed 0 --sims 8 --smoke` |
 | **CLI barrido** | `python -m showdown.inference_sim.run_mcts_sims_sweep --agent mcts_puct_nash ...` |
-| **Env presupuesto** | `MCTS_NASH_SIMS` (fallback `MCTS_SIMS`; default config `50`) |
-| **Dependencias** | NumPy; reutiliza S2 de `mcts_puct` |
+| **Env presupuesto** | `MCTS_NASH_SIMS` (fallback `MCTS_SIMS`; 200 en v2, 50 en v1) |
+| **Env versión** | `MCTS_NASH_VERSION` (2 por defecto en el player; 1 = SM-MCTS B1) |
+| **Dependencias** | NumPy; v2 reutiliza S3, la poda y el preview por búsqueda de `mcts_puct` (G); v1 reutiliza S2 |
 
 > **Para quien aprende IA.** En VGC ambos eligen a la vez. Este agente no asume
 > un rival al azar “después” de ti: mantiene una **tabla** (matriz) de “mi
@@ -114,6 +115,34 @@ Costo = `step_sim` **más** solves FP. Comparar solo \(N_{\rm sim}\) con open-lo
 
 ---
 
+## 4b. Versión 2.0 (agente H 2.0, default del player desde el 22-11-2026, candidata)
+
+`MCTS_NASH_VERSION=2` (default del player; `1` = SM-MCTS B1 de §4). Código:
+`showdown/rl/mcts_puct_nash/openloop_nash.py`. Se conserva lo que define a H (cada nodo es un juego
+simultáneo de suma cero y sube el **valor de Nash** \(v^*(\hat A)\), no la media; se juega
+\(\arg\max\sigma^*\)) y se porta lo que G demostró que funciona (diagnóstico de G §2–§9):
+
+| Aspecto | v1.7 (SM-MCTS B1) | v2.0 | Por qué |
+|---|---|---|---|
+| Modelo de transición | S2 (`step_sim`) | **S3 fase 3c** de G (daño real de la calculadora, velocidad/prioridad, Protect, Fake Out, redirección, Tailwind, Trick Room, estados, boosts, Intimidate, clima, pivotes) | S3 llevó a G de 56 % a 65,5 % contra joint |
+| Árbol | Cerrado: el hijo de una celda se crea una vez (una tirada de azar fija) | **Open-loop**: los nodos guardan solo estadísticas; cada sim vuelve a muestrear el azar desde la raíz | Igual que G v2 |
+| Filas \(I\) | Top-16 por `score_joint` (S2) de todos los joints | Raíz: joints legales reales (`valid_orders`), Top-12 por S3; dentro: joints podados, Top-8 | Sin pases ni golpes al aliado |
+| Columnas \(J\) | Top-16 (S2) | Top-8 podados por S3 desde el lado rival | — |
+| Prior | Uniforme por celda | \(P_{ij} = p_i\,q_j\), softmax del daño estimado (+ ε) | — |
+| Selección | Primero las celdas no visitadas **en orden de id**; luego \(\max Q+U\) sobre celdas | **Desacoplada contra la mezcla actual**: fila \(\arg\max_i \sum_j \tau_j \hat A_{ij} + c\,p_i\sqrt N/(1+n_i)\); columna \(\arg\min_j \sum_i \sigma_i \hat A_{ij} - c\,q_j\sqrt N/(1+n_j)\) | v1 con 50 sims solo veía las primeras filas por id; \(\max Q+U\) sobre celdas supone un rival que colabora |
+| \(\hat A\) no visitadas | 0 | Media del nodo (FPU) | 0 sesgaba \(v^*\) hacia el empate |
+| Hoja | Rollout greedy S2 hasta el turno 40 | 2 turnos greedy S3 + material en [−1, 1] | Igual que G |
+| \(N_{\rm sim}\) / profundidad | 50 / sin tope | **200** (como G) / 4 plies | Mismo presupuesto de sims que G (~1,7× su tiempo por decisión, por el FP) |
+| FP interno / raíz | 200 / 500 | 100 / 500 | Costo |
+| Preview | `team_preview_nash` (nunca entrenado) → `/team 1234` | **Preview por búsqueda de G** (`mean`, 90 s, fase 3c) | +4,1 pts en G (protocolo §5.5) |
+| SP del rival | Inferencia | **Prior meta** (`default_sp_info_mode = 'meta'`) | La inferencia estrecha 0 stats en Reg M-C (diagnóstico de G §9.1) |
+| Anomalías | Silenciosas | `MCTS_STATS_FILE` (excepción, fallback, calculadora, preview), como G | Auditoría de la cola |
+
+Medición pre-registrada: protocolo §4.6 (cola `scripts/server/mcts_h_v2.sh`). Tests:
+`tests/test_mcts_puct_nash_v2.py` (7).
+
+---
+
 ## 5. Observación, acción y máscaras
 
 Live: [`rl_env_spec.md`](rl_env_spec.md). Árbol sobre `BattleSnapshot`. Solo
@@ -121,7 +150,8 @@ joints legales; Mega ok; Tera 22 off. Hojas Candidate 1.
 
 **No hay Team Preview en este MDP de combate.** Preview familiar congelado:
 [`team_preview_nash`](team_preview_nash_spec.md) vía `frozen_preview`
-(`MCTSPuctNashPlayer`); fallback `/team 1234` si falta checkpoint.
+(`MCTSPuctNashPlayer`); fallback `/team 1234` si falta checkpoint. **Desde v2.0 el preview por
+defecto es el de búsqueda de G** (`MCTS_PREVIEW=nash` vuelve al de familia).
 
 ---
 
@@ -279,6 +309,7 @@ y turno.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.0** (candidata) | 2026-11-22 | H 2.0 (§4b): SM-MCTS open-loop con S3 fase 3c de G, Top-K podado por S3, prior \(p_i q_j\), selección desacoplada contra la mezcla de Nash, FPU en \(\hat A\), hoja de G, 200 sims; preview por búsqueda de G; SP por prior meta (sin inferencia); anomalías en `MCTS_STATS_FILE`. v1.7 sigue con `MCTS_NASH_VERSION=1`. Medición pre-registrada: protocolo §4.6. |
 | **1.7** | 2026-11-15 | Objetivo aliado del slot 0 corregido en el adaptador de órdenes (−2; antes −1 = sí mismo, rechazado por Showdown). Sin cambios de obs. |
 | **1.6** | 2026-11-14 | ActionSpec v2 (40 ids por slot, mega como flag de cada movimiento; joint 1600) y máscaras desde `valid_orders`. |
 | **1.5** | 2026-10-11 | Inferencia bajo Preview Nash congelado (`frozen_preview`). |

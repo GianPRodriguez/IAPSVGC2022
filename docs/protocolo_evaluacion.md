@@ -331,6 +331,25 @@ la fase de S3 del preview sigue a la versión (3c en v5.2, 3e en v7). Cola
 - **Consecuencia:** si Z4 se confirma (p Holm < 0,05) y Z1–Z3 mantienen superioridad, v7 pasa a
   ser el default de G. Se reportan por bloque (C11 / C12), el tiempo por semilla y las anomalías.
 
+### 4.6 Agente H 2.0, fijado el 22-11-2026 antes de medir
+
+Candidato: **H 2.0** (spec de H v2.0 §4b): SM-MCTS/Nash open-loop con el modelo S3 fase 3c de G,
+preview por búsqueda de G y SP por prior meta, 200 sims. Base: **H 1.7** (SM-MCTS B1 con S2, 50 sims)
+con el mismo preview y SP. Solo baselines; G 5.2 entra como referencia contra el mismo rival (H no
+juega contra G). Cola `scripts/server/mcts_h_v2.sh`; código congelado en el commit del pre-registro.
+
+- **Exploración** (9101–9117 × 300, contra greedy_joint, mismas series): N1 = H 1.7, N2 = H 2.0. Pasa a
+  confirmación si N2 tiene 0 errores de serie, fallbacks del preview ≤ 5 % y McNemar N2 frente a N1
+  con diferencia > 0 y p < 0,05. Descriptivo: N2 frente a G 5.2 (E0 de la cola 3e, mismas series).
+- **Confirmación** (bloques nuevos C13 = 10401–10417 y C14 = 10501–10517, × 300 BO3): W1 H 2.0 >
+  greedy_joint, W2 H 2.0 > expectimax v1.9, W3 H 2.0 > greedy_solo (binomial, IC bootstrap por
+  semilla); W4 H 2.0 frente a G 5.2 (McNemar **bilateral**, ambos contra joint, mismas series; G 5.2 se
+  vuelve a medir en C13/C14). Holm m = 4.
+- **Consecuencia:** si W1–W3 se confirman, H 2.0 es el H de la Conclusión. W4 responde la pregunta de
+  la tesis "¿el backup de Nash mejora al open-loop con media?" en cualquier dirección; si no se
+  rechaza, se reporta como "sin diferencia detectable" con su IC. Se reportan por bloque, el tiempo
+  por semilla y las anomalías.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -551,3 +570,4 @@ por encima de los tres baselines.
 | 2026-11-22 | Fase 3e (objetos) para G pre-registrada (§4.5, diagnóstico §10): exploración v7 frente a v5.2 en 9101–9117; si mejora, confirmación Z1–Z4 en C11 (10201–10217) y C12 (10301–10317), Holm m = 4. |
 | 2026-11-22 | Exploración de la fase 3e (diagnóstico §10.1): v7 71,18 % frente a v5.2 69,21 % contra joint en 9101–9117, McNemar +1,90 pts (p = 0,0086); pasa a confirmación Z1–Z4 en C11/C12. |
 | 2026-11-22 | Resultado de la confirmación de la fase 3e de G (§5.6): Z1–Z3 confirmadas (v7 70,9 % contra joint, 69,4 % contra expectimax, 73,2 % contra solo); Z4 v7 frente a v5.2 +0,76 pts, p Holm = 0,138 (C11 +1,55, C12 −0,04): no se confirma, G se queda en v5.2. |
+| 2026-11-22 | Agente H 2.0 pre-registrado (§4.6): exploración H 2.0 frente a H 1.7 en 9101–9117; si mejora, confirmación W1–W3 contra baselines y W4 frente a G 5.2 (bilateral) en C13 (10401–10417) y C14 (10501–10517), Holm m = 4. H pasa a SP meta. |
