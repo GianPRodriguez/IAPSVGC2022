@@ -273,7 +273,7 @@ pareado frente al greedy): +4,11 pts contra joint (p = 3·10⁻¹²) y +4,06 con
 
 ---
 
-### 4.7 Fase 3e: objetos (v7.0, candidata: `MCTS_PUCT_VERSION=7`)
+### 4.7 Fase 3e: objetos (v7.0, opcional y no confirmada: `MCTS_PUCT_VERSION=7`)
 
 Incluye 3c (no 3d, que no tuvo efecto). Efectos dinámicos de objetos que la tabla de daño no
 puede ver (los que cambian el daño ya llegan a la calculadora con el pedido):
@@ -290,7 +290,8 @@ puede ver (los que cambian el daño ya llegan a la calculadora con el pedido):
 | Rocky Helmet (29) | Nada | 1/6 al atacante por contacto |
 | Choice Scarf (60), Miracle Seed (128), Fairy Feather (29), Choice | Ya en la velocidad / la tabla | Sin cambio (el bloqueo de Choice no se modela) |
 
-Estado: candidata; medición pre-registrada en protocolo §4.5 (diagnóstico §10).
+Estado: **no confirmada** (protocolo §5.6, diagnóstico §10.2): +0,76 pts frente a v5.2, p Holm = 0,138
+(C11 +1,55, C12 −0,04), con un 4 % más de tiempo. El default sigue siendo 5.2.
 
 ## 5. Observación, acción y máscaras
 
@@ -499,7 +500,7 @@ y turno para reproducir RNG.
 
 | Versión | Fecha | Notas |
 |---|---|---|
-| **7.0** (candidata) | 2026-11-22 | Fase 3e (§4.7): Focus Sash / Sturdy, Sitrus, Leftovers, recoil de Life Orb, bayas de resistencia consumidas (×2 después), Rocky Helmet, White Herb, semillas de terreno; Sash en la puntuación. Incluye 3c, no 3d. `MCTS_PUCT_VERSION=7` (preview por búsqueda con fase 3e). Medición pre-registrada: protocolo §4.5. |
+| **7.0** (opcional, no confirmada) | 2026-11-22 | Fase 3e (§4.7): Focus Sash / Sturdy, Sitrus, Leftovers, recoil de Life Orb, bayas de resistencia consumidas (×2 después), Rocky Helmet, White Herb, semillas de terreno; Sash en la puntuación. Incluye 3c, no 3d. `MCTS_PUCT_VERSION=7` (preview por búsqueda con fase 3e). Medición pre-registrada: protocolo §4.5. Resultado (§5.6): Z1–Z3 confirmadas, Z4 frente a 5.2 +0,76 pts, p Holm = 0,138 → **no pasa a default**. |
 | **5.2** (por defecto desde 2026-11-22) | 2026-11-22 | **Sin inferencia de SP por defecto** (`ValidatedMCTSPuctPlayer.default_sp_info_mode = 'meta'`; combate y preview iguales a 5.1). Diagnóstico §9.1: la inferencia estrechó 0 de 14 016 stats en partidas de G; meta frente a inference +0,02 pts (p = 1), con 14 % menos de tiempo; oracle_spe +0,08 (p = 0,85). `--sp-info-a inference` la reactiva. |
 | **5.1** (por defecto desde 2026-11-22) | 2026-11-22 | **Preview por búsqueda por defecto** (§4.6; combate idéntico a 5.0). Confirmado (protocolo §5.5, C9+C10): +4,11 pts sobre el greedy contra joint y +4,06 contra expectimax, Holm m = 2; G v5 + búsqueda 69,0 % contra joint y 67,7 % contra expectimax. `MCTS_PREVIEW` por defecto `search` (`greedy` / `nash` opcionales); `MCTS_PREVIEW_DEADLINE` por defecto 90 s. |
 | **6.0** (probada, sin efecto neto) | 2026-11-21 | Fase 3d (§4.5): terreno al entrar por habilidad y su duración, ajuste de daño por terreno respecto a la raíz, prioridad de Grassy Glide según el terreno actual, bloqueo de prioridad en Psychic Terrain, Expanding Force en área ×1,5, curación de Grassy, Misty / Electric contra estados. `MCTS_PUCT_VERSION=6`. Exploración (diagnóstico §6.6): 64,5 % frente a 64,2 % de v5, McNemar p = 0,73; sin efecto también en el subgrupo con terreno (+0,26 pts, p = 0,70). No se adopta; se confirma v5. |

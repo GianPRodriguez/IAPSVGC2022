@@ -481,6 +481,28 @@ vuelve al anterior). Frente a v5 con greedy (§5.4), G sube ~+4 pts contra los d
 ~7 s por preview en el servidor (una vez por BO3 gracias al memo) y ~+60 % de tiempo por semilla
 en la cola (≈ 240 s frente a ≈ 150 s, con 28 procesos).
 
+### 5.6 Resultados de la confirmación de la fase 3e de G (22-11-2026, código congelado `8efb619`)
+
+Pre-registro §4.5; exploración en diagnóstico §10.1 (+1,90 pts, p = 0,0086, pasó a confirmación).
+C11 = 10201–10217 y C12 = 10301–10317, × 300 BO3, terminada 17:33.
+
+| Hipótesis | Victorias / series | Tasa / diferencia | IC 95 % (cluster) | C11 | C12 | p Holm | Resultado |
+|---|---|---|---|---|---|---|---|
+| Z1 v7 > greedy_joint | 7198 / 10 146 | 70,94 % | [70,08; 71,87] | 71,74 % | 70,15 % | ≈ 0 | confirmada (34/34 semillas) |
+| Z2 v7 > expectimax v1.9 | 7046 / 10 146 | 69,45 % | [68,57; 70,27] | 69,29 % | 69,60 % | ≈ 0 | confirmada (34/34) |
+| Z3 v7 > greedy_solo | 7426 / 10 148 | 73,18 % | [72,36; 74,03] | 73,07 % | 73,28 % | ≈ 0 | confirmada (34/34) |
+| **Z4 v7 > v5.2** (McNemar, contra joint) | 1319 frente a 1243 (10 054 emparejadas) | **+0,76 pts** | — | +1,55 (p = 0,031) | **−0,04 (p = 0,98)** | **0,138** | **no confirmada** |
+
+Referencia: v5.2 contra joint (Zj5) 7116 / 10 148 = 70,12 % [69,26; 70,98]. Tiempo por semilla:
+v7 229 s frente a v5.2 219 s contra joint (+4 %). 0 errores de serie y 0 fallbacks del preview en
+las 136 corridas.
+
+**Decisión (regla pre-registrada): Z4 no se confirma (p Holm = 0,138) → G se queda en v5.2.** El
+efecto de la exploración se replica en C11 pero desaparece en C12; lo más probable es que la ganancia
+real de los objetos dinámicos sea menor que 1 pt, por debajo de lo que este diseño puede separar.
+v7 queda disponible con `MCTS_PUCT_VERSION=7`. Z1–Z3 confirman de paso que G con objetos sigue
+por encima de los tres baselines.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -528,3 +550,4 @@ en la cola (≈ 240 s frente a ≈ 150 s, con 28 procesos).
 | 2026-11-22 | Resultado del motor de inferencia de SP en G (diagnóstico §9.1): 0 de 14 016 stats estrechados; meta frente a inference +0,02 pts (p = 1), oracle_spe +0,08 (p = 0,85); por la regla pre-registrada el default de G pasa a `meta` (−14 % de tiempo). |
 | 2026-11-22 | Fase 3e (objetos) para G pre-registrada (§4.5, diagnóstico §10): exploración v7 frente a v5.2 en 9101–9117; si mejora, confirmación Z1–Z4 en C11 (10201–10217) y C12 (10301–10317), Holm m = 4. |
 | 2026-11-22 | Exploración de la fase 3e (diagnóstico §10.1): v7 71,18 % frente a v5.2 69,21 % contra joint en 9101–9117, McNemar +1,90 pts (p = 0,0086); pasa a confirmación Z1–Z4 en C11/C12. |
+| 2026-11-22 | Resultado de la confirmación de la fase 3e de G (§5.6): Z1–Z3 confirmadas (v7 70,9 % contra joint, 69,4 % contra expectimax, 73,2 % contra solo); Z4 v7 frente a v5.2 +0,76 pts, p Holm = 0,138 (C11 +1,55, C12 −0,04): no se confirma, G se queda en v5.2. |

@@ -556,3 +556,24 @@ McNemar E1 frente a E0 (4999 series emparejadas): 687 frente a 592 → **+1,90 p
 Por la regla pre-registrada (diferencia > 0, p < 0,05, 0 errores, fallbacks ≤ 5 %) **pasa a
 confirmación** Z1–Z4 en C11 + C12 (en curso desde 08:41). La ganancia es la mitad que la del preview
 por búsqueda (+4 pts), coherente con que los objetos dinámicos cambian solo algunos KOs.
+
+### 10.2 Confirmación (22-11-2026, terminada 17:33)
+
+| Hipótesis | Victorias / series | Tasa / diferencia | IC 95 % (cluster) | C11 | C12 | p Holm | Resultado |
+|---|---|---|---|---|---|---|---|
+| Z1 v7 > greedy_joint | 7198 / 10 146 | 70,94 % | [70,08; 71,87] | 71,74 % | 70,15 % | ≈ 0 | confirmada (34/34 semillas) |
+| Z2 v7 > expectimax v1.9 | 7046 / 10 146 | 69,45 % | [68,57; 70,27] | 69,29 % | 69,60 % | ≈ 0 | confirmada (34/34) |
+| Z3 v7 > greedy_solo | 7426 / 10 148 | 73,18 % | [72,36; 74,03] | 73,07 % | 73,28 % | ≈ 0 | confirmada (34/34) |
+| **Z4 v7 > v5.2** (McNemar, contra joint) | 1319 frente a 1243 (10 054 emparejadas) | **+0,76 pts** | — | +1,55 (p = 0,031) | **−0,04 (p = 0,98)** | **0,138** | **no confirmada** |
+
+Referencia: v5.2 contra joint (Zj5) 7116 / 10 148 = 70,12 % [69,26; 70,98]. Tiempo por semilla:
+v7 229 s frente a v5.2 219 s contra joint (+4 %). 0 errores de serie y 0 fallbacks del preview en
+las 136 corridas.
+
+**Decisión: v7 no pasa a default; G se queda en 5.2** (protocolo §5.6). Lectura: la exploración
+(+1,90 pts) sobrestimó el efecto, como es esperable cuando se elige la candidata por su resultado en
+exploración. C11 lo replica (+1,55) y C12 no (−0,04); juntando todo, +0,76 pts con p = 0,14. Los
+objetos dinámicos cambian pocos KOs por partida y el modelo ya era bueno en esos casos (la tabla de
+daño incluye los objetos que cambian el daño). Para separar un efecto de ~0,8 pts con potencia 80 %
+harían falta ~4 bloques más (unas 18 h), y no compensa frente a pasar al agente H. Con esto, G queda
+cerrado en **5.2** para la Conclusión: combate v5 (3c), preview por búsqueda `mean` y SP por prior meta.
