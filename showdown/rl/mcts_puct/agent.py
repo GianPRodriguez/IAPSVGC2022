@@ -1,5 +1,7 @@
 """MCTS+PUCT agent (docs/mcts_puct_spec.md).
 
+``version=7``: S3 fase 3e (3c + objetos con efecto dinámico: Sash, Sitrus, Leftovers, Life Orb, bayas de
+resistencia, Rocky Helmet, White Herb, semillas); candidata (spec v7.0).
 ``version=6``: S3 fase 3d (+ terreno); probada, sin efecto neto frente a v5 (spec v6.0).
 ``version=5`` (default desde el 21-11-2026, confirmada: protocolo §5.4): S3 fase 3c
 (+ Tailwind / Trick Room, estados, boosts en el árbol, Intimidate, clima, pivotes).
@@ -47,7 +49,7 @@ class MCTSPuctConfig:
             inner_top_k=int(self.inner_top_k), opp_temperature=float(self.opp_temperature),
             opp_eps=float(self.opp_eps), rollout_turns=int(self.rollout_turns),
             max_depth=int(self.max_depth), prefer_mega=bool(self.prefer_mega),
-            model={6: 's3d', 5: 's3c', 4: 's3b', 3: 's3'}.get(min(int(self.version), 6), 's2'),
+            model={7: 's3e', 6: 's3d', 5: 's3c', 4: 's3b', 3: 's3'}.get(min(int(self.version), 7), 's2'),
         )
 
 

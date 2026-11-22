@@ -49,8 +49,19 @@ rivales en el suelo (Fake Out, Sucker Punch, Aqua Jet…). Expanding Force golpe
 en Psychic Terrain. Grassy cura 1/16; Misty bloquea estados y Electric el sueño a quien está
 en el suelo. "En el suelo" = no Volador, sin Levitate ni Air Balloon.
 
-Qué NO modela: críticos, Quick Guard, Spotlight, Yawn, objetos consumibles (Terrain Extender,
-semillas), habilidades raras.
+Fase 3e (``phase='3e'``, MCTS+PUCT v7; incluye 3c, no 3d): objetos con efecto dinámico. Los que
+cambian el daño (Life Orb ×1,3, Miracle Seed, Fairy Feather, Choice, bayas de resistencia) ya están
+en la tabla porque la calculadora recibe el objeto; 3e añade lo que la tabla no puede ver: Focus
+Sash (y Sturdy) dejan a 1 % a quien recibe un golpe letal con el HP lleno (no contra multigolpe) y
+la banda se consume; las bayas de resistencia se consumen tras el primer golpe supereficaz de su
+tipo (Chilan: Normal) y los siguientes hacen ×2 respecto a la tabla; Sitrus cura 25 % al bajar de
+50 %; Leftovers 1/16 al final del turno; Life Orb resta 10 % al atacante tras golpear (no con
+Magic Guard); Rocky Helmet 1/6 al atacante por contacto; White Herb anula las bajadas de stats una
+vez; las semillas de terreno (+1 Def Grassy / Electric, +1 SpD Psychic / Misty) al entrar si el
+terreno está activo. Choice Scarf ya estaba en la velocidad (3a).
+
+Qué NO modela: críticos, Quick Guard, Spotlight, Yawn, bloqueo de Choice, Terrain Extender, Light
+Clay, Eject Button, habilidades raras.
 """
 from __future__ import annotations
 
@@ -100,6 +111,14 @@ _TERRAIN_ABIL = {'grassysurge': 'grassy', 'psychicsurge': 'psychic', 'electricsu
                  'mistysurge': 'misty', 'hadronengine': 'electric'}
 _TERRAIN_BOOST = {'grassy': 'grass', 'electric': 'electric', 'psychic': 'psychic'}
 _GRASSY_HALVED = {'earthquake', 'bulldoze', 'magnitude'}
+# Fase 3e: objetos
+_RESIST_BERRY = {'occaberry': 'fire', 'passhoberry': 'water', 'wacanberry': 'electric', 'rindoberry': 'grass',
+                 'yacheberry': 'ice', 'chopleberry': 'fighting', 'kebiaberry': 'poison', 'shucaberry': 'ground',
+                 'cobaberry': 'flying', 'payapaberry': 'psychic', 'tangaberry': 'bug', 'chartiberry': 'rock',
+                 'kasibberry': 'ghost', 'habanberry': 'dragon', 'colburberry': 'dark', 'babiriberry': 'steel',
+                 'roseliberry': 'fairy', 'chilanberry': 'normal'}
+_SEED = {'grassyseed': ('grassy', 'def'), 'electricseed': ('electric', 'def'),
+         'psychicseed': ('psychic', 'spd'), 'mistyseed': ('misty', 'spd')}
 
 
 def _norm(s) -> str:
@@ -299,6 +318,27 @@ def _key(m: MonSnapshot) -> Tuple[str, str]:
     return getattr(m, '_s3', None) or ('?', _norm(m.display_species()))
 
 
+def berry_triggers(berry: str, mid: str, dfn: MonSnapshot) -> bool:
+    """¿La baya de resistencia ``berry`` se activa con ``mid`` contra ``dfn``? (supereficaz; Chilan: Normal)"""
+    bt = _RESIST_BERRY.get(berry)
+    if not bt:
+        return False
+    mtype = _norm(dex_move(mid).get('type', ''))
+    if mtype != bt:
+        return False
+    if bt == 'normal':
+        return True
+    from showdown.battle_bots.greedy_solo.type_chart import type_effectiveness
+    return float(type_effectiveness(mtype, list(dfn.types or ()) or ['Normal'])) > 1.0
+
+
+def _sash_ready(m: MonSnapshot, mid: str) -> bool:
+    """Focus Sash / Sturdy salvan a 1 % de un golpe letal con el HP lleno (no contra multigolpe)."""
+    if float(m.hp_pct) < 100.0 or dex_move(mid).get('multihit'):
+        return False
+    return _norm(m.item) == 'focussash' or _norm(m.ability) == 'sturdy'
+
+
 @dataclass
 class S3Stats:
     requests: int = 0
@@ -323,6 +363,7 @@ class S3Model:
     spe_raw: Dict[Tuple[str, str], int] = field(default_factory=dict)
     root_weather: str = ''
     root_terrain: str = ''
+    root_item: Dict[Tuple[str, str], str] = field(default_factory=dict)  # fase 3e: objeto en la raíz
     stats: S3Stats = field(default_factory=S3Stats)
 
     # ------------------------------------------------------------------ build
@@ -443,6 +484,7 @@ class S3Model:
             model.spe_raw[_key(m)] = int(spe)
             model.root_boosts[_key(m)] = dict(m.boosts or {})
             model.root_status[_key(m)] = status
+            model.root_item[_key(m)] = _norm(m.item)
             model.speed[_key(m)] = int(effective_speed(
                 spe, boost=int((m.boosts or {}).get('spe') or 0), item=m.item or None,
                 paralyzed=status.startswith('par'),
@@ -454,7 +496,7 @@ class S3Model:
                     model.prio[(_key(m), mid)] = int(pr) if pr is not None else 0
         model.root_weather = _wnorm(getattr(root.field, 'weather', ''))
         model.root_terrain = _tnorm(getattr(root.field, 'terrain', ''))
-        if model.phase in ('3c', '3d'):  # sueño en la raíz: status_counter = turnos ya dormidos -> restantes
+        if model.phase in ('3c', '3d', '3e'):  # sueño en la raíz: status_counter = turnos ya dormidos -> restantes
             for m in our + foe:
                 if str(m.status or '').startswith('slp'):
                     m.status_counter = max(1, 3 - int(getattr(m, 'status_counter', 0) or 0))
@@ -528,10 +570,13 @@ class S3Model:
         if self.phase == '3d':
             f *= (_terrain_factor(att, dfn, mid, terrain)
                   / _terrain_factor(att, dfn, mid, self.root_terrain))
+        if self.phase == '3e':  # baya de resistencia consumida en el árbol: la tabla la incluía (×0,5)
+            rb = self.root_item.get(kd, '')
+            if rb in _RESIST_BERRY and _norm(dfn.item) != rb and berry_triggers(rb, mid, dfn):
+                f *= 2.0
         return f
 
-    @staticmethod
-    def _boost(m: MonSnapshot, boosts: Dict[str, int], *, by_foe: bool) -> None:
+    def _boost(self, m: MonSnapshot, boosts: Dict[str, int], *, by_foe: bool) -> None:
         if not boosts or not _alive(m):
             return
         ab = _norm(m.ability)
@@ -548,7 +593,25 @@ class S3Model:
                 b['atk'] = int(min(6, int(b.get('atk', 0)) + 2))
             elif ab == 'competitive':
                 b['spa'] = int(min(6, int(b.get('spa', 0)) + 2))
+        if self.phase == '3e' and _norm(m.item) == 'whiteherb' and any(int(v) < 0 for v in b.values()):
+            b = {k: max(0, int(v)) for k, v in b.items()}
+            m.item = ''
         m.boosts = b
+
+    # ------------------------------------------------------------ fase 3e: objetos
+    def _heal_items(self, m: MonSnapshot) -> None:
+        """Sitrus: +25 % al quedar en ≤ 50 % (una vez)."""
+        if self.phase == '3e' and _alive(m) and _norm(m.item) == 'sitrusberry' and float(m.hp_pct) <= 50.0:
+            m.hp_pct = min(100.0, float(m.hp_pct) + 25.0)
+            m.item = ''
+
+    @staticmethod
+    def _chip(m: MonSnapshot, pct: float) -> None:
+        if not _alive(m) or pct <= 0:
+            return
+        m.hp_pct = max(0.0, float(m.hp_pct) - float(pct))
+        if m.hp_pct <= 0.0:
+            m.fainted, m.hp_pct = True, 0.0
 
     def _set_weather(self, s: BattleSnapshot, w: str) -> None:
         s.field.weather = _wnorm(w)
@@ -556,7 +619,7 @@ class S3Model:
 
     def on_entry(self, s: BattleSnapshot, m: MonSnapshot, ours: bool) -> None:
         """Habilidades al entrar (fase 3c): Intimidate y clima."""
-        if self.phase not in ('3c', '3d') or not _alive(m):
+        if self.phase not in ('3c', '3d', '3e') or not _alive(m):
             return
         ab = _norm(m.ability)
         if ab == 'intimidate':
@@ -571,6 +634,11 @@ class S3Model:
         if self.phase == '3d' and ab in _TERRAIN_ABIL:
             s.field.terrain = _TERRAIN_ABIL[ab] + 'terrain'
             s.field.terrain_turns = 5.0
+        if self.phase == '3e':
+            sd = _SEED.get(_norm(m.item))
+            if sd and _tnorm(s.field.terrain) == sd[0]:
+                self._boost(m, {sd[1]: 1}, by_foe=False)
+                m.item = ''
 
     def _pivot(self, s: BattleSnapshot, side: SideSnapshot, actor: MonSnapshot, ours: bool) -> None:
         """U-turn / Volt Switch / Parting Shot: entra el de banca con más HP."""
@@ -595,7 +663,7 @@ class S3Model:
         before = {(o, i): (s.our if o else s.foe).active[i] for o in (True, False) for i in range(2)}
         from showdown.rl.mcts_puct.openloop import auto_replace
         auto_replace(s)
-        if self.phase not in ('3c', '3d'):
+        if self.phase not in ('3c', '3d', '3e'):
             return
         for (o, i), old in before.items():
             side = s.our if o else s.foe
@@ -620,10 +688,13 @@ class S3Model:
                 chip += 6.25
             if self.phase == '3d' and _tnorm(s.field.terrain) == 'grassy' and grounded(m):
                 chip -= 6.25
+            if self.phase == '3e' and _norm(m.item) == 'leftovers':
+                chip -= 6.25
             if chip:
                 m.hp_pct = min(100.0, max(0.0, float(m.hp_pct) - chip))
                 if m.hp_pct <= 0.0:
                     m.fainted, m.hp_pct = True, 0.0
+            self._heal_items(m)
         f = s.field
         for flag, turns in (('our_tailwind', 'our_tailwind_turns'), ('opp_tailwind', 'opp_tailwind_turns'),
                             ('trick_room', 'trick_room_turns')):
@@ -700,9 +771,10 @@ class S3Model:
             queue.append((pr, spe, float(rng.random()), ours, slot, act, actor, mid))
         queue.sort(key=lambda q: (q[0], q[1], q[2]), reverse=True)
 
-        c3 = self.phase in ('3c', '3d')
-        b3 = self.phase in ('3b', '3c', '3d')
+        c3 = self.phase in ('3c', '3d', '3e')
+        b3 = self.phase in ('3b', '3c', '3d', '3e')
         d3 = self.phase == '3d'
+        i3 = self.phase == '3e'
         protected: set = set()           # id() de los protegidos este turno
         wide_guard = {True: False, False: False}
         redirect: Dict[bool, Optional[Tuple[MonSnapshot, bool]]] = {True: None, False: None}
@@ -846,11 +918,22 @@ class S3Model:
                 if c3:
                     dmg *= self._mods(actor, dfn, mid, s.field.weather, s.field.terrain if d3 else '')
                 hit_any = True
+                if i3:
+                    if dmg >= float(dfn.hp_pct) and _sash_ready(dfn, mid):
+                        dmg = float(dfn.hp_pct) - 1.0
+                        if _norm(dfn.item) == 'focussash':
+                            dfn.item = ''
+                    if berry_triggers(_norm(dfn.item), mid, dfn):
+                        dfn.item = ''  # el primer golpe ya salió ×0,5 de la tabla
+                    if _norm(dfn.item) == 'rockyhelmet' and 'contact' in _flags(mid):
+                        self._chip(actor, 100.0 / 6.0)
                 dfn.hp_pct = max(0.0, float(dfn.hp_pct) - dmg)
                 if dfn.hp_pct <= 0.0:
                     dfn.fainted = True
                     dfn.hp_pct = 0.0
                     continue
+                if i3:
+                    self._heal_items(dfn)
                 if b3 and mid == 'fakeout' and not _flinch_immune(dfn):
                     flinched.add(id(dfn))
                 if c3:  # secundarios sobre el objetivo
@@ -864,6 +947,10 @@ class S3Model:
                                 dfn.status_counter = int(rng.integers(1, 4))
                         if sec.get('boosts'):
                             self._boost(dfn, sec['boosts'], by_foe=True)
+            if i3 and hit_any and _alive(actor):
+                if _norm(actor.item) == 'lifeorb' and _norm(actor.ability) != 'magicguard':
+                    self._chip(actor, 10.0)
+                self._heal_items(actor)
             if c3 and hit_any and _alive(actor):
                 e = dex_move(mid)
                 if e.get('selfBoosts'):
@@ -911,10 +998,12 @@ class S3Model:
                     hp = float(dfn.hp_pct)
                     exp = min(0.5 * (lo + hi), hp)
                     p_ko = 1.0 if lo >= hp else (0.0 if hi < hp else (hi - hp) / max(1e-6, hi - lo))
+                    if self.phase == '3e' and p_ko > 0 and _sash_ready(dfn, mid):
+                        p_ko, exp = 0.0, min(exp, hp - 1.0)
                     sign = -1.0 if any(dfn is x for x in side.active) else 1.0  # golpear al aliado resta
                     v += sign * acc * (exp + KO_BONUS * p_ko)
                 out[mi * 4 + t] = v
-            if self.phase in ('3b', '3c', '3d') and mid in _FIRST_TURN:
+            if self.phase in ('3b', '3c', '3d', '3e') and mid in _FIRST_TURN:
                 first = int(getattr(actor, 'turns_active', 0) or 0) == 0
                 for t in range(4):
                     if (mi * 4 + t) not in out:
@@ -925,9 +1014,9 @@ class S3Model:
                         tg = opp.active[t] if t < len(opp.active) else None
                         if _alive(tg) and not _flinch_immune(tg):
                             out[mi * 4 + t] += FLINCH_W * self.best_output(view, tg, flip=True)
-        if self.phase in ('3b', '3c', '3d'):
+        if self.phase in ('3b', '3c', '3d', '3e'):
             self._support_scores(view, slot, actor, out)
-        if self.phase in ('3c', '3d'):
+        if self.phase in ('3c', '3d', '3e'):
             self._scores_3c(view, slot, actor, out)
         return out
 

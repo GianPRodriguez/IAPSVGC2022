@@ -314,6 +314,23 @@ preview por búsqueda pasa a ser el de G solo si X1 se confirma y X2 no es signi
 negativa (p Holm < 0,05 con diferencia < 0). Se reportan además las tasas binomiales de cada
 brazo y los fallbacks del preview. Cola: `scripts/server/mcts_g_search_preview.sh`.
 
+### 4.5 Fase 3e (objetos) para G, fijado el 22-11-2026 antes de medir
+
+Candidato: **G v7** = S3 fase 3e (3c + objetos con efecto dinámico; diagnóstico §10,
+`MCTS_PUCT_VERSION=7`), frente al default **v5.2** (combate 3c, preview por búsqueda `mean`, SP
+del rival por prior meta). Ambos con el preview y el `sp_info` por defecto del código congelado;
+la fase de S3 del preview sigue a la versión (3c en v5.2, 3e en v7). Cola
+`scripts/server/mcts_g_v7.sh`; código congelado en el commit del pre-registro.
+
+- **Exploración** (9101–9117 × 300, contra greedy_joint, mismas series): E0 = v5.2, E1 = v7. Pasa a
+  confirmación si E1 tiene 0 errores de serie, fallbacks del preview ≤ 5 % de las series y McNemar
+  E1 frente a E0 con diferencia > 0 y p < 0,05. Si no, G se queda en v5.2.
+- **Confirmación** (bloques nuevos C11 = 10201–10217 y C12 = 10301–10317, × 300 BO3):
+  Z1 v7 > greedy_joint, Z2 v7 > expectimax v1.9, Z3 v7 > greedy_solo (binomial, IC bootstrap por
+  semilla), Z4 v7 > v5.2 (McNemar, ambos contra joint, mismas series). Holm m = 4.
+- **Consecuencia:** si Z4 se confirma (p Holm < 0,05) y Z1–Z3 mantienen superioridad, v7 pasa a
+  ser el default de G. Se reportan por bloque (C11 / C12), el tiempo por semilla y las anomalías.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -509,3 +526,4 @@ en la cola (≈ 240 s frente a ≈ 150 s, con 28 procesos).
 | 2026-11-21 | Exploración pre-registrada del motor de inferencia de SP en G v5 (diagnóstico §9): inference frente a oracle_spe y meta en 9101–9117; si meta no es peor (|Δ| ≤ 1 pt o mejor), el default de G pasa a meta. |
 | 2026-11-22 | Resultados de la confirmación del preview por búsqueda de G (§5.5): X1 +4,11 pts contra joint (p = 3·10⁻¹²) y X2 +4,06 pts contra expectimax (p = 1·10⁻¹¹), ambas confirmadas en C9 y C10 (Holm m = 2); G v5 + búsqueda: 69,0 % contra joint, 67,7 % contra expectimax. El preview por búsqueda (`mean`) pasa a ser el default de G. |
 | 2026-11-22 | Resultado del motor de inferencia de SP en G (diagnóstico §9.1): 0 de 14 016 stats estrechados; meta frente a inference +0,02 pts (p = 1), oracle_spe +0,08 (p = 0,85); por la regla pre-registrada el default de G pasa a `meta` (−14 % de tiempo). |
+| 2026-11-22 | Fase 3e (objetos) para G pre-registrada (§4.5, diagnóstico §10): exploración v7 frente a v5.2 en 9101–9117; si mejora, confirmación Z1–Z4 en C11 (10201–10217) y C12 (10301–10317), Holm m = 4. |

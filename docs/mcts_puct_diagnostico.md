@@ -514,3 +514,30 @@ la Velocidad exacta del rival (I1) tampoco aporta: el prior meta ya la acierta c
 **Decisión (regla pre-registrada): I2 no es peor y |Δ| = 0,02 ≤ 1 pt → el default de G pasa a
 `meta` (inferencia apagada)**, con −14 % de tiempo por semilla. `--sp-info-a inference` la
 reactiva. No hace falta mejorar la inferencia de Velocidad (I1 no es significativo).
+
+## 10. Fase 3e: objetos (v7; fijado el 22-11-2026 antes de medir)
+
+**Motivo.** Siguiente paso del orden acordado (confirmar v5 → preview por búsqueda → objetos → H).
+La calculadora ya aplica en la tabla los objetos que cambian el daño, porque el pedido lleva el
+objeto; lo que S3 no veía son los efectos **dinámicos**, que cambian quién cae y cuándo:
+
+| Objeto (sets de 1800 en el meta) | Qué hacía S3 hasta v5 | Qué hace 3e (v7) |
+|---|---|---|
+| Focus Sash (198), Sturdy | Nada: un golpe letal con el HP lleno mataba | Deja a 1 % (no contra multigolpe); la banda se consume |
+| Life Orb (194) | ×1,3 en la tabla (calculadora), sin coste | + recoil de 10 % al atacante tras golpear (no con Magic Guard) |
+| Sitrus Berry (172) | Nada | +25 % al quedar en ≤ 50 %, una vez |
+| Grassy Seed (94), Psychic Seed (25) | Nada | +1 Def / +1 SpD al entrar con el terreno activo; se consume |
+| Leftovers (93) | Nada | +1/16 al final del turno |
+| Bayas de resistencia (Chople 53, Occa 24, Colbur 23…) | ×0,5 en la tabla en **todos** los golpes | ×0,5 solo en el primero supereficaz de su tipo; luego se consume y los siguientes van ×2 respecto a la tabla |
+| White Herb (46) | Nada | Anula las bajadas de stats una vez (Intimidate, Close Combat, Draco Meteor…) |
+| Rocky Helmet (29) | Nada | 1/6 al atacante por contacto |
+| Choice Scarf (60), Miracle Seed (128), Fairy Feather (29), Choice | Ya en la velocidad / la tabla | Sin cambio (el bloqueo de Choice no se modela) |
+
+Las bayas consumidas antes de la raíz (objeto vacío en poke-env) ya salen de la tabla, así que el
+ajuste ×2 solo aplica a lo que se consume dentro del árbol. La puntuación (prior, rival, rollout)
+quita el bonus de KO a un golpe que la banda aguanta. Implementación: `s3.py` (`phase='3e'`),
+tests `tests/test_mcts_puct_s3e.py` (10).
+
+**Diseño y regla:** protocolo §4.5 (cola `scripts/server/mcts_g_v7.sh`). Exploración E0 = v5.2
+frente a E1 = v7 en 9101–9117 contra joint, en pareado; si McNemar da diferencia > 0 y p < 0,05,
+confirmación Z1–Z4 en C11 + C12 con Holm m = 4.
