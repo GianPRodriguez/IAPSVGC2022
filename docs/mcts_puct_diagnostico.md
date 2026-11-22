@@ -541,3 +541,18 @@ tests `tests/test_mcts_puct_s3e.py` (10).
 **Diseño y regla:** protocolo §4.5 (cola `scripts/server/mcts_g_v7.sh`). Exploración E0 = v5.2
 frente a E1 = v7 en 9101–9117 contra joint, en pareado; si McNemar da diferencia > 0 y p < 0,05,
 confirmación Z1–Z4 en C11 + C12 con Holm m = 4.
+
+### 10.1 Exploración (22-11-2026, código congelado `8efb619`, terminada 08:37)
+
+9101–9117 × 300 BO3 contra greedy_joint, preview por búsqueda por defecto. Tests 58 passed, smoke
+sin anomalías; 0 errores de serie y 0 fallbacks del preview en ambos brazos.
+
+| Brazo | Victorias / series | Tasa | IC 95 % (cluster) | Semillas > 50 % | s / semilla |
+|---|---|---|---|---|---|
+| E0 v5.2 | 3502 / 5060 | 69,21 % | [67,95; 70,45] | 17/17 | 219 |
+| **E1 v7 (3e)** | 3608 / 5069 | **71,18 %** | [69,97; 72,39] | 17/17 | 227 (+4 %) |
+
+McNemar E1 frente a E0 (4999 series emparejadas): 687 frente a 592 → **+1,90 pts, p = 0,0086**.
+Por la regla pre-registrada (diferencia > 0, p < 0,05, 0 errores, fallbacks ≤ 5 %) **pasa a
+confirmación** Z1–Z4 en C11 + C12 (en curso desde 08:41). La ganancia es la mitad que la del preview
+por búsqueda (+4 pts), coherente con que los objetos dinámicos cambian solo algunos KOs.
