@@ -63,9 +63,12 @@ def _env_int(name: str, default: int) -> int:
 
 
 class MCTSPuctPlayer(FamilyPreviewMixin, Player):
-    """Preview greedy (tipado + BST) + MCTS+PUCT joint policy (spec v3.1).
+    """Preview por búsqueda (``mean``) + MCTS+PUCT joint policy.
 
-    Preview (decisión del usuario, 20-11-2026): el mismo de solo/joint/expectimax.
+    Preview por defecto: **búsqueda** con S3 (``search_preview``, decisión ``mean``), confirmada
+    el 22-11-2026 (protocolo §5.5): +4,1 pts sobre el greedy contra joint y +4,1 contra
+    expectimax (C9+C10, McNemar con Holm). ``MCTS_PREVIEW=greedy`` vuelve al preview greedy
+    (tipado + BST, el de solo/joint/expectimax; default hasta el 22-11-2026).
     ``team_preview_nash`` nunca se entrenó (solo un checkpoint de smoke con etiquetas
     mock), así que la familia caía al orden fijo ``/team 1234`` (−4 pts medidos).
     ``MCTS_PREVIEW=nash`` vuelve al preview de familia (requiere checkpoint;
@@ -113,13 +116,14 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
         )
 
     def teampreview(self, battle) -> str:
-        if os.environ.get('MCTS_PREVIEW', 'greedy').strip().lower() == 'nash':
+        mode = (os.environ.get('MCTS_PREVIEW') or 'search').strip().lower()
+        if mode == 'nash':
             out = FamilyPreviewMixin.teampreview(self, battle)
             fp = getattr(self, '_frozen_preview', None)
             if fp is not None and not fp.available:
                 _record_anomaly('preview_fallback', battle, str(getattr(fp, '_load_error', '')))
             return out
-        if os.environ.get('MCTS_PREVIEW', 'greedy').strip().lower() == 'search':
+        if mode == 'search':
             # La búsqueda tarda ~7 s (más bajo carga). Síncrona bloqueaba el bucle asyncio y las
             # conexiones nuevas de otros jugadores del proceso caían por ``open_timeout`` (10 s) de
             # poke-env (servidor, 21-11-2026). poke-env espera la corrutina; la calculadora usa lock.
@@ -151,7 +155,7 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
                 decision=os.environ.get('MCTS_PREVIEW_DECISION', 'mean').strip().lower(),
                 phase=os.environ.get('MCTS_PREVIEW_PHASE', {6: '3d', 5: '3c', 4: '3b'}.get(ver, '3c')),
                 seed=int(self.agent.cfg.seed),
-                deadline_sec=float(os.environ.get('MCTS_PREVIEW_DEADLINE', '25') or 25),
+                deadline_sec=float(os.environ.get('MCTS_PREVIEW_DEADLINE', '90') or 90),  # confirmado con 90 s
             )
             beliefs = getattr(getattr(self, 'iap_battle', None), 'stat_beliefs', None)
             key = _preview_key(ours, foes, cfg)

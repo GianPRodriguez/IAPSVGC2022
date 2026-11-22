@@ -183,15 +183,18 @@ def test_search_with_s3_runs_and_reports_calc_telemetry():
     assert tel.root_max_n > 1 and j in root.edges
 
 
-def test_g_preview_defaults_to_greedy_and_nash_is_opt_in(monkeypatch):
-    """Spec v3.1: preview greedy por defecto (team_preview_nash nunca se entrenó)."""
+def test_g_preview_greedy_and_nash_are_opt_in(monkeypatch):
+    """Preview por búsqueda por defecto (22-11-2026); greedy y nash por MCTS_PREVIEW."""
     from showdown.battle_bots.greedy_solo.pokeenv_player import GreedyDamagePlayer
     from showdown.rl.family_preview_mixin import FamilyPreviewMixin
     from showdown.rl.mcts_puct.player import MCTSPuctPlayer
 
     monkeypatch.setattr(GreedyDamagePlayer, 'teampreview', lambda self, b: '/team greedy')
     monkeypatch.setattr(FamilyPreviewMixin, 'teampreview', lambda self, b: '/team family')
+    monkeypatch.setattr(MCTSPuctPlayer, '_search_preview_async', lambda self, b: '/team search')
     monkeypatch.delenv('MCTS_PREVIEW', raising=False)
+    assert MCTSPuctPlayer.teampreview(MCTSPuctPlayer.__new__(MCTSPuctPlayer), None) == '/team search'
+    monkeypatch.setenv('MCTS_PREVIEW', 'greedy')
     assert MCTSPuctPlayer.teampreview(object(), None) == '/team greedy'
     monkeypatch.setenv('MCTS_PREVIEW', 'nash')
     assert MCTSPuctPlayer.teampreview(object(), None) == '/team family'

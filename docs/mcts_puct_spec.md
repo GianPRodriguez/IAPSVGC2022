@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS+PUCT open-loop (solo turnos) |
-| **Versión** | **5.0** por defecto (confirmada); 6.0 probada sin efecto neto (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
-| **Estado** | v5.0 confirmada y por defecto (protocolo §5.4: > joint 65,5 %, expectimax 63,6 %, solo 66,8 %, y +4,5 pts sobre v4); v4.0 (3b) con `MCTS_PUCT_VERSION=4`, v3.1 (3a) con `=3`. Siguiente: preview por búsqueda (§4.6); v2 (S2) con `MCTS_PUCT_VERSION=2`, v1 con `=1`. Diagnóstico: [`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md) |
+| **Versión** | **5.1** por defecto (combate 5.0 confirmado + preview por búsqueda); 6.0 probada sin efecto neto (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
+| **Estado** | v5.0 confirmada y por defecto (protocolo §5.4: > joint 65,5 %, expectimax 63,6 %, solo 66,8 %, y +4,5 pts sobre v4); v4.0 (3b) con `MCTS_PUCT_VERSION=4`, v3.1 (3a) con `=3`. Preview por búsqueda (`mean`, §4.6) por defecto desde el 22-11-2026 (protocolo §5.5: +4,1 pts contra joint y contra expectimax; 69,0 % / 67,7 %); v2 (S2) con `MCTS_PUCT_VERSION=2`, v1 con `=1`. Diagnóstico: [`mcts_puct_diagnostico.md`](mcts_puct_diagnostico.md) |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Hiperparámetros de búsqueda (sobre todo \(N_{\rm sim}\)); barrido automatizado |
 | **CLI smoke** | `python -m showdown.rl.mcts_puct --seed 0 --sims 16 --smoke` |
@@ -246,7 +246,7 @@ está en 195 de 1800 sets (~65 % de los equipos) con Grassy Glide en 191, y Psyc
 
 ---
 
-### 4.6 Preview por búsqueda (candidato, `MCTS_PREVIEW=search`)
+### 4.6 Preview por búsqueda (por defecto desde el 22-11-2026; `MCTS_PREVIEW=greedy` para el anterior)
 
 Decisión del usuario (21-11-2026): como método de árbol, el preview también debe mirar los
 primeros turnos. Hallazgo previo: el preview greedy (tipado + BST) elige bien los 4 Pokémon
@@ -261,13 +261,15 @@ pero **no elige los leads** (su puntuación ignora el orden; salen en el orden d
 | Modelo | Una tabla S3 para los 6 × 6 Pokémon (~150 pedidos) y la fase de S3 del combate (3c en v5, 3d en v6) |
 | Simulación | 8 simulaciones × 3 turnos por par (softmax de la puntuación S3 en ambos lados, efectos al entrar de los leads); valor = material |
 | Decisión | `mean` (mejor promedio contra las 12 formaciones del rival, por defecto) o `maximin` (`MCTS_PREVIEW_DECISION`); desempate: el orden greedy |
-| Seguridad | `deadline_sec = 25`; si se agota o falla, orden greedy y anomalía `preview_search_fallback` |
+| Seguridad | `deadline_sec = 90` (`MCTS_PREVIEW_DEADLINE`; 25 hasta el 22-11-2026); si se agota o falla, orden greedy y anomalía `preview_search_fallback` |
 
 Coste medido en el laptop: ~12–15 s por preview (1728 simulaciones), ~24 s con el arranque de
 Node. Memo por proceso (21-11-2026, commit `118e998`): la búsqueda es determinista dado (equipos,
 config), así que las partidas 2 y 3 del BO3 reutilizan la formación de la 1; `MCTS_PREVIEW_DEADLINE`
-sube el límite bajo carga. Estado: en medición sobre v5, en pareado contra el preview greedy, con
-regla fijada de antemano (protocolo §4.4, diagnóstico §8).
+sube el límite bajo carga. La búsqueda corre en un hilo (`asyncio.to_thread`, commit `3269711`)
+para no bloquear el bucle de poke-env. **Confirmado el 22-11-2026** (protocolo §5.5, C9+C10, en
+pareado frente al greedy): +4,11 pts contra joint (p = 3·10⁻¹²) y +4,06 contra expectimax
+(p = 1·10⁻¹¹); 0 fallbacks con 90 s. En el servidor tarda ~7 s por preview.
 
 ---
 
@@ -290,7 +292,9 @@ Terminal = Candidate 1; hoja no terminal = material (§4).
 
 **No hay Team Preview en este MDP de combate** (MCTS no elige `/team` como
 acción de búsqueda). Desde v3.1 el preview es el **greedy** de tipado + BST
-(`GreedyDamagePlayer.teampreview`), el mismo de solo/joint/expectimax.
+(`GreedyDamagePlayer.teampreview`), el mismo de solo/joint/expectimax; desde el 22-11-2026 el
+default es el **preview por búsqueda** (§4.6), que usa el modelo S3 para elegir 4 y leads
+(`MCTS_PREVIEW=greedy` vuelve al greedy).
 `MCTS_PREVIEW=nash` usa [`team_preview_nash`](team_preview_nash_spec.md) vía
 `frozen_preview` (fallback `/team 1234` si falta checkpoint; hoy no hay uno entrenado).
 
@@ -422,8 +426,9 @@ Desarrollo: Candidate 1, fidelidad S2↔S1, latencia, profundidad, fallos, barri
 
 ## 10. Team Preview y Conclusión
 
-Pipeline G: **preview greedy (tipado + BST) → MCTS+PUCT combate** desde v3.1 (antes
-`team_preview_nash`, que nunca se entrenó). No comparten árbol ni parámetros. El \(N_{\rm sim}\) congelado del barrido es
+Pipeline G: **preview por búsqueda (S3, `mean`) → MCTS+PUCT combate** desde el 22-11-2026;
+preview greedy (tipado + BST) de v3.1 hasta entonces (antes `team_preview_nash`, que nunca se
+entrenó). No comparten árbol ni parámetros. El \(N_{\rm sim}\) congelado del barrido es
 parte del artefacto de evaluación.
 
 ---
@@ -475,6 +480,7 @@ y turno para reproducir RNG.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **5.1** (por defecto desde 2026-11-22) | 2026-11-22 | **Preview por búsqueda por defecto** (§4.6; combate idéntico a 5.0). Confirmado (protocolo §5.5, C9+C10): +4,11 pts sobre el greedy contra joint y +4,06 contra expectimax, Holm m = 2; G v5 + búsqueda 69,0 % contra joint y 67,7 % contra expectimax. `MCTS_PREVIEW` por defecto `search` (`greedy` / `nash` opcionales); `MCTS_PREVIEW_DEADLINE` por defecto 90 s. |
 | **6.0** (probada, sin efecto neto) | 2026-11-21 | Fase 3d (§4.5): terreno al entrar por habilidad y su duración, ajuste de daño por terreno respecto a la raíz, prioridad de Grassy Glide según el terreno actual, bloqueo de prioridad en Psychic Terrain, Expanding Force en área ×1,5, curación de Grassy, Misty / Electric contra estados. `MCTS_PUCT_VERSION=6`. Exploración (diagnóstico §6.6): 64,5 % frente a 64,2 % de v5, McNemar p = 0,73; sin efecto también en el subgrupo con terreno (+0,26 pts, p = 0,70). No se adopta; se confirma v5. |
 | **5.0** (por defecto desde 2026-11-21) | 2026-11-21 | Fase 3c (§4.4): velocidad dinámica, Tailwind, Trick Room, estados con inmunidades y residuales, boosts en el árbol (estado, secundarios, `selfBoosts`, Parting Shot) con la tabla ajustada por etapas / quemadura / clima, Intimidate y clima al entrar, clima por movimiento, pivotes. Uso en el meta: Tailwind 213, Parting Shot 129, Trick Room 96, Icy Wind 17, Snarl 20. `MCTS_PUCT_VERSION=5`. Exploración: 64,2 % contra joint, +4,0 pts sobre v4 (diagnóstico §6.5). **Confirmada el 21-11-2026** (protocolo §5.4, C7+C8, 34/34 semillas): > greedy_joint 65,52 % [64,68; 66,34], > expectimax 63,60 % [62,72; 64,44], > greedy_solo 66,80 % [65,96; 67,57], y frente a v4 McNemar +4,48 pts (1535 frente a 1080, p = 6·10⁻¹⁹); por la regla del pre-registro pasa a ser el valor por defecto. |
 | **4.0** (confirmada; por defecto hasta v5) | 2026-11-20 | Fase 3b (§4.3): Protect y variantes con \((1/3)^n\), Feint, Wide Guard, Fake Out / First Impression con primer turno y retroceso, Follow Me / Rage Powder, Helping Hand; puntuación de jugadas de apoyo por amenaza evitada. Uso en el meta (1800 sets): Protect 1182, Fake Out 459, Helping Hand 73, Wide Guard 57, Follow Me 35, Rage Powder 29. `MCTS_PUCT_VERSION=4`. **Confirmada el 21-11-2026** (protocolo §5.3, C5+C6, 34/34 semillas): > greedy_joint 62,61 % [61,80; 63,41], > expectimax 61,18 % [60,34; 62,11], > greedy_solo 64,30 % [63,47; 65,08], y frente a v3.1 McNemar +5,09 pts (1582 frente a 1066, p = 10⁻²³); por la regla del pre-registro pasa a ser el valor por defecto. |

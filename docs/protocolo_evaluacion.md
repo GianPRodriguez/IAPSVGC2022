@@ -437,6 +437,33 @@ pasa a ser el valor por defecto de G (`MCTS_PUCT_VERSION=5`). Frente a v4 confir
 v5 sube +2,9 pts contra joint, +2,4 contra expectimax y +2,5 contra solo, con un costo de
 ~25 % más de tiempo por decisión.
 
+### 5.5 Resultados de la confirmación del preview por búsqueda de G (22-11-2026, código congelado `3269711`)
+
+Pre-registro: §4.4 (diagnóstico §8). Cola `scripts/server/mcts_g_search_preview.sh` (commit de
+ejecución `cf73765`, `MCTS_PREVIEW_DEADLINE=90`; exploración 17:51–20:07, confirmación
+20:07–04:16). Variante confirmada: `mean` (selección de la exploración, diagnóstico §8.1).
+**0 errores de serie, 0 fallbacks del preview y 0 anomalías** en toda la cola. Bloques C9
+(10001–10017) y C10 (10101–10117), × 300 BO3, en pareado (mismas series, solo cambia el preview).
+
+| Hipótesis | Comparación | Discordantes (A mejor / B mejor) | Diferencia | p | p Holm | Por bloque (C9 / C10) | Veredicto |
+|---|---|---|---|---|---|---|---|
+| X1 búsqueda > greedy, contra greedy_joint | 10 112 series emparejadas | 1979 / 1563 | **+4,11 pts** | 3·10⁻¹² | 6·10⁻¹² | +4,76 (p = 2·10⁻⁸) / +3,47 (p = 2·10⁻⁵) | **Confirmada** |
+| X2 búsqueda > greedy, contra expectimax v1.9 | 10 104 series emparejadas | 2011 / 1601 | **+4,06 pts** | 1·10⁻¹¹ | 1·10⁻¹¹ | +4,33 (p = 3·10⁻⁷) / +3,78 (p = 7·10⁻⁶) | **Confirmada** (no solo no empeora: mejora) |
+
+| Brazo (C9+C10) | Victorias / series | Tasa | IC 95 % (cluster) | Semillas > 50 % |
+|---|---|---|---|---|
+| G v5 + búsqueda contra joint (X1s) | 7007 / 10 152 | **69,02 %** | [68,19; 69,89] | 34/34 |
+| G v5 + greedy contra joint (X1g) | 6600 / 10 166 | 64,92 % | [64,11; 65,75] | 34/34 |
+| G v5 + búsqueda contra expectimax (X2s) | 6873 / 10 152 | **67,70 %** | [66,86; 68,55] | 34/34 |
+| G v5 + greedy contra expectimax (X2g) | 6462 / 10 161 | 63,60 % | [62,75; 64,45] | 34/34 |
+
+**Consecuencia (regla del pre-registro):** X1 se confirma (Holm m = 2, mismo signo en ambos
+bloques) y X2 no es negativa (es significativamente positiva), así que el **preview por búsqueda
+(`mean`) pasa a ser el preview por defecto de G** (`MCTS_PREVIEW=search`; `MCTS_PREVIEW=greedy`
+vuelve al anterior). Frente a v5 con greedy (§5.4), G sube ~+4 pts contra los dos rivales; coste:
+~7 s por preview en el servidor (una vez por BO3 gracias al memo) y ~+60 % de tiempo por semilla
+en la cola (≈ 240 s frente a ≈ 150 s, con 28 procesos).
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -480,3 +507,4 @@ v5 sube +2,9 pts contra joint, +2,4 contra expectimax y +2,5 contra solo, con un
 | 2026-11-21 | Resultados de la confirmación de G v5 (§5.4): W1–W4 confirmadas con superioridad práctica (65,5 % contra joint, 63,6 % contra expectimax, 66,8 % contra solo) y +4,5 pts sobre v4 (McNemar p = 6·10⁻¹⁹); v5 pasa a ser el valor por defecto de G. |
 | 2026-11-21 | Preview por búsqueda para G v5 (§4.4), fijado antes de medir: exploración S0 greedy / S1 mean / S2 maximin en 9101–9117 con regla de selección; si pasa, X1 (contra joint) y X2 (contra expectimax) en pareado frente al greedy, bloques C9 (10001–10017) y C10 (10101–10117), Holm m = 2. |
 | 2026-11-21 | Exploración pre-registrada del motor de inferencia de SP en G v5 (diagnóstico §9): inference frente a oracle_spe y meta en 9101–9117; si meta no es peor (|Δ| ≤ 1 pt o mejor), el default de G pasa a meta. |
+| 2026-11-22 | Resultados de la confirmación del preview por búsqueda de G (§5.5): X1 +4,11 pts contra joint (p = 3·10⁻¹²) y X2 +4,06 pts contra expectimax (p = 1·10⁻¹¹), ambas confirmadas en C9 y C10 (Holm m = 2); G v5 + búsqueda: 69,0 % contra joint, 67,7 % contra expectimax. El preview por búsqueda (`mean`) pasa a ser el default de G. |

@@ -442,6 +442,30 @@ S0 reproduce exactamente la exploración de v5 (§6.5: 3276 victorias en BO3). *
 pre-registrada: `mean`** (mayor diferencia, p < 0,05, elegible). La confirmación X1 / X2 en C9 y
 C10 arrancó automáticamente a las 20:07.
 
+### 8.2 Confirmación (22-11-2026, código congelado `3269711`, terminada 04:16)
+
+C9 + C10 en pareado frente al preview greedy; 0 errores, 0 fallbacks, 0 anomalías. Detalle y
+veredicto en protocolo §5.5.
+
+| Hipótesis | Comparación | Discordantes (A mejor / B mejor) | Diferencia | p | p Holm | Por bloque (C9 / C10) | Veredicto |
+|---|---|---|---|---|---|---|---|
+| X1 búsqueda > greedy, contra greedy_joint | 10 112 series emparejadas | 1979 / 1563 | **+4,11 pts** | 3·10⁻¹² | 6·10⁻¹² | +4,76 (p = 2·10⁻⁸) / +3,47 (p = 2·10⁻⁵) | **Confirmada** |
+| X2 búsqueda > greedy, contra expectimax v1.9 | 10 104 series emparejadas | 2011 / 1601 | **+4,06 pts** | 1·10⁻¹¹ | 1·10⁻¹¹ | +4,33 (p = 3·10⁻⁷) / +3,78 (p = 7·10⁻⁶) | **Confirmada** (no solo no empeora: mejora) |
+
+| Brazo (C9+C10) | Victorias / series | Tasa | IC 95 % (cluster) | Semillas > 50 % |
+|---|---|---|---|---|
+| G v5 + búsqueda contra joint (X1s) | 7007 / 10 152 | **69,02 %** | [68,19; 69,89] | 34/34 |
+| G v5 + greedy contra joint (X1g) | 6600 / 10 166 | 64,92 % | [64,11; 65,75] | 34/34 |
+| G v5 + búsqueda contra expectimax (X2s) | 6873 / 10 152 | **67,70 %** | [66,86; 68,55] | 34/34 |
+| G v5 + greedy contra expectimax (X2g) | 6462 / 10 161 | 63,60 % | [62,75; 64,45] | 34/34 |
+
+Lectura: la ganancia de la exploración (+5,35) se reproduce en datos nuevos algo más baja (+4,1),
+como es esperable tras seleccionar la mejor variante, y es la misma contra los dos rivales, así que
+no es un ajuste a joint: elegir la pareja de leads mirando 3 turnos adelante vale ~4 pts de BO3 en
+G. **Decisión (regla pre-registrada): el preview por búsqueda `mean` es el default de G desde el
+22-11-2026** (`MCTS_PREVIEW_DEADLINE` por defecto 90 s, el valor confirmado). Medidas posteriores
+de G (motor de inferencia §9, objetos 3e, H) deben fijar el preview de forma explícita.
+
 ## 9. ¿Aporta el motor de inferencia de SP a G? (fijado el 21-11-2026 antes de medir)
 
 **Motivo.** G corre con `sp_info = inference` (clase validated por defecto), mientras joint / solo
