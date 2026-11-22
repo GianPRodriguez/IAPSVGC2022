@@ -426,6 +426,22 @@ preview por búsqueda pasa a ser el de G solo si X1 se confirma y X2 no es signi
 negativa (p Holm < 0,05 con diferencia < 0). Se reportan además las tasas binomiales de cada
 brazo y los fallbacks del preview. Cola: `scripts/server/mcts_g_search_preview.sh`.
 
+### 8.1 Resultado de la exploración (21-11-2026, código congelado `3269711`, terminada 20:07)
+
+G v5 contra greedy_joint, 9101–9117 × 300, mismas series. 0 errores de serie, **0 fallbacks** del
+preview y 0 anomalías en las tres configuraciones; búsqueda ~240 s por semilla frente a ~150 s
+del greedy.
+
+| Config | Victorias / series | Tasa | IC 95 % (cluster) | Frente a S0 (McNemar) |
+|---|---|---|---|---|
+| S0 preview greedy | 3269 / 5085 | 64,29 % | [63,11; 65,47] | — |
+| **S1 búsqueda `mean`** | 3528 / 5076 | **69,50 %** | [68,26; 70,74] | **+5,35 pts** (1000 frente a 729), p = 8·10⁻¹¹ |
+| S2 búsqueda `maximin` | 3493 / 5075 | 68,83 % | [67,61; 70,03] | +4,56 pts (1009 frente a 778), p = 5·10⁻⁸ |
+
+S0 reproduce exactamente la exploración de v5 (§6.5: 3276 victorias en BO3). **Selección
+pre-registrada: `mean`** (mayor diferencia, p < 0,05, elegible). La confirmación X1 / X2 en C9 y
+C10 arrancó automáticamente a las 20:07.
+
 ## 9. ¿Aporta el motor de inferencia de SP a G? (fijado el 21-11-2026 antes de medir)
 
 **Motivo.** G corre con `sp_info = inference` (clase validated por defecto), mientras joint / solo
