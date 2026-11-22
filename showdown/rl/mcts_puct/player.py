@@ -153,7 +153,7 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
             ver = int(self.agent.cfg.version)
             cfg = SearchPreviewConfig(
                 decision=os.environ.get('MCTS_PREVIEW_DECISION', 'mean').strip().lower(),
-                phase=os.environ.get('MCTS_PREVIEW_PHASE', {6: '3d', 5: '3c', 4: '3b'}.get(ver, '3c')),
+                phase=os.environ.get('MCTS_PREVIEW_PHASE', {7: '3e', 6: '3d', 5: '3c', 4: '3b'}.get(ver, '3c')),
                 seed=int(self.agent.cfg.seed),
                 deadline_sec=float(os.environ.get('MCTS_PREVIEW_DEADLINE', '90') or 90),  # confirmado con 90 s
             )
@@ -240,6 +240,14 @@ def make_validated_mcts_puct_player_class():
     from showdown.inference_sim.validated_greedy_player import ValidatedBattleMixin
 
     class ValidatedMCTSPuctPlayer(ValidatedBattleMixin, MCTSPuctPlayer):
-        """MCTS+PUCT + IAP mirror sync / OTS."""
+        """MCTS+PUCT + IAP mirror sync / OTS.
+
+        Sin inferencia de SP por defecto (22-11-2026, diagnóstico §9.1): en partidas de G la
+        inferencia estrechó 0 de 14 016 stats y ``meta`` da las mismas partidas (5070 series
+        emparejadas: +0,02 pts, p = 1) con 14 % menos de tiempo. Los 6 stats del rival al reparto
+        más frecuente del prior meta leave-one-out, como greedy_solo / greedy_joint.
+        """
+
+        default_sp_info_mode = 'meta'
 
     return ValidatedMCTSPuctPlayer

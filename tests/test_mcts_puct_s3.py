@@ -234,3 +234,9 @@ def test_nash_preview_fallback_is_recorded(monkeypatch, tmp_path):
     monkeypatch.setattr(FamilyPreviewMixin, 'teampreview', lambda self, b: '/team 1234')
     assert MCTSPuctPlayer.teampreview(Fake(), None) == '/team 1234'
     assert stats.read_text(encoding='utf-8').startswith('preview_fallback')
+
+
+def test_validated_g_defaults_to_meta_sp_info():
+    """Diagnóstico §9.1 (22-11-2026): la inferencia no aporta a G → meta por defecto."""
+    from showdown.rl.mcts_puct.player import make_validated_mcts_puct_player_class
+    assert make_validated_mcts_puct_player_class().default_sp_info_mode == 'meta'

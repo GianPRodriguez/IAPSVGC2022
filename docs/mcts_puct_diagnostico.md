@@ -491,3 +491,26 @@ apagada). Si I2 es significativamente peor, se mantiene la inferencia. I1 frente
 valor máximo de conocer la Velocidad; si es significativo, queda como motivo para mejorar la
 inferencia de Velocidad (no cambia el default). Se reporta también el tiempo por semilla y la
 reproducibilidad I0 frente a S0 (misma config en la cola del preview).
+
+### 9.1 Resultado (22-11-2026, código congelado `3269711`, commit de ejecución `a4cc9b3`, terminada 06:24)
+
+G v5, preview greedy, contra greedy_joint, 9101–9117 × 300. 0 errores de serie y 0 anomalías.
+
+**Conteo** (56 series, `PS_SP_INFO_DEBUG=1`): 386 partidas, 14 016 stats del rival, 2707
+observaciones de la inferencia → **0 stats estrechados, 0 resueltos**. Igual que con greedy
+(14-11-2026): en Reg M-C la inferencia nunca reduce el rango que ya da la hoja abierta.
+
+| Config | Victorias / series | Tasa | IC 95 % (cluster) | s / semilla | Frente a I0 (McNemar) |
+|---|---|---|---|---|---|
+| I0 inference (default hasta hoy) | 3267 / 5083 | 64,27 % | [63,12; 65,47] | 151 | — |
+| I1 oracle_spe (Velocidad real) | 3269 / 5081 | 64,34 % | [63,09; 65,49] | 148 | +0,08 pts (120 frente a 116), p = 0,85 |
+| **I2 meta** (sin inferencia) | 3266 / 5082 | 64,27 % | [63,08; 65,45] | **130** | **+0,02 pts (2 frente a 1), p = 1** |
+
+Reproducibilidad: I0 frente a S0 de la cola del preview (misma config, otro día) +0,02 pts (1
+frente a 0). I2 e I0 dan prácticamente las mismas partidas (3 series distintas de 5070, ruido de
+concurrencia): sin estrechar nada, `inference` y `meta` le pasan a G la misma información. Conocer
+la Velocidad exacta del rival (I1) tampoco aporta: el prior meta ya la acierta casi siempre.
+
+**Decisión (regla pre-registrada): I2 no es peor y |Δ| = 0,02 ≤ 1 pt → el default de G pasa a
+`meta` (inferencia apagada)**, con −14 % de tiempo por semilla. `--sp-info-a inference` la
+reactiva. No hace falta mejorar la inferencia de Velocidad (I1 no es significativo).
