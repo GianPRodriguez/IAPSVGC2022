@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS–PUCT/Nash simultáneo (solo turnos) |
-| **Versión** | **2.0** (H 2.0: S3 de G open-loop + preview por búsqueda + SP meta, §4b; candidata) |
+| **Versión** | **2.0** (H 2.0: S3 de G open-loop + preview por búsqueda + SP meta, §4b; confirmada, H de la Conclusión) |
 | **Estado** | FROZEN; `showdown/rl/mcts_puct_nash/` |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Presupuesto \(N_{\rm sim}\), Top-K, FP; barrido automatizado de sims |
@@ -115,7 +115,7 @@ Costo = `step_sim` **más** solves FP. Comparar solo \(N_{\rm sim}\) con open-lo
 
 ---
 
-## 4b. Versión 2.0 (agente H 2.0, default del player desde el 22-11-2026, candidata)
+## 4b. Versión 2.0 (agente H 2.0, default del player desde el 22-11-2026, confirmada el 23-11-2026)
 
 `MCTS_NASH_VERSION=2` (default del player; `1` = SM-MCTS B1 de §4). Código:
 `showdown/rl/mcts_puct_nash/openloop_nash.py`. Se conserva lo que define a H (cada nodo es un juego
@@ -140,6 +140,14 @@ simultáneo de suma cero y sube el **valor de Nash** \(v^*(\hat A)\), no la medi
 
 Medición pre-registrada: protocolo §4.6 (cola `scripts/server/mcts_h_v2.sh`). Tests:
 `tests/test_mcts_puct_nash_v2.py` (7).
+
+**Resultado (protocolo §5.7, 23-11-2026):** confirmada contra los tres baselines en C13/C14 (34/34
+semillas cada una): 61,57 % contra greedy_joint, 61,73 % contra expectimax v1.9, 63,33 % contra
+greedy_solo. Frente a G 5.2 (mismas series, contra joint): **−7,25 pts** (1087 frente a 1815, p Holm =
+6·10⁻⁴²; C13 −7,37, C14 −7,13), con 1,7× su tiempo (378 frente a 219 s por semilla). H 1.7 en la
+exploración: 10,9 %. H 2.0 es el H de la Conclusión; con este presupuesto el backup de Nash no mejora al
+open-loop con media de G. Causas posibles, sin probar: matriz de 96 celdas dispersa para 200 sims, y el
+valor de Nash supone un rival del peor caso frente a baselines explotables.
 
 ---
 
@@ -263,7 +271,8 @@ Protocolo: [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 ## 10. Team Preview y Conclusión
 
-Pipeline familiar: **`team_preview_nash` → MCTS–PUCT/Nash combate**
+**Desde v2.0 (Conclusión): preview por búsqueda de G → H 2.0 combate.** Pipeline familiar anterior
+(`MCTS_PREVIEW=nash`): **`team_preview_nash` → MCTS–PUCT/Nash combate**
 (cableado en train live e inferencia; no solo en el registro de Conclusión).
 Mismo apellido “Nash”, problemas distintos (formación vs matrices locales).
 
@@ -309,7 +318,7 @@ y turno.
 
 | Versión | Fecha | Notas |
 |---|---|---|
-| **2.0** (candidata) | 2026-11-22 | H 2.0 (§4b): SM-MCTS open-loop con S3 fase 3c de G, Top-K podado por S3, prior \(p_i q_j\), selección desacoplada contra la mezcla de Nash, FPU en \(\hat A\), hoja de G, 200 sims; preview por búsqueda de G; SP por prior meta (sin inferencia); anomalías en `MCTS_STATS_FILE`. v1.7 sigue con `MCTS_NASH_VERSION=1`. Medición pre-registrada: protocolo §4.6. |
+| **2.0** (confirmada 23-11: 61,6 % joint, 61,7 % expectimax, 63,3 % solo; −7,25 pts frente a G 5.2, protocolo §5.7) | 2026-11-22 | H 2.0 (§4b): SM-MCTS open-loop con S3 fase 3c de G, Top-K podado por S3, prior \(p_i q_j\), selección desacoplada contra la mezcla de Nash, FPU en \(\hat A\), hoja de G, 200 sims; preview por búsqueda de G; SP por prior meta (sin inferencia); anomalías en `MCTS_STATS_FILE`. v1.7 sigue con `MCTS_NASH_VERSION=1`. Medición pre-registrada: protocolo §4.6. |
 | **1.7** | 2026-11-15 | Objetivo aliado del slot 0 corregido en el adaptador de órdenes (−2; antes −1 = sí mismo, rechazado por Showdown). Sin cambios de obs. |
 | **1.6** | 2026-11-14 | ActionSpec v2 (40 ids por slot, mega como flag de cada movimiento; joint 1600) y máscaras desde `valid_orders`. |
 | **1.5** | 2026-10-11 | Inferencia bajo Preview Nash congelado (`frozen_preview`). |

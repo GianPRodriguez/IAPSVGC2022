@@ -526,6 +526,30 @@ real de los objetos dinámicos sea menor que 1 pt, por debajo de lo que este dis
 v7 queda disponible con `MCTS_PUCT_VERSION=7`. Z1–Z3 confirman de paso que G con objetos sigue
 por encima de los tres baselines.
 
+### 5.7 Resultados de la confirmación del agente H 2.0 (23-11-2026, código congelado `c70f0f2`)
+
+Pre-registro §4.6; exploración: H 2.0 62,06 % contra joint, +51,7 pts sobre H 1.7 (p = 3·10⁻¹⁵⁸),
+pasó a confirmación. C13 = 10401–10417 y C14 = 10501–10517, × 300 BO3, terminada el 23-11 a las 10:02.
+
+| Hipótesis | Victorias / series | Tasa / diferencia | IC 95 % (cluster) | C13 | C14 | p Holm | Resultado |
+|---|---|---|---|---|---|---|---|
+| W1 H 2.0 > greedy_joint | 6254 / 10 158 | 61,57 % | [60,71; 62,51] | 61,25 % | 61,88 % | 6·10⁻¹²¹ | confirmada (34/34 semillas) |
+| W2 H 2.0 > expectimax v1.9 | 6274 / 10 164 | 61,73 % | [60,79; 62,60] | 61,07 % | 62,38 % | 4·10⁻¹²⁴ | confirmada (34/34) |
+| W3 H 2.0 > greedy_solo | 6431 / 10 155 | 63,33 % | [62,44; 64,20] | 63,17 % | 63,49 % | 4·10⁻¹⁶⁰ | confirmada (34/34) |
+| **W4 H 2.0 frente a G 5.2** (McNemar bilateral, contra joint) | 1087 frente a 1815 (10 038 emparejadas) | **−7,25 pts** | — | −7,37 (p = 2·10⁻²²) | −7,13 (p = 5·10⁻²¹) | 6·10⁻⁴² | **rechaza H0: G 5.2 es mejor** |
+
+Referencia: G 5.2 contra joint (Gj) 6978 / 10 124 = 68,93 % [68,09; 69,81]. Tiempo por semilla:
+H 2.0 378 s (joint), 421 s (expectimax), 368 s (solo); G 5.2 219 s contra joint (H cuesta 1,7×).
+0 errores de serie, 0 fallbacks del preview y 0 anomalías en las 136 corridas.
+
+**Decisión (regla pre-registrada): W1–W3 se confirman → H 2.0 es el H de la Conclusión.** W4 responde
+la pregunta de la tesis en contra del backup de Nash: con el mismo modelo S3, el mismo preview, el mismo
+SP y las mismas 200 sims, el open-loop con media de G gana 7,25 pts más contra joint que el SM-MCTS con
+valor de Nash, de forma igual en los dos bloques y como en la exploración (−7,18). Hipótesis no probadas
+(spec de H §4b): la matriz de 12 × 8 celdas es demasiado dispersa para 200 sims, y el valor de Nash
+supone un rival del peor caso mientras que los baselines son explotables. Una H 2.1 necesitaría un
+pre-registro nuevo en semillas 10601+.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -577,3 +601,4 @@ por encima de los tres baselines.
 | 2026-11-22 | Agente H 2.0 pre-registrado (§4.6): exploración H 2.0 frente a H 1.7 en 9101–9117; si mejora, confirmación W1–W3 contra baselines y W4 frente a G 5.2 (bilateral) en C13 (10401–10417) y C14 (10501–10517), Holm m = 4. H pasa a SP meta. |
 | 2026-11-22 | Desviación en §4.6: N1 (H 1.7) cortado en 4 semillas (10,8 % frente a 62,1 % de H 2.0, ~860 s/semilla); la regla de paso se evalúa en 9101–9104 emparejadas. |
 | 2026-11-22 | Exploración de H 2.0 (§4.6): N2 H 2.0 62,06 % contra joint (17/17 semillas > 50 %, 376 s/semilla, 0 errores, 0 anomalías); N1 H 1.7 10,91 % (4 semillas, 5431 fallbacks del adaptador); N2 frente a N1 +51,7 pts (p = 3·10⁻¹⁵⁸) → pasa a confirmación. Descriptivo: N2 frente a G 5.2 −7,18 pts (532 frente a 893, p = 9·10⁻²²). |
+| 2026-11-23 | Resultado de la confirmación de H 2.0 (§5.7): W1–W3 confirmadas (61,6 % contra joint, 61,7 % contra expectimax, 63,3 % contra solo, 34/34 semillas cada una); W4 H 2.0 frente a G 5.2 −7,25 pts (p Holm = 6·10⁻⁴², C13 −7,37, C14 −7,13): G 5.2 es mejor. H 2.0 es el H de la Conclusión. |
