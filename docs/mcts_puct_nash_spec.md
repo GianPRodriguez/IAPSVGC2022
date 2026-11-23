@@ -158,18 +158,18 @@ Descriptivo, sin hipótesis.
 
 | Métrica (raíz) | Mediana (p25–p75) |
 |---|---|
-| Matriz \(R 	imes C\) | 12 × 8 |
+| Matriz \(R \times C\) | 12 × 8 |
 | Celdas sin visitar (\(\hat A\) desde el FPU) | **42 %** (21–53 %) |
 | Visitas por celda visitada | **2** (1–3) |
 | \(\max \sigma^*\) / soporte > 5 % | 0,57 (0,38–1,00) / 3 filas |
-| Distancia TV entre \(	au^*\) y el prior del rival \(q\) | 0,63 (0,35–0,82) |
+| Distancia TV entre \(\tau^*\) y el prior del rival \(q\) | 0,63 (0,35–0,82) |
 
 | Regla sobre la misma \(\hat A\) | Coincide con H (argmax \(\sigma^*\)) | Coincide con G 5.2 |
 |---|---|---|
 | argmax \(\sigma^*\) (H 2.0) | — | **45,9 %** (turnos 1–2: 41,9 %) |
 | Fila más visitada | 60,1 % | **60,2 %** |
 | Mejor respuesta a \(q\) | 53,5 % | 40,2 % |
-| Mezcla \(	frac12(\hat A	au^* + \hat A q)\) | 57,8 % | 40,5 % |
+| Mezcla \(\tfrac12(\hat A\tau^* + \hat A q)\) | 57,8 % | 40,5 % |
 
 El joint de G está entre las filas de H en el 96,4 % de los estados, pero H le da \(\sigma^* = 0\) en el
 22,9 % (mediana 0,11) aunque recibe el 28 % de las visitas. Tiempo por decisión: H 1,81 s, G 0,61 s.
