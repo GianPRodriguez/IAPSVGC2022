@@ -205,6 +205,20 @@ Código: `NashOLConfig.decision`, `.solver`, `.t_rm_internal`, `.t_rm_root` y `k
 protocolo §4.7 (cola `scripts/server/mcts_h_v21.sh`). Si un brazo se confirma, pasa a ser el default del
 player como H 2.1.
 
+**Exploración (23-11-2026, 9101–9117 × 300 contra greedy_joint, mismas series, 0 errores y 0 anomalías):**
+
+| Brazo | Tasa contra joint | McNemar frente a H0 | p | s / semilla |
+|---|---|---|---|---|
+| H0 = H 2.0 (N2) | 62,06 % | — | — | 376 |
+| H1 matriz chica | 63,64 % | +1,52 pts (762 frente a 685) | 0,046 | 384 |
+| H2 decisión por visitas | 64,49 % | +2,43 pts (746 frente a 623) | 0,0010 | 372 |
+| **H3 = H1 + H2** | **65,30 %** | **+3,24 pts** (795 frente a 631) | 1,6·10⁻⁵ | 387 |
+| H4 RM+ (350 sims) | 61,52 % | −0,55 pts (746 frente a 774) | 0,49 | 298 |
+
+Por la regla pre-registrada gana **H3**, que pasa a confirmación en C15/C16. Las dos correcciones del
+paso 0 suman casi linealmente (+1,5 y +2,4 → +3,2). RM+ no mejora: es un 21 % más rápido pero no gana
+más; la ganancia viene de muestrear menos celdas y de decidir por visitas, no del resolvedor.
+
 ---
 
 ## 5. Observación, acción y máscaras
