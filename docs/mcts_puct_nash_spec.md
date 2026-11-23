@@ -149,6 +149,40 @@ exploración: 10,9 %. H 2.0 es el H de la Conclusión; con este presupuesto el b
 open-loop con media de G. Causas posibles, sin probar: matriz de 96 celdas dispersa para 200 sims, y el
 valor de Nash supone un rival del peor caso frente a baselines explotables.
 
+**Paso 0 de H 2.1: diagnóstico de H 2.0 (23-11-2026, commit `47c0331`, cola
+`scripts/server/mcts_h_diag.sh`).** H 2.0 contra greedy_joint en 9101–9102 × 300 con
+`MCTS_NASH_DIAG_FILE` (`showdown/rl/mcts_puct_nash/diag.py`): 7628 decisiones no triviales; en cada una
+se registra la matriz de la raíz y el joint que elige G 5.2 en el mismo estado (misma raíz, creencias y
+semilla). El registro no cambia la partida: 189 y 187 victorias, idénticas a N2 en esas semillas.
+Descriptivo, sin hipótesis.
+
+| Métrica (raíz) | Mediana (p25–p75) |
+|---|---|
+| Matriz \(R 	imes C\) | 12 × 8 |
+| Celdas sin visitar (\(\hat A\) desde el FPU) | **42 %** (21–53 %) |
+| Visitas por celda visitada | **2** (1–3) |
+| \(\max \sigma^*\) / soporte > 5 % | 0,57 (0,38–1,00) / 3 filas |
+| Distancia TV entre \(	au^*\) y el prior del rival \(q\) | 0,63 (0,35–0,82) |
+
+| Regla sobre la misma \(\hat A\) | Coincide con H (argmax \(\sigma^*\)) | Coincide con G 5.2 |
+|---|---|---|
+| argmax \(\sigma^*\) (H 2.0) | — | **45,9 %** (turnos 1–2: 41,9 %) |
+| Fila más visitada | 60,1 % | **60,2 %** |
+| Mejor respuesta a \(q\) | 53,5 % | 40,2 % |
+| Mezcla \(	frac12(\hat A	au^* + \hat A q)\) | 57,8 % | 40,5 % |
+
+El joint de G está entre las filas de H en el 96,4 % de los estados, pero H le da \(\sigma^* = 0\) en el
+22,9 % (mediana 0,11) aunque recibe el 28 % de las visitas. Tiempo por decisión: H 1,81 s, G 0,61 s.
+
+Lectura: (1) la matriz está muy submuestreada (2 visitas por celda, 42 % de huecos), así que \(\sigma^*\)
+se calcula sobre una \(\hat A\) ruidosa; (2) la regla de decisión final es la mayor divergencia: la
+fila más visitada de H coincide con G 14 pts más que argmax \(\sigma^*\); (3) responder al prior del
+rival \(q\), solo o mezclado, aleja a H de G, así que la causa "rival del peor caso" no parece la
+principal. Candidatos para H 2.1, en este orden: matriz más chica o RM+ (más visitas por celda en el
+mismo tiempo) y decisión por visitas (o \(\sigma^*\) solo con la matriz bien muestreada); la mezcla con
+\(q\) queda como brazo secundario. Que H coincida con G no implica que gane más; lo decide una medición
+pre-registrada en semillas 10601+.
+
 ---
 
 ## 5. Observación, acción y máscaras
