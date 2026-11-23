@@ -50,6 +50,9 @@ class MCTSPuctNashAgent:
             joint, root, tel = search_nash_openloop(snap, cfg, root_joints=root_joints,
                                                     stat_beliefs=stat_beliefs)
             self.last_sigma = root.sigma
+            from showdown.rl.mcts_puct_nash import diag
+            if diag.enabled():  # paso 0 de H 2.1; apagado por defecto, no cambia la decisión
+                diag.record(snap, root_joints, stat_beliefs, joint, root, tel, cfg, int(self.cfg.seed))
         else:
             sc = SearchConfig(
                 n_sims=int(self.cfg.n_sims),
