@@ -30,6 +30,12 @@ class MCTSPuctNashConfig:
     t_fp_root: int = 500
     version: int = 1   # el player usa 2 por defecto (MCTS_NASH_VERSION); 1 aquí: smoke con backend mock sin calculadora
     model: str = 's3c'
+    # H 2.1 (protocolo §4.7): los defaults reproducen H 2.0.
+    k_self_root: int = 12
+    k_self: int = 8
+    k_opp: int = 8
+    decision: str = 'sigma'
+    solver: str = 'fp'
 
 
 class MCTSPuctNashAgent:
@@ -46,7 +52,10 @@ class MCTSPuctNashAgent:
             from showdown.rl.mcts_puct_nash.openloop_nash import NashOLConfig, search_nash_openloop
             cfg = NashOLConfig(n_sims=int(self.cfg.n_sims), c_puct=float(self.cfg.c_puct),
                                max_turns=int(self.cfg.max_turns), seed=int(self.cfg.seed),
-                               model=str(self.cfg.model), t_fp_root=int(self.cfg.t_fp_root))
+                               model=str(self.cfg.model), t_fp_root=int(self.cfg.t_fp_root),
+                               k_self_root=int(self.cfg.k_self_root), k_self=int(self.cfg.k_self),
+                               k_opp=int(self.cfg.k_opp), decision=str(self.cfg.decision),
+                               solver=str(self.cfg.solver))
             joint, root, tel = search_nash_openloop(snap, cfg, root_joints=root_joints,
                                                     stat_beliefs=stat_beliefs)
             self.last_sigma = root.sigma

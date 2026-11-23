@@ -1,7 +1,7 @@
 """Fictitious Play + Nash value (docs/mcts_puct_nash_spec.md)."""
 from __future__ import annotations
 
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 
@@ -68,6 +68,58 @@ def fictitious_play(
     tau_avg = tau_avg / tau_avg.sum()
     v = float(sigma_avg @ A @ tau_avg)
     return sigma_avg, tau_avg, v
+
+
+class RMPlusState:
+    """Regrets acumulados y sumas de estrategia (ponderadas por iteración) de un nodo."""
+
+    __slots__ = ('Rr', 'Rc', 'Sr', 'Sc', 't')
+
+    def __init__(self, n: int, m: int):
+        self.Rr = np.zeros(n)
+        self.Rc = np.zeros(m)
+        self.Sr = np.zeros(n)
+        self.Sc = np.zeros(m)
+        self.t = 0
+
+
+def _rm_strategy(R: np.ndarray) -> np.ndarray:
+    s = float(R.sum())
+    return R / s if s > 0 else np.full(R.shape[0], 1.0 / R.shape[0])
+
+
+def regret_matching_plus(
+    A: np.ndarray,
+    *,
+    T: int = 10,
+    state: Optional[RMPlusState] = None,
+) -> Tuple[np.ndarray, np.ndarray, float, RMPlusState]:
+    r"""Regret matching+ de suma cero (fila maximiza) con arranque en caliente (H 2.1, brazo RM+).
+
+    ``state`` conserva regrets y promedios entre llamadas: en un nodo de SM-MCTS la matriz cambia poco
+    entre simulaciones, así que bastan pocas iteraciones por backup (``T``) en lugar de un FP completo.
+    Promedio lineal (peso \(t\)), como CFR+. Devuelve \((\bar\sigma, \bar\tau, \bar\sigma^\top A \bar\tau, state)\).
+    """
+    A = np.asarray(A, dtype=np.float64)
+    n, m = int(A.shape[0]), int(A.shape[1])
+    if n == 0 or m == 0:
+        return np.zeros(n), np.zeros(m), 0.0, state or RMPlusState(n, m)
+    if state is None or state.Rr.shape[0] != n or state.Rc.shape[0] != m:
+        state = RMPlusState(n, m)
+    for _ in range(max(1, int(T))):
+        sig = _rm_strategy(state.Rr)
+        tau = _rm_strategy(state.Rc)
+        u_row = A @ tau
+        u_col = sig @ A
+        ev = float(sig @ u_row)
+        state.Rr = np.maximum(state.Rr + u_row - ev, 0.0)
+        state.Rc = np.maximum(state.Rc + ev - u_col, 0.0)
+        state.t += 1
+        state.Sr += state.t * sig
+        state.Sc += state.t * tau
+    sigma = state.Sr / state.Sr.sum()
+    tau = state.Sc / state.Sc.sum()
+    return sigma, tau, float(sigma @ A @ tau), state
 
 
 def nash_value(A: np.ndarray, *, T: int = 200) -> float:

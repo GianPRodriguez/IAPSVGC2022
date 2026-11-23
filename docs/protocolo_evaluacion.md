@@ -354,6 +354,26 @@ juega contra G). Cola `scripts/server/mcts_h_v2.sh`; código congelado en el com
   la búsqueda v1) frente a N2 (H 2.0) 62,1 % en las 17. La regla de paso se aplica sobre las series
   emparejadas de esas 4 semillas (9101–9104). No afecta a la confirmación (W1–W4), que se mide completa.
 
+### 4.7 Agente H 2.1, fijado el 23-11-2026 antes de medir
+
+Candidatos (spec de H §4c, tras el diagnóstico del paso 0 en §4b): H1 matriz chica (8/6/4), H2 decisión
+por la fila más visitada, H3 = H1 + H2, H4 RM+ con arranque en caliente y 350 sims (≈ tiempo de H 2.0).
+Base: **H 2.0** (confirmado en §5.7). Solo baselines; G 5.2 como referencia descriptiva contra el mismo
+rival. Cola `scripts/server/mcts_h_v21.sh`; código congelado en el commit del pre-registro.
+
+- **Exploración** (9101–9117 × 300, contra greedy_joint, mismas series): H0 = H 2.0 se toma de N2 de
+  §4.6 (mismo código por defecto, verificado con test de regresión); H1–H4 se miden. **Regla:** entre los
+  brazos con 0 errores de serie, fallbacks del preview ≤ 5 % y McNemar frente a H0 con diferencia > 0 y
+  p < 0,05, gana el de mayor diferencia (empate: menor tiempo por semilla). Si ninguno pasa, H se queda en
+  2.0 y no hay confirmación. Exploratorio: sin corrección por los cuatro brazos; la confirmación lo cubre.
+- **Confirmación** (bloques nuevos C15 = 10601–10617 y C16 = 10701–10717, × 300 BO3) del brazo ganador
+  (H 2.1): V1 H 2.1 > greedy_joint, V2 H 2.1 > expectimax v1.9, V3 H 2.1 > greedy_solo (binomial, IC
+  bootstrap por semilla); V4 H 2.1 > H 2.0 (McNemar, contra joint, mismas series; H 2.0 se vuelve a medir
+  en C15/C16; exige diferencia > 0). Holm m = 4. Descriptivo: H 2.1 frente a G 5.2 (McNemar, contra joint).
+- **Consecuencia:** si V1–V4 se confirman, H 2.1 pasa a ser el default del player y el H de la
+  Conclusión. Si V4 no se confirma, H se queda en 2.0 (como G en §5.6). Se reportan por bloque, el tiempo
+  por semilla y las anomalías.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -602,3 +622,4 @@ pre-registro nuevo en semillas 10601+.
 | 2026-11-22 | Desviación en §4.6: N1 (H 1.7) cortado en 4 semillas (10,8 % frente a 62,1 % de H 2.0, ~860 s/semilla); la regla de paso se evalúa en 9101–9104 emparejadas. |
 | 2026-11-22 | Exploración de H 2.0 (§4.6): N2 H 2.0 62,06 % contra joint (17/17 semillas > 50 %, 376 s/semilla, 0 errores, 0 anomalías); N1 H 1.7 10,91 % (4 semillas, 5431 fallbacks del adaptador); N2 frente a N1 +51,7 pts (p = 3·10⁻¹⁵⁸) → pasa a confirmación. Descriptivo: N2 frente a G 5.2 −7,18 pts (532 frente a 893, p = 9·10⁻²²). |
 | 2026-11-23 | Resultado de la confirmación de H 2.0 (§5.7): W1–W3 confirmadas (61,6 % contra joint, 61,7 % contra expectimax, 63,3 % contra solo, 34/34 semillas cada una); W4 H 2.0 frente a G 5.2 −7,25 pts (p Holm = 6·10⁻⁴², C13 −7,37, C14 −7,13): G 5.2 es mejor. H 2.0 es el H de la Conclusión. |
+| 2026-11-23 | Agente H 2.1 pre-registrado (§4.7): exploración de H1 matriz chica, H2 decisión por visitas, H3 ambas y H4 RM+ (350 sims) frente a H 2.0 (N2) en 9101–9117; el mejor que pase McNemar p < 0,05 va a confirmación V1–V4 en C15 (10601–10617) y C16 (10701–10717), Holm m = 4. |

@@ -43,7 +43,7 @@ from showdown.rl.mcts_puct.openloop import (
     prepare_root,
 )
 from showdown.rl.mcts_puct.search import make_sim_rng
-from showdown.rl.mcts_puct_nash.nash import fictitious_play
+from showdown.rl.mcts_puct_nash.nash import RMPlusState, fictitious_play, regret_matching_plus
 from showdown.rl.snapshot import BattleSnapshot
 
 _PASS2 = encode_joint_action(PASS_ID, PASS_ID)
@@ -68,6 +68,11 @@ class NashOLConfig:
     prefer_mega: bool = True
     t_fp_internal: int = 100
     t_fp_root: int = 500
+    # H 2.1 (paso 0, spec §4b–§4c): los defaults reproducen H 2.0 exactamente.
+    decision: str = 'sigma'     # 'sigma' = argmax σ* (H 2.0); 'visits' = fila más visitada
+    solver: str = 'fp'          # 'fp' = Fictitious Play por backup (H 2.0); 'rm+' = regret matching+ en caliente
+    t_rm_internal: int = 10     # iteraciones de RM+ por backup (con arranque en caliente)
+    t_rm_root: int = 200        # iteraciones finales de RM+ en la raíz
 
     def openloop(self) -> OpenLoopConfig:
         """Config de G para el modelo de transición y los rollouts compartidos."""
@@ -113,6 +118,7 @@ class NashNode:
     sigma: np.ndarray = field(default_factory=lambda: np.zeros(0))
     tau: np.ndarray = field(default_factory=lambda: np.zeros(0))
     children: Dict[Tuple[int, int], 'NashNode'] = field(default_factory=dict)
+    rm: Optional[RMPlusState] = None
     N: int = 0
     W_sum: float = 0.0
     expanded: bool = False
@@ -172,13 +178,20 @@ def _select(node: NashNode, s: BattleSnapshot, c: float, *, check_rows: bool) ->
     return i, j
 
 
-def _backup(path: List[Tuple[NashNode, int, int]], z: float, t_fp: int) -> None:
+def _solve(node: NashNode, t: int, solver: str) -> Tuple[np.ndarray, np.ndarray, float]:
+    if solver == 'rm+':
+        sigma, tau, v, node.rm = regret_matching_plus(node.payoff(), T=t, state=node.rm)
+        return sigma, tau, v
+    return fictitious_play(node.payoff(), T=t)
+
+
+def _backup(path: List[Tuple[NashNode, int, int]], z: float, t_fp: int, solver: str = 'fp') -> None:
     for node, i, j in reversed(path):
         node.n[i, j] += 1
         node.W[i, j] += z
         node.N += 1
         node.W_sum += z
-        sigma, tau, v = fictitious_play(node.payoff(), T=t_fp)
+        sigma, tau, v = _solve(node, t_fp, solver)
         node.sigma, node.tau = sigma, tau
         z = float(v)
 
@@ -210,7 +223,8 @@ def _simulate(root: NashNode, s0: BattleSnapshot, sim_id: int, ctx: _Ctx, cfg: N
     except Exception:
         tel.failures += 1
         z = 0.0
-    _backup(path, z, cfg.t_fp_internal)
+    rm = str(cfg.solver) == 'rm+'
+    _backup(path, z, int(cfg.t_rm_internal if rm else cfg.t_fp_internal), 'rm+' if rm else 'fp')
     tel.sims += 1
     tel.avg_depth += (depth - tel.avg_depth) / tel.sims
 
@@ -246,11 +260,17 @@ def search_nash_openloop(
         return int(root.I[0]) if root.I else _PASS2, root, tel
     for k in range(int(cfg.n_sims)):
         _simulate(root, s0, k, ctx, cfg, tel)
-    sigma, _tau, v = fictitious_play(root.payoff(), T=int(cfg.t_fp_root))
+    if str(cfg.solver) == 'rm+':
+        sigma, _tau, v = _solve(root, int(cfg.t_rm_root), 'rm+')
+    else:
+        sigma, _tau, v = fictitious_play(root.payoff(), T=int(cfg.t_fp_root))
     visits = root.n.sum(axis=1)
     smax = float(np.max(sigma))
-    cands = [i for i in range(len(root.I)) if sigma[i] >= smax - 1e-9]
-    best = max(cands, key=lambda i: (visits[i], -root.I[i]))  # desempate: más visitas, menor id
+    if str(cfg.decision) == 'visits':  # H 2.1: fila más visitada; desempate por σ*, menor id
+        best = max(range(len(root.I)), key=lambda i: (visits[i], sigma[i], -root.I[i]))
+    else:
+        cands = [i for i in range(len(root.I)) if sigma[i] >= smax - 1e-9]
+        best = max(cands, key=lambda i: (visits[i], -root.I[i]))  # desempate: más visitas, menor id
     tel.root_value = float(v)
     tel.root_sigma_max = smax
     tel.root_cells_visited = int((root.n > 0).sum())

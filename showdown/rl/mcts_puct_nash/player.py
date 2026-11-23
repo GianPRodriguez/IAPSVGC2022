@@ -18,6 +18,27 @@ from showdown.rl.pe_adapter import joint_order_from_spec_actions, snapshot_from_
 _LOG = logging.getLogger(__name__)
 
 
+def _h21_knobs() -> dict:
+    """Variantes de H 2.1 por entorno: ``MCTS_NASH_MATRIX`` (raíz,interior,rival),
+    ``MCTS_NASH_DECISION`` (sigma | visits) y ``MCTS_NASH_SOLVER`` (fp | rm+)."""
+    out: dict = {}
+    mat = (os.environ.get('MCTS_NASH_MATRIX') or '').strip()
+    if mat:
+        kr, ks, ko = (int(x) for x in mat.split(','))
+        out.update(k_self_root=kr, k_self=ks, k_opp=ko)
+    dec = (os.environ.get('MCTS_NASH_DECISION') or '').strip().lower()
+    if dec:
+        if dec not in ('sigma', 'visits'):
+            raise ValueError(f'MCTS_NASH_DECISION={dec!r} (sigma | visits)')
+        out['decision'] = dec
+    sol = (os.environ.get('MCTS_NASH_SOLVER') or '').strip().lower()
+    if sol:
+        if sol not in ('fp', 'rm+'):
+            raise ValueError(f'MCTS_NASH_SOLVER={sol!r} (fp | rm+)')
+        out['solver'] = sol
+    return out
+
+
 class MCTSPuctNashPlayer(FamilyPreviewMixin, Player):
     """Preview por búsqueda (el de G 5.2) + SM-MCTS/Nash.
 
@@ -56,6 +77,8 @@ class MCTSPuctNashPlayer(FamilyPreviewMixin, Player):
                 n_sims=int(sims),
                 seed=int(os.environ.get('MCTS_NASH_SEED', os.environ.get('MCTS_SEED', seed))),
                 version=version,
+                # H 2.1 (protocolo §4.7); sin env = H 2.0. Matriz: "raíz,interior,rival" (p. ej. "8,6,4").
+                **_h21_knobs(),
             )
         )
         self.last_joint = 0

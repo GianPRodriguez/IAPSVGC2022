@@ -185,6 +185,28 @@ pre-registrada en semillas 10601+.
 
 ---
 
+## 4c. Versión 2.1 (candidatas tras el paso 0, pre-registradas el 23-11-2026)
+
+Variantes de H 2.0 que atacan lo que mostró el diagnóstico del paso 0 (§4b): la matriz de la raíz está
+submuestreada (42 % de celdas sin visitar, 2 visitas por celda) y la regla final argmax \(\sigma^*\)
+sobre esa \(\hat A\) ruidosa es la mayor divergencia con G. Se activan por entorno; **sin variables el
+player es H 2.0 exactamente** (test de regresión contra el código congelado `c70f0f2` en
+`tests/test_mcts_puct_nash_v21.py`).
+
+| Brazo | Entorno | Qué cambia | Por qué |
+|---|---|---|---|
+| H1 matriz chica | `MCTS_NASH_MATRIX=8,6,4` | Raíz 8 filas, interior 6, rival 4 (antes 12/8/8): 32 celdas en la raíz en vez de 96 | ~6 visitas por celda con las mismas 200 sims |
+| H2 decisión por visitas | `MCTS_NASH_DECISION=visits` | Se juega la fila más visitada (desempate por \(\sigma^*\), menor id); el árbol, la selección y el backup de Nash no cambian | La fila más visitada coincide con G 14 pts más que argmax \(\sigma^*\) |
+| H3 = H1 + H2 | ambas | — | Las dos causas a la vez |
+| H4 RM+ | `MCTS_NASH_SOLVER=rm+`, `MCTS_NASH_SIMS=350` | Cada nodo resuelve su matriz con **regret matching+** con arranque en caliente (regrets y promedios lineales guardados en el nodo; 10 iteraciones por backup, 200 en la raíz) en lugar de un FP de 100 iteraciones; el valor de Nash sigue subiendo al padre. El ahorro (−41 % por decisión con 200 sims, benchmark local) se gasta en sims: 350 ≈ tiempo de H 2.0 | Más visitas por celda con el mismo tiempo; RM+ es el resolvedor estándar del SM-MCTS (Lanctot et al., 2013; CFR+) |
+
+Código: `NashOLConfig.decision`, `.solver`, `.t_rm_internal`, `.t_rm_root` y `k_self_root/k_self/k_opp`
+(`openloop_nash.py`); `regret_matching_plus` (`nash.py`); `_h21_knobs` (player). Medición pre-registrada:
+protocolo §4.7 (cola `scripts/server/mcts_h_v21.sh`). Si un brazo se confirma, pasa a ser el default del
+player como H 2.1.
+
+---
+
 ## 5. Observación, acción y máscaras
 
 Live: [`rl_env_spec.md`](rl_env_spec.md). Árbol sobre `BattleSnapshot`. Solo
@@ -352,6 +374,7 @@ y turno.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.1** (candidatas) | 2026-11-23 | Variantes por entorno tras el paso 0 (§4c): matriz chica 8/6/4, decisión por visitas, ambas, y RM+ con arranque en caliente y 350 sims. Defaults = H 2.0 exacto. Diagnóstico opcional `MCTS_NASH_DIAG_FILE` (§4b). Medición pre-registrada: protocolo §4.7. |
 | **2.0** (confirmada 23-11: 61,6 % joint, 61,7 % expectimax, 63,3 % solo; −7,25 pts frente a G 5.2, protocolo §5.7) | 2026-11-22 | H 2.0 (§4b): SM-MCTS open-loop con S3 fase 3c de G, Top-K podado por S3, prior \(p_i q_j\), selección desacoplada contra la mezcla de Nash, FPU en \(\hat A\), hoja de G, 200 sims; preview por búsqueda de G; SP por prior meta (sin inferencia); anomalías en `MCTS_STATS_FILE`. v1.7 sigue con `MCTS_NASH_VERSION=1`. Medición pre-registrada: protocolo §4.6. |
 | **1.7** | 2026-11-15 | Objetivo aliado del slot 0 corregido en el adaptador de órdenes (−2; antes −1 = sí mismo, rechazado por Showdown). Sin cambios de obs. |
 | **1.6** | 2026-11-14 | ActionSpec v2 (40 ids por slot, mega como flag de cada movimiento; joint 1600) y máscaras desde `valid_orders`. |
