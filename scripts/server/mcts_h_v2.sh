@@ -89,7 +89,8 @@ fi
 
 # ------------------------------------------------ exploración
 for s in $(seq 9101 9117); do run N2 "$s" h:2 greedy_joint --timeout 2400; done
-for s in $(seq 9101 9117); do run N1 "$s" h:1 greedy_joint --timeout 2400; done
+# N1_SEEDS: desviación del 22-11-2026 (protocolo §4.6): N1 cortado en 4 semillas (10,8 %, ~900–1400 s/semilla)
+for s in ${N1_SEEDS:-$(seq 9101 9117)}; do run N1 "$s" h:1 greedy_joint --timeout 2400; done
 
 S="$OUT/h_summary.txt"
 mc() { python -m showdown.inference_sim.confirm_stats mcnemar --a $1 --b $2; }

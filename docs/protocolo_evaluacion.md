@@ -349,6 +349,10 @@ juega contra G). Cola `scripts/server/mcts_h_v2.sh`; código congelado en el com
   la tesis "¿el backup de Nash mejora al open-loop con media?" en cualquier dirección; si no se
   rechaza, se reporta como "sin diferencia detectable" con su IC. Se reportan por bloque, el tiempo
   por semilla y las anomalías.
+- **Desviación (22-11-2026, 20:45, decidida por el autor):** N1 (H 1.7) se cortó tras 4 de 17 semillas
+  (130 / 1200 = 10,8 %, ~860 s/semilla y subiendo, 5431 fallbacks del adaptador por órdenes ilegales de
+  la búsqueda v1) frente a N2 (H 2.0) 62,1 % en las 17. La regla de paso se aplica sobre las series
+  emparejadas de esas 4 semillas (9101–9104). No afecta a la confirmación (W1–W4), que se mide completa.
 
 ## 5. Plantilla de reporte
 
@@ -571,3 +575,4 @@ por encima de los tres baselines.
 | 2026-11-22 | Exploración de la fase 3e (diagnóstico §10.1): v7 71,18 % frente a v5.2 69,21 % contra joint en 9101–9117, McNemar +1,90 pts (p = 0,0086); pasa a confirmación Z1–Z4 en C11/C12. |
 | 2026-11-22 | Resultado de la confirmación de la fase 3e de G (§5.6): Z1–Z3 confirmadas (v7 70,9 % contra joint, 69,4 % contra expectimax, 73,2 % contra solo); Z4 v7 frente a v5.2 +0,76 pts, p Holm = 0,138 (C11 +1,55, C12 −0,04): no se confirma, G se queda en v5.2. |
 | 2026-11-22 | Agente H 2.0 pre-registrado (§4.6): exploración H 2.0 frente a H 1.7 en 9101–9117; si mejora, confirmación W1–W3 contra baselines y W4 frente a G 5.2 (bilateral) en C13 (10401–10417) y C14 (10501–10517), Holm m = 4. H pasa a SP meta. |
+| 2026-11-22 | Desviación en §4.6: N1 (H 1.7) cortado en 4 semillas (10,8 % frente a 62,1 % de H 2.0, ~860 s/semilla); la regla de paso se evalúa en 9101–9104 emparejadas. |
