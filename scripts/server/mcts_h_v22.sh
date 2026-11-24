@@ -38,10 +38,13 @@ log "esperando MCTS_H_STEPA_DONE en $STEPA/queue.log"
 until grep -q MCTS_H_STEPA_DONE "$STEPA/queue.log" 2>/dev/null; do sleep 120; done
 while ps -eo cmd | grep -q "[r]un_robust_e2e --teams"; do sleep 60; done
 cd "$REPO"
-if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-  log "ERROR: el clon $REPO tiene cambios locales; no se actualiza"; log "MCTS_H_V22_DONE"; exit 1
+# los logs/ que escriben las corridas pueden estar modificados; el resto debe estar limpio
+if [ -n "$(git status --porcelain --untracked-files=no -- . ':!logs')" ]; then
+  log "ERROR: el clon $REPO tiene cambios locales fuera de logs/; no se actualiza"; log "MCTS_H_V22_DONE"; exit 1
 fi
-git fetch -q origin && git merge -q --ff-only origin/feature/Champions
+if ! { git fetch -q origin && git merge -q --ff-only origin/feature/Champions; }; then
+  log "ERROR: no se pudo actualizar el clon (ff-only)"; log "MCTS_H_V22_DONE"; exit 1
+fi
 if ! git merge-base --is-ancestor "$FROZEN" HEAD; then
   log "ERROR: $FROZEN no está en el clon tras actualizar"; log "MCTS_H_V22_DONE"; exit 1
 fi
