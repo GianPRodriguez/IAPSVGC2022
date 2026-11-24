@@ -38,8 +38,8 @@ log "esperando MCTS_H_STEPA_DONE en $STEPA/queue.log"
 until grep -q MCTS_H_STEPA_DONE "$STEPA/queue.log" 2>/dev/null; do sleep 120; done
 while ps -eo cmd | grep -q "[r]un_robust_e2e --teams"; do sleep 60; done
 cd "$REPO"
-# los logs/ que escriben las corridas pueden estar modificados; el resto debe estar limpio
-if [ -n "$(git status --porcelain --untracked-files=no -- . ':!logs')" ]; then
+# los logs/ que escriben las corridas pueden estar modificados (y los chmod +x de las colas); el resto, limpio
+if [ -n "$(git -c core.fileMode=false status --porcelain --untracked-files=no -- . ':!logs')" ]; then
   log "ERROR: el clon $REPO tiene cambios locales fuera de logs/; no se actualiza"; log "MCTS_H_V22_DONE"; exit 1
 fi
 if ! { git fetch -q origin && git merge -q --ff-only origin/feature/Champions; }; then
