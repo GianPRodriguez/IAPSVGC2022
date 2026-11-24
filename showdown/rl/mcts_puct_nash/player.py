@@ -20,7 +20,8 @@ _LOG = logging.getLogger(__name__)
 
 def _h21_knobs() -> dict:
     """Variantes de H 2.1 por entorno: ``MCTS_NASH_MATRIX`` (raíz,interior,rival),
-    ``MCTS_NASH_DECISION`` (sigma | visits) y ``MCTS_NASH_SOLVER`` (fp | rm+)."""
+    ``MCTS_NASH_DECISION`` (sigma | visits), ``MCTS_NASH_SOLVER`` (fp | rm+) y, de H 2.2,
+    ``MCTS_NASH_BACKUP_MIX`` (λ en [0, 1]: valor que sube = (1−λ)·v_Nash + λ·media del nodo)."""
     out: dict = {}
     mat = (os.environ.get('MCTS_NASH_MATRIX') or '').strip()
     if mat:
@@ -36,6 +37,12 @@ def _h21_knobs() -> dict:
         if sol not in ('fp', 'rm+'):
             raise ValueError(f'MCTS_NASH_SOLVER={sol!r} (fp | rm+)')
         out['solver'] = sol
+    mix = (os.environ.get('MCTS_NASH_BACKUP_MIX') or '').strip()
+    if mix:
+        lam = float(mix)
+        if not 0.0 <= lam <= 1.0:
+            raise ValueError(f'MCTS_NASH_BACKUP_MIX={mix!r} (entre 0 y 1)')
+        out['backup_mix'] = lam
     return out
 
 

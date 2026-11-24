@@ -73,6 +73,8 @@ class NashOLConfig:
     solver: str = 'fp'          # 'fp' = Fictitious Play por backup (H 2.0); 'rm+' = regret matching+ en caliente
     t_rm_internal: int = 10     # iteraciones de RM+ por backup (con arranque en caliente)
     t_rm_root: int = 200        # iteraciones finales de RM+ en la raíz
+    # H 2.2 (spec §4d): valor que sube al padre = (1−λ)·v_Nash + λ·media del nodo; λ = 0 es H 2.0/2.1.
+    backup_mix: float = 0.0
 
     def openloop(self) -> OpenLoopConfig:
         """Config de G para el modelo de transición y los rollouts compartidos."""
@@ -185,7 +187,8 @@ def _solve(node: NashNode, t: int, solver: str) -> Tuple[np.ndarray, np.ndarray,
     return fictitious_play(node.payoff(), T=t)
 
 
-def _backup(path: List[Tuple[NashNode, int, int]], z: float, t_fp: int, solver: str = 'fp') -> None:
+def _backup(path: List[Tuple[NashNode, int, int]], z: float, t_fp: int, solver: str = 'fp',
+            mix: float = 0.0) -> None:
     for node, i, j in reversed(path):
         node.n[i, j] += 1
         node.W[i, j] += z
@@ -193,7 +196,10 @@ def _backup(path: List[Tuple[NashNode, int, int]], z: float, t_fp: int, solver: 
         node.W_sum += z
         sigma, tau, v = _solve(node, t_fp, solver)
         node.sigma, node.tau = sigma, tau
-        z = float(v)
+        if mix > 0.0:  # H 2.2 B3: mezcla con la media del nodo (menos varianza del valor de Nash)
+            z = float((1.0 - mix) * v + mix * (node.W_sum / node.N))
+        else:
+            z = float(v)
 
 
 def _simulate(root: NashNode, s0: BattleSnapshot, sim_id: int, ctx: _Ctx, cfg: NashOLConfig,
@@ -224,7 +230,8 @@ def _simulate(root: NashNode, s0: BattleSnapshot, sim_id: int, ctx: _Ctx, cfg: N
         tel.failures += 1
         z = 0.0
     rm = str(cfg.solver) == 'rm+'
-    _backup(path, z, int(cfg.t_rm_internal if rm else cfg.t_fp_internal), 'rm+' if rm else 'fp')
+    _backup(path, z, int(cfg.t_rm_internal if rm else cfg.t_fp_internal), 'rm+' if rm else 'fp',
+            float(cfg.backup_mix))
     tel.sims += 1
     tel.avg_depth += (depth - tel.avg_depth) / tel.sims
 

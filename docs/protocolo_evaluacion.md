@@ -374,6 +374,27 @@ rival. Cola `scripts/server/mcts_h_v21.sh`; código congelado en el commit del p
   Conclusión. Si V4 no se confirma, H se queda en 2.0 (como G en §5.6). Se reportan por bloque, el tiempo
   por semilla y las anomalías.
 
+### 4.8 Agente H 2.2, exploración fijada el 24-11-2026 antes de medir
+
+Candidatos (spec de H §4d): B1 matriz 6/4/3, B2 H3 + RM+ con 200 sims, B3 backup mixto
+(½·valor de Nash + ½·media del nodo), todos sobre **H3** (matriz 8/6/4 + decisión por visitas). Se fija
+mientras la confirmación de H 2.1 (§4.7) aún mide, con la autorización del usuario; si H3 no se
+confirmara, la exploración queda solo como descriptiva. Solo baselines. Cola
+`scripts/server/mcts_h_v22.sh` (espera al paso A; reglas en `scripts/server/h22_rules.py`); código
+congelado en el commit del pre-registro.
+
+- **Exploración** (9101–9117 × 300, contra greedy_joint, mismas series): R = H3 se toma de la exploración
+  de §4.7 (mismo código, verificado con test de regresión); B1–B3 se miden.
+  - **Superioridad (B1, B3):** 0 errores de serie, fallbacks del preview ≤ 5 % y McNemar frente a R con
+    diferencia > 0 y p < 0,05; gana la mayor diferencia (empate: menor tiempo por semilla).
+  - **No inferioridad (B2):** 0 errores, fallbacks ≤ 5 %, cota inferior unilateral 95 % de la diferencia
+    pareada frente a R > −1,5 pts (aproximación normal sobre las series emparejadas) y tiempo por semilla
+    ≤ 85 % del de R.
+  - Si nada pasa, H 2.2 = H 2.1 y no hay confirmación. Exploratorio: sin corrección por los tres brazos.
+- **Confirmación:** no se encola con esta exploración. Si algo pasa, se pre-registra aparte (bloques nuevos
+  desde 10801, contra joint, expectimax y solo, más la comparación pareada frente a H 2.1) y se encola con
+  la aprobación del usuario.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -624,3 +645,4 @@ pre-registro nuevo en semillas 10601+.
 | 2026-11-23 | Resultado de la confirmación de H 2.0 (§5.7): W1–W3 confirmadas (61,6 % contra joint, 61,7 % contra expectimax, 63,3 % contra solo, 34/34 semillas cada una); W4 H 2.0 frente a G 5.2 −7,25 pts (p Holm = 6·10⁻⁴², C13 −7,37, C14 −7,13): G 5.2 es mejor. H 2.0 es el H de la Conclusión. |
 | 2026-11-23 | Agente H 2.1 pre-registrado (§4.7): exploración de H1 matriz chica, H2 decisión por visitas, H3 ambas y H4 RM+ (350 sims) frente a H 2.0 (N2) en 9101–9117; el mejor que pase McNemar p < 0,05 va a confirmación V1–V4 en C15 (10601–10617) y C16 (10701–10717), Holm m = 4. |
 | 2026-11-23 | Exploración de H 2.1 (§4.7, spec de H §4c): H1 +1,52 pts (p = 0,046), H2 +2,43 (p = 0,001), **H3 +3,24 (p = 1,6·10⁻⁵; 65,30 % contra joint)**, H4 RM+ −0,55 (p = 0,49) frente a H 2.0; gana H3 (matriz 8/6/4 + decisión por visitas) y pasa a confirmación V1–V4 en C15/C16. |
+| 2026-11-24 | Exploración de H 2.2 pre-registrada (§4.8, spec de H §4d): B1 matriz 6/4/3 y B3 backup mixto (superioridad frente a H3, McNemar p < 0,05), B2 H3 + RM+ con 200 sims (no inferioridad: cota inferior 95 % > −1,5 pts y ≤ 85 % del tiempo de H3); 9101–9117 contra joint, espera al paso A. Sin confirmación encolada. |

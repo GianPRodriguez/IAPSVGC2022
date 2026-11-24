@@ -219,6 +219,23 @@ Por la regla pre-registrada gana **H3**, que pasa a confirmación en C15/C16. La
 paso 0 suman casi linealmente (+1,5 y +2,4 → +3,2). RM+ no mejora: es un 21 % más rápido pero no gana
 más; la ganancia viene de muestrear menos celdas y de decidir por visitas, no del resolvedor.
 
+## 4d. Versión 2.2 (exploración pre-registrada el 24-11-2026)
+
+Variantes de **H3** (matriz 8/6/4 + decisión por visitas, candidato de H 2.1). Antes de medir: H3 lleva
++3,2 pts sobre H 2.0 pero sigue ~2 pts por debajo de G 5.2 contra joint (C15) y es ~1,7× más lento. Tres
+ideas, una por brazo, activadas por entorno; **sin variables nuevas el player no cambia** (test de
+regresión de H3 y de H3 + RM+ contra el código congelado de H 2.1 en `tests/test_mcts_puct_nash_v22.py`).
+
+| Brazo | Entorno (sobre H3) | Qué cambia | Por qué | Regla |
+|---|---|---|---|---|
+| B1 matriz más chica | `MCTS_NASH_MATRIX=6,4,3` | Raíz 6 filas, interior 4, rival 3: 18 celdas en la raíz (H3: 32, H 2.0: 96) | H1 → H3 mostró que menos celdas = mejor; ¿sigue la tendencia o ya se pierden jugadas buenas? | superioridad |
+| B2 H3 + RM+ | `MCTS_NASH_SOLVER=rm+` (200 sims) | El resolvedor de §4c (RM+ en caliente) con el mismo presupuesto | RM+ fue 21 % más rápido sin perder calidad (H4); si no pierde frente a H3, H se acerca al tiempo de G | **no inferioridad** y velocidad |
+| B3 backup mixto | `MCTS_NASH_BACKUP_MIX=0.5` | El valor que sube al padre es \(\tfrac12 v_{\rm Nash} + \tfrac12 \bar z_{\rm nodo}\) (media de los retornos del nodo) en vez de \(v_{\rm Nash}\) | Con pocas visitas, el valor de Nash de una matriz ruidosa es una estimación con mucha varianza; mezclar con la media la reduce | superioridad |
+
+Código: `NashOLConfig.backup_mix` (λ, 0 = H 2.0/2.1) en `_backup` (`openloop_nash.py`);
+`MCTS_NASH_BACKUP_MIX` en `_h21_knobs` (player). Medición: protocolo §4.8 (cola
+`scripts/server/mcts_h_v22.sh`, reglas en `scripts/server/h22_rules.py`).
+
 ---
 
 ## 5. Observación, acción y máscaras
@@ -388,6 +405,7 @@ y turno.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.2** (exploración) | 2026-11-24 | Variantes de H3 por entorno (§4d): B1 matriz 6/4/3, B2 H3 + RM+ con 200 sims (no inferioridad), B3 backup mixto \(\tfrac12 v_{\rm Nash} + \tfrac12\) media (`MCTS_NASH_BACKUP_MIX`). Sin variables nuevas, sin cambios. Exploración pre-registrada: protocolo §4.8. |
 | **2.1** (candidatas) | 2026-11-23 | Variantes por entorno tras el paso 0 (§4c): matriz chica 8/6/4, decisión por visitas, ambas, y RM+ con arranque en caliente y 350 sims. Defaults = H 2.0 exacto. Diagnóstico opcional `MCTS_NASH_DIAG_FILE` (§4b). Medición pre-registrada: protocolo §4.7. |
 | **2.0** (confirmada 23-11: 61,6 % joint, 61,7 % expectimax, 63,3 % solo; −7,25 pts frente a G 5.2, protocolo §5.7) | 2026-11-22 | H 2.0 (§4b): SM-MCTS open-loop con S3 fase 3c de G, Top-K podado por S3, prior \(p_i q_j\), selección desacoplada contra la mezcla de Nash, FPU en \(\hat A\), hoja de G, 200 sims; preview por búsqueda de G; SP por prior meta (sin inferencia); anomalías en `MCTS_STATS_FILE`. v1.7 sigue con `MCTS_NASH_VERSION=1`. Medición pre-registrada: protocolo §4.6. |
 | **1.7** | 2026-11-15 | Objetivo aliado del slot 0 corregido en el adaptador de órdenes (−2; antes −1 = sí mismo, rechazado por Showdown). Sin cambios de obs. |

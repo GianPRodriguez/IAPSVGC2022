@@ -36,6 +36,7 @@ class MCTSPuctNashConfig:
     k_opp: int = 8
     decision: str = 'sigma'
     solver: str = 'fp'
+    backup_mix: float = 0.0   # H 2.2 (spec §4d)
 
 
 class MCTSPuctNashAgent:
@@ -55,7 +56,7 @@ class MCTSPuctNashAgent:
                                model=str(self.cfg.model), t_fp_root=int(self.cfg.t_fp_root),
                                k_self_root=int(self.cfg.k_self_root), k_self=int(self.cfg.k_self),
                                k_opp=int(self.cfg.k_opp), decision=str(self.cfg.decision),
-                               solver=str(self.cfg.solver))
+                               solver=str(self.cfg.solver), backup_mix=float(self.cfg.backup_mix))
             joint, root, tel = search_nash_openloop(snap, cfg, root_joints=root_joints,
                                                     stat_beliefs=stat_beliefs)
             self.last_sigma = root.sigma
