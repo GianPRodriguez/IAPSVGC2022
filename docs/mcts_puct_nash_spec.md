@@ -3,14 +3,14 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS–PUCT/Nash simultáneo (solo turnos) |
-| **Versión** | **2.0** (H 2.0: S3 de G open-loop + preview por búsqueda + SP meta, §4b; confirmada, H de la Conclusión) |
+| **Versión** | **2.1** (H 2.1 = H 2.0 de §4b con matriz 8/6/4 y decisión por la fila más visitada, §4c; confirmada el 24-11-2026, H de la Conclusión). H 2.0 se reproduce con `MCTS_NASH_MATRIX=12,8,8 MCTS_NASH_DECISION=sigma` |
 | **Estado** | FROZEN; `showdown/rl/mcts_puct_nash/` |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Presupuesto \(N_{\rm sim}\), Top-K, FP; barrido automatizado de sims |
 | **CLI smoke** | `python -m showdown.rl.mcts_puct_nash --seed 0 --sims 8 --smoke` |
 | **CLI barrido** | `python -m showdown.inference_sim.run_mcts_sims_sweep --agent mcts_puct_nash ...` |
 | **Env presupuesto** | `MCTS_NASH_SIMS` (fallback `MCTS_SIMS`; 200 en v2, 50 en v1) |
-| **Env versión** | `MCTS_NASH_VERSION` (2 por defecto en el player; 1 = SM-MCTS B1) |
+| **Env versión** | `MCTS_NASH_VERSION` (2 por defecto en el player = familia open-loop, con los defaults de H 2.1; 1 = SM-MCTS B1). Variantes: `MCTS_NASH_MATRIX`, `MCTS_NASH_DECISION`, `MCTS_NASH_SOLVER`, `MCTS_NASH_BACKUP_MIX` |
 | **Dependencias** | NumPy; v2 reutiliza S3, la poda y el preview por búsqueda de `mcts_puct` (G); v1 reutiliza S2 |
 
 > **Para quien aprende IA.** En VGC ambos eligen a la vez. Este agente no asume
@@ -185,7 +185,7 @@ pre-registrada en semillas 10601+.
 
 ---
 
-## 4c. Versión 2.1 (candidatas tras el paso 0, pre-registradas el 23-11-2026)
+## 4c. Versión 2.1 (pre-registrada el 23-11-2026, confirmada el 24-11-2026: H3, default del player)
 
 Variantes de H 2.0 que atacan lo que mostró el diagnóstico del paso 0 (§4b): la matriz de la raíz está
 submuestreada (42 % de celdas sin visitar, 2 visitas por celda) y la regla final argmax \(\sigma^*\)
@@ -219,6 +219,27 @@ Por la regla pre-registrada gana **H3**, que pasa a confirmación en C15/C16. La
 paso 0 suman casi linealmente (+1,5 y +2,4 → +3,2). RM+ no mejora: es un 21 % más rápido pero no gana
 más; la ganancia viene de muestrear menos celdas y de decidir por visitas, no del resolvedor.
 
+**Confirmación (24-11-2026, C15/C16, protocolo §5.8): H3 = H 2.1 confirmada.** 65,97 % contra joint,
+65,65 % contra expectimax y 67,46 % contra solo (34/34 semillas cada una); +4,46 pts sobre H 2.0
+(p Holm = 4·10⁻¹⁷, +4,17 y +4,75 por bloque). Desde el 24-11 es el default del player (versión 2.1).
+
+**Paso A (descriptivo, 24-11):** H 2.1 frente a G 5.2 en las mismas series: −3,17 pts contra joint,
+−3,00 contra expectimax y −4,09 contra solo. Diagnóstico de H3 en 9101–9102 (7128 decisiones, mismas
+victorias que la exploración, 200 y 193):
+
+| Medida | H 2.0 (paso 0) | H 2.1 (H3) |
+|---|---|---|
+| Matriz de la raíz (mediana) | 12 × 8 | 8 × 4 |
+| Celdas sin visitar (mediana) | 42 % | 16 % |
+| Visitas por celda visitada (mediana) | 2 | 3,5 |
+| Decisión de H = decisión de G en el mismo estado | 45,9 % | 59,8 % |
+| Joint de G dentro de las filas de H | — | 92,5 % |
+| \(\sigma^*\) = 0 para el joint de G | — | 25,7 % |
+| Tiempo por decisión, H frente a G | — | 1,90 s frente a 0,61 s |
+
+H y G ya coinciden en 6 de cada 10 decisiones; en el 7,5 % G elige un joint que H ni considera (fuera
+de sus 8 filas) y en un cuarto de los casos el Nash de H le da peso 0 al joint de G.
+
 ## 4d. Versión 2.2 (exploración pre-registrada el 24-11-2026)
 
 Variantes de **H3** (matriz 8/6/4 + decisión por visitas, candidato de H 2.1). Antes de medir: H3 lleva
@@ -235,6 +256,20 @@ regresión de H3 y de H3 + RM+ contra el código congelado de H 2.1 en `tests/te
 Código: `NashOLConfig.backup_mix` (λ, 0 = H 2.0/2.1) en `_backup` (`openloop_nash.py`);
 `MCTS_NASH_BACKUP_MIX` en `_h21_knobs` (player). Medición: protocolo §4.8 (cola
 `scripts/server/mcts_h_v22.sh`, reglas en `scripts/server/h22_rules.py`).
+
+**Exploración (24-11-2026, 9101–9117 × 300 contra greedy_joint, mismas series, 0 errores y 0 anomalías):**
+
+| Brazo | Tasa contra joint | McNemar frente a R = H3 | p | s / semilla | Regla |
+|---|---|---|---|---|---|
+| R = H3 (H 2.1) | 65,30 % | — | — | 387 | — |
+| B1 matriz 6/4/3 | 65,76 % | +0,51 pts (506 frente a 480) | 0,43 | 378 | superioridad: no pasa |
+| B2 H3 + RM+ (200 sims) | 65,29 % | −0,04 pts (519 frente a 521; cota inferior 95 % −1,09) | 0,98 | **219** | **no inferioridad: pasa** (57 % del tiempo) |
+| B3 backup mixto ½ | 65,81 % | +0,57 pts (420 frente a 391) | 0,33 | 376 | superioridad: no pasa |
+
+Ningún brazo mejora a H3: achicar más la matriz o suavizar el valor de Nash no rinde (efectos de
++0,5 pts, dentro del ruido). **B2 juega igual que H3 en el 57 % del tiempo**, es decir, al mismo coste
+que G 5.2 (221 s). Es el candidato de H 2.2 por velocidad; su confirmación (no inferioridad frente a
+H 2.1 y contra los tres baselines, en 10801+) necesita un pre-registro aparte.
 
 ---
 
@@ -358,7 +393,7 @@ Protocolo: [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 ## 10. Team Preview y Conclusión
 
-**Desde v2.0 (Conclusión): preview por búsqueda de G → H 2.0 combate.** Pipeline familiar anterior
+**Desde v2.1 (Conclusión, 24-11-2026): preview por búsqueda de G → H 2.1 combate** (H 2.0 hasta el 24-11). Pipeline familiar anterior
 (`MCTS_PREVIEW=nash`): **`team_preview_nash` → MCTS–PUCT/Nash combate**
 (cableado en train live e inferencia; no solo en el registro de Conclusión).
 Mismo apellido “Nash”, problemas distintos (formación vs matrices locales).
@@ -405,6 +440,8 @@ y turno.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.2** (exploración medida) | 2026-11-24 | Exploración (§4d): B1 +0,51 pts y B3 +0,57 sin superioridad; B2 H3 + RM+ no inferior (−0,04 pts) en el 57 % del tiempo (219 s/semilla ≈ G). Sin brazo ganador; B2 candidato de velocidad, confirmación no encolada. |
+| **2.1** (confirmada 24-11: 66,0 % joint, 65,7 % expectimax, 67,5 % solo; +4,46 pts sobre H 2.0; −3,2 pts frente a G 5.2, protocolo §5.8) | 2026-11-24 | H3 = matriz 8/6/4 + decisión por visitas pasa a ser el default del player. Paso A y diagnóstico de H3 en §4c. |
 | **2.2** (exploración) | 2026-11-24 | Variantes de H3 por entorno (§4d): B1 matriz 6/4/3, B2 H3 + RM+ con 200 sims (no inferioridad), B3 backup mixto \(\tfrac12 v_{\rm Nash} + \tfrac12\) media (`MCTS_NASH_BACKUP_MIX`). Sin variables nuevas, sin cambios. Exploración pre-registrada: protocolo §4.8. |
 | **2.1** (candidatas) | 2026-11-23 | Variantes por entorno tras el paso 0 (§4c): matriz chica 8/6/4, decisión por visitas, ambas, y RM+ con arranque en caliente y 350 sims. Defaults = H 2.0 exacto. Diagnóstico opcional `MCTS_NASH_DIAG_FILE` (§4b). Medición pre-registrada: protocolo §4.7. |
 | **2.0** (confirmada 23-11: 61,6 % joint, 61,7 % expectimax, 63,3 % solo; −7,25 pts frente a G 5.2, protocolo §5.7) | 2026-11-22 | H 2.0 (§4b): SM-MCTS open-loop con S3 fase 3c de G, Top-K podado por S3, prior \(p_i q_j\), selección desacoplada contra la mezcla de Nash, FPU en \(\hat A\), hoja de G, 200 sims; preview por búsqueda de G; SP por prior meta (sin inferencia); anomalías en `MCTS_STATS_FILE`. v1.7 sigue con `MCTS_NASH_VERSION=1`. Medición pre-registrada: protocolo §4.6. |

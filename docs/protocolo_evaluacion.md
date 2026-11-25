@@ -591,6 +591,32 @@ valor de Nash, de forma igual en los dos bloques y como en la exploración (−7
 supone un rival del peor caso mientras que los baselines son explotables. Una H 2.1 necesitaría un
 pre-registro nuevo en semillas 10601+.
 
+### 5.8 Resultados de la confirmación del agente H 2.1 (24-11-2026, código congelado `4db8267`)
+
+Pre-registro §4.7; exploración: gana H3 (matriz 8/6/4 + decisión por visitas), +3,24 pts sobre H 2.0
+(p = 1,6·10⁻⁵). C15 = 10601–10617 y C16 = 10701–10717, × 300 BO3, terminada el 24-11 a las 11:28.
+
+| Hipótesis | Victorias / series | Tasa / diferencia | IC 95 % (cluster) | C15 | C16 | p Holm | Resultado |
+|---|---|---|---|---|---|---|---|
+| V1 H 2.1 > greedy_joint | 6703 / 10 160 | 65,97 % | [65,11; 66,81] | 65,73 % | 66,22 % | 7·10⁻²³¹ | confirmada (34/34 semillas) |
+| V2 H 2.1 > expectimax v1.9 | 6664 / 10 151 | 65,65 % | [64,76; 66,51] | 64,85 % | 66,44 % | 2·10⁻²²¹ | confirmada (34/34) |
+| V3 H 2.1 > greedy_solo | 6851 / 10 155 | 67,46 % | [66,60; 68,34] | 67,49 % | 67,44 % | 2·10⁻²⁷⁶ | confirmada (34/34) |
+| **V4 H 2.1 > H 2.0** (McNemar, contra joint) | 1665 frente a 1213 (10 127 emparejadas) | **+4,46 pts** | — | +4,17 (p = 3·10⁻⁸) | +4,75 (p = 2·10⁻¹⁰) | 4·10⁻¹⁷ | **confirmada** |
+
+Referencias contra joint en las mismas series: H 2.0 (Hj) 6246 / 10 159 = 61,48 %; G 5.2 (Gj)
+6995 / 10 126 = 69,08 %. Descriptivo H 2.1 frente a G 5.2: −3,17 pts (1011 frente a 1330, p = 5·10⁻¹¹;
+con H 2.0 era −7,25). Tiempo por semilla: H 2.1 373 s (joint), 419 s (expectimax), 361 s (solo); H 2.0
+383 s; G 5.2 221 s. 0 errores de serie, 0 fallbacks del preview y 0 anomalías en las 170 corridas.
+
+**Decisión (regla pre-registrada): V1–V4 se confirman → H 2.1 (H3) es el default del player y el H de
+la Conclusión.** Las dos correcciones del paso 0 (menos celdas y decidir por visitas) explican más de la
+mitad de la distancia con G; el resto sigue a favor del open-loop con media.
+
+**Paso A (descriptivo, 24-11, mismas series C15/C16; spec de H §4c):** G 5.2 contra expectimax 68,57 %
+y contra solo 71,51 %. H 2.1 frente a G 5.2: −3,17 pts contra joint, −3,00 contra expectimax
+(p = 4·10⁻⁹) y −4,09 contra solo (p = 10⁻¹⁸). La desventaja de H frente a G es de 3–4 pts contra los tres
+baselines.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -646,3 +672,5 @@ pre-registro nuevo en semillas 10601+.
 | 2026-11-23 | Agente H 2.1 pre-registrado (§4.7): exploración de H1 matriz chica, H2 decisión por visitas, H3 ambas y H4 RM+ (350 sims) frente a H 2.0 (N2) en 9101–9117; el mejor que pase McNemar p < 0,05 va a confirmación V1–V4 en C15 (10601–10617) y C16 (10701–10717), Holm m = 4. |
 | 2026-11-23 | Exploración de H 2.1 (§4.7, spec de H §4c): H1 +1,52 pts (p = 0,046), H2 +2,43 (p = 0,001), **H3 +3,24 (p = 1,6·10⁻⁵; 65,30 % contra joint)**, H4 RM+ −0,55 (p = 0,49) frente a H 2.0; gana H3 (matriz 8/6/4 + decisión por visitas) y pasa a confirmación V1–V4 en C15/C16. |
 | 2026-11-24 | Exploración de H 2.2 pre-registrada (§4.8, spec de H §4d): B1 matriz 6/4/3 y B3 backup mixto (superioridad frente a H3, McNemar p < 0,05), B2 H3 + RM+ con 200 sims (no inferioridad: cota inferior 95 % > −1,5 pts y ≤ 85 % del tiempo de H3); 9101–9117 contra joint, espera al paso A. Sin confirmación encolada. |
+| 2026-11-24 | Resultado de la confirmación de H 2.1 (§5.8): V1–V4 confirmadas (H3: 66,0 % contra joint, 65,7 % contra expectimax, 67,5 % contra solo; +4,46 pts sobre H 2.0, p Holm = 4·10⁻¹⁷, los dos bloques). H 2.1 pasa a ser el default del player y el H de la Conclusión. Paso A: H 2.1 frente a G 5.2 −3,17 (joint), −3,00 (expectimax), −4,09 (solo). |
+| 2026-11-24 | Exploración de H 2.2 (§4.8, spec de H §4d): B1 matriz 6/4/3 +0,51 pts (p = 0,43) y B3 backup mixto +0,57 (p = 0,33) no pasan la superioridad; **B2 H3 + RM+ pasa la no inferioridad** (−0,04 pts, cota inferior 95 % −1,09 > −1,5; 219 s/semilla = 57 % del tiempo de H3, ≈ G 5.2). Sin brazo ganador; B2 queda como candidato de velocidad, sin confirmación encolada. |
