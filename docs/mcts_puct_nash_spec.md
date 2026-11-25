@@ -273,6 +273,37 @@ H 2.1 y contra los tres baselines, en 10801+) necesita un pre-registro aparte.
 
 ---
 
+## 4e. Confirmación de H 2.2 = B2 (pre-registrada el 25-11-2026) e invariantes del método
+
+**Candidato:** B2 de §4d, es decir H 2.1 con `MCTS_NASH_SOLVER=rm+` (RM+ en caliente, 10 iteraciones por
+backup y 200 en la raíz) y todo lo demás igual. No busca ganar más que H 2.1, sino **jugar igual en
+menos tiempo**: en la exploración, −0,04 pts en el 57 % del tiempo (219 s/semilla, como G 5.2). Si se
+confirma, G y H quedan comparados al mismo coste en sims y en tiempo.
+
+| | H 2.1 | B2 (H 2.2 candidata) |
+|---|---|---|
+| Resolvedor de cada matriz | Fictitious Play, 100 iteraciones desde cero por backup; 500 en la raíz | Regret matching+, 10 iteraciones por backup que continúan las anteriores (regrets y promedios guardados en el nodo); 200 en la raíz |
+| Todo lo demás | — | igual (árbol, matriz 8/6/4, selección, valor de Nash, decisión por visitas, 200 sims) |
+
+Medición: protocolo §4.9 (cola `scripts/server/mcts_h_v22c.sh`, C17/C18). Si se confirma, el default del
+player pasa a `solver='rm+'`.
+
+**Invariantes del método H** (SM-MCTS con equilibrio de Nash en las celdas). Toda versión de H debe
+cumplir los cinco; una variante que rompa alguno es otro agente:
+
+1. **Árbol de jugadas simultáneas:** cada nodo es un turno en que los dos eligen a la vez; los hijos son
+   las celdas (fila propia, columna del rival).
+2. **Matriz por nodo:** cada celda guarda el retorno medio de las simulaciones que pasaron por ella.
+3. **Equilibrio en cada nodo:** el juego matricial \(\hat A\) se resuelve (FP o RM+) y da
+   \(\sigma^*, \tau^*\) y su valor.
+4. **El equilibrio guía la selección:** filas contra \(\tau^*\), columnas contra \(\sigma^*\).
+5. **El valor de Nash es lo que sube al padre** (no la media: eso es G).
+
+Lo que sí puede variar sin cambiar de método: el tamaño de la matriz (Top-K), el resolvedor, el número de
+sims y la regla de la jugada final en la raíz (argmax \(\sigma^*\) en H 2.0; fila más visitada desde
+H 2.1, igual que G). Por esto B3 (backup mixto con la media, §4d) quedaba en el borde del método; no pasó
+y se descartó.
+
 ## 5. Observación, acción y máscaras
 
 Live: [`rl_env_spec.md`](rl_env_spec.md). Árbol sobre `BattleSnapshot`. Solo
@@ -440,6 +471,7 @@ y turno.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.2** (confirmación pre-registrada) | 2026-11-25 | B2 = H 2.1 + RM+ elegido como candidato a H 2.2 (§4e); confirmación U1–U4 en C17/C18 (protocolo §4.9). Invariantes del método H (§4e). |
 | **2.2** (exploración medida) | 2026-11-24 | Exploración (§4d): B1 +0,51 pts y B3 +0,57 sin superioridad; B2 H3 + RM+ no inferior (−0,04 pts) en el 57 % del tiempo (219 s/semilla ≈ G). Sin brazo ganador; B2 candidato de velocidad, confirmación no encolada. |
 | **2.1** (confirmada 24-11: 66,0 % joint, 65,7 % expectimax, 67,5 % solo; +4,46 pts sobre H 2.0; −3,2 pts frente a G 5.2, protocolo §5.8) | 2026-11-24 | H3 = matriz 8/6/4 + decisión por visitas pasa a ser el default del player. Paso A y diagnóstico de H3 en §4c. |
 | **2.2** (exploración) | 2026-11-24 | Variantes de H3 por entorno (§4d): B1 matriz 6/4/3, B2 H3 + RM+ con 200 sims (no inferioridad), B3 backup mixto \(\tfrac12 v_{\rm Nash} + \tfrac12\) media (`MCTS_NASH_BACKUP_MIX`). Sin variables nuevas, sin cambios. Exploración pre-registrada: protocolo §4.8. |

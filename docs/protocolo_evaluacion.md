@@ -395,6 +395,28 @@ congelado en el commit del pre-registro.
   desde 10801, contra joint, expectimax y solo, más la comparación pareada frente a H 2.1) y se encola con
   la aprobación del usuario.
 
+### 4.9 Confirmación de H 2.2 = B2, fijada el 25-11-2026 antes de medir
+
+Candidato (spec de H §4e): **B2 = H 2.1 + RM+ con arranque en caliente y 200 sims**. En la exploración
+(§4.8) pasó la no inferioridad frente a H3: −0,04 pts, cota inferior 95 % −1,09, con el 57 % del tiempo.
+Base: **H 2.1** (confirmada en §5.8). Solo baselines; G 5.2 como referencia descriptiva. Cola
+`scripts/server/mcts_h_v22c.sh`, estadística en `scripts/server/h22c_stats.py`; código congelado en el
+commit del pre-registro.
+
+- **Bloques nuevos:** C17 = 10801–10817 y C18 = 10901–10917, × 300 BO3. Brazos: B2 contra joint,
+  expectimax y solo; H 2.1 contra joint (pareja de U4; se mide en la misma cola, no se reutiliza); G 5.2
+  contra joint (descriptivo, mismo coste que B2).
+- **U1–U3:** B2 > greedy_joint, > expectimax v1.9, > greedy_solo (binomial, IC bootstrap por clúster).
+- **U4 (no inferioridad):** B2 frente a H 2.1 contra joint, McNemar sobre las mismas series. H0: la
+  diferencia es ≤ −1,5 pts; p unilateral por aproximación normal de la diferencia pareada. Se reporta la
+  cota inferior unilateral 95 %, que debe quedar por encima de −1,5 pts.
+- **Holm m = 4** sobre U1–U4. **Condición de tiempo:** s/semilla de B2 contra joint ≤ 85 % del de
+  H 2.1 en la misma cola.
+- **Descriptivo:** B2 frente a G 5.2 contra joint (McNemar), la comparación a igual coste.
+- **Consecuencia:** si U1–U4 se rechazan y se cumple el tiempo, B2 pasa a ser el default del player como
+  **H 2.2** y el H de la Conclusión. Si no, H se queda en 2.1. El margen −1,5 pts es el de la
+  exploración, fijado antes de ver sus datos; equivale a un tercio de la ganancia de H 2.1 sobre H 2.0.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -674,3 +696,4 @@ baselines.
 | 2026-11-24 | Exploración de H 2.2 pre-registrada (§4.8, spec de H §4d): B1 matriz 6/4/3 y B3 backup mixto (superioridad frente a H3, McNemar p < 0,05), B2 H3 + RM+ con 200 sims (no inferioridad: cota inferior 95 % > −1,5 pts y ≤ 85 % del tiempo de H3); 9101–9117 contra joint, espera al paso A. Sin confirmación encolada. |
 | 2026-11-24 | Resultado de la confirmación de H 2.1 (§5.8): V1–V4 confirmadas (H3: 66,0 % contra joint, 65,7 % contra expectimax, 67,5 % contra solo; +4,46 pts sobre H 2.0, p Holm = 4·10⁻¹⁷, los dos bloques). H 2.1 pasa a ser el default del player y el H de la Conclusión. Paso A: H 2.1 frente a G 5.2 −3,17 (joint), −3,00 (expectimax), −4,09 (solo). |
 | 2026-11-24 | Exploración de H 2.2 (§4.8, spec de H §4d): B1 matriz 6/4/3 +0,51 pts (p = 0,43) y B3 backup mixto +0,57 (p = 0,33) no pasan la superioridad; **B2 H3 + RM+ pasa la no inferioridad** (−0,04 pts, cota inferior 95 % −1,09 > −1,5; 219 s/semilla = 57 % del tiempo de H3, ≈ G 5.2). Sin brazo ganador; B2 queda como candidato de velocidad, sin confirmación encolada. |
+| 2026-11-25 | Confirmación de H 2.2 = B2 pre-registrada (§4.9, spec de H §4e): U1–U3 B2 > joint, expectimax, solo; U4 B2 no inferior a H 2.1 (margen −1,5 pts, McNemar con p unilateral); Holm m = 4; tiempo ≤ 85 % del de H 2.1; descriptivo frente a G 5.2 a igual coste. C17 = 10801–10817, C18 = 10901–10917. |
