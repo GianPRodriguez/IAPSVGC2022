@@ -46,11 +46,21 @@ def _h21_knobs() -> dict:
     return out
 
 
+# H 2.1 confirmada el 24-11-2026 (protocolo §5.8): default del player en la familia open-loop (v2).
+# H 2.0 = MCTS_NASH_MATRIX=12,8,8 MCTS_NASH_DECISION=sigma.
+H21_DEFAULTS = {'k_self_root': 8, 'k_self': 6, 'k_opp': 4, 'decision': 'visits'}
+
+
+def _nash_kwargs(version: int) -> dict:
+    """Defaults de H 2.1 (solo v2) y encima las variantes por entorno."""
+    return {**(H21_DEFAULTS if int(version) >= 2 else {}), **_h21_knobs()}
+
+
 class MCTSPuctNashPlayer(FamilyPreviewMixin, Player):
     """Preview por búsqueda (el de G 5.2) + SM-MCTS/Nash.
 
-    ``MCTS_NASH_VERSION`` (2 por defecto = H 2.0: S3 fase 3c open-loop, docs/mcts_puct_nash_spec.md
-    v2.0; 1 = SM-MCTS B1 original con S2). Preview: el mismo de G (``MCTS_PREVIEW``: ``search`` por
+    ``MCTS_NASH_VERSION`` (2 por defecto = familia open-loop con S3 fase 3c y los defaults de H 2.1,
+    docs/mcts_puct_nash_spec.md §4b–§4c; 1 = SM-MCTS B1 original con S2). Preview: el mismo de G (``MCTS_PREVIEW``: ``search`` por
     defecto, ``greedy``, ``nash``); ``team_preview_nash`` nunca se entrenó y caía al orden fijo
     ``/team 1234``. Presupuesto ``MCTS_NASH_SIMS`` (fallback ``MCTS_SIMS``; 200 en v2, como G).
     Anomalías en ``MCTS_STATS_FILE`` (excepción, fallback del adaptador, calculadora, preview).
@@ -84,8 +94,8 @@ class MCTSPuctNashPlayer(FamilyPreviewMixin, Player):
                 n_sims=int(sims),
                 seed=int(os.environ.get('MCTS_NASH_SEED', os.environ.get('MCTS_SEED', seed))),
                 version=version,
-                # H 2.1 (protocolo §4.7); sin env = H 2.0. Matriz: "raíz,interior,rival" (p. ej. "8,6,4").
-                **_h21_knobs(),
+                # Sin env = H 2.1 (protocolo §5.8). Matriz: "raíz,interior,rival" (p. ej. "12,8,8" = H 2.0).
+                **_nash_kwargs(version),
             )
         )
         self.last_joint = 0
