@@ -417,6 +417,51 @@ commit del pre-registro.
   **H 2.2** y el H de la Conclusión. Si no, H se queda en 2.1. El margen −1,5 pts es el de la
   exploración, fijado antes de ver sus datos; equivale a un tercio de la ganancia de H 2.1 sobre H 2.0.
 
+### 4.10 Hipótesis a priori de la familia QD 2.0 (I, J, K), fijada el 26-11-2026 antes de medir
+
+Se fija antes de que existan resultados: la semilla de PPO v2 todavía se está entrenando y las colas
+`qd_i2` y `qd_jk2` aún no arrancan. Es una **expectativa del investigador**, no una hipótesis
+confirmatoria. No cambia ninguna prueba. Sirve para que la Conclusión diga honestamente si los resultados
+coincidieron con lo esperado o sorprendieron. Las confirmaciones de I, J y K se pre-registran aparte,
+después de sus exploraciones.
+
+**Referencias.** PPO v2 de arranque es la semilla elegida por `val`. El **control** es PPO v2 + 1M pasos
+con el mismo preview, mosaico y equipo; es la comparación justa a igual presupuesto. Se mide la tasa de
+victorias contra las 3 heurísticas (greedy_solo, greedy_joint, expectimax) en el split eval.
+
+| Agente | vs PPO v2 de arranque | vs control | P(supera al control), subjetiva |
+|---|---|---|---|
+| I 2.0 (QD-PPO) | mejor, por el entrenamiento extra | empate (±2 pts) | ~30 % |
+| J 2.0 (PGA-ME) | parecido o algo peor | peor | ~10 % |
+| K 2.0 (PPGA) | parecido o algo mejor | algo peor | ~15 % |
+
+**Ranking esperado en rendimiento contra baselines: I > K > J.** En calidad-diversidad (QD-score,
+cobertura) se espera **K ≥ I > J**.
+
+**Razones:**
+1. **Objetivo distinto.** QD reparte el presupuesto entre celdas. El control lo dedica entero a ganar
+   contra el mismo mosaico. A igual presupuesto, la literatura QD rara vez supera a un optimizador puro en
+   rendimiento; gana en QD-score y cobertura.
+2. **I.** Cada hijo recibe 2 actualizaciones de PPO desde una élite, lo que lo acerca a un
+   *population-based training*. La selección pareada y la reevaluación del top-10 en `val` evitan quedarse
+   con un agente que solo tuvo suerte en pocas partidas, lo que podría dar una ventaja pequeña. Pero el
+   presupuesto se reparte entre hijos y evaluaciones.
+3. **J.** Depende de un crítico Q sobre 1600 acciones conjuntas, en un juego estocástico con información
+   parcial, entrenado con ~1M de transiciones. Un crítico mal calibrado desvía el gradiente de política, y
+   las mutaciones Iso+LineDD sobre redes grandes suelen dañarlas. Se espera que su mejor élite quede cerca
+   del arranque.
+4. **K.** Es el método QD más fuerte de los tres en la literatura (rendimiento cercano a PPO en Brax). Pero
+   aquí corre con N1 = N2 = 3 en lugar de 10, y su avance optimiza una recompensa combinada con los BD
+   según xNES, no solo ganar. Se espera una mejora pequeña sobre el arranque y quedar por debajo del
+   control. Es el mejor candidato a QD-score porque su archivo suave y xNES están diseñados para cubrir el
+   mapa de comportamientos.
+5. **Ruido.** Con 200 partidas por rival en la exploración solo se distinguen diferencias de ~3–4 pts.
+   Una diferencia de 1–2 pts frente al control necesita la confirmación pre-registrada.
+
+**Escenario a favor de QD.** Si PPO v2 se estanca en un estilo único y algún rival, en particular
+expectimax, lo castiga, una élite con otro estilo podría rendir más contra ese rival. Por eso los
+resultados se leen **por rival**, no solo como el promedio de las 3 heurísticas.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -723,3 +768,4 @@ por el resolvedor.
 | 2026-11-24 | Exploración de H 2.2 (§4.8, spec de H §4d): B1 matriz 6/4/3 +0,51 pts (p = 0,43) y B3 backup mixto +0,57 (p = 0,33) no pasan la superioridad; **B2 H3 + RM+ pasa la no inferioridad** (−0,04 pts, cota inferior 95 % −1,09 > −1,5; 219 s/semilla = 57 % del tiempo de H3, ≈ G 5.2). Sin brazo ganador; B2 queda como candidato de velocidad, sin confirmación encolada. |
 | 2026-11-25 | Confirmación de H 2.2 = B2 pre-registrada (§4.9, spec de H §4e): U1–U3 B2 > joint, expectimax, solo; U4 B2 no inferior a H 2.1 (margen −1,5 pts, McNemar con p unilateral); Holm m = 4; tiempo ≤ 85 % del de H 2.1; descriptivo frente a G 5.2 a igual coste. C17 = 10801–10817, C18 = 10901–10917. |
 | 2026-11-25 | Resultado de la confirmación de H 2.2 (§5.9): U1–U4 confirmadas (B2: 66,1 % contra joint, 65,2 % contra expectimax, 67,8 % contra solo; frente a H 2.1 +0,00 pts, cota inferior −0,76 > −1,5, p Holm = 6·10⁻⁴) y tiempo 57 % del de H 2.1. H 2.2 = H 2.1 + RM+ pasa a ser el default del player y el H de la Conclusión. Frente a G 5.2 al mismo coste: −2,37 pts. |
+| 2026-11-26 | Hipótesis a priori de la familia QD 2.0 registrada (§4.10), antes de cualquier resultado: frente al control (PPO v2 + 1M) I empata (~30 % de superarlo), K algo peor (~15 %), J peor (~10 %); ranking esperado en rendimiento I > K > J y en QD-score K ≥ I > J. Es descriptiva y no cambia ninguna prueba. |
