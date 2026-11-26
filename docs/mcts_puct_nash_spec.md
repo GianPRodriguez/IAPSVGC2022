@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **Documento** | Contrato exclusivo — MCTS–PUCT/Nash simultáneo (solo turnos) |
-| **Versión** | **2.1** (H 2.1 = H 2.0 de §4b con matriz 8/6/4 y decisión por la fila más visitada, §4c; confirmada el 24-11-2026, H de la Conclusión). H 2.0 se reproduce con `MCTS_NASH_MATRIX=12,8,8 MCTS_NASH_DECISION=sigma` |
+| **Versión** | **2.2** (H 2.2 = H 2.0 de §4b con matriz 8/6/4, decisión por la fila más visitada (§4c) y resolvedor RM+ en caliente (§4d–§4e); confirmada el 25-11-2026, H de la Conclusión). H 2.1 = `MCTS_NASH_SOLVER=fp`; H 2.0 = además `MCTS_NASH_MATRIX=12,8,8 MCTS_NASH_DECISION=sigma` |
 | **Estado** | FROZEN; `showdown/rl/mcts_puct_nash/` |
 | **Training** | **No**: sin gradientes ni `.pt` de combate |
 | **Ajuste** | Presupuesto \(N_{\rm sim}\), Top-K, FP; barrido automatizado de sims |
@@ -288,6 +288,19 @@ confirma, G y H quedan comparados al mismo coste en sims y en tiempo.
 Medición: protocolo §4.9 (cola `scripts/server/mcts_h_v22c.sh`, C17/C18). Si se confirma, el default del
 player pasa a `solver='rm+'`.
 
+**Confirmación (25-11-2026, C17/C18, protocolo §5.9): B2 = H 2.2 confirmada.**
+
+| | H 2.2 (B2) | H 2.1 | G 5.2 |
+|---|---|---|---|
+| Contra joint | **66,07 %** | 66,00 % | 68,42 % |
+| Contra expectimax | 65,19 % | — | — |
+| Contra solo | 67,82 % | — | — |
+| s / semilla contra joint | **218** | 385 | 231 |
+| H 2.2 frente a … (McNemar, contra joint) | — | +0,00 pts (cota inferior 95 % −0,76) | **−2,37 pts** (p = 2·10⁻⁶) |
+
+H 2.2 juega igual que H 2.1 en el 57 % del tiempo. **Desde el 25-11 es el default del player** (versión
+2.2) y el H de la Conclusión. A igual modelo, sims y tiempo, G 5.2 sigue 2,4 pts por encima.
+
 **Invariantes del método H** (SM-MCTS con equilibrio de Nash en las celdas). Toda versión de H debe
 cumplir los cinco; una variante que rompa alguno es otro agente:
 
@@ -424,7 +437,7 @@ Protocolo: [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 ## 10. Team Preview y Conclusión
 
-**Desde v2.1 (Conclusión, 24-11-2026): preview por búsqueda de G → H 2.1 combate** (H 2.0 hasta el 24-11). Pipeline familiar anterior
+**Desde v2.2 (Conclusión, 25-11-2026): preview por búsqueda de G → H 2.2 combate** (H 2.0 hasta el 24-11, H 2.1 hasta el 25-11). Pipeline familiar anterior
 (`MCTS_PREVIEW=nash`): **`team_preview_nash` → MCTS–PUCT/Nash combate**
 (cableado en train live e inferencia; no solo en el registro de Conclusión).
 Mismo apellido “Nash”, problemas distintos (formación vs matrices locales).
@@ -471,6 +484,7 @@ y turno.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.2** (confirmada 25-11: 66,1 % joint, 65,2 % expectimax, 67,8 % solo; = H 2.1 con +0,00 pts en el 57 % del tiempo; −2,37 pts frente a G 5.2 al mismo coste, protocolo §5.9) | 2026-11-25 | H 2.1 + RM+ en caliente pasa a ser el default del player. |
 | **2.2** (confirmación pre-registrada) | 2026-11-25 | B2 = H 2.1 + RM+ elegido como candidato a H 2.2 (§4e); confirmación U1–U4 en C17/C18 (protocolo §4.9). Invariantes del método H (§4e). |
 | **2.2** (exploración medida) | 2026-11-24 | Exploración (§4d): B1 +0,51 pts y B3 +0,57 sin superioridad; B2 H3 + RM+ no inferior (−0,04 pts) en el 57 % del tiempo (219 s/semilla ≈ G). Sin brazo ganador; B2 candidato de velocidad, confirmación no encolada. |
 | **2.1** (confirmada 24-11: 66,0 % joint, 65,7 % expectimax, 67,5 % solo; +4,46 pts sobre H 2.0; −3,2 pts frente a G 5.2, protocolo §5.8) | 2026-11-24 | H3 = matriz 8/6/4 + decisión por visitas pasa a ser el default del player. Paso A y diagnóstico de H3 en §4c. |

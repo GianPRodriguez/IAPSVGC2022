@@ -639,6 +639,31 @@ y contra solo 71,51 %. H 2.1 frente a G 5.2: −3,17 pts contra joint, −3,00 c
 (p = 4·10⁻⁹) y −4,09 contra solo (p = 10⁻¹⁸). La desventaja de H frente a G es de 3–4 pts contra los tres
 baselines.
 
+### 5.9 Resultados de la confirmación de H 2.2 = B2 (25-11-2026, código congelado `0f56856`)
+
+Pre-registro §4.9; exploración: B2 (H 2.1 + RM+) no inferior a H3 (−0,04 pts, cota −1,09) en el 57 % del
+tiempo. C17 = 10801–10817 y C18 = 10901–10917, × 300 BO3, terminada el 25-11 a las 19:19.
+
+| Hipótesis | Victorias / series | Tasa / diferencia | IC 95 % (cluster) | C17 | C18 | p Holm | Resultado |
+|---|---|---|---|---|---|---|---|
+| U1 B2 > greedy_joint | 6689 / 10 124 | 66,07 % | [65,15; 66,98] | 66,26 % | 65,88 % | 5·10⁻²³³ | confirmada (34/34 semillas) |
+| U2 B2 > expectimax v1.9 | 6616 / 10 149 | 65,19 % | [64,26; 66,11] | 64,75 % | 65,62 % | 2·10⁻²⁰⁸ | confirmada (34/34) |
+| U3 B2 > greedy_solo | 6872 / 10 133 | 67,82 % | [66,94; 68,66] | 67,58 % | 68,06 % | 3·10⁻²⁸⁷ | confirmada (34/34) |
+| **U4 B2 no inferior a H 2.1** (McNemar, margen −1,5 pts) | 1092 frente a 1092 (10 068 emparejadas) | **+0,00 pts**, cota inferior 95 % −0,76 | — | +0,22 (cota −0,87) | −0,22 (cota −1,29) | 6·10⁻⁴ | **confirmada** |
+
+Condición de tiempo: B2 218 s/semilla frente a H 2.1 385 s contra joint = **57 %** (tope 85 %), cumple.
+Referencias contra joint en las mismas series: H 2.1 (Hj) 6701 / 10 153 = 66,00 %; G 5.2 (Gj)
+6939 / 10 142 = 68,42 % (231 s/semilla). Descriptivo **B2 frente a G 5.2 al mismo coste: −2,37 pts**
+(1144 frente a 1382, p = 2·10⁻⁶; C17 −2,28, C18 −2,46). B2 contra expectimax tardó 288 s y contra
+solo 218 s. 0 errores de serie, 0 fallbacks del preview y 0 anomalías en las 171 corridas.
+
+**Decisión (regla pre-registrada): U1–U4 se confirman y se cumple el tiempo → H 2.2 (B2) es el default
+del player y el H de la Conclusión.** H 2.2 juega exactamente como H 2.1 (empate 1092–1092 en las
+series discordantes) con el 57 % del tiempo, es decir, al coste de G. Con el mismo modelo, preview, SP,
+200 sims y el mismo tiempo, el open-loop con media (G 5.2) gana 2,4 pts más contra joint que el
+SM-MCTS con valor de Nash (H 2.2): la diferencia entre los dos métodos ya no se explica por tiempo ni
+por el resolvedor.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -697,3 +722,4 @@ baselines.
 | 2026-11-24 | Resultado de la confirmación de H 2.1 (§5.8): V1–V4 confirmadas (H3: 66,0 % contra joint, 65,7 % contra expectimax, 67,5 % contra solo; +4,46 pts sobre H 2.0, p Holm = 4·10⁻¹⁷, los dos bloques). H 2.1 pasa a ser el default del player y el H de la Conclusión. Paso A: H 2.1 frente a G 5.2 −3,17 (joint), −3,00 (expectimax), −4,09 (solo). |
 | 2026-11-24 | Exploración de H 2.2 (§4.8, spec de H §4d): B1 matriz 6/4/3 +0,51 pts (p = 0,43) y B3 backup mixto +0,57 (p = 0,33) no pasan la superioridad; **B2 H3 + RM+ pasa la no inferioridad** (−0,04 pts, cota inferior 95 % −1,09 > −1,5; 219 s/semilla = 57 % del tiempo de H3, ≈ G 5.2). Sin brazo ganador; B2 queda como candidato de velocidad, sin confirmación encolada. |
 | 2026-11-25 | Confirmación de H 2.2 = B2 pre-registrada (§4.9, spec de H §4e): U1–U3 B2 > joint, expectimax, solo; U4 B2 no inferior a H 2.1 (margen −1,5 pts, McNemar con p unilateral); Holm m = 4; tiempo ≤ 85 % del de H 2.1; descriptivo frente a G 5.2 a igual coste. C17 = 10801–10817, C18 = 10901–10917. |
+| 2026-11-25 | Resultado de la confirmación de H 2.2 (§5.9): U1–U4 confirmadas (B2: 66,1 % contra joint, 65,2 % contra expectimax, 67,8 % contra solo; frente a H 2.1 +0,00 pts, cota inferior −0,76 > −1,5, p Holm = 6·10⁻⁴) y tiempo 57 % del de H 2.1. H 2.2 = H 2.1 + RM+ pasa a ser el default del player y el H de la Conclusión. Frente a G 5.2 al mismo coste: −2,37 pts. |
