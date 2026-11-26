@@ -1443,3 +1443,33 @@ mismo set de evaluación que DDQN v1 más `final.pt` contra `val` en las cinco s
 (media de los tres heurísticos), sin mirar `eval`. El resumen incluye DDQN v1 para la comparación limpia
 de algoritmos (mismo preview y misma observación).
 
+### 19.1 Resultados (26-11-2026, commit `3c6e1b3`)
+
+Cinco semillas de 1M pasos, entre 1 h 12 min y 1 h 32 min cada una (180–230 pasos/s). La calculadora
+real respondió todo: 0 % de respaldos y 0 pedidos sin respuesta en ~90M consultas por semilla. Cifras:
+victorias contra los 3 heurísticos, 200 partidas por rival (`kickoff_summary16.md`).
+
+| Método | final.pt `eval` (IC 95 % entre semillas) | IC por partidas | best.pt `eval` | propios | arquetipo (joint) |
+|---|---|---|---|---|---|
+| DDQN v1 | 62,1 % (± 3,4) | ± 1,7 | 59,3 % | 95,9 % | — |
+| PPO v1 (referencia, ddqn_kickoff_checklist) | 81,2 % (± 3,5) | ± 1,4 | — | — | — |
+| **PPO v2** | **84,5 % (± 3,8)** | ± 1,3 | 83,0 % | 95,7 % | 79,0 % (−9,2 frente a joint normal) |
+
+Por rival (PPO v2, final.pt, `eval`): random 99,6 %, greedy_solo 85,2 %, greedy_joint 88,2 %,
+expectimax 80,1 %. PPO v2 supera a DDQN v1 por **+22,4 pts** (Welch ± 4,4; mismo preview y misma
+observación), así que la diferencia es del algoritmo. Frente a PPO v1 son +3,3 pts (descriptivo: PPO v1
+tenía otro preview y otra observación).
+
+| Semilla | `val` | final.pt `eval` | best.pt `eval` |
+|---|---|---|---|
+| 0 | 83,0 % | 84,2 % | 82,0 % |
+| **1 (elegida)** | **91,0 %** | 79,3 % | 82,2 % |
+| 2 | 85,2 % | 85,3 % | 86,7 % |
+| 3 | 86,8 % | 86,7 % | 81,2 % |
+| 4 | 88,3 % | 87,0 % | 82,8 % |
+
+**Semilla para I/J/K: s1**, por la regla fijada antes de entrenar (mejor `val`). En `eval` es la peor de
+las cinco (79,3 %). La regla se mantiene porque elegir mirando `eval` contaminaría la evaluación. La
+discrepancia muestra el ruido de una medición de 200 partidas por rival entre semillas parecidas.
+Consecuencia: el control (s1 + 1M pasos) es la comparación justa para I/J/K, no el promedio de PPO v2.
+
