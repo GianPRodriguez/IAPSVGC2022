@@ -2,12 +2,66 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.7** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.20) |
+| **Versión** | **2.0** (I 2.0: desde PPO v2, comparación pareada, reevaluación al desplegar; §I 2.0). 1.7 = diseño original, nunca entrenado |
 | **Estado** | FROZEN; `showdown/rl/qd_ppo/` |
 | **Training** | **Sí**: MAP-Elites serial con PPO como operador de mejora |
 | **Inferencia** | Despliega \(\pi^\*=\arg\max f\) desde `best_elite.pt` |
-| **CLI** | `python -m showdown.rl.qd_ppo.train` |
+| **CLI** | `python -m showdown.rl.qd_ppo.train2` (I 2.0; `--control` = PPO v2 sin archivo). `train` = I 1.7 |
 | **CLI tune** | `python -m showdown.inference_sim.run_qd_ppo_hp_tune` |
+
+## I 2.0 — QD-PPO desde PPO v2 (25-11-2026)
+
+**Decisiones del usuario (25-11-2026):** arrancar desde PPO v2; medir contra un control "PPO v2 + el
+mismo presupuesto"; aplicar después la misma receta a J y K. Motivo: la revisión de la familia QD
+(25-11) encontró que, desde cero y con 1M de pasos repartidos en ~100 celdas, el mejor linaje casi no
+aprende; que el desplegado se elegía con `argmax f` sobre estimaciones de 20 partidas (maldición del
+ganador); y que los descriptores ocupaban ~5 de las 100 celdas. I 1.7 nunca se entrenó en vivo.
+
+**Papel en la tesis.** I es la línea base on-policy de QD: MAP-Elites con PPO como operador de
+variación, sin gradientes de los descriptores. Responde si mantener un archivo de estilos mejora a PPO
+solo (frente al control) y sirve de ablación para J (crítico compartido) y K (componente diferenciable).
+Cada élite guarda su propio crítico, entrenado con sus propios datos (sin el problema de V fuera de
+política del crítico compartido).
+
+**Formalización.** Archivo \(\mathcal{A}\) sobre una rejilla de 10 × 10 en \(\mathcal{B}\) con límites
+calibrados. Descriptor \(b(\theta)\): fracción de acciones ofensivas frente a estado/preparación y tasa
+de cambios voluntarios por turno, promediadas sobre partidas de al menos 4 turnos. Fitness
+\(f(\theta)=\mathbb{E}[R_{\text{Cand.1}}]\in[-1,1]\). Variación: \(\theta'=\mathrm{PPO}_{K}(\theta_p)\)
+con \(\theta_p\) uniforme entre las celdas ocupadas. \(b\) solo decide dónde compite una política, nunca
+cuánto vale: no hay recompensa de novedad.
+
+| Componente | I 1.7 | I 2.0 |
+|---|---|---|
+| Arranque | 100k pasos de PPO desde cero | `final.pt` de PPO v2 (semilla con mejor `val`, regla previa): actor y crítico, observación P5 del checkpoint, equipo fijo, preview congelado, validación reservada (rivales de `fit`) |
+| Mosaico | random / solo / joint 25 / 25 / 50 | proporciones de las fases de PPO v2: random 15, solo 25, joint 30, expectimax 30 (para no olvidar a expectimax) |
+| Descriptores | rejilla sobre \([0,1]^2\) | límites = percentiles 5–95 de los descriptores por partida de 512 partidas del arranque (ancho mínimo 0,05); esas partidas dan además la estimación inicial del arranque, primera élite |
+| Hijo | 1 actualización PPO (2048 pasos) | 2 actualizaciones PPO (4096 pasos), optimizador nuevo, crítico heredado del padre |
+| Inserción | 20 BO1 propios; reemplaza si \(f_{\rm nuevo}>f_{\rm viejo}\) | el hijo juega 32 enfrentamientos nuevos (rival y semilla de equipos fijos); si su celda está ocupada, el ocupante juega **los mismos** y suma esas partidas a su estimación; el hijo reemplaza solo si la diferencia pareada es > 0. Celda vacía: entra directo. Al menos 16 partidas elegibles |
+| Despliegue | `argmax f` | las 10 élites con mejor estimación se reevalúan en 300 enfrentamientos comunes con equipos `val` contra los tres heurísticos; π* = la mejor (`best_elite.pt`, `reeval.json`) |
+| QD-score | \(\sum \max(0,f)\) | \(\sum (f+1)\) (desplazamiento estándar; todas las celdas cuentan) |
+| Presupuesto | 1M desde cero | 1M de pasos extra sobre PPO v2 (~244 hijos); las partidas de evaluación van aparte |
+
+**Control (`--control`).** El mismo entrenador sin archivo: PPO v2 sigue entrenando 1M de pasos con el
+mismo mosaico, preview, equipo y semilla; se despliega su `final.pt`. Hipótesis central de la
+confirmación: I 2.0 > control.
+
+**Enfrentamientos comunes.** Un enfrentamiento es `{rival, semilla, grupo}`: la semilla fija los equipos
+de los dos lados y el grupo los equipos posibles (`val` para el despliegue). El entorno vectorizado los
+arranca con `start_matches` y encadena el siguiente al terminar cada partida
+(`showdown/rl/qd_ppo/matchups.py`). Una partida caída no cuenta (no es un empate).
+
+**Medición.** Cola `scripts/server/qd_i2.sh` (espera al kick-off de PPO v2): preview QD-PGA v1.6 con
+piloto PPO v2, control, I 2.0 y una exploración descriptiva contra `eval` (I 2.0, control y PPO v2
+con el preview QD, 200 partidas por rival). La confirmación se pre-registra aparte.
+
+```bash
+python -m showdown.rl.qd_ppo.train2 --seed 0 --init-checkpoint <ppo_v2>/final.pt --start-ps --num-envs 32 \
+  --device cuda --preview-checkpoint <preview_qd>/best_elite.pt --require-preview --checkpoint-dir <dir> [--control]
+```
+
+Código: `showdown/rl/qd_ppo/train2.py` (I 2.0 y control), `matchups.py`, `archive.py` (límites, estimación
+acumulada `n_eval`, QD-score, metadatos), `mosaic.py` (`MOSAICS`, `make_sampler`), `vec_env.py`
+(`start_matches`). `train.py` (I 1.7) queda como referencia; nunca produjo un agente.
 
 ## Por qué existe
 
@@ -226,6 +280,7 @@ siendo la suite de \(\pi^\*\), no coverage por sí sola.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.0** | 2026-11-25 | **I 2.0** (decisiones del usuario tras la revisión de la familia QD): arranque desde PPO v2, mosaico con las proporciones de PPO v2, descriptores calibrados, hijos con 2 actualizaciones PPO, comparación pareada con el ocupante en enfrentamientos comunes, reevaluación de las 10 mejores en `val` antes de desplegar, QD-score \(\sum(f+1)\), control `--control`. Ver §I 2.0. |
 | **1.7** | 2026-11-15 | Codificador estructurado (rl_env_spec §3.c) dentro del actor; consistencia por simetría (§3.d) en las actualizaciones PPO del actor (vía `PPOAgent.update`). Objetivo aliado del slot 0 corregido. Checkpoints/archivos anteriores incompatibles. |
 | **1.6** | 2026-11-14 | ObsSpec v2 (6332D, OTS completo + estado + historial) y ActionSpec v2 (40 ids por slot: mega como flag de cada movimiento×objetivo; máscara de entrenamiento = `valid_orders`). Checkpoints anteriores incompatibles. |
 | **1.5** | 2026-10-11 | Train/infer bajo Preview QD-PGA congelado (`frozen_preview`). |

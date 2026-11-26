@@ -3,7 +3,7 @@
 | Campo | Valor |
 |-------|-------|
 | **Documento** | Contrato exclusivo — QD-PGA MAP-Elites solo Team Preview |
-| **Versión** | **1.5** (alineado con `docs/rl_env_spec.md` v1.20 §6.k) |
+| **Versión** | **1.6** (I 2.0: ver §0; alineado con `docs/rl_env_spec.md` v1.20 §6.k) |
 | **Estado** | **FROZEN** — implementado en `showdown/rl/team_preview_qd_pga/` |
 | **Algoritmo** | Grid MAP-Elites + mutación Gaussiana o mejora PPO-clip (PGA) |
 | **Formato** | Gen 9 VGC **Regulation M-C**, OTS, Mega on, **Tera off** |
@@ -14,6 +14,28 @@
 
 El resultado no es una sola policy, sino un archivo de políticas de preview:
 la mejor conocida para cada región de comportamiento.
+
+## 0. Versión 1.6 (25-11-2026, para I 2.0)
+
+Cambios tras la revisión de la familia QD:
+
+| Cambio | Antes | Ahora | Por qué |
+|---|---|---|---|
+| Optimizador del actor | Un Adam para todos los hijos | Uno nuevo por cada hijo PG | Los momentos de Adam de un hijo empujaban al siguiente, de otro padre |
+| Rama de mutación | 128 episodios "burn" sin uso | El hijo mutado solo se evalúa | Eran ~65.000 BO1 en vivo jugados para nada |
+| \(b_2\) | "Agresivo" = todo lo que no es soporte (casi siempre 1) | Fracción de los dos leads que son de soporte (redirección, Tailwind, Trick Room, Fake Out) | Ahora varía con la elección del preview |
+| Rejilla | Sobre \([0,1]^2\) | Límites = percentiles 5–95 de los descriptores por contexto del actor del bootstrap | Ocupar la rejilla con lo que el preview realmente produce |
+| Desplegado | `argmax f` (20 BO1) | Las 10 mejores élites se reevalúan en 300 contextos comunes; se despliega la mejor (`best_elite.pt`; el preview congelado elige por `reeval_f` también desde `archive.pt`) | Maldición del ganador |
+| Observación | Sin P5 (por omisión) | `--obs-abilities 1` por defecto, como preview v2.1; la bandera se guarda en el archivo y el preview congelado la aplica | Información completa, igual que PPO v2 |
+| Contextos | Equipos propios al azar | `--own-team <archivo>`: equipo propio fijo, como preview v2.1 de PPO/DDQN | I juega con el equipo fijo |
+
+**Piloto.** Para I 2.0 el preview se entrena con el combate que lo va a usar: `--pilot ppo` con
+`PREVIEW_PILOT_CHECKPOINT` = el `final.pt` de PPO v2 del que arranca I (rival `greedy_joint`). Así ya se
+hacía con DDQN y PPO (memorizacion_equipos §15).
+
+**Corrección de esta spec.** El §5.1 decía que la evaluación usa un mosaico 25 % random, 25 % greedy y
+50 % expectimax. El código nunca lo implementó: el rival es el mismo piloto (o `greedy_joint` cuando el
+piloto es un combate RL). Se deja escrito así.
 
 ## 1. Por qué existe
 
@@ -255,6 +277,7 @@ del round-robin. Véase
 
 | Versión | Fecha | Notas |
 |---------|-------|-------|
+| **1.6** | 2026-11-25 | Para I 2.0 (§0): Adam nuevo por hijo, sin episodios burn, \(b_2\) = leads de soporte, rejilla calibrada, reevaluación de las 10 mejores antes de desplegar, P5 por defecto, `--own-team`, piloto PPO v2. Corrección: el mosaico de evaluación de §5.1 nunca se implementó. |
 | **1.5** | 2026-11-15 | Codificador estructurado compartido (rl_env_spec §3.c): mismo sub-MLP `464→128→64` para los 12 Pokémon + matrices crudas → 876 → tronco 256; el codificador es parte del actor del archivo. `RL_OBS_ENCODER=flat` restaura el MLP plano. Checkpoints anteriores incompatibles. |
 | **1.4** | 2026-11-14 | Observación compartida OTS v2 (5676D, hoja completa) en lugar de 512D; los actores del archive crecen en la primera capa. Checkpoints anteriores incompatibles. |
 | **1.3** | 2026-10-11 | `archive.pt` + tune `run_team_preview_qd_pga_hp_tune` + tracking prev→nuevo; `--lr/--clip-eps`. |

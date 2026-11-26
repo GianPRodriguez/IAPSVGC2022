@@ -74,7 +74,8 @@ def classify(battle, slot: int, act, mask_slot: np.ndarray) -> str:
 
 def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
         preview_checkpoint: str = '', agent_kind: str = 'ddqn', context: bool = False,
-        foes=FOES, sample: bool = False, temperature: float = 1.0) -> Dict[str, object]:
+        foes=FOES, sample: bool = False, temperature: float = 1.0,
+        family: str = '') -> Dict[str, object]:
     from showdown.inference_sim.team_factory import load_team_file
     from showdown.rl.action_space import decode_joint_action, decode_slot_action
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
@@ -86,7 +87,9 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
     from showdown.rl.pokeenv_backend import PokeEnvBattleBackend
     from showdown.rl.reward import RewardCandidate
 
-    print('[diag] ' + configure_preview(agent_kind, checkpoint=preview_checkpoint or None), flush=True)
+    # family: familia del preview congelado (p. ej. qd_ppo = preview QD-PGA con combate PPO, I 2.0)
+    fam = family or agent_kind
+    print('[diag] ' + configure_preview(fam, checkpoint=preview_checkpoint or None), flush=True)
     if agent_kind == 'ppo':
         from showdown.rl.observation import build_observation_ppo
         from showdown.rl.ppo.agent import PPOAgent, PPOConfig
@@ -109,7 +112,7 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
         if foe not in foes:
             continue
         backend = PokeEnvBattleBackend(opponent=foe, start_ps=True, port=port, account_prefix='DdqnDiag',
-                                       combat_family='ddqn', our_team=our_team, foe_tie=False)
+                                       combat_family=family or 'ddqn', our_team=our_team, foe_tie=False)
         env = VGCEnv(reward_candidate=RewardCandidate.SPARSE, backend=backend, max_episode_turns=40)
         try:
             for g in range(games):
@@ -227,6 +230,7 @@ def main(argv=None) -> int:
     ap.add_argument('--agent-team', default='showdown/rl/data/ddqn_team.txt')
     ap.add_argument('--out', default='logs/policy_diag.json')
     ap.add_argument('--agent', choices=('ddqn', 'ppo'), default='ddqn')
+    ap.add_argument('--family', default='', help='familia del preview congelado (p. ej. qd_ppo); defecto: --agent')
     ap.add_argument('--foes', default=','.join(FOES), help='rivales a jugar (lista separada por comas)')
     ap.add_argument('--sample', action='store_true',
                     help='PPO: sortear la acción de la política en vez de tomar la más probable (P1)')
@@ -237,7 +241,7 @@ def main(argv=None) -> int:
     rep = run(checkpoint=args.checkpoint, games=args.games, port=args.port, seed=args.seed,
               agent_team=args.agent_team, preview_checkpoint=args.preview_checkpoint,
               agent_kind=args.agent, context=args.context, sample=args.sample, temperature=args.temperature,
-              foes=tuple(f.strip() for f in args.foes.split(',') if f.strip()))
+              foes=tuple(f.strip() for f in args.foes.split(',') if f.strip()), family=args.family)
     with open(args.out, 'w', encoding='utf-8') as fh:
         json.dump(rep, fh, indent=1)
     print(format_table(rep))
