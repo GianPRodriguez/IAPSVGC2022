@@ -9,6 +9,66 @@
 | **CLI** | `python -m showdown.rl.qd_ppga.train` |
 | **CLI tune** | `python -m showdown.inference_sim.run_qd_ppga_hp_tune` |
 
+## K 2.0 — PPGA fiel a la teoría (diseño del 25-11-2026)
+
+**Decisión del usuario (25-11-2026):** implementación fiel de PPGA (Batra et al., ICLR 2024), con el
+mismo arranque desde PPO v2, el mismo control y el mismo despliegue que I 2.0. K 1.7 (PPO sobre el
+fitness y selección de padres hacia celdas vacías) solo tomaba el nombre: no tenía gradientes de los
+descriptores, ni ramificación, ni archivo suave.
+
+**Fuente verificada:** arXiv 2305.13795 v2 (versión HTML), Algoritmos 1–3, §3–§4 y apéndices, leída el
+25-11-2026. Lo que el paper no fija se marca "no lo fija el paper" y se decide aquí.
+
+### Algoritmo (Algoritmo 1 del paper)
+
+Un único **punto de búsqueda** \(\theta_\mu\) y una distribución de coeficientes \(c \sim \mathcal N(\mu, \Sigma)\)
+en \(\mathbb R^{k+1}\) (fitness + \(k = 2\) descriptores), mantenida con **xNES** (el paper la cambió de
+CMA-ES porque su tamaño de paso divergía con objetivos ruidosos). Por iteración:
+
+1. **Jacobiano por PPO (VPPO):** el actor se copia \(k+1\) veces, una por objetivo, cada copia con su
+   propia función de valor; cada copia se entrena `N1` iteraciones de PPO con su recompensa. Los
+   "gradientes" son **diferencias de parámetros**: \(\nabla f = \theta'_f - \theta_\mu\),
+   \(\nabla m_j = \theta'_{m_j} - \theta_\mu\). Se normalizan.
+2. \(\theta_\mu\) se evalúa y se intenta insertar.
+3. **Ramificación:** \(\lambda\) coeficientes \(c_i \sim \mathcal N(\mu,\Sigma)\);
+   \(\theta'_i = \theta_\mu + c_{i,0}\nabla f + \sum_j c_{i,j}\nabla m_j\); cada rama se evalúa y se inserta, y
+   devuelve su mejora del archivo \(\Delta_i\).
+4. **xNES** actualiza \(\mu,\Sigma\) con el ranking de los \(\Delta_i\).
+5. **Paseo:** \(\theta_\mu\) se entrena `N2` iteraciones de PPO con la recompensa combinada
+   \(c_{\mu,0}\,r_f + \sum_j c_{\mu,j}\,\delta_j\), con \(c_\mu = \mu\) nuevo, fija durante las `N2` iteraciones.
+6. **Reinicio:** si el archivo no cambió, xNES vuelve a \(\mu = 0\), \(\Sigma = \sigma_g I\) y \(\theta_\mu\) pasa a
+   una élite al azar.
+
+**Archivo suave (CMA-MAE, Algoritmo 2):** cada celda tiene un umbral \(t\); si \(f > t\):
+\(\Delta = f - t\) y \(t \leftarrow (1-\alpha)t + \alpha f\); si no, \(\Delta = 0\).
+
+**Proxies markovianos de los descriptores (§3.1):** el descriptor se vuelve una recompensa por paso.
+Aquí: \(\delta_1\) = fracción de acciones ofensivas del turno (sobre ofensivas + estado/preparación;
+0,5 si no hay); \(\delta_2\) = 1 si los dos activos atacan al mismo rival con ataques de un solo objetivo,
+0 si a rivales distintos, 0,5 si el turno no tiene dos de esos ataques. Su promedio por partida
+reproduce BD1 y BD2 (rl_env_spec v1.34) salvo en la ponderación de los turnos.
+
+### Hiperparámetros
+
+| Parámetro | Paper | K 2.0 | Motivo |
+|---|---|---|---|
+| `N1`, `N2` | 10, 10 | **3, 3** | Presupuesto de 1M de pasos (el paper usa cientos de millones); su ablación muestra que bajar `N1/N2` reduce el rendimiento pero conserva el método ((1, 1) ≈ 50 % del de referencia) |
+| Rollout por iteración de PPO | 128 pasos × E entornos (E no lo fija) | 32 pasos × 32 entornos = 1024 por copia | Mismo paralelismo que el resto de la familia |
+| Épocas / minibatches de PPO | 4 / 8 | 4 / 4 (lote 256) | Los de PPO v2 |
+| \(\lambda\) (ramas) | no lo fija (sugiere 300 políticas por iteración) | **8** | Cada rama cuesta 32 partidas |
+| \(\sigma_g\) inicial | no lo fija | 1,0, con \(\nabla\) normalizados y luego escalados por la norma media de los tres pasos de PPO | Así \(c \approx 1\) equivale a un paso de PPO de tamaño típico |
+| Normalización de \(\nabla\) | `normalize()`, sin detalle | norma euclídea unitaria sobre todos los parámetros | — |
+| \(\alpha\) del archivo | 0,1 (Humanoid, Ant) | 0,1 | — |
+| Umbral inicial de celda vacía | 0 | \(-1\) (mínimo de Cand. 1) | Con fitness en [−1, 1], 0 rechazaría políticas que pierden más de lo que ganan |
+| xNES | Glasmachers et al. (2010), sin detalle | xNES estándar: utilidades por rango, \(\eta_\mu = 1\), \(\eta_\sigma = \eta_B = (9+3\ln d)/(5d\sqrt d)\), \(d = 3\) | Valores por defecto del método |
+| Funciones de valor | una por objetivo | la cabeza de valor de cada copia del actor-crítico (la de \(r_f\) viene de PPO v2; las de \(\delta_j\) se reentrenan en cada VPPO) | — |
+
+**Presupuesto:** 1M de pasos de entorno en total (VPPO, paseo y evaluación de ramas), ~60 iteraciones.
+
+**Común con I 2.0:** arranque desde PPO v2, mosaico, descriptores calibrados, inserción en el archivo de
+resultados por comparación pareada, reevaluación de las 10 mejores en `val`, QD-score \(\sum(f+1)\) y el
+mismo control. El archivo suave solo se usa para ordenar las ramas (\(\Delta\)), como en CMA-MAE.
+
 ## Por qué existe
 
 QD-PPGA estudia si se puede cubrir el mapa sin mutaciones genéticas. Todos los
@@ -217,6 +277,7 @@ El metadata de cada elite conserva el modo de padre para auditoría.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.0** (diseño) | 2026-11-25 | **K 2.0 = PPGA fiel** (decisión del usuario): VPPO con k+1 copias y gradientes como diferencias de parámetros, ramificación con xNES, archivo suave CMA-MAE (\(\alpha = 0{,}1\)), paseo por PPO con la recompensa combinada, reinicio sin mejora, proxies markovianos de BD1/BD2; arranque desde PPO v2 y regla común de I 2.0. Fuente: arXiv 2305.13795 v2. Ver §K 2.0. |
 | **1.7.1** | 2026-11-25 | Archivo compartido con I 2.0: QD-score \(\sum(f+1)\) y límites/metadatos opcionales (por defecto la rejilla sigue sobre \([0,1]^2\)). El rediseño de K (implementación fiel o renombre, arranque desde PPO v2) queda pendiente de decisión del usuario; ver la revisión de la familia QD del 25-11-2026. |
 | **1.7** | 2026-11-15 | Codificador estructurado (rl_env_spec §3.c) dentro del actor; consistencia por simetría (§3.d) en las actualizaciones PPO del actor y aumentación exacta en el TD del crítico compartido. Objetivo aliado del slot 0 corregido. Checkpoints/archivos anteriores incompatibles. |
 | **1.6** | 2026-11-14 | ObsSpec v2 (6332D, OTS completo + estado + historial) y ActionSpec v2 (40 ids por slot: mega como flag de cada movimiento×objetivo; máscara de entrenamiento = `valid_orders`). Checkpoints anteriores incompatibles. |
