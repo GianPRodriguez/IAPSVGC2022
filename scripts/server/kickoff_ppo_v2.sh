@@ -1,10 +1,10 @@
 #!/bin/bash
-# KICK-OFF OFICIAL DE PPO v2 (26-11-2026). Receta fijada en memorizacion_equipos §17–§18:
+# KICK-OFF OFICIAL DE PPO v2 (25-11-2026). Receta fijada en memorizacion_equipos §17–§18:
 #   PPO v2 = PPO v1 + P5 completo (calculadora real en la observación, --obs-abilities 1) + preview
 #   v2.1 sin val (el mismo de DDQN v1: preview_v21b/preview_s0/best.pt) + sorteo T = 0,5 solo al jugar
 #   contra personas (no afecta el entrenamiento). Resto = configuración del kick-off de PPO v1
 #   (simetría ON, máscara del aliado, validación reservada, equipo fijo, 1M pasos por semilla).
-# Decisión del usuario (26-11-2026): entrenar PPO v2 antes de los agentes QD; I, J y K arrancan desde
+# Decisión del usuario (25-11-2026): entrenar PPO v2 antes de los agentes QD; I, J y K arrancan desde
 # el final.pt de la semilla con mejor `val` (regla fijada antes de entrenar). Comparación limpia de
 # algoritmos: PPO v2 frente a DDQN v1 (mismo preview y misma observación).
 #

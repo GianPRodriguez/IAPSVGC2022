@@ -1430,7 +1430,7 @@ Por rival (`final.pt`, `eval`): random 97,7 %, greedy_solo 62,4 %, greedy_joint 
 DDQN v1 (19,1 puntos) mezcla algoritmo, preview y observación. La comparación limpia entre
 algoritmos será PPO v2 frente a DDQN v1 (mismo preview v2.1 sin `val` y misma observación).
 
-## 19. Kick-off oficial de PPO v2 (26-11-2026)
+## 19. Kick-off oficial de PPO v2 (25-11-2026)
 
 **Decisión del usuario:** entrenar PPO v2 antes de los agentes QD (I, J, K), que arrancan desde PPO v2.
 Receta fijada en §17–§18: PPO v1 + P5 completo (calculadora real) + preview v2.1 sin `val` (el mismo de
