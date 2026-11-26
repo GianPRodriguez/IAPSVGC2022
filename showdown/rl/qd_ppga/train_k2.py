@@ -25,7 +25,8 @@ from showdown.rl.qd_ppga.ppga import (
     SoftArchive, XNES, apply_step, normalized, objective_reward, param_delta, ppo_iterations,
 )
 from showdown.rl.qd_ppo.archive import Archive
-from showdown.rl.qd_ppo.matchups import make_matchups, paired_diff, play_matchups
+from showdown.rl.qd_ppo.batch_insert import evaluate_insert_batch
+from showdown.rl.qd_ppo.matchups import make_matchups, play_matchups
 from showdown.rl.qd_ppo.mosaic import make_sampler
 from showdown.rl.qd_ppo.train2 import (
     DEFAULT_TEAM, _agent_from, _make_env, _reeval, _state, calibrate_bounds,
@@ -95,42 +96,10 @@ def run_training(
     def count(_t):
         steps['n'] += 1
 
-    def play(state, matches):
-        return play_matchups(_agent_from(cfg, state), env, matches, on_transition=count)
-
     xnes = XNES(1 + 2, sigma0=sigma_g, seed=int(seed))
     soft = SoftArchive(alpha=alpha)
     stats = {'iterations': 0, 'branches': 0, 'accepts': 0, 'new_cells': 0, 'replaced': 0, 'restarts': 0,
              'rejected_gmin': 0}
-
-    def evaluate_insert(state, meta, archive):
-        """Evalúa ``state``; archivo de resultados (pareada) y Δ del archivo suave. Devuelve (Δ, cambió)."""
-        matches = make_matchups(rng, paired_games, sampler)
-        res = play(state, matches)
-        bd = res.bd()
-        if bd is None or len(res.eligible_bds()) < int(g_min):
-            stats['rejected_gmin'] += 1
-            return 0.0, False
-        key = archive.key_of(*bd)
-        delta = soft.update(key, res.fitness)
-        inc = archive.cells.get(key)
-        if inc is None:
-            archive.try_insert(bd1=bd[0], bd2=bd[1], fitness=res.fitness, state_dict=state, meta=meta,
-                               returns=res.valid_returns(), force=True)
-            stats['accepts'] += 1
-            stats['new_cells'] += 1
-            return delta, True
-        res_i = play(inc.state_dict, matches)
-        inc.add_games(res_i.valid_returns())
-        d = paired_diff(res, res_i)
-        if d > 0:
-            meta['paired_diff'] = d
-            archive.try_insert(bd1=bd[0], bd2=bd[1], fitness=res.fitness, state_dict=state, meta=meta,
-                               returns=res.valid_returns(), force=True)
-            stats['accepts'] += 1
-            stats['replaced'] += 1
-            return delta, True
-        return delta, delta > 0
 
     try:
         calib = play_matchups(base, env, make_matchups(rng, calibrate_games, sampler), on_transition=count)
@@ -157,21 +126,23 @@ def run_training(
                 grads.append(g)
                 norms.append(n)
             scale = float(np.mean([n for n in norms if n > 0])) if any(n > 0 for n in norms) else 0.0
-            # 2. evaluar el punto de búsqueda
-            _d, changed = evaluate_insert(mu_state, {'iter': it, 'op': 'mu'}, archive)
-            # 3. ramas
+            # 2–3. punto de búsqueda y ramas, evaluados a la vez (regla común de I/J/K para el archivo
+            # de resultados; Δ del archivo suave CMA-MAE para el ranking de xNES)
             coefs = xnes.ask(lam)
+            cands = [(mu_state, {'iter': it, 'op': 'mu'})]
+            cands += [(apply_step(mu_state, grads, c, scale),
+                       {'iter': it, 'op': 'branch', 'coef': [float(x) for x in c]}) for c in coefs]
+            stats['branches'] += len(coefs)
+            outs = evaluate_insert_batch(archive, env, lambda sd: _agent_from(cfg, sd), cands, rng, sampler,
+                                         paired_games=paired_games, g_min=g_min, stats=stats,
+                                         on_transition=count)
             deltas = []
-            for c in coefs:
-                if steps['n'] >= budget:
-                    deltas.append(0.0)
-                    continue
-                stats['branches'] += 1
-                br = apply_step(mu_state, grads, c, scale)
-                d, ch = evaluate_insert(br, {'iter': it, 'op': 'branch', 'coef': [float(x) for x in c]},
-                                        archive)
+            changed = False
+            for o in outs:
+                d = soft.update(o['key'], o['res'].fitness) if o['eligible'] else 0.0
                 deltas.append(d)
-                changed = changed or ch
+                changed = changed or o['inserted'] or d > 0
+            deltas = deltas[1:]
             # 4. xNES con el ranking de Δ
             xnes.tell(deltas)
             # 5. paseo: n2 iteraciones de PPO con la recompensa combinada por la media de xNES

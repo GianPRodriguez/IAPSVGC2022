@@ -89,7 +89,7 @@ class _FakeVenv:
         return np.ones((len(idx), 2))
 
     def step_async(self, idx, actions, on_done):
-        self.pending = list(zip(idx, on_done))
+        self.pending.extend(zip(idx, on_done))   # como el entorno real: se acumulan hasta el wait
 
     def drain(self):
         out = []
@@ -189,3 +189,39 @@ def test_bd2_focus_fire_default_and_switch_mode(monkeypatch):
     assert tr.bd_vector()[1] == pytest.approx(2 / 3)
     monkeypatch.setenv('RL_BD2', 'switch')
     assert tr.bd_vector()[1] == pytest.approx(1 / 5)
+
+
+def test_play_multi_assigns_results_per_policy(monkeypatch):
+    import showdown.rl.vec_rollout as vr
+    from showdown.rl.qd_ppo.matchups import play_matchups_multi
+    monkeypatch.setattr(vr, 'is_vec_env', lambda e: True)
+    venv = _FakeVenv(3)
+    venv.step_wait_any = venv.drain
+    venv.crashed = True  # sin caídas en este test
+    g0 = [{'opponent': 'x', 'seed': s, 'split': None} for s in (0, 1, 2, 3)]
+    g1 = [{'opponent': 'x', 'seed': s, 'split': None} for s in (10, 11, 12)]
+    r0, r1 = play_matchups_multi([_FakeAgent(), _FakeAgent()], venv, [g0, g1])
+    assert sorted(venv.started) == [0, 1, 2, 3, 10, 11, 12]
+    assert r0.returns == [1.0, -1.0, 1.0, -1.0] and r1.returns == [1.0, -1.0, 1.0]
+    assert r1.bds[2] == (0.12, 0.0)
+
+
+def test_evaluate_insert_batch_rules(monkeypatch):
+    import showdown.rl.qd_ppo.batch_insert as bi
+    from showdown.rl.qd_ppo.matchups import MatchResults
+    ar = Archive(bounds=((0.0, 1.0), (0.0, 1.0)))
+    ar.try_insert(bd1=0.15, bd2=0.15, fitness=0.0, state_dict={'id': 'inc'}, returns=[0.0] * 4)
+    plan = {'a': [1.0] * 4, 'b': [-1.0] * 4, 'c': [1.0, 1.0, -1.0, 1.0], 'inc': [0.0] * 4}
+    bds = {'a': (0.15, 0.15), 'b': (0.15, 0.15), 'c': (0.85, 0.85), 'inc': (0.15, 0.15)}
+
+    def fake_multi(agents, env, groups, **kw):
+        return [MatchResults(list(plan[a]), [bds[a]] * 4) for a in agents]
+    monkeypatch.setattr(bi, 'play_matchups_multi', fake_multi)
+    stats = {}
+    out = bi.evaluate_insert_batch(ar, None, lambda sd: sd['id'],
+                                   [({'id': 'a'}, {}), ({'id': 'b'}, {}), ({'id': 'c'}, {})],
+                                   np.random.default_rng(0), lambda r: 'x', paired_games=4, g_min=1,
+                                   stats=stats)
+    assert [o['inserted'] for o in out] == [True, False, True]   # a gana al ocupante; c celda nueva
+    assert ar.cells[(1, 1)].state_dict['id'] == 'a' and ar.cells[(8, 8)].state_dict['id'] == 'c'
+    assert stats['replaced'] == 1 and stats['new_cells'] == 1

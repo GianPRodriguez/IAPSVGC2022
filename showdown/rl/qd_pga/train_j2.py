@@ -24,7 +24,8 @@ from showdown.rl.constants import OBS_DIM
 from showdown.rl.ppo.agent import PPOAgent, PPOConfig
 from showdown.rl.qd_pga.pgame import JointReplay, TwinCritic, iso_line, pg_steps, to_torch
 from showdown.rl.qd_ppo.archive import Archive
-from showdown.rl.qd_ppo.matchups import make_matchups, paired_diff, play_matchups
+from showdown.rl.qd_ppo.batch_insert import evaluate_insert_batch
+from showdown.rl.qd_ppo.matchups import make_matchups, play_matchups
 from showdown.rl.qd_ppo.mosaic import make_sampler
 from showdown.rl.qd_ppo.train2 import (
     DEFAULT_TEAM, _agent_from, _make_env, _reeval, _state, calibrate_bounds,
@@ -136,36 +137,16 @@ def run_training(
                 pg_steps(child.net, critic, replay, rng, n_steps=n_pg_steps, lr=pg_lr, batch=batch)
                 offspring.append(('pg', _state(child), k))
             offspring.append(('greedy', _state(greedy), None))
-            for kind, sd, pkey in offspring:
-                if steps['n'] >= budget:
-                    break
+            # todos los hijos a la vez; ocupantes en los mismos enfrentamientos (regla común de I/J/K)
+            for kind, _sd, _k in offspring:
                 stats['children'] += 1
                 stats[kind] += 1
-                matches = make_matchups(rng, paired_games, sampler)
-                child = _agent_from(cfg, sd)
-                res_c = play(child, matches)
-                bd = res_c.bd()
-                if bd is None or len(res_c.eligible_bds()) < int(g_min):
-                    stats['rejected_gmin'] += 1
-                    continue
-                key = archive.key_of(*bd)
-                inc = archive.cells.get(key)
-                meta = {'gen': gen, 'op': kind, 'parent': list(pkey) if pkey else None}
-                if inc is None:
-                    archive.try_insert(bd1=bd[0], bd2=bd[1], fitness=res_c.fitness, state_dict=sd,
-                                       meta=meta, returns=res_c.valid_returns(), force=True)
-                    stats['accepts'] += 1
-                    stats['new_cells'] += 1
-                    continue
-                res_i = play(_agent_from(cfg, inc.state_dict), matches)
-                inc.add_games(res_i.valid_returns())
-                d = paired_diff(res_c, res_i)
-                if d > 0:
-                    meta['paired_diff'] = d
-                    archive.try_insert(bd1=bd[0], bd2=bd[1], fitness=res_c.fitness, state_dict=sd,
-                                       meta=meta, returns=res_c.valid_returns(), force=True)
-                    stats['accepts'] += 1
-                    stats['replaced'] += 1
+            evaluate_insert_batch(
+                archive, env, lambda sd: _agent_from(cfg, sd),
+                [(sd, {'gen': gen, 'op': kind, 'parent': list(pk) if pk else None})
+                 for kind, sd, pk in offspring],
+                rng, sampler, paired_games=paired_games, g_min=g_min, stats=stats, reward='dense',
+                on_transition=rec)
             # crítico (TD3 con SARSA esperado) y actor codicioso con retardo 2
             for j in range(int(n_critic)):
                 critic.update(to_torch(replay.sample(batch, rng), dev), greedy_targ)

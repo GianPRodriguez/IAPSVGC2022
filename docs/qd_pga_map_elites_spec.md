@@ -64,6 +64,8 @@ Aquí la acción es discreta y auto-regresiva: \(\pi(a_1,a_2\mid s)=\pi_1(a_1\mi
 (no hay rollouts de entrenamiento aparte), así que las partidas de evaluación sí cuentan aquí, a
 diferencia de I.
 
+**Evaluación por lotes (`showdown/rl/qd_ppo/batch_insert.py`).** Todos los candidatos de una generación (o el punto de búsqueda y sus ramas) juegan sus enfrentamientos a la vez, cada entorno con la política de su partida y sin esperar a la partida más lenta; después, los ocupantes de las celdas afectadas juegan los mismos enfrentamientos, también a la vez. Si varios candidatos caen en la misma celda ocupada entra el de mayor diferencia pareada positiva; en una celda vacía, el de mayor fitness. La prueba en vivo de J evaluando de a uno daba ~11 pasos/s con 8 entornos (más de 7 h para 1M).
+
 **Común con I 2.0:** arranque desde PPO v2, mosaico de PPO v2, descriptores calibrados (BD2 = foco de
 ataque), comparación pareada con el ocupante, reevaluación de las 10 mejores en `val` antes de
 desplegar, QD-score \(\sum(f+1)\), y el mismo control (PPO v2 + 1M pasos con el mismo preview y mosaico).

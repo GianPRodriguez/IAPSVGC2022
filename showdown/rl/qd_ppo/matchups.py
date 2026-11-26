@@ -225,3 +225,97 @@ def _play_single(agent, env, matches: List[Match], *, max_steps: int, reward: st
     finally:
         env.reward_candidate = prev
     return MatchResults(returns, bds)
+
+
+def play_matchups_multi(agents, env, groups: Sequence[Sequence[Match]], *, reward: str = 'sparse',
+                        on_transition: Optional[Callable[[Transition], None]] = None,
+                        greedy: bool = True) -> List[MatchResults]:
+    """Varias políticas a la vez: ``groups[g]`` son los enfrentamientos de ``agents[g]``.
+
+    En el entorno vectorizado todas las partidas comparten los entornos (cada entorno juega con la
+    política de su partida) y avanzan de forma asíncrona: ningún entorno espera a la partida más
+    lenta. Fuera del vectorizado, se juegan en orden.
+    """
+    from showdown.rl.vec_rollout import is_vec_env
+
+    if not is_vec_env(env):
+        return [play_matchups(a, env, list(g), reward=reward, on_transition=on_transition, greedy=greedy)
+                for a, g in zip(agents, groups)]
+    flat = [(gi, m) for gi, g in enumerate(groups) for m in g]
+    out_r: List[List[Optional[float]]] = [[None] * len(g) for g in groups]
+    out_b: List[List[Optional[Tuple[float, float]]]] = [[None] * len(g) for g in groups]
+    pos = []
+    count = [0] * len(groups)
+    for gi, _m in flat:
+        pos.append(count[gi])
+        count[gi] += 1
+    if not flat:
+        return [MatchResults([], []) for _ in groups]
+    venv = env
+    n = int(venv.num_envs)
+    venv.set_reward((RewardCandidate.DENSE if reward == 'dense' else RewardCandidate.SPARSE).value)
+    try:
+        first = list(range(min(n, len(flat))))
+        venv.start_matches(first, [flat[k][1] for k in first])
+        o, mm = venv.last_obs_mask(first)
+        obs = {i: o[k] for k, i in enumerate(first)}
+        mask = {i: mm[k] for k, i in enumerate(first)}
+        playing = {i: i for i in first}          # entorno -> índice en ``flat``
+        reserved: Dict[int, int] = {}
+        nxt = len(first)
+        busy = set()
+        last_act: Dict[int, Tuple[int, int]] = {}
+        while playing:
+            ready = [i for i in sorted(playing) if i not in busy]
+            for i in ready:
+                if i not in reserved and nxt < len(flat):
+                    reserved[i] = nxt
+                    nxt += 1
+            by_agent: Dict[int, List[int]] = {}
+            for i in ready:
+                by_agent.setdefault(flat[playing[i]][0], []).append(i)
+            for gi, idx in by_agent.items():
+                a1, a2, _lp, _v, _m2 = _act(agents[gi], venv, idx, obs, mask, greedy)
+                acts = [(int(a1[k]), int(a2[k])) for k in range(len(idx))]
+                for i, a in zip(idx, acts):
+                    last_act[i] = a
+                venv.step_async(idx, acts, [dict(flat[reserved[i]][1]) if i in reserved else None
+                                            for i in idx])
+                busy.update(idx)
+            for i, r in venv.step_wait_any():
+                busy.discard(i)
+                k = playing[i]
+                gi, pk = flat[k][0], pos[k]
+                info = r['info']
+                done = bool(r['terminated'] or r['truncated'])
+                crash = info.get('trunc_reason') == 'crash'
+                if on_transition is not None and not crash and not info.get('skip_buffer'):
+                    a = last_act[i]
+                    on_transition({
+                        'obs': obs[i], 'action': a[0] * 40 + a[1], 'reward': float(r['reward']),
+                        'next_obs': r.get('final_obs') if done else r['obs'],
+                        'terminated': bool(r['terminated']), 'truncated': bool(r['truncated']),
+                        'mask': mask[i], 'next_mask': None if done else r['mask'],
+                        'bd_step': info.get('bd_step'), 'group': gi,
+                    })
+                if done:
+                    if not crash:
+                        out_r[gi][pk] = _ret(info)
+                        if info.get('archive_eligible') and info.get('bd_raw') is not None:
+                            b = info['bd_raw']
+                            out_b[gi][pk] = (float(b[0]), float(b[1]))
+                    if i not in reserved:
+                        playing.pop(i)
+                        continue
+                    k2 = reserved.pop(i)
+                    if r.get('worker_restarted'):
+                        venv.start_matches([i], [flat[k2][1]])
+                        oo, m2 = venv.last_obs_mask([i])
+                        r = {'obs': oo[0], 'mask': m2[0]}
+                    playing[i] = k2
+                obs[i], mask[i] = r['obs'], r['mask']
+        venv.drain()
+    finally:
+        venv.set_reward(RewardCandidate.DENSE.value)
+    return [MatchResults(out_r[g], out_b[g]) for g in range(len(groups))]
+

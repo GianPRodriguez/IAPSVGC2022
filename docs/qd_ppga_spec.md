@@ -65,6 +65,8 @@ reproduce BD1 y BD2 (rl_env_spec v1.34) salvo en la ponderación de los turnos.
 
 **Presupuesto:** 1M de pasos de entorno en total (VPPO, paseo y evaluación de ramas), ~60 iteraciones.
 
+**Evaluación por lotes (`showdown/rl/qd_ppo/batch_insert.py`).** Todos los candidatos de una generación (o el punto de búsqueda y sus ramas) juegan sus enfrentamientos a la vez, cada entorno con la política de su partida y sin esperar a la partida más lenta; después, los ocupantes de las celdas afectadas juegan los mismos enfrentamientos, también a la vez. Si varios candidatos caen en la misma celda ocupada entra el de mayor diferencia pareada positiva; en una celda vacía, el de mayor fitness. La prueba en vivo de J evaluando de a uno daba ~11 pasos/s con 8 entornos (más de 7 h para 1M).
+
 **Común con I 2.0:** arranque desde PPO v2, mosaico, descriptores calibrados, inserción en el archivo de
 resultados por comparación pareada, reevaluación de las 10 mejores en `val`, QD-score \(\sum(f+1)\) y el
 mismo control. El archivo suave solo se usa para ordenar las ramas (\(\Delta\)), como en CMA-MAE.
