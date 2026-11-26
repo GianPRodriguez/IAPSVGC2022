@@ -74,3 +74,21 @@ def test_qd_pga_smoke_train():
     assert isinstance(arch, Archive)
     # bootstrap should usually fill ≥1 cell
     assert arch.coverage() >= 0.0
+
+
+def test_b2_is_support_lead_fraction_v16():
+    """v1.6: b2 = fracción de leads de soporte (redirect / Tailwind / Trick Room / Fake Out)."""
+    species = ['Incineroar', 'Tornadus', 'Landorus-Therian', 'Chien-Pao', 'Amoonguss', 'Indeedee-F']
+    assert preview_bd_from_action(encode_preview_action((0, 1, 2, 3)), species)[1] == 1.0
+    assert preview_bd_from_action(encode_preview_action((2, 3, 0, 1)), species)[1] == 0.0
+    assert preview_bd_from_action(encode_preview_action((0, 2, 1, 3)), species)[1] == 0.5
+
+
+def test_archive_meta_roundtrip(tmp_path):
+    ar = Archive(bounds=((0.0, 1.0), (0.0, 0.5)))
+    ar.meta['obs_abilities'] = True
+    ar.try_insert(bd1=0.2, bd2=0.2, fitness=0.1, state_dict={'w': np.ones(1)})
+    ar.save(tmp_path / 'a.pt')
+    br = Archive()
+    br.load(tmp_path / 'a.pt')
+    assert br.meta == {'obs_abilities': True} and br.bounds == ((0.0, 1.0), (0.0, 0.5))

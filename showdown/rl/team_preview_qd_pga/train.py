@@ -1,4 +1,11 @@
-"""Train Team Preview QD-PGA (docs/team_preview_qd_pga_spec.md)."""
+"""Train Team Preview QD-PGA (docs/team_preview_qd_pga_spec.md).
+
+v1.6 (25-11-2026, I 2.0): optimizador del actor nuevo por cada hijo PG (antes Adam arrastraba los
+momentos de hijos de otros padres); la rama de mutación ya no juega episodios "burn" sin uso (el hijo
+solo se evalúa); límites de la rejilla calibrados con el actor del bootstrap (percentiles 5–95 de los
+descriptores por contexto); el desplegado sale de reevaluar las ``REEVAL_TOP`` mejores élites en
+``REEVAL_CTX`` contextos comunes (corrige la maldición del ganador de ``argmax f``).
+"""
 from __future__ import annotations
 
 import argparse
@@ -18,7 +25,7 @@ from showdown.rl.team_preview_qd_pga.archive import (
 )
 from showdown.rl.team_preview_qd_pga.critic import SharedPreviewCritic
 from showdown.rl.team_preview_qd_pga.evaluate import evaluate_actor
-from showdown.rl.team_preview_qd_pga.improve import burn_rollout, pg_improve
+from showdown.rl.team_preview_qd_pga.improve import pg_improve
 from showdown.rl.team_preview_qd_pga.mutate import mutate_actor_state
 
 B_BOOT = 4096
@@ -30,6 +37,29 @@ SIGMA = 0.02
 K_PG = 2
 G_FIT = 20
 G_MIN = 10
+CALIB_CTX = 256
+REEVAL_TOP = 10
+REEVAL_CTX = 300
+REEVAL_SEED = 777
+
+
+def _new_actor_optim(net, lr):
+    import torch
+    return torch.optim.Adam([p for n, p in net.named_parameters() if not n.startswith('value.')], lr=lr)
+
+
+def _per_context_bds(env, act_fn, n):
+    """Descriptor por contexto del actor actual (greedy), para calibrar la rejilla."""
+    from showdown.rl.team_preview_qd_pga.bd import preview_bd_from_action
+    obs, infos = env.reset_batch(int(n))
+    out = []
+    for k in range(int(n)):
+        mask = infos[k].get('action_mask')
+        if mask is None:
+            mask = env.action_masks()
+        a = int(act_fn(obs[k], mask, greedy=True))
+        out.append(preview_bd_from_action(a, infos[k].get('our_species') or []))
+    return out
 
 
 def _make_act_fn(net, device, rng):
@@ -96,14 +126,12 @@ def _train_loop(env, dev, rng, *, b_boot, t_emit, n_emit, n_outer, g_fit, g_min,
                 actor_lr, actor_clip) -> Archive:
     import torch
 
+    from showdown.rl.qd_ppo.train2 import calibrate_bounds
+
     net = PreviewActorCritic(OBS_DIM).to(dev)
     critic = SharedPreviewCritic(OBS_DIM).to(dev)
-    actor_optim = torch.optim.Adam(
-        [p for n, p in net.named_parameters() if not n.startswith('value.')],
-        lr=actor_lr,
-    )
+    actor_optim = _new_actor_optim(net, actor_lr)
     critic_optim = torch.optim.Adam(critic.parameters(), lr=actor_lr)
-    archive = Archive(10, 10)
     act_fn = _make_act_fn(net, dev, rng)
 
     # Bootstrap: PG improves + try insert seed policy
@@ -112,6 +140,12 @@ def _train_loop(env, dev, rng, *, b_boot, t_emit, n_emit, n_outer, g_fit, g_min,
         env, net, critic, actor_optim, critic_optim, dev,
         n_episodes=b_boot, epochs=K_PG, clip_eps=actor_clip,
     )
+    n_cal = max(g_fit, min(CALIB_CTX, 4 * b_boot))
+    bounds = calibrate_bounds(_per_context_bds(env, act_fn, n_cal))
+    archive = Archive(10, 10, bounds=bounds)
+    from showdown.rl.team_preview_obs import obs_abilities_on
+    archive.meta['obs_abilities'] = bool(obs_abilities_on())
+    print(f'calibrated bounds={bounds}', flush=True)
     f, bd, g, meta = evaluate_actor(env, act_fn, G=g_fit, g_min=g_min, greedy=True)
     if meta['eligible']:
         archive.try_insert(
@@ -136,12 +170,12 @@ def _train_loop(env, dev, rng, *, b_boot, t_emit, n_emit, n_outer, g_fit, g_min,
 
             do_mut = bool(rng.random() < P_MUT)
             if do_mut:
+                # v1.6: el hijo mutado solo se evalúa (sin episodios "burn").
                 mut_sd = mutate_actor_state(parent_sd, rng, sigma=SIGMA)
                 load_actor_into(net, mut_sd)
-                burn_rollout(env, net, dev, n_episodes=t_emit, rng=rng)
             else:
                 pg_improve(
-                    env, net, critic, actor_optim, critic_optim, dev,
+                    env, net, critic, _new_actor_optim(net, actor_lr), critic_optim, dev,
                     n_episodes=t_emit, epochs=K_PG, clip_eps=actor_clip,
                 )
 
@@ -163,7 +197,26 @@ def _train_loop(env, dev, rng, *, b_boot, t_emit, n_emit, n_outer, g_fit, g_min,
             flush=True,
         )
 
+    _reeval_top(env, net, act_fn, archive, g_fit)
     return archive
+
+
+def _reeval_top(env, net, act_fn, archive, g_fit) -> None:
+    """Reevalúa las mejores élites en los mismos contextos y marca la desplegable (``deploy_key``)."""
+    n_ctx = REEVAL_CTX if g_fit >= 20 else max(4, g_fit)
+    ranked = sorted(archive.cells.items(), key=lambda kv: kv[1].fitness, reverse=True)[:REEVAL_TOP]
+    best_key, best_f = None, float('-inf')
+    for key, elite in ranked:
+        load_actor_into(net, elite.state_dict)
+        if hasattr(env, 'reseed'):
+            env.reseed(REEVAL_SEED)
+        f, _bd, _g, _m = evaluate_actor(env, act_fn, G=n_ctx, g_min=1, greedy=True)
+        elite.meta['reeval_f'] = float(f)
+        elite.meta['reeval_ctx'] = int(n_ctx)
+        print(f'reeval cell={key} archive_f={elite.fitness:.3f} reeval_f={f:.3f}', flush=True)
+        if f > best_f:
+            best_key, best_f = key, f
+    archive.deploy_key = best_key
 
 
 def train_and_save(
@@ -188,14 +241,17 @@ def train_and_save(
     ckpt_dir = Path(checkpoint_dir)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     archive_pt = arch.save(ckpt_dir / 'archive.pt')
-    best = arch.best()
+    dk = getattr(arch, 'deploy_key', None)
+    best = arch.cells.get(dk) if dk is not None else arch.best()
     best_path = None
     best_f = float('nan')
     if best is not None:
         import torch
         best_path = ckpt_dir / 'best_elite.pt'
-        best_f = float(best.fitness)
-        torch.save({'state_dict': best.state_dict, 'fitness': best.fitness}, best_path)
+        best_f = float(best.meta.get("reeval_f", best.fitness))  # v1.6: reevaluada
+        torch.save({'state_dict': best.state_dict, 'fitness': best.fitness,
+                    'reeval_f': best.meta.get('reeval_f'), 'cell': list(dk) if dk else None,
+                    'obs_abilities': bool(arch.meta.get('obs_abilities', False))}, best_path)
     # Score for HP tune: best elite fitness (Cand. 1); NaN → 0 so trial is rejectable.
     score = 0.0 if (best_f != best_f) else best_f
     meta = {
@@ -242,9 +298,20 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--lr', type=float, default=None, help='Override actor/critic Adam lr')
     p.add_argument('--clip-eps', type=float, default=None, help='Override PPO clip_eps')
     p.add_argument('--checkpoint-dir', default='logs/team_preview_qd_pga_checkpoints')
+    p.add_argument('--obs-abilities', type=int, choices=(0, 1), default=1,
+                   help='observación con la corrección de habilidades (P5), como preview v2.1 (defecto 1)')
+    p.add_argument('--own-team', default='',
+                   help='Equipo propio fijo de los contextos (archivo export; p. ej. showdown/rl/data/ddqn_team.txt)')
     from showdown.rl.preview_live import add_live_cli_args, live_options_from_args
     add_live_cli_args(p)
     args = p.parse_args(argv)
+    import os
+    # Antes de crear el pool live: los workers heredan las variables.
+    os.environ['RL_OBS_ABILITIES'] = '1' if args.obs_abilities else '0'
+    if args.own_team:
+        os.environ['PS_PREVIEW_OWN_TEAM'] = args.own_team
+        print(f'[preview] equipo propio fijo: {args.own_team}', flush=True)
+    print(f'[preview] observación P5 = {bool(args.obs_abilities)}', flush=True)
     arch = train_and_save(
         seed=args.seed,
         smoke=args.smoke,

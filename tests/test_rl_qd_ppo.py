@@ -39,7 +39,7 @@ def test_archive_strict_replace_and_coverage():
     assert arch.cells[bin_bd(0.1, 0.2)].fitness == 0.5
     assert np.allclose(arch.cells[bin_bd(0.1, 0.2)].state_dict['w'], [2.0])
     assert 0.0 < arch.coverage() <= 1.0
-    assert arch.qd_score() == 0.5
+    assert arch.qd_score() == 1.5  # v2.0: Σ (f + 1)
     assert arch.best() is not None
     assert arch.best().fitness == 0.5
 

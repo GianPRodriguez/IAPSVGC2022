@@ -70,26 +70,29 @@ def ppo_improve(
     use_mosaic: bool = True,
     heartbeat: Optional[TrainHeartbeat] = None,
     phase: str = '',
+    foe_sampler=None,
 ) -> Tuple[VGCEnv, int, dict]:
     """
     Collect up to ``steps`` env transitions under Cand. 2; hard-stop at t_total.
 
+    ``foe_sampler(rng) -> str``: mosaico de rivales (por defecto el 25/25/50 de v1).
     Returns (env, steps_taken, metrics).
     """
+    sampler = foe_sampler or sample_mosaic_foe
     from showdown.rl.vec_rollout import is_vec_env
 
     budget = min(int(steps), max(0, int(t_total) - int(global_steps)))
     if is_vec_env(env):
         return _ppo_improve_vec(
             agent, env, budget=budget, rng=rng, global_steps=global_steps,
-            use_mosaic=use_mosaic, heartbeat=heartbeat, phase=phase,
+            use_mosaic=use_mosaic, heartbeat=heartbeat, phase=phase, sampler=sampler,
         )
     env.reward_candidate = RewardCandidate.DENSE
     if budget <= 0:
         return env, 0, {}
 
     if use_mosaic:
-        env = _ensure_foe(env, sample_mosaic_foe(rng))
+        env = _ensure_foe(env, sampler(rng))
 
     obs, info = env.reset(seed=int(seed) + int(global_steps))
     assert env._snap is not None
@@ -128,7 +131,7 @@ def ppo_improve(
 
         if terminated or truncated:
             if use_mosaic:
-                env = _ensure_foe(env, sample_mosaic_foe(rng))
+                env = _ensure_foe(env, sampler(rng))
             obs, info = env.reset()
             assert env._snap is not None
             obs = build_observation_ppo(env._snap)
@@ -158,7 +161,8 @@ def ppo_improve(
     return env, int(local), metrics
 
 
-def _ppo_improve_vec(agent, venv, *, budget, rng, global_steps, use_mosaic, heartbeat, phase):
+def _ppo_improve_vec(agent, venv, *, budget, rng, global_steps, use_mosaic, heartbeat, phase,
+                     sampler=sample_mosaic_foe):
     """Versión vectorizada: mismas reglas (Cand. 2, mosaico por episodio, update al llenar)."""
     from showdown.rl.vec_rollout import run_vec_rollout
 
@@ -200,7 +204,7 @@ def _ppo_improve_vec(agent, venv, *, budget, rng, global_steps, use_mosaic, hear
     out = run_vec_rollout(
         venv, steps=budget, act_fn=act_fn, on_step=on_step,
         boot_fn=agent.values_batch,
-        foe_sampler=(lambda: sample_mosaic_foe(rng)) if use_mosaic else None,
+        foe_sampler=(lambda: sampler(rng)) if use_mosaic else None,
         should_flush=agent.is_rollout_full, flush_fn=flush, final_flush=True,
         heartbeat=heartbeat, hb_offset=int(global_steps), phase=phase or 'improve',
         hb_extras=lambda: {'loss': metrics.get('loss'), 'kl': metrics.get('approx_kl')},

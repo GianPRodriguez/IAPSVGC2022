@@ -1,4 +1,9 @@
-"""Preview BD b1 (speed-control) / b2 (offense vs support) — spec §3."""
+"""Preview BD b1 (speed-control) / b2 (soporte en la apertura) — spec §3.
+
+v1.6 (25-11-2026, I 2.0): b2 = fracción de los dos leads que son de soporte (redirección, Tailwind,
+Trick Room o Fake Out). Antes contaba como "agresivo" todo lo que no fuera soporte y casi siempre
+valía 1; ahora varía con la elección del preview (0, 1/2 o 1 por contexto; continuo en la media).
+"""
 from __future__ import annotations
 
 from typing import Sequence, Tuple
@@ -20,7 +25,7 @@ def preview_bd_from_action(
 ) -> Tuple[float, float]:
     """
     b1: TR / TW-speed-control bias.
-    b2: aggro leads+bench (Fake Out or non-support) vs redirect/TW/TR support.
+    b2: fracción de leads de soporte (redirect / Tailwind / Trick Room / Fake Out).
     """
     i1, i2, i3, i4 = decode_preview_action(int(action))
     names = list(our_species)
@@ -36,14 +41,7 @@ def preview_bd_from_action(
     )
     b1 = float(max(0.0, min(1.0, 0.5 * float(has_tr) + 0.5 * float(has_tw_sc))))
 
-    support = REDIRECT_SPECIES | TAILWIND_SPECIES | TRICK_ROOM_SPECIES
-
-    def _aggro(nid: str) -> bool:
-        if nid in FAKE_OUT_SPECIES:
-            return True
-        return nid not in support
-
-    n_lead = sum(1 for x in lead_ids if _aggro(x))
-    n_bench = sum(1 for x in bench_ids if _aggro(x))
-    b2 = float(max(0.0, min(1.0, (n_lead + 0.5 * n_bench) / 3.0)))
+    support = REDIRECT_SPECIES | TAILWIND_SPECIES | TRICK_ROOM_SPECIES | FAKE_OUT_SPECIES
+    del bench_ids
+    b2 = float(sum(1 for x in lead_ids if x in support)) / 2.0
     return b1, b2

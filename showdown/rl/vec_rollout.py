@@ -251,8 +251,12 @@ def make_qd_env(
     combat_family: str,
     envs_per_server: int = 4,
     base_port: Optional[int] = None,
+    agent_team: str = '',
 ):
-    """Entorno de un entrenador QD: simple (``num_envs<=1``) o vectorizado."""
+    """Entorno de un entrenador QD: simple (``num_envs<=1``) o vectorizado.
+
+    ``agent_team``: equipo fijo del agente (archivo export), como en PPO/DDQN; '' = sorteo del pool.
+    """
     if int(num_envs) <= 1:
         return make_single()
     from showdown.rl.reward import RewardCandidate
@@ -266,6 +270,7 @@ def make_qd_env(
             reward=RewardCandidate.DENSE.value,
             obs_kind='ppo',
             mask_kind='slot',
+            agent_team=str(agent_team or ''),
         ),
         num_envs=int(num_envs),
         seed=int(seed),

@@ -109,6 +109,15 @@ def mark_selected_in_teampreview(battle: Any, order_1based: Sequence[int]) -> No
             pass
 
 
+def _deploy_elite(arch):
+    """Élite desplegable de un archivo QD: la de mejor reevaluación (``reeval_f``, preview v1.6) si
+    existe; si no, la de mayor fitness del archivo."""
+    re = [e for e in arch.cells.values() if e.meta.get('reeval_f') is not None]
+    if re:
+        return max(re, key=lambda e: float(e.meta['reeval_f']))
+    return arch.best()
+
+
 @dataclass
 class FrozenPreviewPolicy:
     """Callable frozen preview: battle → `/team ####`."""
@@ -192,18 +201,21 @@ class FrozenPreviewPolicy:
                         payload = torch.load(path, map_location='cpu')
                     if isinstance(payload, dict) and 'cells' in payload:
                         arch.load(path)
-                        elite = arch.best()
+                        self.obs_abilities = bool(arch.meta.get('obs_abilities', False))
+                        elite = _deploy_elite(arch)
                         if elite is None:
                             self._load_error = 'empty_archive'
                             return
                         actor_sd = elite.state_dict
                     elif isinstance(payload, dict) and 'state_dict' in payload:
                         actor_sd = payload['state_dict']
+                        self.obs_abilities = bool(payload.get('obs_abilities', False))
                     else:
                         actor_sd = payload
                 else:
                     arch.load(path)
-                    elite = arch.best()
+                    self.obs_abilities = bool(arch.meta.get('obs_abilities', False))
+                    elite = _deploy_elite(arch)
                     if elite is None:
                         self._load_error = 'empty_archive'
                         return

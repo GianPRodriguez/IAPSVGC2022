@@ -178,6 +178,22 @@ class _EnvRunner:
         self.env.reset(seed=s)
         return _observe(self.env, self.spec.obs_kind), _mask(self.env, self.spec.mask_kind)
 
+    def start_match(self, match: Dict[str, Any]) -> Tuple[np.ndarray, np.ndarray]:
+        """Empieza una partida concreta: ``{'opponent', 'seed', 'split'}`` (QD I 2.0, pareada).
+
+        La semilla fija los equipos (``_default_team_metas``) y ``split`` el grupo de equipos
+        (``None`` = el de entrenamiento); con el mismo ``match`` dos políticas juegan el mismo
+        enfrentamiento (el azar del simulador sigue siendo propio de cada partida).
+        """
+        opp = match.get('opponent')
+        if opp and str(opp) != self.spec.opponent:
+            self.env, self.spec = _set_opponent(self.env, self.spec, str(opp))
+        backend = getattr(self.env, 'backend', None)
+        if backend is not None and hasattr(backend, '_team_split'):
+            backend._team_split = match.get('split')
+        seed = match.get('seed')
+        return self.reset(None if seed is None else int(seed))
+
     def step(self, action: Tuple[int, int], on_done_opponent: Optional[str]) -> Dict[str, Any]:
         _obs, reward, terminated, truncated, info = self.env.step(tuple(int(a) for a in action))
         obs = _observe(self.env, self.spec.obs_kind)
@@ -195,6 +211,10 @@ class _EnvRunner:
             out['mask'] = _mask(self.env, self.spec.mask_kind)
             return out
         out['final_obs'] = obs
+        if isinstance(on_done_opponent, dict):  # siguiente partida concreta (start_match)
+            out['obs'], out['mask'] = self.start_match(on_done_opponent)
+            out['next_opponent'] = self.spec.opponent
+            return out
         if on_done_opponent and on_done_opponent != self.spec.opponent:
             self.env, self.spec = _set_opponent(self.env, self.spec, on_done_opponent)
         out['obs'], out['mask'] = self.reset()
@@ -248,6 +268,8 @@ def _worker_main(conn, spec: EnvSpec, seed: int, threads: int) -> None:
                     conn.send(('ok', runner.mask2(payload)))
                 elif cmd == 'set_opponent':
                     conn.send(('ok', runner.set_opponent(payload)))
+                elif cmd == 'start_match':
+                    conn.send(('ok', runner.start_match(payload)))
                 elif cmd == 'set_reward':
                     runner.set_reward(payload)
                     conn.send(('ok', None))
@@ -384,6 +406,21 @@ class SyncVecVGCEnv(_VecBase):
             pairs.append(r.set_opponent(opp))
             self.specs[i] = r.spec
         return np.stack([p[0] for p in pairs]), np.stack([p[1] for p in pairs])
+
+    def start_matches(self, indices: Sequence[int], matches: Sequence[Dict[str, Any]]) -> None:
+        """Empieza en cada índice la partida indicada (ver ``_EnvRunner.start_match``)."""
+        last = getattr(self, '_last_om', None)
+        if last is None:
+            last = self._last_om = {}
+        for i, m in zip(indices, matches):
+            r = self._runners[int(i)]
+            last[int(i)] = r.start_match(m)
+            self.specs[int(i)] = r.spec
+
+    def last_obs_mask(self, indices: Sequence[int]) -> Tuple[np.ndarray, np.ndarray]:
+        last = getattr(self, '_last_om', {})
+        return (np.stack([last[int(i)][0] for i in indices]),
+                np.stack([last[int(i)][1] for i in indices]))
 
     def set_reward(self, candidate: str) -> None:
         for i, r in enumerate(self._runners):
@@ -724,6 +761,34 @@ class SubprocVecVGCEnv(_VecBase):
                 res = self._restart(i)
             self._last_obs[i], self._last_mask[i] = res
         return np.stack(self._last_obs), np.stack(self._last_mask)
+
+    def start_matches(self, indices: Sequence[int], matches: Sequence[Dict[str, Any]]) -> None:
+        """Empieza en cada índice la partida indicada; un worker caído se reinicia."""
+        idx = [int(i) for i in indices]
+        sent = {}
+        for i, m in zip(idx, matches):
+            try:
+                self._send(i, 'start_match', dict(m))
+                sent[i] = m
+            except WorkerError:
+                sent[i] = None
+        for i, m in sent.items():
+            res = None
+            if m is not None:
+                try:
+                    res = self._unwrap(i, self._recv(i, self.step_timeout_s))
+                except WorkerError:
+                    res = None
+            if res is None:
+                self._restart(i)
+                res = self._call(i, 'start_match', dict(m or {}))
+            if m and m.get('opponent'):
+                self.specs[i] = self.specs[i].with_opponent(str(m['opponent']))
+            self._last_obs[i], self._last_mask[i] = res
+
+    def last_obs_mask(self, indices: Sequence[int]) -> Tuple[np.ndarray, np.ndarray]:
+        return (np.stack([self._last_obs[int(i)] for i in indices]),
+                np.stack([self._last_mask[int(i)] for i in indices]))
 
     def set_reward(self, candidate: str) -> None:
         out = self._broadcast('set_reward', [str(candidate)] * self.num_envs)
