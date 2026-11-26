@@ -350,6 +350,10 @@ class VGCEnv(gym.Env):
         )
         info['reward_components'] = rr.components
         info['engine'] = engine_meta
+        # Resultado Cand. 1 (+1 / −1 / 0) al terminar, con cualquier recompensa activa (QD J/K 2.0:
+        # el fitness es Cand. 1 aunque la partida se juegue con la densa para el replay / PPO).
+        if terminated or truncated:
+            info['outcome'] = 1.0 if won is True else (-1.0 if won is False else 0.0)
         return obs, float(reward), terminated, truncated, info
 
     def _masks(self, *, slot1_action_id: Optional[int] = None):

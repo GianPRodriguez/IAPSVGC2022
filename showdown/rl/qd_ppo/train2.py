@@ -80,7 +80,7 @@ def calibrate_bounds(bds: List[Tuple[float, float]], lo_q: float = 5.0, hi_q: fl
 
 
 def _make_env(*, mock: bool, seed: int, start_ps: bool, num_envs: int, envs_per_server: int,
-              base_port: Optional[int], agent_team: str):
+              base_port: Optional[int], agent_team: str, mask_kind: str = 'slot'):
     from showdown.rl.env import MockBattleBackend, VGCEnv
     from showdown.rl.reward import RewardCandidate
     from showdown.rl.vec_rollout import make_qd_env
@@ -100,7 +100,7 @@ def _make_env(*, mock: bool, seed: int, start_ps: bool, num_envs: int, envs_per_
     return make_qd_env(
         make_single=single, mock=mock, num_envs=num_envs, seed=seed, start_ps=start_ps,
         account_prefix='QdPpo2', combat_family='qd_ppo', envs_per_server=envs_per_server,
-        base_port=base_port, agent_team='' if mock else agent_team,
+        base_port=base_port, agent_team='' if mock else agent_team, mask_kind=mask_kind,
     )
 
 

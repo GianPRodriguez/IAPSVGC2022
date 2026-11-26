@@ -155,12 +155,26 @@ def _lite_info(info: Dict[str, Any], env=None) -> Dict[str, Any]:
         # Contraste de estado del rival heurístico en el episodio (battle_state_check).
         'foe_state': eng.get('foe_state') if isinstance(eng, dict) else None,
         'episode_return': float(info.get('episode_return', 0.0) or 0.0),
+        'outcome': info.get('outcome'),
         'turn': int(info.get('turn', 0) or 0),
         'error': info.get('error'),
         # Descriptor de comportamiento (QD): válido al terminar el episodio.
         'archive_eligible': eligible,
         'bd_raw': None if bd_raw is None else (float(bd_raw[0]), float(bd_raw[1])),
     }
+
+
+def bd_step_proxies(c0, c1) -> Tuple[float, float]:
+    """Proxies markovianos de BD1/BD2 en un paso (QD-PPGA 2.0, Batra et al. §3.1).
+
+    δ1 = acciones ofensivas / (ofensivas + estado/preparación) del turno (0,5 si no hay);
+    δ2 = 1 si los dos ataques de un solo objetivo van al mismo rival, 0 si no (0,5 si no hubo).
+    """
+    d_off, d_stat = c1[0] - c0[0], c1[1] - c0[1]
+    d_pair, d_focus = c1[2] - c0[2], c1[3] - c0[3]
+    d1 = d_off / (d_off + d_stat) if (d_off + d_stat) > 0 else 0.5
+    d2 = d_focus / d_pair if d_pair > 0 else 0.5
+    return float(d1), float(d2)
 
 
 class _EnvRunner:
@@ -194,10 +208,20 @@ class _EnvRunner:
         seed = match.get('seed')
         return self.reset(None if seed is None else int(seed))
 
+    def _bd_counts(self) -> Tuple[int, int, int, int]:
+        bd = getattr(self.env, '_bd', None)
+        if bd is None:
+            return 0, 0, 0, 0
+        return (int(bd.offensive), int(bd.status_setup), int(getattr(bd, 'paired_attacks', 0)),
+                int(getattr(bd, 'focus_turns', 0)))
+
     def step(self, action: Tuple[int, int], on_done_opponent: Optional[str]) -> Dict[str, Any]:
+        c0 = self._bd_counts()
         _obs, reward, terminated, truncated, info = self.env.step(tuple(int(a) for a in action))
+        c1 = self._bd_counts()
         obs = _observe(self.env, self.spec.obs_kind)
         lite = _lite_info(info, self.env)
+        lite['bd_step'] = bd_step_proxies(c0, c1)
         out: Dict[str, Any] = {
             'reward': float(reward),
             'terminated': bool(terminated),

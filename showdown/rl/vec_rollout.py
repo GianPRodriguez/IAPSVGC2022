@@ -252,6 +252,7 @@ def make_qd_env(
     envs_per_server: int = 4,
     base_port: Optional[int] = None,
     agent_team: str = '',
+    mask_kind: str = 'slot',
 ):
     """Entorno de un entrenador QD: simple (``num_envs<=1``) o vectorizado.
 
@@ -269,7 +270,7 @@ def make_qd_env(
             combat_family=combat_family,
             reward=RewardCandidate.DENSE.value,
             obs_kind='ppo',
-            mask_kind='slot',
+            mask_kind=str(mask_kind),
             agent_team=str(agent_team or ''),
         ),
         num_envs=int(num_envs),

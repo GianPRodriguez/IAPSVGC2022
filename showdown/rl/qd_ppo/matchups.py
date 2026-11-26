@@ -63,23 +63,62 @@ def paired_diff(a: MatchResults, b: MatchResults) -> float:
     return float(np.mean(d)) if d else 0.0
 
 
-def play_matchups(agent, env, matches: Sequence[Match], *, max_steps: int = 80) -> MatchResults:
-    """Juega ``matches`` (greedy, Cand. 1) y devuelve retorno y descriptor por partida, en orden."""
+Transition = Dict[str, object]
+
+
+def _ret(info) -> float:
+    """Resultado Cand. 1 de la partida (``outcome``); si falta, el retorno acumulado."""
+    o = info.get('outcome')
+    return float(o) if o is not None else float(info.get('episode_return', 0.0))
+
+
+def _slot_from_joint(jm: np.ndarray) -> np.ndarray:
+    """Máscara del hueco 1 a partir de la conjunta (1600 = 40 × 40)."""
+    n = int(round(np.sqrt(jm.shape[-1])))
+    return (np.asarray(jm, dtype=np.float32).reshape(-1, n, n).max(axis=-1) > 0).astype(np.float32)
+
+
+def play_matchups(agent, env, matches: Sequence[Match], *, max_steps: int = 80,
+                  reward: str = 'sparse', on_transition: Optional[Callable[[Transition], None]] = None,
+                  greedy: bool = True) -> MatchResults:
+    """Juega ``matches`` y devuelve el resultado Cand. 1 y el descriptor de cada partida, en orden.
+
+    ``reward``: recompensa activa durante las partidas (``'dense'`` = Cand. 2 para el replay del
+    crítico de J 2.0; el resultado devuelto es siempre Cand. 1). ``on_transition``: recibe cada paso
+    ``{obs, action (conjunta), reward, next_obs, terminated, truncated, mask, next_mask}``; las máscaras
+    son las conjuntas si el entorno las da (``mask_kind='joint'``).
+    """
     from showdown.rl.vec_rollout import is_vec_env
 
     if is_vec_env(env):
-        return _play_vec(agent, env, list(matches))
-    return _play_single(agent, env, list(matches), max_steps=max_steps)
+        return _play_vec(agent, env, list(matches), reward=reward, on_transition=on_transition,
+                         greedy=greedy)
+    return _play_single(agent, env, list(matches), max_steps=max_steps, reward=reward,
+                        on_transition=on_transition, greedy=greedy)
 
 
-def _play_vec(agent, venv, matches: List[Match]) -> MatchResults:
+def _act(agent, venv, idx, obs, mask, greedy):
+    o = np.stack([obs[i] for i in idx])
+    m = np.stack([mask[i] for i in idx])
+    if m.shape[-1] > 40:  # máscara conjunta: hueco 1 = alguna fila legal; hueco 2 = la fila de a1
+        m1 = _slot_from_joint(m)
+        n = m1.shape[-1]
+
+        def m2(a1s, _m=m):
+            return np.stack([_m[k].reshape(n, n)[int(a)] for k, a in enumerate(a1s)]).astype(np.float32)
+        return agent.act_batch(o, m1, m2, greedy=greedy)
+    return agent.act_batch(o, m, lambda a1s, _idx=idx: venv.mask2_subset(_idx, a1s), greedy=greedy)
+
+
+def _play_vec(agent, venv, matches: List[Match], *, reward: str = 'sparse',
+              on_transition=None, greedy: bool = True) -> MatchResults:
     n_games = len(matches)
     returns: List[Optional[float]] = [None] * n_games
     bds: List[Optional[Tuple[float, float]]] = [None] * n_games
     if n_games == 0:
         return MatchResults([], [])
     n = int(venv.num_envs)
-    venv.set_reward(RewardCandidate.SPARSE.value)
+    venv.set_reward((RewardCandidate.DENSE if reward == 'dense' else RewardCandidate.SPARSE).value)
     try:
         first = list(range(min(n, n_games)))
         venv.start_matches(first, [matches[k] for k in first])
@@ -98,17 +137,25 @@ def _play_vec(agent, venv, matches: List[Match]) -> MatchResults:
                     reserved[i] = nxt
                     nxt += 1
             on_done = [dict(matches[reserved[i]]) if i in reserved else None for i in idx]
-            a1, a2, _lp, _v, _m2 = agent.act_batch(
-                np.stack([obs[i] for i in idx]), np.stack([mask[i] for i in idx]),
-                lambda a1s, _idx=idx: venv.mask2_subset(_idx, a1s), greedy=True,
-            )
-            venv.step_async(idx, list(zip(a1.tolist(), a2.tolist())), on_done)
+            a1, a2, _lp, _v, _m2 = _act(agent, venv, idx, obs, mask, greedy)
+            act = {i: (int(a1[k]), int(a2[k])) for k, i in enumerate(idx)}
+            venv.step_async(idx, [act[i] for i in idx], on_done)
             for i, r in venv.drain():
                 k = playing[i]
-                if r['terminated'] or r['truncated']:
-                    info = r['info']
-                    if info.get('trunc_reason') != 'crash':   # una caída no es un empate
-                        returns[k] = float(info.get('episode_return', 0.0))
+                info = r['info']
+                done = bool(r['terminated'] or r['truncated'])
+                crash = info.get('trunc_reason') == 'crash'
+                if on_transition is not None and not crash and not info.get('skip_buffer'):
+                    nobs = r.get('final_obs') if done else r['obs']
+                    on_transition({
+                        'obs': obs[i], 'action': act[i][0] * 40 + act[i][1], 'reward': float(r['reward']),
+                        'next_obs': nobs, 'terminated': bool(r['terminated']),
+                        'truncated': bool(r['truncated']), 'mask': mask[i],
+                        'next_mask': None if done else r['mask'], 'bd_step': info.get('bd_step'),
+                    })
+                if done:
+                    if not crash:   # una caída no es un empate
+                        returns[k] = _ret(info)
                         if info.get('archive_eligible') and info.get('bd_raw') is not None:
                             b = info['bd_raw']
                             bds[k] = (float(b[0]), float(b[1]))
@@ -127,32 +174,49 @@ def _play_vec(agent, venv, matches: List[Match]) -> MatchResults:
     return MatchResults(returns, bds)
 
 
-def _play_single(agent, env, matches: List[Match], *, max_steps: int) -> MatchResults:
+def _play_single(agent, env, matches: List[Match], *, max_steps: int, reward: str = 'sparse',
+                 on_transition=None, greedy: bool = True) -> MatchResults:
     from showdown.rl.observation import build_observation_ppo
     from showdown.rl.qd_ppo.evaluate import _ensure_foe, _m2_fn, _slot_masks
 
+    joint = on_transition is not None
+    if joint:
+        from showdown.rl.ddqn.train import _joint_masks
     returns: List[float] = []
     bds: List[Optional[Tuple[float, float]]] = []
     prev = env.reward_candidate
     try:
         for mt in matches:
             env = _ensure_foe(env, str(mt.get('opponent') or 'mock'), seed=0)
-            env.reward_candidate = RewardCandidate.SPARSE
+            env.reward_candidate = RewardCandidate.DENSE if reward == 'dense' else RewardCandidate.SPARSE
             backend = getattr(env, 'backend', None)
             if backend is not None and hasattr(backend, '_team_split'):
                 backend._team_split = mt.get('split')
             env.reset(seed=int(mt.get('seed') or 0))
             obs = build_observation_ppo(env._snap)
             m1, _ = _slot_masks(env)
+            jm = np.asarray(_joint_masks(env), dtype=np.float32) if joint else None
             info: dict = {}
             for _ in range(int(max_steps)):
-                a1, a2, _lp, _v = agent.act(obs, m1, _m2_fn(env), greedy=True)
-                _o, _r, term, trunc, info = env.step((a1, a2))
-                obs = build_observation_ppo(env._snap)
-                m1, _ = _slot_masks(env)
-                if term or trunc:
+                a1, a2, _lp, _v = agent.act(obs, m1, _m2_fn(env), greedy=greedy)
+                bd0 = env._bd
+                c0 = (bd0.offensive, bd0.status_setup, bd0.paired_attacks, bd0.focus_turns)
+                _o, rew, term, trunc, info = env.step((a1, a2))
+                nobs = build_observation_ppo(env._snap)
+                done = bool(term or trunc)
+                if joint and not info.get('skip_buffer'):
+                    from showdown.rl.vec_env import bd_step_proxies
+                    c1 = (bd0.offensive, bd0.status_setup, bd0.paired_attacks, bd0.focus_turns)
+                    njm = None if done else np.asarray(_joint_masks(env), dtype=np.float32)
+                    on_transition({'obs': obs, 'action': int(a1) * 40 + int(a2), 'reward': float(rew),
+                                   'next_obs': nobs, 'terminated': bool(term), 'truncated': bool(trunc),
+                                   'mask': jm, 'next_mask': njm, 'bd_step': bd_step_proxies(c0, c1)})
+                    jm = njm
+                obs = nobs
+                if done:
                     break
-            returns.append(float(info.get('episode_return', 0.0)))
+                m1, _ = _slot_masks(env)
+            returns.append(_ret(info))
             b = None
             if env._bd is not None and env._bd.archive_eligible():
                 v = env._bd.bd_vector()
