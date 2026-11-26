@@ -334,7 +334,9 @@ def load_frozen_preview(
     greedy: bool = True,
     allow_missing: bool = True,
 ) -> FrozenPreviewPolicy:
-    k = resolve_preview_kind(kind)
+    # PREVIEW_KIND: tipo del preview congelado, si no es el de la familia (26-11-2026: I/J/K 2.0 juegan
+    # con el preview v2.1b de PPO v2, un team_preview_ppo, porque el QD-PGA es degenerado con el equipo fijo).
+    k = resolve_preview_kind(os.environ.get('PREVIEW_KIND', '').strip() or kind)
     ckpt = (
         (checkpoint or '').strip()
         or os.environ.get('PREVIEW_CHECKPOINT', '').strip()
@@ -404,6 +406,7 @@ def configure_preview(combat_family: str, *, checkpoint: Optional[str] = None,
     kind = FAMILY_PREVIEW_KIND.get(str(combat_family).strip().lower().replace('-', '_'),
                                    'team_preview_ppo')
     pol = load_frozen_preview(kind=kind, allow_missing=True)
+    kind = pol.kind
     pol._ensure()
     if pol.available:
         return f'preview={kind} ckpt={pol.checkpoint} cargado=sí'

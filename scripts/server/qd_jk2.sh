@@ -1,14 +1,15 @@
 #!/bin/bash
 # AGENTES J 2.0 (PGA-ME fiel) y K 2.0 (PPGA fiel), decisión del usuario del 25-11-2026
 # (docs/qd_pga_map_elites_spec.md §J 2.0, docs/qd_ppga_spec.md §K 2.0). Misma base que I 2.0:
-# arranque desde la semilla de PPO v2 elegida por val, preview QD-PGA de la cola qd_i2 (piloto PPO v2),
+# arranque desde la semilla de PPO v2 elegida por val, preview v2.1b de PPO v2 (team_preview_ppo vía
+# PREVIEW_KIND; el QD-PGA era degenerado con el equipo fijo, decisión del usuario del 26-11-2026),
 # mosaico de PPO v2, comparación pareada, reevaluación en val; el control es el de qd_i2 (PPO v2 + 1M
 # pasos con el mismo preview, mosaico y equipo), que sirve para los tres.
 #
 #   0. Espera a QD_I2_DONE (un método a la vez en el servidor).
 #   1. Tests.  2. J 2.0 (1M pasos de entorno).  3. K 2.0 (1M pasos de entorno).
-#   4. Exploración (descriptiva): best_elite.pt de J y K contra eval (200 partidas por rival, preview QD),
-#      junto a I 2.0, el control y PPO v2 de qd_i2. La confirmación se pre-registra aparte.
+#   4. Exploración (descriptiva): best_elite.pt de J y K contra eval (200 partidas por rival, mismo preview),
+#      junto a I 2.0, el control y PPO v2 de qd_i2 (mismo preview). La confirmación se pre-registra aparte.
 # Resumen: $OUT/qd_jk2_summary.txt. Marca: QD_JK2_DONE.
 #
 #   bash scripts/server/qd_jk2.sh ~/iapsvgc_runs/qd_jk2 ~/iapsvgc_runs/qd_i2 ~/iapsvgc_runs/kickoff_ppo_v2
@@ -23,7 +24,7 @@ cd "$REPO"
 export PYTHONUNBUFFERED=1 PS_RL_STRICT=1
 unset RL_MASK_ALLY_DAMAGE RL_SYM_AUG RL_HOLDOUT_VAL RL_TRAIN_SUBSET RL_FOE_SYNTH PREVIEW_FORCE_ORDER PS_JOINT_ARCHETYPE \
   PPO_FOE_CHECKPOINTS PPO_FOE_PREVIEW RL_OBS_ABILITIES RL_OBS_CALC PREVIEW_SAMPLE PREVIEW_TEMPERATURE PS_TEAM_SPLIT \
-  PREVIEW_PILOT_CHECKPOINT PREVIEW_FOE_PILOT PS_PREVIEW_OWN_TEAM PREVIEW_CHECKPOINT PREVIEW_REQUIRED RL_BD2
+  PREVIEW_PILOT_CHECKPOINT PREVIEW_FOE_PILOT PS_PREVIEW_OWN_TEAM PREVIEW_CHECKPOINT PREVIEW_REQUIRED RL_BD2 PREVIEW_KIND
 log() { echo "$(date '+%F %T') $*" >> "$OUT/queue.log"; }
 clean_ps() { pkill -f "[p]okemon-showdown.*start" 2>/dev/null; sleep 5; }
 TEAM=showdown/rl/data/ddqn_team.txt
@@ -32,7 +33,8 @@ log "esperando QD_I2_DONE en $QI"
 until grep -q QD_I2_DONE "$QI/queue.log" 2>/dev/null; do sleep 120; done
 S=$(grep -o "ELEGIDA [0-9]*" "$KO/ppo_v2_seed.txt" 2>/dev/null | grep -o "[0-9]*")
 INIT="$KO/ppo_s${S:-x}/final.pt"
-PV="$QI/preview/best_elite.pt"
+PV=${PV:-$HOME/iapsvgc_runs/preview_v21b/preview_s0/best.pt}
+export PREVIEW_KIND=team_preview_ppo
 for f in "$INIT" "$PV"; do [ -f "$f" ] || { log "ERROR: falta $f"; log "QD_JK2_DONE"; exit 1; }; done
 log "inicio commit $(git rev-parse --short HEAD); PPO v2 semilla $S; preview $PV"
 clean_ps
@@ -75,8 +77,8 @@ rows = [('J 2.0 PGA-ME (best_elite)', out / 'diag' / 'j2_eval.json'),
         ('K 2.0 PPGA (best_elite)', out / 'diag' / 'k2_eval.json'),
         ('I 2.0 QD-PPO (best_elite)', qi / 'diag' / 'i2_eval.json'),
         ('Control: PPO v2 + 1M', qi / 'diag' / 'control_eval.json'),
-        (f'PPO v2 s{s} (arranque)', qi / 'diag' / 'init_qdpreview_eval.json')]
-print('=== Familia QD 2.0: exploración contra eval (200 partidas por rival, preview QD; descriptivo) ===')
+        (f'PPO v2 s{s} (arranque)', qi / 'diag' / 'init_eval.json')]
+print('=== Familia QD 2.0: exploración contra eval (200 partidas por rival, preview v2.1b de PPO v2; descriptivo) ===')
 print(f"{'agente':32s} " + ' '.join(f'{f:>12s}' for f in FOES) + '   3 heur.')
 for name, p in rows:
     res = _load(p)

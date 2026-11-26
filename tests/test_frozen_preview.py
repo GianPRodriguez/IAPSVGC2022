@@ -60,3 +60,28 @@ def test_preview_ppo_save_load_roundtrip(tmp_path: Path):
     )
     assert cmd.startswith('/team')
     assert 0 <= a < 360
+
+
+def test_preview_kind_override_for_qd_family(tmp_path: Path, monkeypatch):
+    """PREVIEW_KIND (26-11-2026): I/J/K 2.0 juegan con el preview team_preview_ppo de PPO v2."""
+    try:
+        import torch  # noqa: F401
+    except ImportError:
+        return
+    from showdown.rl.frozen_preview import configure_preview
+    from showdown.rl.team_preview_ppo.agent import PreviewPPOAgent
+
+    path = tmp_path / 'best.pt'
+    PreviewPPOAgent().save(path)
+    # setenv antes de delenv: así monkeypatch restaura también lo que configure_preview escribe
+    for k in ('PREVIEW_CHECKPOINT', 'PREVIEW_REQUIRED', 'PREVIEW_KIND'):
+        monkeypatch.setenv(k, '')
+        monkeypatch.delenv(k)
+    # sin override, la familia QD lo resolvería como QD-PGA
+    assert family_preview_for_combat('qd_ppo', checkpoint=str(path)).kind == 'team_preview_qd_pga'
+    monkeypatch.setenv('PREVIEW_KIND', 'team_preview_ppo')
+    for fam in ('qd_ppo', 'qd_pga', 'qd_ppga'):
+        pol = family_preview_for_combat(fam, checkpoint=str(path))
+        assert pol.kind == 'team_preview_ppo' and pol.available
+    msg = configure_preview('qd_pga', checkpoint=str(path), required=True)
+    assert 'preview=team_preview_ppo' in msg and 'cargado=sí' in msg

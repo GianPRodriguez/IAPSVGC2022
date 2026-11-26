@@ -53,13 +53,20 @@ de los dos lados y el grupo los equipos posibles (`val` para el despliegue). El 
 arranca con `start_matches` y encadena el siguiente al terminar cada partida
 (`showdown/rl/qd_ppo/matchups.py`). Una partida caída no cuenta (no es un empate).
 
-**Medición.** Cola `scripts/server/qd_i2.sh` (espera al kick-off de PPO v2): preview QD-PGA v1.6 con
-piloto PPO v2, control, I 2.0 y una exploración descriptiva contra `eval` (I 2.0, control y PPO v2
-con el preview QD, 200 partidas por rival). La confirmación se pre-registra aparte.
+**Medición.** Cola `scripts/server/qd_i2.sh` (espera al kick-off de PPO v2): control, I 2.0 y una
+exploración descriptiva contra `eval` (I 2.0, control y PPO v2, 200 partidas por rival). La confirmación
+se pre-registra aparte.
+
+**Preview (26-11-2026, decisión del usuario).** I 2.0, J 2.0, K 2.0 y el control juegan con el preview
+**v2.1b de PPO v2** (`preview_v21b/preview_s0/best.pt`, un `team_preview_ppo`), cargado con
+`PREVIEW_KIND=team_preview_ppo`. El preview QD-PGA v1.6 con piloto PPO v2 se lanzó y se detuvo: con el equipo fijo `ddqn_team.txt` (Raichu, Rillaboom, Gholdengo, Arcanine-H, Staraptor, Primarina) ninguna especie está en las listas de soporte, así que \(b_2\) vale siempre 0, y \(b_1\) solo cambia si se lleva a Rillaboom (casi nunca): rejilla calibrada \([0, 0{,}025]^2\), cobertura 0,02 (2 celdas), `best_f` = 1,000 con 20 partidas, y 64 de 256 iteraciones en 2 h 51 min (~11 h en total).
+Un archivo de 2 celdas es un escalador de colinas con ruido, no QD. Con el mismo preview que PPO v2, la
+comparación con el control y con el arranque aísla el efecto del combate QD. El preview QD-PGA se
+rediseñará aparte con descriptores que tengan sentido para el equipo fijo.
 
 ```bash
-python -m showdown.rl.qd_ppo.train2 --seed 0 --init-checkpoint <ppo_v2>/final.pt --start-ps --num-envs 32 \
-  --device cuda --preview-checkpoint <preview_qd>/best_elite.pt --require-preview --checkpoint-dir <dir> [--control]
+PREVIEW_KIND=team_preview_ppo python -m showdown.rl.qd_ppo.train2 --seed 0 --init-checkpoint <ppo_v2>/final.pt --start-ps --num-envs 32 \
+  --device cuda --preview-checkpoint <preview_v21b>/best.pt --require-preview --checkpoint-dir <dir> [--control]
 ```
 
 Código: `showdown/rl/qd_ppo/train2.py` (I 2.0 y control), `matchups.py`, `archive.py` (límites, estimación
@@ -283,6 +290,7 @@ siendo la suite de \(\pi^\*\), no coverage por sí sola.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.0.1** | 2026-11-26 | I 2.0, J 2.0, K 2.0 y el control usan el preview v2.1b de PPO v2 (`PREVIEW_KIND=team_preview_ppo`, nuevo en `frozen_preview`): el preview QD-PGA era degenerado con el equipo fijo (cobertura 0,02, \(b_2\) siempre 0). Decisión del usuario. Ver §I 2.0, Medición. |
 | **2.0** | 2026-11-25 | **I 2.0** (decisiones del usuario tras la revisión de la familia QD): arranque desde PPO v2, mosaico con las proporciones de PPO v2, descriptores calibrados, hijos con 2 actualizaciones PPO, comparación pareada con el ocupante en enfrentamientos comunes, reevaluación de las 10 mejores en `val` antes de desplegar, QD-score \(\sum(f+1)\), control `--control`. Ver §I 2.0. |
 | **1.7** | 2026-11-15 | Codificador estructurado (rl_env_spec §3.c) dentro del actor; consistencia por simetría (§3.d) en las actualizaciones PPO del actor (vía `PPOAgent.update`). Objetivo aliado del slot 0 corregido. Checkpoints/archivos anteriores incompatibles. |
 | **1.6** | 2026-11-14 | ObsSpec v2 (6332D, OTS completo + estado + historial) y ActionSpec v2 (40 ids por slot: mega como flag de cada movimiento×objetivo; máscara de entrenamiento = `valid_orders`). Checkpoints anteriores incompatibles. |
