@@ -1429,3 +1429,17 @@ Por rival (`final.pt`, `eval`): random 97,7 %, greedy_solo 62,4 %, greedy_joint 
 **Comparación con PPO:** PPO v1 usa el preview v2 y la observación v1, así que la brecha PPO v1 −
 DDQN v1 (19,1 puntos) mezcla algoritmo, preview y observación. La comparación limpia entre
 algoritmos será PPO v2 frente a DDQN v1 (mismo preview v2.1 sin `val` y misma observación).
+
+## 19. Kick-off oficial de PPO v2 (26-11-2026)
+
+**Decisión del usuario:** entrenar PPO v2 antes de los agentes QD (I, J, K), que arrancan desde PPO v2.
+Receta fijada en §17–§18: PPO v1 + P5 completo (calculadora real) + preview v2.1 sin `val` (el mismo de
+DDQN v1, `preview_v21b/preview_s0/best.pt`); el sorteo con T = 0,5 solo se usa al jugar contra personas.
+Resto igual al kick-off de PPO v1 (1M pasos × 5 semillas, simetría, máscara del aliado, validación
+reservada, equipo fijo). Cola `scripts/server/kickoff_ppo_v2.sh` → `~/iapsvgc_runs/kickoff_ppo_v2`;
+mismo set de evaluación que DDQN v1 más `final.pt` contra `val` en las cinco semillas.
+
+**Regla fijada antes de entrenar:** I, J y K arrancan del `final.pt` de la semilla con mejor `val`
+(media de los tres heurísticos), sin mirar `eval`. El resumen incluye DDQN v1 para la comparación limpia
+de algoritmos (mismo preview y misma observación).
+
