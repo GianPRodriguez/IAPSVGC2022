@@ -58,11 +58,13 @@ def test_player_backup_mix_knob(monkeypatch):
         _h21_knobs()
 
 
-def test_player_default_is_h21(monkeypatch):
-    """Desde el 24-11-2026 (protocolo §5.8) el player usa H 2.1; las variables lo sobreescriben."""
+def test_player_default_is_h22(monkeypatch):
+    """Desde el 25-11-2026 (protocolo §5.9) el player usa H 2.2; las variables lo sobreescriben."""
     from showdown.rl.mcts_puct_nash.player import _nash_kwargs
-    assert _nash_kwargs(2) == {'k_self_root': 8, 'k_self': 6, 'k_opp': 4, 'decision': 'visits'}
+    assert _nash_kwargs(2) == {'k_self_root': 8, 'k_self': 6, 'k_opp': 4, 'decision': 'visits', 'solver': 'rm+'}
     assert _nash_kwargs(1) == {}
+    monkeypatch.setenv('MCTS_NASH_SOLVER', 'fp')
+    assert _nash_kwargs(2)['solver'] == 'fp'  # = H 2.1
     monkeypatch.setenv('MCTS_NASH_MATRIX', '12,8,8')
     monkeypatch.setenv('MCTS_NASH_DECISION', 'sigma')
-    assert _nash_kwargs(2) == {'k_self_root': 12, 'k_self': 8, 'k_opp': 8, 'decision': 'sigma'}  # = H 2.0
+    assert _nash_kwargs(2) == {'k_self_root': 12, 'k_self': 8, 'k_opp': 8, 'decision': 'sigma', 'solver': 'fp'}  # = H 2.0
