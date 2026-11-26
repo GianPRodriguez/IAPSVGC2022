@@ -253,6 +253,7 @@ def make_qd_env(
     base_port: Optional[int] = None,
     agent_team: str = '',
     mask_kind: str = 'slot',
+    subprocess=None,
 ):
     """Entorno de un entrenador QD: simple (``num_envs<=1``) o vectorizado.
 
@@ -278,4 +279,5 @@ def make_qd_env(
         envs_per_server=int(envs_per_server),
         base_port=base_port,
         start_ps=bool(start_ps) and not mock,
+        subprocess=subprocess,
     )
