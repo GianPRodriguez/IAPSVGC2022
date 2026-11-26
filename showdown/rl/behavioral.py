@@ -1,7 +1,15 @@
-"""BDSpec trackers — docs/rl_env_spec.md v1.1."""
+"""BDSpec trackers — docs/rl_env_spec.md v1.1.
+
+BD2 desde el 25-11-2026 (I 2.0, decisión del usuario): **foco de ataque** = de los turnos en que los
+dos activos usan un ataque de un solo objetivo contra el rival, fracción en que ambos apuntan al mismo
+(los movimientos de área no cuentan). La tasa de cambios voluntarios por turno (BD2 anterior) quedaba
+en ~0 con PPO, que casi nunca cambia. ``RL_BD2=switch`` restaura la definición anterior.
+"""
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Optional, Sequence, Tuple
 
 from showdown.rl.constants import BD_MIN_TURNS, PIVOT_MOVES, STATUS_PROTECT_SETUP
@@ -15,6 +23,27 @@ _PROTECT_IDS = frozenset({
 
 def _norm_move(name: str) -> str:
     return str(name or '').strip().lower().replace(' ', '').replace('-', '')
+
+
+def bd2_mode() -> str:
+    """``focus`` (defecto desde I 2.0) o ``switch`` (BD2 original, ``RL_BD2=switch``)."""
+    return 'switch' if os.environ.get('RL_BD2', '').strip().lower() == 'switch' else 'focus'
+
+
+@lru_cache(maxsize=4096)
+def _single_target_attack(move_name: str) -> bool:
+    """Ataque (no de estado) que apunta a un solo rival; los de área y desconocidos no cuentan."""
+    mid = _norm_move(move_name)
+    if not mid:
+        return False
+    try:
+        from showdown.rl import team_preview_obs as P
+        m = P._dex()['moves'].get(P.to_id(move_name))
+    except Exception:
+        m = None
+    if not m:
+        return False
+    return str(m.get('category')) != 'Status' and str(m.get('target')) in ('normal', 'any', 'randomNormal')
 
 
 def classify_action(
@@ -54,6 +83,8 @@ class BehavioralTracker:
     useless_switches: int = 0
     protect_streak: int = 0
     protect_spam_events: int = 0
+    paired_attacks: int = 0     # turnos con dos ataques de un solo objetivo contra el rival
+    focus_turns: int = 0        # de esos, mismo objetivo
     _last_hard_from_to: Optional[Tuple[str, str]] = None
 
     def on_turn_actions(
@@ -77,6 +108,16 @@ class BehavioralTracker:
                 self.hard_switches += 1
             if _norm_move(mn) in _PROTECT_IDS:
                 saw_protect = True
+        if len(slot_actions) >= 2:
+            a, b = slot_actions[0], slot_actions[1]
+            na = move_names[0] if len(move_names) > 0 else ''
+            nb = move_names[1] if len(move_names) > 1 else ''
+            if (a.kind in ('move', 'mega', 'tera') and b.kind in ('move', 'mega', 'tera')
+                    and a.target in (0, 1) and b.target in (0, 1)
+                    and _single_target_attack(na) and _single_target_attack(nb)):
+                self.paired_attacks += 1
+                if a.target == b.target:
+                    self.focus_turns += 1
         if saw_protect:
             self.protect_streak += 1
             if self.protect_streak > 2:
@@ -94,7 +135,10 @@ class BehavioralTracker:
     def bd_vector(self) -> Tuple[float, float]:
         den1 = self.offensive + self.status_setup
         bd1 = (self.offensive / den1) if den1 > 0 else 0.5
-        bd2 = (self.hard_switches / self.turns) if self.turns > 0 else 0.0
+        if bd2_mode() == 'switch':
+            bd2 = (self.hard_switches / self.turns) if self.turns > 0 else 0.0
+        else:
+            bd2 = (self.focus_turns / self.paired_attacks) if self.paired_attacks > 0 else 0.5
         return (
             max(0.0, min(1.0, float(bd1))),
             max(0.0, min(1.0, float(bd2))),
@@ -107,7 +151,10 @@ class BehavioralTracker:
         bd1, bd2 = self.bd_vector()
         return {
             'bd1_aggressiveness': bd1,
-            'bd2_hard_switch_rate': bd2,
+            'bd2_hard_switch_rate': (self.hard_switches / self.turns) if self.turns > 0 else 0.0,
+            'bd2_focus_rate': (self.focus_turns / self.paired_attacks) if self.paired_attacks > 0 else None,
+            'bd2_mode': bd2_mode(),
+            'bd2': bd2,
             'useless_switches': self.useless_switches,
             'protect_spam': self.protect_spam_events,
             'mean_game_length': float(self.turns),

@@ -122,8 +122,8 @@ def test_bd_hard_switch_vs_uturn():
         force_switch=(False, False),
     )
     bd1, bd2 = tr.bd_vector()
-    assert bd2 > 0
-    assert 0.0 <= bd1 <= 1.0
+    assert tr.metrics()['bd2_hard_switch_rate'] > 0   # BD2 original (RL_BD2=switch); el defecto es foco
+    assert 0.0 <= bd1 <= 1.0 and 0.0 <= bd2 <= 1.0
 
 
 def test_observation_shape():

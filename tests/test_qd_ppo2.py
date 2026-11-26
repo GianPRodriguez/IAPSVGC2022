@@ -171,3 +171,21 @@ def test_sync_vec_start_match_and_next_match_dict(monkeypatch):
         assert done
     finally:
         venv.close()
+
+
+def test_bd2_focus_fire_default_and_switch_mode(monkeypatch):
+    """BD2 desde I 2.0: foco de ataque (mismo rival en turnos con dos ataques de un solo objetivo)."""
+    from showdown.rl.behavioral import BehavioralTracker
+    from showdown.rl.snapshot import SlotAction
+    monkeypatch.delenv('RL_BD2', raising=False)
+    tr = BehavioralTracker()
+    mv = lambda t: SlotAction(kind='move', move_index=0, target=t)  # noqa: E731
+    tr.on_turn_actions([mv(0), mv(0)], ['Flare Blitz', 'Wood Hammer'])   # foco
+    tr.on_turn_actions([mv(0), mv(1)], ['Flare Blitz', 'Wood Hammer'])   # reparto
+    tr.on_turn_actions([mv(0), mv(1)], ['Rock Slide', 'Wood Hammer'])    # área: no cuenta
+    tr.on_turn_actions([mv(1), mv(1)], ['Moonblast', 'Flare Blitz'])     # foco
+    tr.on_turn_actions([mv(0), SlotAction(kind='switch', switch_index=0)], ['Flare Blitz', ''])
+    assert tr.paired_attacks == 3 and tr.focus_turns == 2
+    assert tr.bd_vector()[1] == pytest.approx(2 / 3)
+    monkeypatch.setenv('RL_BD2', 'switch')
+    assert tr.bd_vector()[1] == pytest.approx(1 / 5)
