@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.33** |
+| **Version** | **v1.34** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) — **Mega Evolution yes; Terastallization no** |
@@ -193,9 +193,9 @@ R_t =
 |------|----------|
 | Archive entry filter | Episode length \(\ge 4\) turns |
 | BD₁ | **Aggressiveness vs setup ratio** (style proxy; **not** quality): \(\dfrac{\text{Offensive actions}}{\text{Offensive} + \text{Status/Protect/Setup}}\) |
-| BD₂ | **Hard switch rate:** \(\dfrac{\text{Hard switches}}{\text{Total turns}}\) |
+| BD₂ | **Focus fire rate (default since v1.34):** of the turns where both actives use a single-target attack on the foe side, the fraction where both target the same foe (spread moves and status moves do not count; 0.5 if no such turn). The original **hard switch rate** \(\dfrac{\text{Hard switches}}{\text{Total turns}}\) stays available with `RL_BD2=switch`. |
 
-**Hard switch (BD₂) includes only:** explicit neural `SWITCH` actions.
+**Hard switch (original BD₂, `RL_BD2=switch`) includes only:** explicit neural `SWITCH` actions.
 
 **Hard switch excludes:**
 
@@ -676,6 +676,7 @@ con Tera on no es compatible con este benchmark aunque sus dimensiones encajen.
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.34** | 2026-11-25 | **BD₂ = focus fire rate** (user decision for I 2.0): the live I 2.0 smoke showed PPO almost never hard-switches (BD₂ ∈ [0, 0.025]), so the QD archive was effectively one-dimensional. `RL_BD2=switch` restores the hard switch rate. `BehavioralTracker.metrics()` reports both. Vector env: `start_matches` and `{opponent, seed, split}` next-match dicts (paired QD evaluation). |
 | **v1.33** | 2026-11-19 | **Observation v2.1: real damage calculator + full ability/move/item corrections (P5 complete; user decisions, memorizacion_equipos §18.1).** (1) Damage features (our moves vs each foe in 3 modes, vs ally for spread, foe moves vs ours, pair matrix 4×6 both ways) come from `@smogon/calc` Champions (damage-calc `bacbbfc`), built by `showdown/rl/obs_calc.py` with field effects as in reality: Fairy/Dark Aura and Aura Break from any of the 4 actives, the four Ruin abilities, screens, Friend Guard, Battery, Power Spot, Steely Spirit, Last Respects (fainted allies), effective Mega forme. Semantics kept: mid = mean of the roll range × accuracy, max/min = best/worst stats and roll. One batch per observation (~230 requests), fallback to the Python estimate with a circuit breaker; per-episode usage (`obs_calc`) is logged with `foe_state`. (2) Non-damage effects in Python: priority (Grassy Glide in Grassy Terrain, Gale Wings, Prankster), speed (Iron Ball, Surge Surfer), immunities (Bulletproof, Soundproof, Overcoat, Magnet Rise), Sturdy blocks one-hit KO at full HP, Telepathy. Quick Claw / Quick Draw (random) not modelled. (3) Move profile (shared with the preview, `preview_move_mods`): Liquid Voice → Water, Weather Ball with own weather setter, power abilities; cache keyed by version. Audit of legal effects: `API/JSONs/damage_effects_audit.json` (128 abilities, 173 moves, 57 items). Versioned per checkpoint (`obs_abilities`, combat and preview); v1 checkpoints load as False and keep the old observation. Same OBS_DIM. |
 | **v1.32** | 2026-11-18 | **Ability corrections in the observation's damage estimate (P5)** — Liquid Voice (movimientos de sonido → Agua: el Hyper Voice de Primarina contaba como Normal; con sol y contra Venusaur la obs decía ×1 y el real era ×0,375, hallazgo de la prueba online), habilidades de potencia (Tough Claws, Iron Fist, Strong Jaw, Mega Launcher, Sharpness, Punk Rock, Technician, Sheer Force, Fairy/Dark Aura, Parental Bond, Water Bubble) y defensivas (Thick Fat, Heatproof, Water Bubble, Purifying Salt, Fluffy) en `move_damage_frac`, el código de efectividad, el aviso de redirección y el tipo de los movimientos rivales. Same OBS_DIM; the shared move profile (`team_preview_obs._move_infos`, used by the preview) is unchanged. Per checkpoint: `PPOConfig/DDQNConfig.obs_abilities` (default **True** for new training, user decision: PPO and DDQN); checkpoints without the key (PPO v1, earlier DDQN) load as False and keep the old observation. Trainers export `RL_OBS_ABILITIES` from the agent config (workers inherit it); `build_observation*(…, abilities=)` and the PPO/DDQN players and `policy_diag` use each checkpoint's flag, so v1 and v2 can play in the same process. |
 | **v1.31** | 2026-11-18 | **New optional training opponents (PPO v2 candidates)**: `greedy_joint_arq` (greedy_joint with archetype level 2 on that instance only, via `wrap_archetype_level`; validated like greedy_joint, same near-tie draw) and `ppo_v1` (frozen PPO v1 checkpoints from `PPO_FOE_CHECKPOINTS`, one at random per battle, CPU, playing the agent's own team = mirror match). Both are opt-in through `--phases`; with `--expand-omega` they enter Ω with weight 1.0. `policy_diag` accepts them via `--foes` (appended after the 4 default foes, so existing seeds are unchanged) and adds `--sample/--temperature` for PPO. Defaults unchanged. |

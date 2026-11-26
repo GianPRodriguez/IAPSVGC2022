@@ -24,8 +24,11 @@ Cada élite guarda su propio crítico, entrenado con sus propios datos (sin el p
 política del crítico compartido).
 
 **Formalización.** Archivo \(\mathcal{A}\) sobre una rejilla de 10 × 10 en \(\mathcal{B}\) con límites
-calibrados. Descriptor \(b(\theta)\): fracción de acciones ofensivas frente a estado/preparación y tasa
-de cambios voluntarios por turno, promediadas sobre partidas de al menos 4 turnos. Fitness
+calibrados. Descriptor \(b(\theta)\): fracción de acciones ofensivas frente a estado/preparación y
+**foco de ataque** (de los turnos con dos ataques de un solo objetivo contra el rival, fracción en que ambos
+apuntan al mismo; rl_env_spec v1.34), promediadas sobre partidas de al menos 4 turnos. El BD2 original
+(tasa de cambios voluntarios) quedaba en 0–0,025 con PPO, que casi nunca cambia (prueba en vivo del 25-11):
+el archivo habría sido de una dimensión. Decisión del usuario: foco de ataque. Fitness
 \(f(\theta)=\mathbb{E}[R_{\text{Cand.1}}]\in[-1,1]\). Variación: \(\theta'=\mathrm{PPO}_{K}(\theta_p)\)
 con \(\theta_p\) uniforme entre las celdas ocupadas. \(b\) solo decide dónde compite una política, nunca
 cuánto vale: no hay recompensa de novedad.
