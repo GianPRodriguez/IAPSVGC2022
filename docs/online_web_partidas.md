@@ -158,6 +158,12 @@ y el motor de inferencia actual no acota nada dentro de una partida. Prioridad p
 a lo que el rival trajo en la partida 1, luego patrones de juego (probabilísticos, porque el humano también se
 adapta: adojs cambió el compañero de apertura). Pendiente de pre-registro.
 
+**Seguimiento (27-11-2026):** el usuario decidió llevar estas ideas a PPO v3 y DDQN v2 (los dos con los mismos
+cambios): máscara del Protect consecutivo, memoria de serie BO3, entrenamiento en series y preview condicionado
+como prueba aparte. Pre-registro y medición del preview (M1) en `protocolo_evaluacion.md` §4.16. Lo que se pudo
+comprobar con los replays: con `protect_counter` en 1 y 2 en la observación, Gholdengo volvió a usar Protect, así
+que no faltaba información, sino que la política no aprendió a evitarlo.
+
 ### Ideas que salen de aquí (sin evaluar)
 
 - Penalizar o enmascarar el Protect consecutivo cuando la probabilidad de éxito es ≤ 1/3.

@@ -1,0 +1,1068 @@
+{
+  "checkpoint": "C:\\Users\\user\\GitHub\\IAPSVGC2022\\logs\\online_ddqn\\preview_v21b_s0.pt",
+  "temperatura": 1.0,
+  "formaciones_canonicas": 90,
+  "equipo_agente": [
+    "Raichu",
+    "Rillaboom",
+    "Gholdengo",
+    "Arcanine-Hisui",
+    "Staraptor",
+    "Primarina"
+  ],
+  "grupos": {
+    "train": {
+      "rivales": 200,
+      "entropia_media_nats": 0.3312,
+      "entropia_normalizada": 0.0736,
+      "formaciones_efectivas_media": 1.49,
+      "informacion_mutua_nats": 2.078,
+      "informacion_mutua_normalizada": 0.4618,
+      "tv_media_a_la_media": 0.8161,
+      "traer": [
+        {
+          "pokemon": "Raichu",
+          "media": 0.4308,
+          "min": 0.0,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Rillaboom",
+          "media": 0.427,
+          "min": 0.0,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Gholdengo",
+          "media": 0.7649,
+          "min": 0.0004,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Arcanine-Hisui",
+          "media": 0.9217,
+          "min": 0.0003,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Staraptor",
+          "media": 0.7216,
+          "min": 0.0001,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Primarina",
+          "media": 0.734,
+          "min": 0.0013,
+          "max": 1.0
+        }
+      ],
+      "abrir": [
+        {
+          "pokemon": "Raichu",
+          "media": 0.3589,
+          "min": 0.0,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Rillaboom",
+          "media": 0.0131,
+          "min": 0.0,
+          "max": 0.996
+        },
+        {
+          "pokemon": "Gholdengo",
+          "media": 0.3804,
+          "min": 0.0,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Arcanine-Hisui",
+          "media": 0.2771,
+          "min": 0.0,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Staraptor",
+          "media": 0.5571,
+          "min": 0.0,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Primarina",
+          "media": 0.4135,
+          "min": 0.0,
+          "max": 1.0
+        }
+      ],
+      "determinista_traidos_distintos": 8,
+      "determinista_formaciones_distintas": 16,
+      "determinista_traidos_top": [
+        {
+          "traidos": [
+            "Rillaboom",
+            "Gholdengo",
+            "Arcanine-Hisui",
+            "Staraptor"
+          ],
+          "rivales": 54
+        },
+        {
+          "traidos": [
+            "Gholdengo",
+            "Arcanine-Hisui",
+            "Staraptor",
+            "Primarina"
+          ],
+          "rivales": 44
+        },
+        {
+          "traidos": [
+            "Raichu",
+            "Gholdengo",
+            "Arcanine-Hisui",
+            "Primarina"
+          ],
+          "rivales": 40
+        },
+        {
+          "traidos": [
+            "Raichu",
+            "Arcanine-Hisui",
+            "Staraptor",
+            "Primarina"
+          ],
+          "rivales": 25
+        },
+        {
+          "traidos": [
+            "Raichu",
+            "Rillaboom",
+            "Arcanine-Hisui",
+            "Primarina"
+          ],
+          "rivales": 17
+        }
+      ],
+      "determinista_formaciones_top": [
+        {
+          "abre": [
+            "Raichu",
+            "Primarina"
+          ],
+          "atras": [
+            "Gholdengo",
+            "Arcanine-Hisui"
+          ],
+          "rivales": 40
+        },
+        {
+          "abre": [
+            "Gholdengo",
+            "Staraptor"
+          ],
+          "atras": [
+            "Rillaboom",
+            "Arcanine-Hisui"
+          ],
+          "rivales": 36
+        },
+        {
+          "abre": [
+            "Gholdengo",
+            "Staraptor"
+          ],
+          "atras": [
+            "Arcanine-Hisui",
+            "Primarina"
+          ],
+          "rivales": 34
+        },
+        {
+          "abre": [
+            "Arcanine-Hisui",
+            "Staraptor"
+          ],
+          "atras": [
+            "Raichu",
+            "Primarina"
+          ],
+          "rivales": 15
+        },
+        {
+          "abre": [
+            "Raichu",
+            "Arcanine-Hisui"
+          ],
+          "atras": [
+            "Rillaboom",
+            "Primarina"
+          ],
+          "rivales": 13
+        }
+      ]
+    },
+    "val": {
+      "rivales": 30,
+      "entropia_media_nats": 0.7732,
+      "entropia_normalizada": 0.1718,
+      "formaciones_efectivas_media": 2.41,
+      "informacion_mutua_nats": 1.4617,
+      "informacion_mutua_normalizada": 0.3248,
+      "tv_media_a_la_media": 0.6754,
+      "traer": [
+        {
+          "pokemon": "Raichu",
+          "media": 0.3872,
+          "min": 0.0004,
+          "max": 0.9985
+        },
+        {
+          "pokemon": "Rillaboom",
+          "media": 0.4346,
+          "min": 0.0001,
+          "max": 0.966
+        },
+        {
+          "pokemon": "Gholdengo",
+          "media": 0.8178,
+          "min": 0.0132,
+          "max": 0.9999
+        },
+        {
+          "pokemon": "Arcanine-Hisui",
+          "media": 0.9347,
+          "min": 0.0461,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Staraptor",
+          "media": 0.799,
+          "min": 0.0041,
+          "max": 0.9998
+        },
+        {
+          "pokemon": "Primarina",
+          "media": 0.6267,
+          "min": 0.0836,
+          "max": 0.9999
+        }
+      ],
+      "abrir": [
+        {
+          "pokemon": "Raichu",
+          "media": 0.2907,
+          "min": 0.0,
+          "max": 0.9985
+        },
+        {
+          "pokemon": "Rillaboom",
+          "media": 0.0072,
+          "min": 0.0,
+          "max": 0.0543
+        },
+        {
+          "pokemon": "Gholdengo",
+          "media": 0.5016,
+          "min": 0.0,
+          "max": 0.9848
+        },
+        {
+          "pokemon": "Arcanine-Hisui",
+          "media": 0.234,
+          "min": 0.0005,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Staraptor",
+          "media": 0.6214,
+          "min": 0.001,
+          "max": 0.999
+        },
+        {
+          "pokemon": "Primarina",
+          "media": 0.345,
+          "min": 0.0023,
+          "max": 0.9985
+        }
+      ],
+      "determinista_traidos_distintos": 6,
+      "determinista_formaciones_distintas": 9,
+      "determinista_traidos_top": [
+        {
+          "traidos": [
+            "Rillaboom",
+            "Gholdengo",
+            "Arcanine-Hisui",
+            "Staraptor"
+          ],
+          "rivales": 11
+        },
+        {
+          "traidos": [
+            "Gholdengo",
+            "Arcanine-Hisui",
+            "Staraptor",
+            "Primarina"
+          ],
+          "rivales": 7
+        },
+        {
+          "traidos": [
+            "Raichu",
+            "Gholdengo",
+            "Arcanine-Hisui",
+            "Primarina"
+          ],
+          "rivales": 5
+        },
+        {
+          "traidos": [
+            "Raichu",
+            "Arcanine-Hisui",
+            "Staraptor",
+            "Primarina"
+          ],
+          "rivales": 3
+        },
+        {
+          "traidos": [
+            "Raichu",
+            "Rillaboom",
+            "Arcanine-Hisui",
+            "Primarina"
+          ],
+          "rivales": 2
+        }
+      ],
+      "determinista_formaciones_top": [
+        {
+          "abre": [
+            "Gholdengo",
+            "Staraptor"
+          ],
+          "atras": [
+            "Rillaboom",
+            "Arcanine-Hisui"
+          ],
+          "rivales": 10
+        },
+        {
+          "abre": [
+            "Gholdengo",
+            "Staraptor"
+          ],
+          "atras": [
+            "Arcanine-Hisui",
+            "Primarina"
+          ],
+          "rivales": 6
+        },
+        {
+          "abre": [
+            "Raichu",
+            "Primarina"
+          ],
+          "atras": [
+            "Gholdengo",
+            "Arcanine-Hisui"
+          ],
+          "rivales": 5
+        },
+        {
+          "abre": [
+            "Arcanine-Hisui",
+            "Staraptor"
+          ],
+          "atras": [
+            "Raichu",
+            "Primarina"
+          ],
+          "rivales": 3
+        },
+        {
+          "abre": [
+            "Raichu",
+            "Primarina"
+          ],
+          "atras": [
+            "Gholdengo",
+            "Staraptor"
+          ],
+          "rivales": 2
+        }
+      ]
+    },
+    "eval": {
+      "rivales": 100,
+      "entropia_media_nats": 0.7274,
+      "entropia_normalizada": 0.1616,
+      "formaciones_efectivas_media": 2.59,
+      "informacion_mutua_nats": 1.7772,
+      "informacion_mutua_normalizada": 0.395,
+      "tv_media_a_la_media": 0.7673,
+      "traer": [
+        {
+          "pokemon": "Raichu",
+          "media": 0.4951,
+          "min": 0.0,
+          "max": 0.9999
+        },
+        {
+          "pokemon": "Rillaboom",
+          "media": 0.4601,
+          "min": 0.0,
+          "max": 0.9999
+        },
+        {
+          "pokemon": "Gholdengo",
+          "media": 0.6188,
+          "min": 0.0002,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Arcanine-Hisui",
+          "media": 0.9474,
+          "min": 0.0182,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Staraptor",
+          "media": 0.6698,
+          "min": 0.0007,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Primarina",
+          "media": 0.8088,
+          "min": 0.0134,
+          "max": 1.0
+        }
+      ],
+      "abrir": [
+        {
+          "pokemon": "Raichu",
+          "media": 0.402,
+          "min": 0.0,
+          "max": 0.9999
+        },
+        {
+          "pokemon": "Rillaboom",
+          "media": 0.0422,
+          "min": 0.0,
+          "max": 0.9308
+        },
+        {
+          "pokemon": "Gholdengo",
+          "media": 0.3304,
+          "min": 0.0,
+          "max": 0.9998
+        },
+        {
+          "pokemon": "Arcanine-Hisui",
+          "media": 0.3406,
+          "min": 0.0,
+          "max": 0.9998
+        },
+        {
+          "pokemon": "Staraptor",
+          "media": 0.5313,
+          "min": 0.0,
+          "max": 1.0
+        },
+        {
+          "pokemon": "Primarina",
+          "media": 0.3535,
+          "min": 0.0,
+          "max": 0.9999
+        }
+      ],
+      "determinista_traidos_distintos": 8,
+      "determinista_formaciones_distintas": 16,
+      "determinista_traidos_top": [
+        {
+          "traidos": [
+            "Gholdengo",
+            "Arcanine-Hisui",
+            "Staraptor",
+            "Primarina"
+          ],
+          "rivales": 21
+        },
+        {
+          "traidos": [
+            "Raichu",
+            "Gholdengo",
+            "Arcanine-Hisui",
+            "Primarina"
+          ],
+          "rivales": 18
+        },
+        {
+          "traidos": [
+            "Raichu",
+            "Rillaboom",
+            "Arcanine-Hisui",
+            "Primarina"
+          ],
+          "rivales": 17
+        },
+        {
+          "traidos": [
+            "Rillaboom",
+            "Gholdengo",
+            "Arcanine-Hisui",
+            "Staraptor"
+          ],
+          "rivales": 16
+        },
+        {
+          "traidos": [
+            "Raichu",
+            "Arcanine-Hisui",
+            "Staraptor",
+            "Primarina"
+          ],
+          "rivales": 15
+        }
+      ],
+      "determinista_formaciones_top": [
+        {
+          "abre": [
+            "Raichu",
+            "Primarina"
+          ],
+          "atras": [
+            "Gholdengo",
+            "Arcanine-Hisui"
+          ],
+          "rivales": 18
+        },
+        {
+          "abre": [
+            "Gholdengo",
+            "Staraptor"
+          ],
+          "atras": [
+            "Arcanine-Hisui",
+            "Primarina"
+          ],
+          "rivales": 16
+        },
+        {
+          "abre": [
+            "Raichu",
+            "Arcanine-Hisui"
+          ],
+          "atras": [
+            "Rillaboom",
+            "Primarina"
+          ],
+          "rivales": 15
+        },
+        {
+          "abre": [
+            "Gholdengo",
+            "Staraptor"
+          ],
+          "atras": [
+            "Rillaboom",
+            "Arcanine-Hisui"
+          ],
+          "rivales": 12
+        },
+        {
+          "abre": [
+            "Arcanine-Hisui",
+            "Staraptor"
+          ],
+          "atras": [
+            "Raichu",
+            "Primarina"
+          ],
+          "rivales": 8
+        }
+      ]
+    }
+  },
+  "personas": [
+    {
+      "rival": "adojs",
+      "equipo": [
+        "archaludon",
+        "basculegion",
+        "farigiraf",
+        "golisopod",
+        "pelipper",
+        "sneasler"
+      ],
+      "trajo": [
+        "archaludon",
+        "basculegion",
+        "farigiraf",
+        "pelipper"
+      ],
+      "completo": {
+        "rivales": 1,
+        "entropia_media_nats": 2.5029,
+        "entropia_normalizada": 0.5562,
+        "formaciones_efectivas_media": 12.22,
+        "informacion_mutua_nats": 0.0,
+        "informacion_mutua_normalizada": 0.0,
+        "tv_media_a_la_media": 0.0,
+        "traer": [
+          {
+            "pokemon": "Raichu",
+            "media": 0.3081,
+            "min": 0.3081,
+            "max": 0.3081
+          },
+          {
+            "pokemon": "Rillaboom",
+            "media": 0.3634,
+            "min": 0.3634,
+            "max": 0.3634
+          },
+          {
+            "pokemon": "Gholdengo",
+            "media": 0.9139,
+            "min": 0.9139,
+            "max": 0.9139
+          },
+          {
+            "pokemon": "Arcanine-Hisui",
+            "media": 0.8728,
+            "min": 0.8728,
+            "max": 0.8728
+          },
+          {
+            "pokemon": "Staraptor",
+            "media": 0.844,
+            "min": 0.844,
+            "max": 0.844
+          },
+          {
+            "pokemon": "Primarina",
+            "media": 0.6978,
+            "min": 0.6978,
+            "max": 0.6978
+          }
+        ],
+        "abrir": [
+          {
+            "pokemon": "Raichu",
+            "media": 0.273,
+            "min": 0.273,
+            "max": 0.273
+          },
+          {
+            "pokemon": "Rillaboom",
+            "media": 0.0417,
+            "min": 0.0417,
+            "max": 0.0417
+          },
+          {
+            "pokemon": "Gholdengo",
+            "media": 0.6706,
+            "min": 0.6706,
+            "max": 0.6706
+          },
+          {
+            "pokemon": "Arcanine-Hisui",
+            "media": 0.1943,
+            "min": 0.1943,
+            "max": 0.1943
+          },
+          {
+            "pokemon": "Staraptor",
+            "media": 0.5652,
+            "min": 0.5652,
+            "max": 0.5652
+          },
+          {
+            "pokemon": "Primarina",
+            "media": 0.2552,
+            "min": 0.2552,
+            "max": 0.2552
+          }
+        ],
+        "determinista_traidos_distintos": 1,
+        "determinista_formaciones_distintas": 1,
+        "determinista_traidos_top": [
+          {
+            "traidos": [
+              "Gholdengo",
+              "Arcanine-Hisui",
+              "Staraptor",
+              "Primarina"
+            ],
+            "rivales": 1
+          }
+        ],
+        "determinista_formaciones_top": [
+          {
+            "abre": [
+              "Gholdengo",
+              "Staraptor"
+            ],
+            "atras": [
+              "Arcanine-Hisui",
+              "Primarina"
+            ],
+            "rivales": 1
+          }
+        ]
+      },
+      "condicionado": {
+        "rivales": 1,
+        "entropia_media_nats": 1.6689,
+        "entropia_normalizada": 0.3709,
+        "formaciones_efectivas_media": 5.31,
+        "informacion_mutua_nats": 0.0,
+        "informacion_mutua_normalizada": 0.0,
+        "tv_media_a_la_media": 0.0,
+        "traer": [
+          {
+            "pokemon": "Raichu",
+            "media": 0.0987,
+            "min": 0.0987,
+            "max": 0.0987
+          },
+          {
+            "pokemon": "Rillaboom",
+            "media": 0.8298,
+            "min": 0.8298,
+            "max": 0.8298
+          },
+          {
+            "pokemon": "Gholdengo",
+            "media": 0.9444,
+            "min": 0.9444,
+            "max": 0.9444
+          },
+          {
+            "pokemon": "Arcanine-Hisui",
+            "media": 0.962,
+            "min": 0.962,
+            "max": 0.962
+          },
+          {
+            "pokemon": "Staraptor",
+            "media": 0.9474,
+            "min": 0.9474,
+            "max": 0.9474
+          },
+          {
+            "pokemon": "Primarina",
+            "media": 0.2177,
+            "min": 0.2177,
+            "max": 0.2177
+          }
+        ],
+        "abrir": [
+          {
+            "pokemon": "Raichu",
+            "media": 0.0759,
+            "min": 0.0759,
+            "max": 0.0759
+          },
+          {
+            "pokemon": "Rillaboom",
+            "media": 0.0296,
+            "min": 0.0296,
+            "max": 0.0296
+          },
+          {
+            "pokemon": "Gholdengo",
+            "media": 0.6291,
+            "min": 0.6291,
+            "max": 0.6291
+          },
+          {
+            "pokemon": "Arcanine-Hisui",
+            "media": 0.2929,
+            "min": 0.2929,
+            "max": 0.2929
+          },
+          {
+            "pokemon": "Staraptor",
+            "media": 0.8943,
+            "min": 0.8943,
+            "max": 0.8943
+          },
+          {
+            "pokemon": "Primarina",
+            "media": 0.0781,
+            "min": 0.0781,
+            "max": 0.0781
+          }
+        ],
+        "determinista_traidos_distintos": 1,
+        "determinista_formaciones_distintas": 1,
+        "determinista_traidos_top": [
+          {
+            "traidos": [
+              "Rillaboom",
+              "Gholdengo",
+              "Arcanine-Hisui",
+              "Staraptor"
+            ],
+            "rivales": 1
+          }
+        ],
+        "determinista_formaciones_top": [
+          {
+            "abre": [
+              "Gholdengo",
+              "Staraptor"
+            ],
+            "atras": [
+              "Rillaboom",
+              "Arcanine-Hisui"
+            ],
+            "rivales": 1
+          }
+        ]
+      }
+    },
+    {
+      "rival": "Sam smithy",
+      "equipo": [
+        "basculegion",
+        "charizard",
+        "floetteeternal",
+        "garchomp",
+        "kingambit",
+        "whimsicott"
+      ],
+      "trajo": [
+        "charizard",
+        "garchomp",
+        "kingambit",
+        "whimsicott"
+      ],
+      "completo": {
+        "rivales": 1,
+        "entropia_media_nats": 1.9502,
+        "entropia_normalizada": 0.4334,
+        "formaciones_efectivas_media": 7.03,
+        "informacion_mutua_nats": 0.0,
+        "informacion_mutua_normalizada": 0.0,
+        "tv_media_a_la_media": 0.0,
+        "traer": [
+          {
+            "pokemon": "Raichu",
+            "media": 0.6938,
+            "min": 0.6938,
+            "max": 0.6938
+          },
+          {
+            "pokemon": "Rillaboom",
+            "media": 0.111,
+            "min": 0.111,
+            "max": 0.111
+          },
+          {
+            "pokemon": "Gholdengo",
+            "media": 0.7717,
+            "min": 0.7717,
+            "max": 0.7717
+          },
+          {
+            "pokemon": "Arcanine-Hisui",
+            "media": 0.9811,
+            "min": 0.9811,
+            "max": 0.9811
+          },
+          {
+            "pokemon": "Staraptor",
+            "media": 0.5046,
+            "min": 0.5046,
+            "max": 0.5046
+          },
+          {
+            "pokemon": "Primarina",
+            "media": 0.9378,
+            "min": 0.9378,
+            "max": 0.9378
+          }
+        ],
+        "abrir": [
+          {
+            "pokemon": "Raichu",
+            "media": 0.6691,
+            "min": 0.6691,
+            "max": 0.6691
+          },
+          {
+            "pokemon": "Rillaboom",
+            "media": 0.0175,
+            "min": 0.0175,
+            "max": 0.0175
+          },
+          {
+            "pokemon": "Gholdengo",
+            "media": 0.0713,
+            "min": 0.0713,
+            "max": 0.0713
+          },
+          {
+            "pokemon": "Arcanine-Hisui",
+            "media": 0.2639,
+            "min": 0.2639,
+            "max": 0.2639
+          },
+          {
+            "pokemon": "Staraptor",
+            "media": 0.0839,
+            "min": 0.0839,
+            "max": 0.0839
+          },
+          {
+            "pokemon": "Primarina",
+            "media": 0.8943,
+            "min": 0.8943,
+            "max": 0.8943
+          }
+        ],
+        "determinista_traidos_distintos": 1,
+        "determinista_formaciones_distintas": 1,
+        "determinista_traidos_top": [
+          {
+            "traidos": [
+              "Raichu",
+              "Gholdengo",
+              "Arcanine-Hisui",
+              "Primarina"
+            ],
+            "rivales": 1
+          }
+        ],
+        "determinista_formaciones_top": [
+          {
+            "abre": [
+              "Raichu",
+              "Primarina"
+            ],
+            "atras": [
+              "Gholdengo",
+              "Arcanine-Hisui"
+            ],
+            "rivales": 1
+          }
+        ]
+      },
+      "condicionado": {
+        "rivales": 1,
+        "entropia_media_nats": 0.7393,
+        "entropia_normalizada": 0.1643,
+        "formaciones_efectivas_media": 2.09,
+        "informacion_mutua_nats": 0.0,
+        "informacion_mutua_normalizada": 0.0,
+        "tv_media_a_la_media": 0.0,
+        "traer": [
+          {
+            "pokemon": "Raichu",
+            "media": 0.0073,
+            "min": 0.0073,
+            "max": 0.0073
+          },
+          {
+            "pokemon": "Rillaboom",
+            "media": 0.9441,
+            "min": 0.9441,
+            "max": 0.9441
+          },
+          {
+            "pokemon": "Gholdengo",
+            "media": 0.9601,
+            "min": 0.9601,
+            "max": 0.9601
+          },
+          {
+            "pokemon": "Arcanine-Hisui",
+            "media": 0.9964,
+            "min": 0.9964,
+            "max": 0.9964
+          },
+          {
+            "pokemon": "Staraptor",
+            "media": 0.9959,
+            "min": 0.9959,
+            "max": 0.9959
+          },
+          {
+            "pokemon": "Primarina",
+            "media": 0.0962,
+            "min": 0.0962,
+            "max": 0.0962
+          }
+        ],
+        "abrir": [
+          {
+            "pokemon": "Raichu",
+            "media": 0.0045,
+            "min": 0.0045,
+            "max": 0.0045
+          },
+          {
+            "pokemon": "Rillaboom",
+            "media": 0.0298,
+            "min": 0.0298,
+            "max": 0.0298
+          },
+          {
+            "pokemon": "Gholdengo",
+            "media": 0.8854,
+            "min": 0.8854,
+            "max": 0.8854
+          },
+          {
+            "pokemon": "Arcanine-Hisui",
+            "media": 0.0725,
+            "min": 0.0725,
+            "max": 0.0725
+          },
+          {
+            "pokemon": "Staraptor",
+            "media": 0.9898,
+            "min": 0.9898,
+            "max": 0.9898
+          },
+          {
+            "pokemon": "Primarina",
+            "media": 0.018,
+            "min": 0.018,
+            "max": 0.018
+          }
+        ],
+        "determinista_traidos_distintos": 1,
+        "determinista_formaciones_distintas": 1,
+        "determinista_traidos_top": [
+          {
+            "traidos": [
+              "Rillaboom",
+              "Gholdengo",
+              "Arcanine-Hisui",
+              "Staraptor"
+            ],
+            "rivales": 1
+          }
+        ],
+        "determinista_formaciones_top": [
+          {
+            "abre": [
+              "Gholdengo",
+              "Staraptor"
+            ],
+            "atras": [
+              "Rillaboom",
+              "Arcanine-Hisui"
+            ],
+            "rivales": 1
+          }
+        ]
+      }
+    }
+  ]
+}

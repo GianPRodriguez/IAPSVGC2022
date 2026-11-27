@@ -482,6 +482,8 @@ def snapshot_from_battle(
         avail_moves=avail_moves,
         avail_switches=avail_switches,
         last_turn=_last_turn_summary(hist, our_role),
+        # Memoria de serie BO3: quien juega la serie (backend en modo serie, web) la adjunta a la batalla.
+        series_memory=getattr(battle, '_series_memory', None),
     )
 
 
@@ -624,7 +626,8 @@ def pe_slot_mask(battle, slot: int, *, other: Optional[SlotAction] = None) -> np
         mask[MEGA_BASE:MEGA_BASE + N_MOVE_ACTIONS] = mask[0:N_MOVE_ACTIONS]
     if slot < len(can_tera) and allow_tera(bool(can_tera[slot])):
         mask[TERA_ID] = 1.0
-    return _filter_ally_damage(battle, slot, _filter_by_valid_orders(battle, slot, mask))
+    return _filter_protect_streak(battle, slot,
+                                  _filter_ally_damage(battle, slot, _filter_by_valid_orders(battle, slot, mask)))
 
 
 # Habilidad del aliado → tipos que absorbe o que lo benefician al recibirlos: apuntarle un
@@ -670,6 +673,42 @@ def _filter_ally_damage(battle, slot: int, mask: np.ndarray) -> np.ndarray:
             continue
         for base in (0, MEGA_BASE):
             out[base + mi * 4 + 2] = 0.0  # objetivo 2 = aliado
+    return out if np.any(out > 0.5) else mask
+
+
+PROTECT_STREAK_ENV = 'RL_MASK_PROTECT_STREAK'
+
+
+def protect_streak_mask_on() -> bool:
+    """Máscara del Protect consecutivo (rl_env_spec v1.35; PPO v3 / DDQN v2). APAGADA por defecto: v1/v2 y
+    los heurísticos no cambian. La encienden el entrenamiento y los jugadores con
+    ``cfg.mask_protect_streak`` (``RL_MASK_PROTECT_STREAK=1``)."""
+    import os
+    return os.environ.get(PROTECT_STREAK_ENV, '').strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def _filter_protect_streak(battle, slot: int, mask: np.ndarray) -> np.ndarray:
+    """Quita los movimientos que cuentan como Protect si el Pokémon viene de usar uno con éxito.
+
+    Showdown deja usarlos, pero el segundo seguido acierta con probabilidad 1/3 y el tercero 1/9. En las
+    series contra personas (docs/online_web_partidas.md) PPO v2 los repitió con ``protect_counter`` ya en la
+    observación (Primarina dos veces, Gholdengo tres). Usa el contador de poke-env (se reinicia si el Protect
+    falla o el Pokémon sale) y su lista de movimientos (Protect, Detect, Wide/Quick Guard, Endure…). Si la
+    máscara quedara vacía se conserva la original.
+    """
+    if not protect_streak_mask_on():
+        return mask
+    actives = list(getattr(battle, 'active_pokemon', None) or [])
+    mon = actives[slot] if slot < len(actives) else None
+    if mon is None or int(getattr(mon, 'protect_counter', 0) or 0) < 1:
+        return mask
+    moves = list(battle.available_moves[slot]) if slot < len(getattr(battle, 'available_moves', [])) else []
+    out = mask.copy()
+    for mi, move in enumerate(moves[:N_MOVE_SLOTS]):
+        if not bool(getattr(move, 'is_protect_counter', False)):
+            continue
+        for base in (0, MEGA_BASE):
+            out[base + mi * 4:base + mi * 4 + 4] = 0.0
     return out if np.any(out > 0.5) else mask
 
 

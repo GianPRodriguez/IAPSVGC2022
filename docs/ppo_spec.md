@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.11** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.28) |
+| **Versión** | **1.18** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.35; PPO v3) |
 | **Estado** | FROZEN; `showdown/rl/ppo/` y `battle_bots/ppo/` |
 | **Training** | **Sí, parcial**: PPO/curriculum operativos; self-play tiene infraestructura básica, no un rival de checkpoint plenamente cableado |
 | **Inferencia** | `ValidatedPPOPlayer`, greedy masked desde checkpoint |
@@ -126,6 +126,42 @@ sin validar ese cableado. Showdown local se inicia con `--no-security`.
 puede recolectar de forma serial. El default CLI de `20_000` pasos y un smoke
 con rollout 256 son controles operativos, no nuevos hiperparámetros del agente.
 
+### PPO v3: memoria de serie BO3 y máscara del Protect consecutivo (1.18, protocolo §4.16)
+
+Decisión del usuario del 27-11-2026, tras las series de la web contra personas (PPO v2 perdió 0–2 contra adojs y
+contra Sam smithy). **PPO v3 = PPO v2 + estos cambios**, y DDQN v2 recibe exactamente los mismos por juego limpio
+(ddqn_spec 1.26):
+
+- **Máscara del Protect consecutivo** (`cfg.mask_protect_streak`, `RL_MASK_PROTECT_STREAK`; rl_env_spec v1.35
+  §2): fuera los movimientos tipo Protect si el Pokémon viene de usar uno con éxito. Contra personas, la
+  versión anterior repetía Protect con `protect_counter` ya en la observación (Primarina dos veces, Gholdengo
+  tres; docs/online_web_partidas.md).
+- **Memoria de serie BO3** (`cfg.series_memory`, rl_env_spec v1.35 §3.e): 69 entradas más al final de la
+  observación (21 globales + 8 por cada bloque rival) con lo que el rival hizo en las partidas previas de la
+  serie: qué trajo, quién abrió, Trick Room, Tailwind, clima, Protect, cambios, KOs. Idea del usuario: en un
+  BO3 los dos repiten equipo y, con hojas abiertas, lo que la partida 1 revela es el plan del rival; un humano
+  recuerda pocas líneas y el agente puede guardarlas exactas.
+- **Entrenamiento en series BO3** (`--series-bo3`, rl_env_spec v1.35 §3.f): mismo rival y mismos equipos hasta
+  que alguien gana 2; cada partida sigue siendo un episodio. Logs: `wr_partida_1/2/3`, `wr_series`.
+- **Arranque en caliente** (`--init-from`): copia todos los pesos de la versión anterior y la primera capa del
+  torso recibe columnas nuevas en cero para la memoria. Al empezar, la red juega exactamente como la anterior.
+- **Preview**: el congelado de la versión anterior (v2.1b). `--preview-series 1` lo condiciona a lo que el rival
+  trajo en la serie, sin reentrenarlo; es una opción aparte que se evalúa por separado (protocolo §4.16 S1),
+  no parte de la versión salvo que pase su regla.
+
+Compatibilidad: todo apagado por defecto. Los checkpoints anteriores cargan con `series_memory=False` y
+`mask_protect_streak=False` y juegan igual que antes; un checkpoint con memoria reconstruye la red al cargarse.
+`policy_diag --series` evalúa por series (protocolo §4.16).
+
+```bash
+python -m showdown.rl.ppo.train --seed 0 --opponent curriculum --start-ps --obs-abilities 1 \
+    --series-memory 1 --series-bo3 1 --mask-protect-streak 1 \
+    --init-from checkpoints/ppo_v2/ppo_s0/final.pt --steps 1000000 ...
+```
+
+El presupuesto, las semillas y el brazo de control están en el pre-registro (protocolo §4.16) y se fijan con
+el usuario antes de encolar.
+
 ## Hiperparámetros
 
 | Parámetro | Valor | Propósito | Cómo influye |
@@ -242,6 +278,7 @@ Véase [`conclusion_eval_protocol.md`](conclusion_eval_protocol.md).
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.18** | 2026-11-27 | **PPO v3 implementado** (sin entrenar; protocolo §4.16, decisión del usuario): máscara del Protect consecutivo (`mask_protect_streak`), memoria de serie BO3 en la obs (`series_memory`, `OBS_DIM` + 69), entrenamiento en series BO3 (`--series-bo3`), arranque en caliente desde PPO v2 con columnas nuevas en cero (`--init-from`, `PPOAgent.init_from_previous`) y preview opcionalmente condicionado a la serie (`--preview-series`). La simetría se extiende a la memoria. Todo apagado por defecto; v1/v2 no cambian. rl_env_spec v1.35. |
 | **1.17.1** | 2026-11-26 | Resultado del kick-off de PPO v2 (memorizacion_equipos §19.1): **84,5 % (± 3,8) contra `eval`**, +22,4 pts sobre DDQN v1 con el mismo preview y observación; semilla elegida por `val` = s1 (91,0 % `val`, 79,3 % `eval`), punto de partida de I/J/K. |
 | **1.17** | 2026-11-25 | **Kick-off oficial de PPO v2** (sin cambios de código): receta de memorizacion_equipos §17–§19 (P5 completo + preview v2.1 sin `val`), cola `scripts/server/kickoff_ppo_v2.sh`, 1M × 5 semillas. La semilla con mejor `val` es el punto de partida de los agentes QD (I, J, K). |
 | **1.16** | 2026-11-18 | **P5: corrección de habilidades en la observación activa por defecto** (decisión del usuario, PPO y DDQN; rl_env_spec v1.32). `PPOConfig.obs_abilities=True` en entrenamientos nuevos; los checkpoints de PPO v1 cargan con False (observación anterior). `--obs-abilities 0/1`. Se mide en la vigesimoquinta cola. |

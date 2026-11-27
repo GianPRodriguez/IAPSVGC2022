@@ -25,6 +25,19 @@ OBS_DIM = (
     + FIELD_DIM
 )
 
+# Memoria de serie BO3 (rl_env_spec v1.35; PPO v3 / DDQN v2): bloque opcional al final de la obs con lo
+# que el rival hizo en las partidas anteriores de la serie (showdown/rl/series_memory.py). Global + uno
+# por bloque rival (alineado con los 6 bloques foe_*). Solo existe si la obs se construye con memoria.
+MEM_GLOBAL_DIM = 21
+MEM_SLOT_DIM = 8
+MEM_DIM = MEM_GLOBAL_DIM + N_FOE_MONS * MEM_SLOT_DIM
+OBS_DIM_MEMORY = OBS_DIM + MEM_DIM
+
+
+def obs_dim_for(series_memory: bool = False) -> int:
+    """Dimensión de la obs de combate: ``OBS_DIM`` o ``OBS_DIM + MEM_DIM`` con memoria de serie."""
+    return OBS_DIM_MEMORY if series_memory else OBS_DIM
+
 # Canonical party slots
 PARTY_ORDER = (
     'self_active_1',

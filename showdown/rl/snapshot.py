@@ -152,6 +152,9 @@ class BattleSnapshot:
     avail_switches: Optional[Tuple[Tuple[str, ...], Tuple[str, ...]]] = None
     # Resumen del último turno: our/foe × protect, switch, faint, fakeout, spread.
     last_turn: Dict[str, float] = dataclasses.field(default_factory=dict)
+    # Memoria de serie BO3 (``showdown.rl.series_memory.SeriesMemory``) o None (partida suelta). La obs solo
+    # la usa con RL_OBS_SERIES_MEMORY / memory=True (rl_env_spec v1.35).
+    series_memory: Optional[object] = None
 
     def party_list(self) -> List[Optional[MonSnapshot]]:
         """Canonical Spec order: self a/b, self bench, foe a/b, foe bench."""

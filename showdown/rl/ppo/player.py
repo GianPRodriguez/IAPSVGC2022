@@ -49,6 +49,8 @@ class PPOPlayer(FamilyPreviewMixin, Player):
         self.checkpoint_path = str(ckpt).strip()
         if self.checkpoint_path and Path(self.checkpoint_path).is_file():
             self.agent.load(self.checkpoint_path)
+        if getattr(self.agent.cfg, 'mask_protect_streak', False):
+            os.environ['RL_MASK_PROTECT_STREAK'] = '1'  # PPO v3: máscara del Protect consecutivo
         self.last_actions = (0, 0)
         self.init_family_preview(
             preview_checkpoint=preview_checkpoint,
@@ -61,7 +63,8 @@ class PPOPlayer(FamilyPreviewMixin, Player):
         assert isinstance(battle, DoubleBattle)
         try:
             snap = snapshot_from_battle(battle, stat_beliefs=player_stat_beliefs(self))
-            obs = build_observation_ppo(snap, abilities=bool(getattr(self.agent.cfg, 'obs_abilities', False)))
+            obs = build_observation_ppo(snap, abilities=bool(getattr(self.agent.cfg, 'obs_abilities', False)),
+                                        memory=bool(getattr(self.agent.cfg, 'series_memory', False)))
             m1, _m2u = pe_autoregressive_masks(battle, slot1_action_id=None)
 
             def m2_fn(a1: int):

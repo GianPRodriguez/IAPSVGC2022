@@ -150,6 +150,10 @@ def _make_router_class():
             self.format_names: Dict[str, str] = {}
             self.ots: Dict[str, List[str]] = {}      # sala -> líneas |showteam| (hojas abiertas)
             self.locked = False                     # sesión bloqueada (‽): no puede retar, sí aceptar
+            # Memoria de serie BO3 por rival (PPO v3 / DDQN v2, protocolo §4.16): partidas terminadas de la
+            # serie en curso; se adjunta a cada partida nueva y la usan los agentes con series_memory.
+            self.memories: Dict[str, Any] = {}
+            self.preview_series = False             # preview condicionado a lo que el rival trajo
             # poke-env solo registra los popups y los PM de retos: se observan antes de su manejo normal.
             self._orig_handle_message = self.ps_client._handle_message
             self.ps_client._handle_message = self._observe_then_handle
@@ -206,7 +210,17 @@ def _make_router_class():
             key = self.assign.get(to_id(getattr(battle, 'opponent_username', None)))
             return self.agents.get(key) if key else None
 
+        def _attach_memory(self, battle):
+            """Adjunta a la batalla la memoria de las partidas PREVIAS de la serie (una vez por batalla)."""
+            mem = self.memories.get(to_id(getattr(battle, 'opponent_username', None)))
+            if mem is None or getattr(battle, '_series_memory', None) is not None:
+                return mem
+            from showdown.rl.series_memory import SeriesMemory
+            battle._series_memory = SeriesMemory(records=list(mem.records))
+            return mem
+
         def choose_move(self, battle):
+            self._attach_memory(battle)
             agent = self.agent_for(battle)
             if agent is None:
                 self.logger.warning('batalla sin agente asignado: %s', battle.battle_tag)
@@ -214,10 +228,12 @@ def _make_router_class():
             return agent.choose_move(battle)
 
         def teampreview(self, battle):
+            mem = self._attach_memory(battle)
             agent = self.agent_for(battle)
             if agent is None:
                 return '/team 1234'
-            return agent.teampreview(battle)
+            keep = mem.foe_brought() if (self.preview_series and mem is not None and mem.records) else None
+            return agent.teampreview(battle, foe_keep=keep) if keep else agent.teampreview(battle)
 
         async def _update_challenges(self, split_message):
             try:
@@ -350,6 +366,9 @@ class Bo3Service:
         s.ignore = set(self.player.battles)
         s.t_challenge = time.time()
         self.player.assign[s.uid] = s.agent
+        if hasattr(self.player, 'memories'):
+            from showdown.rl.series_memory import SeriesMemory
+            self.player.memories[s.uid] = SeriesMemory()
         if self.inbound_only:
             self._start_inbound(s)
             return
@@ -427,8 +446,15 @@ class Bo3Service:
 
     async def _watch(self, s: Series) -> None:
         try:
+            recorded: Set[str] = set()
             while True:
                 s.tags, s.wins, s.losses, done = series_score(self.player.battles, s.uid, s.ignore)
+                mem = getattr(self.player, 'memories', {}).get(s.uid)
+                for tag in s.tags:  # memoria de serie: cada partida terminada se anota una vez
+                    b = self.player.battles.get(tag)
+                    if mem is not None and tag not in recorded and getattr(b, 'finished', False):
+                        mem.add_battle(b)
+                        recorded.add(tag)
                 if done:
                     self._finish(s, 'terminada', '')
                     return
@@ -447,6 +473,7 @@ class Bo3Service:
             if s.uid in self.order:
                 self.order.remove(s.uid)
         self.player.assign.pop(s.uid, None)
+        getattr(self.player, 'memories', {}).pop(s.uid, None)
         LOG.info('serie %s (%s): %s %d-%d %s', s.user, s.agent, state, s.wins, s.losses, msg)
         if s.tags:
             self._save(s)
@@ -671,6 +698,8 @@ def main(argv=None) -> int:
                     help='no intentar retar: la persona siempre reta al bot (IP bloqueada por Showdown)')
     ap.add_argument('--out', default=str(OUT),
                     help='carpeta de resúmenes y replays (en la EC2, fuera del repo para que git pull no choque)')
+    ap.add_argument('--preview-series', action='store_true',
+                    help='preview condicionado a lo que el rival trajo en la serie (partida 2 y 3)')
     ap.add_argument('--check', action='store_true', help='solo carga los agentes, sin conectarse')
     args = ap.parse_args(argv)
 
@@ -718,6 +747,7 @@ def main(argv=None) -> int:
                          series_timeout=args.series_timeout * 60, max_active=args.max_active,
                          max_queue=args.max_queue, inbound_timeout=args.inbound_timeout * 60, out_dir=out_dir)
     service.inbound_only = bool(args.inbound_only)
+    player.preview_series = bool(args.preview_series)
     asyncio.run_coroutine_threadsafe(service.run(exit_on_disconnect=True), POKE_LOOP)
     httpd = ThreadingHTTPServer((args.host, args.port), make_handler(service))
     print(f'[web] {user} sirviendo en http://{args.host}:{args.port} ({args.format})', flush=True)

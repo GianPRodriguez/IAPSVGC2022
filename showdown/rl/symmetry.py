@@ -34,8 +34,11 @@ from showdown.rl.constants import (
     MOVE_SLOT_DIM,
     N_FOE_MONS,
     N_MOVE_ACTIONS,
+    MEM_GLOBAL_DIM,
+    MEM_SLOT_DIM,
     N_OUR_MONS,
     OBS_DIM,
+    OBS_DIM_MEMORY,
     OTS_MON_DIM,
     SLOT_ACTION_N,
     SWITCH_BASE,
@@ -122,13 +125,27 @@ def _base_perms() -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     return pm, pf, pb
 
 
-@lru_cache(maxsize=1)
-def obs_perms() -> np.ndarray:
-    """int64[8, OBS_DIM]: ``obs' = obs[P[g]]``."""
-    pm, pf, pb = _base_perms()
-    out = np.zeros((N_ELEMENTS, OBS_DIM), dtype=np.int64)
+def _extend_perms(pm: np.ndarray, pf: np.ndarray, pb: np.ndarray, dim: int):
+    """Extiende las permutaciones a la obs con memoria de serie (rl_env_spec v1.35): el bloque global no se
+    mueve y σ_f intercambia los bloques de memoria de los activos rivales 0 ↔ 1 (van alineados con foe_*)."""
+    if dim == OBS_DIM:
+        return pm, pf, pb
+    if dim != OBS_DIM_MEMORY:
+        raise ValueError(f'simetría: dimensión de obs desconocida {dim}')
+    tail = np.arange(OBS_DIM, dim, dtype=np.int64)
+    pm2, pf2, pb2 = (np.concatenate([p, tail]) for p in (pm, pf, pb))
+    s0 = OBS_DIM + MEM_GLOBAL_DIM
+    _swap(pf2, s0, s0 + MEM_SLOT_DIM, MEM_SLOT_DIM)
+    return pm2, pf2, pb2
+
+
+@lru_cache(maxsize=4)
+def obs_perms(dim: int = OBS_DIM) -> np.ndarray:
+    """int64[8, dim]: ``obs' = obs[P[g]]`` (``dim`` = OBS_DIM u OBS_DIM_MEMORY)."""
+    pm, pf, pb = _extend_perms(*_base_perms(), int(dim))
+    out = np.zeros((N_ELEMENTS, int(dim)), dtype=np.int64)
     for g in range(N_ELEMENTS):
-        p = np.arange(OBS_DIM, dtype=np.int64)
+        p = np.arange(int(dim), dtype=np.int64)
         if g & BIT_BENCH:
             p = p[pb]
         if g & BIT_FOE:
@@ -175,7 +192,8 @@ def bench_swap_valid(obs: np.ndarray) -> np.ndarray:
     from showdown.rl.observation import obs_layout
 
     lay = obs_layout()
-    x = np.asarray(obs).reshape(-1, OBS_DIM)
+    o = np.asarray(obs)
+    x = o.reshape(-1, o.shape[-1])
     ok = np.ones(x.shape[0], dtype=bool)
     for name in ('our_2', 'our_3'):
         d = lay[name][0] + OTS_MON_DIM
@@ -185,15 +203,17 @@ def bench_swap_valid(obs: np.ndarray) -> np.ndarray:
 
 def sample_elements(obs: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     """Un elemento aleatorio por fila (σ_b solo donde aplica). Incluye la identidad."""
-    n = np.asarray(obs).reshape(-1, OBS_DIM).shape[0]
+    o = np.asarray(obs)
+    n = o.reshape(-1, o.shape[-1]).shape[0]
     g = rng.integers(0, N_ELEMENTS, size=n)
     g[~bench_swap_valid(obs)] &= ~BIT_BENCH
     return g.astype(np.int64)
 
 
 def augment_obs(obs: np.ndarray, g: np.ndarray) -> np.ndarray:
-    x = np.asarray(obs).reshape(-1, OBS_DIM)
-    perms = obs_perms()[np.asarray(g, dtype=np.int64)]
+    o = np.asarray(obs)
+    x = o.reshape(-1, o.shape[-1])
+    perms = obs_perms(x.shape[1])[np.asarray(g, dtype=np.int64)]
     return np.take_along_axis(x, perms, axis=1)
 
 
@@ -212,15 +232,15 @@ def augment_joint_mask(mask: np.ndarray, g: np.ndarray) -> np.ndarray:
 # de las funciones de arriba; solo se mueve a la GPU la parte pesada (permutar columnas).
 # --------------------------------------------------------------------------- #
 
-_TORCH_PERMS: Dict[Tuple[str, str], object] = {}
+_TORCH_PERMS: Dict[Tuple[str, str, int], object] = {}
 
 
-def _perm_tensor(kind: str, device):
+def _perm_tensor(kind: str, device, dim: int = OBS_DIM):
     import torch
-    key = (kind, str(device))
+    key = (kind, str(device), int(dim))
     t = _TORCH_PERMS.get(key)
     if t is None:
-        src = obs_perms() if kind == 'obs' else joint_perms()
+        src = obs_perms(int(dim)) if kind == 'obs' else joint_perms()
         t = torch.as_tensor(src, dtype=torch.int64, device=device)
         _TORCH_PERMS[key] = t
     return t
@@ -248,7 +268,7 @@ def sample_elements_t(obs_t, rng: np.random.Generator) -> np.ndarray:
 def augment_obs_t(obs_t, g: np.ndarray):
     import torch
     gt = torch.as_tensor(g, dtype=torch.int64, device=obs_t.device)
-    return obs_t.gather(1, _perm_tensor('obs', obs_t.device)[gt])
+    return obs_t.gather(1, _perm_tensor('obs', obs_t.device, int(obs_t.shape[1]))[gt])
 
 
 def augment_joint_t(a_t, g: np.ndarray):

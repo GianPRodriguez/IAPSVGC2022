@@ -13,7 +13,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -83,7 +83,29 @@ def _pad6(feats: list) -> list:
     return feats
 
 
-def obs_bundle_from_pokeenv_battle(battle: Any) -> PreviewObsBundle:
+PREVIEW_SERIES_ENV = 'PREVIEW_SERIES_CONDITION'
+
+
+def preview_series_condition_on() -> bool:
+    """Preview condicionado a la serie (protocolo §4.16, sin reentrenar): en la partida 2 y 3 de un BO3 el
+    preview ve del rival solo los Pokémon que trajo en partidas anteriores (el resto como desconocidos).
+    APAGADO por defecto (``PREVIEW_SERIES_CONDITION=1`` lo enciende)."""
+    return os.environ.get(PREVIEW_SERIES_ENV, '').strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def _keep_foe(mons: Sequence[Any], foe_keep: Optional[Sequence[str]]) -> List[Any]:
+    """Filtra la hoja rival a las especies de ``foe_keep`` (clave de series_memory.species_key). Si el filtro
+    no deja ninguno o deja todos, devuelve la hoja completa."""
+    mons = list(mons)
+    if not foe_keep:
+        return mons
+    from showdown.rl.series_memory import species_key
+    keep = {species_key(x) for x in foe_keep}
+    kept = [m for m in mons if species_key(_species_name(m)) in keep]
+    return kept if 0 < len(kept) < len(mons) else mons
+
+
+def obs_bundle_from_pokeenv_battle(battle: Any, foe_keep: Optional[Sequence[str]] = None) -> PreviewObsBundle:
     """Hoja OTS completa desde poke-env.
 
     Propio: ``teampreview_team`` (teambuilder: item, habilidad, naturaleza, SP,
@@ -95,6 +117,7 @@ def obs_bundle_from_pokeenv_battle(battle: Any) -> PreviewObsBundle:
     our_src = list(getattr(battle, 'teampreview_team', None) or battle.team.values())
     foe_ots = list((getattr(battle, 'opponent_team', None) or {}).values())
     foe_src = foe_ots or list(getattr(battle, 'teampreview_opponent_team', None) or [])
+    foe_src = _keep_foe(foe_src, foe_keep)  # preview condicionado a la serie (los demás quedan desconocidos)
     our = [mon_feat_from_pokeenv(m, own=True) for m in our_src[:6]]
     foe = [mon_feat_from_pokeenv(m, own=False) for m in foe_src[:6]]
     return PreviewObsBundle(our=_pad6(our), foe=_pad6(foe))
@@ -136,6 +159,9 @@ class FrozenPreviewPolicy:
     # habría elegido el modo determinista en la última batalla (para medir cuánto se aparta).
     temperature: float = 1.0
     last_greedy_order: Optional[Tuple[int, ...]] = None
+    # Especies rivales que vio el preview en la última batalla si estuvo condicionado a la serie (diagnóstico).
+    last_foe_keep: Optional[Tuple[str, ...]] = None
+    _agent: Any = None  # PreviewPPOAgent (solo team_preview_ppo): para la distribución completa
 
     @property
     def available(self) -> bool:
@@ -159,8 +185,10 @@ class FrozenPreviewPolicy:
                 agent.cfg.device = self.device
                 agent.load(path)
                 self.obs_abilities = bool(getattr(agent.cfg, 'obs_abilities', False))
+                self._agent = agent
 
                 canon = np.asarray(canonical_mask(), dtype=np.float32) if getattr(agent.cfg, 'canonical', False) else None
+                self._canon = canon
 
                 def choose(obs, mask):
                     m = mask
@@ -262,6 +290,40 @@ class FrozenPreviewPolicy:
         a = int(self._chooser(obs, mask))
         return a, f'/team {action_to_team_string(a)}'
 
+    def distribution_from_feats(
+        self,
+        our: Sequence[PreviewMonFeat],
+        foe: Sequence[PreviewMonFeat],
+        *,
+        temperature: Optional[float] = None,
+    ) -> Optional[np.ndarray]:
+        """Probabilidad de cada una de las 360 formaciones (solo ``team_preview_ppo``; None si no aplica).
+
+        Es la distribución del modo con sorteo (``greedy=False``): softmax de los logits enmascarados entre
+        las formaciones canónicas con que se entrenó, a la temperatura dada (por defecto la de la política).
+        El modo determinista elige su argmax. Para medir si el preview está colapsado (protocolo §4.16).
+        """
+        self._ensure()
+        if self._agent is None:
+            return None
+        import torch
+        from showdown.rl.team_preview_obs import obs_abilities_scope
+        with obs_abilities_scope(self.obs_abilities):
+            obs = encode_preview_obs(PreviewObsBundle(our=_pad6(our), foe=_pad6(foe)))
+        mask = np.asarray(legal_mask(6), dtype=np.float32)
+        canon = getattr(self, '_canon', None)
+        if canon is not None:
+            mask = mask * canon
+        t = float(self.temperature if temperature is None else temperature)
+        agent = self._agent
+        with torch.no_grad():
+            o = torch.as_tensor(obs, dtype=torch.float32, device=agent.device).unsqueeze(0)
+            m = torch.as_tensor(mask, dtype=torch.float32, device=agent.device).unsqueeze(0)
+            logits, _v = agent.net(o)
+            z = agent._masked_logits(logits, m) / max(1e-3, t)
+            p = torch.softmax(z, dim=-1).squeeze(0).cpu().numpy().astype(np.float64)
+        return p
+
     def action_tuple_from_feats(
         self,
         our: Sequence[PreviewMonFeat],
@@ -272,14 +334,17 @@ class FrozenPreviewPolicy:
             return FIXED_EXPORT_TUPLE
         return tuple(i + 1 for i in decode_preview_action(a))
 
-    def choose_action(self, battle: Any) -> Tuple[int, str]:
-        """Returns (action_id, '/team ####'). Falls back to fixed export."""
+    def choose_action(self, battle: Any, foe_keep: Optional[Sequence[str]] = None) -> Tuple[int, str]:
+        """Returns (action_id, '/team ####'). Falls back to fixed export.
+
+        ``foe_keep``: especies rivales traídas en partidas previas de la serie (preview condicionado)."""
         self._ensure()
         if self._chooser is None:
             return 0, FIXED_EXPORT_ORDER
         from showdown.rl.team_preview_obs import obs_abilities_scope
+        self.last_foe_keep = tuple(foe_keep) if foe_keep else None
         with obs_abilities_scope(self.obs_abilities):
-            bundle = obs_bundle_from_pokeenv_battle(battle)
+            bundle = obs_bundle_from_pokeenv_battle(battle, foe_keep=foe_keep)
             obs = encode_preview_obs(bundle)
         mask = np.asarray(legal_mask(6), dtype=np.float32)
         a = int(self._chooser(obs, mask))
@@ -295,7 +360,7 @@ class FrozenPreviewPolicy:
             return FIXED_EXPORT_TUPLE
         return tuple(i + 1 for i in decode_preview_action(a))
 
-    def teampreview(self, battle: Any) -> str:
+    def teampreview(self, battle: Any, foe_keep: Optional[Sequence[str]] = None) -> str:
         """Orden ``/team`` para la batalla.
 
         ``PREVIEW_FORCE_ORDER=1356`` (diagnóstico, memorizacion_equipos.md §13) fuerza siempre esa
@@ -310,7 +375,7 @@ class FrozenPreviewPolicy:
             self.last_order = order
             mark_selected_in_teampreview(battle, order)
             return '/team ' + ''.join(str(x) for x in order)
-        a, cmd = self.choose_action(battle)
+        a, cmd = self.choose_action(battle, foe_keep=foe_keep)
         order = tuple(i + 1 for i in decode_preview_action(a))
         if self._chooser is None:
             order = FIXED_EXPORT_TUPLE

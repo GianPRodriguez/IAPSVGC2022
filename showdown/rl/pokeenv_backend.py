@@ -305,6 +305,13 @@ class PokeEnvBattleBackend(BattleBackend):
 
     Episode = one BO1 game (finished battle). Requires PS listening
     (`node pokemon-showdown start --no-security`).
+
+    **Modo serie BO3** (``series=True`` o ``RL_SERIES_BO3=1``; rl_env_spec v1.35, PPO v3 / DDQN v2): cada
+    episodio sigue siendo una partida, pero las partidas se agrupan en series al mejor de 3 contra el mismo
+    rival y los mismos equipos. La batalla lleva la memoria de las partidas previas (``_series_memory``, que
+    la obs usa con RL_OBS_SERIES_MEMORY) y el preview puede condicionarse a lo que el rival trajo
+    (PREVIEW_SERIES_CONDITION). Un cambio de rival pedido a mitad de serie se aplica al empezar la siguiente;
+    una partida abortada corta la serie.
     """
 
     def __init__(
@@ -326,6 +333,7 @@ class PokeEnvBattleBackend(BattleBackend):
         port: Optional[int] = None,
         foe_tie: Optional[bool] = None,
         team_split: Optional[str] = None,
+        series: Optional[bool] = None,
     ):
         from poke_env.ps_client import LocalhostServerConfiguration
 
@@ -377,6 +385,18 @@ class PokeEnvBattleBackend(BattleBackend):
         self._uid = 0
         self._closed = False
         self._cached_opp_export: Optional[str] = None
+        # Modo serie BO3 (None = RL_SERIES_BO3).
+        import os as _os
+        from showdown.rl.series_memory import SeriesMemory
+        env_on = _os.environ.get('RL_SERIES_BO3', '').strip().lower() in ('1', 'true', 'yes', 'on')
+        self._series_on = bool(series) if series is not None else env_on
+        self._series = SeriesMemory()
+        self._series_teams = None          # (our, our_meta, opp, opp_meta) fijos durante la serie
+        self._series_broken = False        # una partida abortada corta la serie
+        self._series_recorded = False      # la partida en curso ya se anotó en la memoria
+        self._pending_opponent: Optional[str] = None
+        self.series_count = 0
+        self.last_series: Optional[Dict[str, Any]] = None  # resumen de la última serie terminada
 
     @property
     def opponent(self) -> str:
@@ -391,6 +411,10 @@ class PokeEnvBattleBackend(BattleBackend):
                 f'Opciones: {", ".join(LIVE_OPPONENTS)}'
             )
         if key == self._opponent and self._foe is not None:
+            self._pending_opponent = None
+            return
+        if self._series_on and self._series.records and not self._series.decided:
+            self._pending_opponent = key  # no se cambia de rival a mitad de serie
             return
         self._abort_open_battle()
         self._stop_player(self._foe)
@@ -402,8 +426,42 @@ class PokeEnvBattleBackend(BattleBackend):
 
     # --- BattleBackend -----------------------------------------------------
 
+    def series_state(self) -> Optional[Dict[str, Any]]:
+        """Partida en curso de la serie (1–3) y marcador antes de ella; None fuera del modo serie."""
+        if not self._series_on:
+            return None
+        return {'partida': self._series.game_index, 'victorias': self._series.our_wins,
+                'derrotas': self._series.foe_wins, 'serie': self.series_count}
+
+    def _start_series_if_needed(self) -> None:
+        if not self._series_on:
+            return
+        from showdown.rl.series_memory import SeriesMemory
+        if self._battle is not None and not getattr(self._battle, 'finished', True):
+            self._series_broken = True  # se abandona una partida a medias
+        if self._series.records and not self._series.decided and not self._series_broken:
+            return
+        if self._series.records:
+            self.last_series = {'partidas': len(self._series.records), 'victorias': self._series.our_wins,
+                                'derrotas': self._series.foe_wins, 'cortada': bool(self._series_broken),
+                                'ganada': self._series.our_wins > self._series.foe_wins}
+        self._series = SeriesMemory()
+        self._series_teams = None
+        self._series_broken = False
+        self.series_count += 1
+        if self._pending_opponent is not None:
+            key, self._pending_opponent = self._pending_opponent, None
+            self.set_opponent(key)
+
+    def _record_series_game(self) -> None:
+        b = self._battle
+        if self._series_on and b is not None and b.finished and not self._series_recorded:
+            self._series.add_battle(b)
+            self._series_recorded = True
+
     def reset(self, *, seed: Optional[int] = None) -> BattleSnapshot:
         self._ensure_ps()
+        self._start_series_if_needed()
         self._abort_open_battle()
         self._ensure_players(seed=seed)
 
@@ -421,6 +479,11 @@ class PokeEnvBattleBackend(BattleBackend):
                 f'RL env challenge timed out ({self.challenge_timeout}s): {exc!r}'
             ) from exc
         self._fs_base = self._foe_state_counts()
+        if self._series_on:
+            # Memoria de las partidas PREVIAS de la serie (copia: la partida en curso se anota al terminar).
+            from showdown.rl.series_memory import SeriesMemory
+            self._battle._series_memory = SeriesMemory(records=list(self._series.records))
+            self._series_recorded = False
         try:  # P5: base de los contadores de la calculadora para este episodio
             from showdown.rl.observation import calc_stats
             self._oc_base = calc_stats()
@@ -455,6 +518,10 @@ class PokeEnvBattleBackend(BattleBackend):
             'used_fallback': bool(used_fallback),
             'order': str(order),
         }
+        if self._series_on and self._battle.finished:
+            st = self.series_state()
+            self._record_series_game()
+            meta['series'] = {**(st or {}), 'decidida': bool(self._series.decided)}
         fs = self.foe_state_episode()
         if fs is not None:
             meta['foe_state'] = fs
@@ -551,19 +618,24 @@ class PokeEnvBattleBackend(BattleBackend):
         from poke_env.environment.env import _EnvPlayer
         from poke_env.ps_client import AccountConfiguration
 
-        our_meta = _team_meta(self._our_team_arg)
-        opp_meta = _team_meta(self._opp_team_arg)
-        our = _team_export(self._our_team_arg)
-        opp = _team_export(self._opp_team_arg)
-        if our is None or opp is None:
-            d0, d1 = _default_team_metas(seed=seed, split=self._team_split)
-            if our is None:
-                our, our_meta = _team_export(d0), d0
-            if opp is None:
-                opp, opp_meta = _team_export(d1), d1
-        if self._opponent in MIRROR_FOES:
-            # Espejo (P3): el PPO v1 congelado juega con el equipo del agente.
-            opp, opp_meta = our, our_meta
+        if self._series_on and self._series_teams is not None:
+            our, our_meta, opp, opp_meta = self._series_teams  # misma serie: mismos equipos
+        else:
+            our_meta = _team_meta(self._our_team_arg)
+            opp_meta = _team_meta(self._opp_team_arg)
+            our = _team_export(self._our_team_arg)
+            opp = _team_export(self._opp_team_arg)
+            if our is None or opp is None:
+                d0, d1 = _default_team_metas(seed=seed, split=self._team_split)
+                if our is None:
+                    our, our_meta = _team_export(d0), d0
+                if opp is None:
+                    opp, opp_meta = _team_export(d1), d1
+            if self._opponent in MIRROR_FOES:
+                # Espejo (P3): el PPO v1 congelado juega con el equipo del agente.
+                opp, opp_meta = our, our_meta
+            if self._series_on:
+                self._series_teams = (our, our_meta, opp, opp_meta)
         self._cached_opp_export = opp
         if opp_meta is not None:
             from showdown.inference_sim.team_split import team_key
@@ -579,10 +651,17 @@ class PokeEnvBattleBackend(BattleBackend):
         name_b = f'{self.account_prefix}B{stamp}{self._uid}'
 
         preview_pol = self._preview_policy
+        backend = self
 
         class _FamilyPreviewEnvPlayer(_EnvPlayer):
             def teampreview(self, battle):
-                return preview_pol.teampreview(battle)
+                # Preview condicionado a la serie (PREVIEW_SERIES_CONDITION, protocolo §4.16): en la partida 2–3
+                # ve del rival solo lo que trajo antes.
+                from showdown.rl.frozen_preview import preview_series_condition_on
+                keep = None
+                if backend._series_on and backend._series.records and preview_series_condition_on():
+                    keep = backend._series.foe_brought()
+                return preview_pol.teampreview(battle, foe_keep=keep)
 
         if self._agent is None:
             self._agent = _FamilyPreviewEnvPlayer(

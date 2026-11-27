@@ -37,6 +37,7 @@ from showdown.rl.constants import (
     MON_DYN_DIM,
     MOVE_SLOT_DIM,
     N_FOE_MONS,
+    MEM_DIM,
     N_OUR_MONS,
     OBS_DIM,
     OTS_MON_DIM,
@@ -716,14 +717,45 @@ def _field_block(snap: BattleSnapshot, ours, foes) -> np.ndarray:
 # API
 # --------------------------------------------------------------------------- #
 
-_LAST: Tuple[Optional[BattleSnapshot], Optional[np.ndarray], Optional[bool]] = (None, None, None)
+_LAST: Tuple[Optional[BattleSnapshot], Optional[np.ndarray], Optional[tuple]] = (None, None, None)
+
+# --------------------------------------------------------------------------- #
+# Memoria de serie BO3 (rl_env_spec v1.35; PPO v3 / DDQN v2). APAGADA por defecto: la obs mide OBS_DIM y
+# nada cambia para v1/v2. Encendida (``SERIES_MEMORY_ENV=1`` o ``memory=True``) se añade al final el bloque
+# de ``showdown/rl/series_memory.py`` (MEM_DIM), calculado desde ``BattleSnapshot.series_memory``; sin
+# memoria adjunta (partida suelta) va el bloque de "partida 1 sin historial".
+# --------------------------------------------------------------------------- #
+SERIES_MEMORY_ENV = 'RL_OBS_SERIES_MEMORY'
+_OBS_MEMORY: '_cv.ContextVar[Optional[bool]]' = _cv.ContextVar('rl_obs_series_memory', default=None)
 
 
-def build_observation(battle: BattleSnapshot, *, abilities: Optional[bool] = None) -> np.ndarray:
-    """float32[OBS_DIM]. Memo del último snapshot (env y entrenador piden la misma obs).
+def obs_memory_on() -> bool:
+    v = _OBS_MEMORY.get()
+    if v is not None:
+        return bool(v)
+    return _os.environ.get(SERIES_MEMORY_ENV, '').strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def memory_block(battle: BattleSnapshot, foes: List[Optional[MonSnapshot]]) -> np.ndarray:
+    """float32[MEM_DIM] alineado con los bloques rivales ``foes`` (orden de ``_foe_slots``)."""
+    from showdown.rl.series_memory import EMPTY
+    mem = getattr(battle, 'series_memory', None) or EMPTY
+    return mem.vector([m.display_species() if m is not None else None for m in foes])
+
+
+def build_observation(battle: BattleSnapshot, *, abilities: Optional[bool] = None,
+                      memory: Optional[bool] = None) -> np.ndarray:
+    """float32[OBS_DIM] (o OBS_DIM + MEM_DIM con memoria de serie). Memo del último snapshot.
 
     ``abilities``: corrección de habilidades en el daño (P5); None = RL_OBS_ABILITIES / contexto.
+    ``memory``: bloque de memoria de serie BO3; None = RL_OBS_SERIES_MEMORY / contexto.
     """
+    if memory is not None and memory != obs_memory_on():
+        tok_m = _OBS_MEMORY.set(bool(memory))
+        try:
+            return build_observation(battle, abilities=abilities)
+        finally:
+            _OBS_MEMORY.reset(tok_m)
     if abilities is not None and abilities != obs_abilities_on():
         tok = _OBS_ABILITIES.set(bool(abilities))
         try:
@@ -731,7 +763,7 @@ def build_observation(battle: BattleSnapshot, *, abilities: Optional[bool] = Non
         finally:
             _OBS_ABILITIES.reset(tok)
     global _LAST
-    flag = obs_abilities_on()
+    flag = (obs_abilities_on(), obs_memory_on())
     if _LAST[0] is battle and _LAST[1] is not None and _LAST[2] == flag:
         return _LAST[1].copy()
     ours = _our_slots(battle.our)
@@ -739,7 +771,7 @@ def build_observation(battle: BattleSnapshot, *, abilities: Optional[bool] = Non
     tok = None
     if obs_calc_enabled():
         tok = _CALC_TABLE.set(_calc_table_for(battle, ours, foes))
-    elif flag:
+    elif flag[0]:
         CALC_STATS['obs'] += 1
         CALC_STATS['fallback_obs'] += 1
     try:
@@ -747,6 +779,8 @@ def build_observation(battle: BattleSnapshot, *, abilities: Optional[bool] = Non
     finally:
         if tok is not None:
             _CALC_TABLE.reset(tok)
+    if flag[1]:
+        obs = np.concatenate([obs, memory_block(battle, foes)]).astype(np.float32)
     _LAST = (battle, obs, flag)
     return obs.copy()
 
@@ -788,16 +822,18 @@ def _assemble(battle: BattleSnapshot, ours, foes) -> np.ndarray:
     return obs
 
 
-def build_observation_ddqn(battle: BattleSnapshot, *, abilities: Optional[bool] = None) -> np.ndarray:
+def build_observation_ddqn(battle: BattleSnapshot, *, abilities: Optional[bool] = None,
+                           memory: Optional[bool] = None) -> np.ndarray:
     """v2: igual para todos los agentes (ya no hay segmento belief que anular)."""
-    return build_observation(battle, abilities=abilities)
+    return build_observation(battle, abilities=abilities, memory=memory)
 
 
-def build_observation_ppo(battle: BattleSnapshot, *, abilities: Optional[bool] = None) -> np.ndarray:
-    return build_observation(battle, abilities=abilities)
+def build_observation_ppo(battle: BattleSnapshot, *, abilities: Optional[bool] = None,
+                          memory: Optional[bool] = None) -> np.ndarray:
+    return build_observation(battle, abilities=abilities, memory=memory)
 
 
-def obs_layout() -> Dict[str, Tuple[int, int]]:
+def obs_layout(memory: bool = False) -> Dict[str, Tuple[int, int]]:
     """Rangos [inicio, fin) de cada sección (diagnóstico / tests / tesis)."""
     out: Dict[str, Tuple[int, int]] = {}
     o = 0
@@ -816,4 +852,6 @@ def obs_layout() -> Dict[str, Tuple[int, int]]:
     out['field'] = (o, o + FIELD_DIM)
     o += FIELD_DIM
     assert o == OBS_DIM
+    if memory:  # bloque de memoria de serie (obs de OBS_DIM + MEM_DIM, rl_env_spec v1.35 §3.e)
+        out['memory'] = (o, o + MEM_DIM)
     return out

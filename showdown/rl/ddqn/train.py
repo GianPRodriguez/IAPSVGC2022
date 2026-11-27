@@ -24,7 +24,7 @@ import json
 import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -305,6 +305,9 @@ def _run_steps(
                     current = nxt
                 opp_code = opponent_code(current)
                 ep_counts[current] = ep_counts.get(current, 0) + 1
+            from showdown.rl.train_metrics import SERIES
+            _eng = ended_info.get('engine') if isinstance(ended_info, dict) else None
+            SERIES.add(_eng.get('series') if isinstance(_eng, dict) else None, ended_info.get('outcome'))
             if tracker is not None:
                 tracker.end(0, global_step=global_step_offset + local,
                             terminated=bool(terminated), truncated=bool(truncated),
@@ -424,6 +427,8 @@ def _run_steps_vec(
                 current[i] = r.get('next_opponent') or current[i]
                 ep_counts[current[i]] = ep_counts.get(current[i], 0) + 1
                 pending[i] = _sample_next()
+                from showdown.rl.train_metrics import SERIES
+                SERIES.add(info.get('series'), info.get('outcome'))
                 if tracker is not None:
                     tracker.end(i, global_step=global_step_offset + local + 1,
                                 terminated=bool(r['terminated']), truncated=bool(r['truncated']),
@@ -626,6 +631,7 @@ def run_training(
     envs_per_server: int = 4,
     base_port: Optional[int] = None,
     agent_team: str = DEFAULT_AGENT_TEAM,
+    series_opts: Optional[Dict[str, Any]] = None,
 ) -> DDQNAgent:
     if not schedule:
         raise ValueError('schedule vacío')
@@ -680,6 +686,10 @@ def run_training(
         agent.cfg.obs_abilities = bool(obs_abilities)
     os.environ['RL_OBS_ABILITIES'] = '1' if agent.cfg.obs_abilities else '0'
     print(f'[ddqn] observación: corrección de habilidades (P5) = {bool(agent.cfg.obs_abilities)}', flush=True)
+    # DDQN v2 (protocolo §4.16), igual que PPO v3: memoria de serie, series BO3, máscara del Protect
+    # consecutivo y preview condicionado.
+    from showdown.rl.series_options import apply_series_options
+    series_meta = apply_series_options(agent, series_opts, resume=bool(resume), tag='ddqn')
     rng = np.random.default_rng(int(seed) + 17)
     ckpt_dir = Path(checkpoint_dir)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
@@ -946,6 +956,7 @@ def run_training(
             'total_steps': global_steps,
             'buf_frac_final': agent.replay.origin_fractions(),
             'suite': [asdict(s) for s in suite_rows],
+            'serie_bo3': series_meta,
         }
         (ckpt_dir / 'train_meta.json').write_text(
             json.dumps(meta, indent=2) + '\n', encoding='utf-8',
@@ -1050,6 +1061,8 @@ def _main(argv: Optional[list] = None) -> int:
                    help='Prob. de borrar cada Pokémon rival no activo de la obs al aprender (§8, b)')
     p.add_argument('--q-head', choices=('joint', 'factored'), default=None,
                    help="Cabeza de la red Q: 'joint' (1 600 salidas, por defecto) o 'factored' (por hueco, §10)")
+    from showdown.rl.series_options import add_series_cli_args
+    add_series_cli_args(p)
     p.add_argument('--obs-abilities', type=int, choices=(0, 1), default=None, help='corrección de habilidades en la observación (P5): 1 = sí (por defecto en entrenamientos nuevos), 0 = como PPO v1')
     p.add_argument('--q-rank', type=int, default=None,
                    help='Rango de la interacción entre huecos con --q-head factored (0 = aditiva)')
@@ -1114,6 +1127,7 @@ def _main(argv: Optional[list] = None) -> int:
         eval_every=args.eval_every,
         eval_games=args.eval_games,
         resume=args.resume,
+        series_opts=series_opts_from_args(args),
         layer_norm=bool(args.layer_norm),
         weight_decay=args.weight_decay, dropout=args.dropout,
         foe_bench_dropout=args.foe_bench_dropout,
@@ -1127,6 +1141,9 @@ def _main(argv: Optional[list] = None) -> int:
         agent_team='' if str(args.agent_team).lower() in ('pool', 'none', '') else args.agent_team,
     )
     return 0
+
+
+from showdown.rl.series_options import series_opts_from_args  # noqa: E402
 
 
 def main(argv: Optional[list] = None) -> int:

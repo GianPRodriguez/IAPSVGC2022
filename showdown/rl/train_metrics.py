@@ -136,6 +136,58 @@ class FoeStateTally:
 FOE_STATE = FoeStateTally()
 
 
+class SeriesTally:
+    """Resultados por partida de la serie BO3 (modo serie, rl_env_spec v1.35; PPO v3 / DDQN v2).
+
+    ``add(series, outcome)`` con ``series`` = ``info['series']`` del backend (partida 1–3 y marcador ANTES de
+    ella, ``decidida`` tras ella) y ``outcome`` = 1 / -1 / 0 (o True/False). ``flush()`` devuelve la tasa de
+    victorias por partida, la de series terminadas y cuántas se cortaron, y reinicia la ventana.
+    """
+
+    def __init__(self) -> None:
+        self.reset()
+
+    def reset(self) -> None:
+        self.games = Counter()
+        self.wins = Counter()
+        self.series = 0
+        self.series_won = 0
+
+    def add(self, series: Optional[Mapping[str, Any]], outcome: Any) -> None:
+        if not isinstance(series, Mapping) or 'partida' not in series:
+            return
+        g = int(series.get('partida', 1))
+        if isinstance(outcome, bool):
+            won = outcome
+        else:
+            try:
+                won = float(outcome) > 0.5
+            except (TypeError, ValueError):
+                won = False
+        self.games[g] += 1
+        self.wins[g] += int(won)
+        if series.get('decidida'):
+            w = int(series.get('victorias', 0)) + int(won)
+            lo = int(series.get('derrotas', 0)) + int(not won)
+            self.series += 1
+            self.series_won += int(w > lo)
+
+    def flush(self) -> Dict[str, Any]:
+        out: Dict[str, Any] = {}
+        for g in (1, 2, 3):
+            if self.games[g]:
+                out[f'wr_partida_{g}'] = self.wins[g] / self.games[g]
+                out[f'n_partida_{g}'] = int(self.games[g])
+        if self.series:
+            out['wr_series'] = self.series_won / self.series
+            out['n_series'] = int(self.series)
+        self.reset()
+        return out
+
+
+SERIES = SeriesTally()
+
+
 @dataclass
 class _EpAcc:
     opponent: str
@@ -279,7 +331,8 @@ class EpisodeTracker:
         s = self.summary()
         if self.log is not None:
             self.log.write('window', step=int(global_step), phase=phase,
-                           learner=dict(learner or {}), foe_state=FOE_STATE.flush(), **s, **extra)
+                           learner=dict(learner or {}), foe_state=FOE_STATE.flush(), series=SERIES.flush(),
+                           **s, **extra)
         return s
 
     def console_extras(self) -> Dict[str, Any]:

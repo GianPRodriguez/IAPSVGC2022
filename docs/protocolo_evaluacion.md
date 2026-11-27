@@ -574,6 +574,67 @@ los datos del selector venían de `fit`, equipos memorizados en los que todas la
   generalización es limitada.
 - **Cola:** `scripts/server/qd_f2b.sh`, después de F4 (un método a la vez).
 
+### 4.16 PPO v3 / DDQN v2: memoria de serie BO3 y máscara del Protect consecutivo, fijada el 27-11-2026 antes de medir
+
+**Origen.** Las series de la web contra personas (`docs/online_web_partidas.md`): PPO v2 perdió 0–2 contra adojs
+(lluvia + Trick Room) y contra Sam smithy (sol + Tailwind). Patrones: preview casi fijo, Protect consecutivo con
+`protect_counter` ya en la observación y ninguna adaptación entre partidas. Idea del usuario: en un BO3 los dos
+repiten equipo, así que lo que el rival hizo en la partida 1 sirve para la 2 y la 3, y el agente puede recordarlo
+exacto. Por juego limpio, **PPO y DDQN reciben los mismos cambios**: PPO v3 (ppo_spec 1.18) y DDQN v2 (ddqn_spec
+1.26), rl_env_spec v1.35. El código está implementado y probado; **nada está encolado**.
+
+**M1 (descriptiva, ya medida, `scripts/analysis/preview_distribution.py`).** Preview v2.1b (`preview_v21b_s0`),
+sorteo T = 1, hoja abierta del rival:
+
+| Grupo | H / ln 90 | Formaciones efectivas | I(rival; formación) / ln 90 | Formaciones argmax distintas | Traer Raichu / Arcanine-H |
+|---|---|---|---|---|---|
+| `train` (200) | 0,07 | 1,5 | 0,46 | 16 | 0,43 / 0,92 |
+| `val` (30) | 0,17 | 2,4 | 0,32 | 9 | 0,39 / 0,93 |
+| `eval` (100) | 0,16 | 2,6 | 0,40 | 16 | 0,50 / 0,95 |
+
+Por rival el preview está casi colapsado (el sorteo T = 1 apenas añade variedad), pero sí reacciona al equipo rival
+(información mutua 32–46 % del máximo). Hay un sesgo fuerte hacia Arcanine-Hisui (92–95 %). Con el rival
+condicionado a 4 Pokémon (los otros 2 como desconocidos), los dos equipos humanos convergen a la misma formación
+(Gholdengo, Staraptor, Rillaboom, Arcanine): una entrada nunca vista empuja al preview a una formación por defecto.
+
+**P1. Máscara del Protect consecutivo (sin reentrenar; exploración con regla).** PPO v2 (s0–s4) y DDQN v1
+(s0–s4) con y sin la máscara (`RL_MASK_PROTECT_STREAK`), `policy_diag` sobre `eval`, 200 partidas por heurístico
+(joint, solo, expectimax; random de control), rivales deterministas, mismas semillas en los dos brazos (pareado).
+Prueba: no inferioridad con margen −1,5 pts (McNemar), por familia. Se reporta además cuántas decisiones cambió la
+máscara. **Expectativa:** diferencia ≈ 0 (contra los heurísticos la situación es rara; la ganancia esperada es
+contra personas). **Regla:** si es no inferior, la máscara se activa en la web para las versiones actuales y entra
+en PPO v3 / DDQN v2; si no, se revisa antes de entrenar.
+
+**S1. Preview condicionado a la serie (sin reentrenar; exploración con regla).** PPO v2 y DDQN v1 en series BO3
+(`policy_diag --series`, `eval`, 100 series por heurístico, rivales deterministas), con y sin `--preview-series`.
+La partida 1 es idéntica en los dos brazos; la comparación es la tasa de victorias en las partidas 2–3. **Regla:**
+se adopta solo con +1,5 pts o más y p < 0,05 unilateral. **Expectativa a priori (por M1):** ≤ 0.
+
+**V. Memoria de serie (confirmación).** Dos brazos por familia, mismos rivales, programa y presupuesto:
+
+- **C (control):** versión anterior + entrenamiento adicional en series BO3, con máscara, **sin memoria**.
+- **V (v3 / v2):** igual, **con memoria** (arranque en caliente con columnas nuevas en cero).
+
+Así la diferencia V − C se debe solo a la memoria (el entrenamiento adicional y la máscara son comunes). Semillas
+de arranque: PPO v2 s0–s2 (`checkpoints/ppo_v2/`), DDQN v1 s0–s2 (`~/iapsvgc_runs/kickoff_ddqn_v2/ddqn_s*`).
+Rivales de entrenamiento con sorteo de casi-empates (§3c.6), para que las series no sean copias exactas.
+
+- **Evaluación:** `final.pt` (§3c.2), `policy_diag --series` sobre `eval`, 100 series por heurístico (joint, solo,
+  expectimax; random de control), rivales deterministas, bloque de semillas `--seed 40000` (no usado antes).
+- **Primaria (V1 PPO, V2 DDQN):** tasa de victorias en las partidas 2–3, V − C, a nivel de método (media de las 3
+  semillas, IC entre semillas y por partidas, §3c.1). Superioridad unilateral p < 0,05, Holm m = 2.
+- **Secundarias:** series ganadas; no inferioridad en la partida 1 (margen −1,5 pts: la memoria no debe dañar la
+  partida 1, donde su bloque es casi cero); variante con `--foe-tie` (descriptiva); V frente a la versión anterior
+  sin entrenamiento adicional (descriptiva).
+- **Expectativa a priori:** PPO +1 a +3 pts en las partidas 2–3 (probabilidad de confirmar ~35 %); DDQN ≈ 0.
+  Límite reconocido: los heurísticos no se adaptan entre partidas, así que la memoria puede aprender "el rival
+  repite"; contra personas habría que verlo en la web.
+
+**Decisiones pendientes del usuario antes de encolar:** presupuesto adicional por semilla (propuesta: 1M pasos,
+como el control de I/J/K); número de semillas (propuesta: 3 por brazo); mezcla de rivales del entrenamiento
+(propuesta: la del kick-off de PPO v2 con sorteo de casi-empates); orden de las colas (propuesta: P1 y S1 primero,
+son baratas; luego C y V de PPO; luego DDQN).
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -964,3 +1025,4 @@ equipos rivales, 0 caídas. λ = 10 por validación cruzada agrupada.
 | 2026-11-26 | Resultado de F1 de la familia QD 2.0 (§5.10): **S_J confirmada** (J > control contra expectimax, +3,00 pts, p Holm = 2,2·10⁻⁴). N_J no confirmada por poco (−0,64 pts, cota −1,31, p = 0,017 > 0,0167). N_I (−2,64) y N_K (−3,14) no confirmadas: rinden menos que el control. Control 82,2 % frente a I 79,5, J 81,5 y K 79,0 % (12 000 partidas cada uno). |
 | 2026-11-26 | Resultado de F2 (§5.11, exploración): el selector rinde 80,8 % frente a 82,8 % del control (−1,97 ± 1,53 pts) y +0,37 frente a la mejor élite única. Causa: en `fit` (equipos de entrenamiento, memorizados) todas las élites ganan 95–97 % y no hay señal para aprender. El oráculo (90,7 %) está inflado por ruido de selección. Mejora posible: entrenar el selector con equipos no vistos. |
 | 2026-11-26 | F2b pre-registrada (§4.15, exploración): selector entrenado con 2000 enfrentamientos `val` por heurístico (equipos no vistos) y probado con la parte `eval` de F2. Cola `qd_f2b.sh`, después de F4. |
+| 2026-11-27 | **PPO v3 / DDQN v2 pre-registrados (§4.16)**, código implementado y sin encolar: M1 (distribución del preview, ya medida: casi colapsado por rival, pero reacciona al rival; sesgo a Arcanine-Hisui), P1 máscara del Protect consecutivo sin reentrenar (no inferioridad −1,5 pts), S1 preview condicionado a la serie sin reentrenar (regla +1,5 pts), V1/V2 memoria de serie (brazos C y V, partidas 2–3, Holm m = 2). Por juego limpio PPO y DDQN reciben los mismos cambios (decisión del usuario). Presupuesto, semillas y orden pendientes del usuario. |

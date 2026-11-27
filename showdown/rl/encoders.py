@@ -97,12 +97,16 @@ class StructuredEncoder(nn.Module):
 
 
 def combat_encoder(obs_dim: Optional[int] = None, kind: Optional[str] = None) -> nn.Module:
-    """ObsSpec v2: 10 Pokémon (522) · 8 movimientos propios (81) · 8 rivales (43) · crudo."""
+    """ObsSpec v2: 10 Pokémon (522) · 8 movimientos propios (81) · 8 rivales (43) · crudo.
+
+    Con memoria de serie (``OBS_DIM_MEMORY``, rl_env_spec v1.35) el bloque de memoria va al final como
+    segmento crudo: los sub-MLP compartidos no cambian y solo crece la entrada de la primera capa del torso.
+    """
     from showdown.rl.constants import (
-        FOE_MOVE_DIM, MON_BLOCK_DIM, MOVE_SLOT_DIM, N_FOE_MONS, N_OUR_MONS, OBS_DIM,
+        FOE_MOVE_DIM, MON_BLOCK_DIM, MOVE_SLOT_DIM, N_FOE_MONS, N_OUR_MONS, OBS_DIM, OBS_DIM_MEMORY,
     )
     d = int(OBS_DIM if obs_dim is None else obs_dim)
-    if encoder_kind(kind) == 'flat' or d != OBS_DIM:
+    if encoder_kind(kind) == 'flat' or d not in (OBS_DIM, OBS_DIM_MEMORY):
         return FlatEncoder(d)
     n_mon = N_OUR_MONS + N_FOE_MONS
     o_moves = n_mon * MON_BLOCK_DIM

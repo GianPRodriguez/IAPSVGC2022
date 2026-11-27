@@ -220,8 +220,11 @@ class VGCEnv(gym.Env):
         self.opponent_perspective = bool(opponent_perspective)
         self.max_episode_turns = int(max_episode_turns)
 
+        from showdown.rl.constants import obs_dim_for
+        from showdown.rl.observation import obs_memory_on
+        # OBS_DIM, u OBS_DIM + MEM_DIM con memoria de serie (RL_OBS_SERIES_MEMORY; PPO v3 / DDQN v2).
         self.observation_space = spaces.Box(
-            low=-1.0, high=1.0, shape=(OBS_DIM,), dtype=np.float32,
+            low=-1.0, high=1.0, shape=(obs_dim_for(obs_memory_on()),), dtype=np.float32,
         )
         self.action_space = spaces.MultiDiscrete([SLOT_ACTION_N, SLOT_ACTION_N])
 

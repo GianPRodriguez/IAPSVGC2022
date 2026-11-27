@@ -32,14 +32,14 @@ está en [`rl_env_spec.md`](rl_env_spec.md). La evaluación final está en
 | [`team_preview_masked_ppo_spec`](team_preview_masked_ppo_spec.md) | Solo preview | Sí | Preview de DDQN y PPO |
 | [`team_preview_nash_spec`](team_preview_nash_spec.md) | Solo preview | Sí (red) + LP | Preview de MCTS / MCTS–Nash |
 | [`team_preview_qd_pga_spec`](team_preview_qd_pga_spec.md) | Solo preview | Sí (archive) | Preview de QD-PPO / QD-PGA / QD-PPGA |
-| [`ddqn_spec`](ddqn_spec.md) | Solo turnos (MDP) | Sí | Combate + preview PPO |
-| [`ppo_spec`](ppo_spec.md) | Solo turnos (MDP) | Sí | Combate + preview PPO |
+| [`ddqn_spec`](ddqn_spec.md) | Solo turnos (MDP) | Sí | Combate + preview PPO; DDQN v2 (1.26) con memoria de serie BO3 |
+| [`ppo_spec`](ppo_spec.md) | Solo turnos (MDP) | Sí | Combate + preview PPO; PPO v3 (1.18) con memoria de serie BO3 |
 | [`mcts_puct_spec`](mcts_puct_spec.md) | Solo turnos | No (búsqueda) | Combate + preview greedy (desde v3.1; `team_preview_nash` sin entrenar) |
 | [`mcts_puct_nash_spec`](mcts_puct_nash_spec.md) | Solo turnos | No (búsqueda) | Combate + preview Nash |
 | [`qd_ppo_spec`](qd_ppo_spec.md) | Solo turnos | Sí | Combate + preview QD-PGA |
 | [`qd_pga_map_elites_spec`](qd_pga_map_elites_spec.md) | Solo turnos | Sí | Combate + preview QD-PGA |
 | [`qd_ppga_spec`](qd_ppga_spec.md) | Solo turnos | Sí | Combate + preview QD-PGA |
-| [`rl_env_spec`](rl_env_spec.md) | Contrato común | — | Obs / Reward / Action / Tera |
+| [`rl_env_spec`](rl_env_spec.md) | Contrato común | — | Obs / Reward / Action / Tera; v1.35: memoria y modo serie BO3, máscara del Protect consecutivo |
 | [`heuristic_agents_spec`](heuristic_agents_spec.md) | Umbrella | — | Escalera heurística |
 | [`conclusion_eval_protocol`](conclusion_eval_protocol.md) | Eval final | Freeze | Round-robin 11 |
 

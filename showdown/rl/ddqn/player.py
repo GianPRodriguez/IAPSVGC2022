@@ -52,6 +52,8 @@ class DDQNPlayer(FamilyPreviewMixin, Player):
         if self.checkpoint_path and Path(self.checkpoint_path).is_file():
             self.agent.load(self.checkpoint_path)
             self.checkpoint_loaded = True
+        if self.checkpoint_loaded and getattr(self.agent.cfg, 'mask_protect_streak', False):
+            os.environ['RL_MASK_PROTECT_STREAK'] = '1'  # DDQN v2: máscara del Protect consecutivo
         if not self.checkpoint_loaded:
             msg = (f'DDQN sin checkpoint (ruta={self.checkpoint_path or "<vacía>"}): '
                    'jugará con pesos aleatorios de inicialización')
@@ -69,7 +71,8 @@ class DDQNPlayer(FamilyPreviewMixin, Player):
         assert isinstance(battle, DoubleBattle)
         try:
             snap = snapshot_from_battle(battle, stat_beliefs=player_stat_beliefs(self))
-            obs = build_observation_ddqn(snap, abilities=bool(getattr(self.agent.cfg, 'obs_abilities', False)))
+            obs = build_observation_ddqn(snap, abilities=bool(getattr(self.agent.cfg, 'obs_abilities', False)),
+                                         memory=bool(getattr(self.agent.cfg, 'series_memory', False)))
             mask = legal_joint_mask(battle)
             joint = self.agent.act(obs, mask, epsilon=self.epsilon)
             self.last_joint = int(joint)

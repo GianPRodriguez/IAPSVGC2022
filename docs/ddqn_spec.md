@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| **Versión** | **1.25** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.33) |
+| **Versión** | **1.26** (alineada con [`rl_env_spec.md`](rl_env_spec.md) v1.35; DDQN v2) |
 | **Estado** | FROZEN; implementado en `showdown/rl/ddqn/` y `battle_bots/ddqn/` |
 | **Training** | **Sí**: off-policy con replay; entrenamiento live requiere Showdown local |
 | **Inferencia** | `ValidatedDDQNPlayer`, acción greedy legal desde un checkpoint |
@@ -166,6 +166,42 @@ La consola añade `wr`, `ret`, `ko+`, `ko-` y `wr_<rival>` al heartbeat. Resumen
 Los `20_000` pasos del CLI son un default práctico, no la fase contractual de
 `500_000`. `--smoke` valida cableado, no calidad.
 
+### DDQN v2: memoria de serie BO3 y máscara del Protect consecutivo (1.26, protocolo §4.16)
+
+Decisión del usuario del 27-11-2026: **por juego limpio, DDQN recibe los mismos cambios que PPO v3**.
+**DDQN v2 = DDQN v1 + estos cambios** (ppo_spec 1.18):
+
+- **Máscara del Protect consecutivo** (`cfg.mask_protect_streak`, `RL_MASK_PROTECT_STREAK`; rl_env_spec v1.35
+  §2): fuera los movimientos tipo Protect si el Pokémon viene de usar uno con éxito. Contra personas, la
+  versión anterior repetía Protect con `protect_counter` ya en la observación (Primarina dos veces, Gholdengo
+  tres; docs/online_web_partidas.md).
+- **Memoria de serie BO3** (`cfg.series_memory`, rl_env_spec v1.35 §3.e): 69 entradas más al final de la
+  observación (21 globales + 8 por cada bloque rival) con lo que el rival hizo en las partidas previas de la
+  serie: qué trajo, quién abrió, Trick Room, Tailwind, clima, Protect, cambios, KOs. Idea del usuario: en un
+  BO3 los dos repiten equipo y, con hojas abiertas, lo que la partida 1 revela es el plan del rival; un humano
+  recuerda pocas líneas y el agente puede guardarlas exactas.
+- **Entrenamiento en series BO3** (`--series-bo3`, rl_env_spec v1.35 §3.f): mismo rival y mismos equipos hasta
+  que alguien gana 2; cada partida sigue siendo un episodio. Logs: `wr_partida_1/2/3`, `wr_series`.
+- **Arranque en caliente** (`--init-from`): copia todos los pesos de la versión anterior y la primera capa del
+  torso recibe columnas nuevas en cero para la memoria. Al empezar, la red juega exactamente como la anterior.
+- **Preview**: el congelado de la versión anterior (v2.1b). `--preview-series 1` lo condiciona a lo que el rival
+  trajo en la serie, sin reentrenarlo; es una opción aparte que se evalúa por separado (protocolo §4.16 S1),
+  no parte de la versión salvo que pase su regla.
+
+Compatibilidad: todo apagado por defecto. Los checkpoints anteriores cargan con `series_memory=False` y
+`mask_protect_streak=False` y juegan igual que antes; un checkpoint con memoria reconstruye la red al cargarse.
+`policy_diag --series` evalúa por series (protocolo §4.16).
+
+En DDQN la primera capa ampliada es `net.0` (cabeza conjunta o factorizada); la red objetivo se copia de la
+online tras el arranque en caliente. Con LayerNorm el arranque en caliente no conserva la función y se rechaza
+(DDQN v1 no la usa). La memoria entra también en el replay (`ReplayBuffer(obs_dim=OBS_DIM + 69)`).
+
+```bash
+python -m showdown.rl.ddqn.train --seed 0 --opponent curriculum --start-ps --obs-abilities 1 \
+    --series-memory 1 --series-bo3 1 --mask-protect-streak 1 \
+    --init-from <ddqn_v1_s0>/final.pt --steps 1000000 ...
+```
+
 ## Hiperparámetros
 
 | Parámetro | Valor | Propósito | Cómo influye |
@@ -299,6 +335,7 @@ Pipeline familiar: **`team_preview_ppo` → DDQN**. Código compartido:
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **1.26** | 2026-11-27 | **DDQN v2 implementado** (sin entrenar; protocolo §4.16), con los mismos cambios que PPO v3 por juego limpio (decisión del usuario): máscara del Protect consecutivo, memoria de serie BO3 en la obs (`OBS_DIM` + 69, también en el replay), entrenamiento en series BO3, arranque en caliente desde DDQN v1 con columnas nuevas en cero (`DDQNAgent.init_from_previous`, red objetivo = online) y preview opcionalmente condicionado. Todo apagado por defecto; v1 no cambia. rl_env_spec v1.35. |
 | **1.25** | 2026-11-21 | Documentación (sin cambio de código): ActionSpec v2 descrito completo en §Observación, acción y máscaras (tabla de 40 ids por hueco, objetivos, joint \(40a_1+a_2\) en [0, 1599], reglas de la Mega, ejemplos y diferencia con v1). Corrige restos de v1 en el glosario (\(24a_1+a_2\), [0, 575]) y en la sección de acciones (ids 22 Tera / 23 reservado). La fila 1.2 («Mega 21 intacto») describe ActionSpec v1. |
 | **1.24** | 2026-11-20 | **DDQN v1** (nombre fijado por el usuario) = kick-off oficial de DDQN: configuración final (REG weight decay 0,03 + dropout 0,1, cabeza conjunta, sin simetría, máscara del aliado, validación reservada, equipo fijo, 1M × 5), observación v2.1 (P5, calculadora real) y preview v2.1 sin `val` (`preview_v21b/preview_s0/best.pt`). Código 12229a3; checkpoints en `~/iapsvgc_runs/kickoff_ddqn_v2/ddqn_s{0..4}/`. final.pt contra `eval`: 62,1 % (± 3,4 entre semillas). Resultados: memorizacion_equipos §18.7. |
 | **1.23** | 2026-11-18 | **P5: corrección de habilidades en la observación activa por defecto** (decisión del usuario, también para DDQN; rl_env_spec v1.32). `DDQNConfig.obs_abilities=True`; checkpoints anteriores cargan con False. `--obs-abilities 0/1`. Entra en el kick-off de DDQN; su efecto se mide en la vigesimoquinta cola. |

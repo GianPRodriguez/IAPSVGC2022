@@ -15,6 +15,12 @@ decisión de cada hueco:
     python -m showdown.rl.ddqn.policy_diag --checkpoint <dir>/best.pt --games 50 --port 8370 \\
         --preview-checkpoint <preview>.pt --out logs/policy_diag.json
 
+``--series`` (protocolo §4.16; PPO v3 / DDQN v2): ``--games`` pasa a ser el número de SERIES BO3 por rival
+(mismo rival y mismos equipos hasta que alguien gane 2); se informa la tasa de victorias por partida 1/2/3 y
+por serie. La obs lleva la memoria de serie si el checkpoint la usa, la máscara del Protect consecutivo sigue
+al checkpoint y ``--preview-series`` condiciona el preview a lo que el rival trajo. ``--foe-tie`` activa el
+sorteo de casi-empates de los rivales (por defecto deterministas, como siempre).
+
 ``--context`` (memorizacion_equipos.md §12) agrega el desglose de decisiones según el plan del
 rival (Trick Room o Tailwind rival activos, Fake Out disponible, redirección, rival que puede
 activar Trick Room; ver ``showdown/rl/context_diag.py``) y, por partida, los usos reales de Trick
@@ -75,7 +81,8 @@ def classify(battle, slot: int, act, mask_slot: np.ndarray) -> str:
 def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
         preview_checkpoint: str = '', agent_kind: str = 'ddqn', context: bool = False,
         foes=FOES, sample: bool = False, temperature: float = 1.0,
-        family: str = '') -> Dict[str, object]:
+        family: str = '', series: bool = False, preview_series: bool = False,
+        foe_tie: bool = False) -> Dict[str, object]:
     from showdown.inference_sim.team_factory import load_team_file
     from showdown.rl.action_space import decode_joint_action, decode_slot_action
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
@@ -97,7 +104,14 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
     else:
         agent = DDQNAgent(DDQNConfig(device='cpu', replay_device='cpu', replay_capacity=64))
     agent.load(checkpoint, map_location='cpu')
+    # PPO v3 / DDQN v2: la máscara del Protect consecutivo y la memoria de serie siguen al checkpoint.
+    mem_on = bool(getattr(agent.cfg, 'series_memory', False))
+    os.environ['RL_MASK_PROTECT_STREAK'] = '1' if getattr(agent.cfg, 'mask_protect_streak', False) else '0'
+    os.environ['PREVIEW_SERIES_CONDITION'] = '1' if preview_series else '0'
     our_team = load_team_file(agent_team) if agent_team else None
+    from showdown.rl.train_metrics import SeriesTally
+    series_by_foe: Dict[str, SeriesTally] = defaultdict(SeriesTally)
+    series_out: Dict[str, Dict] = {}
     by_foe: Dict[str, Counter] = defaultdict(Counter)
     results: Dict[str, Counter] = defaultdict(Counter)
     games_log = []  # equipo rival y resultado de cada partida (análisis de similitud con train)
@@ -112,17 +126,30 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
         if foe not in foes:
             continue
         backend = PokeEnvBattleBackend(opponent=foe, start_ps=True, port=port, account_prefix='DdqnDiag',
-                                       combat_family=family or 'ddqn', our_team=our_team, foe_tie=False)
+                                       combat_family=family or 'ddqn', our_team=our_team, foe_tie=bool(foe_tie),
+                                       series=bool(series))
         env = VGCEnv(reward_candidate=RewardCandidate.SPARSE, backend=backend, max_episode_turns=40)
+        # En modo serie, ``games`` = series; cada serie juega hasta 3 partidas (semilla de la 1.ª partida).
+        plan = []
+        for g in range(games):
+            plan.extend([(g, k) for k in range(3)] if series else [(g, 0)])
         try:
-            for g in range(games):
-                env.reset(seed=int(seed) + 300_000 + fi * 10_000 + g)
+            skip_series = -1
+            for g, k in plan:
+                if series and (g == skip_series or (k > 0 and backend._series.decided)):
+                    skip_series = g
+                    continue
+                if series and k == 0 and backend._series.records and not backend._series.decided:
+                    backend._series_broken = True  # la serie anterior quedó cortada: se empieza otra
+                # Sin --series, las mismas semillas de siempre (reproducibilidad de evaluaciones anteriores).
+                env.reset(seed=int(seed) + 300_000 + fi * 10_000 + ((g * 3 + k) if series else g))
                 info = {}
                 game_div = False
                 for _ in range(80):
                     battle = env.backend._battle
                     if agent_kind == 'ppo':
-                        obs = build_observation_ppo(env._snap, abilities=bool(agent.cfg.obs_abilities))
+                        obs = build_observation_ppo(env._snap, abilities=bool(agent.cfg.obs_abilities),
+                                                    memory=mem_on)
                         p1, _ = pe_autoregressive_masks(battle, slot1_action_id=None)
                         m2f = (lambda x, _b=battle: pe_autoregressive_masks(_b, slot1_action_id=int(x))[1])
                         a1, a2, _lp, _v = agent.act(obs, p1, m2f, greedy=not sample, temperature=temperature)
@@ -139,7 +166,8 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                             if free and (a1, a2) != (g1, g2):
                                 game_div = True
                     else:
-                        obs = build_observation_ddqn(env._snap, abilities=bool(agent.cfg.obs_abilities))
+                        obs = build_observation_ddqn(env._snap, abilities=bool(agent.cfg.obs_abilities),
+                                                     memory=mem_on)
                         a = agent.act(obs, _joint_masks(env), epsilon=0.0)
                         a1, a2 = decode_joint_action(int(a))
                     m1, _ = pe_autoregressive_masks(battle, slot1_action_id=None)
@@ -167,6 +195,12 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                 ret = float(info.get('episode_return', 0.0))
                 res = 'win' if ret > 0.05 else ('loss' if ret < -0.05 else 'tie')
                 results[foe][res] += 1
+                eng = info.get('engine') if isinstance(info, dict) else None
+                ser = eng.get('series') if isinstance(eng, dict) else None
+                if series:
+                    series_by_foe[foe].add(ser, res == 'win')
+                    if ser is None or not backend._series.records:
+                        skip_series = g  # partida abortada: la serie se corta
                 if sample and agent_kind == 'ppo':
                     div[foe]['partidas'] += 1
                     div[foe]['partidas_con_alguna_distinta'] += int(game_div)
@@ -182,9 +216,16 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                     rec['formacion_determinista'] = ''.join(str(x) for x in pp.last_greedy_order)
                 if context:
                     rec['eventos'] = CD.count_events(env.backend._battle)
+                if series:
+                    rec['serie'] = g
+                    rec['partida'] = (ser or {}).get('partida', k + 1)
+                    if getattr(pp, 'last_foe_keep', None):
+                        rec['preview_vio'] = list(pp.last_foe_keep)
                 games_log.append(rec)
         finally:
             env.close()
+        if series:
+            series_out[foe] = series_by_foe[foe].flush()
     total = Counter()
     for c in by_foe.values():
         total.update(c)
@@ -200,6 +241,10 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                                  if os.environ.get('PREVIEW_SAMPLE', '').strip().lower() in ('1', 'true', 'yes')
                                  else None),
             'divergencia': {f: dict(c) for f, c in div.items()} if sample else None,
+            'series': ({'por_rival': series_out, 'preview_condicionado': bool(preview_series),
+                        'rivales_con_sorteo': bool(foe_tie), 'memoria': mem_on,
+                        'mascara_protect': bool(getattr(agent.cfg, 'mask_protect_streak', False))}
+                       if series else None),
             'total': dict(total),
             **({'contexto': {c: dict(v) for c, v in ctx_counts.items()}} if context else {})}
 
@@ -217,6 +262,16 @@ def format_table(rep: Dict[str, object]) -> str:
     lines += ['', '| Rival | Victorias | Derrotas |', '|---|---|---|']
     for f, r in rep['resultados'].items():
         lines.append(f"| {f} | {r.get('win', 0)} | {r.get('loss', 0)} |")
+    ser = rep.get('series')
+    if ser:
+        lines += ['', '| Rival | Partida 1 | Partida 2 | Partida 3 | Series ganadas |', '|---|---|---|---|---|']
+        for f, r in (ser.get('por_rival') or {}).items():
+            cells = []
+            for g in (1, 2, 3):
+                n_g = r.get(f'n_partida_{g}')
+                cells.append(f"{100 * r[f'wr_partida_{g}']:.1f} % ({n_g})" if n_g else '–')
+            sw = f"{100 * r['wr_series']:.1f} % ({r['n_series']})" if r.get('n_series') else '–'
+            lines.append(f'| {f} | ' + ' | '.join(cells) + f' | {sw} |')
     return '\n'.join(lines)
 
 
@@ -235,13 +290,19 @@ def main(argv=None) -> int:
     ap.add_argument('--sample', action='store_true',
                     help='PPO: sortear la acción de la política en vez de tomar la más probable (P1)')
     ap.add_argument('--temperature', type=float, default=1.0, help='temperatura del sorteo (con --sample)')
+    ap.add_argument('--series', action='store_true',
+                    help='series BO3 (protocolo §4.16): --games = series por rival; resultados por partida y serie')
+    ap.add_argument('--preview-series', action='store_true',
+                    help='preview condicionado a lo que el rival trajo en la serie (con --series)')
+    ap.add_argument('--foe-tie', action='store_true', help='rivales con sorteo de casi-empates (no deterministas)')
     ap.add_argument('--context', action='store_true',
                     help='desglose por plan del rival y usos de movimientos clave (§12)')
     args = ap.parse_args(argv)
     rep = run(checkpoint=args.checkpoint, games=args.games, port=args.port, seed=args.seed,
               agent_team=args.agent_team, preview_checkpoint=args.preview_checkpoint,
               agent_kind=args.agent, context=args.context, sample=args.sample, temperature=args.temperature,
-              foes=tuple(f.strip() for f in args.foes.split(',') if f.strip()), family=args.family)
+              foes=tuple(f.strip() for f in args.foes.split(',') if f.strip()), family=args.family,
+              series=bool(args.series), preview_series=bool(args.preview_series), foe_tie=bool(args.foe_tie))
     with open(args.out, 'w', encoding='utf-8') as fh:
         json.dump(rep, fh, indent=1)
     print(format_table(rep))

@@ -32,7 +32,8 @@ class FamilyPreviewMixin:
                 device=device,
             )
 
-    def teampreview(self, battle) -> str:
+    def teampreview(self, battle, foe_keep=None) -> str:
+        """``foe_keep``: especies que el rival trajo en partidas previas de la serie (preview condicionado)."""
         if self._frozen_preview is None:
             self.init_family_preview()
-        return self._frozen_preview.teampreview(battle)
+        return self._frozen_preview.teampreview(battle, foe_keep=foe_keep)

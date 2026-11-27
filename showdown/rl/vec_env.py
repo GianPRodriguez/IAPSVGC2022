@@ -120,7 +120,8 @@ def _set_opponent(env, spec: EnvSpec, opponent: str):
         and hasattr(backend, 'set_opponent')
     ):
         backend.set_opponent(opponent)
-        return env, new_spec
+        # En modo serie BO3 el cambio se difiere hasta el fin de la serie: el spec refleja el rival real.
+        return env, spec.with_opponent(str(getattr(backend, 'opponent', opponent)))
     if env is not None:
         env.close()
     return make_env(new_spec), new_spec
@@ -154,6 +155,8 @@ def _lite_info(info: Dict[str, Any], env=None) -> Dict[str, Any]:
         'used_fallback': bool(isinstance(eng, dict) and eng.get('used_fallback')),
         # Contraste de estado del rival heurístico en el episodio (battle_state_check).
         'foe_state': eng.get('foe_state') if isinstance(eng, dict) else None,
+        # Modo serie BO3 (rl_env_spec v1.35): partida y marcador al terminar cada partida.
+        'series': eng.get('series') if isinstance(eng, dict) else None,
         'episode_return': float(info.get('episode_return', 0.0) or 0.0),
         'outcome': info.get('outcome'),
         'turn': int(info.get('turn', 0) or 0),
@@ -242,8 +245,15 @@ class _EnvRunner:
         if on_done_opponent and on_done_opponent != self.spec.opponent:
             self.env, self.spec = _set_opponent(self.env, self.spec, on_done_opponent)
         out['obs'], out['mask'] = self.reset()
+        self._sync_opponent()
         out['next_opponent'] = self.spec.opponent
         return out
+
+    def _sync_opponent(self) -> None:
+        """El backend en modo serie aplica al empezar una serie el cambio de rival diferido."""
+        real = getattr(getattr(self.env, 'backend', None), 'opponent', None)
+        if real and real != self.spec.opponent and self.spec.opponent != 'mock':
+            self.spec = self.spec.with_opponent(str(real))
 
     def mask2(self, a1: int) -> np.ndarray:
         return _mask2(self.env, a1)

@@ -7,7 +7,7 @@ from typing import Dict, Optional, Tuple
 
 import numpy as np
 
-from showdown.rl.constants import OBS_DIM, PASS_ID, SLOT_ACTION_N
+from showdown.rl.constants import OBS_DIM, OBS_DIM_MEMORY, PASS_ID, SLOT_ACTION_N, obs_dim_for
 
 
 @dataclass
@@ -36,6 +36,12 @@ class PPOConfig:
     # muestras permutadas como datos on-policy (la acción no se muestreó de π(·|g·s)).
     sym_coef: float = 0.1
     sym_value: bool = True
+    # PPO v3 (ppo_spec 1.18, protocolo §4.16). series_memory: bloque de memoria de serie BO3 al final de la
+    # obs (rl_env_spec v1.35; la red recibe OBS_DIM + MEM_DIM). mask_protect_streak: la máscara quita los
+    # movimientos tipo Protect cuando el Pokémon viene de usar uno con éxito (RL_MASK_PROTECT_STREAK).
+    # Checkpoints anteriores (v1, v2) no los tienen: al cargarlos quedan en False.
+    series_memory: bool = False
+    mask_protect_streak: bool = False
 
 
 class PPOAgent:
@@ -72,9 +78,14 @@ class PPOAgent:
         self._masked_ent = masked_categorical_entropy
         device = torch.device(self.cfg.device)
         self.device = device
-        self.net = ActorCritic().to(device)
+        self.net = ActorCritic(obs_dim=self.obs_dim).to(device)
         self.optim = torch.optim.Adam(self.net.parameters(), lr=self.cfg.lr)
-        self.buffer = RolloutBuffer(capacity=self.cfg.rollout_steps, obs_dim=OBS_DIM)
+        self.buffer = RolloutBuffer(capacity=self.cfg.rollout_steps, obs_dim=self.obs_dim)
+
+    @property
+    def obs_dim(self) -> int:
+        """OBS_DIM, u OBS_DIM + MEM_DIM con memoria de serie (PPO v3)."""
+        return obs_dim_for(bool(getattr(self.cfg, 'series_memory', False)))
 
     def set_lr(self, lr: float) -> None:
         self._ensure_torch()
@@ -205,7 +216,8 @@ class PPOAgent:
 
         obs_np = np.asarray(batch['obs'])
         if (self.cfg.sym_coef <= 0.0 and not self.cfg.sym_value) or \
-                obs_np.shape[-1] != OBS_DIM or not SYM.sym_aug_enabled(True, default=True):
+                obs_np.shape[-1] not in (OBS_DIM, OBS_DIM_MEMORY) or \
+                not SYM.sym_aug_enabled(True, default=True):
             return None, None, {}
         torch = self._torch
         aug = SYM.ppo_symmetry_batch(obs_np, batch['a1'], batch['a2'], batch['m1'],
@@ -272,13 +284,13 @@ class PPOAgent:
         n = max(1, int(num_envs))
         self.cfg.num_envs = n
         per_env = max(1, -(-int(self.cfg.rollout_steps) // n))  # ceil
-        self.buffer = VecRolloutBuffer(n, capacity=per_env, obs_dim=OBS_DIM)
+        self.buffer = VecRolloutBuffer(n, capacity=per_env, obs_dim=self.obs_dim)
 
     def values_batch(self, obs: np.ndarray) -> np.ndarray:
         """V(s) para un lote ``[N, OBS_DIM]``."""
         self._ensure_torch()
         torch = self._torch
-        obs = np.asarray(obs, dtype=np.float32).reshape(-1, OBS_DIM)
+        obs = np.asarray(obs, dtype=np.float32).reshape(-1, self.obs_dim)
         if obs.shape[0] == 0:
             return np.zeros(0, dtype=np.float32)
         self.net.eval()
@@ -303,7 +315,7 @@ class PPOAgent:
         """
         self._ensure_torch()
         torch = self._torch
-        obs = np.asarray(obs, dtype=np.float32).reshape(-1, OBS_DIM)
+        obs = np.asarray(obs, dtype=np.float32).reshape(-1, self.obs_dim)
         m1 = np.asarray(m1, dtype=np.float32).reshape(-1, SLOT_ACTION_N)
         n = obs.shape[0]
         self.net.eval()
@@ -457,9 +469,13 @@ class PPOAgent:
             payload = torch.load(path, map_location=loc)
         if 'config' in payload and isinstance(payload['config'], dict):
             self.cfg.obs_abilities = False  # anteriores a P5: observación sin la corrección
+            self.cfg.series_memory = False  # anteriores a PPO v3
+            self.cfg.mask_protect_streak = False
             for k, v in payload['config'].items():
                 if hasattr(self.cfg, k):
                     setattr(self.cfg, k, v)
+        if int(self.net.encoder.obs_dim) != self.obs_dim:
+            self._rebuild_net()  # el checkpoint usa otra obs (con/sin memoria de serie)
         key = 'net' if 'net' in payload else 'online'
         self.net.load_state_dict(payload[key])
         self.env_steps = int(payload.get('env_steps', 0))
@@ -469,6 +485,37 @@ class PPOAgent:
                 self.optim.load_state_dict(payload['optim'])
             except (ValueError, KeyError):
                 pass
+
+    def _rebuild_net(self) -> None:
+        """Red, optimizador y buffer nuevos para la dimensión de obs actual (``cfg.series_memory``)."""
+        from showdown.rl.ppo.buffer import RolloutBuffer
+        from showdown.rl.ppo.network import ActorCritic
+        torch = self._torch
+        self.net = ActorCritic(obs_dim=self.obs_dim).to(self.device)
+        self.optim = torch.optim.Adam(self.net.parameters(), lr=self.cfg.lr)
+        self.buffer = RolloutBuffer(capacity=self.cfg.rollout_steps, obs_dim=self.obs_dim)
+
+    def init_from_previous(self, path: Path | str) -> Dict[str, object]:
+        """Arranque en caliente de PPO v3 desde un checkpoint sin memoria (PPO v2).
+
+        Copia todos los pesos; la primera capa del torso (``fc1``) recibe columnas nuevas para el bloque de
+        memoria, inicializadas en CERO: con esos pesos la red calcula exactamente lo mismo que el
+        checkpoint de origen (la memoria no influye hasta que el entrenamiento lo decida). No copia el
+        optimizador ni los contadores. Devuelve un resumen para el registro.
+        """
+        from showdown.rl.warm_start import expand_state_dict
+        self._ensure_torch()
+        torch = self._torch
+        try:
+            payload = torch.load(path, map_location=self.device, weights_only=False)
+        except TypeError:
+            payload = torch.load(path, map_location=self.device)
+        src_cfg = dict(payload.get('config') or {})
+        src = payload['net'] if 'net' in payload else payload['online']
+        new_sd, info = expand_state_dict(src, self.net.state_dict(), first_layers=('fc1.weight',))
+        self.net.load_state_dict(new_sd)
+        info.update({'origen': str(path), 'obs_abilities_origen': bool(src_cfg.get('obs_abilities', False))})
+        return info
 
     def load_bc_weights(self, path: Path | str) -> None:
         """Load actor–critic from BC checkpoint; switch to post-BC LR."""

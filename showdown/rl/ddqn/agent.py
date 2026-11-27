@@ -12,7 +12,7 @@ from showdown.rl.action_space import (
     decode_joint_action,
     encode_joint_action,
 )
-from showdown.rl.constants import JOINT_ACTION_N, OBS_DIM, PASS_ID
+from showdown.rl.constants import JOINT_ACTION_N, OBS_DIM, OBS_DIM_MEMORY, PASS_ID, obs_dim_for
 
 
 @dataclass
@@ -70,6 +70,10 @@ class DDQNConfig:
     # anteriores queda en False.
     obs_abilities: bool = True
     q_rank: int = 0
+    # DDQN v2 (ddqn_spec 1.26, protocolo §4.16), igual que PPO v3 por juego limpio: memoria de serie BO3 al
+    # final de la obs (rl_env_spec v1.35) y máscara del Protect consecutivo. Checkpoints anteriores: False.
+    series_memory: bool = False
+    mask_protect_streak: bool = False
 
 
 class DDQNAgent:
@@ -106,7 +110,7 @@ class DDQNAgent:
         self._copy_weights = copy_weights
         device = torch.device(self.cfg.device)
         self.device = device
-        kw = dict(layer_norm=bool(self.cfg.layer_norm), dropout=float(self.cfg.dropout),
+        kw = dict(obs_dim=self.obs_dim, layer_norm=bool(self.cfg.layer_norm), dropout=float(self.cfg.dropout),
                   q_head=str(self.cfg.q_head), q_rank=int(self.cfg.q_rank))
         self.online = QNetwork(**kw).to(device)
         self.target = QNetwork(**kw).to(device)
@@ -117,8 +121,13 @@ class DDQNAgent:
                                            weight_decay=float(self.cfg.weight_decay))
         else:
             self.optim = torch.optim.Adam(self.online.parameters(), lr=self.cfg.lr)
-        self.replay = ReplayBuffer(capacity=self.cfg.replay_capacity, obs_dim=OBS_DIM,
+        self.replay = ReplayBuffer(capacity=self.cfg.replay_capacity, obs_dim=self.obs_dim,
                                    device=self._replay_device(device))
+
+    @property
+    def obs_dim(self) -> int:
+        """OBS_DIM, u OBS_DIM + MEM_DIM con memoria de serie (DDQN v2)."""
+        return obs_dim_for(bool(getattr(self.cfg, 'series_memory', False)))
 
     def _replay_device(self, device) -> str:
         import os
@@ -173,7 +182,7 @@ class DDQNAgent:
         """
         self._ensure_torch()
         torch = self._torch
-        obs = np.asarray(obs, dtype=np.float32).reshape(-1, OBS_DIM)
+        obs = np.asarray(obs, dtype=np.float32).reshape(-1, self.obs_dim)
         masks = np.asarray(masks, dtype=np.float32).reshape(-1, JOINT_ACTION_N)
         n = obs.shape[0]
         eps = self.epsilon if epsilon is None else float(epsilon)
@@ -252,7 +261,7 @@ class DDQNAgent:
             # la rama NumPy; el muestreo y las permutaciones se hacen en la GPU.
             s_t, a_t, r_t, s2_t, done, m2_t, opp = self.replay.sample_torch(
                 self.cfg.batch_size, self._rng)
-            if s_t.shape[1] == OBS_DIM:
+            if s_t.shape[1] in (OBS_DIM, OBS_DIM_MEMORY):
                 from showdown.rl import symmetry as SYM
 
                 if SYM.sym_aug_enabled(self.cfg.sym_aug):
@@ -264,7 +273,7 @@ class DDQNAgent:
             a_t, r_t, done = a_t.long(), r_t.float(), done.float()
         else:
             s, a, r, s2, term, m2, opp = self.replay.sample(self.cfg.batch_size, self._rng)
-            if s.shape[1] == OBS_DIM:
+            if s.shape[1] in (OBS_DIM, OBS_DIM_MEMORY):
                 from showdown.rl import symmetry as SYM
 
                 if SYM.sym_aug_enabled(self.cfg.sym_aug):
@@ -281,7 +290,7 @@ class DDQNAgent:
             m2_t = torch.as_tensor(m2, dtype=torch.float32, device=self.device)
 
         reg_stats: Dict[str, float] = {}
-        if float(self.cfg.foe_bench_dropout) > 0.0 and s_t.shape[1] == OBS_DIM:
+        if float(self.cfg.foe_bench_dropout) > 0.0 and s_t.shape[1] in (OBS_DIM, OBS_DIM_MEMORY):
             from showdown.rl.ddqn.regularize import foe_bench_dropout_t
             s_t, frac = foe_bench_dropout_t(s_t, float(self.cfg.foe_bench_dropout), self._rng)
             reg_stats['foe_bench_dropped'] = frac
@@ -331,6 +340,26 @@ class DDQNAgent:
             out[f'buf_frac_{name}'] = float(frac)
         return out
 
+    def init_from_previous(self, path: Path | str) -> Dict[str, object]:
+        """Arranque en caliente de DDQN v2 desde un checkpoint sin memoria (DDQN v1): como PPO v3, copia
+        todos los pesos y amplía la primera capa (``net.0``) con columnas en cero para el bloque de memoria.
+        Red objetivo = online. No copia el optimizador ni los contadores."""
+        from showdown.rl.warm_start import expand_state_dict
+        self._ensure_torch()
+        torch = self._torch
+        if bool(self.cfg.layer_norm):
+            raise ValueError('arranque en caliente con LayerNorm: la normalización cambia con la entrada ampliada')
+        try:
+            payload = torch.load(path, map_location=self.device, weights_only=False)
+        except TypeError:
+            payload = torch.load(path, map_location=self.device)
+        src_cfg = dict(payload.get('config') or {})
+        new_sd, info = expand_state_dict(payload['online'], self.online.state_dict(), first_layers=('net.0.weight',))
+        self.online.load_state_dict(new_sd)
+        self._copy_weights(self.online, self.target)
+        info.update({'origen': str(path), 'obs_abilities_origen': bool(src_cfg.get('obs_abilities', False))})
+        return info
+
     def save(self, path: Path | str) -> Path:
         self._ensure_torch()
         path = Path(path)
@@ -361,13 +390,16 @@ class DDQNAgent:
                 setattr(self.cfg, k, 0.0)
             self.cfg.q_head, self.cfg.q_rank = 'joint', 0
             self.cfg.obs_abilities = False  # anteriores a P5 (rl_env_spec v1.32)
+            self.cfg.series_memory = False  # anteriores a DDQN v2
+            self.cfg.mask_protect_streak = False
             for k, v in payload['config'].items():
                 if hasattr(self.cfg, k):
                     setattr(self.cfg, k, v)
         self.online.dropout = self.target.dropout = float(self.cfg.dropout)
         if (bool(getattr(self.online, 'layer_norm', False)) != bool(self.cfg.layer_norm)
                 or getattr(self.online, 'q_head', 'joint') != str(self.cfg.q_head)
-                or int(getattr(self.online, 'q_rank', 0)) != int(self.cfg.q_rank)):
+                or int(getattr(self.online, 'q_rank', 0)) != int(self.cfg.q_rank)
+                or int(self.online.encoder.obs_dim) != self.obs_dim):
             # el checkpoint usa otra arquitectura (con/sin LayerNorm): reconstruir las redes
             self.online = None
             self._ensure_torch()

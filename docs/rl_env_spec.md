@@ -2,7 +2,7 @@
 
 | Field | Value |
 |-------|--------|
-| **Version** | **v1.34** |
+| **Version** | **v1.35** |
 | **Status** | **FROZEN / IMMUTABLE** |
 | **Target stack** | PyTorch + Gymnasium |
 | **Format** | Gen 9 VGC (Regulation M-C, Open Team Sheets) — **Mega Evolution yes; Terastallization no** |
@@ -68,6 +68,14 @@ parity, but \(M[\mathrm{tera}]=0\) always and agents must never emit
 
 Training and inference use the **same** mask: per-slot ids are kept only if their poke-env order is in
 `battle.valid_orders[slot]` (pass only when legal, valid targets only, no switch when trapped).
+
+**Consecutive-Protect mask (v1.35; PPO v3 / DDQN v2; off by default).** With `RL_MASK_PROTECT_STREAK=1`
+(set from `cfg.mask_protect_streak`), `pe_slot_mask → _filter_protect_streak` removes every move that counts
+as Protect (poke-env `Move.is_protect_counter`: Protect, Detect, King's Shield, Wide/Quick Guard, Endure…,
+normal and mega ids) when the active Pokémon's `protect_counter ≥ 1` (it used one successfully last turn;
+the counter resets on failure or switch). A second consecutive Protect succeeds with probability 1/3. If the
+filter would empty the mask, the original is kept. Motivation: against people PPO v2 repeated Protect with
+`protect_counter` already in the obs (docs/online_web_partidas.md).
 
 Canonical joint helper (DDQN): `legal_joint_mask(battle) -> (1600,)` with
 
@@ -143,6 +151,45 @@ obs builder on mirrored battles (`tests/test_rl_symmetry.py`).
 | PPO / QD-PPO / QD-PGA/PPGA actors | DrAC-style consistency: `sym_coef·(log π(g·a|g·s) − log π(a|s)ᵀ)²` (ᵀ = stop-grad, `sym_coef`=0.1) + value loss on g·s with the same return (PPO). Permuted samples are not used as on-policy data. σ_o only on rows where a1 is neither mega nor switch (then m2 is exactly the unconditional slot-2 mask). |
 
 Logged: `sym_frac_our/foe/bench`, `sym_pi_loss`, `sym_v_loss`. `RL_SYM_AUG=0` disables it (ablation).
+
+With the series-memory block (§3.e) the permutations extend to `OBS_DIM_MEMORY`: the global block is fixed and
+σ_f also swaps the memory blocks of foe slots 0 ↔ 1 (`symmetry._extend_perms`).
+
+### 3.e Series memory block (v1.35; PPO v3 / DDQN v2; off by default)
+
+In a BO3 both players keep their teams. With open team sheets, game 1 does not reveal moves or items, but it
+does reveal **which 4 the foe brought, who led and how it played**. With `RL_OBS_SERIES_MEMORY=1` (or
+`build_observation(..., memory=True)`, set from `cfg.series_memory`), `MEM_DIM = 69` features are appended
+after the field block (`OBS_DIM_MEMORY = 6401`; `obs_layout()['memory']`). They are computed by
+`showdown/rl/series_memory.py` from the finished games of the current series (`BattleSnapshot.series_memory`,
+taken from `battle._series_memory`). Frequencies are averages over previous games, not the last one.
+
+| Range | Feature |
+|---|---|
+| g0–g2 | Game index one-hot (1, 2, 3) |
+| g3–g5 | Our series wins / 2, foe series wins / 2, previous games / 2 |
+| g6–g9 | Fraction of games with foe Trick Room, mean first TR turn / 10, same for foe Tailwind |
+| g10–g14 | Fraction of games the foe set rain / sun / sand / snow; foe set a terrain |
+| g15–g17 | Foe Protect per active mon-turn, foe voluntary switches per turn, foe Fake Out on turn 1 |
+| g18–g20 | Mean game length / 20, last game won by us, previous games exist |
+| s0–s7 (×6, one per foe block `foe_0…foe_5`, by species) | Memory present; brought (fraction of games); led; fainted when brought; Protect per active turn; active turns per game / 10; Protect on turn 1; damaging-move share |
+
+Without previous games the block is zero except g0 (game 1). The structured encoder (§3.c) passes it as a raw
+segment, so only the first trunk layer grows; a warm start from a checkpoint without memory
+(`showdown/rl/warm_start.py`) copies all weights and initialises the new input columns to **zero**, so the
+expanded network computes exactly what the source did (tested).
+
+### 3.f Series mode BO3 (v1.35; off by default)
+
+`PokeEnvBattleBackend(series=True)` or `RL_SERIES_BO3=1`: each episode is still one game (reward unchanged),
+but games are grouped into best-of-3 series against the same foe kind and the same team pair. The backend
+attaches the memory of previous games to each new battle, records each finished game (`GameRecord` from
+`battle._replay_data`), defers an opponent change requested mid-series until the series ends (the vec-env
+runner reports the real opponent), and breaks the series if a game is aborted. `info['engine']['series']`
+gives the game index and score; trainers log `wr_partida_1/2/3`, `wr_series`, `n_series`
+(`train_metrics.SERIES`). With `PREVIEW_SERIES_CONDITION=1` the frozen preview sees, in games 2–3, only the foe
+Pokémon brought in previous games (`FrozenPreviewPolicy.teampreview(battle, foe_keep=...)`; the rest are padded
+as unknown) — a no-retraining test (protocol §4.16), off by default.
 
 ---
 
@@ -676,6 +723,7 @@ con Tera on no es compatible con este benchmark aunque sus dimensiones encajen.
 
 | Version | Date | Notes |
 |---------|------|-------|
+| **v1.35** | 2026-11-27 | **BO3 series support for PPO v3 / DDQN v2 (protocol §4.16; user decision after the web series against people; all off by default, v1/v2 unchanged).** (1) Consecutive-Protect mask (§2, `RL_MASK_PROTECT_STREAK`). (2) Series-memory block (§3.e, `RL_OBS_SERIES_MEMORY`, `MEM_DIM` = 69, `OBS_DIM_MEMORY` = 6401) with symmetry extension and zero-init warm start. (3) Series mode BO3 in the live backend (§3.f, `RL_SERIES_BO3`) with series metrics in the training logs and `policy_diag --series`. (4) Optional series-conditioned frozen preview (`PREVIEW_SERIES_CONDITION`). |
 | **v1.34** | 2026-11-25 | **BD₂ = focus fire rate** (user decision for I 2.0): the live I 2.0 smoke showed PPO almost never hard-switches (BD₂ ∈ [0, 0.025]), so the QD archive was effectively one-dimensional. `RL_BD2=switch` restores the hard switch rate. `BehavioralTracker.metrics()` reports both. Vector env: `start_matches` and `{opponent, seed, split}` next-match dicts (paired QD evaluation). |
 | **v1.33** | 2026-11-19 | **Observation v2.1: real damage calculator + full ability/move/item corrections (P5 complete; user decisions, memorizacion_equipos §18.1).** (1) Damage features (our moves vs each foe in 3 modes, vs ally for spread, foe moves vs ours, pair matrix 4×6 both ways) come from `@smogon/calc` Champions (damage-calc `bacbbfc`), built by `showdown/rl/obs_calc.py` with field effects as in reality: Fairy/Dark Aura and Aura Break from any of the 4 actives, the four Ruin abilities, screens, Friend Guard, Battery, Power Spot, Steely Spirit, Last Respects (fainted allies), effective Mega forme. Semantics kept: mid = mean of the roll range × accuracy, max/min = best/worst stats and roll. One batch per observation (~230 requests), fallback to the Python estimate with a circuit breaker; per-episode usage (`obs_calc`) is logged with `foe_state`. (2) Non-damage effects in Python: priority (Grassy Glide in Grassy Terrain, Gale Wings, Prankster), speed (Iron Ball, Surge Surfer), immunities (Bulletproof, Soundproof, Overcoat, Magnet Rise), Sturdy blocks one-hit KO at full HP, Telepathy. Quick Claw / Quick Draw (random) not modelled. (3) Move profile (shared with the preview, `preview_move_mods`): Liquid Voice → Water, Weather Ball with own weather setter, power abilities; cache keyed by version. Audit of legal effects: `API/JSONs/damage_effects_audit.json` (128 abilities, 173 moves, 57 items). Versioned per checkpoint (`obs_abilities`, combat and preview); v1 checkpoints load as False and keep the old observation. Same OBS_DIM. |
 | **v1.32** | 2026-11-18 | **Ability corrections in the observation's damage estimate (P5)** — Liquid Voice (movimientos de sonido → Agua: el Hyper Voice de Primarina contaba como Normal; con sol y contra Venusaur la obs decía ×1 y el real era ×0,375, hallazgo de la prueba online), habilidades de potencia (Tough Claws, Iron Fist, Strong Jaw, Mega Launcher, Sharpness, Punk Rock, Technician, Sheer Force, Fairy/Dark Aura, Parental Bond, Water Bubble) y defensivas (Thick Fat, Heatproof, Water Bubble, Purifying Salt, Fluffy) en `move_damage_frac`, el código de efectividad, el aviso de redirección y el tipo de los movimientos rivales. Same OBS_DIM; the shared move profile (`team_preview_obs._move_infos`, used by the preview) is unchanged. Per checkpoint: `PPOConfig/DDQNConfig.obs_abilities` (default **True** for new training, user decision: PPO and DDQN); checkpoints without the key (PPO v1, earlier DDQN) load as False and keep the old observation. Trainers export `RL_OBS_ABILITIES` from the agent config (workers inherit it); `build_observation*(…, abilities=)` and the PPO/DDQN players and `policy_diag` use each checkpoint's flag, so v1 and v2 can play in the same process. |

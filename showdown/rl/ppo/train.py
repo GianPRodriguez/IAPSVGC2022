@@ -13,7 +13,7 @@ import os
 import json
 from dataclasses import asdict
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -227,6 +227,8 @@ def _collect_and_update(
             from showdown.rl.train_metrics import FOE_STATE
             _eng = info.get('engine') if isinstance(info, dict) else None
             FOE_STATE.add(_eng.get('foe_state') if isinstance(_eng, dict) else None, current)
+            from showdown.rl.train_metrics import SERIES
+            SERIES.add(_eng.get('series') if isinstance(_eng, dict) else None, info.get('outcome'))
             if self_play and pool is not None and len(pool) > 0:
                 # Opponent is frozen checkpoint weights — live foes stay in omega mode.
                 pass
@@ -368,8 +370,9 @@ def _collect_and_update_vec(
             if r.get('worker_restarted'):
                 restarts += 1
             if r['terminated'] or r['truncated']:
-                from showdown.rl.train_metrics import FOE_STATE
+                from showdown.rl.train_metrics import FOE_STATE, SERIES
                 FOE_STATE.add(info.get('foe_state'), current[i])
+                SERIES.add(info.get('series'), info.get('outcome'))
                 current[i] = r.get('next_opponent') or current[i]
                 ep_counts[current[i]] = ep_counts.get(current[i], 0) + 1
                 pending[i] = _sample_next()
@@ -508,7 +511,8 @@ class _PPOValidator:
             while self.next_log <= gstep:
                 self.next_log += self.log_every
             from showdown.rl.train_metrics import FOE_STATE
-            self.mlog.write('update', step=int(gstep), foe_state=FOE_STATE.flush(),
+            from showdown.rl.train_metrics import SERIES
+            self.mlog.write('update', step=int(gstep), foe_state=FOE_STATE.flush(), series=SERIES.flush(),
                             **{k: float(v) for k, v in metrics.items() if isinstance(v, (int, float))})
         if self.enabled and gstep >= self.next:
             while self.next <= gstep:
@@ -578,6 +582,7 @@ def run_training(
     eval_every: int = 250_000,
     eval_games: int = 50,
     resume: str = '',
+    series_opts: Optional[Dict[str, Any]] = None,
 ) -> PPOAgent:
     if not schedule and not self_play:
         raise ValueError('schedule vacío')
@@ -618,6 +623,9 @@ def run_training(
     # La observación de este proceso y de sus entornos (heredan la variable) sigue al checkpoint.
     os.environ['RL_OBS_ABILITIES'] = '1' if agent.cfg.obs_abilities else '0'
     print(f'[ppo] observación: corrección de habilidades (P5) = {bool(agent.cfg.obs_abilities)}', flush=True)
+    # PPO v3 (protocolo §4.16): memoria de serie, series BO3, máscara del Protect consecutivo, preview condicionado.
+    from showdown.rl.series_options import apply_series_options
+    series_meta = apply_series_options(agent, series_opts, resume=bool(resume), tag='ppo')
 
     rng = np.random.default_rng(int(seed) + 17)
     ckpt_dir = Path(checkpoint_dir)
@@ -882,6 +890,7 @@ def run_training(
             'update_steps': agent.update_steps,
             'total_steps': global_steps,
             'suite': [asdict(s) for s in suite_rows],
+            'serie_bo3': series_meta,
         }
         (ckpt_dir / 'train_meta.json').write_text(
             json.dumps(meta, indent=2) + '\n', encoding='utf-8',
@@ -958,6 +967,8 @@ def _main(argv: Optional[list] = None) -> int:
     p.add_argument('--smoke', action='store_true', help='Treat as smoke (suite default 0)')
     p.add_argument('--lr', type=float, default=None, help='Override PPOConfig.lr')
     p.add_argument('--clip-eps', type=float, default=None, help='Override PPOConfig.clip_eps')
+    from showdown.rl.series_options import add_series_cli_args
+    add_series_cli_args(p)
     p.add_argument('--obs-abilities', type=int, choices=(0, 1), default=None, help='corrección de habilidades en la observación (P5): 1 = sí (por defecto en entrenamientos nuevos), 0 = como PPO v1')
     p.add_argument('--ent-coef', type=float, default=None,
                    help='Override PPOConfig.ent_coef (por defecto 0,01; memorizacion_equipos.md §14)')
@@ -1036,8 +1047,12 @@ def _main(argv: Optional[list] = None) -> int:
         eval_every=args.eval_every,
         eval_games=args.eval_games,
         resume=args.resume,
+        series_opts=series_opts_from_args(args),
     )
     return 0
+
+
+from showdown.rl.series_options import series_opts_from_args  # noqa: E402
 
 
 def main(argv: Optional[list] = None) -> int:
