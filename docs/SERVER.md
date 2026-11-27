@@ -451,3 +451,19 @@ la laptop:
 `damage-calc` debe estar compilado (`calc/dist/index.js`). Si no lo está, el
 cálculo de daño devuelve `None` y la inferencia de stats por daño no poda nada,
 sin dar error.
+
+## Horas de cómputo por agente (medidas el 27-11-2026)
+
+Desde `~/iapsvgc_runs` en phantom (no incluye `~/iapsvgc_scratch` ni lo hecho en la laptop antes del 16-11).
+**Entrenamiento** = suma de `elapsed` de los `reporte.txt`, clasificados por algoritmo. **Cola** = primera a última
+marca de tiempo de cada `queue.log` (entrenamiento + evaluaciones + reanudaciones). Las colas a veces corrieron a la
+vez, así que las horas de cola son de reloj por cola, no exclusivas.
+
+| Agente | Entrenamiento puro | Horas de cola | Detalle |
+|---|---|---|---|
+| E (preview PPO + DDQN) | **43,0 h** (66 entrenamientos DDQN) | 9,2 h propias + parte de 141 h compartidas | kick-off DDQN v1 4,7 h de entrenamiento / 9,2 h de cola |
+| F (preview PPO + PPO) | **36,2 h** (40 entrenamientos PPO) | 22,2 h propias + parte de 141 h compartidas | PPO v1 (5,3 h de cola), candidatos de PPO v2 (8,2 h), kick-off PPO v2 (7,0 h de entrenamiento / 8,7 h de cola) |
+| E + F compartido | — | **141,1 h** pilotos (`kickoff`…`kickoff22`) + 13,7 h P5/P1b + 3,1 h preview v2.1b | colas de pilotos y ajustes con DDQN y PPO mezclados |
+| G (MCTS + PUCT) | sin entrenamiento (búsqueda) | **61,0 h** | versiones v2–v7, confirmaciones v3–v5, preview por búsqueda (13,7 h), Nash (4,5 h) |
+| H (preview Nash + MCTS-Nash) | sin entrenamiento (búsqueda) | **78,8 h** | H 2.0 (16,2 h), H 2.1 (23,8 h), paso A (13,0 h), H 2.2 (12,6 h) y su confirmación (12,9 h) |
+| I, J, K (QD) | exploración: I 3 h 04, J 2 h 46, K 1 h 33 (control 1 h 53) | **56,5 h hasta ahora** | I 2.0 16,1 h, J/K 2.0 19,6 h, F1 0,8 h, F2 0,9 h, F3 8,8 h, F4 10,3 h (en curso), F2b en curso |
