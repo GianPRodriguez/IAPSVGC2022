@@ -29,12 +29,77 @@ _PREVIEW_MEMO: dict = {}
 _PREVIEW_MEMO_MAX = 512
 
 
-def _preview_key(ours, foes, cfg) -> tuple:
+def _preview_key(ours, foes, cfg, brought=None) -> tuple:
     def mk(m):
         return (m.species, tuple(m.types), m.ability, m.item, tuple(m.moves),
                 tuple(sorted((m.stats or {}).items())) if isinstance(getattr(m, 'stats', None), dict) else ())
+    from showdown.rl.mcts_puct import arch_ext as _X
     return (tuple(mk(m) for m in ours), tuple(mk(m) for m in foes), cfg.decision, cfg.phase, cfg.seed,
-            cfg.our_combos, cfg.foe_combos, cfg.n_rollouts, cfg.turns)
+            cfg.our_combos, cfg.foe_combos, cfg.n_rollouts, cfg.turns, _X.arch_on(), tuple(brought or ()))
+
+
+def _series_key(battle) -> tuple:
+    foe = tuple(sorted(str(getattr(m, 'species', '')) for m in (getattr(battle, 'opponent_team', None) or {}).values()))
+    return (str(getattr(battle, 'opponent_username', '') or ''), foe)
+
+
+def series_update(player, battle) -> None:
+    """S (protocolo §4.19): qué trajo el rival y qué movimientos usó en esta partida (se acumula en la serie)."""
+    from showdown.rl.mcts_puct import arch_ext as _X
+    if not _X.series_on():
+        return
+    mem = getattr(player, '_series_mem', None)
+    if mem is None:
+        mem = player._series_mem = {}
+    ent = mem.setdefault(_series_key(battle), {'brought': [], 'moves': {}})
+    for mon in (getattr(battle, 'opponent_active_pokemon', None) or []):
+        if mon is not None:
+            sp = str(getattr(mon, 'species', ''))
+            if sp and sp not in ent['brought'] and len(ent['brought']) < 4:
+                ent['brought'].append(sp)
+    for mon in (getattr(battle, 'opponent_team', None) or {}).values():
+        used = {_X._id(mid) for mid, mv in (getattr(mon, 'moves', None) or {}).items()
+                if getattr(mv, 'current_pp', 1) < getattr(mv, 'max_pp', 1)}
+        if used:
+            ent['moves'].setdefault(_X._id(getattr(mon, 'species', '')), set()).update(used)
+
+
+def series_moves(player, battle):
+    from showdown.rl.mcts_puct import arch_ext as _X
+    if not _X.series_on():
+        return None
+    ent = (getattr(player, '_series_mem', None) or {}).get(_series_key(battle))
+    return ent['moves'] if ent else None
+
+
+def series_brought(player, battle):
+    """Los 4 que el rival trajo en partidas anteriores de la serie (None en la partida 1)."""
+    from showdown.rl.mcts_puct import arch_ext as _X
+    if not _X.series_on():
+        return None
+    mem = getattr(player, '_series_mem', None)
+    if mem is None:
+        mem = player._series_mem = {}
+    key = _series_key(battle)
+    if not (getattr(player, 'series_games', None) or []):
+        mem.pop(key, None)            # partida 1 de una serie: memoria nueva
+        return None
+    ent = mem.get(key)
+    return list(ent['brought']) if ent and len(ent['brought']) == 4 else None
+
+
+def act_with_series(player, battle, fn):
+    """Corre ``fn()`` con los movimientos que el rival usó en la serie visibles para el puntaje S3."""
+    from showdown.rl.mcts_puct import arch_ext as _X
+    series_update(player, battle)
+    mv = series_moves(player, battle)
+    if not mv:
+        return fn()
+    tok = _X.SERIES_MOVES.set(mv)
+    try:
+        return fn()
+    finally:
+        _X.SERIES_MOVES.reset(tok)
 
 
 def _record_anomaly(kind: str, battle, detail: str = '') -> None:
@@ -158,13 +223,15 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
                 deadline_sec=float(os.environ.get('MCTS_PREVIEW_DEADLINE', '90') or 90),  # confirmado con 90 s
             )
             beliefs = getattr(getattr(self, 'iap_battle', None), 'stat_beliefs', None)
-            key = _preview_key(ours, foes, cfg)
+            brought = series_brought(self, battle)
+            key = _preview_key(ours, foes, cfg, brought)
             hit = _PREVIEW_MEMO.get(key)
             if hit is not None:
                 order = list(hit)
                 self.mcts_stats['preview_memo_hits'] = self.mcts_stats.get('preview_memo_hits', 0) + 1
             else:
-                order, info = choose_formation(ours, foes, cfg, stat_beliefs=beliefs)
+                extra = {'foe_brought': brought} if brought else {}   # sin serie: llamada idéntica a G 5.2
+                order, info = choose_formation(ours, foes, cfg, stat_beliefs=beliefs, **extra)
                 self.mcts_stats['preview_sec'] = self.mcts_stats.get('preview_sec', 0.0) + info.elapsed_sec
                 if info.fallback:
                     _record_anomaly('preview_search_fallback', battle, info.fallback)
@@ -201,7 +268,7 @@ class MCTSPuctPlayer(FamilyPreviewMixin, Player):
             snap = snapshot_from_battle(battle)
             root = self._root_joints(battle) if int(self.agent.cfg.version) >= 2 else None
             beliefs = getattr(getattr(self, 'iap_battle', None), 'stat_beliefs', None)
-            joint = self.agent.act(snap, root_joints=root, stat_beliefs=beliefs)
+            joint = act_with_series(self, battle, lambda: self.agent.act(snap, root_joints=root, stat_beliefs=beliefs))
             tel = self.agent.last_telemetry
             if tel is not None:
                 st['search_sec'] += float(getattr(tel, 'elapsed_sec', 0.0) or 0.0)

@@ -1018,6 +1018,8 @@ class S3Model:
             self._support_scores(view, slot, actor, out)
         if self.phase in ('3c', '3d', '3e'):
             self._scores_3c(view, slot, actor, out)
+        from showdown.rl.mcts_puct import arch_ext as _X   # G v8 / H 2.3 (opcional, protocolo §4.19)
+        _X.apply_scores(self, view, slot, actor, out)
         return out
 
     # --------------------------------------------------- puntuación (fase 3c)

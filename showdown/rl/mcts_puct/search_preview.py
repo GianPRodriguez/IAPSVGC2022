@@ -114,8 +114,13 @@ def choose_formation(
     *,
     stat_beliefs=None,
     ranges_fn=None,
+    foe_brought: Optional[Sequence[str]] = None,
 ) -> Tuple[Tuple[int, ...], PreviewInfo]:
-    """Formación (lead1, lead2, banca1, banca2), 1-based, para ``/team``."""
+    """Formación (lead1, lead2, banca1, banca2), 1-based, para ``/team``.
+
+    Opcional (protocolo §4.19): ``MCTS_ARCH=1`` suma la formación del plan de cada lado; ``foe_brought`` (serie BO3,
+    ``MCTS_SERIES=1``) limita al rival a los 4 que trajo antes, con sus 6 parejas de leads.
+    """
     from showdown.rl.mcts_puct.s3 import S3Model
 
     cfg = cfg or SearchPreviewConfig()
@@ -128,6 +133,16 @@ def choose_formation(
             raise ValueError('equipos incompletos')
         our_forms = [f for c in top_combos(ours, foes, cfg.our_combos) for f in formations(c)]
         foe_forms = [f for c in top_combos(foes, ours, cfg.foe_combos) for f in formations(c)]
+        from showdown.rl.mcts_puct import arch_ext as _X
+        if _X.arch_on():
+            for forms, team, opp in ((our_forms, ours, foes), (foe_forms, foes, ours)):
+                pf = _X.plan_formation(team, opp)
+                if pf is not None and pf not in forms:
+                    forms.append(pf)
+        if foe_brought:
+            seen = _X.seen_formations(foes, foe_brought)
+            if seen:
+                foe_forms = seen
         info.n_ours, info.n_foe = len(our_forms), len(foe_forms)
 
         # Tabla S3 para los 6 × 6: raíz "ancha" con todos en activos + banca.

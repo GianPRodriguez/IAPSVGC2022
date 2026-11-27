@@ -723,6 +723,44 @@ nunca practicaron. D3 debería mostrar que el nivel 3 es un rival claramente má
 Eso convertiría a **entrenar contra el nivel 3** (la reconsideración de P4, memorizacion_equipos §17.1) en la
 siguiente mejora más prometedora para PPO y DDQN. La decisión la toma el usuario con los resultados.
 
+### 4.19 G y H contra arquetipos: diagnóstico y extensiones A / S / F (exploración), fijada el 27-11-2026 antes de medir
+
+Decisión del usuario: "prepara y encola todos" (las propuestas 1–4 para G y H; la 5, probarlos en la web contra
+personas, queda fuera del servidor). Cola `scripts/server/gh_arq_queue.sh`, después de D3. Bloque **X1 =
+11001–11017**, 300 BO3 por semilla, rival greedy_joint validado. Código congelado en el commit de este
+pre-registro. Estadística: `scripts/server/gh_arq_stats.py`.
+
+**Origen.** G y H se evaluaron contra baselines que casi nunca ejecutan planes (D1). Su modelo del rival tiene el
+mismo sesgo: el rival del árbol se muestrea con el softmax del puntaje S3, que valora Trick Room / Tailwind por la
+velocidad ganada pero da **0** a los movimientos de clima, sin mirar el plan del equipo. El preview por búsqueda
+modela al rival con las combinaciones del preview greedy.
+
+**Punto 1 (descriptivo).** G 5.2 y H 2.2 contra greedy_joint nivel 0 (G0, H0) y nivel 3 (G3, H3; §4.17).
+- Se reporta la caída de cada agente del nivel 0 al 3 (McNemar pareado) y la brecha H − G en cada nivel.
+- **Hipótesis sobre H:** al mismo costo G le gana a H por ~2,4 pts contra los baselines de siempre (§5.9), porque
+  el criterio de Nash es conservador frente a un rival explotable. Contra un rival que ejecuta planes, la brecha
+  H − G sería **menor** (menos negativa) que contra el nivel 0.
+- **Expectativa:** G y H caen ~3–6 pts contra el nivel 3, menos que PPO / DDQN (E10–E11, §4.18), porque su simulador
+  sí modela Trick Room, Tailwind y clima. La hipótesis sobre H, ~45 %.
+
+**Puntos 2–4 (exploración contra el nivel 3).** Extensiones apagadas por defecto (spec de G 8.0, de H 2.3), cada
+una frente a su agente base en las mismas semillas:
+
+| Brazo | Extensión | Qué cambia | Expectativa |
+|---|---|---|---|
+| GA / HA | **A** arquetipos (`MCTS_ARCH=1`) | Bono S3 (+30) por poner el clima / campo de los planes de cada lado (también el del rival) y +15 a Trick Room / Tailwind de su plan; el preview suma la formación del plan de cada lado | +1 a +3 pts (la más prometedora) |
+| GS / HS | **S** serie BO3 (`MCTS_SERIES=1`) | Partidas 2–3: el preview simula solo los 4 que el rival trajo antes; +5 a los movimientos que ya usó | +0,5 a +2 pts (el rival determinista repite, así que es un techo optimista) |
+| GF / HF | **F** hoja con campo (`MCTS_LEAF_FIELD=1`) | La hoja suma 0,15 × el valor del control de velocidad vigente | ≈ 0 a +1 pt |
+
+- **Regla:** una extensión es candidata a confirmación si su diferencia frente a la base es > 0 con McNemar p < 0,05.
+  La confirmación se pre-registra aparte, en bloques nuevos (11101+), y también contra los baselines de siempre
+  (nivel 0): una extensión no debe empeorar donde G y H ya están confirmados.
+- **Límites:**
+  - El nivel 3 sigue siendo determinista (salvo el azar del simulador), así que S puede sobreestimar lo que valdría
+    contra personas.
+  - Los campos solo se bonifican en las fases S3 3d/3e, que no son las de G 5.2 / H 2.2.
+  - G sigue sin componentes de RL (decisión del 20-11).
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -1254,3 +1292,4 @@ nunca vio una entrada con 4 rivales conocidos y cae en una formación por defect
 | 2026-11-27 | Cola v3: la caché de la calculadora (`IAPSVGC2022_v3/logs/calc_cache.sqlite`) creció ~30 GB/h (96 GB a las 12:54). Se activó `scripts/server/cache_watchdog.sh` (probado en el servidor con un lanzador falso), que aplica la regla de los 250 GB del usuario: si se supera, detiene la cola, borra la caché y relanza la cola reanudable. Se pierde como mucho el entrenamiento en curso. |
 | 2026-11-27 | Resultados parciales de la cola v3 (§5.15): P1 máscara +1,0 (PPO) y +0,2 (DDQN); S1 preview condicionado −7,2 y −5,3, no se adopta; D1 Trick Room 0,1 % y Tailwind 1,6 %. D3 pre-registrado (§4.17): greedy_joint nivel 3 con clima, campos y núcleos clásicos de VGC (`greedy_joint_arq3`), medido contra PPO v2 y DDQN v1 después de v3; cola `arq3_queue.sh`. |
 | 2026-11-27 | Expectativas actualizadas para lo pendiente (§4.18), antes de los resultados: P1 no inferior en las dos familias; memoria de serie V − C PPO +0,5 a +2 (confirmar ~25 %) y DDQN ≈ 0; nivel 3 de arquetipos activa su clima en ≥ 70 % y baja a PPO a ~72–76 % y a DDQN a ~45–50 %; siguiente mejora esperada: entrenar contra el nivel 3. |
+| 2026-11-27 | G y H contra arquetipos pre-registrado (§4.19, exploración en X1 = 11001–11017): punto 1 descriptivo (G0/G3/H0/H3, hipótesis de que la brecha H − G se achica contra el nivel 3) y extensiones A arquetipos, S serie BO3 y F hoja con campo (GA/GS/GF, HA/HS/HF) frente a su base contra el nivel 3; candidata si > 0 y p < 0,05. Cola `gh_arq_queue.sh` tras D3. |

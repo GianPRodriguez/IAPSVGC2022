@@ -484,6 +484,7 @@ y turno.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.3** (candidata, opcional; por defecto sigue 2.2) | 2026-11-27 | Hereda de G las extensiones A / S / F (`MCTS_ARCH`, `MCTS_SERIES`, `MCTS_LEAF_FIELD`; spec de G 8.0, protocolo §4.19): solo cambian el puntaje S3, el preview y la hoja, así que se respetan las invariantes del método H (árbol simultáneo, matriz de celdas, Nash por nodo). |
 | **2.2** (confirmada 25-11: 66,1 % joint, 65,2 % expectimax, 67,8 % solo; = H 2.1 con +0,00 pts en el 57 % del tiempo; −2,37 pts frente a G 5.2 al mismo coste, protocolo §5.9) | 2026-11-25 | H 2.1 + RM+ en caliente pasa a ser el default del player. |
 | **2.2** (confirmación pre-registrada) | 2026-11-25 | B2 = H 2.1 + RM+ elegido como candidato a H 2.2 (§4e); confirmación U1–U4 en C17/C18 (protocolo §4.9). Invariantes del método H (§4e). |
 | **2.2** (exploración medida) | 2026-11-24 | Exploración (§4d): B1 +0,51 pts y B3 +0,57 sin superioridad; B2 H3 + RM+ no inferior (−0,04 pts) en el 57 % del tiempo (219 s/semilla ≈ G). Sin brazo ganador; B2 candidato de velocidad, confirmación no encolada. |

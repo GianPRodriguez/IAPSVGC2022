@@ -278,7 +278,12 @@ def _rollout_value(s: BattleSnapshot, rng, ctx: '_Ctx') -> float:
             break
         a_self = A.greedy_joint(s, scorer=ctx.scorer, target_fn=ctx.target_fn)
         s = _step(s, a_self, _opp(s, rng, ctx), rng, ctx)
-    return material_value(s)
+    v = material_value(s)
+    if not s.finished and ctx.model is not None:
+        from showdown.rl.mcts_puct import arch_ext as _X   # F: control de velocidad en la hoja (§4.19)
+        if _X.leaf_field_on():
+            v = float(max(-1.0, min(1.0, v + _X.LEAF_FIELD_W * _X.field_advantage(ctx.model, s))))
+    return v
 
 
 def _simulate(root: OLNode, root_state: BattleSnapshot, sim_id: int,

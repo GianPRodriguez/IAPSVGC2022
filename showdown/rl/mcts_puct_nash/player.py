@@ -11,7 +11,7 @@ from poke_env.player.battle_order import BattleOrder, DefaultBattleOrder
 
 from showdown.rl.action_space import decode_joint_action
 from showdown.rl.family_preview_mixin import FamilyPreviewMixin
-from showdown.rl.mcts_puct.player import MCTSPuctPlayer, _env_int, _record_anomaly
+from showdown.rl.mcts_puct.player import MCTSPuctPlayer, _env_int, _record_anomaly, act_with_series
 from showdown.rl.mcts_puct_nash.agent import MCTSPuctNashAgent, MCTSPuctNashConfig
 from showdown.rl.pe_adapter import joint_order_from_spec_actions, snapshot_from_battle
 
@@ -121,7 +121,7 @@ class MCTSPuctNashPlayer(FamilyPreviewMixin, Player):
             v2 = int(self.agent.cfg.version) >= 2
             root = self._root_joints(battle) if v2 else None
             beliefs = getattr(getattr(self, 'iap_battle', None), 'stat_beliefs', None)
-            joint = self.agent.act(snap, root_joints=root, stat_beliefs=beliefs)
+            joint = act_with_series(self, battle, lambda: self.agent.act(snap, root_joints=root, stat_beliefs=beliefs))
             tel = self.agent.last_telemetry
             if tel is not None and v2:
                 st['search_sec'] += float(getattr(tel, 'elapsed_sec', 0.0) or 0.0)
