@@ -73,6 +73,44 @@ Código: `showdown/rl/qd_ppo/train2.py` (I 2.0 y control), `matchups.py`, `archi
 acumulada `n_eval`, QD-score, metadatos), `mosaic.py` (`MOSAICS`, `make_sampler`), `vec_env.py`
 (`start_matches`). `train.py` (I 1.7) queda como referencia; nunca produjo un agente.
 
+### Exploración de la familia QD 2.0 (26-11-2026, colas `qd_i2` y `qd_jk2`, commit `7814cb4`)
+
+Contra `eval`, 200 partidas por rival, tasa de victorias en %. La columna `val` es la reevaluación de despliegue.
+
+| Agente (preview v2.1b de PPO v2) | random | solo | joint | expectimax | **3 heur.** | `val` (300, reeval) |
+|---|---|---|---|---|---|---|
+| J 2.0 PGA-ME (`best_elite`) | 99,5 | 85,0 | 83,0 | 77,5 | **81,8 %** | 91,7 % |
+| Control: PPO v2 s1 + 1M | 99,5 | 84,0 | 87,0 | 72,0 | **81,0 %** | 85,3 % |
+| I 2.0 QD-PPO (`best_elite`) | 98,5 | 86,0 | 85,5 | 71,0 | **80,8 %** | 93,3 % |
+| PPO v2 s1 (arranque) | 99,5 | 82,0 | 83,5 | 75,5 | **80,3 %** | 91,0 % (kick-off) |
+| K 2.0 PPGA (`best_elite`) | 98,5 | 80,5 | 82,5 | 72,0 | **78,3 %** | 90,0 % |
+
+| Archivo | Celdas (cobertura) | QD-score | Hijos / aceptados | Tiempo |
+|---|---|---|---|---|
+| I 2.0 | 18 (0,18) | 35,3 | 245 / 93 | 3 h 04 min (90 pasos/s) |
+| J 2.0 | 44 (0,44) | 83,7 | 2880 / 775 (1440 GA, 1260 PG, 180 codicioso) | 2 h 46 min (100 pasos/s) |
+| K 2.0 | 87 (0,87) | 162,1 | 520 ramas / 204, 65 iteraciones, 0 reinicios | 1 h 33 min (181 pasos/s) |
+| Control | — | — | — | 1 h 53 min (146 pasos/s) |
+
+**Lectura (descriptiva, 600 partidas por agente contra las 3 heurísticas, IC 95 % ≈ ± 3,2 pts por tasa y
+≈ ± 4,5 pts por diferencia).**
+1. **Ninguno se distingue del control.** J +0,8, I −0,2 y K −2,7 pts. Todo cae dentro del ruido.
+2. **Tampoco del arranque:** el control mejora +0,7 pts sobre PPO v2 s1. Con 1M pasos más, PPO v2 ya está
+   cerca de su techo con esta receta.
+3. **Maldición del ganador en el despliegue.** El mejor del top-10 en `val` (300 partidas) da 90–93 %, pero
+   en eval vuelve a ~80 %. Elegir el máximo de 10 estimaciones ruidosas sigue sesgando hacia arriba. `val`
+   además es más fácil que eval para s1 (91,0 frente a 79,3 en el kick-off).
+4. **Calidad-diversidad:** K cubre el 87 % del mapa con QD-score 162, J el 44 % y I el 18 %. Las élites de
+   K y J rinden casi lo mismo que la mejor (K 6,3: 90 % en `val`; J 7,4: 91,7 %). El valor de QD aquí está en
+   la variedad de estilos con rendimiento parecido, no en un agente más fuerte.
+5. **Por rival:** J es el mejor contra expectimax (77,5 % frente a 72,0 del control, +5,5 pts, en el límite
+   del ruido para un rival con 200 partidas, IC ≈ ± 8). Es el único indicio de que otra élite castiga mejor a
+   un rival concreto; habría que confirmarlo.
+6. **Contraste con la hipótesis a priori (protocolo §4.10):** se esperaba I ≈ control (sí), K algo peor
+   (sí, −2,7) y J peor (no: J es el mejor, aunque dentro del ruido). En QD-score se esperaba K ≥ I > J; salió
+   K > J > I. El archivo de I queda chico porque cada hijo cuesta 2 actualizaciones de PPO (245 hijos frente a
+   2880 de J).
+
 ## Por qué existe
 
 Optimizar una única política puede descubrir una sola forma de ganar. QD-PPO
@@ -290,6 +328,7 @@ siendo la suite de \(\pi^\*\), no coverage por sí sola.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.0.2** | 2026-11-26 | Exploración de la familia QD 2.0 (§I 2.0): contra eval J 81,8 %, control 81,0 %, I 80,8 %, PPO v2 s1 80,3 %, K 78,3 %; ninguno se distingue del control; QD-score K 162 > J 84 > I 35; maldición del ganador en el despliegue por `val` (90–93 % → ~80 %). |
 | **2.0.1** | 2026-11-26 | I 2.0, J 2.0, K 2.0 y el control usan el preview v2.1b de PPO v2 (`PREVIEW_KIND=team_preview_ppo`, nuevo en `frozen_preview`): el preview QD-PGA era degenerado con el equipo fijo (cobertura 0,02, \(b_2\) siempre 0). Decisión del usuario. Ver §I 2.0, Medición. |
 | **2.0** | 2026-11-25 | **I 2.0** (decisiones del usuario tras la revisión de la familia QD): arranque desde PPO v2, mosaico con las proporciones de PPO v2, descriptores calibrados, hijos con 2 actualizaciones PPO, comparación pareada con el ocupante en enfrentamientos comunes, reevaluación de las 10 mejores en `val` antes de desplegar, QD-score \(\sum(f+1)\), control `--control`. Ver §I 2.0. |
 | **1.7** | 2026-11-15 | Codificador estructurado (rl_env_spec §3.c) dentro del actor; consistencia por simetría (§3.d) en las actualizaciones PPO del actor (vía `PPOAgent.update`). Objetivo aliado del slot 0 corregido. Checkpoints/archivos anteriores incompatibles. |

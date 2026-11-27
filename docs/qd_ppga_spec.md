@@ -71,6 +71,8 @@ reproduce BD1 y BD2 (rl_env_spec v1.34) salvo en la ponderación de los turnos.
 resultados por comparación pareada, reevaluación de las 10 mejores en `val`, QD-score \(\sum(f+1)\) y el
 mismo control. El archivo suave solo se usa para ordenar las ramas (\(\Delta\)), como en CMA-MAE.
 
+**Exploración (26-11-2026):** ver la tabla común de I, J y K en qd_ppo_spec §I 2.0. K 2.0: **78,3 % contra eval** (control 81,0 %, −2,7 pts, dentro del ruido); archivo de 87 celdas (cobertura 0,87), QD-score 162,1, el mejor de la familia; 65 iteraciones, 0 reinicios, xNES μ = (2,03, −0,27, −3,81), σ = 0,23, en 1 h 33 min.
+
 ## Por qué existe
 
 QD-PPGA estudia si se puede cubrir el mapa sin mutaciones genéticas. Todos los
@@ -279,6 +281,7 @@ El metadata de cada elite conserva el modo de padre para auditoría.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.0.2** | 2026-11-26 | Exploración: K 2.0 78,3 % contra eval (control 81,0 %), 87 celdas, QD-score 162,1. Ver qd_ppo_spec §I 2.0. |
 | **2.0.1** | 2026-11-26 | K 2.0 juega con el preview v2.1b de PPO v2 (`PREVIEW_KIND=team_preview_ppo`), igual que I 2.0 y el control: el preview QD-PGA era degenerado con el equipo fijo (qd_ppo_spec 2.0.1). Decisión del usuario. |
 | **2.0** (diseño) | 2026-11-25 | **K 2.0 = PPGA fiel** (decisión del usuario): VPPO con k+1 copias y gradientes como diferencias de parámetros, ramificación con xNES, archivo suave CMA-MAE (\(\alpha = 0{,}1\)), paseo por PPO con la recompensa combinada, reinicio sin mejora, proxies markovianos de BD1/BD2; arranque desde PPO v2 y regla común de I 2.0. Fuente: arXiv 2305.13795 v2. Ver §K 2.0. |
 | **1.7.1** | 2026-11-25 | Archivo compartido con I 2.0: QD-score \(\sum(f+1)\) y límites/metadatos opcionales (por defecto la rejilla sigue sobre \([0,1]^2\)). El rediseño de K (implementación fiel o renombre, arranque desde PPO v2) queda pendiente de decisión del usuario; ver la revisión de la familia QD del 25-11-2026. |

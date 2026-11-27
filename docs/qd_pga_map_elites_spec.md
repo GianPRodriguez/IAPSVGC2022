@@ -70,6 +70,8 @@ diferencia de I.
 ataque), comparación pareada con el ocupante, reevaluación de las 10 mejores en `val` antes de
 desplegar, QD-score \(\sum(f+1)\), y el mismo control (PPO v2 + 1M pasos con el mismo preview y mosaico).
 
+**Exploración (26-11-2026):** ver la tabla común de I, J y K en qd_ppo_spec §I 2.0. J 2.0: **81,8 % contra eval** (control 81,0 %, +0,8 pts, dentro del ruido); 77,5 % contra expectimax (+5,5 frente al control); archivo de 44 celdas, QD-score 83,7, 2880 hijos en 2 h 46 min. El crítico funcionó lo bastante para no degradar al arranque, contra lo esperado (§4.10 del protocolo).
+
 ## Por qué existe
 
 QD-PGA explora un mapa de estilos con dos herramientas complementarias. La
@@ -279,6 +281,7 @@ acompañar cualquier comparación.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.0.2** | 2026-11-26 | Exploración: J 2.0 81,8 % contra eval (control 81,0 %), 44 celdas, QD-score 83,7. Ver qd_ppo_spec §I 2.0. |
 | **2.0.1** | 2026-11-26 | J 2.0 juega con el preview v2.1b de PPO v2 (`PREVIEW_KIND=team_preview_ppo`), igual que I 2.0 y el control: el preview QD-PGA era degenerado con el equipo fijo (qd_ppo_spec 2.0.1). Decisión del usuario. |
 | **2.0** (diseño) | 2026-11-25 | **J 2.0 = PGA-ME fiel** (decisión del usuario): Iso+LineDD, rama de gradiente con crítico gemelo Q (cabeza conjunta 1600) y gradiente de política esperado, SARSA esperado con el actor codicioso objetivo, actor codicioso inyectado por generación, todas las transiciones al replay; arranque desde PPO v2 y regla común de I 2.0. Fuente: QDax. Ver §J 2.0. |
 | **1.7.1** | 2026-11-25 | Archivo compartido con I 2.0: QD-score \(\sum(f+1)\) y límites/metadatos opcionales (por defecto la rejilla sigue sobre \([0,1]^2\)). El rediseño de J (implementación fiel o renombre, arranque desde PPO v2) queda pendiente de decisión del usuario; ver la revisión de la familia QD del 25-11-2026. |

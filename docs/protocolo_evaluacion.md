@@ -462,6 +462,8 @@ cobertura) se espera **K ≥ I > J**.
 expectimax, lo castiga, una élite con otro estilo podría rendir más contra ese rival. Por eso los
 resultados se leen **por rival**, no solo como el promedio de las 3 heurísticas.
 
+**Resultado de la exploración (26-11-2026, qd_ppo_spec §I 2.0):** contra eval, control 81,0 %, I 80,8 %, K 78,3 % y J 81,8 %. I ≈ control y K algo peor coinciden con lo esperado; J por encima del control no, aunque todo cae dentro del ruido (± 4,5 pts por diferencia). En QD-score salió K > J > I (se esperaba K ≥ I > J).
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -769,3 +771,4 @@ por el resolvedor.
 | 2026-11-25 | Confirmación de H 2.2 = B2 pre-registrada (§4.9, spec de H §4e): U1–U3 B2 > joint, expectimax, solo; U4 B2 no inferior a H 2.1 (margen −1,5 pts, McNemar con p unilateral); Holm m = 4; tiempo ≤ 85 % del de H 2.1; descriptivo frente a G 5.2 a igual coste. C17 = 10801–10817, C18 = 10901–10917. |
 | 2026-11-25 | Resultado de la confirmación de H 2.2 (§5.9): U1–U4 confirmadas (B2: 66,1 % contra joint, 65,2 % contra expectimax, 67,8 % contra solo; frente a H 2.1 +0,00 pts, cota inferior −0,76 > −1,5, p Holm = 6·10⁻⁴) y tiempo 57 % del de H 2.1. H 2.2 = H 2.1 + RM+ pasa a ser el default del player y el H de la Conclusión. Frente a G 5.2 al mismo coste: −2,37 pts. |
 | 2026-11-26 | Hipótesis a priori de la familia QD 2.0 registrada (§4.10), antes de cualquier resultado: frente al control (PPO v2 + 1M) I empata (~30 % de superarlo), K algo peor (~15 %), J peor (~10 %); ranking esperado en rendimiento I > K > J y en QD-score K ≥ I > J. Es descriptiva y no cambia ninguna prueba. |
+| 2026-11-26 | Exploración de la familia QD 2.0 frente a la hipótesis a priori (§4.10): I ≈ control y K algo peor coinciden; J (81,8 %) por encima del control (81,0 %) no se esperaba, pero está dentro del ruido. QD-score K > J > I. Confirmación pendiente de decidir. |
