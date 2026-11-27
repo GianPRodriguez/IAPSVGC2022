@@ -318,7 +318,7 @@ def main(argv: Optional[list] = None) -> int:
     p.add_argument('--bd-bounds', default='', help='lo1,hi1,lo2,hi2 (sin calibración)')
     p.add_argument('--reeval-top', type=int, default=REEVAL_TOP)
     p.add_argument('--reeval-games', type=int, default=REEVAL_GAMES)
-    p.add_argument('--mosaic', default='ppo_v2', choices=('ppo_v2', 'v1', 'heur'))
+    p.add_argument('--mosaic', default='ppo_v2', choices=('ppo_v2', 'v1', 'heur', 'pool'))
     p.add_argument('--control', action='store_true', help='PPO v2 sigue entrenando sin archivo')
     p.add_argument('--smoke', action='store_true')
     p.add_argument('--start-ps', action='store_true')

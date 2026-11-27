@@ -127,7 +127,7 @@ def compute_stats(results: Dict[str, Any], *, control: str = 'control', margin: 
             out['tests'][f'N_{a}'] = {'kind': f'no inferioridad {a} vs {control} (margen −{100 * margin:.1f} pts)', **t}
             pv[f'N_{a}'] = t['p']
     sa, sf = sup
-    if sa in agents:
+    if sa and sa in agents:
         idx = [i for i, f in enumerate(foes) if f == sf]
         t = paired([agents[sa][i] for i in idx], [c[i] for i in idx], shift=0.0)
         out['tests'][f'S_{sa}'] = {'kind': f'superioridad {sa} > {control} contra {sf}', **t}
@@ -148,8 +148,30 @@ def compute_stats(results: Dict[str, Any], *, control: str = 'control', margin: 
     return out
 
 
-def format_stats(st: Dict[str, Any]) -> str:
-    lines = ['=== F1 QD 2.0: confirmación contra eval (pre-registro: protocolo §4.11) ===', '']
+def merge_results(paths: Sequence[str], rename: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    """Une resultados de colas distintas con los MISMOS enfrentamientos (mismo bloque y rivales).
+
+    ``rename``: ``{'archivo:agente': 'nuevo'}`` o ``{'agente': 'nuevo'}`` para distinguir agentes homónimos.
+    """
+    rename = rename or {}
+    out: Optional[Dict[str, Any]] = None
+    for p in paths:
+        r = json.loads(Path(p).read_text(encoding='utf-8'))
+        if out is None:
+            out = {'foes': r['foes'], 'seeds': r['seeds'], 'wins': {}}
+        elif r['foes'] != out['foes'] or r['seeds'] != out['seeds']:
+            raise ValueError(f'{p}: enfrentamientos distintos; no se pueden parear')
+        for name, w in r['wins'].items():
+            new = rename.get(f'{p}:{name}', rename.get(name, name))
+            if new in out['wins']:
+                raise ValueError(f'agente repetido {new!r}; use --rename')
+            out['wins'][new] = w
+    assert out is not None
+    return out
+
+
+def format_stats(st: Dict[str, Any], title: str = 'F1 QD 2.0: confirmación contra eval (pre-registro: protocolo §4.11)') -> str:
+    lines = [f'=== {title} ===', '']
     foes = [k for k in next(iter(st['rates'].values())) if k not in ('crashes',)]
     lines.append(f"{'agente':10s} " + ' '.join(f'{f:>22s}' for f in foes) + '  caídas')
     for name, row in st['rates'].items():
@@ -290,6 +312,29 @@ def run_confirm(agents: Dict[str, str], *, cfg_checkpoint: str, out: Path, per_f
     return results
 
 
+def export_elites(archive: str, deploy_json: str, agent: str, top: int, cfg_checkpoint: str,
+                  out: Path) -> List[Path]:
+    """Las ``top`` élites de ``agent`` con más victorias en el despliegue de F1, como checkpoints PPO."""
+    from showdown.rl.ppo.agent import PPOAgent, PPOConfig
+    from showdown.rl.qd_ppo.archive import Archive
+    from showdown.rl.qd_ppo.train2 import _agent_from
+
+    base = PPOAgent(PPOConfig(device='cpu'))
+    base._ensure_torch()
+    base.load(cfg_checkpoint)
+    arch = Archive()
+    arch.load(archive)
+    rows = [r for r in json.loads(Path(deploy_json).read_text(encoding='utf-8'))['rows'] if r['agent'] == agent]
+    rows.sort(key=lambda r: (r['win_rate'], r['fitness']), reverse=True)
+    out.mkdir(parents=True, exist_ok=True)
+    paths = []
+    for k, r in enumerate(rows[:int(top)]):
+        pth = out / f'{agent}_elite{k}_{r["cell"][0]}_{r["cell"][1]}.pt'
+        _agent_from(base.cfg, arch.cells[tuple(r['cell'])].state_dict).save(pth)
+        paths.append(pth)
+    return paths
+
+
 def _kv(items: Sequence[str]) -> Dict[str, str]:
     out = {}
     for it in items:
@@ -323,18 +368,38 @@ def main(argv: Optional[list] = None) -> int:
     c.add_argument('--per-foe', type=int, default=4000)
     c.add_argument('--seed-block', type=int, default=CONFIRM_SEED_BLOCK)
     s = sub.add_parser('stats')
-    s.add_argument('--results', required=True)
+    s.add_argument('--results', action='append', required=True, help='uno o más results.json pareables')
+    s.add_argument('--rename', action='append', default=[], help='[archivo:]agente=nuevo')
     s.add_argument('--margin', type=float, default=MARGIN)
+    s.add_argument('--control', default='control')
+    s.add_argument('--ni', default='I,J,K', help='agentes de las pruebas de no inferioridad')
+    s.add_argument('--sup', default='J:expectimax_bayesian', help='agente:rival de la superioridad ("" = ninguna)')
+    s.add_argument('--init', default='init')
+    s.add_argument('--out', default='', help='prefijo de salida (defecto: confirm_stats junto al primero)')
+    s.add_argument('--title', default='F1 QD 2.0: confirmación contra eval (pre-registro: protocolo §4.11)')
+    e = sub.add_parser('export', help='guarda élites de un archivo como checkpoints PPO')
+    e.add_argument('--archive', required=True)
+    e.add_argument('--deploy', required=True, help='deploy.json de F1 (orden por victorias en val)')
+    e.add_argument('--agent', required=True)
+    e.add_argument('--top', type=int, default=5)
+    e.add_argument('--cfg-checkpoint', required=True)
+    e.add_argument('--out', required=True)
     a = p.parse_args(argv)
 
     if a.cmd == 'stats':
-        res = json.loads(Path(a.results).read_text(encoding='utf-8'))
-        st = compute_stats(res, margin=a.margin)
-        outp = Path(a.results).with_name('confirm_stats.json')
-        outp.write_text(json.dumps(st, indent=2), encoding='utf-8')
-        txt = format_stats(st)
+        res = merge_results(a.results, dict(x.rsplit('=', 1) for x in a.rename))
+        sup = tuple(a.sup.split(':', 1)) if a.sup else ('', '')
+        st = compute_stats(res, control=a.control, margin=a.margin,
+                           ni_agents=[x for x in a.ni.split(',') if x], sup=sup, init=a.init)
+        outp = Path(a.out) if a.out else Path(a.results[0]).with_name('confirm_stats')
+        outp.with_suffix('.json').write_text(json.dumps(st, indent=2), encoding='utf-8')
+        txt = format_stats(st, a.title)
         outp.with_suffix('.txt').write_text(txt + '\n', encoding='utf-8')
         print(txt)
+        return 0
+    if a.cmd == 'export':
+        paths = export_elites(a.archive, a.deploy, a.agent, a.top, a.cfg_checkpoint, Path(a.out))
+        print(','.join(str(x) for x in paths))
         return 0
 
     from showdown.rl.foe_pool import trainer_defaults

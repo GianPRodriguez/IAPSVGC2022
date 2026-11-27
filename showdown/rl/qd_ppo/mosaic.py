@@ -25,6 +25,10 @@ MOSAICS = {
     'ppo_v2': (('random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian'), (0.15, 0.25, 0.30, 0.30)),
     # Selección del desplegado y validación: los tres heurísticos por igual (como el val de PPO v2).
     'heur': (('greedy_solo', 'greedy_joint', 'expectimax_bayesian'), (1 / 3, 1 / 3, 1 / 3)),
+    # F4b (26-11-2026): el archivo como pool de rivales. ppo_v1 = rival PPO congelado en espejo con un
+    # checkpoint al azar de PPO_FOE_CHECKPOINTS por partida (aquí, élites de K 2.0).
+    'pool': (('random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian', 'ppo_v1'),
+             (0.10, 0.20, 0.25, 0.25, 0.20)),
 }
 
 

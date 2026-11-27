@@ -281,6 +281,7 @@ El metadata de cada elite conserva el modo de padre para auditoría.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.0.3** | 2026-11-26 | F3b (protocolo §4.13): corrida de K 2.0 con N1 = N2 = 10 (las del paper) desde PPO v2 s1, mismo presupuesto, para medir el efecto de la reducción a 3. |
 | **2.0.2** | 2026-11-26 | Exploración: K 2.0 78,3 % contra eval (control 81,0 %), 87 celdas, QD-score 162,1. Ver qd_ppo_spec §I 2.0. |
 | **2.0.1** | 2026-11-26 | K 2.0 juega con el preview v2.1b de PPO v2 (`PREVIEW_KIND=team_preview_ppo`), igual que I 2.0 y el control: el preview QD-PGA era degenerado con el equipo fijo (qd_ppo_spec 2.0.1). Decisión del usuario. |
 | **2.0** (diseño) | 2026-11-25 | **K 2.0 = PPGA fiel** (decisión del usuario): VPPO con k+1 copias y gradientes como diferencias de parámetros, ramificación con xNES, archivo suave CMA-MAE (\(\alpha = 0{,}1\)), paseo por PPO con la recompensa combinada, reinicio sin mejora, proxies markovianos de BD1/BD2; arranque desde PPO v2 y regla común de I 2.0. Fuente: arXiv 2305.13795 v2. Ver §K 2.0. |

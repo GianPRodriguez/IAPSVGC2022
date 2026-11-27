@@ -99,7 +99,8 @@ def train(
     b_boot = 64 if smoke else B_BOOT
     t_emit = 16 if smoke else T_EMIT
     n_emit = 2 if smoke else N_EMIT
-    n_outer = 2 if smoke else N_OUTER
+    import os as _os
+    n_outer = 2 if smoke else int(_os.environ.get('PREVIEW_N_OUTER', '') or N_OUTER)
     g_fit = 4 if smoke else G_FIT
     g_min = 2 if smoke else G_MIN
     actor_lr = 3e-4 if lr is None else float(lr)
@@ -145,6 +146,8 @@ def _train_loop(env, dev, rng, *, b_boot, t_emit, n_emit, n_outer, g_fit, g_min,
     archive = Archive(10, 10, bounds=bounds)
     from showdown.rl.team_preview_obs import obs_abilities_on
     archive.meta['obs_abilities'] = bool(obs_abilities_on())
+    from showdown.rl.team_preview_qd_pga.bd import bd_mode
+    archive.meta['bd'] = bd_mode()
     print(f'calibrated bounds={bounds}', flush=True)
     f, bd, g, meta = evaluate_actor(env, act_fn, G=g_fit, g_min=g_min, greedy=True)
     if meta['eligible']:
@@ -302,12 +305,21 @@ def main(argv: Optional[list] = None) -> int:
                    help='observación con la corrección de habilidades (P5), como preview v2.1 (defecto 1)')
     p.add_argument('--own-team', default='',
                    help='Equipo propio fijo de los contextos (archivo export; p. ej. showdown/rl/data/ddqn_team.txt)')
+    p.add_argument('--bd', choices=('species', 'roles'), default='species',
+                   help='descriptores: species (v1.6) o roles (v1.7, equipo propio fijo; F4a)')
+    p.add_argument('--n-outer', type=int, default=None, help=f'iteraciones externas (defecto {N_OUTER})')
     from showdown.rl.preview_live import add_live_cli_args, live_options_from_args
     add_live_cli_args(p)
     args = p.parse_args(argv)
     import os
     # Antes de crear el pool live: los workers heredan las variables.
     os.environ['RL_OBS_ABILITIES'] = '1' if args.obs_abilities else '0'
+    os.environ['PREVIEW_BD'] = args.bd
+    if args.n_outer:
+        os.environ['PREVIEW_N_OUTER'] = str(int(args.n_outer))
+    if args.bd == 'roles' and not args.own_team:
+        p.error('--bd roles necesita --own-team')
+    print(f'[preview] descriptores = {args.bd}', flush=True)
     if args.own_team:
         os.environ['PS_PREVIEW_OWN_TEAM'] = args.own_team
         print(f'[preview] equipo propio fijo: {args.own_team}', flush=True)

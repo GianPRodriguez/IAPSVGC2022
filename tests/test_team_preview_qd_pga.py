@@ -92,3 +92,26 @@ def test_archive_meta_roundtrip(tmp_path):
     br = Archive()
     br.load(tmp_path / 'a.pt')
     assert br.meta == {'obs_abilities': True} and br.bounds == ((0.0, 1.0), (0.0, 0.5))
+
+
+def test_roles_bd_fixed_team(monkeypatch):
+    """v1.7 (F4a): con el equipo fijo, los descriptores por roles sí varían con la elección."""
+    from showdown.rl.team_preview_action import decode_preview_action
+    from showdown.rl.team_preview_qd_pga import bd as B
+
+    monkeypatch.setenv('PREVIEW_BD', 'roles')
+    monkeypatch.setenv('PS_PREVIEW_OWN_TEAM', 'showdown/rl/data/ddqn_team.txt')
+    sp = ['Raichu', 'Rillaboom', 'Gholdengo', 'Arcanine-Hisui', 'Staraptor', 'Primarina']
+    seen = set()
+    for a in range(360):
+        b1, b2 = B.preview_bd_from_action(a, sp)
+        i1, i2, i3, i4 = decode_preview_action(a)
+        sup = {0, 1, 4}
+        phys = {1, 3, 4}
+        assert b1 == ((i1 in sup) + (i2 in sup)) / 2
+        assert b2 == sum(i in phys for i in (i1, i2, i3, i4)) / 4
+        seen.add((b1, b2))
+    assert {b for b, _ in seen} == {0.0, 0.5, 1.0}
+    assert {b for _, b in seen} == {0.25, 0.5, 0.75}
+    monkeypatch.delenv('PREVIEW_BD')
+    assert B.bd_mode() == 'species'

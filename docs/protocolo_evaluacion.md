@@ -500,6 +500,64 @@ con 300 partidas inflaba al elegido. Cola `scripts/server/qd_f1.sh`, código en
   expectimax que PPO puro, que es lo que la Fase 2 (selector de élite por rival) quiere explotar. Una N no
   rechazada se reporta tal cual, sin reformular la prueba.
 
+### 4.12 F2 de la familia QD 2.0: selector de élite por rival (exploración), fijada el 26-11-2026 antes de medir
+
+Decisión del usuario: implementar F2–F4 y encolarlas detrás de F1, en una cadena: `qd_f2.sh` → `qd_f3.sh`
+→ `qd_f4.sh`, un método a la vez. Código en `showdown/rl/qd_ppo/selector_f2.py` y `team_roles.py`,
+congelado en el commit de este pre-registro. Las tres fases son **exploraciones**: no tienen pruebas
+confirmatorias. Si alguna da un efecto prometedor, su confirmación se pre-registra aparte.
+
+- **Idea.** El repertorio de Cully et al. (2015) aplicado a combate: el preview muestra el equipo rival,
+  y entre élites de estilos distintos se elige la que mejor le va. El selector solo ve el equipo rival
+  (especies y conteos de roles a partir de los sets); no ve el algoritmo del rival.
+- **Repertorio.** Las 10 élites con más victorias en el despliegue de F1 (`deploy.json`, 1000 partidas
+  `val`), de cualquiera de los tres archivos.
+- **Datos.** Cada élite juega los mismos 1000 enfrentamientos `fit` por heurístico (bloque 50001), así
+  que cualquier elección tiene su resultado observado: es un bandit con información completa.
+- **Modelo.** Por élite, una regresión logística con L2. λ se elige por validación cruzada agrupada por
+  equipo rival (5 pliegues en `fit`), según las victorias de la élite elegida.
+- **Prueba.** En `eval` (bloque 60001, 1000 enfrentamientos por heurístico) juegan las 10 élites, el
+  control y PPO v2 s1. El resultado del selector en cada enfrentamiento es el de la élite que eligió. No
+  hay sesgo de selección, porque la elección usa solo el equipo rival.
+- **Comparación primaria (descriptiva):** selector − control, pareada, con IC 95 % y p unilateral.
+  **Secundarias:** selector − mejor élite única (elegida en `fit`), por rival, y el oráculo por equipo,
+  que es optimista porque elige con los resultados de `eval`. También se reporta qué élites se eligieron.
+- **Expectativa a priori:** ganancia pequeña o nula (0 a +2 pts). Los equipos de `eval` son distintos de
+  los de `fit` (separación por clones), y con ~200 equipos de entrenamiento generalizar por especie es
+  difícil. Un oráculo muy por encima del selector indicaría que la diversidad sí sirve, pero que el
+  contexto no alcanza para elegir.
+
+### 4.13 F3 de la familia QD 2.0: réplica y K con N = 10, fijada el 26-11-2026 antes de medir
+
+- **3a. Réplica desde otra semilla.** PPO v2 **s4** es la segunda mejor en `val` (88,3 %); la regla se
+  fija ahora, sin mirar `eval`. Se entrenan desde s4 el control, J 2.0 y K 2.0, con la misma receta y 1M
+  pasos. I no se replica: es el más caro y en la exploración quedó igual al control.
+- **3b. K 2.0 con N1 = N2 = 10** (las iteraciones del paper) desde s1, con el mismo presupuesto de 1M
+  pasos.
+- **Despliegue** como en F1: top-10 por archivo, 1000 partidas `val`, bloque 30002.
+- **Partidas.** J4, K4, control4, PPO v2 s4, K10, K1 (el desplegado de F1) y el control de s1 juegan los
+  mismos 2000 enfrentamientos `eval` por heurístico (bloque 70001).
+- **Lectura.** F3a usa las mismas pruebas de F1 sobre s4 (N_J4 y N_K4 frente a control4, S_J4 contra
+  expectimax, Holm m = 3), pero como réplica: confirma la dirección y no suma afirmaciones nuevas a la
+  Conclusión. F3b compara K10 y K1 frente al control de s1 (no inferioridad, descriptiva), y también
+  cobertura y QD-score.
+- **Expectativa:** el patrón de F1 se repite (QD ≈ control). K10 queda igual o algo mejor que K1.
+
+### 4.14 F4 de la familia QD 2.0: preview por roles y archivo como pool de rivales, fijada el 26-11-2026 antes de medir
+
+- **4a. Preview QD-PGA v1.7.** Usa descriptores por roles para el equipo fijo (team_preview_qd_pga_spec
+  1.7): b1 = leads de soporte / 2 y b2 = físicos entre los 4 que se llevan / 4, calculados con los sets
+  reales. Piloto = el control; 64 iteraciones externas; despliegue por reevaluación del top-10. El
+  control juega con este preview los mismos enfrentamientos `eval` de F1 (bloque 40001, 4000 por
+  heurístico) y se parea con el control de F1, que usa el preview v2.1b.
+  Comparación descriptiva: preview por roles − v2.1b, con el mismo combate.
+- **4b. El archivo como pool de rivales.** PPO v2 s1 + 1M pasos con el mosaico `pool`: random 10 %,
+  greedy_solo 20 %, greedy_joint 25 %, expectimax 25 % y 20 % contra las 5 mejores élites de K en espejo
+  (`ppo_v1` con `PPO_FOE_CHECKPOINTS`). Juega los mismos enfrentamientos `eval` de F1 y se parea con el
+  control. Comparación descriptiva: pool − control.
+- **Expectativa:** 4a ≈ v2.1b, porque el preview pesa poco con el equipo fijo y el v2.1b ya está
+  entrenado. 4b ≈ control contra las heurísticas, aunque podría ganar robustez frente a estilos variados.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -809,3 +867,4 @@ por el resolvedor.
 | 2026-11-26 | Hipótesis a priori de la familia QD 2.0 registrada (§4.10), antes de cualquier resultado: frente al control (PPO v2 + 1M) I empata (~30 % de superarlo), K algo peor (~15 %), J peor (~10 %); ranking esperado en rendimiento I > K > J y en QD-score K ≥ I > J. Es descriptiva y no cambia ninguna prueba. |
 | 2026-11-26 | Exploración de la familia QD 2.0 frente a la hipótesis a priori (§4.10): I ≈ control y K algo peor coinciden; J (81,8 %) por encima del control (81,0 %) no se esperaba, pero está dentro del ruido. QD-score K > J > I. Confirmación pendiente de decidir. |
 | 2026-11-26 | F1 de la familia QD 2.0 pre-registrada (§4.11): despliegue con 1000 partidas `val` (top-10 de cada archivo) y confirmación con 4000 enfrentamientos `eval` por heurístico; N_I/N_J/N_K no inferioridad frente al control (margen −1,5 pts) y S_J J > control contra expectimax, Holm m = 4. Cola `scripts/server/qd_f1.sh`. |
+| 2026-11-26 | F2–F4 de la familia QD 2.0 pre-registradas como exploraciones (§4.12–§4.14), encadenadas detrás de F1: F2 selector de élite por rival (logística sobre el equipo rival, bandit con información completa); F3 réplica desde PPO v2 s4 (control, J, K) y K con N1 = N2 = 10; F4a preview QD-PGA por roles; F4b PPO con el archivo de K como pool de rivales. |

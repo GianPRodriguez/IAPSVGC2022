@@ -281,6 +281,7 @@ acompañar cualquier comparación.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.0.3** | 2026-11-26 | F3a (protocolo §4.13): réplica de J 2.0 desde PPO v2 s4. |
 | **2.0.2** | 2026-11-26 | Exploración: J 2.0 81,8 % contra eval (control 81,0 %), 44 celdas, QD-score 83,7. Ver qd_ppo_spec §I 2.0. |
 | **2.0.1** | 2026-11-26 | J 2.0 juega con el preview v2.1b de PPO v2 (`PREVIEW_KIND=team_preview_ppo`), igual que I 2.0 y el control: el preview QD-PGA era degenerado con el equipo fijo (qd_ppo_spec 2.0.1). Decisión del usuario. |
 | **2.0** (diseño) | 2026-11-25 | **J 2.0 = PGA-ME fiel** (decisión del usuario): Iso+LineDD, rama de gradiente con crítico gemelo Q (cabeza conjunta 1600) y gradiente de política esperado, SARSA esperado con el actor codicioso objetivo, actor codicioso inyectado por generación, todas las transiciones al replay; arranque desde PPO v2 y regla común de I 2.0. Fuente: QDax. Ver §J 2.0. |
