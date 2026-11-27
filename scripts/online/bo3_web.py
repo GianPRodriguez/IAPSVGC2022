@@ -289,9 +289,25 @@ class Bo3Service:
                 return text
         return None
 
-    async def run(self) -> None:
+    async def _watchdog(self, grace: float = 90.0) -> None:
+        """Termina el proceso (systemd lo reinicia) si no hay sesión en ``grace`` s o se cae el websocket."""
+        t0 = time.time()
+        while True:
+            await asyncio.sleep(10)
+            client = self.player.ps_client
+            listening = getattr(client, '_listening_coroutine', None)
+            if listening is not None and listening.done():
+                LOG.error('se cerró la conexión con Showdown: salgo para que systemd reinicie')
+                os._exit(3)
+            if not client.logged_in.is_set() and time.time() - t0 > grace:
+                LOG.error('sin sesión en Showdown tras %d s: salgo para que systemd reinicie', int(grace))
+                os._exit(3)
+
+    async def run(self, exit_on_disconnect: bool = False) -> None:
         self.loop = asyncio.get_running_loop()
         self.queue = asyncio.Queue()
+        if exit_on_disconnect:
+            self.loop.create_task(self._watchdog())
         await self.player.ps_client.logged_in.wait()
         LOG.info('conectado como %s; esperando retos', self.player.username)
         while True:
@@ -675,7 +691,7 @@ def main(argv=None) -> int:
                          series_timeout=args.series_timeout * 60, max_active=args.max_active,
                          max_queue=args.max_queue, inbound_timeout=args.inbound_timeout * 60)
     service.inbound_only = bool(args.inbound_only)
-    asyncio.run_coroutine_threadsafe(service.run(), POKE_LOOP)
+    asyncio.run_coroutine_threadsafe(service.run(exit_on_disconnect=True), POKE_LOOP)
     httpd = ThreadingHTTPServer((args.host, args.port), make_handler(service))
     print(f'[web] {user} sirviendo en http://{args.host}:{args.port} ({args.format})', flush=True)
     try:
