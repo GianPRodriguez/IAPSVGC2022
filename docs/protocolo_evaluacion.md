@@ -558,6 +558,22 @@ confirmatorias. Si alguna da un efecto prometedor, su confirmación se pre-regis
 - **Expectativa:** 4a ≈ v2.1b, porque el preview pesa poco con el equipo fijo y el v2.1b ya está
   entrenado. 4b ≈ control contra las heurísticas, aunque podría ganar robustez frente a estilos variados.
 
+### 4.15 F2b: selector entrenado con equipos no vistos, fijada el 26-11-2026 antes de medir
+
+Decisión del usuario tras F2 (§5.11). Es una exploración y es la corrección de la falla de diseño de F2:
+los datos del selector venían de `fit`, equipos memorizados en los que todas las élites ganaban 95–97 %.
+
+- **Datos del selector:** el mismo repertorio de F2 (10 élites) juega 2000 enfrentamientos `val` por
+  heurístico (bloque 50002, 30 equipos rivales). Ningún agente se entrenó con esos equipos. El
+  repertorio se eligió en `val` (despliegue de F1), pero `eval` sigue intacto.
+- **Prueba:** la parte `eval` de F2 (mismas 3000 partidas, mismo control, mismo arranque). Así la
+  diferencia entre F2 y F2b se debe solo a los datos del selector.
+- **Modelo y comparaciones:** como en §4.12. Primaria: selector − control. Secundarias: selector − mejor
+  élite única y selector F2b − selector F2.
+- **Expectativa:** mejor que F2, pero difícilmente por encima del control. Con 30 equipos rivales la
+  generalización es limitada.
+- **Cola:** `scripts/server/qd_f2b.sh`, después de F4 (un método a la vez).
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -947,3 +963,4 @@ equipos rivales, 0 caídas. λ = 10 por validación cruzada agrupada.
 | 2026-11-26 | F2–F4 de la familia QD 2.0 pre-registradas como exploraciones (§4.12–§4.14), encadenadas detrás de F1: F2 selector de élite por rival (logística sobre el equipo rival, bandit con información completa); F3 réplica desde PPO v2 s4 (control, J, K) y K con N1 = N2 = 10; F4a preview QD-PGA por roles; F4b PPO con el archivo de K como pool de rivales. |
 | 2026-11-26 | Resultado de F1 de la familia QD 2.0 (§5.10): **S_J confirmada** (J > control contra expectimax, +3,00 pts, p Holm = 2,2·10⁻⁴). N_J no confirmada por poco (−0,64 pts, cota −1,31, p = 0,017 > 0,0167). N_I (−2,64) y N_K (−3,14) no confirmadas: rinden menos que el control. Control 82,2 % frente a I 79,5, J 81,5 y K 79,0 % (12 000 partidas cada uno). |
 | 2026-11-26 | Resultado de F2 (§5.11, exploración): el selector rinde 80,8 % frente a 82,8 % del control (−1,97 ± 1,53 pts) y +0,37 frente a la mejor élite única. Causa: en `fit` (equipos de entrenamiento, memorizados) todas las élites ganan 95–97 % y no hay señal para aprender. El oráculo (90,7 %) está inflado por ruido de selección. Mejora posible: entrenar el selector con equipos no vistos. |
+| 2026-11-26 | F2b pre-registrada (§4.15, exploración): selector entrenado con 2000 enfrentamientos `val` por heurístico (equipos no vistos) y probado con la parte `eval` de F2. Cola `qd_f2b.sh`, después de F4. |

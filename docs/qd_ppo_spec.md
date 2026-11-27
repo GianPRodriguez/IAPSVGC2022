@@ -328,6 +328,7 @@ siendo la suite de \(\pi^\*\), no coverage por sí sola.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.1.3** | 2026-11-26 | `selector_f2 play --fit-split val --eval-from`: datos del selector con equipos no vistos y la prueba `eval` reutilizada (F2b, protocolo §4.15). |
 | **2.1.2** | 2026-11-26 | F2 (protocolo §5.11): el selector de élite por rival entrenado con equipos `fit` no supera al control (−1,97 pts) ni a la mejor élite única (+0,37): en equipos memorizados todas las élites ganan 95–97 %. |
 | **2.1.1** | 2026-11-26 | F1 (protocolo §5.10): I 2.0 rinde menos que el control (79,5 frente a 82,2 %, −2,64 pts, no inferioridad no confirmada); J 2.0 confirma J > control contra expectimax (+3,0 pts); K 2.0 −3,14 pts. Checkpoints de PPO v2 y del control en `checkpoints/ppo_v2/`. |
 | **2.1** | 2026-11-26 | Herramientas de F1–F4 (protocolo §4.11–§4.14): `confirm_f1.py` (despliegue con 1000 partidas `val`, partidas pareadas, no inferioridad y Holm, fusión de resultados, exportación de élites), `selector_f2.py` (selector de élite por rival), `team_roles.py` (roles por set), mosaico `pool` (élites como rivales `ppo_v1`). |

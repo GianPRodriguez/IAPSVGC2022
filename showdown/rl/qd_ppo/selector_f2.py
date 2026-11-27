@@ -244,15 +244,25 @@ def _repertoire(deploy: Dict[str, Any], archives: Dict[str, str], r: int) -> Dic
 def run_play(*, deploy_json: str, archives: Dict[str, str], control: str, init: Optional[str],
              cfg_checkpoint: str, out: Path, r: int = 10, per_foe_fit: int = 1000, per_foe_eval: int = 1000,
              mock: bool = False, num_envs: int = 32, envs_per_server: int = 4, base_port: Optional[int] = None,
-             agent_team: str = '', chunk: int = 300) -> Dict[str, Any]:
+             agent_team: str = '', chunk: int = 300, fit_split: str = 'fit', fit_seed_block: int = FIT_SEED_BLOCK,
+             eval_from: Optional[str] = None) -> Dict[str, Any]:
+    """``fit_split``: grupo de equipos de los datos del selector (F2b: ``val``, equipos no vistos).
+
+    ``eval_from``: reutiliza la parte ``eval`` de otro ``results.json`` con el mismo repertorio (F2b usa la
+    prueba de F2, así la comparación es sobre las mismas partidas).
+    """
     from showdown.rl.qd_ppo.confirm_f1 import _state_of
     out.mkdir(parents=True, exist_ok=True)
     deploy = json.loads(Path(deploy_json).read_text(encoding='utf-8'))
     cfg, env = _setup(cfg_checkpoint, mock=mock, num_envs=num_envs, envs_per_server=envs_per_server,
                       base_port=base_port, agent_team=agent_team)
     rep = _repertoire(deploy, archives, r)
-    fit_split, ev_split = (None, None) if mock else ('fit', 'eval')
-    m_fit = balanced_matchups(FIT_SEED_BLOCK, per_foe_fit, fit_split)
+    prev = json.loads(Path(eval_from).read_text(encoding='utf-8')) if eval_from else None
+    if prev is not None and list(prev['repertoire']) != list(rep):
+        raise ValueError(f'{eval_from}: repertorio distinto {prev["repertoire"]} != {list(rep)}')
+    fit_name = fit_split
+    fit_split, ev_split = (None, None) if mock else (fit_split, 'eval')
+    m_fit = balanced_matchups(fit_seed_block, per_foe_fit, fit_split)
     m_ev = balanced_matchups(EVAL_SEED_BLOCK, per_foe_eval, ev_split)
     ev_states = dict(rep)
     ev_states['control'] = _state_of(control, cfg)
@@ -261,14 +271,18 @@ def run_play(*, deploy_json: str, archives: Dict[str, str], control: str, init: 
     print(f'[f2] repertorio {list(rep)}; fit {len(m_fit)}, eval {len(m_ev)} enfrentamientos', flush=True)
     try:
         r_fit = _play_all(cfg, rep, env, _for_env(m_fit, mock), chunk=chunk, tag='fit')
-        r_ev = _play_all(cfg, ev_states, env, _for_env(m_ev, mock), chunk=chunk, tag='eval')
+        r_ev = None if prev is not None else _play_all(cfg, ev_states, env, _for_env(m_ev, mock), chunk=chunk,
+                                                       tag='eval')
     finally:
         env.close()
-    res = {'repertoire': list(rep), 'fit_split': fit_split or 'fit', 'eval_split': ev_split or 'eval',
+    res = {'repertoire': list(rep), 'fit_split': fit_name, 'eval_split': ev_split or 'eval',
            'fit': {'foes': [m['opponent'] for m in m_fit], 'seeds': [m['seed'] for m in m_fit],
                    'wins': {k: wins_of(v) for k, v in r_fit.items()}},
-           'eval': {'foes': [m['opponent'] for m in m_ev], 'seeds': [m['seed'] for m in m_ev],
-                    'wins': {k: wins_of(v) for k, v in r_ev.items()}}}
+           'eval': prev['eval'] if prev is not None else {
+               'foes': [m['opponent'] for m in m_ev], 'seeds': [m['seed'] for m in m_ev],
+               'wins': {k: wins_of(v) for k, v in r_ev.items()}}}
+    if prev is not None:
+        res['eval_from'] = str(eval_from)
     (out / 'results.json').write_text(json.dumps(res), encoding='utf-8')
     return res
 
@@ -286,6 +300,9 @@ def main(argv: Optional[list] = None) -> int:
     q.add_argument('--r', type=int, default=10)
     q.add_argument('--per-foe-fit', type=int, default=1000)
     q.add_argument('--per-foe-eval', type=int, default=1000)
+    q.add_argument('--fit-split', default='fit', choices=('fit', 'val'), help='equipos de los datos del selector')
+    q.add_argument('--fit-seed-block', type=int, default=FIT_SEED_BLOCK)
+    q.add_argument('--eval-from', default=None, help='results.json cuya parte eval se reutiliza')
     q.add_argument('--mock', action='store_true')
     q.add_argument('--num-envs', type=int, default=32)
     q.add_argument('--envs-per-server', type=int, default=4)
@@ -316,7 +333,8 @@ def main(argv: Optional[list] = None) -> int:
         run_play(deploy_json=a.deploy, archives=_kv(a.archive), control=a.control, init=a.init,
                  cfg_checkpoint=a.cfg_checkpoint, out=Path(a.out), r=a.r, per_foe_fit=a.per_foe_fit,
                  per_foe_eval=a.per_foe_eval, mock=a.mock, num_envs=a.num_envs,
-                 envs_per_server=a.envs_per_server, base_port=a.base_port, agent_team=a.agent_team)
+                 envs_per_server=a.envs_per_server, base_port=a.base_port, agent_team=a.agent_team,
+                 fit_split=a.fit_split, fit_seed_block=a.fit_seed_block, eval_from=a.eval_from)
     return 0
 
 

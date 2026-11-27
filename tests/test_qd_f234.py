@@ -154,3 +154,10 @@ def test_selector_play_mock(tmp_path):
     assert res['repertoire'] == [rows[2]['name'], rows[1]['name']]
     assert set(res['eval']['wins']) == {rows[2]['name'], rows[1]['name'], 'control'}
     assert len(res['fit']['wins'][rows[1]['name']]) == 6
+    # F2b: datos del selector en val y la parte eval reutilizada de la corrida anterior
+    res2 = run_play(deploy_json=str(tmp_path / 'd.json'), archives={'K': str(tmp_path / 'K.pt')}, control=str(ck),
+                    init=None, cfg_checkpoint=str(ck), out=tmp_path / 'f2b', r=2, per_foe_fit=1, per_foe_eval=2,
+                    mock=True, num_envs=2, chunk=3, fit_split='val', fit_seed_block=7,
+                    eval_from=str(tmp_path / 'f2' / 'results.json'))
+    assert res2['fit_split'] == 'val' and res2['eval'] == res['eval']
+    assert len(res2['fit']['wins'][rows[1]['name']]) == 3
