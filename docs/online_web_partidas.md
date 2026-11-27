@@ -74,9 +74,10 @@ Preview: Gholdengo + Staraptor delante otra vez, Arcanine + Primarina detrás.
    regala el turno: el compañero queda solo frente a la amenaza (partida 1) o el rival activa Trick Room
    libremente (partida 2). Tailwind no se usó nunca.
 3. **No se reconoce la velocidad bajo lluvia y Trick Room.** Gholdengo no protege frente a Basculegion con
-   Swift Swim y Helping Hand. Bajo Trick Room, Staraptor y Arcanine caen sin moverse. La observación P5 usa la
-   calculadora para el daño (con el clima), pero el orden de movimiento con Swift Swim o Trick Room no es
-   explícito.
+   Swift Swim y Helping Hand. Bajo Trick Room, Staraptor y Arcanine caen sin moverse. *Corrección (27-11-2026):*
+   la observación **sí** tiene el orden de velocidad efectivo (matrices de velocidad con Tailwind, Swift Swim,
+   Chlorophyll y similares, e inversión por Trick Room; `observation.effective_speed` / `speed_relation`) y marca
+   los movimientos rivales de Trick Room y Tailwind. La información estaba; falla la respuesta de la política.
 4. ~~Habilidades del rival que bloquean~~ (retirado): el Grassy Glide contra Armor Tail fue un cambio del rival,
    y con hojas abiertas la habilidad se conoce (la observación marca la prioridad bloqueada por Armor Tail).
 5. **Protect consecutivo** (partida 2, turno 8): es legal en Showdown, pero falla casi siempre. Con el combate
@@ -167,8 +168,9 @@ que no faltaba información, sino que la política no aprendió a evitarlo.
 ### Ideas que salen de aquí (sin evaluar)
 
 - Penalizar o enmascarar el Protect consecutivo cuando la probabilidad de éxito es ≤ 1/3.
-- Añadir a la observación el orden de velocidad efectivo (Trick Room, Tailwind, Swift Swim/Chlorophyll,
-  parálisis) además del daño.
-- Incluir arquetipos de lluvia y Trick Room en el pool de rivales del entrenamiento.
+- ~~Añadir a la observación el orden de velocidad efectivo~~ (retirada: ya está en la observación).
+- ~~Incluir arquetipos de lluvia y Trick Room en el pool~~: ya están entre los equipos (`train`: Trick Room 24 %,
+  Tailwind 68 %, lluvia 17 %, sol 12 %, Defiant/Competitive 38 %). Lo que falta medir es si los rivales
+  heurísticos *ejecutan* esos planes.
 - Medir la distribución del preview v2.1b contra estos equipos: entropía, frecuencia de cada Pokémon y si la
   elección cambia con el rival (Raichu 0/4, Arcanine 4/4).
