@@ -34,6 +34,7 @@ class PPOPlayer(FamilyPreviewMixin, Player):
         *args,
         checkpoint: Optional[str] = None,
         greedy: bool = True,
+        temperature: float = 1.0,
         preview_checkpoint: Optional[str] = None,
         preview_kind: Optional[str] = None,
         **kwargs,
@@ -41,6 +42,8 @@ class PPOPlayer(FamilyPreviewMixin, Player):
         kwargs.setdefault('accept_open_team_sheet', True)
         super().__init__(*args, **kwargs)
         self.greedy = bool(greedy)
+        # Solo al muestrear (greedy=False): PPO v2 contra personas usa T = 0,5 (memorizacion_equipos §19).
+        self.temperature = float(temperature)
         self.agent = PPOAgent(PPOConfig(device=os.environ.get('PPO_DEVICE', 'cpu')))
         ckpt = checkpoint or os.environ.get('PPO_CHECKPOINT') or ''
         self.checkpoint_path = str(ckpt).strip()
@@ -65,7 +68,8 @@ class PPOPlayer(FamilyPreviewMixin, Player):
                 _m1, m2 = pe_autoregressive_masks(battle, slot1_action_id=a1)
                 return m2
 
-            a1, a2, _lp, _v = self.agent.act(obs, m1, m2_fn, greedy=self.greedy)
+            a1, a2, _lp, _v = self.agent.act(obs, m1, m2_fn, greedy=self.greedy,
+                                              temperature=self.temperature)
             self.last_actions = (int(a1), int(a2))
             order, used_fallback = joint_order_from_spec_actions(battle, (a1, a2))
             self.decision_stats.record_ok(order_fallback=bool(used_fallback))
