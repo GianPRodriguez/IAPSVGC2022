@@ -630,10 +630,13 @@ Rivales de entrenamiento con sorteo de casi-empates (§3c.6), para que las serie
   Límite reconocido: los heurísticos no se adaptan entre partidas, así que la memoria puede aprender "el rival
   repite"; contra personas habría que verlo en la web.
 
-**Decisiones pendientes del usuario antes de encolar:** presupuesto adicional por semilla (propuesta: 1M pasos,
-como el control de I/J/K); número de semillas (propuesta: 3 por brazo); mezcla de rivales del entrenamiento
-(propuesta: la del kick-off de PPO v2 con sorteo de casi-empates); orden de las colas (propuesta: P1 y S1 primero,
-son baratas; luego C y V de PPO; luego DDQN).
+**Decisiones del usuario (27-11-2026, antes de medir):** +1M pasos por semilla; 3 semillas por brazo; diseño
+con control (brazos C y V, así V − C se atribuye solo a la memoria); orden P1 → S1 → PPO → DDQN. Mezcla de rivales
+del entrenamiento: la del kick-off (`random:150k, greedy_solo:250k, greedy_joint:300k, expectimax_bayesian:300k`)
+con el sorteo de casi-empates por defecto. En DDQN el arranque en caliente empieza con ε = 0,05 (el final del
+programa) en los dos brazos, para no destruir la política aprendida. P1 y S1 usan PPO v2 s0–s4 y DDQN v1 s0–s4;
+S1 sin máscara, para aislar el preview. Cola: `scripts/server/v3_queue.sh` (reanudable; informe con
+`scripts/analysis/v3_report.py`), **sin encolar hasta el visto bueno del usuario**.
 
 ## 5. Plantilla de reporte
 
@@ -1065,3 +1068,4 @@ enfrentamientos `eval` por heurístico, 6000 por agente, 0 caídas.
 | 2026-11-26 | F2b pre-registrada (§4.15, exploración): selector entrenado con 2000 enfrentamientos `val` por heurístico (equipos no vistos) y probado con la parte `eval` de F2. Cola `qd_f2b.sh`, después de F4. |
 | 2026-11-27 | **PPO v3 / DDQN v2 pre-registrados (§4.16)**, código implementado y sin encolar: M1 (distribución del preview, ya medida: casi colapsado por rival, pero reacciona al rival; sesgo a Arcanine-Hisui), P1 máscara del Protect consecutivo sin reentrenar (no inferioridad −1,5 pts), S1 preview condicionado a la serie sin reentrenar (regla +1,5 pts), V1/V2 memoria de serie (brazos C y V, partidas 2–3, Holm m = 2). Por juego limpio PPO y DDQN reciben los mismos cambios (decisión del usuario). Presupuesto, semillas y orden pendientes del usuario. |
 | 2026-11-27 | Resultado de F3 (§5.12): desde s4, control4 85,8 %, J4 83,8 % (−1,95), K4 82,2 % (−3,60); **la ventaja de J contra expectimax no se replica** (−1,0, p = 0,83), así que la de F1 es propia de s1. K con N = 10 rinde igual que con N = 3 (−2,47 frente a −2,48) y cubre menos mapa (54 frente a 87 celdas). |
+| 2026-11-27 | §4.16 cerrada con las decisiones del usuario (+1M pasos, 3 semillas por brazo, control C frente a V, orden P1 → S1 → PPO → DDQN; ε = 0,05 en el arranque en caliente de DDQN). Cola `scripts/server/v3_queue.sh` e informe `scripts/analysis/v3_report.py` preparados, sin encolar. |

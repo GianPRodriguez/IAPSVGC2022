@@ -82,7 +82,7 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
         preview_checkpoint: str = '', agent_kind: str = 'ddqn', context: bool = False,
         foes=FOES, sample: bool = False, temperature: float = 1.0,
         family: str = '', series: bool = False, preview_series: bool = False,
-        foe_tie: bool = False) -> Dict[str, object]:
+        foe_tie: bool = False, mask_protect: str = 'auto') -> Dict[str, object]:
     from showdown.inference_sim.team_factory import load_team_file
     from showdown.rl.action_space import decode_joint_action, decode_slot_action
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
@@ -106,7 +106,10 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
     agent.load(checkpoint, map_location='cpu')
     # PPO v3 / DDQN v2: la máscara del Protect consecutivo y la memoria de serie siguen al checkpoint.
     mem_on = bool(getattr(agent.cfg, 'series_memory', False))
-    os.environ['RL_MASK_PROTECT_STREAK'] = '1' if getattr(agent.cfg, 'mask_protect_streak', False) else '0'
+    # mask_protect: 'auto' = la del checkpoint; '1' / '0' la fuerza (P1 de §4.16: máscara sin reentrenar).
+    mask_on = bool(getattr(agent.cfg, 'mask_protect_streak', False)) if mask_protect == 'auto' else mask_protect == '1'
+    os.environ['RL_MASK_PROTECT_STREAK'] = '1' if mask_on else '0'
+    protect_streak: Dict[str, Counter] = defaultdict(Counter)  # situaciones de Protect repetible y repeticiones
     os.environ['PREVIEW_SERIES_CONDITION'] = '1' if preview_series else '0'
     our_team = load_team_file(agent_team) if agent_team else None
     from showdown.rl.train_metrics import SeriesTally
@@ -176,6 +179,14 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                     for slot, (aid, m) in enumerate(((a1, m1), (a2, m2))):
                         sa = decode_slot_action(int(aid))
                         cat = classify(battle, slot, sa, m)
+                        # ¿Venía de un Protect exitoso y tenía otro disponible? (lo que quita la máscara)
+                        act_mons = list(getattr(battle, 'active_pokemon', None) or [])
+                        mon_s = act_mons[slot] if slot < len(act_mons) else None
+                        if mon_s is not None and int(getattr(mon_s, 'protect_counter', 0) or 0) >= 1 and any(
+                                bool(getattr(mv, 'is_protect_counter', False))
+                                for mv in (battle.available_moves[slot] if slot < len(battle.available_moves) else [])):
+                            protect_streak[foe]['situaciones'] += 1
+                            protect_streak[foe]['repitio_protect'] += int(cat == 'protect')
                         by_foe[foe][cat] += 1
                         if sa.kind == 'mega':
                             by_foe[foe]['mega'] += 1
@@ -241,6 +252,8 @@ def run(*, checkpoint: str, games: int, port: int, seed: int, agent_team: str,
                                  if os.environ.get('PREVIEW_SAMPLE', '').strip().lower() in ('1', 'true', 'yes')
                                  else None),
             'divergencia': {f: dict(c) for f, c in div.items()} if sample else None,
+            'mascara_protect_consecutivo': {'activa': mask_on,
+                                            'por_rival': {f: dict(c) for f, c in protect_streak.items()}},
             'series': ({'por_rival': series_out, 'preview_condicionado': bool(preview_series),
                         'rivales_con_sorteo': bool(foe_tie), 'memoria': mem_on,
                         'mascara_protect': bool(getattr(agent.cfg, 'mask_protect_streak', False))}
@@ -295,6 +308,8 @@ def main(argv=None) -> int:
     ap.add_argument('--preview-series', action='store_true',
                     help='preview condicionado a lo que el rival trajo en la serie (con --series)')
     ap.add_argument('--foe-tie', action='store_true', help='rivales con sorteo de casi-empates (no deterministas)')
+    ap.add_argument('--mask-protect', choices=('auto', '0', '1'), default='auto',
+                    help='máscara del Protect consecutivo: auto = la del checkpoint; 1/0 la fuerza (P1, §4.16)')
     ap.add_argument('--context', action='store_true',
                     help='desglose por plan del rival y usos de movimientos clave (§12)')
     args = ap.parse_args(argv)
@@ -302,7 +317,8 @@ def main(argv=None) -> int:
               agent_team=args.agent_team, preview_checkpoint=args.preview_checkpoint,
               agent_kind=args.agent, context=args.context, sample=args.sample, temperature=args.temperature,
               foes=tuple(f.strip() for f in args.foes.split(',') if f.strip()), family=args.family,
-              series=bool(args.series), preview_series=bool(args.preview_series), foe_tie=bool(args.foe_tie))
+              series=bool(args.series), preview_series=bool(args.preview_series), foe_tie=bool(args.foe_tie),
+              mask_protect=args.mask_protect)
     with open(args.out, 'w', encoding='utf-8') as fh:
         json.dump(rep, fh, indent=1)
     print(format_table(rep))

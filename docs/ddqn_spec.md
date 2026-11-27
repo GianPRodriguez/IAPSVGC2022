@@ -193,7 +193,8 @@ Compatibilidad: todo apagado por defecto. Los checkpoints anteriores cargan con 
 `policy_diag --series` evalúa por series (protocolo §4.16).
 
 En DDQN la primera capa ampliada es `net.0` (cabeza conjunta o factorizada); la red objetivo se copia de la
-online tras el arranque en caliente. Con LayerNorm el arranque en caliente no conserva la función y se rechaza
+online tras el arranque en caliente, y el ε del programa empieza ya en su valor final (0,05): con
+`env_steps` en 0 empezaría en 1,0 y destruiría la política aprendida. Con LayerNorm el arranque en caliente no conserva la función y se rechaza
 (DDQN v1 no la usa). La memoria entra también en el replay (`ReplayBuffer(obs_dim=OBS_DIM + 69)`).
 
 ```bash

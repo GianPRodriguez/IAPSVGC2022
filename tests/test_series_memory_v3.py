@@ -163,6 +163,10 @@ def test_ddqn_warm_start_is_function_preserving(tmp_path):
     v2 = DDQNAgent(DDQNConfig(seed=2, series_memory=True, **kw))
     v2.init_from_previous(path)
     assert v2.obs_dim == OBS_DIM_MEMORY and v2.replay.obs_dim == OBS_DIM_MEMORY
+    from showdown.rl.series_options import apply_series_options
+    v2b = DDQNAgent(DDQNConfig(seed=3, **kw))
+    meta = apply_series_options(v2b, {'series_memory': 1, 'init_from': str(path)})
+    assert v2b.cfg.eps_start == v2b.cfg.eps_end and meta['init_info']['eps_start'] == v2b.cfg.eps_end
     rng = np.random.default_rng(0)
     obs = rng.random((3, OBS_DIM)).astype(np.float32)
     mem = rng.random((3, MEM_DIM)).astype(np.float32)
@@ -262,3 +266,41 @@ def test_backend_series_defers_opponent_change_until_series_ends():
     assert b.last_series == {'partidas': 2, 'victorias': 2, 'derrotas': 0, 'cortada': False, 'ganada': True}
     off = PokeEnvBattleBackend(opponent='random', series=False)
     assert off.series_state() is None
+
+
+def test_v3_report_rules(tmp_path):
+    import json
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts' / 'analysis'))
+    import v3_report as R
+    d = tmp_path / 'diag'
+    d.mkdir()
+
+    def games(wins, foe='greedy_joint'):
+        return [{'rival': foe, 'res': 'win' if w else 'loss'} for w in wins]
+    # P1: mismas partidas salvo 2 que la máscara convierte en victoria
+    off = [True] * 60 + [False] * 40
+    on = list(off)
+    on[60] = on[61] = True
+    (d / 'p1_ppo_s0_off.json').write_text(json.dumps({'partidas': games(off), 'mascara_protect_consecutivo': {
+        'por_rival': {'greedy_joint': {'situaciones': 7, 'repitio_protect': 3}}}}))
+    (d / 'p1_ppo_s0_on.json').write_text(json.dumps({'partidas': games(on)}))
+    p1 = '\n'.join(R.p1(d))
+    assert '| ppo | 100 | +2.00 pts' in p1 and '| sí |' in p1 and '7 / 3' in p1
+
+    # V: V gana más partidas 2–3 que C en las 3 semillas
+    def series_games(win23):
+        out = []
+        for sidx in range(40):
+            out.append({'rival': 'greedy_solo', 'serie': sidx, 'partida': 1, 'res': 'win'})
+            out.append({'rival': 'greedy_solo', 'serie': sidx, 'partida': 2, 'res': 'win' if sidx < win23 else 'loss'})
+        return out
+    for k in range(3):
+        (d / f'v_ppo_C_s{k}.json').write_text(json.dumps({'partidas': series_games(20)}))
+        (d / f'v_ppo_V_s{k}.json').write_text(json.dumps({'partidas': series_games(30)}))
+    vtxt = '\n'.join(R.v(d))
+    assert '50.0 % → 75.0 %' in vtxt and '+25.00 pts' in vtxt and 'confirmada' in vtxt
+    assert 'no inferior' in vtxt
+    R.main([str(tmp_path)])
+    assert (tmp_path / 'v3_report.md').read_text(encoding='utf-8').startswith('# PPO v3 / DDQN v2')

@@ -66,6 +66,10 @@ def apply_series_options(agent, opts: Optional[Dict[str, Any]], *, resume: bool 
     init_info: Optional[Dict[str, Any]] = None
     if o.get('init_from') and not resume:
         init_info = agent.init_from_previous(o['init_from'])
+        if hasattr(cfg, 'eps_start') and hasattr(cfg, 'eps_end'):
+            # DDQN: el ε del programa empieza en 1,0 (política aleatoria) porque env_steps vuelve a 0; con una
+            # política ya entrenada eso la destruiría. Se continúa con el ε final (0,05) desde el principio.
+            init_info['eps_start'] = cfg.eps_start = float(cfg.eps_end)
         print(f'[{tag}] arranque en caliente desde {o["init_from"]}: {init_info}', flush=True)
     series_bo3 = bool(cfg.series_memory) if o.get('series_bo3') is None else bool(o['series_bo3'])
     preview_series = bool(o.get('preview_series') or 0)
