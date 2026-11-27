@@ -1,0 +1,81 @@
+# Train Report — ppo
+status: DONE
+generated_at_utc: 2026-11-26T05:38:00.741148+00:00
+seed: 2
+device: cuda
+smoke: false
+
+## Config
+expand_omega: true
+self_play: false
+reward_mode: candidate2
+weights: {"mock": 1.0, "random": 1.0, "greedy_solo": 1.0, "greedy_joint": 1.0, "expectimax_bayesian": 0.35}
+lr: 0.0003
+clip_eps: 0.2
+num_envs: 32
+envs_per_server: 4
+
+## Budget
+steps: 1000000 / 1000000 (100.0%) [1M/1M]
+elapsed: 1h13m (4424.6s)
+steps_per_sec: 226.01
+
+## Outcome metrics
+env_steps: 1000000
+update_steps: 570
+pool_size: 0
+
+## Phases
+### phase[0]
+index: 0
+unlock: random
+omega: ["random"]
+steps_done: 150000
+sampling_probs: {"random": 1.0}
+ep_counts: {"random": 23470}
+worker_restarts: 0
+num_envs: 32
+### phase[1]
+index: 1
+unlock: greedy_solo
+omega: ["random", "greedy_solo"]
+steps_done: 250000
+sampling_probs: {"random": 0.5, "greedy_solo": 0.5}
+ep_counts: {"random": 22672, "greedy_solo": 22786}
+worker_restarts: 0
+num_envs: 32
+### phase[2]
+index: 2
+unlock: greedy_joint
+omega: ["random", "greedy_solo", "greedy_joint"]
+steps_done: 300000
+sampling_probs: {"random": 0.3333333333333333, "greedy_solo": 0.3333333333333333, "greedy_joint": 0.3333333333333333}
+ep_counts: {"random": 18514, "greedy_solo": 18462, "greedy_joint": 18468}
+worker_restarts: 0
+num_envs: 32
+### phase[3]
+index: 3
+unlock: expectimax_bayesian
+omega: ["random", "greedy_solo", "greedy_joint", "expectimax_bayesian"]
+steps_done: 300000
+sampling_probs: {"random": 0.29850746268656714, "greedy_solo": 0.29850746268656714, "greedy_joint": 0.29850746268656714, "expectimax_bayesian": 0.1044776119402985}
+ep_counts: {"random": 16483, "greedy_solo": 16634, "greedy_joint": 16783, "expectimax_bayesian": 5833}
+worker_restarts: 0
+num_envs: 32
+
+## Artifacts
+final_pt: ~/iapsvgc_runs/kickoff_ppo_v2/ppo_s2/final.pt
+train_meta_json: ~/iapsvgc_runs/kickoff_ppo_v2/ppo_s2/train_meta.json
+checkpoint_dir: ~/iapsvgc_runs/kickoff_ppo_v2/ppo_s2
+
+## Offline suite (Cand. 1 greedy BO1)
+suite_games_per_foe: 0
+(suite skipped or empty)
+
+## Analysis notes
+- Train uses Cand. 2 (or anneal); suite uses Cand. 1 sparse.
+- Self-play runs may need live PS for meaningful suite foes.
+- Live console heartbeats complement this static report.
+
+## Machine twin
+Companion JSON: reporte.json (same directory).

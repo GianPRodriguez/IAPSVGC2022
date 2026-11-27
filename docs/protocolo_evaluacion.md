@@ -805,6 +805,49 @@ series discordantes) con el 57 % del tiempo, es decir, al coste de G. Con el mis
 SM-MCTS con valor de Nash (H 2.2): la diferencia entre los dos métodos ya no se explica por tiempo ni
 por el resolvedor.
 
+### 5.10 Resultados de F1 de la familia QD 2.0 (26-11-2026, código congelado `bc7f716`)
+
+**Despliegue (1a, 1000 partidas `val`).** Se eligieron I 8,3 (91,4 %), J 7,6 (91,5 %) y K 6,3 (88,5 %).
+I y K coinciden con la elección de 300 partidas; J cambia de 7,4 a 7,6.
+
+**Partidas (1b).** 4000 enfrentamientos `eval` por heurístico, 12 000 por agente, 0 caídas. Tasa de
+victorias con IC 95 % de Wilson:
+
+| Agente | greedy_solo | greedy_joint | expectimax | **3 heur.** |
+|---|---|---|---|---|
+| I 2.0 | 83,0 [81,9–84,2] | 84,2 [83,0–85,3] | 71,4 [70,0–72,8] | **79,5 %** [78,8–80,3] |
+| J 2.0 | 82,2 [81,0–83,4] | 83,5 [82,3–84,6] | **78,9** [77,6–80,1] | **81,5 %** [80,8–82,2] |
+| K 2.0 | 82,4 [81,2–83,6] | 82,6 [81,4–83,8] | 72,1 [70,7–73,4] | **79,0 %** [78,3–79,8] |
+| **Control** (PPO v2 s1 + 1M) | **85,8** [84,7–86,9] | **84,9** [83,7–85,9] | 75,9 [74,5–77,2] | **82,2 %** [81,5–82,9] |
+| PPO v2 s1 (arranque) | 82,7 [81,5–83,8] | 83,9 [82,7–85,0] | 74,5 [73,1–75,8] | 80,3 % [79,6–81,1] |
+
+**Pruebas (Holm m = 4):**
+
+| Prueba | d (pts) | Cota inf. 95 % | p | p Holm | Resultado |
+|---|---|---|---|---|---|
+| **S_J**: J > control contra expectimax | **+3,00** | +1,72 | 5,5·10⁻⁵ | 2,2·10⁻⁴ | **Confirmada** |
+| N_J: J no inferior al control | −0,64 | −1,31 | 0,017 | 0,051 | No confirmada (por poco: la cota pasa el margen −1,5, pero p = 0,017 > α/3 = 0,0167 en Holm) |
+| N_I: I no inferior al control | −2,64 | −3,31 | 0,998 | 1 | No confirmada |
+| N_K: K no inferior al control | −3,14 | −3,81 | 1,000 | 1 | No confirmada |
+
+**Lectura:**
+1. **El control es el mejor agente en el promedio** (82,2 %). Supera a I (−2,6 pts) y a K (−3,1 pts) más
+   allá del margen, así que esos dos rinden menos que PPO con el mismo presupuesto. La exploración de
+   200 partidas (I ≈ K ≈ control) no tenía resolución para verlo.
+2. **J es el único QD que se acerca al control** (−0,6 pts), y **castiga mejor a expectimax: +3,0 pts,
+   confirmado.** Es el primer resultado confirmatorio a favor de un QD. A cambio, pierde contra greedy_solo
+   (−3,6) y greedy_joint (−1,3): su estilo rinde distinto según el rival. Eso es justo lo que el selector
+   de F2 intenta aprovechar.
+3. **El control mejora al arranque** en +1,8 pts (± 0,8). El 1M de pasos extra sí sirve, y por eso el
+   control era necesario para no atribuirle esa mejora a QD.
+4. **Los QD no mejoran al arranque.** J: +1,2 pts; I y K: −0,8 y −1,3 pts. Su presupuesto rinde menos
+   que el de PPO puro.
+5. **Frente a la hipótesis a priori (§4.10):** I ≈ control no se cumple (I queda por debajo). K algo peor
+   se cumple. J por encima del control no se cumple en el promedio, pero sí contra expectimax.
+6. **Consecuencia para la Conclusión.** Se puede afirmar: "J 2.0 (PGA-ME) supera a PPO con el mismo
+   presupuesto contra expectimax, por +3,0 pts". No se puede afirmar que algún QD rinda en promedio igual
+   que PPO. I y K quedan por debajo del control.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -868,3 +911,4 @@ por el resolvedor.
 | 2026-11-26 | Exploración de la familia QD 2.0 frente a la hipótesis a priori (§4.10): I ≈ control y K algo peor coinciden; J (81,8 %) por encima del control (81,0 %) no se esperaba, pero está dentro del ruido. QD-score K > J > I. Confirmación pendiente de decidir. |
 | 2026-11-26 | F1 de la familia QD 2.0 pre-registrada (§4.11): despliegue con 1000 partidas `val` (top-10 de cada archivo) y confirmación con 4000 enfrentamientos `eval` por heurístico; N_I/N_J/N_K no inferioridad frente al control (margen −1,5 pts) y S_J J > control contra expectimax, Holm m = 4. Cola `scripts/server/qd_f1.sh`. |
 | 2026-11-26 | F2–F4 de la familia QD 2.0 pre-registradas como exploraciones (§4.12–§4.14), encadenadas detrás de F1: F2 selector de élite por rival (logística sobre el equipo rival, bandit con información completa); F3 réplica desde PPO v2 s4 (control, J, K) y K con N1 = N2 = 10; F4a preview QD-PGA por roles; F4b PPO con el archivo de K como pool de rivales. |
+| 2026-11-26 | Resultado de F1 de la familia QD 2.0 (§5.10): **S_J confirmada** (J > control contra expectimax, +3,00 pts, p Holm = 2,2·10⁻⁴). N_J no confirmada por poco (−0,64 pts, cota −1,31, p = 0,017 > 0,0167). N_I (−2,64) y N_K (−3,14) no confirmadas: rinden menos que el control. Control 82,2 % frente a I 79,5, J 81,5 y K 79,0 % (12 000 partidas cada uno). |

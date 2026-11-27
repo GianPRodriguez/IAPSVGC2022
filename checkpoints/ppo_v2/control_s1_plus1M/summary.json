@@ -1,0 +1,29 @@
+{
+  "seed": 0,
+  "init_checkpoint": "~/iapsvgc_runs/kickoff_ppo_v2/ppo_s1/final.pt",
+  "control": true,
+  "mosaic": "ppo_v2",
+  "t_extra": 1000000,
+  "smoke": false,
+  "global_steps": 1000000,
+  "last_metrics": {
+    "loss": 0.1059848313452676,
+    "clip_fraction": 0.11519639741163701,
+    "approx_kl": 0.015264595564076444,
+    "entropy": 0.914012148976326,
+    "explained_variance": 0.29753577709198,
+    "sym_frac_our": 0.3559280960648148,
+    "sym_frac_foe": 0.4965313946759259,
+    "sym_frac_bench": 0.35985062210648144,
+    "sym_pi_loss": 0.23786919005215168,
+    "sym_v_loss": 0.11731506232172251
+  },
+  "reeval": [
+    {
+      "name": "control_final",
+      "fitness": 0.7066666666666667,
+      "win_rate": 0.8533333333333334,
+      "games": 300
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "seed": 0,
+  "device": "cuda",
+  "expand_omega": true,
+  "self_play": false,
+  "reward_mode": "candidate2",
+  "weights": {
+    "mock": 1.0,
+    "random": 1.0,
+    "greedy_solo": 1.0,
+    "greedy_joint": 1.0,
+    "expectimax_bayesian": 0.35
+  },
+  "phase_log": [
+    {
+      "index": 0,
+      "unlock": "random",
+      "omega": [
+        "random"
+      ],
+      "steps_done": 150000,
+      "sampling_probs": {
+        "random": 1.0
+      },
+      "ep_counts": {
+        "random": 23223
+      },
+      "worker_restarts": 0,
+      "num_envs": 32
+    },
+    {
+      "index": 1,
+      "unlock": "greedy_solo",
+      "omega": [
+        "random",
+        "greedy_solo"
+      ],
+      "steps_done": 250000,
+      "sampling_probs": {
+        "random": 0.5,
+        "greedy_solo": 0.5
+      },
+      "ep_counts": {
+        "random": 22277,
+        "greedy_solo": 21783
+      },
+      "worker_restarts": 0,
+      "num_envs": 32
+    },
+    {
+      "index": 2,
+      "unlock": "greedy_joint",
+      "omega": [
+        "random",
+        "greedy_solo",
+        "greedy_joint"
+      ],
+      "steps_done": 300000,
+      "sampling_probs": {
+        "random": 0.3333333333333333,
+        "greedy_solo": 0.3333333333333333,
+        "greedy_joint": 0.3333333333333333
+      },
+      "ep_counts": {
+        "random": 18240,
+        "greedy_solo": 18187,
+        "greedy_joint": 18282
+      },
+      "worker_restarts": 0,
+      "num_envs": 32
+    },
+    {
+      "index": 3,
+      "unlock": "expectimax_bayesian",
+      "omega": [
+        "random",
+        "greedy_solo",
+        "greedy_joint",
+        "expectimax_bayesian"
+      ],
+      "steps_done": 300000,
+      "sampling_probs": {
+        "random": 0.29850746268656714,
+        "greedy_solo": 0.29850746268656714,
+        "greedy_joint": 0.29850746268656714,
+        "expectimax_bayesian": 0.1044776119402985
+      },
+      "ep_counts": {
+        "random": 16480,
+        "greedy_solo": 16213,
+        "greedy_joint": 16145,
+        "expectimax_bayesian": 5650
+      },
+      "worker_restarts": 0,
+      "num_envs": 32
+    }
+  ],
+  "env_steps": 1000000,
+  "update_steps": 571,
+  "total_steps": 1000000,
+  "suite": []
+}

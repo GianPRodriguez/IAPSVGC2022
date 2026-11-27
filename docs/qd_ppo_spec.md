@@ -328,6 +328,7 @@ siendo la suite de \(\pi^\*\), no coverage por sí sola.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.1.1** | 2026-11-26 | F1 (protocolo §5.10): I 2.0 rinde menos que el control (79,5 frente a 82,2 %, −2,64 pts, no inferioridad no confirmada); J 2.0 confirma J > control contra expectimax (+3,0 pts); K 2.0 −3,14 pts. Checkpoints de PPO v2 y del control en `checkpoints/ppo_v2/`. |
 | **2.1** | 2026-11-26 | Herramientas de F1–F4 (protocolo §4.11–§4.14): `confirm_f1.py` (despliegue con 1000 partidas `val`, partidas pareadas, no inferioridad y Holm, fusión de resultados, exportación de élites), `selector_f2.py` (selector de élite por rival), `team_roles.py` (roles por set), mosaico `pool` (élites como rivales `ppo_v1`). |
 | **2.0.2** | 2026-11-26 | Exploración de la familia QD 2.0 (§I 2.0): contra eval J 81,8 %, control 81,0 %, I 80,8 %, PPO v2 s1 80,3 %, K 78,3 %; ninguno se distingue del control; QD-score K 162 > J 84 > I 35; maldición del ganador en el despliegue por `val` (90–93 % → ~80 %). |
 | **2.0.1** | 2026-11-26 | I 2.0, J 2.0, K 2.0 y el control usan el preview v2.1b de PPO v2 (`PREVIEW_KIND=team_preview_ppo`, nuevo en `frozen_preview`): el preview QD-PGA era degenerado con el equipo fijo (cobertura 0,02, \(b_2\) siempre 0). Decisión del usuario. Ver §I 2.0, Medición. |

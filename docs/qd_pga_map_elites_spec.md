@@ -281,6 +281,7 @@ acompañar cualquier comparación.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.0.4** | 2026-11-26 | F1 (protocolo §5.10): **J 2.0 > control contra expectimax confirmada** (78,9 frente a 75,9 %, +3,0 pts, p Holm 2,2·10⁻⁴); en el promedio −0,64 pts (no inferioridad no confirmada por poco). |
 | **2.0.3** | 2026-11-26 | F3a (protocolo §4.13): réplica de J 2.0 desde PPO v2 s4. |
 | **2.0.2** | 2026-11-26 | Exploración: J 2.0 81,8 % contra eval (control 81,0 %), 44 celdas, QD-score 83,7. Ver qd_ppo_spec §I 2.0. |
 | **2.0.1** | 2026-11-26 | J 2.0 juega con el preview v2.1b de PPO v2 (`PREVIEW_KIND=team_preview_ppo`), igual que I 2.0 y el control: el preview QD-PGA era degenerado con el equipo fijo (qd_ppo_spec 2.0.1). Decisión del usuario. |

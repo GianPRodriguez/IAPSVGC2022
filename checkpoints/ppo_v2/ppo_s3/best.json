@@ -1,0 +1,44 @@
+{
+ "step": 750001,
+ "mean_wr": 0.905,
+ "games_per_foe": 50,
+ "rows": [
+  {
+   "foe": "random",
+   "n_games": 50,
+   "wins": 50,
+   "losses": 0,
+   "ties": 0,
+   "mean_return": 1.0,
+   "win_rate": 1.0
+  },
+  {
+   "foe": "greedy_solo",
+   "n_games": 50,
+   "wins": 48,
+   "losses": 2,
+   "ties": 0,
+   "mean_return": 0.92,
+   "win_rate": 0.96
+  },
+  {
+   "foe": "greedy_joint",
+   "n_games": 50,
+   "wins": 44,
+   "losses": 6,
+   "ties": 0,
+   "mean_return": 0.76,
+   "win_rate": 0.88
+  },
+  {
+   "foe": "expectimax_bayesian",
+   "n_games": 50,
+   "wins": 39,
+   "losses": 11,
+   "ties": 0,
+   "mean_return": 0.56,
+   "win_rate": 0.78
+  }
+ ],
+ "sec": 73.7
+}
