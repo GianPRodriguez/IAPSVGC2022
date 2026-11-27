@@ -304,3 +304,28 @@ def test_v3_report_rules(tmp_path):
     assert 'no inferior' in vtxt
     R.main([str(tmp_path)])
     assert (tmp_path / 'v3_report.md').read_text(encoding='utf-8').startswith('# PPO v3 / DDQN v2')
+
+
+def test_archetype_diag_report(tmp_path):
+    import json
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts' / 'analysis'))
+    import archetype_diag as D
+    import archetypes as A
+    teams = A._all_teams()
+    tr_key = next(k for k, t in teams.items() if 'trick_room' in A.team_tags(t))
+    games = [
+        {'rival': 'greedy_joint', 'equipo': tr_key, 'res': 'loss', 'formacion': '3546',
+         'eventos': {'rival': {'trick_room_activado': 1}, 'nuestro': {'tailwind': 1}}},
+        {'rival': 'greedy_joint', 'equipo': tr_key, 'res': 'win', 'formacion': '1234',
+         'eventos': {'rival': {}, 'nuestro': {}}},
+        {'rival': 'random', 'equipo': tr_key, 'res': 'win', 'formacion': '1234', 'eventos': {}},
+    ]
+    f = tmp_path / 'p1_ppo_s0_off.json'
+    f.write_text(json.dumps({'partidas': games}), encoding='utf-8')
+    g = D.load_games([str(f)])
+    assert len(g['ppo']) == 2  # random no cuenta
+    txt = '\n'.join(D.report(g, ['Raichu', 'Rillaboom', 'Gholdengo', 'Arcanine-Hisui', 'Staraptor', 'Primarina']))
+    assert '| trick_room | 2 | 50.0 % (2) | 0.0 % (1) | 100.0 % (1) |' in txt
+    assert 'usó Tailwind en 50.0 % (2)' not in txt and 'usó Tailwind en 100.0 % (1)' in txt

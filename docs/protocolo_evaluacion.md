@@ -605,6 +605,21 @@ máscara. **Expectativa:** diferencia ≈ 0 (contra los heurísticos la situaci�
 contra personas). **Regla:** si es no inferior, la máscara se activa en la web para las versiones actuales y entra
 en PPO v3 / DDQN v2; si no, se revisa antes de entrenar.
 
+**D1/D2. Diagnósticos por arquetipo (descriptivos, añadidos el 27-11-2026 antes de medir, decisión del usuario).**
+Corrección previa: la observación sí tiene el orden de velocidad efectivo y los arquetipos de las personas (lluvia,
+sol, Trick Room, Tailwind, Defiant/Competitive) están entre los equipos de entrenamiento (`train`: TR 24 %, Tailwind
+68 %, lluvia 17 %, sol 12 %, Defiant/Competitive 38 %). Hipótesis: los heurísticos casi nunca ejecutan esos planes y
+por eso el agente no aprende a responder. Desde las evaluaciones sin máscara de P1 (con `--context`),
+`scripts/analysis/archetype_diag.py` informa: D1a victorias por arquetipo; D1b fracción de partidas en que el rival
+activó Trick Room / Tailwind cuando su equipo lo tiene, y victorias según lo activara o no; D1c uso propio de Tailwind
+cuando trae a Staraptor; D2 preview real por arquetipo (traer cada Pokémon, abrir con Intimidate contra
+Defiant/Competitive, Arcanine-Hisui contra ≥ 2 atacantes de Tierra/Agua). **Guía de decisión (para proponer al
+usuario, no automática):** si los heurísticos activan su Trick Room o Tailwind en menos del 25 % de las partidas en que
+lo tienen, se propone un rival de entrenamiento que sí lo ejecute (distinto del `greedy_joint_arq` descartado en la
+cola 24); si el preview trae a Arcanine-Hisui en más del 80 % de las partidas contra ≥ 2 atacantes de Tierra/Agua y
+con menos victorias que sin él, se propone reentrenar el preview. Muestra de prueba local (12 partidas, no cuenta):
+Trick Room activado 0/3, Tailwind 0/9, Tailwind propio 0/7.
+
 **S1. Preview condicionado a la serie (sin reentrenar; exploración con regla).** PPO v2 y DDQN v1 en series BO3
 (`policy_diag --series`, `eval`, 100 series por heurístico, rivales deterministas), con y sin `--preview-series`.
 La partida 1 es idéntica en los dos brazos; la comparación es la tasa de victorias en las partidas 2–3. **Regla:**
@@ -1070,3 +1085,4 @@ enfrentamientos `eval` por heurístico, 6000 por agente, 0 caídas.
 | 2026-11-27 | Resultado de F3 (§5.12): desde s4, control4 85,8 %, J4 83,8 % (−1,95), K4 82,2 % (−3,60); **la ventaja de J contra expectimax no se replica** (−1,0, p = 0,83), así que la de F1 es propia de s1. K con N = 10 rinde igual que con N = 3 (−2,47 frente a −2,48) y cubre menos mapa (54 frente a 87 celdas). |
 | 2026-11-27 | §4.16 cerrada con las decisiones del usuario (+1M pasos, 3 semillas por brazo, control C frente a V, orden P1 → S1 → PPO → DDQN; ε = 0,05 en el arranque en caliente de DDQN). Cola `scripts/server/v3_queue.sh` e informe `scripts/analysis/v3_report.py` preparados, sin encolar. |
 | 2026-11-27 | **F4a cortada** por decisión del usuario en la iteración 42 de 64, sin resultado: la calibración salió estrecha ([0,475; 0,525] en los dos descriptores, porque el actor inicial elige casi siempre lo mismo), la rejilla funcionaba con pocos niveles (cobertura 0,13) y aporta poco a las mejoras de PPO y DDQN. F4b y F2b siguen. |
+| 2026-11-27 | §4.16: diagnósticos D1/D2 por arquetipo añadidos antes de medir (decisión del usuario), desde las evaluaciones sin máscara de P1 con `--context`; guía de decisión para proponer un rival que ejecute Trick Room / Tailwind o reentrenar el preview. Corrección: la observación ya tenía el orden de velocidad efectivo. |

@@ -4,7 +4,8 @@
 # CON memoria), orden P1 → S1 → PPO → DDQN. PPO y DDQN reciben los mismos cambios (juego limpio).
 #
 #   P1  máscara del Protect consecutivo sin reentrenar: PPO v2 s0–s4 y DDQN v1 s0–s4, 200 partidas por rival
-#       sobre eval, con y sin máscara (mismas semillas, pareado).
+#       sobre eval, con y sin máscara (mismas semillas, pareado), con --context (eventos por partida).
+#   D1/D2 diagnósticos descriptivos desde P1 sin máscara: $OUT/d1_report.md (scripts/analysis/archetype_diag.py).
 #   S1  preview condicionado a la serie sin reentrenar: los mismos checkpoints en series BO3 (100 por rival),
 #       con y sin --preview-series.
 #   V   por familia y semilla 0–2: C y V desde la versión anterior (+1M pasos, mezcla de rivales del kick-off,
@@ -52,11 +53,15 @@ diag() {  # nombre familia checkpoint [--opciones de policy_diag...]
 for fam in ppo ddqn; do
   for s in 0 1 2 3 4; do
     ck=$(prev_ck $fam $s)
-    diag p1_${fam}_s${s}_off $fam "$ck" --games 200 --mask-protect 0
-    diag p1_${fam}_s${s}_on $fam "$ck" --games 200 --mask-protect 1
+    diag p1_${fam}_s${s}_off $fam "$ck" --games 200 --mask-protect 0 --context
+    diag p1_${fam}_s${s}_on $fam "$ck" --games 200 --mask-protect 1 --context
   done
 done
 log "P1 terminado"
+# D1/D2 (descriptivos): victorias por arquetipo, ¿los heurísticos ejecutan Trick Room / Tailwind?, uso propio de
+# Tailwind y preview real por arquetipo, desde las evaluaciones sin máscara de P1 (llevan --context).
+python scripts/analysis/archetype_diag.py --out "$OUT/d1_report.md" "$OUT/diag/p1_ppo_s*_off.json"   "$OUT/diag/p1_ddqn_s*_off.json" > "$OUT/d1_report.err" 2>&1
+log "D1/D2 rc=$?"
 
 # ---------------- S1: preview condicionado sin reentrenar ----------------
 for fam in ppo ddqn; do
