@@ -226,3 +226,22 @@ def test_render_page_escapes_and_refreshes():
     assert 'http-equiv="refresh"' in page
     s.state = 'terminada'
     assert 'http-equiv="refresh"' not in w.render_page(w.AGENTS, status=(s, 0))
+
+
+def test_summarize_web_totals_and_replay_links(tmp_path):
+    import json
+    import summarize_web as sw
+    (tmp_path / 'replays').mkdir()
+    (tmp_path / 'replays' / 'bot - battle-x-111.html').write_text('r', encoding='utf-8')
+    games = [{'sala': 'battle-x-111', 'turnos': 7, 'ganó': True}, {'sala': 'battle-x-222', 'turnos': 9, 'ganó': True}]
+    for name, d in (('bo3_ash_20261127_101500.json', {'agente': 'PPO v2', 'rival': 'Ash', 'estado': 'terminada',
+                                                       'serie': 'ganada', 'victorias': 2, 'derrotas': 0,
+                                                       'partidas': games}),
+                    ('bo3_misty_20261127_090000.json', {'agente': 'PPO v2', 'rival': 'Misty', 'estado': 'expirada',
+                                                         'serie': 'perdida', 'victorias': 0, 'derrotas': 1,
+                                                         'partidas': games[:1]})):
+        (tmp_path / name).write_text(json.dumps(d), encoding='utf-8')
+    md = sw.summarize(sw.load_series(tmp_path), tmp_path)
+    assert '| PPO v2 | 2 | 1 | 0 | 1 | 2–1 | 67 % |' in md
+    assert md.index('Misty') < md.index('| Ash')  # orden por fecha
+    assert '[P1](replays/bot%20-%20battle-x-111.html) P2' in md
