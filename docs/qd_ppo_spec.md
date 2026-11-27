@@ -328,6 +328,7 @@ siendo la suite de \(\pi^\*\), no coverage por sí sola.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.1.4** | 2026-11-27 | F4b (protocolo §5.13): PPO con el mosaico `pool` (20 % élites de K) 81,3 % frente a 82,2 % del control (−0,87 pts); 22 reinicios de entorno con los rivales en espejo. |
 | **2.1.3** | 2026-11-26 | `selector_f2 play --fit-split val --eval-from`: datos del selector con equipos no vistos y la prueba `eval` reutilizada (F2b, protocolo §4.15). |
 | **2.1.2** | 2026-11-26 | F2 (protocolo §5.11): el selector de élite por rival entrenado con equipos `fit` no supera al control (−1,97 pts) ni a la mejor élite única (+0,37): en equipos memorizados todas las élites ganan 95–97 %. |
 | **2.1.1** | 2026-11-26 | F1 (protocolo §5.10): I 2.0 rinde menos que el control (79,5 frente a 82,2 %, −2,64 pts, no inferioridad no confirmada); J 2.0 confirma J > control contra expectimax (+3,0 pts); K 2.0 −3,14 pts. Checkpoints de PPO v2 y del control en `checkpoints/ppo_v2/`. |

@@ -1016,6 +1016,34 @@ enfrentamientos `eval` por heurístico, 6000 por agente, 0 caídas.
 5. **Frente a la expectativa (§4.13):** el patrón QD ≈ control se cumple en la forma "QD ≤ control". La
    expectativa de que K10 rindiera igual o algo mejor que K1 se cumple: rinde igual.
 
+### 5.13 Resultados de F4b: PPO con el archivo de K como pool de rivales (27-11-2026, código `463c736`)
+
+PPO v2 s1 + 1M pasos con el mosaico `pool`: el 20 % de las partidas contra las 5 mejores élites de K en
+espejo. Entrenó en 1 h 40 min con 22 reinicios de entorno (el control tuvo 0: los rivales PPO en espejo
+son menos estables). Partidas: los mismos 12 000 enfrentamientos `eval` de F1 (bloque 40001), pareados
+con el control. 0 caídas.
+
+| Agente | solo | joint | expectimax | **3 heur.** |
+|---|---|---|---|---|
+| Control (mosaico de PPO v2) | 85,8 | 84,9 | 75,9 | **82,2 %** |
+| **Pool** (20 % élites de K) | 84,4 | 82,2 | 77,4 | **81,3 %** |
+| PPO v2 s1 (arranque) | 82,7 | 83,9 | 74,5 | 80,3 % |
+
+- **N_pool:** −0,87 pts (cota inferior 95 % −1,56). No rechaza por muy poco: la cota apenas cruza el
+  margen −1,5 (p = 0,067).
+- **Por rival frente al control:** expectimax +1,52 (± 1,60), solo −1,45 (± 1,26), joint −2,67 (± 1,41).
+- **Frente al arranque:** +0,97 (± 0,83). El control mejora +1,83.
+
+**Lectura:**
+1. **Entrenar contra la diversidad de K no mejora a PPO contra las heurísticas.** Queda casi igual al
+   control y un poco por debajo, porque el 20 % de las partidas contra élites le resta práctica contra
+   las heurísticas, que son la métrica.
+2. **Hay un desplazamiento como el de J:** mejora contra expectimax (+1,5, no significativo) y pierde
+   contra greedy_joint. Lo que aporta la diversidad parece cambiar contra quién rinde, no cuánto rinde.
+3. **Frente a la expectativa (§4.14):** se esperaba pool ≈ control. Se cumple (−0,9 pts). La posible
+   ganancia en robustez frente a estilos variados no se mide contra las heurísticas; habría que medirla
+   contra personas o contra un pool aparte.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -1090,3 +1118,4 @@ enfrentamientos `eval` por heurístico, 6000 por agente, 0 caídas.
 | 2026-11-27 | §4.16: S1 con 3 semillas por familia (s0–s2) y evaluaciones de la cola en paralelo (`JOBS`, un puerto por evaluación; entrenamientos de uno en uno), decisión del usuario para acortar la cola de ~4–5,5 a ~1,5–2 días. Diseño y reglas sin cambios. |
 | 2026-11-27 | Objetivo de equidad de cómputo entre agentes (decisión del usuario): horas de cola totales similares para E–K. Registro y desequilibrio actual en `docs/presupuesto_computo.md` (F 101 h, E 88 h, H 79 h, G 61 h, I/J/K 19 h cada uno). |
 | 2026-11-27 | **PPO v3 / DDQN v2 encolados** (§4.16, visto bueno del usuario): `v3_queue.sh` con JOBS = 6 en la copia del repo `IAPSVGC2022_v3` (commit `72a42bc`, con los checkpoints de PPO v2 en `checkpoints/ppo_v2/`). Un envoltorio espera a `QD_F2B_DONE` (un método a la vez) y corre los tests de v3 antes de lanzar la cola. Salida `~/iapsvgc_runs/v3`, marca `V3_DONE`. |
+| 2026-11-27 | Resultado de F4b (§5.13): el PPO entrenado con un 20 % de élites de K como rivales rinde 81,3 % frente a 82,2 % del control (−0,87 pts, cota −1,56; no inferioridad no confirmada por poco). Expectimax +1,5, joint −2,7: la diversidad cambia contra quién rinde, no cuánto. |
