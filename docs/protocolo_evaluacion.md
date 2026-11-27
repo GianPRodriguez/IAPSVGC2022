@@ -464,6 +464,42 @@ resultados se leen **por rival**, no solo como el promedio de las 3 heurísticas
 
 **Resultado de la exploración (26-11-2026, qd_ppo_spec §I 2.0):** contra eval, control 81,0 %, I 80,8 %, K 78,3 % y J 81,8 %. I ≈ control y K algo peor coinciden con lo esperado; J por encima del control no, aunque todo cae dentro del ruido (± 4,5 pts por diferencia). En QD-score salió K > J > I (se esperaba K ≥ I > J).
 
+### 4.11 F1 de la familia QD 2.0: despliegue y confirmación, fijada el 26-11-2026 antes de medir
+
+Decisión del usuario: primera fase de la propuesta FODA, medir bien antes de cualquier mejora. Parte de la
+exploración (§4.10, qd_ppo_spec §I 2.0): ningún QD se distinguió del control, y el despliegue por `val`
+con 300 partidas inflaba al elegido. Cola `scripts/server/qd_f1.sh`, código en
+`showdown/rl/qd_ppo/confirm_f1.py`, congelado en el commit de este pre-registro.
+
+- **1a. Despliegue (selección, no prueba).** Las 10 élites con mejor estimación de cada archivo (I, J, K)
+  juegan los mismos **1000 enfrentamientos `val`** (334 por heurístico, bloque de semillas 30001). Se
+  despliega la de más victorias (desempate: retorno medio). Esto reemplaza la reevaluación de 300
+  partidas. `eval` no interviene.
+- **1b. Partidas de la confirmación.** I, J y K desplegados, el **control** (PPO v2 s1 + 1M,
+  `qd_i2/control/final.pt`) y **PPO v2 s1** (arranque, solo descriptivo) juegan los mismos **4000
+  enfrentamientos `eval` por heurístico** (greedy_solo, greedy_joint, expectimax; 12 000 por agente;
+  bloque de semillas 40001, nuevo). Un enfrentamiento fija el rival y los equipos de los dos lados; el azar
+  del simulador es propio de cada partida. Las partidas caídas se excluyen del par. El instrumento es el
+  entorno vectorizado de los entrenadores QD (`play_matchups`), con el preview v2.1b de PPO v2 y el equipo
+  fijo, en modo determinista. No es `policy_diag`, así que las cifras absolutas pueden diferir algo de la
+  exploración; las pruebas son internas a esta cola.
+- **N_I, N_J, N_K (no inferioridad):** agente frente al control sobre los 12 000 pares, diferencia
+  pareada de victorias. H0: d ≤ −1,5 pts; p unilateral por aproximación normal (equivale a McNemar con n
+  grande). Se reporta la cota inferior unilateral 95 %. El margen es el de H 2.2 (decisión del usuario).
+- **S_J (superioridad):** J > control solo contra expectimax (4000 pares), H0: d ≤ 0. Prueba el indicio
+  de la exploración (+5,5 pts, 77,5 frente a 72,0).
+- **Holm m = 4** sobre N_I, N_J, N_K y S_J, α = 0,05.
+- **Potencia (planificación):** con ~30 % de pares discordantes, el error estándar de d es ≈ 0,5 pts con
+  12 000 pares. Si la diferencia real es 0, la probabilidad de rechazar N con el umbral más estricto de
+  Holm (0,0125) es ≈ 0,8.
+- **Descriptivo:** tasas por rival con IC de Wilson, diferencias pareadas por rival frente al control y
+  frente al arranque, caídas. La diversidad (cobertura y QD-score de §4.10) se reporta como resultado
+  descriptivo de los archivos, sin prueba (opción (c) de la propuesta).
+- **Consecuencia:** cada N rechazada permite afirmar que ese QD "rinde al menos como PPO con el mismo
+  presupuesto, con un margen de 1,5 pts, y aporta diversidad". Si S_J se rechaza, J castiga mejor a
+  expectimax que PPO puro, que es lo que la Fase 2 (selector de élite por rival) quiere explotar. Una N no
+  rechazada se reporta tal cual, sin reformular la prueba.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -772,3 +808,4 @@ por el resolvedor.
 | 2026-11-25 | Resultado de la confirmación de H 2.2 (§5.9): U1–U4 confirmadas (B2: 66,1 % contra joint, 65,2 % contra expectimax, 67,8 % contra solo; frente a H 2.1 +0,00 pts, cota inferior −0,76 > −1,5, p Holm = 6·10⁻⁴) y tiempo 57 % del de H 2.1. H 2.2 = H 2.1 + RM+ pasa a ser el default del player y el H de la Conclusión. Frente a G 5.2 al mismo coste: −2,37 pts. |
 | 2026-11-26 | Hipótesis a priori de la familia QD 2.0 registrada (§4.10), antes de cualquier resultado: frente al control (PPO v2 + 1M) I empata (~30 % de superarlo), K algo peor (~15 %), J peor (~10 %); ranking esperado en rendimiento I > K > J y en QD-score K ≥ I > J. Es descriptiva y no cambia ninguna prueba. |
 | 2026-11-26 | Exploración de la familia QD 2.0 frente a la hipótesis a priori (§4.10): I ≈ control y K algo peor coinciden; J (81,8 %) por encima del control (81,0 %) no se esperaba, pero está dentro del ruido. QD-score K > J > I. Confirmación pendiente de decidir. |
+| 2026-11-26 | F1 de la familia QD 2.0 pre-registrada (§4.11): despliegue con 1000 partidas `val` (top-10 de cada archivo) y confirmación con 4000 enfrentamientos `eval` por heurístico; N_I/N_J/N_K no inferioridad frente al control (margen −1,5 pts) y S_J J > control contra expectimax, Holm m = 4. Cola `scripts/server/qd_f1.sh`. |
