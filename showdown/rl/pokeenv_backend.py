@@ -82,8 +82,8 @@ VALIDATED_FOES = ('greedy_solo', 'greedy_joint', 'expectimax_bayesian')
 #   cobertura y sueño), solo en esta instancia (``wrap_archetype_level``).
 # - ppo_v1: PPO v1 congelado (checkpoints en PPO_FOE_CHECKPOINTS, separados por comas; uno al azar
 #   por partida) jugando con el MISMO equipo que el agente (espejo): v1 es especialista de ese equipo.
-FOE_BASE_KIND = {'greedy_joint_arq': 'greedy_joint'}
-ARCHETYPE_FOE_LEVEL = {'greedy_joint_arq': 2}
+FOE_BASE_KIND = {'greedy_joint_arq': 'greedy_joint', 'greedy_joint_arq3': 'greedy_joint'}
+ARCHETYPE_FOE_LEVEL = {'greedy_joint_arq': 2, 'greedy_joint_arq3': 3}  # 3: clima, campo y núcleos clásicos (§4.17)
 MIRROR_FOES = ('ppo_v1',)
 
 
@@ -139,6 +139,7 @@ LIVE_OPPONENTS = (
     'greedy_joint',
     'expectimax_bayesian',
     'greedy_joint_arq',
+    'greedy_joint_arq3',
     'ppo_v1',
 )
 

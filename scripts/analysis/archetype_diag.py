@@ -33,6 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import archetypes as A  # noqa: E402
 
 HEUR = ('greedy_solo', 'greedy_joint', 'expectimax_bayesian')
+RIVALS = HEUR   # --rivales cambia qué rivales cuentan (p. ej. greedy_joint_arq3, protocolo §4.17)
 
 
 def _pct(w: int, n: int) -> str:
@@ -51,7 +52,7 @@ def load_games(paths: Sequence[str]) -> Dict[str, List[dict]]:
             except (OSError, ValueError):
                 continue
             for g in d.get('partidas', []):
-                if g.get('rival') not in HEUR:
+                if g.get('rival') not in RIVALS:
                     continue
                 tags = A.tags_for_key(g.get('equipo'))
                 if tags is None:
@@ -78,7 +79,9 @@ def report(games: Dict[str, List[dict]], names: Sequence[str]) -> List[str]:
         lines += ['', '### D1b. ¿El rival ejecuta su control de velocidad?', '',
                   '| Plan | Partidas con el plan en el equipo | Lo activó | Victorias si lo activó | Victorias si no |',
                   '|---|---|---|---|---|']
-        for tag, key in (('trick_room', 'trick_room_activado'), ('tailwind', 'tailwind_activado')):
+        for tag, key in (('trick_room', 'trick_room_activado'), ('tailwind', 'tailwind_activado'),
+                         ('lluvia', 'lluvia_activado'), ('sol', 'sol_activado'), ('arena', 'arena_activado'),
+                         ('nieve', 'nieve_activado')):
             sub = [g for g in gs if tag in g['_tags'] and isinstance(g.get('eventos'), dict)]
             act = [g for g in sub if int((g['eventos'].get('rival') or {}).get(key, 0)) > 0]
             no = [g for g in sub if g not in act]
@@ -126,12 +129,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     ap.add_argument('paths', nargs='+', help='JSON de policy_diag (admite comodines)')
     ap.add_argument('--agent-team', default=str(REPO / 'showdown/rl/data/ddqn_team.txt'))
     ap.add_argument('--out', default='')
+    ap.add_argument('--rivales', default=','.join(HEUR), help='rivales que cuentan (p. ej. greedy_joint_arq3)')
+    ap.add_argument('--titulo', default='D1 / D2: PPO v2 y DDQN v1 por arquetipo del rival (protocolo §4.16)')
     args = ap.parse_args(argv)
+    global RIVALS
+    RIVALS = tuple(x for x in args.rivales.split(',') if x)
     from showdown.inference_sim.team_factory import load_team_file
     names = [str(m.species) for m in load_team_file(args.agent_team).mons]
     games = load_games(args.paths)
-    lines = ['# D1 / D2: PPO v2 y DDQN v1 por arquetipo del rival (protocolo §4.16)', '',
-             'Equipos `eval`, rivales deterministas, joint, solo y expectimax. Formación = índices del equipo propio '
+    lines = [f'# {args.titulo}', '',
+             f'Equipos `eval`, rivales deterministas: {", ".join(RIVALS)}. Formación = índices del equipo propio '
              '(los dos primeros abren).', ''] + report(games, names)
     text = '\n'.join(lines) + '\n'
     if args.out:

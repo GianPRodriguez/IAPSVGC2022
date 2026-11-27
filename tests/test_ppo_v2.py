@@ -130,7 +130,7 @@ def test_policy_diag_sample_flags():
     src = inspect.getsource(P.main)
     assert '--sample' in src and '--temperature' in src
     assert P.FOES == ('random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian')  # semillas iguales
-    assert P.EXTRA_FOES == ('greedy_joint_arq', 'ppo_v1')
+    assert P.EXTRA_FOES == ('greedy_joint_arq', 'ppo_v1', 'greedy_joint_arq3')  # arq3 al final (§4.17)
 
 
 # --------------------------------------------------------------------------- resumen

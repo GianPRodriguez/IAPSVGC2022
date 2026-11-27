@@ -18,6 +18,13 @@ from typing import Dict, Iterable, List, Optional, Set
 KEY_MOVES = {'trickroom': 'trick_room', 'tailwind': 'tailwind', 'fakeout': 'fake_out',
              'followme': 'redirect', 'ragepowder': 'redirect'}
 REDIRECT = {'followme', 'ragepowder'}
+# Clima / campo (protocolo §4.17): inicio por habilidad ([of] el que la tiene) o por movimiento (último usuario).
+WEATHER_KEYS = {'raindance': 'lluvia', 'primordialsea': 'lluvia', 'sunnyday': 'sol', 'desolateland': 'sol',
+                'sandstorm': 'arena', 'snow': 'nieve', 'snowscape': 'nieve', 'hail': 'nieve'}
+TERRAIN_KEYS = {'grassyterrain': 'campo_hierba', 'psychicterrain': 'campo_psiquico',
+                'electricterrain': 'campo_electrico', 'mistyterrain': 'campo_niebla'}
+FIELD_MOVES = {'raindance', 'sunnyday', 'sandstorm', 'snowscape', 'chillyreception', 'hail', 'grassyterrain',
+               'psychicterrain', 'electricterrain', 'mistyterrain'}
 CONTEXTS = ('rival_trick_room', 'propio_trick_room', 'rival_tailwind', 'rival_fake_out',
             'rival_redireccion', 'rival_puede_trick_room', 'turno_1', 'sin_contexto')
 
@@ -43,6 +50,7 @@ def count_events(battle) -> Dict[str, Dict[str, int]]:
     role = getattr(battle, 'player_role', None) or 'p1'
     out = {'nuestro': Counter(), 'rival': Counter()}
     last_tr_user = ''
+    last_field_user = ''
     for m in _messages(battle):
         if len(m) < 3:
             continue
@@ -55,6 +63,21 @@ def count_events(battle) -> Dict[str, Dict[str, int]]:
                 out['nuestro' if side == role else 'rival'][key] += 1
                 if mid == 'trickroom':
                     last_tr_user = side
+            last_field_user = side if mid in FIELD_MOVES else ''
+        elif kind == '-weather' and not any('[upkeep]' in str(p) for p in m[3:]):
+            wkey = WEATHER_KEYS.get(_id(m[2]))
+            side = next((_side(p) for p in m[3:] if str(p).startswith('[of]')), '') or last_field_user
+            if wkey and side:
+                c = out['nuestro' if side == role else 'rival']
+                c['clima_activado'] += 1
+                c[f'{wkey}_activado'] += 1
+        elif kind == '-fieldstart' and 'terrain' in _id(m[2]):
+            tkey = TERRAIN_KEYS.get(_id(str(m[2]).replace('move:', '')))
+            side = next((_side(p) for p in m[3:] if str(p).startswith('[of]')), '') or last_field_user
+            if tkey and side:
+                c = out['nuestro' if side == role else 'rival']
+                c['campo_activado'] += 1
+                c[f'{tkey}_activado'] += 1
         elif kind == '-fieldstart' and 'trickroom' in _id(m[2]):
             side = next((_side(p) for p in m[3:] if str(p).startswith('[of]')), '') or last_tr_user
             if side:

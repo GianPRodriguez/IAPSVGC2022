@@ -116,6 +116,27 @@ _SLEEP_MOVES = frozenset({'spore', 'sleeppowder', 'hypnosis', 'yawn', 'darkvoid'
 
 import contextvars as _contextvars
 
+# Nivel 3 (protocolo §4.17, 27-11-2026): además de los niveles 1–2, planes clásicos de clima, campo y velocidad
+# (``archetypes.py``): poner el clima / campo del plan si no está, Protect o redirección del compañero mientras se
+# pone (también Trick Room / Tailwind), preview y cambios forzados según el plan (en ``pokeenv_player``).
+_ARCHETYPE_FIELD_BONUS = 250.0
+_ARCHETYPE_REDIRECT_COVER_BONUS = 80.0
+# Plan del equipo y campo actual durante una decisión (lo fija ``pokeenv_player`` con nivel ≥ 3).
+_ARCHETYPE_PLAN: '_contextvars.ContextVar[Optional[tuple]]' = _contextvars.ContextVar(
+    'greedy_joint_archetype_plan', default=None)
+
+
+def _plan_setup_bonus(atom: 'JointAtom') -> float:
+    """Nivel 3: bono por poner el clima / campo del plan si no está activo."""
+    ctx = _ARCHETYPE_PLAN.get()
+    if not ctx or _archetype_level() < 3:
+        return 0.0
+    from showdown.battle_bots.greedy_joint import archetypes as _A
+    fit, weather, terrain = ctx
+    if _A.sets_plan_field(atom.move_name, fit) and not _A.plan_field_active(fit, weather, terrain):
+        return float(_ARCHETYPE_FIELD_BONUS)
+    return 0.0
+
 # Nivel por instancia de rival (los entornos RL mezclan rivales normales y de arquetipo en un mismo
 # proceso): lo fija ``archetype_level_scope``; sin él se usa la variable de entorno.
 _ARCHETYPE_LEVEL_OVERRIDE: '_contextvars.ContextVar[Optional[int]]' = _contextvars.ContextVar(
@@ -162,8 +183,21 @@ def wrap_archetype_level(player, level: int):
         return _run()
 
     player.choose_move = choose_move
+    for attr in ('teampreview', '_forced_switch_order'):   # nivel 3: preview y cambios forzados según el plan
+        if hasattr(player, attr):
+            setattr(player, attr, _with_level(getattr(player, attr), int(level)))
     player.archetype_level = int(level)
     return player
+
+
+def _with_level(fn, level: int):
+    def wrapped(*a, **kw):
+        tok = _ARCHETYPE_LEVEL_OVERRIDE.set(level)
+        try:
+            return fn(*a, **kw)
+        finally:
+            _ARCHETYPE_LEVEL_OVERRIDE.reset(tok)
+    return wrapped
 _SCREEN_PARTNER_BONUS = 8.0  # Reflect/LS Screen/Aurora Veil + partner daño
 _REDIRECT_LITE_SCALE = 0.55
 
@@ -1699,6 +1733,24 @@ def _utility_score_damage_iso(
         if atom.utility == 'charge':
             s += _charge_utility(atom)
             continue
+
+        if _archetype_level() >= 3:
+            fb = _plan_setup_bonus(atom)
+            if fb > 0.0:
+                s += fb
+                continue
+            # Nivel 3: el compañero cubre (Protect o redirección) mientras el otro pone el clima / campo del plan
+            # o Tailwind / Trick Room.
+            partner_sets = _plan_setup_bonus(partner) > 0.0 or (
+                partner.utility == 'speed' and _field_setup_bonus(
+                    partner, atom, left_poke=left_poke, right_poke=right_poke, foes=foes,
+                    trick_room=trick_room, our_tailwind=our_tailwind, opp_tailwind=opp_tailwind) > 0.0)
+            if partner_sets and atom.utility == 'redirect':
+                s += _ARCHETYPE_REDIRECT_COVER_BONUS
+                continue
+            if partner_sets and atom.utility == 'protect' and _plan_setup_bonus(partner) > 0.0:
+                s += _ARCHETYPE_PROTECT_COVER_BONUS
+                continue
 
         if _archetype_level() >= 2:
             # Nivel 2: Protect del compañero mientras el otro pone Tailwind / Trick Room.

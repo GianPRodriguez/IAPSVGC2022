@@ -40,7 +40,7 @@ import numpy as np
 FOES = ('random', 'greedy_solo', 'greedy_joint', 'expectimax_bayesian')
 # Rivales opcionales (solo con --foes; van al final para no cambiar las semillas de los anteriores):
 # greedy_joint_arq = arquetipo nivel 2; ppo_v1 = PPO v1 congelado en espejo (PPO_FOE_CHECKPOINTS).
-EXTRA_FOES = ('greedy_joint_arq', 'ppo_v1')
+EXTRA_FOES = ('greedy_joint_arq', 'ppo_v1', 'greedy_joint_arq3')  # al final: no cambia las semillas de los demás
 _PROTECT = {'protect', 'detect', 'spikyshield', 'banefulbunker', 'kingsshield', 'silktrap',
             'obstruct', 'burningbulwark', 'wideguard', 'quickguard', 'maxguard'}
 

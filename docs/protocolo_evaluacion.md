@@ -654,6 +654,40 @@ s0–s2 y sin máscara, para aislar el preview. Las evaluaciones corren en paral
 cada una); los entrenamientos, de uno en uno. Tiempo estimado: ~1,5–2 días (en serie habrían sido 4–5,5). Cola: `scripts/server/v3_queue.sh` (reanudable; informe con
 `scripts/analysis/v3_report.py`), **sin encolar hasta el visto bueno del usuario**.
 
+### 4.17 D3: greedy_joint en modo arquetipo nivel 3 (clima, campo y núcleos clásicos), fijado el 27-11-2026 antes de medir
+
+**Origen.** El hallazgo de que los heurísticos no juegan los arquetipos que usan las personas ya estaba documentado
+para el control de velocidad: la cola 19 (memorizacion_equipos §14.2) midió Trick Room en el 0–1 % y Tailwind en el
+0–4 % de las partidas, y el modo arquetipo nivel 1 bajó a PPO y DDQN 7–9 pts (§14.4). D1 de la cola v3 lo confirma con
+PPO v2 (§5.15: Trick Room 0,1 %, Tailwind 1,6 %). **Hallazgo nuevo (27-11-2026):** el modo arquetipo solo forzaba
+Tailwind / Trick Room. El clima (lluvia, sol, arena, nieve) y los campos entraban solo pasivamente: habilidades que
+se activan al entrar y clima en el cálculo de daño, pero sin plan (sin bono a Rain Dance / Sunny Day, sin preview que
+abra con quien pone el clima y quien lo aprovecha). Las personas ganaron con lluvia + Trick Room y sol + Tailwind.
+
+**Nivel 3** (greedy_joint_spec 1.8.3, decisión del usuario, con los arquetipos clásicos que propuso: lluvia con
+Pelipper / Politoed + Basculegion / Archaludon; doble clima Charizard-Y / Torkoal + Venusaur + Pelipper + Archaludon;
+campo de hierba / psíquico con semillas y Unburden; arena con Tyranitar + Excadrill; Trick Room con Indeedee-F +
+Hatterene / Armarouge + Ursaluna / Torkoal): rival RL `greedy_joint_arq3`.
+
+**D3 (descriptivo; cola `scripts/server/arq3_queue.sh`, después de la cola v3).**
+- **Partidas:** PPO v2 s0–s4 y DDQN v1 s0–s4 contra greedy_joint en los niveles 0, 2 y 3, `eval`, 200 partidas por
+  rival y semilla, rivales deterministas, `--context`.
+- **Prueba previa:** una prueba en vivo corta contra el nivel 3; si falla, la cola se detiene.
+- **Se reporta:**
+  1. Ejecución de los planes por nivel: fracción de partidas en que el rival activó Trick Room, Tailwind, lluvia,
+     sol, arena o nieve cuando su equipo los tiene.
+  2. Tasa de victorias por nivel y familia.
+  3. Victorias por arquetipo.
+- **Expectativa a priori:**
+  - El nivel 3 activa su clima en la mayoría de las partidas en que el equipo lo tiene, porque el preview abre con
+    quien lo pone.
+  - Trick Room y Tailwind suben respecto del nivel 2, porque el plan elige quién abre.
+  - PPO y DDQN pierden más contra el nivel 3 que contra el nivel 2.
+- **Uso:** junto con el informe de v3, decide si el nivel 3 entra en el entrenamiento. Es la reconsideración de P4,
+  memorizacion_equipos §17.1, y la decide el usuario.
+- **Límite conocido:** greedy_joint no hace cambios voluntarios. Un clima de habilidad que se pierde solo vuelve
+  con un cambio forzado o con el movimiento.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -1072,6 +1106,39 @@ partidas). λ = 300: la validación cruzada prefiere la regularización máxima,
    rendimiento por rival para que elegir según el equipo rival aporte algo. El oráculo optimista (90,7 %)
    es ruido de selección.
 
+### 5.15 Resultados parciales de la cola v3: P1, S1 y D1/D2 (27-11-2026, código `7dc00bf`)
+
+Las pruebas formales de P1 y S1 las calcula el informe final (`v3_report.py`). Aquí van las cifras descriptivas,
+con victorias contra las 3 heurísticas.
+
+**P1, máscara del Protect consecutivo, sin reentrenar** (5 semillas, 600 partidas cada una, `eval`):
+
+| Familia | Sin máscara | Con máscara | Diferencia |
+|---|---|---|---|
+| PPO v2 | 85,2 % | 86,2 % | +1,0 |
+| DDQN v1 | 63,5 % | 63,6 % | +0,2 |
+
+**S1, preview condicionado a la serie, sin reentrenar** (series BO3, 3 semillas; todas las partidas, incluida la
+1, que es igual en los dos brazos):
+
+| Familia | Sin condicionar | Condicionado | Diferencia |
+|---|---|---|---|
+| PPO v2 | 83,6 % | 76,4 % | **−7,2** |
+| DDQN v1 | 64,7 % | 59,4 % | **−5,3** |
+
+Muy por debajo de la regla (+1,5 pts): **no se adopta**. Coincide con la expectativa de M1 (≤ 0): el preview v2.1b
+nunca vio una entrada con 4 rivales conocidos y cae en una formación por defecto.
+
+**D1/D2, diagnósticos por arquetipo** (PPO v2, 3000 partidas, `d1_report.md`):
+- Los heurísticos casi nunca ejecutan su control de velocidad: Trick Room activado en el **0,1 %** de las partidas
+  en que su equipo lo tiene (675) y Tailwind en el **1,6 %** (2020). Confirma la cola 19 (§14.2 de
+  memorizacion_equipos).
+- PPO usa Tailwind en el 14 % de las partidas en que trae a Staraptor.
+- El preview trae a Arcanine-Hisui en el 94 % de las partidas. Reacciona a algunos arquetipos: contra lluvia trae
+  menos a Raichu (20 frente a 50 %) y más a Staraptor (91 frente a 68 %).
+- Victorias por arquetipo: nieve 77 %, sol 83 %, Tailwind 84 %, lluvia 85 % y arena 95 %. Los equipos de clima
+  apenas cuestan contra los heurísticos porque estos no juegan el clima como plan (§4.17).
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -1150,3 +1217,4 @@ partidas). λ = 300: la validación cruzada prefiere la regularización máxima,
 | 2026-11-27 | Resultado de F2b (§5.14): el selector entrenado con equipos `val` no vistos rinde 80,5 % frente a 82,8 % del control (−2,33) y −2,60 frente a la mejor élite única. Las élites difieren ~1,5 pts por rival: no hay señal que explotar. Lateral: J 4,6, elegida con 6000 partidas `val`, iguala al control (83,1 %). |
 | 2026-11-27 | Cola v3 (§4.16): el primer arranque se frenó porque fallaron 6 tests por aislamiento (dos tests de `test_series_memory_v3.py` dejaban activa la memoria de serie para los siguientes). Corregido en `7dc00bf` sin tocar el código de v3. La cola arrancó a las 09:42 con JOBS = 6 (P1 primero). |
 | 2026-11-27 | Cola v3: la caché de la calculadora (`IAPSVGC2022_v3/logs/calc_cache.sqlite`) creció ~30 GB/h (96 GB a las 12:54). Se activó `scripts/server/cache_watchdog.sh` (probado en el servidor con un lanzador falso), que aplica la regla de los 250 GB del usuario: si se supera, detiene la cola, borra la caché y relanza la cola reanudable. Se pierde como mucho el entrenamiento en curso. |
+| 2026-11-27 | Resultados parciales de la cola v3 (§5.15): P1 máscara +1,0 (PPO) y +0,2 (DDQN); S1 preview condicionado −7,2 y −5,3, no se adopta; D1 Trick Room 0,1 % y Tailwind 1,6 %. D3 pre-registrado (§4.17): greedy_joint nivel 3 con clima, campos y núcleos clásicos de VGC (`greedy_joint_arq3`), medido contra PPO v2 y DDQN v1 después de v3; cola `arq3_queue.sh`. |

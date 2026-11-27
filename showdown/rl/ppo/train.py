@@ -52,6 +52,7 @@ LIVE_OPPONENTS = (
     'greedy_joint',
     'expectimax_bayesian',
     'greedy_joint_arq',  # PPO v2 (P2): greedy_joint en modo arquetipo nivel 2
+    'greedy_joint_arq3',  # §4.17: nivel 3 (clima, campo y núcleos clásicos de VGC)
     'ppo_v1',            # PPO v2 (P3): PPO v1 congelado, espejo (PPO_FOE_CHECKPOINTS)
 )
 ALL_OPPONENTS = ('mock',) + LIVE_OPPONENTS + ('curriculum', 'self')

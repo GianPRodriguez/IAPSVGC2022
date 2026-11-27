@@ -47,6 +47,31 @@ from showdown.battle_bots.greedy_joint import joint as _joint_mod
 _MOVES_PATH = Path(__file__).resolve().parents[3] / 'API' / 'JSONs' / 'moves.json'
 
 
+def _arch_level() -> int:
+    return int(_joint_mod._archetype_level())
+
+
+def _infos_from_mons(mons, user_team=None):
+    """``MonInfo`` (arquetipos, nivel 3) del equipo propio: hoja propia si la hay (validated), si no poke-env."""
+    from showdown.battle_bots.greedy_joint import archetypes as A
+    sets = list(getattr(user_team, 'mons', None) or [])
+    out = []
+    for i, mon in enumerate(mons, start=1):
+        st = sets[i - 1] if i - 1 < len(sets) else None
+        if st is not None and A._id(getattr(st, 'species', ''))[:5] == A._id(_species_name(mon))[:5]:
+            out.append(A.mon_info(i, st.species, st.ability or '', st.item or '', st.moves or ()))
+        else:
+            moves = list((getattr(mon, 'moves', None) or {}).keys())
+            out.append(A.mon_info(i, _species_name(mon), str(getattr(mon, 'ability', '') or ''),
+                                  str(getattr(mon, 'item', '') or ''), moves))
+    return out
+
+
+def _foe_infos(mons):
+    from showdown.battle_bots.greedy_joint import archetypes as A
+    return [A.mon_info(i, _species_name(m)) for i, m in enumerate(mons, start=1)]
+
+
 def _joint_tie_margin() -> float:
     """``PS_JOINT_TIE_MARGIN``: margen de casi-empate para la variante estocástica (0 = off)."""
     import os
@@ -298,6 +323,7 @@ class GreedyJointPlayer(StaleRoomGuardMixin, Player):
         self.last_preview_order: str = '1234'
         self.last_decision_score: float = 0.0
         self._diag_kinds: Counter = Counter()
+        self._arch_plans: dict = {}   # nivel 3: plan elegido en el preview, por batalla
         # Precalienta calc (TCP/stdio) fuera del primer turno crítico
         try:
             warm_damage_calc()
@@ -330,6 +356,13 @@ class GreedyJointPlayer(StaleRoomGuardMixin, Player):
 
         scored = best_team_preview_order(our, foes)
         order = scored.order
+        if _arch_level() >= 3:
+            # Nivel 3: abre quien pone el plan + quien lo aprovecha / protege (archetypes.py).
+            from showdown.battle_bots.greedy_joint import archetypes as A
+            own_src = battle.teampreview_team or list(battle.team.values())
+            order, fit = A.preview_order(_infos_from_mons(own_src, getattr(self, 'user_team', None)),
+                                         _foe_infos(foe_src), order)
+            self._arch_plans[battle.battle_tag] = fit
         # Marcar seleccionados (requisito poke-env)
         selected = set(order)
         for i, mon in enumerate(battle.teampreview_team or [], start=1):
@@ -421,16 +454,23 @@ class GreedyJointPlayer(StaleRoomGuardMixin, Player):
         tera_l = str(left_mon.tera_type.name) if left_mon and left_mon.tera_type else None
         tera_r = str(right_mon.tera_type.name) if right_mon and right_mon.tera_type else None
 
-        best_l, best_r, total = await best_joint_double_action(
-            left_calc, right_calc, left_opts, right_opts, foes,
-            weather=weather, terrain=terrain,
-            can_mega_left=can_mega_l, can_mega_right=can_mega_r,
-            can_tera_left=can_tera_l, can_tera_right=can_tera_r,
-            tera_left=tera_l, tera_right=tera_r,
-            field_ctx=field_ctx,
-            tie_margin=(float(self.tie_margin) if self.tie_margin is not None
-                        else _joint_tie_margin()),
-        )
+        plan_tok = None
+        if _arch_level() >= 3:
+            plan_tok = _joint_mod._ARCHETYPE_PLAN.set((self._battle_plan(battle), weather, terrain))
+        try:
+            best_l, best_r, total = await best_joint_double_action(
+                left_calc, right_calc, left_opts, right_opts, foes,
+                weather=weather, terrain=terrain,
+                can_mega_left=can_mega_l, can_mega_right=can_mega_r,
+                can_tera_left=can_tera_l, can_tera_right=can_tera_r,
+                tera_left=tera_l, tera_right=tera_r,
+                field_ctx=field_ctx,
+                tie_margin=(float(self.tie_margin) if self.tie_margin is not None
+                            else _joint_tie_margin()),
+            )
+        finally:
+            if plan_tok is not None:
+                _joint_mod._ARCHETYPE_PLAN.reset(plan_tok)
         self.last_decision_score = total
         if diversity_log.enabled():
             await _log_joint_diversity(
@@ -484,6 +524,38 @@ class GreedyJointPlayer(StaleRoomGuardMixin, Player):
         )
         return DoubleBattleOrder(o1, o2)
 
+    def _battle_plan(self, battle: DoubleBattle):
+        """Nivel 3: plan de la batalla (el del preview; si no hubo, se calcula con el equipo)."""
+        tag = battle.battle_tag
+        if tag not in self._arch_plans:
+            from showdown.battle_bots.greedy_joint import archetypes as A
+            own = list(battle.team.values()) if getattr(battle, 'team', None) else []
+            foe = list(battle.opponent_team.values()) if getattr(battle, 'opponent_team', None) else []
+            self._arch_plans[tag] = A.choose_plan(
+                _infos_from_mons(own, getattr(self, 'user_team', None)), _foe_infos(foe))
+        return self._arch_plans.get(tag)
+
+    def _plan_switch_pick(self, battle: DoubleBattle, switches):
+        """Nivel 3: en un cambio forzado, vuelve quien pone el clima / campo si se perdió; si está, quien lo
+        aprovecha. None = sin preferencia (se usa el criterio de tipos)."""
+        if _arch_level() < 3 or not switches:
+            return None
+        from showdown.battle_bots.greedy_joint import archetypes as A
+        fit = self._battle_plan(battle)
+        if fit is None or fit.plan.kind == 'speed':
+            return None
+        infos = _infos_from_mons(switches)
+        if not A.plan_field_active(fit, _weather_str(battle), _terrain_str(battle)):
+            for mon, info in zip(switches, infos):
+                if A.is_auto_setter(info, fit.plan):
+                    return mon
+        best, best_s = None, 0.0
+        for mon, info in zip(switches, infos):
+            sc = A.abuser_score(info, fit.plan)
+            if sc > best_s:
+                best, best_s = mon, sc
+        return best
+
     def _forced_switch_order(self, battle: DoubleBattle) -> BattleOrder:
         foe_types = []
         for foe in battle.opponent_active_pokemon:
@@ -523,6 +595,9 @@ class GreedyJointPlayer(StaleRoomGuardMixin, Player):
                 best_slot = best_forced_switch_slot(reserved, foe_types)
                 best_i = int(best_slot)
             pick = ranked[best_i][0]
+            plan_pick = self._plan_switch_pick(battle, switches)
+            if plan_pick is not None:
+                pick = plan_pick
             used.add(pick)
             orders.append(SingleBattleOrder(pick))
         while len(orders) < 2:
