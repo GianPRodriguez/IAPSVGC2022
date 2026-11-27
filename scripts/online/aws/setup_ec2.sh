@@ -40,6 +40,17 @@ if ! command -v caddy >/dev/null; then
 fi
 
 log "repos (versiones fijadas como en docs/SERVER.md)"
+# Los datos de las series viven en ~/online_web (fuera del repo). Las versiones anteriores escribían en
+# $REPO/logs/online_web: se mueven allí los archivos sin versionar para que git pull no choque con ellos.
+mkdir -p "$B/online_web/replays"
+if [ -d "$REPO/.git" ]; then
+  git -C "$REPO" ls-files --others --exclude-standard -z logs/online_web | while IFS= read -r -d '' f; do
+    rel="${f#logs/online_web/}"
+    mkdir -p "$B/online_web/$(dirname "$rel")"
+    [ -e "$B/online_web/$rel" ] || cp -p "$REPO/$f" "$B/online_web/$rel"
+    rm -f "$REPO/$f"
+  done
+fi
 if [ ! -d "$REPO/.git" ]; then
   git clone -q --depth 1 --branch "$BRANCH" --single-branch https://github.com/GianPRodriguez/IAPSVGC2022.git "$REPO"
 else
@@ -123,7 +134,7 @@ User=$USER
 WorkingDirectory=$REPO
 Environment=PYTHONUNBUFFERED=1
 # --inbound-only: Showdown bloquea (lock) la IP de la EC2; la persona reta al bot y el bot acepta.
-ExecStart=$B/venv/bin/python scripts/online/bo3_web.py --host 127.0.0.1 --port 8000 --inbound-only
+ExecStart=$B/venv/bin/python scripts/online/bo3_web.py --host 127.0.0.1 --port 8000 --inbound-only --out $B/online_web
 Restart=on-failure
 RestartSec=15
 

@@ -669,6 +669,8 @@ def main(argv=None) -> int:
                     help='minutos para que la persona rete al bot cuando Showdown bloquea los retos salientes')
     ap.add_argument('--inbound-only', action='store_true',
                     help='no intentar retar: la persona siempre reta al bot (IP bloqueada por Showdown)')
+    ap.add_argument('--out', default=str(OUT),
+                    help='carpeta de resúmenes y replays (en la EC2, fuera del repo para que git pull no choque)')
     ap.add_argument('--check', action='store_true', help='solo carga los agentes, sin conectarse')
     args = ap.parse_args(argv)
 
@@ -695,7 +697,8 @@ def main(argv=None) -> int:
     from poke_env.concurrency import POKE_LOOP
     from poke_env.ps_client import AccountConfiguration, ShowdownServerConfiguration
 
-    (OUT / 'replays').mkdir(parents=True, exist_ok=True)
+    out_dir = Path(args.out)
+    (out_dir / 'replays').mkdir(parents=True, exist_ok=True)
     RouterPlayer = _make_router_class()
     player = RouterPlayer(
         agents=agents,
@@ -704,7 +707,7 @@ def main(argv=None) -> int:
         battle_format=args.format,
         team=team,
         max_concurrent_battles=max(50, 3 * (args.max_active + args.max_queue)),
-        save_replays=str(OUT / 'replays'),
+        save_replays=str(out_dir / 'replays'),
         start_timer_on_battle_start=True,
         accept_open_team_sheet=True,
         log_level=logging.WARNING,  # en INFO poke-env registra todo el tráfico, incluido el token de login
@@ -713,7 +716,7 @@ def main(argv=None) -> int:
     pe_log.handlers = pe_log.handlers[:1]
     service = Bo3Service(player, fmt=args.format, accept_timeout=args.accept_timeout,
                          series_timeout=args.series_timeout * 60, max_active=args.max_active,
-                         max_queue=args.max_queue, inbound_timeout=args.inbound_timeout * 60)
+                         max_queue=args.max_queue, inbound_timeout=args.inbound_timeout * 60, out_dir=out_dir)
     service.inbound_only = bool(args.inbound_only)
     asyncio.run_coroutine_threadsafe(service.run(exit_on_disconnect=True), POKE_LOOP)
     httpd = ThreadingHTTPServer((args.host, args.port), make_handler(service))
