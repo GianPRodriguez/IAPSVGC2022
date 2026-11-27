@@ -1044,6 +1044,34 @@ con el control. 0 caídas.
    ganancia en robustez frente a estilos variados no se mide contra las heurísticas; habría que medirla
    contra personas o contra un pool aparte.
 
+### 5.14 Resultados de F2b: selector entrenado con equipos no vistos (27-11-2026, código `b4426d4`, exploración)
+
+Datos: el mismo repertorio de F2 jugó 2000 enfrentamientos `val` por heurístico (bloque 50002). Salieron
+20 equipos rivales distintos, de los 30 de `val`. Prueba: la parte `eval` de F2 (las mismas 3000
+partidas). λ = 300: la validación cruzada prefiere la regularización máxima, casi una constante.
+
+| Brazo (`eval`) | solo | joint | expectimax | **3 heur.** |
+|---|---|---|---|---|
+| Mejor élite única (J 4,6, elegida en `val`) | 83,4 | 86,5 | 79,3 | **83,1 %** |
+| Control | 85,6 | 87,6 | 75,2 | **82,8 %** |
+| Selector F2b | 82,9 | 85,1 | 73,4 | 80,5 % |
+| Selector F2 (con `fit`) | 84,5 | 82,8 | 75,2 | 80,8 % |
+
+- **Primaria:** selector − control = −2,33 pts (± 1,57). Selector − mejor élite única = −2,60 (± 1,33).
+- La mejor élite única elegida en `val` iguala al control: +0,27 (± 1,50).
+
+**Lectura:**
+1. **El selector tampoco funciona con equipos no vistos.** En `val` las élites ganan entre 88,9 y 90,6 %:
+   hay más margen que en `fit`, pero las diferencias entre élites siguen siendo de ~1,5 pts. Con 20
+   equipos de entrenamiento, el modelo no aprende qué élite le va mejor a cada rival y elegir
+   "por rival" resta frente a quedarse con una sola.
+2. **Hallazgo lateral:** la élite J 4,6, elegida con 6000 partidas en `val`, rinde lo mismo que el control
+   (83,1 frente a 82,8 %) y mejor contra expectimax (+4,1). Elegir la élite con más partidas acerca a J al
+   control. Es descriptivo y su selección no estaba pre-registrada; no cambia la conclusión de F1.
+3. **Conclusión del selector (F2 y F2b):** con este repertorio, las élites se parecen demasiado en
+   rendimiento por rival para que elegir según el equipo rival aporte algo. El oráculo optimista (90,7 %)
+   es ruido de selección.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -1119,3 +1147,4 @@ con el control. 0 caídas.
 | 2026-11-27 | Objetivo de equidad de cómputo entre agentes (decisión del usuario): horas de cola totales similares para E–K. Registro y desequilibrio actual en `docs/presupuesto_computo.md` (F 101 h, E 88 h, H 79 h, G 61 h, I/J/K 19 h cada uno). |
 | 2026-11-27 | **PPO v3 / DDQN v2 encolados** (§4.16, visto bueno del usuario): `v3_queue.sh` con JOBS = 6 en la copia del repo `IAPSVGC2022_v3` (commit `72a42bc`, con los checkpoints de PPO v2 en `checkpoints/ppo_v2/`). Un envoltorio espera a `QD_F2B_DONE` (un método a la vez) y corre los tests de v3 antes de lanzar la cola. Salida `~/iapsvgc_runs/v3`, marca `V3_DONE`. |
 | 2026-11-27 | Resultado de F4b (§5.13): el PPO entrenado con un 20 % de élites de K como rivales rinde 81,3 % frente a 82,2 % del control (−0,87 pts, cota −1,56; no inferioridad no confirmada por poco). Expectimax +1,5, joint −2,7: la diversidad cambia contra quién rinde, no cuánto. |
+| 2026-11-27 | Resultado de F2b (§5.14): el selector entrenado con equipos `val` no vistos rinde 80,5 % frente a 82,8 % del control (−2,33) y −2,60 frente a la mejor élite única. Las élites difieren ~1,5 pts por rival: no hay señal que explotar. Lateral: J 4,6, elegida con 6000 partidas `val`, iguala al control (83,1 %). |

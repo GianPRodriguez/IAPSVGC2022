@@ -328,6 +328,7 @@ siendo la suite de \(\pi^\*\), no coverage por sí sola.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.1.5** | 2026-11-27 | F2b (protocolo §5.14): el selector con equipos no vistos tampoco supera al control (−2,33 pts); las élites difieren ~1,5 pts por rival. Se cierra la línea del selector. |
 | **2.1.4** | 2026-11-27 | F4b (protocolo §5.13): PPO con el mosaico `pool` (20 % élites de K) 81,3 % frente a 82,2 % del control (−0,87 pts); 22 reinicios de entorno con los rivales en espejo. |
 | **2.1.3** | 2026-11-26 | `selector_f2 play --fit-split val --eval-from`: datos del selector con equipos no vistos y la prueba `eval` reutilizada (F2b, protocolo §4.15). |
 | **2.1.2** | 2026-11-26 | F2 (protocolo §5.11): el selector de élite por rival entrenado con equipos `fit` no supera al control (−1,97 pts) ni a la mejor élite única (+0,37): en equipos memorizados todas las élites ganan 95–97 %. |
