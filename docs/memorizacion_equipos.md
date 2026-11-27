@@ -1172,6 +1172,7 @@ entrenar el preview v2.1.
 **Decisiones del usuario (19-11-2026):**
 - **P3 no se adopta.** Su único argumento era ganarle al mismo rival con que se entrenó.
 - **P4 no se implementa.**
+  - *Revisión pendiente (27-11-2026, decisión del usuario):* reconsiderar P4 (rival de arquetipos con entropía 0,03) después de la cola v3 (protocolo §4.16), con la evidencia nueva. D1 mostró que los heurísticos activan Trick Room en el 0,1 % y Tailwind en el 1,6 % de las partidas en que pueden, y las derrotas contra personas fueron contra esos planes. P4 era el mejor contra Trick Room (87,4 frente a 81,0 %) y Tailwind (83,8 frente a 77,6 %).
 - **El preview v2.1 usa la misma receta que el v2:** greedy_joint como combate, tu equipo, 200
   actualizaciones, entropía 0,005, formaciones canónicas, `best.pt`.
 - **Medir antes de las corridas oficiales.**
