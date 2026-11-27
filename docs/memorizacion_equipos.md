@@ -986,7 +986,7 @@ Código: `showdown/rl/pokeenv_backend.py` (rivales `greedy_joint_arq` y `ppo_v1`
 `showdown/rl/ppo/agent.py` (temperatura), `showdown/rl/ddqn/policy_diag.py`
 (`--sample`, `--temperature`, rivales extra), `showdown/rl/team_archetypes.py`. Tests:
 `tests/test_ppo_v2.py`. Script: `scripts/server/kickoff_queue24.sh`; resumen:
-`showdown/rl/kickoff_summary24.py`. Duración estimada ~8,2 h. Resultados: pendientes.
+`showdown/rl/kickoff_summary24.py`. Duración estimada ~8,2 h. Resultados: §17.1 (P2 y P4 no cumplen la regla; P3 cumple, pero el usuario no lo adopta; P4 no se implementa).
 
 **Calibración del enfrentamiento en espejo (19-11-2026).** Con resultados parciales, P2 y P4
 ganaron solo el 28,2 % y el 21,8 % contra PPO v1, y la regla de P3 suponía que v1 contra sí mismo
