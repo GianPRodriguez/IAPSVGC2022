@@ -1,0 +1,51 @@
+{
+  "agente": "PPO v2",
+  "rival": "Sam smithy",
+  "formato": "gen9championsvgc2026regmcbo3",
+  "estado": "terminada",
+  "nota": "",
+  "victorias": 0,
+  "derrotas": 2,
+  "serie": "perdida",
+  "checkpoint": "/home/ubuntu/IAPSVGC2022/checkpoints/ppo_v2/ppo_s1/final.pt",
+  "partidas": [
+    {
+      "sala": "battle-gen9championsvgc2026regmcbo3-2720144924",
+      "turnos": 8,
+      "ganó": false,
+      "equipo_rival": [
+        "basculegion",
+        "charizard",
+        "floetteeternal",
+        "garchomp",
+        "kingambit",
+        "whimsicott"
+      ]
+    },
+    {
+      "sala": "battle-gen9championsvgc2026regmcbo3-2720145911",
+      "turnos": 5,
+      "ganó": false,
+      "equipo_rival": [
+        "basculegion",
+        "charizard",
+        "floetteeternal",
+        "garchomp",
+        "kingambit",
+        "whimsicott"
+      ]
+    }
+  ],
+  "decisiones_acumuladas_agente": {
+    "agent": "ppo",
+    "decisions": 42,
+    "exceptions": 0,
+    "exception_rate": 0.0,
+    "order_fallbacks": 0,
+    "order_fallback_rate": 0.0,
+    "by_error": {},
+    "last_error": ""
+  },
+  "espera_aceptar_s": 273.3,
+  "duracion_min": 6.2
+}

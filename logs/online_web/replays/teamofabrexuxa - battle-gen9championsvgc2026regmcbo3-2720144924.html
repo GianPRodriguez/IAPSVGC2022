@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<!-- version 1 -->
+<title>battle-gen9championsvgc2026regmcbo3-2720144924</title>
+<style>
+    html,
+    body {
+        font-family: Verdana, sans-serif;
+        font-size: 10pt;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        padding: 12px 0;
+    }
+
+    .battle-log {
+        font-family: Verdana, sans-serif;
+        font-size: 10pt;
+    }
+
+    .battle-log-inline {
+        border: 1px solid #AAAAAA;
+        background: #EEF2F5;
+        color: black;
+        max-width: 640px;
+        margin: 0 auto 80px;
+        padding-bottom: 5px;
+    }
+
+    .battle-log .inner {
+        padding: 4px 8px 0px 8px;
+    }
+
+    .battle-log .inner-preempt {
+        padding: 0 8px 4px 8px;
+    }
+
+    .battle-log .inner-after {
+        margin-top: 0.5em;
+    }
+
+    .battle-log h2 {
+        margin: 0.5em -8px;
+        padding: 4px 8px;
+        border: 1px solid #AAAAAA;
+        background: #E0E7EA;
+        border-left: 0;
+        border-right: 0;
+        font-family: Verdana, sans-serif;
+        font-size: 13pt;
+    }
+
+    .backprop {
+        top: 0;
+    }
+
+    .battle-log .chat {
+        vertical-align: middle;
+        padding: 3px 0 3px 0;
+        font-size: 8pt;
+    }
+
+    .battle-log .chat strong {
+        color: #40576A;
+    }
+
+    .battle-log .chat em {
+        padding: 1px 4px 1px 3px;
+        color: #000000;
+        font-style: normal;
+    }
+
+    .chat.mine {
+        background: rgba(0, 0, 0, 0.05);
+        margin-left: -8px;
+        margin-right: -8px;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .spoiler {
+        color: #BBBBBB;
+        background: #BBBBBB;
+        padding: 0px 3px;
+    }
+
+    .spoiler:hover,
+    .spoiler:active,
+    .spoiler-shown {
+        color: #000000;
+        background: #E2E2E2;
+        padding: 0px 3px;
+    }
+
+    .spoiler a {
+        color: #BBBBBB;
+    }
+
+    .spoiler:hover a,
+    .spoiler:active a,
+    .spoiler-shown a {
+        color: #2288CC;
+    }
+
+    .chat code,
+    .chat .spoiler:hover code,
+    .chat .spoiler:active code,
+    .chat .spoiler-shown code {
+        border: 1px solid #C0C0C0;
+        background: #EEEEEE;
+        color: black;
+        padding: 0 2px;
+    }
+
+    .chat .spoiler code {
+        border: 1px solid #CCCCCC;
+        background: #CCCCCC;
+        color: #CCCCCC;
+    }
+
+    .battle-log .rated {
+        padding: 3px 4px;
+    }
+
+    .battle-log .rated strong {
+        color: white;
+        background: #89A;
+        padding: 1px 4px;
+        border-radius: 4px;
+    }
+
+    .spacer {
+        margin-top: 0.5em;
+    }
+
+    .message-announce {
+        background: #6688AA;
+        color: white;
+        padding: 1px 4px 2px;
+    }
+
+    .message-announce a,
+    .broadcast-green a,
+    .broadcast-blue a,
+    .broadcast-red a {
+        color: #DDEEFF;
+    }
+
+    .broadcast-green {
+        background-color: #559955;
+        color: white;
+        padding: 2px 4px;
+    }
+
+    .broadcast-blue {
+        background-color: #6688AA;
+        color: white;
+        padding: 2px 4px;
+    }
+
+    .infobox {
+        border: 1px solid #6688AA;
+        padding: 2px 4px;
+    }
+
+    .infobox-limited {
+        max-height: 200px;
+        overflow: auto;
+        overflow-x: hidden;
+    }
+
+    .broadcast-red {
+        background-color: #AA5544;
+        color: white;
+        padding: 2px 4px;
+    }
+
+    .message-learn-canlearn {
+        font-weight: bold;
+        color: #228822;
+        text-decoration: underline;
+    }
+
+    .message-learn-cannotlearn {
+        font-weight: bold;
+        color: #CC2222;
+        text-decoration: underline;
+    }
+
+    .message-effect-weak {
+        font-weight: bold;
+        color: #CC2222;
+    }
+
+    .message-effect-resist {
+        font-weight: bold;
+        color: #6688AA;
+    }
+
+    .message-effect-immune {
+        font-weight: bold;
+        color: #666666;
+    }
+
+    .message-learn-list {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+    .message-throttle-notice,
+    .message-error {
+        color: #992222;
+    }
+
+    .message-overflow,
+    .chat small.message-overflow {
+        font-size: 0pt;
+    }
+
+    .message-overflow::before {
+        font-size: 9pt;
+        content: '...';
+    }
+
+    .subtle {
+        color: #3A4A66;
+    }
+</style>
+<div class="wrapper replay-wrapper" style="max-width:1180px;margin:0 auto">
+    <input type="hidden" name="replayid" value="unregisteredserver-gen8randombattle-320064" />
+    <div class="battle"></div>
+    <div class="battle-log"></div>
+    <div class="replay-controls"></div>
+    <div class="replay-controls-2"></div>
+    <h1 style="font-weight:normal;text-align:center"><strong>poke-env battle replay</strong><br />battle-gen9championsvgc2026regmcbo3-2720144924<br /><a
+            href="http://pokemonshowdown.com/users/randomplayer1" class="subtle" target="_blank">teamofabrexuxa</a>
+        vs. <a href="http://pokemonshowdown.com/users/randomplayer2" class="subtle"
+            target="_blank">Sam Smithy</a></h1>
+    <script type="text/plain" class="battle-log-data">
+    >battle-gen9championsvgc2026regmcbo3-2720144924
+|init|battle
+|title|Sam Smithy vs. teamofabrexuxa
+|j|☆Sam Smithy
+|j|‽teamofabrexuxa
+|html|<table width="100%"><tr><td align="left">Sam Smithy</td><td align="right">teamofabrexuxa</tr><tr><td align="left"><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> </td><td align="right"><i class="fa fa-circle-o"></i> <i class="fa fa-circle-o"></i> </tr></table>
+|uhtml|bestof|<h2><strong>Game 1</strong> of <a href="/game-bestof3-gen9championsvgc2026regmcbo3-2720144923">a best-of-3</a></h2>
+|gametype|doubles
+|player|p1|Sam Smithy|2|
+|player|p2|teamofabrexuxa|266|
+|gen|9
+|tier|[Gen 9 Champions] VGC 2026 Reg M-C (Bo3)
+|rule|Species Clause: Limit one of each Pokemon
+|rule|Item Clause: Limit 1 of each item
+|clearpoke
+|poke|p1|Kingambit, L50, M|
+|poke|p1|Whimsicott, L50, M|
+|poke|p1|Garchomp, L50, F|
+|poke|p1|Charizard, L50, F|
+|poke|p1|Floette-Eternal, L50, F|
+|poke|p1|Basculegion, L50, M|
+|poke|p2|Raichu, L50, M|
+|poke|p2|Rillaboom, L50, M|
+|poke|p2|Gholdengo, L50|
+|poke|p2|Arcanine-Hisui, L50, M|
+|poke|p2|Staraptor, L50, M|
+|poke|p2|Primarina, L50, F|
+|teampreview|4
+|inactive|Battle timer is ON: inactive players will automatically lose when time's up. (requested by teamofabrexuxa)
+|inactive|Time left: 90 sec this turn | 420 sec total | 90 sec grace
+|inactive|Sam Smithy has 60 seconds left.
+|
+|teamsize|p1|4
+|teamsize|p2|4
+|start
+|switch|p1a: Maradona|Whimsicott, L50, M|100/100
+|switch|p1b: Jorginho|Kingambit, L50, M|100/100
+|switch|p2a: Gholdengo|Gholdengo, L50|189/189
+|switch|p2b: Staraptor|Staraptor, L50, M|185/185
+|-ability|p2b: Staraptor|Intimidate|boost
+|-unboost|p1a: Maradona|atk|1
+|-unboost|p1b: Jorginho|atk|1
+|-ability|p1b: Jorginho|Defiant|boost
+|-boost|p1b: Jorginho|atk|2
+|turn|1
+|inactive|Time left: 55 sec this turn | 420 sec total
+|
+|detailschange|p2b: Staraptor|Staraptor-Mega, L50, M
+|-mega|p2b: Staraptor|Staraptor|Staraptite
+|move|p2a: Gholdengo|Protect|p2a: Gholdengo
+|-singleturn|p2a: Gholdengo|Protect
+|move|p1b: Jorginho|Sucker Punch|p2b: Staraptor
+|-resisted|p2b: Staraptor|1
+|-damage|p2b: Staraptor|132/185
+|move|p1a: Maradona|Moonblast|p2b: Staraptor
+|-supereffective|p2b: Staraptor|1
+|-damage|p2b: Staraptor|0 fnt
+|faint|p2b: Staraptor
+|
+|upkeep
+|inactive|Time left: 55 sec this turn | 420 sec total
+|
+|switch|p2b: Rillaboom|Rillaboom, L50, M|205/205
+|-fieldstart|move: Grassy Terrain|[from] ability: Grassy Surge|[of] p2b: Rillaboom
+|turn|2
+|inactive|Time left: 55 sec this turn | 420 sec total
+|
+|switch|p1b: Charizard|Charizard, L50, F|100/100
+|move|p1a: Maradona|Protect|p1a: Maradona
+|-singleturn|p1a: Maradona|Protect
+|move|p2b: Rillaboom|Fake Out|p1b: Charizard
+|-crit|p1b: Charizard
+|-damage|p1b: Charizard|70/100
+|move|p2a: Gholdengo|Make It Rain|p1b: Charizard|[spread] p1b
+|-activate|p1a: Maradona|move: Protect
+|-resisted|p1b: Charizard|1
+|-damage|p1b: Charizard|32/100
+|-unboost|p2a: Gholdengo|spa|2
+|-damage|p2a: Gholdengo|171/189|[from] item: Life Orb
+|
+|-heal|p2a: Gholdengo|182/189|[from] Grassy Terrain
+|upkeep
+|turn|3
+|inactive|Time left: 55 sec this turn | 420 sec total
+|
+|detailschange|p1b: Charizard|Charizard-Mega-Y, L50, F
+|-mega|p1b: Charizard|Charizard|Charizardite Y
+|-weather|SunnyDay|[from] ability: Drought|[of] p1b: Charizard
+|move|p1a: Maradona|Tailwind|p1a: Maradona
+|-sidestart|p1: Sam Smithy|move: Tailwind
+|move|p1b: Charizard|Heat Wave|p2a: Gholdengo|[spread] p2b
+|-miss|p1b: Charizard|p2a: Gholdengo
+|-supereffective|p2b: Rillaboom|1
+|-damage|p2b: Rillaboom|0 fnt
+|faint|p2b: Rillaboom
+|move|p2a: Gholdengo|Make It Rain|p1a: Maradona|[spread] p1a,p1b
+|-supereffective|p1a: Maradona|1
+|-resisted|p1b: Charizard|1
+|-enditem|p1a: Maradona|Focus Sash
+|-damage|p1a: Maradona|1/100
+|-damage|p1b: Charizard|19/100
+|-unboost|p2a: Gholdengo|spa|2
+|-damage|p2a: Gholdengo|164/189|[from] item: Life Orb
+|
+|-weather|SunnyDay|[upkeep]
+|-heal|p1a: Maradona|6/100|[from] Grassy Terrain
+|-heal|p2a: Gholdengo|175/189|[from] Grassy Terrain
+|upkeep
+|inactive|Time left: 55 sec this turn | 420 sec total
+|
+|switch|p2b: Arcanine|Arcanine-Hisui, L50, M|172/172
+|turn|4
+|inactive|Time left: 55 sec this turn | 420 sec total
+|inactive|Sam Smithy has 30 seconds left.
+|
+|switch|p1b: Jerry Rivera|Garchomp, L50, F|100/100
+|move|p1a: Maradona|Protect|p1a: Maradona
+|-singleturn|p1a: Maradona|Protect
+|move|p2b: Arcanine|Head Smash|p1b: Jerry Rivera
+|-resisted|p1b: Jerry Rivera|1
+|-damage|p1b: Jerry Rivera|64/100
+|-damage|p2b: Arcanine|151/172|[from] ability: Rough Skin|[of] p1b: Jerry Rivera
+|move|p2a: Gholdengo|Shadow Ball|p1a: Maradona
+|-activate|p1a: Maradona|move: Protect
+|
+|-weather|SunnyDay|[upkeep]
+|-heal|p1a: Maradona|12/100|[from] Grassy Terrain
+|-heal|p1b: Jerry Rivera|70/100|[from] Grassy Terrain
+|-heal|p2b: Arcanine|161/172|[from] Grassy Terrain
+|-heal|p2a: Gholdengo|186/189|[from] Grassy Terrain
+|upkeep
+|turn|5
+|inactive|Time left: 55 sec this turn | 420 sec total
+|
+|move|p1a: Maradona|Moonblast|p2b: Arcanine
+|-resisted|p2b: Arcanine|1
+|-damage|p2b: Arcanine|124/172
+|move|p1b: Jerry Rivera|Earthquake|p2a: Gholdengo|[spread] p1a,p2a,p2b
+|-resisted|p1a: Maradona|1
+|-supereffective|p2a: Gholdengo|1
+|-supereffective|p2b: Arcanine|2
+|-damage|p1a: Maradona|0 fnt
+|-damage|p2a: Gholdengo|114/189
+|-damage|p2b: Arcanine|0 fnt
+|faint|p1a: Maradona
+|faint|p2b: Arcanine
+|move|p2a: Gholdengo|Shadow Ball|p1b: Jerry Rivera
+|-damage|p1b: Jerry Rivera|54/100
+|-damage|p2a: Gholdengo|96/189|[from] item: Life Orb
+|
+|-weather|SunnyDay|[upkeep]
+|-heal|p1b: Jerry Rivera|60/100|[from] Grassy Terrain
+|-heal|p2a: Gholdengo|107/189|[from] Grassy Terrain
+|upkeep
+|
+|switch|p1a: Jorginho|Kingambit, L50, M|100/100
+|turn|6
+|inactive|Time left: 55 sec this turn | 420 sec total
+|
+|move|p2a: Gholdengo|Protect|p2a: Gholdengo
+|-singleturn|p2a: Gholdengo|Protect
+|move|p1b: Jerry Rivera|Dragon Claw|p2a: Gholdengo
+|-activate|p2a: Gholdengo|move: Protect
+|move|p1a: Jorginho|Kowtow Cleave|p2a: Gholdengo
+|-activate|p2a: Gholdengo|move: Protect
+|
+|-weather|SunnyDay|[upkeep]
+|-heal|p1b: Jerry Rivera|66/100|[from] Grassy Terrain
+|-heal|p2a: Gholdengo|118/189|[from] Grassy Terrain
+|-sideend|p1: Sam Smithy|move: Tailwind
+|-fieldend|move: Grassy Terrain
+|upkeep
+|turn|7
+|inactive|Time left: 55 sec this turn | 420 sec total
+|
+|move|p2a: Gholdengo|Protect|p2a: Gholdengo
+|-singleturn|p2a: Gholdengo|Protect
+|move|p1b: Jerry Rivera|Dragon Claw|p2a: Gholdengo
+|-activate|p2a: Gholdengo|move: Protect
+|move|p1a: Jorginho|Kowtow Cleave|p2a: Gholdengo
+|-activate|p2a: Gholdengo|move: Protect
+|
+|-weather|none
+|upkeep
+|turn|8
+|inactive|Time left: 55 sec this turn | 420 sec total
+|
+|move|p2a: Gholdengo|Protect||[still]
+|-fail|p2a: Gholdengo
+|move|p1b: Jerry Rivera|Dragon Claw|p2a: Gholdengo
+|-resisted|p2a: Gholdengo|1
+|-damage|p2a: Gholdengo|82/189
+|move|p1a: Jorginho|Kowtow Cleave|p2a: Gholdengo
+|-supereffective|p2a: Gholdengo|1
+|-damage|p2a: Gholdengo|0 fnt
+|faint|p2a: Gholdengo
+|
+|win|Sam Smithy
+    </script>
+</div>
+
+<div class="battle-log battle-log-inline" style="display:none"></div>
+
+<script>
+    let daily = Math.floor(Date.now() / 1000 / 60 / 60 / 24); document.write('<script src="https://play.pokemonshowdown.com/js/replay-embed.js?version' + daily + '"></' + 'script>');
+</script>
+
+<p style="text-align:center"> Replay created by <a href="https://github.com/hsahovic/poke-env">poke-env</a>, with code from <a
+        href="https://github.com/smogon/pokemon-showdown"> pokemon-showdown</a>. If something goes wrong, don't hesitate
+    to open an <a href="https://github.com/hsahovic/poke-env/issues">issue!</a></p>
