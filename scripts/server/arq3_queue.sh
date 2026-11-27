@@ -39,7 +39,8 @@ TEAM=showdown/rl/data/ddqn_team.txt
 FOES=greedy_joint,greedy_joint_arq,greedy_joint_arq3
 
 log "esperando el fin de la cola v3 ($V3LOG)"
-until tail -n 1 "$V3LOG" 2>/dev/null | grep -q " V3_DONE\$"; do sleep 120; done
+# Se ignoran las líneas del vigía de la caché (escribe su cierre después de V3_DONE).
+until grep -v "vigía caché" "$V3LOG" 2>/dev/null | tail -n 1 | grep -q " V3_DONE\$"; do sleep 120; done
 [ -f "$PV" ] || { log "ERROR: falta el preview $PV"; log "ARQ3_DONE"; exit 1; }
 log "inicio commit $(git rev-parse --short HEAD); JOBS=$JOBS"
 clean_ps
