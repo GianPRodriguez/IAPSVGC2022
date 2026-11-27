@@ -28,6 +28,11 @@ Golisopod/Sneasler (no salieron). Ganó las dos partidas sin perder ningún Pok�
 **Datos técnicos:** 25 decisiones, 0 excepciones, 0 órdenes de respaldo. El bot aceptó en 28 s y la serie
 duró 5,3 min. El fallo es de juego, no de infraestructura.
 
+**Hojas abiertas (corrección del 27-11-2026):** la serie se jugó **con hojas abiertas**, según la constancia que
+envió el rival. El primer diagnóstico decía "cerradas" porque los replays no tenían `|showteam|`, pero poke-env
+procesa esas líneas sin pasarlas a `parse_message` y nunca las escribe en el replay guardado. Desde ese día
+`bo3_web.py` las añade al replay y marca `hojas_abiertas` en el JSON de cada partida.
+
 ### Partida 1 (4 turnos, 0–4 en Pokémon)
 
 Preview: Gholdengo + Staraptor delante, Rillaboom + Arcanine detrás.
@@ -35,7 +40,9 @@ Preview: Gholdengo + Staraptor delante, Rillaboom + Arcanine detrás.
 1. Staraptor megaevoluciona y usa **Protect**. Gholdengo no protege y cae de un golpe antes de moverse:
    Helping Hand + Wave Crash de Basculegion, que con Swift Swim es más rápido que Gholdengo (aun con el
    −1 de Intimidate).
-2. Rillaboom usa **Grassy Glide contra Farigiraf**: Armor Tail bloquea la prioridad y el turno se pierde.
+2. Rillaboom elige Grassy Glide contra **Basculegion** (68 %), pero el rival **cambia a Farigiraf** en ese
+   hueco y su Armor Tail bloquea la prioridad. Fue una buena lectura del humano, no un error de información:
+   al decidir, Farigiraf no estaba en el campo.
    Pelipper le hace KO con Hurricane, que en lluvia no falla. Staraptor usa Brave Bird contra Farigiraf
    (53 %, que se cura con la Sitrus Berry).
 3. Arcanine rompe el Focus Sash de Pelipper con Head Smash y Staraptor repite Brave Bird contra Farigiraf.
@@ -69,13 +76,23 @@ Preview: Gholdengo + Staraptor delante otra vez, Arcanine + Primarina detrás.
    Swift Swim y Helping Hand. Bajo Trick Room, Staraptor y Arcanine caen sin moverse. La observación P5 usa la
    calculadora para el daño (con el clima), pero el orden de movimiento con Swift Swim o Trick Room no es
    explícito.
-4. **Habilidades del rival que bloquean.** Grassy Glide contra Armor Tail. Farigiraf puede tener Armor Tail,
-   Cud Chew o Sap Sipper, y la habilidad no se revela hasta que actúa. El agente no considera esa posibilidad.
+4. ~~Habilidades del rival que bloquean~~ (retirado): el Grassy Glide contra Armor Tail fue un cambio del rival,
+   y con hojas abiertas la habilidad se conoce (la observación marca la prioridad bloqueada por Armor Tail).
 5. **Protect consecutivo** (partida 2, turno 8): es legal en Showdown, pero falla casi siempre. Con el combate
    muestreado a T = 0,5 puede ser el sorteo. Las máscaras no lo penalizan.
 6. **Arquetipo fuera de la distribución de entrenamiento.** Lluvia + Trick Room + Last Respects no es el estilo
    de los heurísticos ni del pool. Es el mismo diagnóstico que el 0–2 de PPO v1 contra una persona
    (memorizacion_equipos §16).
+
+### Memoria entre partidas del Bo3 (idea del usuario, 27-11-2026)
+
+Las dos partidas son contra el mismo equipo, y el agente empezó la segunda igual que la primera (misma
+formación, Mega Staraptor + Protect). Con hojas abiertas, lo que la partida 1 aporta de verdad es **qué 4 trajo
+el rival, quién abrió y cómo jugó** (aquí: lluvia con Basculegion delante y luego Trick Room). Lo que no aporta
+mucho son los SP: el oráculo de SP exactos solo da unos +1 punto a los agentes greedy (sp-information, 14-11-2026),
+y el motor de inferencia actual no acota nada dentro de una partida. Prioridad propuesta: preview condicionado
+a lo que el rival trajo en la partida 1, luego patrones de juego (probabilísticos, porque el humano también se
+adapta: adojs cambió el compañero de apertura). Pendiente de pre-registro.
 
 ### Ideas que salen de aquí (sin evaluar)
 

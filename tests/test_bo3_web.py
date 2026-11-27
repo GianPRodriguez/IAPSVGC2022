@@ -350,3 +350,19 @@ def test_router_locked_login_counts_as_logged_in():
     assert not r.ps_client.logged_in.is_set() and not r.locked
     r.observe('|updateuser|‽BotLock|1|266|{}')
     assert r.ps_client.logged_in.is_set() and r.locked
+
+
+def test_router_records_open_team_sheets_in_replay():
+    pytest.importorskip('poke_env')
+    from poke_env.ps_client import AccountConfiguration
+    Router = w._make_router_class()
+    r = Router(agents={}, account_configuration=AccountConfiguration('BotOts', None),
+               battle_format=w.FORMAT, start_listening=False)
+    tag = f'battle-{w.FORMAT}-1'
+    b = types.SimpleNamespace(_replay_data=[])
+    r._battles[tag] = b
+    r.observe(f'>{tag}\n|showteam|p1|Farigiraf||SitrusBerry|ArmorTail|TrickRoom,Psychic|||||50|\n|turn|1')
+    assert r.ots[tag][0].startswith('|showteam|p1|Farigiraf')
+    assert b._replay_data and b._replay_data[0][1] == 'showteam'
+    r.observe('|showteam|p2|X')  # fuera de una sala: se ignora
+    assert list(r.ots) == [tag]

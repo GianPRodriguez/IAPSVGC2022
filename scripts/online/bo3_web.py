@@ -148,6 +148,7 @@ def _make_router_class():
             self.incoming: Dict[str, str] = {}      # retos entrantes pendientes: id -> formato
             self.popups: List[Tuple[float, str]] = []
             self.format_names: Dict[str, str] = {}
+            self.ots: Dict[str, List[str]] = {}      # sala -> líneas |showteam| (hojas abiertas)
             self.locked = False                     # sesión bloqueada (‽): no puede retar, sí aceptar
             # poke-env solo registra los popups y los PM de retos: se observan antes de su manejo normal.
             self._orig_handle_message = self.ps_client._handle_message
@@ -163,6 +164,7 @@ def _make_router_class():
         def observe(self, message: str) -> None:
             """Popups, nombres de formatos y PM ``/challenge`` (Showdown avisa así de los retos)."""
             me = to_id(self.username)
+            room = message.split('\n', 1)[0][1:].strip() if message.startswith('>') else ''
             for line in message.split('\n'):
                 parts = line.split('|')
                 if len(parts) < 2:
@@ -179,6 +181,13 @@ def _make_router_class():
                 elif parts[1] == 'popup':
                     self.popups.append((time.time(), '|'.join(parts[2:]).replace('||', ' ').strip()))
                     del self.popups[:-50]
+                elif parts[1] == 'showteam' and room:
+                    # Hojas abiertas: poke-env las procesa sin pasarlas a parse_message, así que no quedaban
+                    # en el replay guardado (27-11-2026 se diagnosticó por error una serie como cerrada).
+                    self.ots.setdefault(room, []).append(line)
+                    battle = self._battles.get(room)
+                    if battle is not None:
+                        battle._replay_data.append(parts)
                 elif parts[1] == 'formats':
                     self.format_names.update(parse_formats(parts[2:]))
                 elif parts[1] == 'pm' and len(parts) >= 5 and parts[4].startswith('/challenge'):
@@ -448,7 +457,9 @@ class Bo3Service:
             b = self.player.battles.get(tag)
             if b is None:
                 continue
-            games.append({'sala': tag, 'turnos': b.turn, 'ganó': b.won,
+            ots = getattr(self.player, 'ots', {}).get(tag, [])
+            games.append({'sala': tag, 'turnos': b.turn, 'ganó': b.won, 'hojas_abiertas': bool(ots),
+                          'hojas': ots,
                           'equipo_rival': sorted(m.species for m in b.opponent_team.values())})
         agent = self.player.agents.get(s.agent)
         summary = {
