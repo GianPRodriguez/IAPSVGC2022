@@ -1,0 +1,51 @@
+{
+  "agente": "PPO v2",
+  "rival": "adojs",
+  "formato": "gen9championsvgc2026regmcbo3",
+  "estado": "terminada",
+  "nota": "",
+  "victorias": 0,
+  "derrotas": 2,
+  "serie": "perdida",
+  "checkpoint": "/home/ubuntu/IAPSVGC2022/checkpoints/ppo_v2/ppo_s1/final.pt",
+  "partidas": [
+    {
+      "sala": "battle-gen9championsvgc2026regmcbo3-2720141879-lt3syt1l53sf9cjbgfacclnnxld2p0apw",
+      "turnos": 4,
+      "ganó": false,
+      "equipo_rival": [
+        "archaludon",
+        "basculegion",
+        "farigiraf",
+        "golisopod",
+        "pelipper",
+        "sneasler"
+      ]
+    },
+    {
+      "sala": "battle-gen9championsvgc2026regmcbo3-2720142521-92i5jv27syh080ebuh8tx3gbtemsqd0pw",
+      "turnos": 8,
+      "ganó": false,
+      "equipo_rival": [
+        "archaludon",
+        "basculegion",
+        "farigiraf",
+        "golisopod",
+        "pelipper",
+        "sneasler"
+      ]
+    }
+  ],
+  "decisiones_acumuladas_agente": {
+    "agent": "ppo",
+    "decisions": 25,
+    "exceptions": 0,
+    "exception_rate": 0.0,
+    "order_fallbacks": 0,
+    "order_fallback_rate": 0.0,
+    "by_error": {},
+    "last_error": ""
+  },
+  "espera_aceptar_s": 28.0,
+  "duracion_min": 5.3
+}

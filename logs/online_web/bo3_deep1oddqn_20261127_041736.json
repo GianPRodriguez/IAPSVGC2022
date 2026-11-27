@@ -1,0 +1,51 @@
+{
+  "agente": "PPO v2",
+  "rival": "Deep1ODDQN",
+  "formato": "gen9championsvgc2026regmcbo3",
+  "estado": "terminada",
+  "nota": "",
+  "victorias": 2,
+  "derrotas": 0,
+  "serie": "ganada",
+  "checkpoint": "/home/ubuntu/IAPSVGC2022/checkpoints/ppo_v2/ppo_s1/final.pt",
+  "partidas": [
+    {
+      "sala": "battle-gen9championsvgc2026regmcbo3-2720140552",
+      "turnos": 5,
+      "ganó": true,
+      "equipo_rival": [
+        "arcaninehisui",
+        "gholdengo",
+        "primarina",
+        "raichu",
+        "rillaboom",
+        "staraptor"
+      ]
+    },
+    {
+      "sala": "battle-gen9championsvgc2026regmcbo3-2720140837",
+      "turnos": 3,
+      "ganó": true,
+      "equipo_rival": [
+        "arcaninehisui",
+        "gholdengo",
+        "primarina",
+        "raichu",
+        "rillaboom",
+        "staraptor"
+      ]
+    }
+  ],
+  "decisiones_acumuladas_agente": {
+    "agent": "ppo",
+    "decisions": 9,
+    "exceptions": 0,
+    "exception_rate": 0.0,
+    "order_fallbacks": 0,
+    "order_fallback_rate": 0.0,
+    "by_error": {},
+    "last_error": ""
+  },
+  "espera_aceptar_s": 3.0,
+  "duracion_min": 1.2
+}
