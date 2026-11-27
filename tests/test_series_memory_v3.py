@@ -154,8 +154,13 @@ def test_ppo_warm_start_is_function_preserving(tmp_path):
     assert not back.cfg.series_memory and back.obs_dim == OBS_DIM
 
 
-def test_ddqn_warm_start_is_function_preserving(tmp_path):
+def test_ddqn_warm_start_is_function_preserving(tmp_path, monkeypatch):
     torch = pytest.importorskip('torch')
+    # apply_series_options escribe estas variables: monkeypatch las restaura al terminar (si no, la memoria de
+    # serie quedaba activa para los tests siguientes y la observación pasaba a 6401)
+    for k in ('RL_OBS_SERIES_MEMORY', 'RL_MASK_PROTECT_STREAK', 'RL_SERIES_BO3', 'PREVIEW_SERIES_CONDITION'):
+        monkeypatch.setenv(k, '')
+        monkeypatch.delenv(k)
     from showdown.rl.ddqn.agent import DDQNAgent, DDQNConfig
     kw = dict(replay_capacity=64, replay_device='cpu', dropout=0.0)
     v1 = DDQNAgent(DDQNConfig(seed=1, **kw))
@@ -238,8 +243,11 @@ def test_series_options_apply(monkeypatch):
     pytest.importorskip('torch')
     from showdown.rl.ppo.agent import PPOAgent, PPOConfig
     from showdown.rl.series_options import apply_series_options
+    # setenv antes de delenv: con la variable ausente, delenv no registra nada y lo que escribe
+    # apply_series_options quedaría puesto para los tests siguientes (la observación pasaba a 6401)
     for k in ('RL_OBS_SERIES_MEMORY', 'RL_MASK_PROTECT_STREAK', 'RL_SERIES_BO3', 'PREVIEW_SERIES_CONDITION'):
-        monkeypatch.delenv(k, raising=False)
+        monkeypatch.setenv(k, '')
+        monkeypatch.delenv(k)
     agent = PPOAgent(PPOConfig())
     meta = apply_series_options(agent, {'series_memory': 1, 'mask_protect_streak': 1, 'preview_series': 1})
     import os
