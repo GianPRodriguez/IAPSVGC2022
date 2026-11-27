@@ -37,6 +37,13 @@ class FakeClient:
     async def send_message(self, msg, room=None):
         self.sent.append(('msg', msg))
 
+    async def accept_challenge(self, user, team):
+        self.sent.append(('accept', user))
+        uid = w.to_id(user)
+        if self.player.incoming.pop(uid, None) == w.FORMAT:
+            tag = f'battle-{uid}-in'
+            self.player.battles[tag] = FakeBattle(user, tag=tag)
+
 
 class FakePlayer:
     """Simula Showdown: según ``behaviour[uid]`` el rival acepta, rechaza, ignora o no existe."""
@@ -46,6 +53,9 @@ class FakePlayer:
         self.agents = {'ppo': object(), 'ddqn': object()}
         self.assign = {}
         self.pending_to = set()
+        self.incoming = {}
+        self.popups = []
+        self.format_names = {w.FORMAT: '[Gen 9 Champions] VGC 2026 Reg M-C (Bo3)'}
         self.battles = {}
         self.next_team = 'team'
         self.behaviour = behaviour or {}
@@ -58,6 +68,11 @@ class FakePlayer:
         mode = self.behaviour.get(uid, 'accept')
         loop = asyncio.get_running_loop()
         if mode == 'missing':
+            return
+        if mode in ('locked', 'notfound'):
+            text = ('You are locked and cannot challenge unlocked users.' if mode == 'locked'
+                    else f"The user '{user}' was not found.")
+            loop.call_later(0.02, lambda: self.popups.append((w.time.time(), text)))
             return
         self.pending_to.add(uid)
         if mode == 'accept':
@@ -245,3 +260,81 @@ def test_summarize_web_totals_and_replay_links(tmp_path):
     assert '| PPO v2 | 2 | 1 | 0 | 1 | 2–1 | 67 % |' in md
     assert md.index('Misty') < md.index('| Ash')  # orden por fecha
     assert '[P1](replays/bot%20-%20battle-x-111.html) P2' in md
+
+
+def test_router_observes_challenge_pms_popups_and_formats():
+    pytest.importorskip('poke_env')
+    from poke_env.ps_client import AccountConfiguration
+    Router = w._make_router_class()
+    r = Router(agents={}, account_configuration=AccountConfiguration('BotObs', None),
+               battle_format=w.FORMAT, start_listening=False)
+    # Mensajes reales capturados de Showdown (27-11-2026)
+    r.observe(f'|pm| BotObs| Deep1ODDQN|/challenge {w.FORMAT}|{w.FORMAT}|||')
+    assert r.pending_to == {'deep1oddqn'}
+    r.observe('|pm| Deep1ODDQN| BotObs|/challenge')
+    assert r.pending_to == set()
+    r.observe(f'|pm|+Ash K| BotObs|/challenge {w.FORMAT}|{w.FORMAT}|||')
+    assert r.incoming == {'ashk': w.FORMAT}
+    r.observe('|pm| BotObs|+Ash K|/challenge')
+    assert r.incoming == {}
+    r.observe('|popup|You are locked and cannot challenge unlocked users.||If this user is your friend, ask.')
+    assert 'locked' in r.popups[-1][1] and '||' not in r.popups[-1][1]
+    r.observe('|formats|,1|S/V Singles|[Gen 9] Random Battle,f|[Gen 9 Champions] VGC 2026 Reg M-C (Bo3),e')
+    assert r.format_names[w.FORMAT] == '[Gen 9 Champions] VGC 2026 Reg M-C (Bo3)'
+    assert r.format_names['gen9randombattle'] == '[Gen 9] Random Battle'
+
+
+def test_locked_switches_to_inbound_and_accepts_only_registered_users(tmp_path):
+    player = FakePlayer({'ash': 'locked'})
+
+    async def scenario():
+        svc = _service(player, out_dir=tmp_path, inbound_timeout=0.6)
+        task = asyncio.create_task(svc.run())
+        await asyncio.sleep(0.01)
+        svc.submit('Ash', 'ppo')
+        await asyncio.sleep(0.1)
+        assert svc.inbound_only and svc.series['ash'].state == 'esperando_reto'
+        # Un desconocido reta al bot: se ignora
+        player.incoming['stranger'] = w.FORMAT
+        # Ash reta con otro formato: se le avisa y no se acepta
+        player.incoming['ash'] = 'gen9randombattle'
+        await asyncio.sleep(0.05)
+        assert 'otro formato' in svc.series['ash'].msg and ('accept', 'Ash') not in player.ps_client.sent
+        player.incoming['ash'] = w.FORMAT
+        await asyncio.sleep(0.05)
+        assert ('accept', 'Ash') in player.ps_client.sent and svc.series['ash'].state == 'jugando'
+        assert player.assign['ash'] == 'ppo' and 'stranger' in player.incoming
+        # La siguiente serie ya no intenta retar
+        n_challenges = sum(1 for x in player.ps_client.sent if x[0] == 'challenge')
+        svc.submit('Misty', 'ddqn')
+        await asyncio.sleep(0.05)
+        assert svc.series['misty'].state == 'esperando_reto'
+        assert sum(1 for x in player.ps_client.sent if x[0] == 'challenge') == n_challenges
+        await asyncio.sleep(0.8)
+        assert svc.series['misty'].state == 'no_acepto' and 'No llegó' in svc.series['misty'].msg
+        task.cancel()
+
+    asyncio.run(scenario())
+
+
+def test_not_found_popup_shown_to_user(tmp_path):
+    player = FakePlayer({'nadie': 'notfound'})
+
+    async def scenario():
+        svc = _service(player, out_dir=tmp_path)
+        task = asyncio.create_task(svc.run())
+        await asyncio.sleep(0.01)
+        svc.submit('Nadie', 'ppo')
+        await asyncio.sleep(0.1)
+        s = svc.series['nadie']
+        assert s.state == 'no_acepto' and 'was not found' in s.msg and not svc.inbound_only
+        task.cancel()
+
+    asyncio.run(scenario())
+
+
+def test_render_inbound_instructions():
+    s = w.Series(user='Ash', uid='ash', agent='ppo', state='esperando_reto')
+    page = w.render_page(w.AGENTS, status=(s, 0), bot='teamofabrexuxa',
+                         fmt_label='[Gen 9 Champions] VGC 2026 Reg M-C (Bo3)', inbound=True)
+    assert 'Rétalo tú' in page and 'VGC 2026 Reg M-C (Bo3)' in page and 'http-equiv="refresh"' in page

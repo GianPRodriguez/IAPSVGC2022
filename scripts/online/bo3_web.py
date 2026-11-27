@@ -14,6 +14,11 @@ creados sin conexión propia y con el equipo fijo:
 - Varios jugadores distintos a la vez (``--max-active`` series en curso); una serie activa por usuario.
 - Showdown admite un reto saliente pendiente a la vez: los retos se envían en serie; si no se acepta en
   ``--accept-timeout`` s se cancela (``/cancelchallenge``) y se pasa al siguiente.
+- Showdown bloquea (*lock*) las IP de centros de datos como la EC2 del Learner Lab (27-11-2026): un usuario
+  bloqueado no puede retar, pero sí aceptar. Al primer popup "locked" el bot pasa a modo inverso: la página
+  pide a la persona que rete ella al bot en el formato BO3 y el bot acepta solo a quien se registró
+  (``--inbound-timeout`` min); ``--inbound-only`` empieza directamente así. Los demás popups (usuario no
+  encontrado, etc.) se muestran en la página.
 - Timer de Showdown activado en cada partida, para que una persona ausente no deje colgada la serie.
 - Cada serie terminada se guarda en ``logs/online_web/bo3_<usuario>_<fecha>.json`` (+ replays).
 
@@ -47,10 +52,11 @@ OUT = REPO / 'logs' / 'online_web'
 FORMAT = 'gen9championsvgc2026regmcbo3'
 AGENTS = {'ppo': 'PPO v2', 'ddqn': 'DDQN v1'}  # clave del formulario -> nombre visible
 
-ACTIVE_STATES = ('en_cola', 'retando', 'jugando')
+ACTIVE_STATES = ('en_cola', 'retando', 'esperando_reto', 'jugando')
 STATE_TEXT = {
     'en_cola': 'En cola: el reto se enviará en cuanto el bot termine el reto anterior.',
     'retando': 'Reto enviado: acéptalo en Showdown.',
+    'esperando_reto': 'Esperando tu reto.',
     'jugando': 'Serie en curso.',
     'terminada': 'Serie terminada.',
     'no_acepto': 'El reto no se aceptó.',
@@ -72,6 +78,16 @@ def valid_username(name: Optional[str]) -> Optional[str]:
     """Nombre limpio si parece un usuario válido de Showdown (1–18 caracteres), si no ``None``."""
     name = (name or '').strip()
     return name if _USER_RE.match(name) and to_id(name) else None
+
+
+def parse_formats(items: Iterable[str]) -> Dict[str, str]:
+    """``|formats|`` de Showdown -> {id: nombre visible} (p. ej. '[Gen 9] Random Battle')."""
+    out: Dict[str, str] = {}
+    for item in items:
+        name = item.split(',', 1)[0].strip()
+        if name and to_id(name):
+            out[to_id(name)] = name
+    return out
 
 
 def series_score(battles: Dict[str, Any], uid: str, ignore: Iterable[str]) -> Tuple[List[str], int, int, bool]:
@@ -128,7 +144,44 @@ def _make_router_class():
             super().__init__(*args, **kwargs)
             self.agents = agents
             self.assign: Dict[str, str] = {}
-            self.pending_to: Set[str] = set()  # retos salientes pendientes (IDs), según updatechallenges
+            self.pending_to: Set[str] = set()       # retos salientes pendientes (IDs)
+            self.incoming: Dict[str, str] = {}      # retos entrantes pendientes: id -> formato
+            self.popups: List[Tuple[float, str]] = []
+            self.format_names: Dict[str, str] = {}
+            # poke-env solo registra los popups y los PM de retos: se observan antes de su manejo normal.
+            self._orig_handle_message = self.ps_client._handle_message
+            self.ps_client._handle_message = self._observe_then_handle
+
+        async def _observe_then_handle(self, message: str):
+            try:
+                self.observe(message)
+            except Exception as exc:  # noqa: BLE001 - un mensaje raro no debe tumbar la conexión
+                self.logger.warning('mensaje no reconocido (%s): %.200s', exc, message)
+            await self._orig_handle_message(message)
+
+        def observe(self, message: str) -> None:
+            """Popups, nombres de formatos y PM ``/challenge`` (Showdown avisa así de los retos)."""
+            me = to_id(self.username)
+            for line in message.split('\n'):
+                parts = line.split('|')
+                if len(parts) < 2:
+                    continue
+                if parts[1] == 'popup':
+                    self.popups.append((time.time(), '|'.join(parts[2:]).replace('||', ' ').strip()))
+                    del self.popups[:-50]
+                elif parts[1] == 'formats':
+                    self.format_names.update(parse_formats(parts[2:]))
+                elif parts[1] == 'pm' and len(parts) >= 5 and parts[4].startswith('/challenge'):
+                    sender, receiver = to_id(parts[2]), to_id(parts[3])
+                    other = receiver if sender == me else sender
+                    fmt = parts[4][len('/challenge'):].strip()
+                    if not fmt:  # "/challenge" vacío: ya no hay reto entre ambos (aceptado, rechazado o cancelado)
+                        self.pending_to.discard(other)
+                        self.incoming.pop(other, None)
+                    elif sender == me:
+                        self.pending_to.add(receiver)
+                    elif receiver == me:
+                        self.incoming[sender] = fmt
 
         def agent_for(self, battle):
             key = self.assign.get(to_id(getattr(battle, 'opponent_username', None)))
@@ -172,8 +225,12 @@ def _make_router_class():
 class Bo3Service:
     def __init__(self, player, *, fmt: str = FORMAT, accept_timeout: float = 120.0,
                  series_timeout: float = 90 * 60.0, max_active: int = 4, max_queue: int = 10,
-                 out_dir: Path = OUT, poll: float = 1.0):
+                 out_dir: Path = OUT, poll: float = 1.0, inbound_timeout: float = 300.0):
         self.player = player
+        # Showdown bloquea (lock) las IP de centros de datos: un usuario bloqueado no puede retar, pero sí
+        # aceptar. Tras el primer "locked" la persona reta al bot y el bot acepta (``inbound_only``).
+        self.inbound_only = False
+        self.inbound_timeout = inbound_timeout
         self.fmt = fmt
         self.accept_timeout = accept_timeout
         self.series_timeout = series_timeout
@@ -221,7 +278,16 @@ class Bo3Service:
 
     # -- lado poke-env (bucle de asyncio de poke-env) ---------------------- #
     def _n_playing(self) -> int:
-        return sum(s.state in ('retando', 'jugando') for s in self.series.values())
+        return sum(s.state in ('retando', 'esperando_reto', 'jugando') for s in self.series.values())
+
+    def format_label(self) -> str:
+        return getattr(self.player, 'format_names', {}).get(self.fmt, self.fmt)
+
+    def _popup_since(self, t: float) -> Optional[str]:
+        for ts, text in reversed(getattr(self.player, 'popups', [])):
+            if ts >= t:
+                return text
+        return None
 
     async def run(self) -> None:
         self.loop = asyncio.get_running_loop()
@@ -246,6 +312,9 @@ class Bo3Service:
         s.ignore = set(self.player.battles)
         s.t_challenge = time.time()
         self.player.assign[s.uid] = s.agent
+        if self.inbound_only:
+            self._start_inbound(s)
+            return
         LOG.info('%s reta a %s con %s', self.player.username, s.user, s.agent)
         await self.player.ps_client.challenge(s.user, self.fmt, self.player.next_team)
 
@@ -255,6 +324,15 @@ class Bo3Service:
             if tags:
                 break
             waited = time.time() - s.t_challenge
+            popup = self._popup_since(s.t_challenge)
+            if popup is not None:
+                if 'locked' in popup.lower():
+                    LOG.warning('Showdown bloquea los retos salientes (%s): desde ahora la gente reta al bot', popup)
+                    self.inbound_only = True
+                    self._start_inbound(s)
+                    return
+                self._finish(s, 'no_acepto', f'Showdown: {popup}')
+                return
             if s.uid in self.player.pending_to:
                 seen_pending = True
             elif seen_pending:
@@ -277,6 +355,37 @@ class Bo3Service:
         s.state = 'jugando'
         s.t_start = time.time()
         asyncio.get_running_loop().create_task(self._watch(s))
+
+    def _start_inbound(self, s: Series) -> None:
+        s.state = 'esperando_reto'
+        s.t_challenge = time.time()
+        LOG.info('esperando el reto de %s (%s)', s.user, s.agent)
+        asyncio.get_running_loop().create_task(self._inbound(s))
+
+    async def _inbound(self, s: Series) -> None:
+        """Espera el reto de ``s.uid`` en el formato correcto, lo acepta y sigue la serie."""
+        try:
+            accepted_at: Optional[float] = None
+            while not series_score(self.player.battles, s.uid, s.ignore)[0]:
+                now = time.time()
+                fmt = self.player.incoming.get(s.uid)
+                if fmt is not None and fmt != self.fmt:
+                    s.msg = f'Tu reto es de otro formato ({fmt}); usa {self.format_label()}.'
+                elif fmt is not None and (accepted_at is None or now - accepted_at > 20):
+                    s.msg = ''
+                    accepted_at = now
+                    LOG.info('aceptando el reto de %s', s.user)
+                    await self.player.ps_client.accept_challenge(s.user, self.player.next_team)
+                if now - s.t_challenge > self.inbound_timeout:
+                    self._finish(s, 'no_acepto', f'No llegó tu reto en {int(self.inbound_timeout // 60)} min.')
+                    return
+                await asyncio.sleep(self.poll)
+            s.state = 'jugando'
+            s.msg = ''
+            s.t_start = time.time()
+            await self._watch(s)
+        except Exception as exc:  # noqa: BLE001
+            self._finish(s, 'error', f'{type(exc).__name__}: {exc}')
 
     async def _watch(self, s: Series) -> None:
         try:
@@ -350,7 +459,8 @@ border:0;border-radius:8px;background:var(--acc);color:#fff;cursor:pointer}.mut{
 
 
 def render_page(agents: Dict[str, str], *, status: Optional[Tuple[Series, int]] = None,
-                error: str = '', user: str = '', bot: str = '') -> str:
+                error: str = '', user: str = '', bot: str = '', fmt_label: str = '',
+                inbound: bool = False, inbound_min: int = 5) -> str:
     esc = html.escape
     refresh = ''
     status_html = ''
@@ -363,6 +473,10 @@ def render_page(agents: Dict[str, str], *, status: Optional[Tuple[Series, int]] 
             line += f' (posición {pos})'
         if s.state == 'retando':
             line += f' Busca el reto de <b>{esc(bot)}</b> en Showdown.'
+        if s.state == 'esperando_reto':
+            line = (f'<b>Rétalo tú:</b> en Showdown busca al usuario <b>{esc(bot)}</b>, pulsa <i>Challenge</i>, '
+                    f'elige el formato <b>{esc(fmt_label)}</b> y tu equipo. El bot acepta en segundos '
+                    f'(tienes {inbound_min} min).')
         score = (f'<p class="big">{esc(agents.get(s.agent, s.agent))} {s.wins} – {s.losses} {esc(s.user)}</p>'
                  if s.state in ('jugando', 'terminada', 'expirada') else '')
         status_html = (f'<div class="card"><h1>{esc(s.user)} vs {esc(agents.get(s.agent, s.agent))}</h1>'
@@ -370,6 +484,10 @@ def render_page(agents: Dict[str, str], *, status: Optional[Tuple[Series, int]] 
                        + (f'<p class="mut">{esc(s.msg)}</p>' if s.msg else '') + '</div>')
     options = ''.join(f'<option value="{esc(k)}">{esc(v)}</option>' for k, v in agents.items())
     err_html = f'<p class="err">{esc(error)}</p>' if error else ''
+    how = (f'Conéctate a play.pokemonshowdown.com con ese usuario. Después de Enviar, <b>reta tú</b> a '
+           f'<b>{esc(bot)}</b> en el formato <b>{esc(fmt_label)}</b> con tu equipo.' if inbound else
+           f'Conéctate a play.pokemonshowdown.com con ese usuario: te llegará un reto de <b>{esc(bot)}</b> '
+           f'que debes aceptar en 2 minutos.')
     return f"""<!doctype html><html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">{refresh}<title>Reto BO3</title>
 <style>{_CSS}</style></head><body><main>{status_html}
@@ -379,8 +497,7 @@ def render_page(agents: Dict[str, str], *, status: Optional[Tuple[Series, int]] 
 <label for="usuario">Tu usuario de Showdown</label>
 <input id="usuario" name="usuario" maxlength="18" required autocomplete="off" value="{esc(user)}">
 <button type="submit">Enviar</button>{err_html}
-<p class="mut">Conéctate a play.pokemonshowdown.com con ese usuario: te llegará un reto de
-<b>{esc(bot)}</b> que debes aceptar en 2 minutos.</p>
+<p class="mut">{how}</p>
 </form></div></main></body></html>"""
 
 
@@ -414,8 +531,7 @@ def make_handler(service: Bo3Service):
                 return
             user = (parse_qs(url.query).get('u') or [''])[0][:18]
             st = service.status(user) if user else None
-            self._send(200, render_page(AGENTS_AVAILABLE(service), status=st, user=user,
-                                        bot=service.player.username))
+            self._send(200, render_page(AGENTS_AVAILABLE(service), status=st, user=user, **_page_kw(service)))
 
         def do_POST(self):
             if urlparse(self.path).path != '/retar':
@@ -433,9 +549,14 @@ def make_handler(service: Bo3Service):
                 self._send(303, '', headers={'Location': '/?u=' + quote(user)})
             else:
                 self._send(400, render_page(AGENTS_AVAILABLE(service), error=msg, user=user[:18],
-                                            bot=service.player.username))
+                                            **_page_kw(service)))
 
     return Handler
+
+
+def _page_kw(service: Bo3Service) -> Dict[str, Any]:
+    return {'bot': service.player.username, 'fmt_label': service.format_label(),
+            'inbound': service.inbound_only, 'inbound_min': int(service.inbound_timeout // 60)}
 
 
 def AGENTS_AVAILABLE(service: Bo3Service) -> Dict[str, str]:  # noqa: N802
@@ -504,6 +625,10 @@ def main(argv=None) -> int:
     ap.add_argument('--max-queue', type=int, default=10, help='series esperando turno de reto')
     ap.add_argument('--accept-timeout', type=float, default=120.0, help='segundos para aceptar el reto')
     ap.add_argument('--series-timeout', type=float, default=90.0, help='minutos máximos por serie')
+    ap.add_argument('--inbound-timeout', type=float, default=5.0,
+                    help='minutos para que la persona rete al bot cuando Showdown bloquea los retos salientes')
+    ap.add_argument('--inbound-only', action='store_true',
+                    help='no intentar retar: la persona siempre reta al bot (IP bloqueada por Showdown)')
     ap.add_argument('--check', action='store_true', help='solo carga los agentes, sin conectarse')
     args = ap.parse_args(argv)
 
@@ -548,7 +673,8 @@ def main(argv=None) -> int:
     pe_log.handlers = pe_log.handlers[:1]
     service = Bo3Service(player, fmt=args.format, accept_timeout=args.accept_timeout,
                          series_timeout=args.series_timeout * 60, max_active=args.max_active,
-                         max_queue=args.max_queue)
+                         max_queue=args.max_queue, inbound_timeout=args.inbound_timeout * 60)
+    service.inbound_only = bool(args.inbound_only)
     asyncio.run_coroutine_threadsafe(service.run(), POKE_LOOP)
     httpd = ThreadingHTTPServer((args.host, args.port), make_handler(service))
     print(f'[web] {user} sirviendo en http://{args.host}:{args.port} ({args.format})', flush=True)
