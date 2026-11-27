@@ -122,7 +122,8 @@ Wants=network-online.target
 User=$USER
 WorkingDirectory=$REPO
 Environment=PYTHONUNBUFFERED=1
-ExecStart=$B/venv/bin/python scripts/online/bo3_web.py --host 127.0.0.1 --port 8000
+# --inbound-only: Showdown bloquea (lock) la IP de la EC2; la persona reta al bot y el bot acepta.
+ExecStart=$B/venv/bin/python scripts/online/bo3_web.py --host 127.0.0.1 --port 8000 --inbound-only
 Restart=on-failure
 RestartSec=15
 
