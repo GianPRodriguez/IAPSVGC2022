@@ -848,6 +848,40 @@ victorias con IC 95 % de Wilson:
    presupuesto contra expectimax, por +3,0 pts". No se puede afirmar que algún QD rinda en promedio igual
    que PPO. I y K quedan por debajo del control.
 
+### 5.11 Resultados de F2: selector de élite por rival (26-11-2026, código `463c736`, exploración)
+
+Repertorio: 10 élites (5 de I y 5 de J; ninguna de K entró en el top-10 de `val`). Datos: 3000
+enfrentamientos `fit` por élite, de 89 equipos rivales. Prueba: 3000 enfrentamientos `eval` de 58
+equipos rivales, 0 caídas. λ = 10 por validación cruzada agrupada.
+
+| Brazo (`eval`, 1000 por rival) | solo | joint | expectimax | **3 heur.** |
+|---|---|---|---|---|
+| Control | 85,6 | 87,6 | 75,2 | **82,8 %** |
+| **Selector** | 84,5 | 82,8 | 75,2 | **80,8 %** |
+| Mejor élite única (J 6,5, elegida en `fit`) | 82,5 | 84,1 | 74,8 | 80,5 % |
+| PPO v2 s1 | 83,2 | 84,5 | 73,6 | 80,4 % |
+| Oráculo por equipo (optimista) | 91,3 | 93,1 | 87,8 | 90,7 % |
+
+- **Primaria:** selector − control = **−1,97 pts** (± 1,53). El selector rinde menos que el control.
+- Selector − mejor élite única = +0,37 (± 1,40): elegir por rival no aporta nada medible.
+- Por rival frente al control: solo −1,1; joint −4,8; expectimax 0,0.
+- El selector eligió sobre todo J 7,6 (47 %), J 6,5 (16 %) e I 9,3 (16 %).
+
+**Lectura:**
+1. **El selector no funciona con este diseño, y la causa está en los datos de entrenamiento.** En `fit`
+   todas las élites ganan entre 95 y 97 %: son los equipos con los que se entrenaron y los tienen
+   memorizados (la brecha de memorización de §19). Sin diferencias entre élites en `fit`, el modelo no
+   tiene nada que aprender sobre qué élite le va mejor a cada rival, y en `eval`, con equipos nuevos,
+   elige casi al azar entre élites parecidas.
+2. **El oráculo (90,7 %) no prueba que haya margen.** Elige la mejor de 10 élites por equipo con ~52
+   partidas por equipo en la misma muestra. El error estándar por equipo es de ~5,5 pts y el máximo de 10
+   lo infla en ~8 pts, así que casi toda la distancia es ruido de selección.
+3. **Expectativa a priori (§4.12):** se esperaba una ganancia de 0 a +2 pts. Salió −2,0 frente al control
+   y +0,4 frente a la mejor élite única, en la zona baja de lo esperado.
+4. **Mejora posible (no encolada):** entrenar el selector con equipos que los agentes no vieron
+   (`val`, o una parte de `eval` separada de la prueba), donde sí hay diferencias entre élites. El costo
+   es menos equipos para el selector.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -912,3 +946,4 @@ victorias con IC 95 % de Wilson:
 | 2026-11-26 | F1 de la familia QD 2.0 pre-registrada (§4.11): despliegue con 1000 partidas `val` (top-10 de cada archivo) y confirmación con 4000 enfrentamientos `eval` por heurístico; N_I/N_J/N_K no inferioridad frente al control (margen −1,5 pts) y S_J J > control contra expectimax, Holm m = 4. Cola `scripts/server/qd_f1.sh`. |
 | 2026-11-26 | F2–F4 de la familia QD 2.0 pre-registradas como exploraciones (§4.12–§4.14), encadenadas detrás de F1: F2 selector de élite por rival (logística sobre el equipo rival, bandit con información completa); F3 réplica desde PPO v2 s4 (control, J, K) y K con N1 = N2 = 10; F4a preview QD-PGA por roles; F4b PPO con el archivo de K como pool de rivales. |
 | 2026-11-26 | Resultado de F1 de la familia QD 2.0 (§5.10): **S_J confirmada** (J > control contra expectimax, +3,00 pts, p Holm = 2,2·10⁻⁴). N_J no confirmada por poco (−0,64 pts, cota −1,31, p = 0,017 > 0,0167). N_I (−2,64) y N_K (−3,14) no confirmadas: rinden menos que el control. Control 82,2 % frente a I 79,5, J 81,5 y K 79,0 % (12 000 partidas cada uno). |
+| 2026-11-26 | Resultado de F2 (§5.11, exploración): el selector rinde 80,8 % frente a 82,8 % del control (−1,97 ± 1,53 pts) y +0,37 frente a la mejor élite única. Causa: en `fit` (equipos de entrenamiento, memorizados) todas las élites ganan 95–97 % y no hay señal para aprender. El oráculo (90,7 %) está inflado por ruido de selección. Mejora posible: entrenar el selector con equipos no vistos. |
