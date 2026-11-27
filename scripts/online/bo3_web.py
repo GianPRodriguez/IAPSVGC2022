@@ -148,6 +148,7 @@ def _make_router_class():
             self.incoming: Dict[str, str] = {}      # retos entrantes pendientes: id -> formato
             self.popups: List[Tuple[float, str]] = []
             self.format_names: Dict[str, str] = {}
+            self.locked = False                     # sesión bloqueada (‽): no puede retar, sí aceptar
             # poke-env solo registra los popups y los PM de retos: se observan antes de su manejo normal.
             self._orig_handle_message = self.ps_client._handle_message
             self.ps_client._handle_message = self._observe_then_handle
@@ -166,7 +167,16 @@ def _make_router_class():
                 parts = line.split('|')
                 if len(parts) < 2:
                     continue
-                if parts[1] == 'popup':
+                if parts[1] == 'updateuser' and len(parts) > 2 and parts[2].strip().startswith('‽') \
+                        and to_id(parts[2]) == me:
+                    # "‽nombre": sesión iniciada pero bloqueada (Showdown marca la IP de la EC2 como proxy).
+                    # poke-env solo reconoce " nombre"; un usuario bloqueado puede jugar y aceptar retos.
+                    if not self.ps_client.logged_in.is_set():
+                        self.logger.warning('sesión iniciada como %s pero bloqueada (lock): solo se aceptan '
+                                            'retos', parts[2].strip())
+                    self.locked = True
+                    self.ps_client.logged_in.set()
+                elif parts[1] == 'popup':
                     self.popups.append((time.time(), '|'.join(parts[2:]).replace('||', ' ').strip()))
                     del self.popups[:-50]
                 elif parts[1] == 'formats':
@@ -309,7 +319,10 @@ class Bo3Service:
         if exit_on_disconnect:
             self.loop.create_task(self._watchdog())
         await self.player.ps_client.logged_in.wait()
-        LOG.info('conectado como %s; esperando retos', self.player.username)
+        if getattr(self.player, 'locked', False):
+            self.inbound_only = True
+        LOG.info('conectado como %s%s; esperando retos', self.player.username,
+                 ' (bloqueado: la gente reta al bot)' if self.inbound_only else '')
         while True:
             s = await self.queue.get()
             try:

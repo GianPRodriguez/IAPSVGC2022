@@ -338,3 +338,15 @@ def test_render_inbound_instructions():
     page = w.render_page(w.AGENTS, status=(s, 0), bot='teamofabrexuxa',
                          fmt_label='[Gen 9 Champions] VGC 2026 Reg M-C (Bo3)', inbound=True)
     assert 'Rétalo tú' in page and 'VGC 2026 Reg M-C (Bo3)' in page and 'http-equiv="refresh"' in page
+
+
+def test_router_locked_login_counts_as_logged_in():
+    pytest.importorskip('poke_env')
+    from poke_env.ps_client import AccountConfiguration
+    Router = w._make_router_class()
+    r = Router(agents={}, account_configuration=AccountConfiguration('BotLock', None),
+               battle_format=w.FORMAT, start_listening=False)
+    r.observe('|updateuser| Guest 123|0|2|{}')
+    assert not r.ps_client.logged_in.is_set() and not r.locked
+    r.observe('|updateuser|‽BotLock|1|266|{}')
+    assert r.ps_client.logged_in.is_set() and r.locked
