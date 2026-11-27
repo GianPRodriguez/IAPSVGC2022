@@ -454,6 +454,9 @@ sin dar error.
 
 ## Horas de cómputo por agente (medidas el 27-11-2026)
 
+Resumen por herramienta; el reparto por agente, el objetivo de equilibrio y lo que falta están en
+[`presupuesto_computo.md`](presupuesto_computo.md).
+
 Desde `~/iapsvgc_runs` en phantom (no incluye `~/iapsvgc_scratch` ni lo hecho en la laptop antes del 16-11).
 **Entrenamiento** = suma de `elapsed` de los `reporte.txt`, clasificados por algoritmo. **Cola** = primera a última
 marca de tiempo de cada `queue.log` (entrenamiento + evaluaciones + reanudaciones). Las colas a veces corrieron a la
