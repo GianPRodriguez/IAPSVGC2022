@@ -620,7 +620,7 @@ cola 24); si el preview trae a Arcanine-Hisui en más del 80 % de las partidas c
 con menos victorias que sin él, se propone reentrenar el preview. Muestra de prueba local (12 partidas, no cuenta):
 Trick Room activado 0/3, Tailwind 0/9, Tailwind propio 0/7.
 
-**S1. Preview condicionado a la serie (sin reentrenar; exploración con regla).** PPO v2 y DDQN v1 en series BO3
+**S1. Preview condicionado a la serie (sin reentrenar; exploración con regla).** PPO v2 y DDQN v1 (s0–s2, decisión del usuario del 27-11-2026; antes s0–s4) en series BO3
 (`policy_diag --series`, `eval`, 100 series por heurístico, rivales deterministas), con y sin `--preview-series`.
 La partida 1 es idéntica en los dos brazos; la comparación es la tasa de victorias en las partidas 2–3. **Regla:**
 se adopta solo con +1,5 pts o más y p < 0,05 unilateral. **Expectativa a priori (por M1):** ≤ 0.
@@ -649,8 +649,9 @@ Rivales de entrenamiento con sorteo de casi-empates (§3c.6), para que las serie
 con control (brazos C y V, así V − C se atribuye solo a la memoria); orden P1 → S1 → PPO → DDQN. Mezcla de rivales
 del entrenamiento: la del kick-off (`random:150k, greedy_solo:250k, greedy_joint:300k, expectimax_bayesian:300k`)
 con el sorteo de casi-empates por defecto. En DDQN el arranque en caliente empieza con ε = 0,05 (el final del
-programa) en los dos brazos, para no destruir la política aprendida. P1 y S1 usan PPO v2 s0–s4 y DDQN v1 s0–s4;
-S1 sin máscara, para aislar el preview. Cola: `scripts/server/v3_queue.sh` (reanudable; informe con
+programa) en los dos brazos, para no destruir la política aprendida. P1 usa PPO v2 s0–s4 y DDQN v1 s0–s4; S1,
+s0–s2 y sin máscara, para aislar el preview. Las evaluaciones corren en paralelo (`JOBS`, 6 por defecto, un puerto
+cada una); los entrenamientos, de uno en uno. Tiempo estimado: ~1,5–2 días (en serie habrían sido 4–5,5). Cola: `scripts/server/v3_queue.sh` (reanudable; informe con
 `scripts/analysis/v3_report.py`), **sin encolar hasta el visto bueno del usuario**.
 
 ## 5. Plantilla de reporte
@@ -1086,3 +1087,4 @@ enfrentamientos `eval` por heurístico, 6000 por agente, 0 caídas.
 | 2026-11-27 | §4.16 cerrada con las decisiones del usuario (+1M pasos, 3 semillas por brazo, control C frente a V, orden P1 → S1 → PPO → DDQN; ε = 0,05 en el arranque en caliente de DDQN). Cola `scripts/server/v3_queue.sh` e informe `scripts/analysis/v3_report.py` preparados, sin encolar. |
 | 2026-11-27 | **F4a cortada** por decisión del usuario en la iteración 42 de 64, sin resultado: la calibración salió estrecha ([0,475; 0,525] en los dos descriptores, porque el actor inicial elige casi siempre lo mismo), la rejilla funcionaba con pocos niveles (cobertura 0,13) y aporta poco a las mejoras de PPO y DDQN. F4b y F2b siguen. |
 | 2026-11-27 | §4.16: diagnósticos D1/D2 por arquetipo añadidos antes de medir (decisión del usuario), desde las evaluaciones sin máscara de P1 con `--context`; guía de decisión para proponer un rival que ejecute Trick Room / Tailwind o reentrenar el preview. Corrección: la observación ya tenía el orden de velocidad efectivo. |
+| 2026-11-27 | §4.16: S1 con 3 semillas por familia (s0–s2) y evaluaciones de la cola en paralelo (`JOBS`, un puerto por evaluación; entrenamientos de uno en uno), decisión del usuario para acortar la cola de ~4–5,5 a ~1,5–2 días. Diseño y reglas sin cambios. |
