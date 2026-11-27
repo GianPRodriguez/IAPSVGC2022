@@ -688,6 +688,41 @@ Hatterene / Armarouge + Ursaluna / Torkoal): rival RL `greedy_joint_arq3`.
 - **Límite conocido:** greedy_joint no hace cambios voluntarios. Un clima de habilidad que se pierde solo vuelve
   con un cambio forzado o con el movimiento.
 
+### 4.18 Expectativas actualizadas para lo pendiente en el servidor (v3 y D3), fijadas el 27-11-2026 antes de los resultados
+
+Pedido del usuario: registrar qué se espera antes de que terminen la cola v3 (PPO v3 / DDQN v2, §4.16) y D3 (§4.17).
+Son **expectativas del investigador** y no cambian ninguna prueba ni regla pre-registrada. Actualizan las de §4.16 y
+§4.17 con lo aprendido desde entonces:
+- Familia QD: 1M pasos extra de PPO dan +1,8 pts desde s1 y +0,0 desde s4 (§5.10, §5.12). Las versiones
+  actuales están cerca de su techo con esta receta.
+- D1: los heurísticos casi nunca ejecutan Trick Room ni Tailwind (§5.15).
+- S1: condicionar el preview a la serie costó entre 5 y 7 pts (§5.15).
+
+| # | Pregunta | Expectativa | Probabilidad subjetiva |
+|---|---|---|---|
+| E1 | P1 formal: ¿la máscara del Protect consecutivo es no inferior (−1,5 pts)? | Sí en las dos familias (PPO +1,0, DDQN +0,2) | PPO ~85 %, DDQN ~80 % |
+| E2 | **V1 (PPO): V − C en las partidas 2–3** | +0,5 a +2 pts (antes: +1 a +3) | Confirmar ~25 % (antes ~35 %) |
+| E3 | **V2 (DDQN): V − C en las partidas 2–3** | ≈ 0 (−1 a +1) | Confirmar ~10 % |
+| E4 | ¿La memoria daña la partida 1? (no inferioridad, −1,5 pts) | No daña: sus columnas nuevas empiezan en cero y en la partida 1 el bloque es casi cero | No inferior ~80 % |
+| E5 | V − C con rivales que sortean entre casi-empates (`--foe-tie`, descriptivo) | Menor que con rivales deterministas | ~65 % |
+| E6 | C frente a la versión anterior (descriptivo: +1M en series BO3 con máscara) | PPO +0,5 (−1 a +2), por el techo; DDQN +2 (0 a +4), porque está lejos del techo (~63 %) | — |
+| E7 | Series ganadas (secundaria) | Siguen a las partidas: V ≈ C | — |
+| E8 | D3: ¿el nivel 3 activa su clima cuando el equipo lo tiene? | Sí, en ≥ 70 % de esas partidas (el nivel 0 casi nunca lo planifica: solo los climas de habilidad que entran) | ~75 % |
+| E9 | D3: ¿Trick Room y Tailwind se activan más en el nivel 3 que en el 2? | Sí: Trick Room de ~10 % a ~20–30 %, gracias al preview y a la redirección | ~70 % |
+| E10 | D3: PPO v2 contra greedy_joint, nivel 0 → 2 → 3 | ~88 % → ~79 % → **~72–76 %** | Caída 2→3 ≥ 3 pts: ~60 % |
+| E11 | D3: DDQN v1, nivel 0 → 2 → 3 | ~62 % → ~54 % → **~45–50 %** (cae más que PPO) | ~60 % |
+| E12 | Operación: ¿el vigía de la caché actúa en la cola v3? | Sí, una vez (~18:30 del 27-11, en la fase de DDQN); se pierde un entrenamiento y la cola termina ~1 h más tarde | ~80 % |
+
+**Lectura de E5.** Si V − C es claramente mayor con rivales deterministas que con rivales que sortean, la memoria
+estaría aprendiendo que el rival repite exactamente lo mismo, no a adaptarse en general. Eso es útil contra los
+heurísticos, pero sería una advertencia para las partidas contra personas.
+
+**Conclusión esperada.** La memoria de serie dará, como mucho, una mejora pequeña en PPO y ninguna en DDQN. No
+alcanzará para las derrotas contra personas, que vienen de planes (clima con Trick Room o Tailwind) que los agentes
+nunca practicaron. D3 debería mostrar que el nivel 3 es un rival claramente más duro y más parecido a una persona.
+Eso convertiría a **entrenar contra el nivel 3** (la reconsideración de P4, memorizacion_equipos §17.1) en la
+siguiente mejora más prometedora para PPO y DDQN. La decisión la toma el usuario con los resultados.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -1218,3 +1253,4 @@ nunca vio una entrada con 4 rivales conocidos y cae en una formación por defect
 | 2026-11-27 | Cola v3 (§4.16): el primer arranque se frenó porque fallaron 6 tests por aislamiento (dos tests de `test_series_memory_v3.py` dejaban activa la memoria de serie para los siguientes). Corregido en `7dc00bf` sin tocar el código de v3. La cola arrancó a las 09:42 con JOBS = 6 (P1 primero). |
 | 2026-11-27 | Cola v3: la caché de la calculadora (`IAPSVGC2022_v3/logs/calc_cache.sqlite`) creció ~30 GB/h (96 GB a las 12:54). Se activó `scripts/server/cache_watchdog.sh` (probado en el servidor con un lanzador falso), que aplica la regla de los 250 GB del usuario: si se supera, detiene la cola, borra la caché y relanza la cola reanudable. Se pierde como mucho el entrenamiento en curso. |
 | 2026-11-27 | Resultados parciales de la cola v3 (§5.15): P1 máscara +1,0 (PPO) y +0,2 (DDQN); S1 preview condicionado −7,2 y −5,3, no se adopta; D1 Trick Room 0,1 % y Tailwind 1,6 %. D3 pre-registrado (§4.17): greedy_joint nivel 3 con clima, campos y núcleos clásicos de VGC (`greedy_joint_arq3`), medido contra PPO v2 y DDQN v1 después de v3; cola `arq3_queue.sh`. |
+| 2026-11-27 | Expectativas actualizadas para lo pendiente (§4.18), antes de los resultados: P1 no inferior en las dos familias; memoria de serie V − C PPO +0,5 a +2 (confirmar ~25 %) y DDQN ≈ 0; nivel 3 de arquetipos activa su clima en ≥ 70 % y baja a PPO a ~72–76 % y a DDQN a ~45–50 %; siguiente mejora esperada: entrenar contra el nivel 3. |
