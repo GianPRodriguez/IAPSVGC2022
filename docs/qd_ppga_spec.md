@@ -281,6 +281,7 @@ El metadata de cada elite conserva el modo de padre para auditoría.
 
 | Versión | Fecha | Notas |
 |---|---|---|
+| **2.0.5** | 2026-11-27 | F3 (protocolo §5.12): K4 −3,60 pts frente a control4; K con N1 = N2 = 10 rinde igual que con N = 3 (−2,47 frente a −2,48 respecto al control de s1) y cubre menos mapa (54 frente a 87 celdas). La reducción a N = 3 no explica el rendimiento. |
 | **2.0.4** | 2026-11-26 | F1 (protocolo §5.10): K 2.0 79,0 % frente a 82,2 % del control (−3,14 pts); no inferioridad no confirmada. |
 | **2.0.3** | 2026-11-26 | F3b (protocolo §4.13): corrida de K 2.0 con N1 = N2 = 10 (las del paper) desde PPO v2 s1, mismo presupuesto, para medir el efecto de la reducción a 3. |
 | **2.0.2** | 2026-11-26 | Exploración: K 2.0 78,3 % contra eval (control 81,0 %), 87 celdas, QD-score 162,1. Ver qd_ppo_spec §I 2.0. |

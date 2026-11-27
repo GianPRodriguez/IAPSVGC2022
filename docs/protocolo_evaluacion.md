@@ -959,6 +959,44 @@ equipos rivales, 0 caídas. λ = 10 por validación cruzada agrupada.
    (`val`, o una parte de `eval` separada de la prueba), donde sí hay diferencias entre élites. El costo
    es menos equipos para el selector.
 
+### 5.12 Resultados de F3: réplica desde s4 y K con N = 10 (27-11-2026, código `463c736`)
+
+Despliegue con 1000 partidas `val`: J4 4,3 (87,0 %), K4 6,3 (85,2 %), K10 7,4 (91,7 %). Partidas: 2000
+enfrentamientos `eval` por heurístico, 6000 por agente, 0 caídas.
+
+| Agente | solo | joint | expectimax | **3 heur.** | Archivo |
+|---|---|---|---|---|---|
+| control4 (PPO v2 s4 + 1M) | 88,8 | 88,9 | 79,7 | **85,8 %** | — |
+| PPO v2 s4 (arranque) | 86,8 | 89,6 | 81,3 | **85,9 %** | — |
+| J4 | 86,2 | 86,7 | 78,6 | 83,8 % | 31 celdas, QD-score 61 |
+| K4 | 84,4 | 85,5 | 76,8 | 82,2 % | 83 celdas, QD-score 153 |
+| control1 (de F1) | 85,5 | 85,2 | 76,1 | 82,2 % | — |
+| K10 (N = 10, desde s1) | 82,3 | 83,0 | 74,0 | 79,8 % | 54 celdas, QD-score 85, 23 iteraciones |
+| K1 (K de F1) | 83,2 | 83,9 | 72,2 | 79,8 % | 87 celdas, QD-score 162 |
+
+**F3a (réplica s4, Holm m = 3):**
+- N_J4: −1,95 pts (cota −2,85), no rechaza.
+- N_K4: −3,60 pts (cota −4,51), no rechaza.
+- **S_J4: −1,00 pts contra expectimax (p = 0,83), no rechaza: la ventaja de J contra expectimax de F1 no se
+  replica desde s4.**
+
+**F3b (K10 frente a control1):**
+- N_K10: −2,47 pts, igual que K1 (−2,48). Las iteraciones del paper no mejoran el rendimiento.
+- K10 cubre menos mapa (54 frente a 87 celdas), porque con N = 10 caben menos iteraciones en el mismo
+  presupuesto.
+
+**Lectura:**
+1. **El patrón de F1 se replica:** los QD rinden menos que el control. J queda más cerca (−0,6 en s1 y
+   −2,0 en s4) y K más lejos (−3,1 y −3,6).
+2. **La ventaja de J contra expectimax depende de la semilla.** En s1 fue +3,0 (confirmada); en s4 es
+   −1,0. La afirmación de F1 se mantiene para el agente desplegado desde s1, pero no se puede generalizar
+   a "PGA-ME castiga mejor a expectimax".
+3. **Desde s4, el control no mejora al arranque** (−0,1 ± 1,0). s4 ya estaba en su techo con esta receta
+   (85,9 %). Ningún QD lo supera: J4 −2,1 y K4 −3,7 frente al arranque.
+4. **La reducción N = 3 de K no explica su rendimiento:** con N = 10 rinde igual y cubre menos.
+5. **Frente a la expectativa (§4.13):** el patrón QD ≈ control se cumple en la forma "QD ≤ control". La
+   expectativa de que K10 rindiera igual o algo mejor que K1 se cumple: rinde igual.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -1026,3 +1064,4 @@ equipos rivales, 0 caídas. λ = 10 por validación cruzada agrupada.
 | 2026-11-26 | Resultado de F2 (§5.11, exploración): el selector rinde 80,8 % frente a 82,8 % del control (−1,97 ± 1,53 pts) y +0,37 frente a la mejor élite única. Causa: en `fit` (equipos de entrenamiento, memorizados) todas las élites ganan 95–97 % y no hay señal para aprender. El oráculo (90,7 %) está inflado por ruido de selección. Mejora posible: entrenar el selector con equipos no vistos. |
 | 2026-11-26 | F2b pre-registrada (§4.15, exploración): selector entrenado con 2000 enfrentamientos `val` por heurístico (equipos no vistos) y probado con la parte `eval` de F2. Cola `qd_f2b.sh`, después de F4. |
 | 2026-11-27 | **PPO v3 / DDQN v2 pre-registrados (§4.16)**, código implementado y sin encolar: M1 (distribución del preview, ya medida: casi colapsado por rival, pero reacciona al rival; sesgo a Arcanine-Hisui), P1 máscara del Protect consecutivo sin reentrenar (no inferioridad −1,5 pts), S1 preview condicionado a la serie sin reentrenar (regla +1,5 pts), V1/V2 memoria de serie (brazos C y V, partidas 2–3, Holm m = 2). Por juego limpio PPO y DDQN reciben los mismos cambios (decisión del usuario). Presupuesto, semillas y orden pendientes del usuario. |
+| 2026-11-27 | Resultado de F3 (§5.12): desde s4, control4 85,8 %, J4 83,8 % (−1,95), K4 82,2 % (−3,60); **la ventaja de J contra expectimax no se replica** (−1,0, p = 0,83), así que la de F1 es propia de s1. K con N = 10 rinde igual que con N = 3 (−2,47 frente a −2,48) y cubre menos mapa (54 frente a 87 celdas). |
