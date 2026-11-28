@@ -773,6 +773,43 @@ una frente a su agente base en las mismas semillas:
   - Los campos solo se bonifican en las fases S3 3d/3e, que no son las de G 5.2 / H 2.2.
   - G sigue sin componentes de RL (decisión del 20-11).
 
+### 4.20 PPO y DDQN entrenados contra greedy_joint nivel 3 (confirmación), fijada el 28-11-2026 antes de medir
+
+Aprobado por el usuario. Es la reconsideración de P4 con la evidencia de D3 (§5.17): contra el nivel 3, PPO v2 cae
+de 87,7 a 63,4 % y DDQN v1 de 69,0 a 46,8 %, mientras G casi no cae (§5.18). Decisión previa del usuario: PPO v3 /
+DDQN v2 se nombran a partir de este entrenamiento. Cola `scripts/server/l3_queue.sh`, después de la de G y H;
+informe con `scripts/analysis/l3_report.py`. Código congelado en el commit de este pre-registro.
+
+- **Brazo L3:** igual que el brazo C de la cola v3 (versión anterior + 1M pasos en series BO3, máscara del Protect
+  consecutivo, sin memoria, arranque en caliente; DDQN con ε = 0,05), **salvo la mezcla de rivales**:
+  `random:150k, greedy_solo:200k, greedy_joint:200k, greedy_joint_arq3:200k, expectimax_bayesian:250k` con
+  `--expand-omega`. C usó `random:150k, greedy_solo:250k, greedy_joint:300k, expectimax_bayesian:300k`.
+  Semillas 0–2 por familia.
+- **Brazo C:** se reutiliza de la cola v3 (`~/iapsvgc_runs/v3/<fam>_C_s<k>/final.pt`). Así L3 − C se debe solo a
+  los rivales de entrenamiento. Se reevalúa en esta cola, con las mismas partidas que L3.
+- **Evaluación:** L3, C y la versión anterior (descriptivo), con `policy_diag` sobre `eval`, 200 partidas por
+  rival (random, greedy_solo, greedy_joint, expectimax y nivel 3), rivales deterministas, `--context`, máscara
+  activada. Las semillas son las mismas en todos los brazos, así que las partidas quedan pareadas por rival.
+- **T_PPO, T_DDQN (superioridad):** L3 > C contra `greedy_joint_arq3`, McNemar pareado (600 pares por familia),
+  p unilateral.
+- **N_PPO, N_DDQN (no inferioridad):** L3 frente a C contra las 3 heurísticas (1800 pares por familia), margen
+  −1,5 pts, p unilateral.
+- **Holm m = 4**, α = 0,05.
+- **Consecuencia:** en cada familia donde T y N se confirman, el brazo L3 es **PPO v3 / DDQN v2**. Si T se
+  confirma y N no, decide el usuario. Si T no se confirma, el siguiente paso sería más peso para el nivel 3 o
+  sumar la entropía 0,03 de P4.
+- **Expectativa a priori:**
+
+  | Prueba | Expectativa | Probabilidad subjetiva |
+  |---|---|---|
+  | T_PPO contra el nivel 3 | +6 a +12 pts | ~80 % |
+  | T_DDQN | +4 a +10 pts | ~65 % |
+  | N_PPO / N_DDQN contra las 3 heurísticas | −1 a +1 pts | ~75 % cada una |
+
+  Contra el nivel 3 los dos seguirán por debajo de su nivel contra joint normal: 1M pasos no cierran una brecha de
+  ~23 pts.
+- **No se suma la entropía 0,03 de P4,** para que L3 − C mida solo el efecto del rival de nivel 3.
+
 ## 5. Plantilla de reporte
 
 | Hipótesis | Victorias / N | Tasa | IC 95 % (cluster) | p | p Holm | Semillas > 50 % | Veredicto |
@@ -1399,3 +1436,4 @@ X1 = 11001–11017, 300 BO3 por semilla (~5070 series por brazo), 0 errores de s
 | 2026-11-27 | Pendiente (decisión del usuario): preview condicionado a la serie para PPO / DDQN contra el nivel 3. S1 falló porque la red recibe una entrada fuera de su distribución; las vías son (a) reentrenar el preview con enmascaramiento de 2 rivales y contexto de leads, o (b) una regla de matchup para las partidas 2–3. Se decide con GS / HS de la cola de G y H (§4.19). |
 | 2026-11-28 | Resultados de v3 (§5.16): P1 máscara no inferior en las dos familias, **se adopta**; S1 no; **memoria de serie V − C no confirmada** (PPO −1,79, DDQN −2,75, p Holm = 1). D3 (§5.17): **contra el nivel 3, PPO cae de 87,7 a 63,4 % y DDQN de 69,0 a 46,8 %**; el nivel 3 activa Trick Room en el 46–64 % y lluvia / sol en el 73–78 %. G y H, parte 1 (§5.18): **G −1,4 pts y H −3,4 contra el nivel 3**; la hipótesis de que H acorta la brecha con G no se cumple (−2,4 → −4,5). |
 | 2026-11-28 | Decisión del usuario sobre §5.16: **no se nombra todavía PPO v3 / DDQN v2**. Se espera a entrenar contra greedy_joint nivel 3 (reconsideración de P4, respaldada por D3 §5.17), y la versión que resulte será la oficial. |
+| 2026-11-28 | Entrenamiento contra greedy_joint nivel 3 pre-registrado (§4.20, aprobado por el usuario): brazo L3 (= C de v3 con el nivel 3 en la mezcla de rivales), s0–s2 por familia, frente al C de v3 reutilizado; T (L3 > C contra el nivel 3) y N (no inferior contra las 3 heurísticas), Holm m = 4; si se confirman, L3 = PPO v3 / DDQN v2. Cola `l3_queue.sh` tras la de G y H. |
