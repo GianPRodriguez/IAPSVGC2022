@@ -1224,6 +1224,96 @@ nunca vio una entrada con 4 rivales conocidos y cae en una formación por defect
 - Victorias por arquetipo: nieve 77 %, sol 83 %, Tailwind 84 %, lluvia 85 % y arena 95 %. Los equipos de clima
   apenas cuestan contra los heurísticos porque estos no juegan el clima como plan (§4.17).
 
+### 5.16 Resultados de la cola v3: PPO v3 / DDQN v2 (28-11-2026, código `7dc00bf`)
+
+La cola terminó a las 01:51 del 28-11. El vigía de la caché actuó una vez (18:38 del 27-11, 251 GB) y se perdieron
+~13 min. Informe: `~/iapsvgc_runs/v3/v3_report.md`. P1, S1 y D1 están en §5.15; aquí van las cifras formales y la
+memoria de serie.
+
+| Prueba | PPO | DDQN | Regla / expectativa (§4.16, §4.18) |
+|---|---|---|---|
+| **P1** máscara del Protect consecutivo (3000 pares) | +1,00 pts, cota −0,07: **no inferior** | +0,17, cota −1,39: **no inferior** | Se adopta (E1 ✓) |
+| **S1** preview condicionado (partidas 2–3, 900 series) | −8,06 pts | −7,06 pts | No se adopta (expectativa ≤ 0 ✓) |
+| **V − C** memoria de serie, partidas 2–3 (3 semillas) | 81,7 → 79,9 %: **−1,79 pts** (IC ± 13,1), p = 0,84, p Holm = 1 | 60,4 → 57,6 %: **−2,75 pts** (IC ± 9,8), p = 0,91, p Holm = 1 | **V1 y V2 no se confirman** (E2 ✗, E3 ✓ ≈ 0) |
+| Partida 1, V − C | +1,89 (cota −0,90): no inferior | +1,00 (cota −2,76): no demostrada | E4: PPO ✓, DDQN sin demostrar |
+| Series ganadas, C → V | 85,7 → 85,7 % | 63,2 → 61,4 % | E7 ✓ |
+
+PPO por semilla (partidas 2–3, C → V): s0 79,4 → 82,4; s1 79,5 → 78,5; s2 86,3 → 78,9. Con rivales que sortean:
++3,9, −2,7 y +2,2. C le gana a PPO v2 sin entrenamiento adicional en las 3 semillas (+1,6, +2,8 y +3,1).
+
+**Lectura:**
+1. **La memoria de serie no mejora a ninguna de las dos familias** contra los heurísticos. Hay una semilla a favor
+   y otras en contra, y nada es significativo. Contra rivales deterministas que no cambian de plan entre
+   partidas, recordar no da información que la política no tenga ya.
+2. **La máscara del Protect consecutivo se adopta** según la regla pre-registrada: se activa en la web para las
+   versiones actuales y entra en las próximas versiones.
+3. **El entrenamiento adicional en series con la máscara (brazo C) sí suma** frente a PPO v2 (+1,6 a +3,1 pts,
+   descriptivo).
+4. **Pendiente de decisión del usuario:** qué se llama oficialmente PPO v3 / DDQN v2. La memoria no se confirmó.
+   Las opciones son: el brazo C (v2/v1 + 1M en series + máscara), mantener v2/v1 con la máscara activada, o
+   esperar a entrenar contra el nivel 3 (§5.17).
+
+### 5.17 Resultados de D3: el nivel 3 de arquetipos contra PPO v2 y DDQN v1 (28-11-2026, código `9fdfd8f`)
+
+Victorias contra greedy_joint por nivel (`eval`, 200 partidas por rival y semilla, 5 semillas, partidas sueltas):
+
+| Familia | Nivel 0 | Nivel 2 | **Nivel 3** | Caída 0 → 3 |
+|---|---|---|---|---|
+| PPO v2 | 87,7 % | 78,7 % | **63,4 %** | **−24,3** |
+| DDQN v1 | 69,0 % | 61,6 % | **46,8 %** | **−22,2** |
+
+Las 5 semillas de PPO caen al rango 62,0–66,0 %; las de DDQN, al 41,0–51,5 %.
+
+**¿El rival ejecuta su plan?** (fracción de partidas en que lo activó cuando su equipo lo tiene; partidas contra
+PPO y contra DDQN):
+
+| Plan | Nivel 0 | Nivel 2 | **Nivel 3** |
+|---|---|---|---|
+| Trick Room | 0,0–0,5 % | 34–47 % | **46–64 %** |
+| Tailwind | 0,0–1,6 % | 31–39 % | **39–46 %** |
+| Lluvia | 46–48 % | 72 % | **78 %** |
+| Sol | 47–48 % | 36 % | **73–76 %** |
+| Arena | 100 % | 100 % | 45–47 % |
+| Nieve | 0 % | 67 % | 0 % (25 partidas) |
+
+**Lectura:**
+1. **El nivel 3 es un rival mucho más duro de lo esperado.** PPO cae 24 pts (se esperaba bajar a ~72–76 %; E10 ✗,
+   mucho peor) y DDQN 22 pts (se esperaba ~45–50 %; E11 ✓). La fuerza medida contra los heurísticos de siempre
+   sobreestima a los dos agentes frente a rivales que juegan planes.
+2. **Ejecuta sus planes:** Trick Room 46–64 % (E9 ✓), lluvia 78 % y sol 73–76 % (E8 ✓ para los dos climas
+   principales). La arena baja respecto del nivel 0, porque el preview del nivel 3 a veces elige otro plan del
+   equipo en lugar de abrir con Tyranitar. La nieve no se activa (25 partidas, sin abusadores detectados).
+3. **Corrección parcial a §4.17:** con el nivel 0, lluvia y sol ya se activaban en ~48 % de las partidas por
+   habilidades que entran solas. Lo que faltaba era *planificarlos* (abrir con quien los pone y quien los
+   aprovecha), no el clima en sí.
+4. **Cuando el rival ejecuta su plan, los agentes pierden mucho más.** PPO frente a un Trick Room activado gana el
+   32,7 % (si no se activa, 82,6 %). Es la misma debilidad que con las personas.
+
+### 5.18 Resultados parciales de G y H contra arquetipos, parte 1 (28-11-2026, código `17d4f20`)
+
+X1 = 11001–11017, 300 BO3 por semilla (~5070 series por brazo), 0 errores de serie; smoke sin anomalías.
+
+| Brazo | Victorias en series (IC 95 %) | s/semilla |
+|---|---|---|
+| G 5.2 contra nivel 0 | 69,12 % [67,91; 70,27] | 236 |
+| **G 5.2 contra nivel 3** | **67,58 %** [66,36; 68,76] | 240 |
+| H 2.2 contra nivel 0 | 66,70 % [65,51; 67,92] | 232 |
+| **H 2.2 contra nivel 3** | **63,17 %** [61,87; 64,48] | 234 |
+
+- Caída 0 → 3: **G −1,41 pts (p = 0,09)**; **H −3,44 pts (p = 5·10⁻⁵)**.
+- Brecha H − G: −2,40 pts en el nivel 0 y −4,46 en el nivel 3. **La hipótesis sobre H no se cumple**: el criterio
+  de Nash no lo vuelve más robusto contra rivales con planes; la brecha con G se agranda.
+
+**Lectura:**
+1. **Los agentes de búsqueda son mucho más robustos que los de RL contra rivales con planes.** G casi no cae
+   (−1,4) y H cae −3,4, frente a −24 de PPO y −22 de DDQN. Su simulador modela Trick Room, Tailwind y el clima, así
+   que su fuerza no depende de que el rival los evite.
+2. **Comparación aproximada:** contra el nivel 0, PPO (87,7 % de partidas) supera a G (69,1 % de series BO3).
+   Contra el nivel 3, PPO baja a 63,4 % y G queda en 67,6 %. Las métricas no son idénticas (partidas sueltas con
+   equipo fijo frente a series BO3 con equipos del pool), así que la comparación es solo indicativa.
+3. Parte 2 (extensiones A / S / F) en curso: A en G va +0,77 pts con 13 de 17 semillas (p = 0,29) y cuesta ~50 %
+   más de tiempo.
+
 ## 6. Limitaciones
 
 - Un solo formato (Reg M-C) y un solo pool de equipos.
@@ -1307,3 +1397,4 @@ nunca vio una entrada con 4 rivales conocidos y cae en una formación por defect
 | 2026-11-27 | G y H contra arquetipos pre-registrado (§4.19, exploración en X1 = 11001–11017): punto 1 descriptivo (G0/G3/H0/H3, hipótesis de que la brecha H − G se achica contra el nivel 3) y extensiones A arquetipos, S serie BO3 y F hoja con campo (GA/GS/GF, HA/HS/HF) frente a su base contra el nivel 3; candidata si > 0 y p < 0,05. Cola `gh_arq_queue.sh` tras D3. |
 | 2026-11-27 | §2: **greedy_joint nivel 3 pasa a ser métrica secundaria fija** de la evaluación (decisión del usuario). Los agentes RL lo juegan por defecto (`policy_diag`, sección propia en `kickoff_report`); G y H suman un brazo descriptivo en sus próximas corridas. El resultado principal (3 heurísticas) no cambia. |
 | 2026-11-27 | Pendiente (decisión del usuario): preview condicionado a la serie para PPO / DDQN contra el nivel 3. S1 falló porque la red recibe una entrada fuera de su distribución; las vías son (a) reentrenar el preview con enmascaramiento de 2 rivales y contexto de leads, o (b) una regla de matchup para las partidas 2–3. Se decide con GS / HS de la cola de G y H (§4.19). |
+| 2026-11-28 | Resultados de v3 (§5.16): P1 máscara no inferior en las dos familias, **se adopta**; S1 no; **memoria de serie V − C no confirmada** (PPO −1,79, DDQN −2,75, p Holm = 1). D3 (§5.17): **contra el nivel 3, PPO cae de 87,7 a 63,4 % y DDQN de 69,0 a 46,8 %**; el nivel 3 activa Trick Room en el 46–64 % y lluvia / sol en el 73–78 %. G y H, parte 1 (§5.18): **G −1,4 pts y H −3,4 contra el nivel 3**; la hipótesis de que H acorta la brecha con G no se cumple (−2,4 → −4,5). |
