@@ -23,6 +23,9 @@ from typing import Dict, List, Optional, Tuple
 
 HEUR = ('greedy_solo', 'greedy_joint', 'expectimax_bayesian')
 FOES = ('random',) + HEUR
+# Métrica secundaria fija desde el 27-11-2026 (protocolo §2, decisión del usuario): greedy_joint en modo
+# arquetipo nivel 3 (clima, campos y núcleos clásicos de VGC). No entra en el resultado principal (HEUR).
+SECONDARY = ('greedy_joint_arq3',)
 METHODS = ('ddqn', 'ppo')
 SEEDS = range(5)
 # t de Student al 97,5 % por grados de libertad (n − 1)
@@ -142,6 +145,24 @@ def build(d: Path) -> str:
         L += ['', '## 3b. Contra greedy_joint en modo arquetipo (Tailwind / Trick Room; final.pt, `eval`)', '',
               '| Método | Semillas | joint normal | joint arquetipo (IC entre semillas) | Diferencia |',
               '|---|---|---|---|---|'] + arch_rows
+    sec_rows = []
+    for m in METHODS:
+        xs = [rate(r, SECONDARY) for _, r in data[m]['final_eval']]
+        xs = [x[0] for x in xs if x]
+        js = [rate(r, ('greedy_joint',)) for _, r in data[m]['final_eval'] if rate(r, SECONDARY)]
+        js = [x[0] for x in js if x]
+        if xs:
+            mu, hw = mean_ci(xs)
+            mj = sum(js) / len(js) if js else None
+            sec_rows.append(f'| {m.upper()} | {len(xs)} | {_pct(mu)}'
+                            f"{f' (± {100 * hw:.1f})' if len(xs) > 1 else ''} | "
+                            f"{_pct(mj) if mj is not None else '—'} | "
+                            f"{f'{100 * (mu - mj):+.1f}' if mj is not None else '—'} |")
+    if sec_rows:
+        L += ['', '## 3c. Métrica secundaria: greedy_joint nivel 3 (clima, campos, Trick Room, Tailwind; final.pt, '
+              '`eval`)', '', 'No entra en el resultado principal (protocolo §2).', '',
+              '| Método | Semillas | Nivel 3 (IC entre semillas) | joint normal | Diferencia |',
+              '|---|---|---|---|---|'] + sec_rows
     if len(means) == 2 and all(len(v) > 1 for v in means.values()):
         a, b = means['ppo'], means['ddqn']
         ma, mb = sum(a) / len(a), sum(b) / len(b)

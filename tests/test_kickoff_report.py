@@ -48,3 +48,19 @@ def test_report_archetype_section_and_ppo_only(tmp_path):
     md = (tmp_path / 'kickoff_summary16.md').read_text(encoding='utf-8')
     assert '## 3b.' in md and '| PPO | 2 | 85.0 % | 75.0 %' in md and '-10.0' in md
     assert '| DDQN | 0 | sin datos' in md and '## 4.' not in md  # solo PPO: sin comparación
+
+
+def test_report_secondary_level3_section(tmp_path):
+    """Métrica secundaria (protocolo §2): nivel 3 de arquetipos, fuera del resultado principal."""
+    import json
+    from showdown.rl.kickoff_report import HEUR, SECONDARY, build, rate
+    assert SECONDARY == ('greedy_joint_arq3',) and 'greedy_joint_arq3' not in HEUR
+    d = tmp_path / 'diag'
+    d.mkdir()
+    res = {f: {'win': 150, 'loss': 50} for f in ('random',) + HEUR}
+    res['greedy_joint_arq3'] = {'win': 140, 'loss': 60}
+    for s in (0, 1):
+        (d / f'ppo_s{s}_final_eval.json').write_text(json.dumps({'resultados': res}))
+    txt = build(tmp_path)
+    assert '3c. Métrica secundaria' in txt and '70.0 %' in txt
+    assert abs(rate(res)[0] - 0.75) < 1e-9          # el principal no incluye el nivel 3

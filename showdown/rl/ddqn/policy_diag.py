@@ -299,7 +299,10 @@ def main(argv=None) -> int:
     ap.add_argument('--out', default='logs/policy_diag.json')
     ap.add_argument('--agent', choices=('ddqn', 'ppo'), default='ddqn')
     ap.add_argument('--family', default='', help='familia del preview congelado (p. ej. qd_ppo); defecto: --agent')
-    ap.add_argument('--foes', default=','.join(FOES), help='rivales a jugar (lista separada por comas)')
+    # Por defecto también el nivel 3 de arquetipos (métrica secundaria, protocolo §2; 27-11-2026). Va al final de
+    # FOES + EXTRA_FOES: no cambia las semillas de los demás rivales.
+    ap.add_argument('--foes', default=','.join(FOES + ('greedy_joint_arq3',)),
+                    help='rivales a jugar (lista separada por comas)')
     ap.add_argument('--sample', action='store_true',
                     help='PPO: sortear la acción de la política en vez de tomar la más probable (P1)')
     ap.add_argument('--temperature', type=float, default=1.0, help='temperatura del sorteo (con --sample)')

@@ -31,6 +31,18 @@ selección. Medir con semillas nuevas da una estimación de la ventaja sin ese s
   puntual (el reparto más frecuente del prior), que no acierta en ~26 % de los Pokémon, así
   que el chequeo falla por diseño (p. ej. H2: `fail_bo3_inf=6304`, `NEED_FIX=YES`). No
   afecta al juego ni a la validez de la corrida.
+- **Métrica secundaria fija: greedy_joint en modo arquetipo nivel 3** (desde el 27-11-2026, decisión del usuario;
+  §4.17, greedy_joint_spec 1.8.3). Los baselines casi nunca ejecutan los planes que usan las personas (D1: Trick
+  Room 0,1 %, Tailwind 1,6 %; el clima nunca como plan), así que la métrica principal no ve esa debilidad. El nivel 3
+  juega lluvia, sol, arena, nieve, campos, Trick Room con redirección y Tailwind.
+  - **El resultado principal no cambia** (contra greedy_solo, greedy_joint y expectimax). Todas las confirmaciones
+    ya hechas siguen valiendo.
+  - **Agentes RL** (`policy_diag`, `kickoff_report`): el rival `greedy_joint_arq3` se juega por defecto y se informa
+    en una sección propia. Va al final de la lista de rivales, así que no cambia las semillas de los demás.
+  - **G y H** (`run_robust_e2e`): las próximas exploraciones y confirmaciones agregan un brazo descriptivo contra
+    `greedy_joint` con `PS_JOINT_ARCHETYPE=3`, en las mismas semillas que el brazo contra joint normal.
+  - **Agentes congelados de la Conclusión** (G 5.2, H 2.2, PPO v2, DDQN v1): su cifra contra el nivel 3 sale de D3
+    (§4.17) y de la cola de G/H contra arquetipos (§4.19).
 
 ## 2b. Separación de equipos: 200 para entrenar, 100 para evaluar
 
@@ -1293,3 +1305,4 @@ nunca vio una entrada con 4 rivales conocidos y cae en una formación por defect
 | 2026-11-27 | Resultados parciales de la cola v3 (§5.15): P1 máscara +1,0 (PPO) y +0,2 (DDQN); S1 preview condicionado −7,2 y −5,3, no se adopta; D1 Trick Room 0,1 % y Tailwind 1,6 %. D3 pre-registrado (§4.17): greedy_joint nivel 3 con clima, campos y núcleos clásicos de VGC (`greedy_joint_arq3`), medido contra PPO v2 y DDQN v1 después de v3; cola `arq3_queue.sh`. |
 | 2026-11-27 | Expectativas actualizadas para lo pendiente (§4.18), antes de los resultados: P1 no inferior en las dos familias; memoria de serie V − C PPO +0,5 a +2 (confirmar ~25 %) y DDQN ≈ 0; nivel 3 de arquetipos activa su clima en ≥ 70 % y baja a PPO a ~72–76 % y a DDQN a ~45–50 %; siguiente mejora esperada: entrenar contra el nivel 3. |
 | 2026-11-27 | G y H contra arquetipos pre-registrado (§4.19, exploración en X1 = 11001–11017): punto 1 descriptivo (G0/G3/H0/H3, hipótesis de que la brecha H − G se achica contra el nivel 3) y extensiones A arquetipos, S serie BO3 y F hoja con campo (GA/GS/GF, HA/HS/HF) frente a su base contra el nivel 3; candidata si > 0 y p < 0,05. Cola `gh_arq_queue.sh` tras D3. |
+| 2026-11-27 | §2: **greedy_joint nivel 3 pasa a ser métrica secundaria fija** de la evaluación (decisión del usuario). Los agentes RL lo juegan por defecto (`policy_diag`, sección propia en `kickoff_report`); G y H suman un brazo descriptivo en sus próximas corridas. El resultado principal (3 heurísticas) no cambia. |
